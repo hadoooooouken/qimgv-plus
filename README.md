@@ -6,7 +6,7 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 
 - **Simple UI & Fast**: Lightweight and extremely responsive interface.
 
-- **NVIDIA GPU-Accelerated Scaling (CUDA)**: Extremely smooth and high-quality zooming offloaded to your GPU, including an experimental "ULTRA" mode that filters digital noise and sharpens details in real-time.
+- **NVIDIA GPU-Accelerated Scaling (CUDA)**: Extremely smooth and high-quality zooming offloaded to your GPU, including an experimental mode that applies median noise filtering followed by Lanczos upscaling and a soft sharpening pass.
 
 - **Real-Time Color Adjustments**: Instant, lag-free adjustments of Brightness, Contrast, Saturation, and Hue calculated on the graphics card via shaders. Accessible via the right-click context menu while viewing an image.
 
@@ -119,7 +119,7 @@ When you've created your script go to __Settings > Controls > Add__, then select
 ## High quality scaling
 
 qimgv-plus supports high-quality, hardware-accelerated scaling filters:
-- **GPU-Accelerated Scaling (NVIDIA CUDA)**: Offloads scaling to your NVIDIA graphics card using CUDA/NPP (when built with CUDA support). Filter options in __Settings > Scaling__ include **Bicubic (CUDA)**, **Lanczos (CUDA)**, and the experimental **ULTRA (CUDA)** mode (filters digital noise and applies smart sharpening in real-time).
+- **GPU-Accelerated Scaling (NVIDIA CUDA)**: Offloads scaling to your NVIDIA graphics card using CUDA/NPP (when built with CUDA support). Filter options in __Settings > Scaling__ include **Bicubic (CUDA)**, **Lanczos (CUDA)**, and the **Experimental (CUDA)** mode (median denoise → Lanczos upscale → soft sharpen pass).
 - **CPU Scaling**: Standard high-quality CPU scaling filters (**Bicubic** or **Bilinear+Sharpen**) are available when built with OpenCV support (enabled by default).
 
 # Supported Image Formats
