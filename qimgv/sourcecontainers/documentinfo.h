@@ -23,7 +23,7 @@
 
 #include <QImageReader>
 
-enum DocumentType { NONE, STATIC, ANIMATED, VIDEO };
+enum DocumentType { NONE, STATIC, ANIMATED };
 
 class DocumentInfo {
 public:

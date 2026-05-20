@@ -1,0 +1,36 @@
+{
+    "Keys": [
+        "3fr",
+        "arw",
+        "crw", "cr2", "cr3",
+        "dcr", "dng",
+        "erf",
+        "fff",
+        "iiq",
+        "k25", "kdc",
+        "mdc", "mef", "mos", "mrw",
+        "nef", "nrw",
+        "orf",
+        "pef",
+        "raf", "raw", "rwl", "rw2",
+        "sr2", "srf", "srw", "sti",
+        "x3f"
+    ],
+    "MimeTypes": [
+        "image/x-hasselblad-3fr",
+        "image/x-sony-arw",
+        "image/x-canon-crw", "image/x-canon-cr2", "image/x-canon-cr3",
+        "image/x-kodak-dcr", "image/x-adobe-dng",
+        "image/x-epson-erf",
+        "image/x-hasselblad-fff",
+        "image/x-phaseone-iiq",
+        "image/x-kodak-k25", "image/x-kodak-kdc",
+        "image/x-minolta-mdc", "image/x-mamiya-mef", "image/x-leaf-mos", "image/x-minolta-mrw",
+        "image/x-nikon-nef", "image/x-nikon-nrw",
+        "image/x-olympus-orf",
+        "image/x-pentax-pef",
+        "image/x-fuji-raf", "image/x-panasonic-raw", "image/x-panasonic-rw2", "image/x-panasonic-rw2",
+        "image/x-sony-sr2", "image/x-sony-srf", "image/x-samsung-srw", "image/x-sinar-sti",
+        "image/x-sigma-x3f"
+    ]
+}

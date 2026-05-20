@@ -1,0 +1,51 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "windows-base",
+      "description": "Base configuration for Windows",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "E:/Qt/6.11.1/msvc2022_64;E:/Vulkan",
+        "OPENCV_SUPPORT": "ON",
+        "OpenCV_DIR": "E:/opencv/build",
+        "EXIV2": "ON",
+        "exiv2_DIR": "E:/qimgv/formats/exiv2-0.28.8-2022msvc-AMD64/lib/cmake/exiv2",
+        "USE_QT5": "OFF"
+      },
+      "environment": {
+        "VULKAN_SDK": "E:/Vulkan",
+        "PATH": "E:/Qt/6.11.1/msvc2022_64/bin;E:/opencv/build/x64/vc16/bin;E:/exiv2-0.28.8-2022msvc-AMD64/bin;E:/CUDA/bin;E:/Vulkan/Bin;$penv{PATH}"
+      }
+    },
+    {
+      "name": "qimgv-x64-debug",
+      "displayName": "qimgv: x64 Debug",
+      "inherits": "windows-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "qimgv-x64-release",
+      "displayName": "qimgv: x64 Release",
+      "inherits": "windows-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "qimgv-x64-debug",
+      "configurePreset": "qimgv-x64-debug"
+    },
+    {
+      "name": "qimgv-x64-release",
+      "configurePreset": "qimgv-x64-release"
+    }
+  ]
+}

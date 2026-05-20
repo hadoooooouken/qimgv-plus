@@ -23,12 +23,13 @@ void ActionManager::initDefaults() {
     actionManager->defaults.insert("Left", "prevImage");
     actionManager->defaults.insert("XButton2", "nextImage");
     actionManager->defaults.insert("XButton1", "prevImage");
-    actionManager->defaults.insert("WheelDown", "nextImage");
-    actionManager->defaults.insert("WheelUp", "prevImage");
+    actionManager->defaults.insert("WheelDown", "zoomOut");
+    actionManager->defaults.insert("WheelUp", "zoomIn");
     actionManager->defaults.insert("F", "toggleFullscreen");
-    actionManager->defaults.insert("F11", "toggleFullscreen");
-    actionManager->defaults.insert("LMB_DoubleClick", "toggleFullscreen");
-    actionManager->defaults.insert("MiddleButton", "exit");
+    actionManager->defaults.insert("Enter", "toggleFullscreen");
+    actionManager->defaults.insert("LMB_DoubleClick", "fitNormal");
+    actionManager->defaults.insert("MiddleButton", "folderView");
+    actionManager->defaults.insert("Backspace", "folderView");
     actionManager->defaults.insert("Space", "toggleFitMode");
     actionManager->defaults.insert("1", "fitWindow");
     actionManager->defaults.insert("2", "fitWidth");
@@ -41,12 +42,9 @@ void ActionManager::initDefaults() {
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+L", "rotateLeft");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+WheelUp", "zoomInCursor");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+WheelDown", "zoomOutCursor");
-    actionManager->defaults.insert("=", "zoomIn"); // [=+] key on the number row
-    actionManager->defaults.insert(InputMap::keyNameCtrl() + "+=", "zoomIn");
+    actionManager->defaults.insert("=", "zoomIn");
     actionManager->defaults.insert("+", "zoomIn");
-    actionManager->defaults.insert(InputMap::keyNameCtrl() + "++", "zoomIn");
     actionManager->defaults.insert("-", "zoomOut");
-    actionManager->defaults.insert(InputMap::keyNameCtrl() + "+-", "zoomOut");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+Down", "zoomOut");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+Up", "zoomIn");
     actionManager->defaults.insert("Up", "scrollUp");
@@ -66,12 +64,6 @@ void ActionManager::initDefaults() {
     actionManager->defaults.insert("M", "moveFile");
     actionManager->defaults.insert("Home", "jumpToFirst");
     actionManager->defaults.insert("End", "jumpToLast");
-    actionManager->defaults.insert(InputMap::keyNameCtrl() + "+Right", "seekVideoForward");
-    actionManager->defaults.insert(InputMap::keyNameCtrl() + "+Left", "seekVideoBackward");
-    actionManager->defaults.insert(",", "frameStepBack");
-    actionManager->defaults.insert(".", "frameStep");
-    actionManager->defaults.insert("Enter", "folderView");
-    actionManager->defaults.insert("Backspace", "folderView");
     actionManager->defaults.insert("F5", "reloadImage");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+C", "copyFileClipboard");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+" + InputMap::keyNameShift() + "+C", "copyPathClipboard");
@@ -87,16 +79,8 @@ void ActionManager::initDefaults() {
     actionManager->defaults.insert(InputMap::keyNameShift() + "+Left", "prevDirectory");
     actionManager->defaults.insert(InputMap::keyNameShift() + "+F", "toggleFullscreenInfoBar");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+V", "pasteFile");
-
-#ifdef __APPLE__
-    actionManager->defaults.insert(InputMap::keyNameAlt() + "+Up", "zoomIn");
-    actionManager->defaults.insert(InputMap::keyNameAlt() + "+Down", "zoomOut");
-    actionManager->defaults.insert(InputMap::keyNameCtrl() + "+Comma", "openSettings");
-#else
     actionManager->defaults.insert("P", "openSettings");
-#endif
-
-    //actionManager->defaults.insert("Backspace", "goUp"); // todo: shortcut scopes?
+    actionManager->defaults.insert(InputMap::keyNameShift() + "+P", "togglePanorama");
 }
 
 //------------------------------------------------------------------------------

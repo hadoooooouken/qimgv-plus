@@ -342,8 +342,6 @@ void ThumbnailWidgetCmp::drawDropHover(QPainter *painter) {
 }
 
 void ThumbnailWidgetCmp::drawThumbnail(QPainter* painter, const QPixmap *pixmap) {
-    if(!thumbnail->hasAlphaChannel() && thumbStyle != THUMB_COMPACT)
-        painter->fillRect(drawRectCentered.adjusted(3,3,3,3), shadowColor);
     painter->drawPixmap(drawRectCentered, *pixmap);
 }
 

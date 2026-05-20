@@ -1,6 +1,6 @@
 ## SOURCES FOR QIMGV COMPONENTS
 
-target_sources(qimgv PRIVATE
+target_sources(qimgv-plus PRIVATE
     directorymodel.cpp
     directorypresenter.cpp
 
@@ -30,17 +30,17 @@ target_sources(qimgv PRIVATE
 )
 
 if(APPLE)
-    #target_sources(qimgv PRIVATE
+    #target_sources(qimgv-plus PRIVATE
     #    directorymanager/watchers/linux/linuxfsevent.cpp
     #    directorymanager/watchers/linux/linuxwatcher.cpp
     #    directorymanager/watchers/linux/linuxworker.cpp)
 elseif(UNIX)
-    target_sources(qimgv PRIVATE
+    target_sources(qimgv-plus PRIVATE
         directorymanager/watchers/linux/linuxfsevent.cpp
         directorymanager/watchers/linux/linuxwatcher.cpp
         directorymanager/watchers/linux/linuxworker.cpp)
 elseif(WIN32)
-    target_sources(qimgv PRIVATE
+    target_sources(qimgv-plus PRIVATE
         directorymanager/watchers/windows/windowswatcher.cpp
         directorymanager/watchers/windows/windowsworker.cpp)
 endif()

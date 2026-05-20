@@ -20,6 +20,7 @@ signals:
 
 public slots:
     void requestScaled(ScalerRequest req);
+    void clear();
 
 private slots:
     void onTaskStart(ScalerRequest req);
@@ -33,6 +34,7 @@ private:
     bool buffered, running;
     clock_t currentRequestTimestamp;
     ScalerRequest bufferedRequest, startedRequest;
+    bool mCleared = false;
 
     Cache *cache;
 

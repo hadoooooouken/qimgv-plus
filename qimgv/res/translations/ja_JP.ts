@@ -15,64 +15,128 @@
     </message>
 </context>
 <context>
+    <name>ColorAdjustmentsOverlay</name>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="53"/>
+        <source>OverlayHeaderWidget</source>
+        <translation>OverlayHeaderWidget</translation>
+    </message>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="90"/>
+        <source>Color adjustments</source>
+        <translation>色調整</translation>
+    </message>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="126"/>
+        <source>Brightness</source>
+        <translation>明るさ</translation>
+    </message>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="190"/>
+        <source>0%</source>
+        <translation>0%</translation>
+    </message>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="207"/>
+        <source>Contrast</source>
+        <translation>コントラスト</translation>
+    </message>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="271"/>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="433"/>
+        <source>100%</source>
+        <translation>100%</translation>
+    </message>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="288"/>
+        <source>Hue</source>
+        <translation>色相</translation>
+    </message>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="352"/>
+        <source>0°</source>
+        <translation>0°</translation>
+    </message>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="369"/>
+        <source>Saturation</source>
+        <translation>彩度</translation>
+    </message>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="464"/>
+        <source>Reset</source>
+        <translation>リセット</translation>
+    </message>
+</context>
+<context>
     <name>ContextMenu</name>
     <message>
-        <location filename="../../gui/contextmenu.ui" line="229"/>
+        <location filename="../../gui/contextmenu.ui" line="236"/>
         <source>Edit</source>
         <translation>編集</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="55"/>
+        <location filename="../../gui/contextmenu.cpp" line="59"/>
         <source>Print</source>
         <translation>印刷</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="59"/>
+        <location filename="../../gui/contextmenu.cpp" line="63"/>
         <source>Quick copy</source>
         <translation>クイックコピー</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="63"/>
+        <location filename="../../gui/contextmenu.cpp" line="67"/>
         <source>Quick move</source>
         <translation>クイック移動</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="67"/>
+        <location filename="../../gui/contextmenu.cpp" line="71"/>
         <source>Move to trash</source>
         <translation>ゴミ箱へ移動</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="72"/>
+        <location filename="../../gui/contextmenu.cpp" line="76"/>
+        <source>Color adjustments</source>
+        <translation>色調整</translation>
+    </message>
+    <message>
+        <location filename="../../gui/contextmenu.cpp" line="80"/>
+        <source>Panorama mode</source>
+        <translation>パノラマモード</translation>
+    </message>
+    <message>
+        <location filename="../../gui/contextmenu.cpp" line="84"/>
         <source>Open</source>
         <translation>開く</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="77"/>
+        <location filename="../../gui/contextmenu.cpp" line="89"/>
         <source>Folder View</source>
         <translation>フォルダービュー</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="82"/>
+        <location filename="../../gui/contextmenu.cpp" line="94"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="85"/>
+        <location filename="../../gui/contextmenu.cpp" line="97"/>
         <source>Open with...</source>
         <translation type="unfinished">スクリプト/アプリで開く...</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="91"/>
+        <location filename="../../gui/contextmenu.cpp" line="103"/>
         <source>Show in folder</source>
         <translation type="unfinished">ファイルの場所を開く</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="99"/>
+        <location filename="../../gui/contextmenu.cpp" line="111"/>
         <source>Back</source>
         <translation>戻る</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="102"/>
+        <location filename="../../gui/contextmenu.cpp" line="114"/>
         <source>Configure menu</source>
         <translation type="unfinished">スクリプト/アプリの追加</translation>
     </message>
@@ -94,228 +158,228 @@
 <context>
     <name>Core</name>
     <message>
-        <location filename="../../core.cpp" line="255"/>
+        <location filename="../../core.cpp" line="300"/>
         <source>Updated: </source>
         <translation>更新: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="261"/>
+        <location filename="../../core.cpp" line="308"/>
         <source>Welcome to </source>
         <translation>ようこそ </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="261"/>
+        <location filename="../../core.cpp" line="309"/>
         <source> version </source>
         <translation> バージョン </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="268"/>
+        <location filename="../../core.cpp" line="329"/>
         <source>Shuffle mode: OFF</source>
         <translation>シャッフルモード: OFF</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="271"/>
+        <location filename="../../core.cpp" line="332"/>
         <source>Shuffle mode: ON</source>
         <translation>シャッフルモード: ON</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="280"/>
+        <location filename="../../core.cpp" line="341"/>
         <source>Slideshow: OFF</source>
         <translation>スライドショー: OFF</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="284"/>
+        <location filename="../../core.cpp" line="345"/>
         <source>Slideshow: ON</source>
         <translation>スライドショー: ON</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="355"/>
+        <location filename="../../core.cpp" line="408"/>
         <source>Delete </source>
         <translation> </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="355"/>
+        <location filename="../../core.cpp" line="409"/>
         <source> items permanently?</source>
         <translation>個のアイテムを完全に削除しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="357"/>
+        <location filename="../../core.cpp" line="411"/>
         <source>Delete item permanently?</source>
         <translation>アイテムを完全に削除しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="358"/>
+        <location filename="../../core.cpp" line="412"/>
         <source>Delete permanently</source>
         <translation>完全に削除</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="374"/>
+        <location filename="../../core.cpp" line="428"/>
         <source>File removed</source>
         <translation>ファイルを削除しました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="378"/>
+        <location filename="../../core.cpp" line="432"/>
         <source>Removed: </source>
         <translation>削除済み: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="378"/>
-        <location filename="../../core.cpp" line="408"/>
+        <location filename="../../core.cpp" line="433"/>
+        <location filename="../../core.cpp" line="469"/>
         <source> files</source>
         <translation> 個のファイル</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="389"/>
+        <location filename="../../core.cpp" line="445"/>
         <source>Move </source>
         <translation> </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="389"/>
+        <location filename="../../core.cpp" line="445"/>
         <source> items to trash?</source>
         <translation>個のアイテムをゴミ箱へ移動しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="391"/>
+        <location filename="../../core.cpp" line="447"/>
         <source>Move item to trash?</source>
         <translation>アイテムをゴミ箱へ移動しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="392"/>
+        <location filename="../../core.cpp" line="448"/>
         <source>Move to trash</source>
         <translation>ゴミ箱へ移動</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="404"/>
+        <location filename="../../core.cpp" line="464"/>
         <source>Moved to trash</source>
         <translation>ゴミ箱に移動しました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="408"/>
+        <location filename="../../core.cpp" line="468"/>
         <source>Moved to trash: </source>
         <translation>ゴミ箱に移動しました: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="463"/>
+        <location filename="../../core.cpp" line="524"/>
         <source>File copied</source>
         <translation>ファイルがコピーされました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="470"/>
+        <location filename="../../core.cpp" line="531"/>
         <source>Path copied</source>
         <translation>パスがコピーされました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="644"/>
-        <location filename="../../core.cpp" line="918"/>
-        <location filename="../../core.cpp" line="939"/>
+        <location filename="../../core.cpp" line="705"/>
+        <location filename="../../core.cpp" line="975"/>
+        <location filename="../../core.cpp" line="997"/>
         <source>File exists</source>
         <translation>ファイルは存在します</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="644"/>
+        <location filename="../../core.cpp" line="705"/>
         <source>Overwrite file?</source>
         <translation>ファイルを上書きしますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="812"/>
-        <location filename="../../core.cpp" line="880"/>
+        <location filename="../../core.cpp" line="855"/>
+        <location filename="../../core.cpp" line="934"/>
         <source>Could not create directory </source>
         <translation>ディレクトリを作成できませんでした </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="916"/>
+        <location filename="../../core.cpp" line="973"/>
         <source>File moved.</source>
         <translation>ファイルが移動されました。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="918"/>
-        <location filename="../../core.cpp" line="939"/>
+        <location filename="../../core.cpp" line="976"/>
+        <location filename="../../core.cpp" line="998"/>
         <source>Destination file exists. Overwrite?</source>
         <translation>移動先にファイルが存在します。上書きしますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="937"/>
+        <location filename="../../core.cpp" line="995"/>
         <source>File copied.</source>
         <translation>ファイルがコピーされました。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="984"/>
+        <location filename="../../core.cpp" line="1048"/>
         <source>Perform action &quot;</source>
         <translation>アクションを実行 &quot;</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="984"/>
+        <location filename="../../core.cpp" line="1049"/>
         <source>Changes will be saved immediately.</source>
         <translation>変更はすぐに保存されます。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1002"/>
+        <location filename="../../core.cpp" line="1070"/>
         <source>Flip horizontal</source>
         <translation>水平方向に反転</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1006"/>
+        <location filename="../../core.cpp" line="1074"/>
         <source>Flip vertical</source>
         <translation>垂直方向に反転</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1010"/>
+        <location filename="../../core.cpp" line="1079"/>
         <source>Rotate</source>
         <translation>回転</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1014"/>
+        <location filename="../../core.cpp" line="1084"/>
         <source>Resize</source>
         <translation>リサイズ</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1020"/>
-        <location filename="../../core.cpp" line="1026"/>
+        <location filename="../../core.cpp" line="1091"/>
+        <location filename="../../core.cpp" line="1097"/>
         <source>Crop</source>
         <translation>切り抜き</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1058"/>
+        <location filename="../../core.cpp" line="1128"/>
         <source>File saved</source>
         <translation>ファイルが保存されました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1061"/>
+        <location filename="../../core.cpp" line="1131"/>
         <source>Could not save file</source>
         <translation>ファイルを保存できませんでした</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1171"/>
+        <location filename="../../core.cpp" line="1250"/>
         <source>Could not open image</source>
         <translation>画像を開けませんでした</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1175"/>
+        <location filename="../../core.cpp" line="1254"/>
         <source>Can only print static images</source>
         <translation>静止画像のみ印刷できます</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1226"/>
+        <location filename="../../core.cpp" line="1308"/>
         <source>Could not open path: </source>
         <translation>パスを開けませんでした: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1260"/>
+        <location filename="../../core.cpp" line="1351"/>
         <source>Could not load folder: </source>
         <translation>フォルダを読み込めませんでした: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1413"/>
+        <location filename="../../core.cpp" line="1537"/>
         <source>End of directory.</source>
         <translation>ディレクトリの終わり。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1452"/>
+        <location filename="../../core.cpp" line="1575"/>
         <source>Load failed: </source>
         <translation>読み込みに失敗しました: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1496"/>
+        <location filename="../../core.cpp" line="1620"/>
         <source>Error: could not load image.</source>
         <translation>エラー: 画像を読み込めませんでした。</translation>
     </message>
@@ -470,6 +534,14 @@
     </message>
 </context>
 <context>
+    <name>FolderGridView</name>
+    <message>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="465"/>
+        <source>Move to trash</source>
+        <translation>ゴミ箱に移動</translation>
+    </message>
+</context>
+<context>
     <name>FolderView</name>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="17"/>
@@ -584,35 +656,35 @@
 <context>
     <name>MW</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="565"/>
+        <location filename="../../gui/mainwindow.cpp" line="595"/>
         <source>Save File as...</source>
         <translation>名前を付けてファイルを保存</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="800"/>
+        <location filename="../../gui/mainwindow.cpp" line="830"/>
         <source>Folder view</source>
         <translation>フォルダービュー</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="801"/>
-        <location filename="../../gui/mainwindow.cpp" line="802"/>
-        <location filename="../../gui/mainwindow.cpp" line="805"/>
-        <location filename="../../gui/mainwindow.cpp" line="806"/>
+        <location filename="../../gui/mainwindow.cpp" line="831"/>
+        <location filename="../../gui/mainwindow.cpp" line="832"/>
+        <location filename="../../gui/mainwindow.cpp" line="835"/>
+        <location filename="../../gui/mainwindow.cpp" line="836"/>
         <source>No file opened.</source>
         <translation>ファイルが開かれていません。</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="867"/>
+        <location filename="../../gui/mainwindow.cpp" line="899"/>
         <source>Fit Window</source>
         <translation>ウィンドウに合わせる</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="871"/>
+        <location filename="../../gui/mainwindow.cpp" line="903"/>
         <source>Fit Width</source>
         <translation>幅に合わせる</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="875"/>
+        <location filename="../../gui/mainwindow.cpp" line="907"/>
         <source>Fit 1:1</source>
         <translation>1:1表示</translation>
     </message>
@@ -713,109 +785,109 @@
         <translation>拡張 + フォルダー</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="218"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="248"/>
         <source>Make</source>
         <translation>メーカー</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="222"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="252"/>
         <source>Model</source>
         <translation>モデル</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="226"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="256"/>
         <source>Date/Time</source>
         <translation>日時</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="233"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="236"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="263"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="266"/>
         <source>ExposureTime</source>
         <translation>露出時間</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="233"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="236"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="263"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="266"/>
         <source> sec</source>
         <translation> 秒</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="244"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="274"/>
         <source>F Number</source>
         <translation>F値</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="249"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="279"/>
         <source>ISO Speed ratings</source>
         <translation>ISOスピードレート</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="253"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="283"/>
         <source>Flash</source>
         <translation>フラッシュ</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="259"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="289"/>
         <source>Focal Length</source>
         <translation>焦点距離</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="259"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="289"/>
         <source> mm</source>
         <translation> mm</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="268"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="298"/>
         <source>UserComment</source>
         <translation>ユーザーコメント</translation>
     </message>
     <message>
-        <location filename="../../utils/fileoperations.cpp" line="43"/>
+        <location filename="../../utils/fileoperations.cpp" line="41"/>
         <source>Operation completed succesfully.</source>
         <translation>操作は正常に完了しました。</translation>
     </message>
     <message>
-        <location filename="../../utils/fileoperations.cpp" line="45"/>
+        <location filename="../../utils/fileoperations.cpp" line="43"/>
         <source>Destination file exists.</source>
         <translation>宛先ファイルは存在します。</translation>
     </message>
     <message>
-        <location filename="../../utils/fileoperations.cpp" line="47"/>
+        <location filename="../../utils/fileoperations.cpp" line="45"/>
         <source>Destination directory exists.</source>
         <translation>宛先ディレクトリは存在します。</translation>
     </message>
     <message>
-        <location filename="../../utils/fileoperations.cpp" line="49"/>
+        <location filename="../../utils/fileoperations.cpp" line="47"/>
         <source>Source file is not writable.</source>
         <translation>ソースファイルは書き込み可能ではありません。</translation>
     </message>
     <message>
-        <location filename="../../utils/fileoperations.cpp" line="51"/>
+        <location filename="../../utils/fileoperations.cpp" line="49"/>
         <source>Destination is not writable.</source>
         <translation>宛先は書き込み可能ではありません。</translation>
     </message>
     <message>
-        <location filename="../../utils/fileoperations.cpp" line="53"/>
+        <location filename="../../utils/fileoperations.cpp" line="51"/>
         <source>Source file does not exist.</source>
         <translation>ソースファイルが存在しません。</translation>
     </message>
     <message>
-        <location filename="../../utils/fileoperations.cpp" line="55"/>
+        <location filename="../../utils/fileoperations.cpp" line="53"/>
         <source>Destination does not exist.</source>
         <translation>宛先が存在しません。</translation>
     </message>
     <message>
-        <location filename="../../utils/fileoperations.cpp" line="57"/>
+        <location filename="../../utils/fileoperations.cpp" line="55"/>
         <source>Directory is not empty.</source>
         <translation>ディレクトリは空ではありません。</translation>
     </message>
     <message>
-        <location filename="../../utils/fileoperations.cpp" line="59"/>
+        <location filename="../../utils/fileoperations.cpp" line="57"/>
         <source>Nothing to do.</source>
         <translation>何もすることがありません。</translation>
     </message>
     <message>
-        <location filename="../../utils/fileoperations.cpp" line="61"/>
+        <location filename="../../utils/fileoperations.cpp" line="59"/>
         <source>Other error.</source>
         <translation>その他のエラー。</translation>
     </message>
@@ -1231,12 +1303,14 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="864"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2240"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2157"/>
         <source>xx</source>
         <translation>xx</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="962"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3405"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="79"/>
         <source>Thumbnail panel</source>
         <translation>サムネイルパネル</translation>
     </message>
@@ -1261,612 +1335,669 @@
         <translation>選択した画像を中央に配置</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1109"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1064"/>
+        <source>Show subfolders</source>
+        <translation>サブフォルダを表示</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1116"/>
         <source>Extended</source>
         <translation>拡張</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1119"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1126"/>
         <source>Previews only</source>
         <translation>プレビューのみ</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1126"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1133"/>
         <source>Display style:</source>
         <translation>表示スタイル:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1139"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1146"/>
         <source>Show filename and resolution</source>
         <translation>ファイル名と解像度を表示</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1159"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1166"/>
         <source>Simple</source>
         <translation>シンプル</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1183"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1190"/>
         <source>Preview size:</source>
         <translation>プレビューサイズ:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1258"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1265"/>
         <source>Position:</source>
         <translation>位置:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1266"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2064"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1273"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1981"/>
         <source>Top</source>
         <translation>上</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1271"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1278"/>
         <source>Bottom</source>
         <translation>下</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1276"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1283"/>
         <source>Left</source>
         <translation>左</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1281"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1288"/>
         <source>Right</source>
         <translation>右</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1374"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1381"/>
         <source>Folder navigation</source>
         <translation>フォルダーナビゲーション</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1400"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1407"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1410"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1417"/>
         <source>Loop folder</source>
         <translation>フォルダーをループ</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1417"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1424"/>
         <source>Go to the next folder</source>
         <translation>次のフォルダーへ</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1424"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1431"/>
         <source>After reaching the end:</source>
         <translation>最後の画像に達した後:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1476"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1483"/>
         <source>Default sorting mode:</source>
         <translation>デフォルトの並べ替えモード:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1493"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1500"/>
         <source>A - Z</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1498"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1505"/>
         <source>Z - A</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1503"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1510"/>
         <source>Size</source>
         <translation>サイズ</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1508"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1515"/>
         <source>Size (desc)</source>
         <translation>サイズ (降順)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1513"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1520"/>
         <source>Oldest</source>
         <translation>古い順</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1518"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1525"/>
         <source>Newest</source>
         <translation>新しい順</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1541"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1548"/>
         <source>Apply sorting to folders</source>
         <translation>フォルダーに並べ替えを適用</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1609"/>
         <source>Video playback</source>
-        <translation>ビデオ再生</translation>
+        <translation type="vanished">ビデオ再生</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1651"/>
         <source>Play sounds</source>
-        <translation>サウンドを再生</translation>
+        <translation type="vanished">サウンドを再生</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1720"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1562"/>
+        <source>Show hidden files</source>
+        <translation>隠しファイルを表示</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1630"/>
         <source>Slideshow</source>
         <translation>スライドショー</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1740"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1650"/>
         <source>Switch interval:</source>
         <translation>切り替え間隔:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1771"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1681"/>
         <source>ms</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1803"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1713"/>
         <source>Loop slideshow</source>
         <translation>スライドショーをループ</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1900"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1810"/>
         <source>View</source>
         <translation>表示</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1956"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1866"/>
         <source>Display options</source>
         <translation>表示オプション</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1980"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1890"/>
         <source>Image fit:</source>
         <translation>画像のフィット:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1987"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1897"/>
         <source>Fit in window</source>
         <translation>ウィンドウに合わせる</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1997"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1907"/>
         <source>Stretch to width</source>
         <translation>幅に合わせる</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2004"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1914"/>
         <source>1:1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2026"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1921"/>
+        <source>Fit in window (stretch)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1943"/>
         <source>Keep fit mode when switching images</source>
         <translation>画像切り替え時にフィットモードを維持</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2057"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1974"/>
         <source>Focus in 1:1 mode:</source>
         <translation>1:1モードでのフォーカス:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2071"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1988"/>
         <source>Center</source>
         <translation>中央</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2078"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1995"/>
         <source>At cursor</source>
         <translation>カーソル位置</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2103"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2020"/>
         <source>Part of image that&apos;s focused after switching to 1:1</source>
         <translation>1:1表示に切り替えた際の焦点部分</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2126"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2043"/>
         <source>Grid background on images with transparency</source>
         <translation>透明な画像にグリッド背景を表示</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2163"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2080"/>
         <source>Expand images, up to:</source>
         <translation>画像を拡大、最大:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2271"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2188"/>
         <source>Images smaller than window will be zoomed in</source>
         <translation>ウィンドウより小さい画像は拡大表示されます</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2323"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2240"/>
         <source>Zoom options</source>
         <translation>ズームオプション</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2330"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2247"/>
         <source>Unlock minimum zoom</source>
         <translation>最小ズームを解除</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2340"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2257"/>
         <source>Always allow zooming below 100%</source>
         <translation>常に100%未満のズームを許可</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2365"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2282"/>
         <source>Zoom step:</source>
         <translation>ズームステップ:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2433"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2350"/>
         <source>[step]</source>
         <translation>[ステップ]</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2462"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2379"/>
         <source>Use fixed zoom levels:</source>
         <translation>固定ズームレベルを使用:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2506"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2423"/>
         <source>Load defaults</source>
         <translation>デフォルトを読み込む</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2574"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2491"/>
         <source>Scaling quality</source>
         <translation>スケーリング品質</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2601"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2518"/>
         <source>Scaling filter:</source>
         <translation>スケーリングフィルター:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2633"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2550"/>
         <source>Nearest neighbor</source>
         <translation>最近傍補間</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2638"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2555"/>
         <source>Bilinear</source>
         <translation>バイリニア</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2680"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2597"/>
         <source>When unchecked, nearest neighbor algorithm will be used for upscaling.</source>
         <translation>チェックを外すと、アップスケーリングに最近傍補間が使用されます。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2683"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2600"/>
         <source>Smooth upscaling</source>
         <translation>スムーズなアップスケーリング</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2702"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2619"/>
         <source>Smooth animated images</source>
         <translation>アニメーション画像をスムーズにする</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2781"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2698"/>
         <source>Theme</source>
         <translation>テーマ</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2840"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2757"/>
         <source>Load preset:</source>
         <translation>プリセットを読み込む:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2853"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2857"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2770"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2774"/>
         <source>Black</source>
         <translation>黒</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2862"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2779"/>
         <source>Dark</source>
         <translation>ダーク</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2867"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2784"/>
         <source>Dark Blue</source>
         <translation>ダークブルー</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2872"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2789"/>
         <source>Light</source>
         <translation>ライト</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2896"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2813"/>
         <source>Use system colors</source>
         <translation>システムカラーを使用</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2906"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2823"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;modify&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;変更&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3132"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3049"/>
         <source>Accent</source>
         <translation>アクセント</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3139"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3056"/>
         <source>Background</source>
         <translation>背景</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3146"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3063"/>
         <source>Background (fullscreen mode)</source>
         <translation>背景 (フルスクリーンモード)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3184"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3101"/>
         <source>Text</source>
         <translation>テキスト</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3191"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3108"/>
         <source>Icons</source>
         <translation>アイコン</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3291"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="62"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3208"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="76"/>
         <source>Overlay background</source>
         <translation>オーバーレイ背景</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3329"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="60"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3246"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="74"/>
         <source>Widget background</source>
         <translation>ウィジェットの背景</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3336"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3253"/>
         <source>Folder view top panel</source>
         <translation>フォルダービューのトップパネル</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3343"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="61"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3260"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="75"/>
         <source>Widget border</source>
         <translation>ウィジェットの境界線</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3412"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="63"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3329"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="77"/>
         <source>Overlay text</source>
         <translation>オーバーレイテキスト</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3450"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="64"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3367"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="78"/>
         <source>Scrollbars</source>
         <translation>スクロールバー</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3457"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3412"/>
         <source>Folder view background</source>
         <translation>フォルダービューの背景</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3528"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3483"/>
         <source>Other window tweaks</source>
         <translation>その他のウィンドウの調整</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3543"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3498"/>
         <source>Window opacity:</source>
         <translation>ウィンドウの不透明度:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3596"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3551"/>
         <source>%</source>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3621"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3576"/>
         <source>Background blur (KDE)</source>
         <translation>背景のぼかし (KDE)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3673"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3628"/>
         <source>Controls</source>
         <translation>コントロール</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3734"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4073"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3689"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4134"/>
         <source>Add</source>
         <translation>追加</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3741"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4080"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3696"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4141"/>
         <source>Edit</source>
         <translation>編集</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3754"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4087"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3709"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4148"/>
         <source>Remove</source>
         <translation>削除</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3783"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3738"/>
         <source>Reset to defaults</source>
         <translation>デフォルトにリセット</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3817"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3772"/>
         <source>Action</source>
         <translation>アクション</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3822"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3777"/>
         <source>Shortcut</source>
         <translation>ショートカット</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3874"/>
-        <source>Mouse &amp; touchpad</source>
-        <translation>マウスとタッチパッド</translation>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3832"/>
+        <source>Switch image by clicking window edges</source>
+        <translation>ウィンドウの端をクリックして画像を切り替える</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3895"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3839"/>
+        <source>Visible edges</source>
+        <translation>表示される端</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4759"/>
+        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;This is a fast and easy to use image viewer&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Github page:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/hadoooooouken/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Main developer:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; easymodo (easymodofrf@gmail.com)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv/graphs/contributors&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;Contributors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;OpenCV enabled builds use &lt;/span&gt;&lt;a href=&quot;https://github.com/dbzhang800/QtOpenCV&quot;&gt;&lt;span style=&quot; font-family:&apos;Ubuntu&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;QtOpenCV&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt; by dbzhang800&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;qimgv is licensed under &lt;/span&gt;&lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.en.html&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;GNU GPL Version 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Report any issues / request features &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;qimgv のライセンスは &lt;/span&gt;&lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.en.html&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;GNU GPL バージョン 3 です&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;バグ報告や機能の要望は &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;こちら&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>Mouse &amp; touchpad</source>
+        <translation type="vanished">マウスとタッチパッド</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3869"/>
         <source>Scroll image with:</source>
         <translation>画像スクロール:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3903"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3877"/>
         <source>None</source>
         <translation>なし</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3908"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3882"/>
         <source>Touchpad</source>
         <translation>タッチパッド</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3913"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3887"/>
         <source>Touchpad &amp; Mouse Wheel</source>
         <translation>タッチパッドとマウスホイール</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3939"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3913"/>
         <source>Note: you can also zoom by holding RMB and moving the mouse</source>
         <translation>注意: 右クリックを押しながらマウスを動かすことでもズームできます</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3953"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3941"/>
+        <source>Mouse scrolling speed:</source>
+        <translation>マウスのスクロール速度:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3985"/>
+        <source>[x]</source>
+        <translation>[x]</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4014"/>
         <source>Trackpad detection</source>
         <translation>トラックパッドの検出</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3963"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4024"/>
         <source>Disable if you have issues with mouse scrolling</source>
         <translation>マウススクロールに問題がある場合は無効にしてください</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3995"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4056"/>
         <source>Scripts</source>
         <translation>スクリプト</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4051"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4112"/>
         <source>Note: these will appear in &quot;Open with&quot; menu.</source>
         <translation type="unfinished">注意: これらは「スクリプト/アプリで開く」メニューに表示されます。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4061"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4122"/>
         <source>Also, you can assign shortcuts to scripts (in &quot;Controls&quot; section).</source>
         <translation>また、「コントロール」セクションでスクリプトにショートカットを割り当てることもできます。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4170"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4231"/>
         <source>Advanced</source>
         <translation>詳細</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4227"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4288"/>
         <source>Preload the next/previous image. Results in a much faster image switching (at the expense of wasting more RAM).</source>
         <translation>次/前の画像をプリロードします。これにより、画像の切り替えが大幅に高速化されます（RAMをより多く消費します）。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4230"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4291"/>
         <source>Use preloader (recommended)</source>
         <translation>プリローダーを使用する（推奨）</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4240"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4301"/>
         <source>Load adjacent images in background</source>
         <translation>隣接する画像をバックグラウンドで読み込む</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4268"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4329"/>
         <source>Thumbnailer thread count:</source>
         <translation>サムネイル生成のスレッド数:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4306"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4367"/>
         <source>2</source>
         <translation>2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4337"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4398"/>
         <source>Use thumbnail cache (recommended)</source>
         <translation>サムネイルキャッシュを使用する（推奨）</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4344"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4405"/>
         <source>Unload off-screen thumbnails</source>
         <translation>画面外のサムネイルをアンロードする</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4354"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4415"/>
         <source>Dynamically unload items to save memory</source>
         <translation>メモリを節約するために動的にアイテムをアンロードする</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4368"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4429"/>
         <source>Show save overlay when editing images</source>
         <translation>画像編集中に保存オーバーレイを表示</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4383"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4444"/>
         <source>JPEG save quality:</source>
         <translation>JPEG保存品質:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4427"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4488"/>
         <source>q</source>
         <translation>q</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4456"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4517"/>
         <source>Confirm moving to trash</source>
         <translation>ゴミ箱への移動を確認</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4468"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4529"/>
         <source>Confirm file delete (!)</source>
         <translation>ファイルの削除を確認 (!)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4482"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4543"/>
         <source>JXL animation support (experimental)</source>
         <translation>JXLアニメーションサポート（実験的）</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4510"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4557"/>
+        <source>Allow multiple instances</source>
+        <translation>複数プロセスの起動を許可</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4586"/>
         <source>Memory allocation limit per image, MB:</source>
         <translation>画像あたりのメモリ割り当て制限（MB）:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4571"/>
         <source>Mpv binary:</source>
-        <translation>Mpvバイナリ:</translation>
+        <translation type="vanished">Mpvバイナリ:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4612"/>
         <source>...</source>
-        <translation>...</translation>
+        <translation type="vanished">...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4706"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4708"/>
         <source>About qimgv</source>
         <translation>qimgvについて</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4757"/>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
@@ -1876,16 +2007,16 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;This is a fast and easy to use image viewer&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Features video support via libmpv&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Github page:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/easymodo/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Github page:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/hadoooooouken/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Main developer:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; easymodo (easymodofrf@gmail.com)&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv/graphs/contributors&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;Contributors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv/graphs/contributors&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;Contributors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;OpenCV enabled builds use &lt;/span&gt;&lt;a href=&quot;https://github.com/dbzhang800/QtOpenCV&quot;&gt;&lt;span style=&quot; font-family:&apos;Ubuntu&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;QtOpenCV&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt; by dbzhang800&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;qimgv is licensed under &lt;/span&gt;&lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.en.html&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;GNU GPL Version 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Report any issues / request features &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Report any issues / request features &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="vanished">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 hr { height: 1px; border-width: 0; }
@@ -1894,75 +2025,74 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;これは高速で使いやすい画像ビューアです&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;libmpvによるビデオサポート機能&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Githubページ:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/easymodo/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Githubページ:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/hadoooooouken/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;メイン開発者:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; easymodo (easymodofrf@gmail.com)&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv/graphs/contributors&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;貢献者&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv/graphs/contributors&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;貢献者&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;OpenCV対応ビルドは&lt;/span&gt;&lt;a href=&quot;https://github.com/dbzhang800/QtOpenCV&quot;&gt;&lt;span style=&quot; font-family:&apos;Ubuntu&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;QtOpenCV&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt; by dbzhang800を使用しています&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;qimgvは&lt;/span&gt;&lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.en.html&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;GNU GPL Version 3&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;でライセンスされています&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;問題の報告や機能のリクエストは&lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;こちら&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;問題の報告や機能のリクエストは&lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;こちら&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4850"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4851"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4857"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4858"/>
         <source>Apply</source>
         <translation>適用</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4864"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4865"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="9"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="7"/>
         <source>Preferences — </source>
         <translation>設定 — </translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="54"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="68"/>
         <source>Accent color</source>
         <translation>アクセントカラー</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="55"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="69"/>
         <source>Windowed mode background</source>
         <translation>ウィンドウモードの背景</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="56"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="70"/>
         <source>Fullscreen mode background</source>
         <translation>フルスクリーンモードの背景</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="57"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="71"/>
         <source>FolderView background</source>
         <translation>フォルダービューの背景</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="58"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="72"/>
         <source>FolderView top panel</source>
         <translation>フォルダービューのトップパネル</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="59"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="73"/>
         <source>Text color</source>
         <translation>テキストの色</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="569"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="657"/>
         <source>Edit shortcut</source>
         <translation>ショートカットを編集</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="620"/>
         <source>Navigate to mpv binary</source>
-        <translation>mpvバイナリに移動</translation>
+        <translation type="vanished">mpvバイナリに移動</translation>
     </message>
 </context>
 <context>
@@ -1996,32 +2126,32 @@ li.checked::marker { content: &quot;\2612&quot;; }
 <context>
     <name>main</name>
     <message>
-        <location filename="../../main.cpp" line="133"/>
+        <location filename="../../main.cpp" line="102"/>
         <source>File or directory path.</source>
         <translation>ファイルまたはディレクトリのパス。</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="136"/>
+        <location filename="../../main.cpp" line="105"/>
         <source>Generate all thumbnails for directory.</source>
         <translation>ディレクトリのすべてのサムネイルを生成します。</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="137"/>
+        <location filename="../../main.cpp" line="107"/>
         <source>directory-path</source>
         <translation>ディレクトリパス</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="139"/>
+        <location filename="../../main.cpp" line="109"/>
         <source>Thumbnail size. Current size is used if not specified.</source>
         <translation>サムネイルサイズ。指定しない場合は現在のサイズが使用されます。</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="140"/>
+        <location filename="../../main.cpp" line="111"/>
         <source>thumbnail-size</source>
         <translation>サムネイルサイズ</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="142"/>
+        <location filename="../../main.cpp" line="113"/>
         <source>Show build options.</source>
         <translation>ビルドオプションを表示します。</translation>
     </message>

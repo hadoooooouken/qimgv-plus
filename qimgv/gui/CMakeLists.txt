@@ -1,6 +1,6 @@
 ## SOURCES FOR QIMGV GUI
 
-target_sources(qimgv PRIVATE
+target_sources(qimgv-plus PRIVATE
     centralwidget.cpp
     contextmenu.cpp
     flowlayout.cpp
@@ -23,7 +23,6 @@ target_sources(qimgv PRIVATE
     customwidgets/spinboxinputfix.cpp
     customwidgets/thumbnailview.cpp
     customwidgets/thumbnailwidget.cpp
-    customwidgets/videoslider.cpp
     customwidgets/pushbuttonfocusind.cpp
     customwidgets/styledcombobox.cpp
     customwidgets/colorselectorbutton.cpp
@@ -48,11 +47,11 @@ target_sources(qimgv PRIVATE
     overlays/fullscreeninfooverlayproxy.cpp
     overlays/imageinfooverlay.cpp
     overlays/imageinfooverlayproxy.cpp
+    overlays/coloradjustmentsoverlay.cpp
+    overlays/coloradjustmentsoverlayproxy.cpp
     overlays/mapoverlay.cpp
     overlays/renameoverlay.cpp
     overlays/saveconfirmoverlay.cpp
-    overlays/videocontrols.cpp
-    overlays/videocontrolsproxy.cpp
     overlays/zoomindicatoroverlay.cpp
     overlays/zoomindicatoroverlayproxy.cpp
 
@@ -66,9 +65,8 @@ target_sources(qimgv PRIVATE
     panels/infobar/infobarproxy.cpp
 
     viewers/documentwidget.cpp
+    viewers/filterpixmapitem.cpp
     viewers/imageviewerv2.cpp
-    viewers/videoplayer.cpp
-    viewers/videoplayerinitproxy.cpp
     viewers/viewerwidget.cpp
 
     folderview/foldergridview.cpp
@@ -83,7 +81,7 @@ target_sources(qimgv PRIVATE
 
 # UI Files
 
-target_sources(qimgv PRIVATE
+target_sources(qimgv-plus PRIVATE
     contextmenu.ui
 
     dialogs/filereplacedialog.ui
@@ -98,9 +96,9 @@ target_sources(qimgv PRIVATE
     overlays/floatingmessage.ui
     overlays/fullscreeninfooverlay.ui
     overlays/imageinfooverlay.ui
+    overlays/coloradjustmentsoverlay.ui
     overlays/renameoverlay.ui
     overlays/saveconfirmoverlay.ui
-    overlays/videocontrols.ui
 
     panels/croppanel/croppanel.ui
     panels/sidepanel/sidepanel.ui

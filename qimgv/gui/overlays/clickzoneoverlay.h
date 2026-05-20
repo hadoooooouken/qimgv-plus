@@ -27,6 +27,9 @@ public:
     bool isHighlighted();
     void setPressed(bool mode);
 
+private slots:
+    void onAnimationFinished();
+
 public slots:
     void readSettings();
 
@@ -41,6 +44,8 @@ private:
     bool leftHovered = false, rightHovered = false;
     bool drawZones = true;
     ActiveHighlightZone activeZone = HIGHLIGHT_NONE;
+    QGraphicsOpacityEffect *fadeEffect;
+    QPropertyAnimation *fadeAnimation;
     void drawPixmap(QPainter &p, QPixmap *pixmap, QRect rect);
 
 protected:

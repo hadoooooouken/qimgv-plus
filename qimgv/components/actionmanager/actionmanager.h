@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <QObject>
 #include <QKeyEvent>
@@ -91,11 +91,6 @@ signals:
     void folderView();
     void documentView();
     void runScript(const QString&);
-    void pauseVideo();
-    void seekVideoForward();
-    void seekVideoBackward();
-    void frameStep();
-    void frameStepBack();
     void toggleFolderView();
     void moveToTrash();
     void reloadImage();
@@ -111,9 +106,6 @@ signals:
     void toggleShuffle();
     void toggleScalingFilter();
     void showInDirectory();
-    void toggleMute();
-    void volumeUp();
-    void volumeDown();
     void toggleSlideshow();
     void discardEdits();
     void goUp();
@@ -124,6 +116,8 @@ signals:
     void print();
     void toggleFullscreenInfoBar();
     void pasteFile();
+    void togglePanorama();
+    void colorAdjustments();
 };
 
 extern ActionManager *actionManager;

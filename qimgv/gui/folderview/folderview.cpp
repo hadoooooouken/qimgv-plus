@@ -24,13 +24,7 @@ FolderView::FolderView(QWidget *parent) :
     header->hideSection(2); // type
     header->hideSection(3); // mod date
 
-#ifdef _WIN32
     dirModel->setRootPath("");
-#else
-    dirModel->setRootPath(QDir::homePath());
-    QModelIndex idx = dirModel->index(dirModel->rootPath());
-    ui->dirTreeView->setRootIndex(idx);
-#endif
     // -------------------------------
     ui->upButton->setAction("goUp");
     ui->upButton->setIconPath(":res/icons/common/buttons/panel/up16.png");
@@ -72,6 +66,8 @@ FolderView::FolderView(QWidget *parent) :
     connect(ui->thumbnailGrid, &FolderGridView::draggedOut,      this, &FolderView::draggedOut);
     connect(ui->thumbnailGrid, &FolderGridView::draggedOver,     this, &FolderView::draggedOver);
     connect(ui->thumbnailGrid, &FolderGridView::droppedInto,     this, &FolderView::droppedInto);
+    connect(ui->thumbnailGrid, &FolderGridView::backRequested,    this, &FolderView::backRequested);
+    connect(ui->thumbnailGrid, &FolderGridView::forwardRequested, this, &FolderView::forwardRequested);
 
     connect(ui->bookmarksWidget, &BookmarksWidget::bookmarkClicked, this, &FolderView::onBookmarkClicked);
 
@@ -273,19 +269,6 @@ void FolderView::onRootBtn() {
 }
 
 void FolderView::setDirectoryPath(QString path) {
-#ifdef __linux
-    if(path.startsWith(QDir::homePath())) {
-        if(dirModel->rootPath() != QDir::homePath()) {
-            dirModel->setRootPath(QDir::homePath());
-            QModelIndex idx = dirModel->index(dirModel->rootPath());
-            ui->dirTreeView->setRootIndex(idx);
-        }
-    } else {
-        dirModel->setRootPath("/");
-        QModelIndex idx = dirModel->index(dirModel->rootPath());
-        ui->dirTreeView->setRootIndex(idx);
-    }
-#endif
     ui->pathLabel->setText(path);
 
     if(ui->dirTreeView->currentIndex().data() == path)

@@ -24,6 +24,7 @@ struct BaseColorScheme {
     QColor accent;
     QColor folderview;
     QColor folderview_topbar;
+    QColor thumbpanel;
     QColor scrollbar;
     QColor overlay_text;
     QColor overlay;
@@ -46,6 +47,7 @@ public:
     QColor accent;
     QColor folderview;
     QColor folderview_topbar;
+    QColor thumbpanel;
     QColor scrollbar;
     QColor scrollbar_hover;
     QColor overlay_text;
@@ -63,6 +65,9 @@ public:
     QColor panel_button_pressed;
     QColor folderview_hc;
     QColor folderview_hc2;
+    QColor thumbpanel_hc;
+    QColor thumbpanel_hc2;
+    QColor thumbpanel_text;
     QColor folderview_button_hover;
     QColor folderview_button_pressed;
     QColor input_field_focus;

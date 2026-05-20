@@ -78,9 +78,24 @@ void Scaler::requestScaled(ScalerRequest req) {
     sem->release(1);
 }
 
+void Scaler::clear() {
+    sem->acquire(1);
+    if(buffered) {
+        if(!running || bufferedRequest.image != startedRequest.image) {
+            cache->release(bufferedRequest.image->fileName());
+        }
+        buffered = false;
+        bufferedRequest = ScalerRequest();
+    }
+    mCleared = true;
+    sem->release(1);
+}
+
+
 void Scaler::onTaskStart(ScalerRequest req) {
     sem->acquire(1);
     running = true;
+    mCleared = false;
     // clear buffered flag if there were no requests after us
     if(buffered && bufferedRequest == req) {
         buffered = false;
@@ -93,6 +108,14 @@ void Scaler::onTaskStart(ScalerRequest req) {
 void Scaler::onTaskFinish(QImage *scaled, ScalerRequest req) {
     sem->acquire(1);
     running = false;
+    if(mCleared) {
+        if(scaled) delete scaled;
+        QString name = req.image->fileName();
+        cache->release(req.image->fileName());
+        mCleared = false;
+        sem->release(1);
+        return;
+    }
     if(buffered && bufferedRequest.image == req.image) {
     } else {
       //qDebug() << "onTaskFinish() - 2 releasing..  " <<  req.image->name();
@@ -102,7 +125,7 @@ void Scaler::onTaskFinish(QImage *scaled, ScalerRequest req) {
     }
     if(buffered) {
       //qDebug() << "onTaskFinish - startingBuffered: " << bufferedRequest.string;
-        delete scaled;
+        if(scaled) delete scaled;
         //startRequest(bufferedRequest);
         emit startBufferedRequest();
         sem->release(1);

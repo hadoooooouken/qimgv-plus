@@ -1,6 +1,6 @@
 ## SOURCES FOR QIMGV UTILITY CLASSES
 
-target_sources(qimgv PRIVATE
+target_sources(qimgv-plus PRIVATE
     actions.cpp
     cmdoptionsrunner.cpp
     imagefactory.cpp
@@ -12,4 +12,9 @@ target_sources(qimgv PRIVATE
     stuff.cpp
     wallpapersetter.cpp
     fileoperations.cpp
+)
+
+target_sources(qimgv-plus PRIVATE
+    ../gui/viewers/panoramagraphicsitem.cpp
+    ../gui/viewers/panoramagraphicsitem.h
 )

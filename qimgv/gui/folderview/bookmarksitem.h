@@ -30,7 +30,7 @@ signals:
 protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
-
+    void mouseMoveEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
     void dropEvent(QDropEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *event) override;
@@ -48,6 +48,7 @@ private:
     QSpacerItem *spacer;
     QHBoxLayout layout;
     bool mHighlighted;
+    QPoint dragStartPosition;
 };
 
 #endif // BOOKMARKSITEM_H

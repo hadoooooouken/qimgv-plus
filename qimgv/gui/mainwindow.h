@@ -28,6 +28,7 @@
 #include "gui/overlays/changelogwindow.h"
 #include "gui/overlays/imageinfooverlayproxy.h"
 #include "gui/overlays/renameoverlay.h"
+#include "gui/overlays/coloradjustmentsoverlayproxy.h"
 #include "gui/dialogs/resizedialog.h"
 #include "gui/centralwidget.h"
 #include "gui/dialogs/filereplacedialog.h"
@@ -68,9 +69,8 @@ public:
     explicit MW(QWidget *parent = nullptr);
     bool isCropPanelActive();
     void onScalingFinished(std::unique_ptr<QPixmap>scaled);
-    void showImage(std::unique_ptr<QPixmap> pixmap);
+    void showImage(std::unique_ptr<QPixmap> pixmap, QString filePath = "");
     void showAnimation(std::shared_ptr<QMovie> movie);
-    void showVideo(QString file);
 
     void setCurrentInfo(int fileIndex, int fileCount, QString filePath, QString fileName, QSize imageSize, qint64 fileSize, bool slideshow, bool shuffle, bool edited);
     void setExifInfo(QMap<QString, QString>);
@@ -102,6 +102,7 @@ private:
     CopyOverlay *copyOverlay;
 
     RenameOverlay *renameOverlay;
+    ColorAdjustmentsOverlayProxy *colorAdjustmentsOverlay = nullptr;
 
     ImageInfoOverlayProxy *imageInfoOverlay;
 
@@ -184,20 +185,11 @@ signals:
     void scrollDown();
     void scrollLeft();
     void scrollRight();
-    void pauseVideo();
-    void stopPlayback();
-    void seekVideoForward();
-    void seekVideoBackward();
-    void frameStep();
-    void frameStepBack();
-    void toggleMute();
-    void volumeUp();
-    void volumeDown();
     void toggleTransparencyGrid();
     void droppedIn(const QMimeData*, QObject*);
     void draggedOut();
-    void setLoopPlayback(bool);
-    void playbackFinished();
+    void nextImageRequested();
+    void prevImageRequested();
 
 public slots:
     void setupFullUi();
@@ -246,6 +238,7 @@ public slots:
     void onSortingChanged(SortingMode);
     void toggleImageInfoOverlay();
     void toggleRenameOverlay(QString currentName);
+    void toggleColorAdjustments();
     void setFilterNearest();
     void setFilterBilinear();
     void setFilter(ScalingFilter filter);
@@ -254,4 +247,5 @@ public slots:
     void toggleLockZoom();
     void toggleLockView();
     void toggleFullscreenInfoBar();
+    void togglePanorama();
 };

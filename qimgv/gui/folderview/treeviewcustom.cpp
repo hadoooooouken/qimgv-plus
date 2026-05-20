@@ -17,11 +17,12 @@ TreeViewCustom::TreeViewCustom(QWidget *parent) : QTreeView(parent) {
 }
 
 void TreeViewCustom::dropEvent(QDropEvent *event) {
-    QModelIndex dropIndex = indexAt(event->pos());
+    QModelIndex dropIndex = indexAt(event->position().toPoint());
     if(dropIndex.isValid()) {
         QList<QString> paths;
         // TODO: QUrl gave me some issues previosly, test
-        for(auto url : event->mimeData()->urls())
+        const auto urls = event->mimeData()->urls();
+        for(const auto &url : urls)
             paths << url.toLocalFile();
         emit droppedIn(paths, dropIndex);
     }

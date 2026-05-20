@@ -138,13 +138,13 @@ void MainPanel::paintEvent(QPaintEvent *event) {
     QWidget::paintEvent(event);
     // borders
     QPainter p(this);
-    p.setPen(settings->colorScheme().folderview_hc);
+    p.setPen(settings->colorScheme().thumbpanel_hc2);
     switch(mPosition) {
         case PANEL_TOP:
             p.drawLine(rect().bottomLeft(), rect().bottomRight());
         break;
         case PANEL_BOTTOM:
-            p.fillRect(rect().left(), rect().top(), width(), 3, settings->colorScheme().folderview);
+            p.fillRect(rect().left(), rect().top(), width(), 3, settings->colorScheme().thumbpanel);
             p.drawLine(rect().topLeft(), rect().topRight());
         break;
         case PANEL_LEFT:

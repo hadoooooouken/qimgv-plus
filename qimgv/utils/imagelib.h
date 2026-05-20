@@ -14,6 +14,15 @@
 #include <opencv2/imgproc.hpp>
 #endif
 
+#ifdef USE_CUDA_NPP
+#include <cuda_runtime.h>
+#include <npp.h>
+#include <nppi_arithmetic_and_logical_operations.h>
+#include <nppi_geometry_transforms.h>
+#include <nppi_filtering_functions.h>
+#include <nppi_support_functions.h>
+#endif
+
 class ImageLib {
     public:
         static QImage *rotatedRaw(const QImage *src, int grad);
@@ -21,6 +30,7 @@ class ImageLib {
 
         static QImage *croppedRaw(const QImage *src, QRect newRect);
         static QImage *cropped(std::shared_ptr<const QImage> src, QRect newRect);
+        // Using global ScalingFilter from settings.h
 
         static QImage *flippedHRaw(const QImage *src);
         static QImage *flippedH(std::shared_ptr<const QImage> src);
@@ -36,6 +46,9 @@ class ImageLib {
 
 #ifdef USE_OPENCV
         static QImage *scaled_CV(std::shared_ptr<const QImage> source, QSize destSize, cv::InterpolationFlags filter, int sharpen);
+#endif
+#ifdef USE_CUDA_NPP
+        static QImage *scaled_CUDA(std::shared_ptr<const QImage> source, QSize destSize, ScalingFilter filter);
 #endif
         static std::unique_ptr<const QImage> exifRotated(std::unique_ptr<const QImage> src, int orientation);
         static std::unique_ptr<QImage> exifRotated(std::unique_ptr<QImage> src, int orientation);

@@ -43,6 +43,8 @@ public:
 public slots:
     void updateInfoString();
     bool loadPath(QString);
+    void raiseWindow();
+
 
 private:
     QElapsedTimer t;
@@ -174,5 +176,10 @@ private slots:
     void prevDirectory(bool selectLast);
     void prevDirectory();
     void print();
+    void historyBack();
+    void historyForward();
     void modelDelayLoad();
+private:
+    QStringList backHistory, forwardHistory;
+    bool blockHistory = false;
 };

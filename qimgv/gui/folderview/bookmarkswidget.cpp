@@ -1,4 +1,7 @@
 #include "bookmarkswidget.h"
+#include <QDropEvent>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
 
 BookmarksWidget::BookmarksWidget(QWidget *parent) : QWidget(parent), highlightedPath("") {
     setAcceptDrops(true);
@@ -15,7 +18,7 @@ BookmarksWidget::~BookmarksWidget() {
 
 void BookmarksWidget::readSettings() {
     QStringList _paths = settings->bookmarks();
-    for(auto path : _paths)
+    for(const auto &path : std::as_const(_paths))
         addBookmark(path);
     if(_paths.empty())
         addBookmark(QDir::homePath());
@@ -74,13 +77,40 @@ void BookmarksWidget::onPathChanged(QString path) {
 }
 
 void BookmarksWidget::dropEvent(QDropEvent *event) {
-//    QModelIndex dropIndex = indexAt(event->pos());
-//    if(dropIndex.isValid())
-//        emit droppedIn(event->mimeData()->urls(), dropIndex);
+    if(event->mimeData()->hasFormat("application/x-qimgv-bookmark")) {
+        QString path = QString::fromUtf8(event->mimeData()->data("application/x-qimgv-bookmark"));
+        int oldIndex = paths.indexOf(path);
+        if(oldIndex == -1) return;
+
+        int targetIndex = -1;
+        for(int i = 0; i < layout.count(); i++) {
+            auto w = layout.itemAt(i)->widget();
+            if(w && event->pos().y() < w->geometry().center().y()) {
+                targetIndex = i;
+                break;
+            }
+        }
+        if(targetIndex == -1) targetIndex = layout.count() - 1;
+
+        if(oldIndex != targetIndex) {
+            paths.move(oldIndex, targetIndex);
+            // Re-ordering widgets in QVBoxLayout
+            QLayoutItem *item = layout.takeAt(oldIndex);
+            layout.insertItem(targetIndex, item);
+            saveBookmarks();
+        }
+        event->acceptProposedAction();
+    }
 }
 
 void BookmarksWidget::dragEnterEvent(QDragEnterEvent *event) {
-    if(event->mimeData()->hasUrls()) {
+    if(event->mimeData()->hasUrls() || event->mimeData()->hasFormat("application/x-qimgv-bookmark")) {
+        event->acceptProposedAction();
+    }
+}
+
+void BookmarksWidget::dragMoveEvent(QDragMoveEvent *event) {
+    if(event->mimeData()->hasUrls() || event->mimeData()->hasFormat("application/x-qimgv-bookmark")) {
         event->acceptProposedAction();
     }
 }

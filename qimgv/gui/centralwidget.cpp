@@ -22,7 +22,6 @@ void CentralWidget::showDocumentView() {
     mode = MODE_DOCUMENT;
     setCurrentIndex(0);
     widget(0)->setFocus();
-    documentView->viewWidget()->startPlayback();
 }
 
 void CentralWidget::showFolderView() {
@@ -33,7 +32,6 @@ void CentralWidget::showFolderView() {
     setCurrentIndex(1);
     widget(1)->show();
     widget(1)->setFocus();
-    documentView->viewWidget()->stopPlayback();
 }
 
 void CentralWidget::toggleViewMode() {

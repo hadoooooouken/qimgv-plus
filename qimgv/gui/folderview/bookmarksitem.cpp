@@ -1,4 +1,6 @@
 #include "bookmarksitem.h"
+#include <QDrag>
+#include <QApplication>
 
 BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent)
     : QWidget(parent), dirName(_dirName), dirPath(_dirPath), mHighlighted(false)
@@ -53,7 +55,25 @@ void BookmarksItem::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void BookmarksItem::mousePressEvent(QMouseEvent *event) {
+    if(event->button() == Qt::LeftButton)
+        dragStartPosition = event->pos();
     event->accept();
+}
+
+void BookmarksItem::mouseMoveEvent(QMouseEvent *event) {
+    if (!(event->buttons() & Qt::LeftButton))
+        return;
+    if ((event->pos() - dragStartPosition).manhattanLength()
+         < QApplication::startDragDistance())
+        return;
+
+    QDrag *drag = new QDrag(this);
+    QMimeData *mimeData = new QMimeData;
+
+    mimeData->setData("application/x-qimgv-bookmark", dirPath.toUtf8());
+    drag->setMimeData(mimeData);
+
+    drag->exec(Qt::MoveAction);
 }
 
 void BookmarksItem::onRemoveClicked() {
@@ -71,7 +91,8 @@ void BookmarksItem::paintEvent(QPaintEvent *event) {
 void BookmarksItem::dropEvent(QDropEvent *event) {
     QList<QString> paths;
     // TODO: QUrl gave me some issues previosly, test
-    for(auto url : event->mimeData()->urls())
+    const auto urls = event->mimeData()->urls();
+    for(const auto &url : urls)
         paths << url.toLocalFile();
     emit droppedIn(paths, dirPath);
 }
@@ -79,6 +100,9 @@ void BookmarksItem::dropEvent(QDropEvent *event) {
 void BookmarksItem::dragEnterEvent(QDragEnterEvent *event) {
     if(event->mimeData()->hasUrls()) {
         event->acceptProposedAction();
+    } else {
+        event->ignore();
+        return;
     }
     setProperty("hover", true);
     update();

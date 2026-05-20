@@ -24,7 +24,7 @@ void CmdOptionsRunner::generateThumbs(QString dirPath, int size) {
     qDebug() << "Size limit:" << size << "x" << size << "px";
     qDebug() << "Generating thumbnails...";
 
-    for(auto path : list)
+    for(const auto &path : std::as_const(list))
         th.getThumbnailAsync(path, size, false, false);
 
     th.waitForDone();
@@ -34,9 +34,6 @@ void CmdOptionsRunner::generateThumbs(QString dirPath, int size) {
 
 void CmdOptionsRunner::showBuildOptions() {
     QStringList features;
-#ifdef USE_MPV
-    features << "USE_MPV";
-#endif
 #ifdef USE_EXIV2
     features << "USE_EXIV2";
 #endif

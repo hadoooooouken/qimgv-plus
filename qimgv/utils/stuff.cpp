@@ -6,29 +6,13 @@ int clamp(int x, int lower, int upper) {
 
 // 0 - mac, 1 - linux, 2 - windows, 3 - other
 int probeOS() {
-#ifdef TARGET_OS_MAC
-    return 0;
-#elif defined(__linux__) || defined(__FreeBSD__)
-    return 1;
-#elif defined _WIN32 || defined _WIN64
     return 2;
-#else
-    return 3;
-#endif
 }
 
 StdString toStdString(QString str) {
-#ifdef _WIN32
     return str.toStdWString();
-#else
-    return str.toStdString();
-#endif
 }
 
 QString fromStdString(StdString str) {
-#ifdef _WIN32
     return QString::fromStdWString(str);
-#else
-    return QString::fromStdString(str);
-#endif
 }

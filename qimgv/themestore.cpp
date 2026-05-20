@@ -10,6 +10,7 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
             base.widget = p.window().color();
             base.widget_border = p.window().color();
             base.folderview = p.base().color();
+            base.thumbpanel = p.base().color();
             base.text = p.text().color();
             base.icons = p.text().color();
             base.accent = p.highlight().color();
@@ -19,63 +20,67 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
             base.tid = static_cast<int>(name);
             break;
         case COLORS_LIGHT: // v2, works with w10 titlebars
-            base.accent = "#719ccd";
-            base.background = "#1a1a1a";
-            base.background_fullscreen = "#1a1a1a";
-            base.folderview = "#f2f2f2";
-            base.folderview_topbar = "#ffffff";
-            base.icons = "#656768";
-            base.overlay = "#1a1a1a";
-            base.overlay_text = "#d2d2d2";
-            base.text = "#353535";
-            base.scrollbar = "#aaaaaa";
-            base.widget = "#ffffff";
-            base.widget_border = "#c3c3c3";
+            base.accent = QColor(0xff719ccd);
+            base.background = QColor(0xff1a1a1a);
+            base.background_fullscreen = QColor(0xff1a1a1a);
+            base.folderview = QColor(0xfff2f2f2);
+            base.folderview_topbar = QColor(0xffffffff);
+            base.thumbpanel = QColor(0xfff2f2f2);
+            base.icons = QColor(0xff656768);
+            base.overlay = QColor(0xff1a1a1a);
+            base.overlay_text = QColor(0xffd2d2d2);
+            base.text = QColor(0xff353535);
+            base.scrollbar = QColor(0xffaaaaaa);
+            base.widget = QColor(0xffffffff);
+            base.widget_border = QColor(0xffc3c3c3);
             base.tid = static_cast<int>(name);
             break;
         case COLORS_DARKBLUE:
-            base.background = "#18191a";
-            base.background_fullscreen = "#18191a";
-            base.text = "#cdd2d7";
-            base.icons = "#babec3";
-            base.widget = "#232629";
-            base.widget_border = "#26292d";
-            base.accent = "#336ca5";
-            base.folderview = "#232629";
-            base.folderview_topbar = "#31363b";
-            base.scrollbar = "#4f565c";
-            base.overlay_text = "#d2d2d2";
-            base.overlay = "#1a1a1a";
+            base.background = QColor(0xff18191a);
+            base.background_fullscreen = QColor(0xff18191a);
+            base.text = QColor(0xffcdd2d7);
+            base.icons = QColor(0xffbabec3);
+            base.widget = QColor(0xff232629);
+            base.widget_border = QColor(0xff26292d);
+            base.accent = QColor(0xff336ca5);
+            base.folderview = QColor(0xff232629);
+            base.folderview_topbar = QColor(0xff31363b);
+            base.thumbpanel = QColor(0xff232629);
+            base.scrollbar = QColor(0xff4f565c);
+            base.overlay_text = QColor(0xffd2d2d2);
+            base.overlay = QColor(0xff1a1a1a);
             base.tid = static_cast<int>(name);
             break;
         case COLORS_BLACK:
-            base.background = "#000000";
-            base.background_fullscreen = "#000000";
-            base.text = "#b0b0b0";
-            base.icons = "#999999";
-            base.widget = "#080808";
-            base.widget_border = "#181818";
-            base.accent = "#5a5a5a";
-            base.folderview = "#111111";
-            base.folderview_topbar = "#111111";
-            base.scrollbar = "#343434";
-            base.overlay_text = "#999999";
-            base.overlay = "#000000";
+            base.background = QColor(0xff000000);
+            base.background_fullscreen = QColor(0xff000000);
+            base.text = QColor(0xffffffff);
+            base.icons = QColor(0xffacacac);
+            base.widget = QColor(0xff080808);
+            base.widget_border = QColor(0xff181818);
+            base.accent = QColor(0xff0080ff);
+            base.folderview = QColor(0xff111111);
+            base.folderview_topbar = QColor(0xff111111);
+            base.thumbpanel = QColor(0x80000000);
+            base.scrollbar = QColor(0xff343434);
+            base.overlay_text = QColor(0xff999999);
+            base.overlay = QColor(0xff000000);
             base.tid = static_cast<int>(name);
             break;
         case COLORS_DARK:
-            base.background = "#1a1a1a";
-            base.background_fullscreen = "#1a1a1a";
-            base.text = "#b6b6b6";
-            base.icons = "#a4a4a4";
-            base.widget = "#252525";
-            base.widget_border = "#2c2c2c";
-            base.accent = "#8c9b81";
-            base.folderview = "#242424";
-            base.folderview_topbar = "#383838";
-            base.scrollbar = "#5a5a5a";
-            base.overlay_text = "#d2d2d2";
-            base.overlay = "#1a1a1a";
+            base.background = QColor(0xff1a1a1a);
+            base.background_fullscreen = QColor(0xff1a1a1a);
+            base.text = QColor(0xffb6b6b6);
+            base.icons = QColor(0xffa4a4a4);
+            base.widget = QColor(0xff252525);
+            base.widget_border = QColor(0xff2c2c2c);
+            base.accent = QColor(0xff8c9b81);
+            base.folderview = QColor(0xff242424);
+            base.folderview_topbar = QColor(0xff383838);
+            base.thumbpanel = QColor(0xff242424);
+            base.scrollbar = QColor(0xff5a5a5a);
+            base.overlay_text = QColor(0xffd2d2d2);
+            base.overlay = QColor(0xff1a1a1a);
             base.tid = static_cast<int>(name);
             break;
     }
@@ -102,6 +107,7 @@ void ColorScheme::setBaseColors(BaseColorScheme base) {
     accent                = base.accent;
     folderview            = base.folderview;
     folderview_topbar     = base.folderview_topbar;
+    thumbpanel            = base.thumbpanel;
     overlay               = base.overlay;
     overlay_text          = base.overlay_text;
     scrollbar             = base.scrollbar;
@@ -117,6 +123,10 @@ void ColorScheme::createColorVariants() {
         panel_button_pressed.setHsv(folderview_topbar.hue(), folderview_topbar.saturation(), qMin(folderview_topbar.value() + 15, 255));
         folderview_hc.setHsv(folderview.hue(), folderview.saturation(), qMin(folderview.value() + 12, 255));
         folderview_hc2.setHsv(folderview.hue(), folderview.saturation(), qMin(folderview.value() + 28, 255));
+        thumbpanel_hc = (qGray(thumbpanel.rgb()) > 128) ? QColor(0, 0, 0) : QColor(255, 255, 255);
+        thumbpanel_hc2.setHsv(thumbpanel.hue(), thumbpanel.saturation(), qMin(thumbpanel.value() + 18, 255));
+        thumbpanel_hc.setAlpha(thumbpanel.alpha());
+        thumbpanel_hc2.setAlpha(thumbpanel.alpha());
         folderview_button_pressed = folderview_hc;
         folderview_button_hover = folderview_hc2;
         // regular buttons - from widget bg
@@ -126,7 +136,8 @@ void ColorScheme::createColorVariants() {
         scrollbar_hover = scrollbar.lighter(120);
         // text
         text_hc = QColor(text.lighter(110));
-        text_hc2 = QColor(text.lighter(118));
+        text_hc2 = (qGray(folderview.rgb()) > 128) ? QColor(0, 0, 0) : QColor(255, 255, 255);
+        thumbpanel_text = (qGray(thumbpanel.rgb()) > 128) ? QColor(0, 0, 0) : QColor(255, 255, 255);
         text_lc = QColor(text.darker(115));
         text_lc2 = QColor(text.darker(160));
     } else { // light theme
@@ -136,6 +147,10 @@ void ColorScheme::createColorVariants() {
         panel_button_pressed.setHsv(folderview_topbar.hue(), folderview_topbar.saturation(), qMax(folderview_topbar.value() - 55, 0));
         folderview_hc.setHsv(folderview.hue(), folderview.saturation(), qMax(folderview.value() - 25, 0));
         folderview_hc2.setHsv(folderview.hue(), folderview.saturation(), qMax(folderview.value() - 60, 0));
+        thumbpanel_hc = (qGray(thumbpanel.rgb()) > 128) ? QColor(0, 0, 0) : QColor(255, 255, 255);
+        thumbpanel_hc2.setHsv(thumbpanel.hue(), thumbpanel.saturation(), qMax(thumbpanel.value() - 40, 0));
+        thumbpanel_hc.setAlpha(thumbpanel.alpha());
+        thumbpanel_hc2.setAlpha(thumbpanel.alpha());
         folderview_button_pressed = folderview_hc2;
         folderview_button_hover = folderview_hc;
         // regular buttons - from widget bg
@@ -145,7 +160,8 @@ void ColorScheme::createColorVariants() {
         scrollbar_hover = scrollbar.darker(120);
         // text
         text_hc = QColor(text.darker(104));
-        text_hc2 = QColor(text.darker(112));
+        text_hc2 = (qGray(folderview.rgb()) > 128) ? QColor(0, 0, 0) : QColor(255, 255, 255);
+        thumbpanel_text = (qGray(thumbpanel.rgb()) > 128) ? QColor(0, 0, 0) : QColor(255, 255, 255);
         text_lc = QColor(text.lighter(130));
         text_lc2 = QColor(text.lighter(160));
     }

@@ -68,6 +68,8 @@ signals:
     void moveUrlsRequested(QList<QString>, QString path);
     void droppedInto(const QMimeData*, QObject*, int) override;
     void draggedOver(int) override;
+    void backRequested() override;
+    void forwardRequested() override;
 
 private slots:
     void onSortingSelected(int);

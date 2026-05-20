@@ -35,6 +35,7 @@ protected:
     void mousePressEvent(QMouseEvent*);
     void paintEvent(QPaintEvent *);
     void keyPressEvent(QKeyEvent *event);
+    bool eventFilter(QObject *obj, QEvent *event) override;
 private slots:
     void switchToMainPage();
     void switchToScriptsPage();

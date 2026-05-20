@@ -225,7 +225,7 @@ QComboBox QAbstractItemView {
 /* panel buttons holder widget */
 
 [accessibleName="panelButtonsWidget"] {
-    background-color: %folderview%;
+    background-color: %thumbpanel_rgba%;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -308,6 +308,10 @@ FullscreenInfoOverlay {
 
 FullscreenInfoOverlay QLabel {
     color: %overlay_text%;
+}
+
+ColorAdjustmentsOverlay QLabel {
+    color: %text_hc%;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -490,7 +494,7 @@ ThumbnailView {
 }
 /*----------------------------------------------------------------------------*/
 ThumbnailStrip {
-    background-color: %folderview%;
+    background-color: %thumbpanel_rgba%;
 }
 /*----------------------------------------------------------------------------*/
 PanelButtonsHolder {
@@ -597,7 +601,7 @@ FVOptionsPopup QLabel {
 
 ThumbnailStrip QScrollBar:horizontal {
     height: 13px;
-    background-color: %folderview%;
+    background-color: %thumbpanel_rgba%;
 }
 
 ThumbnailStrip QScrollBar::handle:horizontal {
@@ -612,7 +616,7 @@ ThumbnailStrip QScrollBar::handle:horizontal:hover {
 
 ThumbnailStrip QScrollBar:vertical {
     width: 13px;
-    background-color: %folderview%;
+    background-color: %thumbpanel_rgba%;
 }
 
 ThumbnailStrip QScrollBar::handle:vertical {
@@ -904,4 +908,27 @@ PrintDialog QCheckBox {
 PrintDialog QRadioButton:hover,
 PrintDialog QCheckBox:hover {
     /*  background-color: %sys_window_tinted%;  */
+}
+/*----------------------------------------------------------------------------*/
+/* Color Adjustments Overlay Sliders styling */
+ColorAdjustmentsOverlay QSlider {
+    height: 18px;
+    background: transparent;
+}
+
+ColorAdjustmentsOverlay QSlider::groove:horizontal {
+    height: 2px;
+    background: %sys_window_tinted_hc2%;
+    border-radius: 1px;
+}
+
+ColorAdjustmentsOverlay QSlider::handle:horizontal {
+    background: %accent%;
+    width: 8px;
+    margin: -8px 0px;
+    border-radius: 1px;
+}
+
+ColorAdjustmentsOverlay QSlider::handle:horizontal:hover {
+    background: %accent_hover_rgba%;
 }

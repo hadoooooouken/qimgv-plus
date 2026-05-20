@@ -30,6 +30,7 @@ private slots:
     void setPanelPinned(bool mode);
     bool panelPinned();
     void readSettings();
+    void hideFloatingPanelDelayed();
 
 protected:
     void enterEvent(QEnterEvent *event);
@@ -42,4 +43,5 @@ private:
     std::shared_ptr<InfoBarProxy> mInfoBar;
     std::shared_ptr<MainPanel> mainPanel;
     bool avoidPanelFlag, mPanelEnabled, mPanelFullscreenOnly, mIsFullscreen, mPanelPinned, mInteractionEnabled, mAllowPanelInit;
+    QTimer hideTimer;
 };

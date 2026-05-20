@@ -75,6 +75,13 @@ void DocumentInfo::detectFormat() {
     if(mDocumentType != DocumentType::NONE)
         return;
     QMimeDatabase mimeDb;
+    // Fast check by extension first to bail out on videos
+    QMimeType fastMime = mimeDb.mimeTypeForFile(fileInfo.filePath(), QMimeDatabase::MatchExtension);
+    if(fastMime.name().startsWith("video/")) {
+        mDocumentType = DocumentType::NONE;
+        return;
+    }
+
     mMimeType = mimeDb.mimeTypeForFile(fileInfo.filePath(), QMimeDatabase::MatchContent);
     auto mimeName = mMimeType.name().toUtf8();
     auto suffix = fileInfo.suffix().toLower().toUtf8();
@@ -108,20 +115,43 @@ void DocumentInfo::detectFormat() {
     } else if(mimeName == "image/bmp") {
         mFormat = "bmp";
         mDocumentType = DocumentType::STATIC;
-    } else if(settings->videoPlayback() && settings->videoFormats().contains(mimeName)) {
-        mDocumentType = DocumentType::VIDEO;
-        mFormat = settings->videoFormats().value(mimeName);
+    } else if(mimeName == "image/svg+xml" || suffix == "svg") {
+        mFormat = "svg";
+        mDocumentType = DocumentType::STATIC;
+    } else if(mimeName == "image/vnd.radiance" || suffix == "hdr") {
+        mFormat = "hdr";
+        mDocumentType = DocumentType::STATIC;
+    } else if(mimeName == "image/x-exr" || suffix == "exr") {
+        mFormat = "exr";
+        mDocumentType = DocumentType::STATIC;
+    } else if(mimeName == "application/pdf" || suffix == "pdf" || suffix == "ai" || mimeName == "application/illustrator") {
+        mFormat = "pdf";
+        mDocumentType = DocumentType::STATIC;
+    } else if(mimeName == "image/x-tga" || mimeName == "image/x-targa" || suffix == "tga") {
+        mFormat = "tga";
+        mDocumentType = DocumentType::STATIC;
+    } else if(mimeName == "application/x-krita" || suffix == "kra") {
+        mFormat = "kra";
+        mDocumentType = DocumentType::STATIC;
+    } else if(mimeName == "image/openraster" || suffix == "ora") {
+        mFormat = "ora";
+        mDocumentType = DocumentType::STATIC;
+    } else if(mimeName == "image/vnd.ms-photo" || mimeName == "image/jxr" || suffix == "jxr" || suffix == "hdp" || suffix == "wdp") {
+        mFormat = "jxr";
+        mDocumentType = DocumentType::STATIC;
+    } else if(mimeName.startsWith("image/x-") || suffix == "arw" || suffix == "cr2" || suffix == "nef" || suffix == "dng" || suffix == "raf") {
+        // RAW formats
+        mFormat = "raw";
+        mDocumentType = DocumentType::STATIC;
+    } else if(QImageReader::supportedMimeTypes().contains(mimeName)) {
+        mFormat = mMimeType.preferredSuffix();
+        mDocumentType = DocumentType::STATIC;
     } else {
-        // just try to open via suffix if all of the above fails
-        mFormat = suffix;
-        if(mFormat.compare("jfif", Qt::CaseInsensitive) == 0)
-            mFormat = "jpg";
-        if(settings->videoPlayback() && settings->videoFormats().values().contains(suffix))
-            mDocumentType = DocumentType::VIDEO;
-        else
-            mDocumentType = DocumentType::STATIC;
+        // unknown file type; skip
+        mDocumentType = DocumentType::NONE;
     }
-    loadExifOrientation();
+    if(mDocumentType != DocumentType::NONE)
+        loadExifOrientation();
 }
 
 inline
@@ -193,7 +223,7 @@ void DocumentInfo::loadExifTags() {
     try {
         std::unique_ptr<Exiv2::Image> image;
 
-        image = Exiv2::ImageFactory::open(toStdString(fileInfo.filePath()));
+        image = Exiv2::ImageFactory::open(fileInfo.filePath().toUtf8().toStdString());
 
         assert(image.get() != 0);
         image->readMetadata();
@@ -298,7 +328,7 @@ QMap<QString, QString> DocumentInfo::getExifTags() {
 }
 
 void DocumentInfo::loadExifOrientation() {
-    if(mDocumentType == DocumentType::VIDEO || mDocumentType == DocumentType::NONE)
+    if(mDocumentType == DocumentType::NONE)
         return;
 
     QString path = filePath();

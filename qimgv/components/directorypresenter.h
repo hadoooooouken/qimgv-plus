@@ -10,6 +10,9 @@
 
 //tmp
 #include <QtSvg/QSvgRenderer>
+#include <QDir>
+#include <QImageReader>
+#include <QMultiMap>
 
 class DirectoryPresenter : public QObject {
     Q_OBJECT
@@ -36,6 +39,7 @@ public:
     void setShowDirs(bool mode);
 
     QList<QString> selectedPaths() const;
+    int upArrowCount() const;
 
 
 signals:
@@ -43,6 +47,8 @@ signals:
     void fileActivated(QString filePath);
     void draggedOut(QList<QString>);
     void droppedInto(QList<QString>, QString);
+    void backRequested();
+    void forwardRequested();
 
 public slots:
     void disconnectView();
@@ -62,4 +68,8 @@ private:
     std::shared_ptr<DirectoryModel> model = nullptr;
     Thumbnailer thumbnailer;
     bool mShowDirs;
+    QMultiMap<QString, int> dirThumbnailTasks;
+
+    std::shared_ptr<Thumbnail> composeFolderThumbnail(int size, const QString &dirName, const QPixmap &innerThumb);
+    std::shared_ptr<Thumbnail> composeUpArrowThumbnail(int size);
 };

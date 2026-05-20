@@ -64,11 +64,7 @@ QString ShortcutBuilder::processMouseEvent(QMouseEvent *event) {
 QString ShortcutBuilder::processKeyEvent(QKeyEvent *event) {
     if(event->type() != QEvent::KeyPress || isModifier(Qt::Key(event->key())))
         return "";
-#if defined(__linux__) || defined(__FreeBSD__) || defined(_WIN32)
     return fromEventNativeScanCode(event);
-#else
-    return fromEventText(event);
-#endif
 }
 //------------------------------------------------------------------------------
 QString ShortcutBuilder::modifierKeys(QInputEvent *event){
@@ -121,30 +117,5 @@ QString ShortcutBuilder::fromEventNativeScanCode(QKeyEvent *event) {
     }
 
     //qDebug() << "RESULT:" << sequence;
-    return sequence;
-}
-//------------------------------------------------------------------------------
-QString ShortcutBuilder::fromEventText(QKeyEvent *event) {
-    // layout-dependent method
-    // -------------------------
-    // Works on platforms for which there is no native scancode support from Qt.
-    // Keybinds will work only on the same layout they were added (except non-printables).
-    QString sequence = QVariant::fromValue(Qt::Key(event->key())).toString();
-    if(!sequence.isEmpty()) {
-        // remove "Key_" at the beginning
-        sequence.remove(0,4);
-        // rename some keys to match the ones from inputmap
-        // just a bandaid
-        if(sequence == "Return")
-            sequence = "Enter";
-        else if(sequence == "Escape")
-            sequence = "Esc";
-    } else {
-        // got an unknown key (usually something from non-eng layout)
-        // use it's text value instead
-        sequence = QKeySequence(event->key()).toString();
-    }
-    if(!sequence.isEmpty())
-        sequence.prepend(modifierKeys(event));
     return sequence;
 }

@@ -1,4 +1,9 @@
 #include "foldergridview.h"
+#include "utils/imagelib.h"
+#include <QMenu>
+#include <QAction>
+#include <QIcon>
+#include <QCursor>
 
 // TODO: create a base class for this and the one on panel
 
@@ -415,5 +420,53 @@ void FolderGridView::resizeEvent(QResizeEvent *event) {
         fitSceneToContents();
         //focusOn(selectedIndex());
         loadVisibleThumbnailsDelayed();
+    }
+}
+
+void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
+    bool isRightClick = (event->button() == Qt::RightButton);
+    bool wasGesture = (mouseInteraction == THUMB_INTERACTION_GESTURE);
+    ThumbnailView::mouseReleaseEvent(event);
+
+    if (isRightClick && !wasGesture) {
+        if (!selection().isEmpty()) {
+            QMenu menu(this);
+            // styling:
+            QString stylesheet = 
+                "QMenu {"
+                " background-color: %1;"
+                " border: 1px solid %2;"
+                " padding: 4px 0px;"
+                "}"
+                "QMenu::item {"
+                " color: %3;"
+                " padding: 6px 24px 6px 36px;"
+                "}"
+                "QMenu::icon {"
+                " margin-left: 10px;"
+                "}"
+                "QMenu::item:selected {"
+                " background-color: %4;"
+                " color: %5;"
+                "}";
+            auto scheme = settings->colorScheme();
+            stylesheet = stylesheet.arg(
+                scheme.widget.name(),
+                scheme.widget_border.name(),
+                scheme.text.name(),
+                scheme.accent.name(),
+                scheme.background.name());
+            menu.setStyleSheet(stylesheet);
+
+            QPixmap pixmap(":/res/icons/common/menuitem/trash16.png");
+            ImageLib::recolor(pixmap, scheme.icons);
+            QIcon icon(pixmap);
+
+            QAction *action = menu.addAction(icon, tr("Move to trash"));
+            QAction *selectedAction = menu.exec(event->globalPos());
+            if (selectedAction == action) {
+                actionManager->invokeAction("moveToTrash");
+            }
+        }
     }
 }

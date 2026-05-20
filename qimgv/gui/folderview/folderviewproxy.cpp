@@ -30,6 +30,8 @@ void FolderViewProxy::init() {
     connect(folderView.get(), &FolderView::moveUrlsRequested, this, &FolderViewProxy::moveUrlsRequested);
     connect(folderView.get(), &FolderView::droppedInto, this, &FolderViewProxy::droppedInto);
     connect(folderView.get(), &FolderView::draggedOver, this, &FolderViewProxy::draggedOver);
+    connect(folderView.get(), &FolderView::backRequested, this, &FolderViewProxy::backRequested);
+    connect(folderView.get(), &FolderView::forwardRequested, this, &FolderViewProxy::forwardRequested);
 
     folderView->show();
 

@@ -10,13 +10,16 @@ MW::MW(QWidget *parent)
       copyOverlay(nullptr),
       saveOverlay(nullptr),
       renameOverlay(nullptr),
+      colorAdjustmentsOverlay(nullptr),
       infoBarFullscreen(nullptr),
       imageInfoOverlay(nullptr),
       floatingMessage(nullptr),
       cropPanel(nullptr),
-      cropOverlay(nullptr)
+      cropOverlay(nullptr),
+      panelPosition(PANEL_TOP)
 {
     setAttribute(Qt::WA_TranslucentBackground, true);
+    setAttribute(Qt::WA_NoSystemBackground, true);
     layout.setContentsMargins(0,0,0,0);
     layout.setSpacing(0);
 
@@ -51,7 +54,7 @@ MW::MW(QWidget *parent)
 
 /*                                                             |--[ImageViewer]
  *                        |--[DocumentWidget]--[ViewerWidget]--|
- * [MW]--[CentralWidget]--|                                    |--[VideoPlayer]
+ * [MW]--[CentralWidget]--|
  *                        |--[FolderView]
  *
  *  (not counting floating widgets)
@@ -77,8 +80,9 @@ void MW::setupUi() {
     imageInfoOverlay = new ImageInfoOverlayProxy(viewerWidget.get());
     floatingMessage = new FloatingMessageProxy(viewerWidget.get()); // todo: use additional one for folderview?
     connect(viewerWidget.get(), &ViewerWidget::scalingRequested, this, &MW::scalingRequested);
-    connect(viewerWidget.get(), &ViewerWidget::draggedOut, this, qOverload<>(&MW::draggedOut));
-    connect(viewerWidget.get(), &ViewerWidget::playbackFinished, this, &MW::playbackFinished);
+    connect(viewerWidget.get(), &ViewerWidget::draggedOut,       this, &MW::draggedOut);
+    connect(viewerWidget.get(), &ViewerWidget::nextImageRequested, this, &MW::nextImageRequested);
+    connect(viewerWidget.get(), &ViewerWidget::prevImageRequested, this, &MW::prevImageRequested);
     connect(viewerWidget.get(), &ViewerWidget::showScriptSettings, this, &MW::showScriptSettings);
     connect(this, &MW::zoomIn,        viewerWidget.get(), &ViewerWidget::zoomIn);
     connect(this, &MW::zoomOut,       viewerWidget.get(), &ViewerWidget::zoomOut);
@@ -88,17 +92,7 @@ void MW::setupUi() {
     connect(this, &MW::scrollDown,  viewerWidget.get(), &ViewerWidget::scrollDown);
     connect(this, &MW::scrollLeft,  viewerWidget.get(), &ViewerWidget::scrollLeft);
     connect(this, &MW::scrollRight, viewerWidget.get(), &ViewerWidget::scrollRight);
-    connect(this, &MW::pauseVideo,     viewerWidget.get(), &ViewerWidget::pauseResumePlayback);
-    connect(this, &MW::stopPlayback,   viewerWidget.get(), &ViewerWidget::stopPlayback);
-    connect(this, &MW::seekVideoForward, viewerWidget.get(), &ViewerWidget::seekForward);
-    connect(this, &MW::seekVideoBackward,  viewerWidget.get(), &ViewerWidget::seekBackward);
-    connect(this, &MW::frameStep,      viewerWidget.get(), &ViewerWidget::frameStep);
-    connect(this, &MW::frameStepBack,  viewerWidget.get(), &ViewerWidget::frameStepBack);
-    connect(this, &MW::toggleMute,  viewerWidget.get(), &ViewerWidget::toggleMute);
-    connect(this, &MW::volumeUp,  viewerWidget.get(), &ViewerWidget::volumeUp);
-    connect(this, &MW::volumeDown,  viewerWidget.get(), &ViewerWidget::volumeDown);
     connect(this, &MW::toggleTransparencyGrid, viewerWidget.get(), &ViewerWidget::toggleTransparencyGrid);
-    connect(this, &MW::setLoopPlayback,  viewerWidget.get(), &ViewerWidget::setLoopPlayback);
 }
 
 void MW::setupFullUi() {
@@ -146,6 +140,8 @@ void MW::toggleFolderView() {
         copyOverlay->hide();
     if(renameOverlay)
         renameOverlay->hide();
+    if(colorAdjustmentsOverlay)
+        colorAdjustmentsOverlay->hide();
     docWidget->hideFloatingPanel();
     imageInfoOverlay->hide();
     centralWidget->toggleViewMode();
@@ -158,6 +154,8 @@ void MW::enableFolderView() {
         copyOverlay->hide();
     if(renameOverlay)
         renameOverlay->hide();
+    if(colorAdjustmentsOverlay)
+        colorAdjustmentsOverlay->hide();
     docWidget->hideFloatingPanel();
     imageInfoOverlay->hide();
     centralWidget->showFolderView();
@@ -245,13 +243,12 @@ void MW::preShowResize(QSize sz) {
         setGeometry(newGeom);
     else // setGeometry wont work on hidden windows, so we just save for it to be restored later
         settings->setWindowGeometry(newGeom);
-    qApp->processEvents(); // not needed anymore with patched qt?
 }
 
-void MW::showImage(std::unique_ptr<QPixmap> pixmap) {
+void MW::showImage(std::unique_ptr<QPixmap> pixmap, QString filePath) {
     if(settings->autoResizeWindow())
         preShowResize(pixmap->size());
-    viewerWidget->showImage(std::move(pixmap));
+    viewerWidget->showImage(std::move(pixmap), filePath);
     updateCropPanelData();
 }
 
@@ -262,11 +259,6 @@ void MW::showAnimation(std::shared_ptr<QMovie> movie) {
     updateCropPanelData();
 }
 
-void MW::showVideo(QString file) {
-    if(settings->autoResizeWindow())
-        preShowResize(QSize()); // tmp. find a way to get this though mpv BEFORE playback
-    viewerWidget->showVideo(file);
-}
 
 void MW::showContextMenu() {
     viewerWidget->showContextMenu();
@@ -340,6 +332,24 @@ void MW::toggleRenameOverlay(QString currentName) {
         renameOverlay->show();
     } else {
         renameOverlay->hide();
+    }
+}
+
+void MW::toggleColorAdjustments() {
+    if(centralWidget->currentViewMode() == MODE_FOLDERVIEW)
+        return;
+    if(!colorAdjustmentsOverlay) {
+        colorAdjustmentsOverlay = new ColorAdjustmentsOverlayProxy(viewerWidget.get());
+        connect(colorAdjustmentsOverlay, &ColorAdjustmentsOverlayProxy::adjustmentsChanged,
+                this, [this](float b, float c, float s, float h) {
+            viewerWidget->setColorAdjustments(b, c, s, h);
+        });
+    }
+    if(colorAdjustmentsOverlay->isHidden()) {
+        colorAdjustmentsOverlay->setCustomPosition(QCursor::pos());
+        colorAdjustmentsOverlay->show();
+    } else {
+        colorAdjustmentsOverlay->hide();
     }
 }
 
@@ -448,6 +458,8 @@ bool MW::event(QEvent *event) {
         maximized = isMaximized();
     if(event->type() == QEvent::Move || event->type() == QEvent::Resize)
         windowGeometryChangeTimer.start();
+    if(event->type() == QEvent::WindowDeactivate)
+        docWidget->hideFloatingPanel(true);
     return QWidget::event(event);
 }
 
@@ -483,6 +495,7 @@ void MW::mouseDoubleClickEvent(QMouseEvent *event) {
     );
     actionManager->processEvent(fakePressEvent);
     actionManager->processEvent(event);
+    delete fakePressEvent;
 }
 
 void MW::close() {
@@ -495,6 +508,10 @@ void MW::close() {
 #endif
     if(copyOverlay)
         copyOverlay->saveSettings();
+    if(colorAdjustmentsOverlay) {
+        delete colorAdjustmentsOverlay;
+        colorAdjustmentsOverlay = nullptr;
+    }
     QWidget::close();
 }
 
@@ -561,7 +578,7 @@ QString MW::getSaveFileName(QString filePath) {
     if(writerFormats.contains("dds"))  filters.append("DDS (*.dds)");
     if(writerFormats.contains("wbmp")) filters.append("WBMP (*.wbmp)");
     // add everything else from imagewriter
-    for(auto fmt : writerFormats) {
+    for(const auto &fmt : std::as_const(writerFormats)) {
         if(filters.filter(fmt).isEmpty())
             filters.append(fmt.toUpper() + " (*." + fmt + ")");
     }
@@ -570,7 +587,7 @@ QString MW::getSaveFileName(QString filePath) {
     // find matching filter for the current image
     QString selectedFilter = "JPEG (*.jpg *.jpeg *jpe *jfif)";
     QFileInfo fi(filePath);
-    for(auto filter : filters) {
+    for(const auto &filter : std::as_const(filters)) {
         if(filter.contains(fi.suffix().toLower())) {
             selectedFilter = filter;
             break;
@@ -927,6 +944,7 @@ bool MW::showConfirmation(QString title, QString msg) {
 }
 
 void MW::readSettings() {
+    panelPosition = settings->panelPosition();
     showInfoBarFullscreen = settings->infoBarFullscreen();
     showInfoBarWindowed = settings->infoBarWindowed();
     adaptToWindowState();
@@ -1001,3 +1019,5 @@ void MW::leaveEvent(QEvent *event) {
 //bool MW::focusNextPrevChild(bool) {
 //    return false;
 //}
+
+void MW::togglePanorama() { viewerWidget->togglePanorama(); }

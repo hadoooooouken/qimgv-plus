@@ -32,6 +32,8 @@ public:
     virtual void draggedToBookmarks(QList<int>) = 0;
     virtual void draggedOver(int) = 0;
     virtual void droppedInto(const QMimeData*, QObject*, int) = 0;
+    virtual void backRequested() = 0;
+    virtual void forwardRequested() = 0;
 };
 
 Q_DECLARE_INTERFACE(IDirectoryView, "IDirectoryView")

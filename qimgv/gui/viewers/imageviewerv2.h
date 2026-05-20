@@ -2,7 +2,9 @@
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
-#include <QGraphicsPixmapItem>
+#include "filterpixmapitem.h"
+#include <QGraphicsSvgItem>
+#include <QSvgRenderer>
 #include <QElapsedTimer>
 #include <QWheelEvent>
 #include <QTimeLine>
@@ -21,7 +23,8 @@ enum MouseInteractionState {
     MOUSE_DRAG,
     MOUSE_PAN,
     MOUSE_ZOOM,
-    MOUSE_WHEEL_ZOOM
+    MOUSE_WHEEL_ZOOM,
+    MOUSE_GESTURE
 };
 
 enum ViewLockMode {
@@ -40,10 +43,11 @@ public:
     virtual QRect scaledRectR() const;
     virtual float currentScale() const;
     virtual QSize sourceSize() const;
-    virtual void showImage(std::unique_ptr<QPixmap> _pixmap);
+    virtual void showImage(std::unique_ptr<QPixmap> _pixmap, QString filePath = "");
     virtual void showAnimation(std::shared_ptr<QMovie> _animation);
     virtual void setScaledPixmap(std::unique_ptr<QPixmap> newFrame);
     virtual bool isDisplaying() const;
+    void setColorAdjustments(float brightness, float contrast, float saturation, float hue);
 
     virtual bool imageFits() const;
     bool scaledImageFits() const;
@@ -67,6 +71,8 @@ signals:
     void animationPaused(bool);
     void frameChanged(int);
     void durationChanged(int);
+    void nextImageRequested();
+    void prevImageRequested();
 
 public slots:
     virtual void setFitMode(ImageFitMode mode);
@@ -94,6 +100,7 @@ public slots:
     virtual void setScalingFilter(ScalingFilter filter);
     void setLoopPlayback(bool mode);
     void toggleTransparencyGrid();
+    void togglePanorama();
 
     void nextFrame();
     void prevFrame();
@@ -131,7 +138,7 @@ private:
     std::shared_ptr<QPixmap> pixmap;
     std::unique_ptr<QPixmap> pixmapScaled;
     std::shared_ptr<QMovie> movie;
-    QGraphicsPixmapItem pixmapItem, pixmapItemScaled;
+    FilterPixmapItem pixmapItem, pixmapItemScaled;
     QTimer *animationTimer, *scaleTimer;
     QScrollBar *hs, *vs;
     QPoint mouseMoveStartPos, mousePressPos, drawPos;
@@ -151,11 +158,11 @@ private:
     // how many px you can move while holding RMB until it counts as a zoom attempt
     int zoomThreshold = 4;
     int dragThreshold = 10;
+    int gestureThreshold = 40;
 
     bool dragsEnabled = true;
-    bool wayland = false;
 
-    float zoomStep = 0.1, dpr;
+    float zoomStep = 0.1f, dpr;
     float minScale, maxScale, fitWindowScale, fitWindowStretchScale, expandLimit, lockedScale;
     QPointF savedViewportPos;
     ViewLockMode mViewLock;
@@ -206,4 +213,12 @@ private:
     void lockZoom();
     void doZoomIn(bool atCursor);
     void doZoomOut(bool atCursor);
+
+private:
+    class PanoramaGraphicsItem *panoramaItem = nullptr;
+    QGraphicsSvgItem *svgItem = nullptr;
+    bool mSvgMode = false;
+    bool mPanoramaMode = false;
+    float mPanoramaYaw = 0.0f, mPanoramaPitch = 0.0f, mPanoramaFov = 90.0f;
+    QString currentFilePath;
 };

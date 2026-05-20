@@ -9,12 +9,13 @@ class WindowsWorker : public WatcherWorker {
     Q_OBJECT
 public:
     WindowsWorker();
+    ~WindowsWorker();
 
     void setDirectoryHandle(HANDLE hDir);
     virtual void run() override;
 
 signals:
-    void notifyEvent(PFILE_NOTIFY_INFORMATION);
+    void notifyEvent(FILE_NOTIFY_INFORMATION*);
 
 private:
     HANDLE hDir;

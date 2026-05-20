@@ -56,9 +56,7 @@ void Actions::init() {
     mActions.insert("flipH", QVersionNumber(0,6,3));
     mActions.insert("flipV", QVersionNumber(0,6,3));
     mActions.insert("folderView", QVersionNumber(0,6,85));
-    mActions.insert("pauseVideo", QVersionNumber(0,6,85));
-    mActions.insert("frameStep", QVersionNumber(0,6,85));
-    mActions.insert("frameStepBack", QVersionNumber(0,6,85));
+    mActions.insert("folderView", QVersionNumber(0,6,85));
     mActions.insert("folderView", QVersionNumber(0,6,85));
     mActions.insert("documentView", QVersionNumber(0,6,88));
     mActions.insert("toggleFolderView", QVersionNumber(0,6,88));
@@ -75,21 +73,18 @@ void Actions::init() {
     mActions.insert("toggleImageInfo", QVersionNumber(0,7,84));
     mActions.insert("toggleShuffle", QVersionNumber(0,8,3));
     mActions.insert("toggleScalingFilter", QVersionNumber(0,8,3));
-    mActions.insert("toggleMute", QVersionNumber(0,8,7));
-    mActions.insert("volumeUp", QVersionNumber(0,8,7));
-    mActions.insert("volumeDown", QVersionNumber(0,8,7));
     mActions.insert("toggleSlideshow", QVersionNumber(0,8,81));
     mActions.insert("showInDirectory", QVersionNumber(0,8,82));
     mActions.insert("goUp", QVersionNumber(0,9,2));
     mActions.insert("discardEdits", QVersionNumber(0,9,2));
     mActions.insert("nextDirectory", QVersionNumber(0,9,2));
     mActions.insert("prevDirectory", QVersionNumber(0,9,2));
-    mActions.insert("seekVideoForward", QVersionNumber(0,9,2));
-    mActions.insert("seekVideoBackward", QVersionNumber(0,9,2));
     mActions.insert("lockZoom", QVersionNumber(0,9,2));
     mActions.insert("lockView", QVersionNumber(0,9,2));
     mActions.insert("print", QVersionNumber(1,0,0));
     mActions.insert("toggleFullscreenInfoBar", QVersionNumber(1,0,0));
     mActions.insert("pasteFile", QVersionNumber(1,0,3));
+    mActions.insert("togglePanorama", QVersionNumber(1,0,3));
+    mActions.insert("colorAdjustments", QVersionNumber(1,0,3));
 }
 
