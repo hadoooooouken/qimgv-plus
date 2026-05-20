@@ -147,7 +147,7 @@ if(WIN32)
     endif()
 
     # 5. kimageformats dependencies (safe check)
-    set(_kimg_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw avif heif jxl kra ora jxr)
+    set(_kimg_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw avif jxl kra ora jxr heif)
     foreach(_plugin ${_kimg_plugins})
         if(TARGET kimg_${_plugin})
             add_dependencies(qimgv-plus kimg_${_plugin})
@@ -158,39 +158,26 @@ if(WIN32)
     # 6. kimageformats plugins deployment
     add_custom_command(TARGET qimgv-plus POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:qimgv-plus>/imageformats"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_ani>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_dds>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_ff>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_hdr>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_iff>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_pcx>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_pic>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_pfm>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_psd>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_pxr>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_qoi>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_ras>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_rgb>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_sct>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_tim>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
+        COMMENT "Preparing imageformats output directory..."
     )
-    if(TARGET kimg_tga)
-        add_custom_command(TARGET qimgv-plus POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_tga>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/")
-    endif()
-    add_custom_command(TARGET qimgv-plus POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_xcf>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_exr>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_raw>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_kra>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_ora>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
-        # AVIF, HEIF, JXL plugins (only if they were built)
-        COMMAND ${CMAKE_COMMAND} -E echo "Copying kimageformats plugins..."
-    )
-    if(TARGET kimg_avif)
-        add_custom_command(TARGET qimgv-plus POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_avif>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/")
-    endif()
+    # Copy each plugin only if its target was actually built
+    set(_kimg_required_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw kra ora)
+    foreach(_plugin ${_kimg_required_plugins})
+        if(TARGET kimg_${_plugin})
+            add_custom_command(TARGET qimgv-plus POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_${_plugin}>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/"
+                COMMENT "Deploying kimg_${_plugin}..."
+            )
+        else()
+            message(WARNING "Plugin kimg_${_plugin} was not built, skipping deployment")
+        endif()
+    endforeach()
+    # Optional format plugins
     if(TARGET kimg_heif)
         add_custom_command(TARGET qimgv-plus POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_heif>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/")
+    endif()
+    if(TARGET kimg_avif)
+        add_custom_command(TARGET qimgv-plus POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_avif>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/")
     endif()
     if(TARGET kimg_jxl)
         add_custom_command(TARGET qimgv-plus POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_jxl>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/")
@@ -199,29 +186,7 @@ if(WIN32)
         add_custom_command(TARGET qimgv-plus POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_jxr>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/")
     endif()
 
-    # 6. Codec DLLs for AVIF, HEIF, JXL
-    add_custom_command(TARGET qimgv-plus POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libavif/build/Release/avif.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libheif/build/libheif/Release/heif.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjxl/build/lib/Release/jxl.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjxl/build/lib/Release/jxl_threads.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjxl/build/lib/Release/jxl_cms.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        # Brotli (for JXL)
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjxl/build/third_party/brotli/Release/brotlidec.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjxl/build/third_party/brotli/Release/brotlienc.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjxl/build/third_party/brotli/Release/brotlicommon.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        # OpenEXR & Imath & Zlib
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjxl/build/third_party/zlib/Release/zlib1.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/openexr/install/bin/OpenEXR-4_0.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/openexr/install/bin/OpenEXRCore-4_0.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/openexr/install/bin/OpenEXRUtil-4_0.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/openexr/install/bin/Iex-4_0.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/openexr/install/bin/IlmThread-4_0.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/Imath/install/bin/Imath-3_2.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        # LibRaw
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/LibRaw/buildfiles/release-x86_64/libraw.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMENT "Copying advanced image format codec DLLs..."
-    )
+
 
     # 7. Translation files deployment
     add_custom_command(TARGET qimgv-plus POST_BUILD
@@ -229,4 +194,15 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_BINARY_DIR}/qimgv/translations" "$<TARGET_FILE_DIR:qimgv-plus>/translations"
         COMMENT "Deploying translation files..."
     )
+
+    # 8. Copy OpenMP runtime for LibRaw
+    set(OPENMP_DLL_PATH "E:/MVSC/VC/Redist/MSVC/14.51.36231/x64/Microsoft.VC145.OpenMP/vcomp140.dll")
+    if(EXISTS "${OPENMP_DLL_PATH}")
+        add_custom_command(TARGET qimgv-plus POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OPENMP_DLL_PATH}" "$<TARGET_FILE_DIR:qimgv-plus>/"
+            COMMENT "Deploying OpenMP runtime (vcomp140.dll)..."
+        )
+    else()
+        message(WARNING "OpenMP runtime NOT found at: ${OPENMP_DLL_PATH}")
+    endif()
 endif()

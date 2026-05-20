@@ -17,6 +17,7 @@ ui_*.h
 formats/
 bkp/
 *.zip
+*.7z
 release/
 qimgv/Output/
 Output/

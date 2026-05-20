@@ -641,7 +641,6 @@ void setParams(QImageIOHandler *handler, LibRaw *rawProcessor)
      * but, when used, some FUJI RAF files of my library are poorly rendered (e.g. completely green). This is the
      * why I used AHD: a good compromise between quality and performance with no rendering errors.
      */
-    params.user_qual = T_IQ(quality);
 
     /**
      * @brief half_size
@@ -661,19 +660,26 @@ void setParams(QImageIOHandler *handler, LibRaw *rawProcessor)
      * @fbdd_noiserd
      * FBDD noise reduction (0 - off, 1 - light, 2 - full)
      */
-    params.fbdd_noiserd = std::min(2, T_NR(quality));
+    
 
     /**
      * @four_color_rgb
      * Interpolate RGGB as four colors (0 - off, 1 - on)
      */
-    params.four_color_rgb = T_FC(quality);
+    
 
     /**
      * @use_fuji_rotate
      * Don't stretch or rotate raw pixels (0 - off, 1 - on)
      */
     params.use_fuji_rotate = T_SR(quality) ? 0 : 1;
+
+    /* hado tweaks */
+    params.user_qual = 2;
+    params.fbdd_noiserd = 0;
+    params.four_color_rgb = 0;
+    params.no_auto_bright = 0;
+    params.auto_bright_thr = 0.001;
 }
 
 bool LoadTHUMB(QImageIOHandler *handler, QImage &img)

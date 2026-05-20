@@ -112,6 +112,9 @@ void DocumentInfo::detectFormat() {
     } else if(mimeName == "image/avif") {
         mFormat = "avif";
         mDocumentType = detectAnimatedAvif() ? DocumentType::ANIMATED : DocumentType::STATIC;
+    } else if(mimeName == "image/heif" || mimeName == "image/heic" || suffix == "heif" || suffix == "heic") {
+        mFormat = "heif";
+        mDocumentType = DocumentType::STATIC;
     } else if(mimeName == "image/bmp") {
         mFormat = "bmp";
         mDocumentType = DocumentType::STATIC;

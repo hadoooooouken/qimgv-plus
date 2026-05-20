@@ -158,228 +158,228 @@
 <context>
     <name>Core</name>
     <message>
-        <location filename="../../core.cpp" line="300"/>
+        <location filename="../../core.cpp" line="314"/>
         <source>Updated: </source>
         <translation>Güncellendi: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="308"/>
+        <location filename="../../core.cpp" line="322"/>
         <source>Welcome to </source>
         <translation>Hoş geldiniz</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="309"/>
+        <location filename="../../core.cpp" line="323"/>
         <source> version </source>
         <translation> sürüm </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="329"/>
+        <location filename="../../core.cpp" line="343"/>
         <source>Shuffle mode: OFF</source>
         <translation>Karıştırma modu: KAPALI</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="332"/>
+        <location filename="../../core.cpp" line="346"/>
         <source>Shuffle mode: ON</source>
         <translation>Karıştırma modu: AÇIK</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="341"/>
+        <location filename="../../core.cpp" line="355"/>
         <source>Slideshow: OFF</source>
         <translation>Slayt gösterisi: KAPALI</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="345"/>
+        <location filename="../../core.cpp" line="359"/>
         <source>Slideshow: ON</source>
         <translation>Slayt gösterisi: AÇIK</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="408"/>
+        <location filename="../../core.cpp" line="422"/>
         <source>Delete </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="409"/>
+        <location filename="../../core.cpp" line="423"/>
         <source> items permanently?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="411"/>
+        <location filename="../../core.cpp" line="425"/>
         <source>Delete item permanently?</source>
         <translation>Kalıcı olarak silmek istiyor musunuz?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="412"/>
+        <location filename="../../core.cpp" line="426"/>
         <source>Delete permanently</source>
         <translation>Kalıcı olarak sil</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="428"/>
+        <location filename="../../core.cpp" line="442"/>
         <source>File removed</source>
         <translation>Dosya kaldırıldı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="432"/>
+        <location filename="../../core.cpp" line="446"/>
         <source>Removed: </source>
         <translation>Kaldırıldı: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="433"/>
-        <location filename="../../core.cpp" line="469"/>
+        <location filename="../../core.cpp" line="447"/>
+        <location filename="../../core.cpp" line="483"/>
         <source> files</source>
         <translation> dosya</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="445"/>
+        <location filename="../../core.cpp" line="459"/>
         <source>Move </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="445"/>
+        <location filename="../../core.cpp" line="459"/>
         <source> items to trash?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="447"/>
+        <location filename="../../core.cpp" line="461"/>
         <source>Move item to trash?</source>
         <translation>Öğeyi çöp kutusuna taşımak istiyor musunuz?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="448"/>
+        <location filename="../../core.cpp" line="462"/>
         <source>Move to trash</source>
         <translation>Çöp kutusuna taşı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="464"/>
+        <location filename="../../core.cpp" line="478"/>
         <source>Moved to trash</source>
         <translation>Çöp kutusuna taşındı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="468"/>
+        <location filename="../../core.cpp" line="482"/>
         <source>Moved to trash: </source>
         <translation>Çöp kutusuna taşındı: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="524"/>
+        <location filename="../../core.cpp" line="538"/>
         <source>File copied</source>
         <translation>Dosya kopyalandı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="531"/>
+        <location filename="../../core.cpp" line="545"/>
         <source>Path copied</source>
         <translation>Dosya yolu kopyalandı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="705"/>
-        <location filename="../../core.cpp" line="975"/>
-        <location filename="../../core.cpp" line="997"/>
+        <location filename="../../core.cpp" line="719"/>
+        <location filename="../../core.cpp" line="989"/>
+        <location filename="../../core.cpp" line="1011"/>
         <source>File exists</source>
         <translation>Dosya zaten var</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="705"/>
+        <location filename="../../core.cpp" line="719"/>
         <source>Overwrite file?</source>
         <translation>Dosyanın üzerine yazılsın mı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="855"/>
-        <location filename="../../core.cpp" line="934"/>
+        <location filename="../../core.cpp" line="869"/>
+        <location filename="../../core.cpp" line="948"/>
         <source>Could not create directory </source>
         <translation>Dizin oluşturulamadı </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="973"/>
+        <location filename="../../core.cpp" line="987"/>
         <source>File moved.</source>
         <translation>Dosya taşındı.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="976"/>
-        <location filename="../../core.cpp" line="998"/>
+        <location filename="../../core.cpp" line="990"/>
+        <location filename="../../core.cpp" line="1012"/>
         <source>Destination file exists. Overwrite?</source>
         <translation>Dosya hedefte var. Üzerine yazılsın mı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="995"/>
+        <location filename="../../core.cpp" line="1009"/>
         <source>File copied.</source>
         <translation>Dosya kopyalandı.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1048"/>
+        <location filename="../../core.cpp" line="1062"/>
         <source>Perform action &quot;</source>
         <translation>Eylemi gerçekleştir: &quot;</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1049"/>
+        <location filename="../../core.cpp" line="1063"/>
         <source>Changes will be saved immediately.</source>
         <translation>Değişiklikler hemen kaydedilecektir.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1070"/>
+        <location filename="../../core.cpp" line="1084"/>
         <source>Flip horizontal</source>
         <translation>Yatay çevir</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1074"/>
+        <location filename="../../core.cpp" line="1088"/>
         <source>Flip vertical</source>
         <translation>Dikey çevir</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1079"/>
+        <location filename="../../core.cpp" line="1093"/>
         <source>Rotate</source>
         <translation>Döndür</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1084"/>
+        <location filename="../../core.cpp" line="1098"/>
         <source>Resize</source>
         <translation>Yeniden boyutlandır</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1091"/>
-        <location filename="../../core.cpp" line="1097"/>
+        <location filename="../../core.cpp" line="1105"/>
+        <location filename="../../core.cpp" line="1111"/>
         <source>Crop</source>
         <translation>Kırp</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1128"/>
+        <location filename="../../core.cpp" line="1142"/>
         <source>File saved</source>
         <translation>Dosya kaydedildi</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1131"/>
+        <location filename="../../core.cpp" line="1145"/>
         <source>Could not save file</source>
         <translation>Dosya kaydedilemedi</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1250"/>
+        <location filename="../../core.cpp" line="1264"/>
         <source>Could not open image</source>
         <translation>Görüntü açılamadı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1254"/>
+        <location filename="../../core.cpp" line="1268"/>
         <source>Can only print static images</source>
         <translation>Sadece hareketsiz görüntüler yazdırılabilir</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1308"/>
+        <location filename="../../core.cpp" line="1323"/>
         <source>Could not open path: </source>
         <translation>Dosya yolu açılamadı: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1351"/>
+        <location filename="../../core.cpp" line="1366"/>
         <source>Could not load folder: </source>
         <translation>Klasör yüklenemedi: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1537"/>
+        <location filename="../../core.cpp" line="1552"/>
         <source>End of directory.</source>
         <translation>Dizin sonu.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1575"/>
+        <location filename="../../core.cpp" line="1590"/>
         <source>Load failed: </source>
         <translation>Yükleme başarısız: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1620"/>
+        <location filename="../../core.cpp" line="1636"/>
         <source>Error: could not load image.</source>
         <translation>Hata: Görüntü yüklenemedi.</translation>
     </message>
@@ -656,35 +656,35 @@
 <context>
     <name>MW</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="595"/>
+        <location filename="../../gui/mainwindow.cpp" line="596"/>
         <source>Save File as...</source>
         <translation>Dosyayı farklı kaydet...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="830"/>
+        <location filename="../../gui/mainwindow.cpp" line="831"/>
         <source>Folder view</source>
         <translation>Klasör görünümü</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="831"/>
         <location filename="../../gui/mainwindow.cpp" line="832"/>
-        <location filename="../../gui/mainwindow.cpp" line="835"/>
+        <location filename="../../gui/mainwindow.cpp" line="833"/>
         <location filename="../../gui/mainwindow.cpp" line="836"/>
+        <location filename="../../gui/mainwindow.cpp" line="837"/>
         <source>No file opened.</source>
         <translation>Açık dosya yok.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="899"/>
+        <location filename="../../gui/mainwindow.cpp" line="900"/>
         <source>Fit Window</source>
         <translation>Pencereye sığdır</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="903"/>
+        <location filename="../../gui/mainwindow.cpp" line="904"/>
         <source>Fit Width</source>
         <translation>Genişliğe sığdır</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="907"/>
+        <location filename="../../gui/mainwindow.cpp" line="908"/>
         <source>Fit 1:1</source>
         <translation>Gerçek boyutta göster 1:1</translation>
     </message>
@@ -785,59 +785,59 @@
         <translation>Ayrıntılı + Klasörler</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="248"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="251"/>
         <source>Make</source>
         <translation>Marka</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="252"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="255"/>
         <source>Model</source>
         <translation>Model</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="256"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="259"/>
         <source>Date/Time</source>
         <translation>Tarih/Saat</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="263"/>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="266"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="269"/>
         <source>ExposureTime</source>
         <translation>Pozlama süresi</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="263"/>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="266"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="269"/>
         <source> sec</source>
         <translation> saniye</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="274"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="277"/>
         <source>F Number</source>
         <translation>F numarası</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="279"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="282"/>
         <source>ISO Speed ratings</source>
         <translation>ISO hız derecesi</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="283"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="286"/>
         <source>Flash</source>
         <translation>Flaş</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="289"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="292"/>
         <source>Focal Length</source>
         <translation>Odak uzaklığı</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="289"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="292"/>
         <source> mm</source>
         <translation> mm</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="298"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="301"/>
         <source>UserComment</source>
         <translation>Kullanıcı yorumu</translation>
     </message>
@@ -2122,32 +2122,32 @@ li.checked::marker { content: &quot;\2612&quot;; }
 <context>
     <name>main</name>
     <message>
-        <location filename="../../main.cpp" line="102"/>
+        <location filename="../../main.cpp" line="109"/>
         <source>File or directory path.</source>
         <translation>Dosya veya dizin yolu.</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="105"/>
+        <location filename="../../main.cpp" line="112"/>
         <source>Generate all thumbnails for directory.</source>
         <translation>Dizindeki tüm küçük resimleri oluştur.</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="107"/>
+        <location filename="../../main.cpp" line="114"/>
         <source>directory-path</source>
         <translation>dizin-yolu</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="109"/>
+        <location filename="../../main.cpp" line="116"/>
         <source>Thumbnail size. Current size is used if not specified.</source>
         <translation>Küçük resim boyutu. Belirtilmediği takdirde şu anki boyut kullanılır.</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="111"/>
+        <location filename="../../main.cpp" line="118"/>
         <source>thumbnail-size</source>
         <translation>küçük resim-boyutu</translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="113"/>
+        <location filename="../../main.cpp" line="120"/>
         <source>Show build options.</source>
         <translation>Derleme seçeneklerini göster.</translation>
     </message>

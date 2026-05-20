@@ -1,8 +1,6 @@
 /*
-    High Efficiency Image File Format (HEIF) support for QImage.
-
-    SPDX-FileCopyrightText: 2020 Sirius Bakke <sirius@bakke.co>
-    SPDX-FileCopyrightText: 2021 Daniel Novomesky <dnovomesky@gmail.com>
+    HEIF/HEIC image support via FFmpeg for QImage.
+    Read-only decoder plugin.
 
     SPDX-License-Identifier: LGPL-2.0-or-later
 */
@@ -10,10 +8,9 @@
 #ifndef KIMG_HEIF_P_H
 #define KIMG_HEIF_P_H
 
-#include <QByteArray>
 #include <QImage>
 #include <QImageIOPlugin>
-#include <QMutex>
+#include <QSize>
 
 class HEIFHandler : public QImageIOHandler
 {
@@ -22,66 +19,27 @@ public:
 
     bool canRead() const override;
     bool read(QImage *image) override;
-    bool write(const QImage &image) override;
+    bool write(const QImage &) override { return false; }
 
     QVariant option(ImageOption option) const override;
     void setOption(ImageOption option, const QVariant &value) override;
     bool supportsOption(ImageOption option) const override;
 
-    static bool isHeifDecoderAvailable();
-    static bool isHeifEncoderAvailable();
-    static bool isHej2DecoderAvailable();
-    static bool isHej2EncoderAvailable();
-    static bool isAVCIDecoderAvailable();
-
     static bool isSupportedBMFFType(const QByteArray &header);
-    static bool isSupportedHEJ2(const QByteArray &header);
-    static bool isSupportedAVCI(const QByteArray &header);
 
 private:
     bool ensureParsed() const;
-    bool ensureDecoder();
+    bool decodeWithFFmpeg();
 
-    enum ParseHeicState {
-        ParseHeicError = -1,
-        ParseHeicNotParsed = 0,
-        ParseHeicSuccess = 1,
+    enum ParseState {
+        NotParsed = 0,
+        ParseSuccess = 1,
+        ParseError = -1,
     };
 
-    ParseHeicState m_parseState;
-    int m_quality;
+    ParseState m_parseState;
     QImage m_current_image;
-    quint16 m_orientation;
-
-    bool write_helper(const QImage &image);
-
-    /*!
-     * \brief heif_orientation_helper
-     * Read the transform_mirror and transform_rotation_ccw properties and set \a m_orientation
-     * \return True on success, otherwise false.
-     */
-    bool read_orientation_helper(void *heif_handle, const void *heif_ctx);
-
-    /*!
-     * \brief read_crop
-     * Read the crop information.
-     * \return True on success, otherwise false.
-     */
-    bool read_crop(void *heif_handle, const void *heif_ctx, const QSize& size, QRect &crop);
-
-    static void startHeifLib();
-    static void finishHeifLib();
-    static void queryHeifLib();
-    static size_t m_initialized_count;
-
-    static bool m_plugins_queried;
-    static bool m_heif_decoder_available;
-    static bool m_heif_encoder_available;
-    static bool m_hej2_decoder_available;
-    static bool m_hej2_encoder_available;
-    static bool m_avci_decoder_available;
-
-    static QMutex &getHEIFHandlerMutex();
+    int m_quality;
 };
 
 class HEIFPlugin : public QImageIOPlugin

@@ -1,25 +1,23 @@
 /*
-    High Efficiency Image File Format (HEIF) support for QImage.
-
-    SPDX-FileCopyrightText: 2020 Sirius Bakke <sirius@bakke.co>
-    SPDX-FileCopyrightText: 2021 Daniel Novomesky <dnovomesky@gmail.com>
+    HEIF/HEIC image support via FFmpeg for QImage.
+    Read-only decoder plugin.
 
     SPDX-License-Identifier: LGPL-2.0-or-later
 */
 
 #include "heif_p.h"
-#include "microexif_p.h"
-#include "util_p.h"
-#include <libheif/heif.h>
-#include <libheif/heif_properties.h>
+
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
+}
 
 #include <QColorSpace>
+#include <QIODevice>
 #include <QLoggingCategory>
-#include <QPointF>
-#include <QSysInfo>
-
 #include <cstring>
-#include <limits>
 
 #ifdef QT_DEBUG
 Q_LOGGING_CATEGORY(LOG_HEIFPLUGIN, "kf.imageformats.plugins.heif", QtDebugMsg)
@@ -27,1223 +25,321 @@ Q_LOGGING_CATEGORY(LOG_HEIFPLUGIN, "kf.imageformats.plugins.heif", QtDebugMsg)
 Q_LOGGING_CATEGORY(LOG_HEIFPLUGIN, "kf.imageformats.plugins.heif", QtWarningMsg)
 #endif
 
-#ifndef HEIF_MAX_METADATA_SIZE
-/*!
- * XMP and EXIF maximum size.
- */
-#define HEIF_MAX_METADATA_SIZE (4 * 1024 * 1024)
-#endif
+// ─── Custom AVIO for reading from memory ───────────────────────────
 
-#ifndef HEIF_DISABLE_QT_TRANSFORMATION
-/*!
- * HEIF transformations, in addition to rotations and reflections,
- * also support image cropping. Consequently, the Qt plugin, must
- * also honor the crop. This define is useful in case of problems:
- * activating it disables Qt's support for transformations,
- * delegating them to the HEIF libraries (which will therefore
- * always apply them regardless of what is requested from Qt).
- */
-// #define HEIF_DISABLE_QT_TRANSFORMATION
-#endif
+struct MemBuffer {
+    const uint8_t *data;
+    int64_t size;
+    int64_t pos;
+};
 
-size_t HEIFHandler::m_initialized_count = 0;
-bool HEIFHandler::m_plugins_queried = false;
-bool HEIFHandler::m_heif_decoder_available = false;
-bool HEIFHandler::m_heif_encoder_available = false;
-bool HEIFHandler::m_hej2_decoder_available = false;
-bool HEIFHandler::m_hej2_encoder_available = false;
-bool HEIFHandler::m_avci_decoder_available = false;
-
-extern "C" {
-static struct heif_error heifhandler_write_callback(struct heif_context * /* ctx */, const void *data, size_t size, void *userdata)
+static int memRead(void *opaque, uint8_t *buf, int buf_size)
 {
-    heif_error error;
-    error.code = heif_error_Ok;
-    error.subcode = heif_suberror_Unspecified;
-    error.message = "Success";
-
-    if (!userdata || !data || size == 0) {
-        error.code = heif_error_Usage_error;
-        error.subcode = heif_suberror_Null_pointer_argument;
-        error.message = "Wrong parameters!";
-        return error;
-    }
-
-    QIODevice *ioDevice = static_cast<QIODevice *>(userdata);
-    qint64 bytesWritten = ioDevice->write(static_cast<const char *>(data), size);
-
-    if (bytesWritten < static_cast<qint64>(size)) {
-        error.code = heif_error_Encoding_error;
-        error.message = "Bytes written to QIODevice are smaller than input data size";
-        error.subcode = heif_suberror_Cannot_write_output_data;
-    }
-
-    return error;
+    auto *mb = static_cast<MemBuffer *>(opaque);
+    int64_t remaining = mb->size - mb->pos;
+    if (remaining <= 0)
+        return AVERROR_EOF;
+    int toRead = static_cast<int>(qMin(static_cast<int64_t>(buf_size), remaining));
+    memcpy(buf, mb->data + mb->pos, toRead);
+    mb->pos += toRead;
+    return toRead;
 }
+
+static int64_t memSeek(void *opaque, int64_t offset, int whence)
+{
+    auto *mb = static_cast<MemBuffer *>(opaque);
+    switch (whence) {
+    case SEEK_SET: mb->pos = offset; break;
+    case SEEK_CUR: mb->pos += offset; break;
+    case SEEK_END: mb->pos = mb->size + offset; break;
+    case AVSEEK_SIZE: return mb->size;
+    default: return AVERROR(EINVAL);
+    }
+    if (mb->pos < 0) mb->pos = 0;
+    if (mb->pos > mb->size) mb->pos = mb->size;
+    return mb->pos;
 }
+
+// ─── HEIFHandler ───────────────────────────────────────────────────
 
 HEIFHandler::HEIFHandler()
-    : m_parseState(ParseHeicNotParsed)
+    : m_parseState(NotParsed)
     , m_quality(100)
-    , m_orientation(0)
 {
-}
-
-bool HEIFHandler::canRead() const
-{
-    if (m_parseState == ParseHeicNotParsed) {
-        QIODevice *dev = device();
-        if (dev) {
-            const QByteArray header = dev->peek(28);
-
-            if (HEIFHandler::isSupportedBMFFType(header)) {
-                setFormat("heif");
-                return true;
-            }
-
-            if (HEIFHandler::isSupportedHEJ2(header)) {
-                setFormat("hej2");
-                return true;
-            }
-
-            if (HEIFHandler::isSupportedAVCI(header)) {
-                setFormat("avci");
-                return true;
-            }
-        }
-        return false;
-    }
-
-    if (m_parseState != ParseHeicError) {
-        return true;
-    }
-    return false;
-}
-
-bool HEIFHandler::read(QImage *outImage)
-{
-    if (!ensureParsed()) {
-        return false;
-    }
-
-    *outImage = m_current_image;
-    return true;
-}
-
-bool HEIFHandler::write(const QImage &image)
-{
-    if (image.format() == QImage::Format_Invalid || image.isNull()) {
-        qCWarning(LOG_HEIFPLUGIN) << "No image data to save";
-        return false;
-    }
-
-    startHeifLib();
-
-    bool success = write_helper(image);
-
-    finishHeifLib();
-
-    return success;
-}
-
-bool HEIFHandler::write_helper(const QImage &image)
-{
-    int save_depth; // 8 or 10bit per channel
-    QImage::Format tmpformat; // format for temporary image
-    const bool save_alpha = image.hasAlphaChannel();
-
-    switch (image.format()) {
-    case QImage::Format_BGR30:
-    case QImage::Format_A2BGR30_Premultiplied:
-    case QImage::Format_RGB30:
-    case QImage::Format_A2RGB30_Premultiplied:
-    case QImage::Format_Grayscale16:
-    case QImage::Format_RGBX64:
-    case QImage::Format_RGBA64:
-    case QImage::Format_RGBA64_Premultiplied:
-        save_depth = 10;
-        break;
-    default:
-        if (image.depth() > 32) {
-            save_depth = 10;
-        } else {
-            save_depth = 8;
-        }
-        break;
-    }
-
-    heif_compression_format encoder_codec = heif_compression_HEVC;
-    if (format() == "hej2") {
-        encoder_codec = heif_compression_JPEG2000;
-        save_depth = 8; // for compatibility reasons
-    }
-
-    heif_chroma chroma;
-    if (save_depth > 8) {
-        if (save_alpha) {
-            tmpformat = QImage::Format_RGBA64;
-            chroma = (QSysInfo::ByteOrder == QSysInfo::LittleEndian) ? heif_chroma_interleaved_RRGGBBAA_LE : heif_chroma_interleaved_RRGGBBAA_BE;
-        } else {
-            tmpformat = QImage::Format_RGBX64;
-            chroma = (QSysInfo::ByteOrder == QSysInfo::LittleEndian) ? heif_chroma_interleaved_RRGGBB_LE : heif_chroma_interleaved_RRGGBB_BE;
-        }
-    } else {
-        if (save_alpha) {
-            tmpformat = QImage::Format_RGBA8888;
-            chroma = heif_chroma_interleaved_RGBA;
-        } else {
-            tmpformat = QImage::Format_RGB888;
-            chroma = heif_chroma_interleaved_RGB;
-        }
-    }
-
-    QImage tmpimage;
-    auto cs = image.colorSpace();
-    if (cs.isValid() && cs.colorModel() == QColorSpace::ColorModel::Cmyk && image.format() == QImage::Format_CMYK8888) {
-        tmpimage = image.convertedToColorSpace(QColorSpace(QColorSpace::SRgb), tmpformat);
-    } else if (cs.isValid() && cs.colorModel() == QColorSpace::ColorModel::Gray
-               && (image.format() == QImage::Format_Grayscale8 || image.format() == QImage::Format_Grayscale16)) {
-        QColorSpace::TransferFunction trc_new = cs.transferFunction();
-        float gamma_new = cs.gamma();
-        if (trc_new == QColorSpace::TransferFunction::Custom) {
-            trc_new = QColorSpace::TransferFunction::SRgb;
-        }
-        tmpimage = image.convertedToColorSpace(QColorSpace(QColorSpace::Primaries::SRgb, trc_new, gamma_new), tmpformat);
-    } else {
-        tmpimage = image.convertToFormat(tmpformat);
-    }
-
-    struct heif_context *context = heif_context_alloc();
-    struct heif_error err;
-    struct heif_image *h_image = nullptr;
-
-    err = heif_image_create(tmpimage.width(), tmpimage.height(), heif_colorspace_RGB, chroma, &h_image);
-    if (err.code) {
-        qCWarning(LOG_HEIFPLUGIN) << "heif_image_create error:" << err.message;
-        heif_context_free(context);
-        return false;
-    }
-
-    QByteArray iccprofile = tmpimage.colorSpace().iccProfile();
-    if (iccprofile.size() > 0) {
-        heif_image_set_raw_color_profile(h_image, "prof", iccprofile.constData(), iccprofile.size());
-    }
-
-    heif_image_add_plane(h_image, heif_channel_interleaved, image.width(), image.height(), save_depth);
-    int stride = 0;
-    uint8_t *const dst = heif_image_get_plane(h_image, heif_channel_interleaved, &stride);
-    size_t rowbytes;
-
-    switch (save_depth) {
-    case 10:
-        if (save_alpha) {
-            for (int y = 0; y < tmpimage.height(); y++) {
-                const uint16_t *src_word = reinterpret_cast<const uint16_t *>(tmpimage.constScanLine(y));
-                uint16_t *dest_word = reinterpret_cast<uint16_t *>(dst + (y * stride));
-                for (int x = 0; x < tmpimage.width(); x++) {
-                    int tmp_pixelval;
-                    // R
-                    tmp_pixelval = (int)(((float)(*src_word) / 65535.0f) * 1023.0f + 0.5f);
-                    *dest_word = qBound(0, tmp_pixelval, 1023);
-                    src_word++;
-                    dest_word++;
-                    // G
-                    tmp_pixelval = (int)(((float)(*src_word) / 65535.0f) * 1023.0f + 0.5f);
-                    *dest_word = qBound(0, tmp_pixelval, 1023);
-                    src_word++;
-                    dest_word++;
-                    // B
-                    tmp_pixelval = (int)(((float)(*src_word) / 65535.0f) * 1023.0f + 0.5f);
-                    *dest_word = qBound(0, tmp_pixelval, 1023);
-                    src_word++;
-                    dest_word++;
-                    // A
-                    tmp_pixelval = (int)(((float)(*src_word) / 65535.0f) * 1023.0f + 0.5f);
-                    *dest_word = qBound(0, tmp_pixelval, 1023);
-                    src_word++;
-                    dest_word++;
-                }
-            }
-        } else { // no alpha channel
-            for (int y = 0; y < tmpimage.height(); y++) {
-                const uint16_t *src_word = reinterpret_cast<const uint16_t *>(tmpimage.constScanLine(y));
-                uint16_t *dest_word = reinterpret_cast<uint16_t *>(dst + (y * stride));
-                for (int x = 0; x < tmpimage.width(); x++) {
-                    int tmp_pixelval;
-                    // R
-                    tmp_pixelval = (int)(((float)(*src_word) / 65535.0f) * 1023.0f + 0.5f);
-                    *dest_word = qBound(0, tmp_pixelval, 1023);
-                    src_word++;
-                    dest_word++;
-                    // G
-                    tmp_pixelval = (int)(((float)(*src_word) / 65535.0f) * 1023.0f + 0.5f);
-                    *dest_word = qBound(0, tmp_pixelval, 1023);
-                    src_word++;
-                    dest_word++;
-                    // B
-                    tmp_pixelval = (int)(((float)(*src_word) / 65535.0f) * 1023.0f + 0.5f);
-                    *dest_word = qBound(0, tmp_pixelval, 1023);
-                    src_word++;
-                    dest_word++;
-                    // X
-                    src_word++;
-                }
-            }
-        }
-        break;
-    case 8:
-        rowbytes = save_alpha ? (tmpimage.width() * 4) : (tmpimage.width() * 3);
-        for (int y = 0; y < tmpimage.height(); y++) {
-            memcpy(dst + (y * stride), tmpimage.constScanLine(y), rowbytes);
-        }
-        break;
-    default:
-        qCWarning(LOG_HEIFPLUGIN) << "Unsupported depth:" << save_depth;
-        heif_image_release(h_image);
-        heif_context_free(context);
-        return false;
-        break;
-    }
-
-    struct heif_encoder *encoder = nullptr;
-    err = heif_context_get_encoder_for_format(context, encoder_codec, &encoder);
-    if (err.code) {
-        qCWarning(LOG_HEIFPLUGIN) << "Unable to get an encoder instance:" << err.message;
-        heif_image_release(h_image);
-        heif_context_free(context);
-        return false;
-    }
-
-    heif_encoder_set_lossy_quality(encoder, m_quality);
-    if (m_quality > 90) {
-        if (m_quality == 100) {
-            heif_encoder_set_lossless(encoder, true);
-        }
-        heif_encoder_set_parameter_string(encoder, "chroma", "444");
-    }
-
-    struct heif_encoding_options *encoder_options = heif_encoding_options_alloc();
-    encoder_options->save_alpha_channel = save_alpha;
-
-    if ((tmpimage.width() % 2 == 1) || (tmpimage.height() % 2 == 1)) {
-        qCWarning(LOG_HEIFPLUGIN) << "Image has odd dimension!\nUse even-numbered dimension(s) for better compatibility with other HEIF implementations.";
-        if (save_alpha) {
-            // This helps to save alpha channel when image has odd dimension
-            encoder_options->macOS_compatibility_workaround = 0;
-        }
-    }
-
-    if (m_orientation >= 1 && m_orientation <= 8) {
-        // Function available from HEIF v1.14
-        encoder_options->image_orientation = heif_orientation(m_orientation);
-    }
-
-    struct heif_image_handle *handle;
-    err = heif_context_encode_image(context, h_image, encoder, encoder_options, &handle);
-
-    // exif metadata
-    if (err.code == heif_error_Ok) {
-        auto exif = MicroExif::fromImage(tmpimage);
-        if (m_orientation >= 1 && m_orientation <= 8) {
-            // EXIF orientation must be coherent with HEIF orientation
-            exif.setOrientation(m_orientation);
-        }
-        if (!exif.isEmpty()) {
-            auto ba = exif.toByteArray();
-            err = heif_context_add_exif_metadata(context, handle, ba.constData(), ba.size());
-        }
-    }
-    // xmp metadata
-    if (err.code == heif_error_Ok) {
-        auto xmp = image.text(QStringLiteral(META_KEY_XMP_ADOBE));
-        if (!xmp.isEmpty()) {
-            auto ba = xmp.toUtf8();
-            err = heif_context_add_XMP_metadata(context, handle, ba.constData(), ba.size());
-        }
-    }
-
-    if (encoder_options) {
-        heif_encoding_options_free(encoder_options);
-    }
-
-    if (err.code) {
-        qCWarning(LOG_HEIFPLUGIN) << "heif_context_encode_image failed:" << err.message;
-        heif_encoder_release(encoder);
-        heif_image_release(h_image);
-        heif_context_free(context);
-        return false;
-    }
-
-    struct heif_writer writer;
-    writer.writer_api_version = 1;
-    writer.write = heifhandler_write_callback;
-
-    err = heif_context_write(context, &writer, device());
-
-    heif_encoder_release(encoder);
-    heif_image_release(h_image);
-
-    if (err.code) {
-        qCWarning(LOG_HEIFPLUGIN) << "Writing HEIF image failed:" << err.message;
-        heif_context_free(context);
-        return false;
-    }
-
-    heif_context_free(context);
-    return true;
-}
-
-bool HEIFHandler::read_orientation_helper(void *heif_handle, const void *heif_ctx)
-{
-    if (heif_handle == nullptr || heif_ctx == nullptr) {
-        return false;
-    }
-    auto handle = reinterpret_cast<heif_image_handle *>(heif_handle);
-    auto ctx = reinterpret_cast<const heif_context *>(heif_ctx);
-    auto item_id = heif_image_handle_get_item_id(handle);
-
-    // get the properties
-    heif_transform_mirror_direction mirror = heif_transform_mirror_direction::heif_transform_mirror_direction_invalid;
-    heif_property_id mir_id;
-    if (heif_item_get_properties_of_type(ctx, item_id, heif_item_property_type_transform_mirror, &mir_id, 1) > 0) {
-        mirror = heif_item_get_property_transform_mirror(ctx, item_id, mir_id);
-        if (mirror == heif_transform_mirror_direction::heif_transform_mirror_direction_invalid)
-            return false;
-    }
-
-    int rotation_ccw = -1;
-    heif_property_id rot_id;
-    if (heif_item_get_properties_of_type(ctx, item_id, heif_item_property_type_transform_rotation, &rot_id, 1) > 0) {
-        rotation_ccw = heif_item_get_property_transform_rotation_ccw(ctx, item_id, rot_id);
-        if (rotation_ccw == -1)
-            return false;
-    }
-
-    if (rotation_ccw == -1 && mirror == heif_transform_mirror_direction::heif_transform_mirror_direction_invalid) {
-        m_orientation = 0;
-    } else if (rotation_ccw == 0 && mirror == heif_transform_mirror_direction::heif_transform_mirror_direction_invalid) {
-        m_orientation = 1;
-    } else if (rotation_ccw <= 0 && mirror == heif_transform_mirror_direction::heif_transform_mirror_direction_horizontal) {
-        m_orientation = 2;
-    } else if (rotation_ccw == 180 && mirror == heif_transform_mirror_direction::heif_transform_mirror_direction_invalid) {
-        m_orientation = 3;
-    } else if (rotation_ccw <= 0 && mirror == heif_transform_mirror_direction::heif_transform_mirror_direction_vertical) {
-        m_orientation = 4;
-    } else if (rotation_ccw == 270 && mirror == heif_transform_mirror_direction::heif_transform_mirror_direction_horizontal) {
-        m_orientation = 5;
-    } else if (rotation_ccw == 270 && mirror == heif_transform_mirror_direction::heif_transform_mirror_direction_invalid) {
-        m_orientation = 6;
-    } else if (rotation_ccw == 270 && mirror == heif_transform_mirror_direction::heif_transform_mirror_direction_vertical) {
-        m_orientation = 7;
-    } else if (rotation_ccw == 90 && mirror == heif_transform_mirror_direction::heif_transform_mirror_direction_invalid) {
-        m_orientation = 8;
-    }
-
-    return true;
-}
-
-bool HEIFHandler::read_crop(void *heif_handle, const void *heif_ctx, const QSize &size, QRect &crop)
-{
-    if (heif_handle == nullptr || heif_ctx == nullptr) {
-        return false;
-    }
-    auto handle = reinterpret_cast<heif_image_handle *>(heif_handle);
-    auto ctx = reinterpret_cast<const heif_context *>(heif_ctx);
-    auto item_id = heif_image_handle_get_item_id(handle);
-
-    heif_property_id crop_id;
-    if (heif_item_get_properties_of_type(ctx, item_id, heif_item_property_type_transform_crop, &crop_id, 1) > 0) {
-        int l = 0, t = 0, r = 0, b = 0;
-        heif_item_get_property_transform_crop_borders(ctx, item_id, crop_id, size.width(), size.height(), &l, &t, &r, &b);
-        crop = QRect(QPoint(t, l), size - QSize(b + t, r + l));
-    }
-
-    return crop.isValid();
 }
 
 bool HEIFHandler::isSupportedBMFFType(const QByteArray &header)
 {
-    if (header.size() < 28) {
+    if (header.size() < 12)
         return false;
-    }
-
-    const char *buffer = header.constData();
-    if (memcmp(buffer + 4, "ftyp", 4) == 0) {
-        if (memcmp(buffer + 8, "heic", 4) == 0) {
-            return true;
-        }
-        if (memcmp(buffer + 8, "heis", 4) == 0) {
-            return true;
-        }
-        if (memcmp(buffer + 8, "heix", 4) == 0) {
-            return true;
-        }
-
-        /* we want to avoid loading AVIF files via this plugin */
-        if (memcmp(buffer + 8, "mif1", 4) == 0) {
-            for (int offset = 16; offset <= 24; offset += 4) {
-                if (memcmp(buffer + offset, "avif", 4) == 0) {
-                    return false;
+    const char *buf = header.constData();
+    if (memcmp(buf + 4, "ftyp", 4) != 0)
+        return false;
+    // HEIC/HEIF brand detection
+    static const char *brands[] = { "heic", "heis", "heix", "mif1", "mif2", "msf1" };
+    for (auto brand : brands) {
+        if (memcmp(buf + 8, brand, 4) == 0) {
+            // exclude AVIF (mif1 with avif compatible brand)
+            if (memcmp(buf + 8, "mif1", 4) == 0 && header.size() >= 28) {
+                for (int off = 16; off <= 24; off += 4) {
+                    if (memcmp(buf + off, "avif", 4) == 0)
+                        return false;
                 }
             }
             return true;
         }
-
-        if (memcmp(buffer + 8, "mif2", 4) == 0) {
-            return true;
-        }
-        if (memcmp(buffer + 8, "msf1", 4) == 0) {
-            return true;
-        }
     }
-
     return false;
 }
 
-bool HEIFHandler::isSupportedHEJ2(const QByteArray &header)
+bool HEIFHandler::canRead() const
 {
-    if (header.size() < 28) {
+    if (m_parseState == NotParsed) {
+        QIODevice *dev = device();
+        if (dev) {
+            const QByteArray header = dev->peek(28);
+            if (isSupportedBMFFType(header)) {
+                const_cast<HEIFHandler *>(this)->setFormat("heif");
+                return true;
+            }
+        }
         return false;
     }
-
-    const char *buffer = header.constData();
-    if (memcmp(buffer + 4, "ftypj2ki", 8) == 0) {
-        return true;
-    }
-
-    return false;
+    return m_parseState == ParseSuccess;
 }
 
-bool HEIFHandler::isSupportedAVCI(const QByteArray &header)
+bool HEIFHandler::read(QImage *outImage)
 {
-    if (header.size() < 28) {
+    if (!ensureParsed())
         return false;
-    }
-
-    const char *buffer = header.constData();
-    if (memcmp(buffer + 4, "ftypavci", 8) == 0) {
-        return true;
-    }
-
-    return false;
+    *outImage = m_current_image;
+    return true;
 }
 
 QVariant HEIFHandler::option(ImageOption option) const
 {
-    if (option == Quality) {
+    if (option == Quality)
         return m_quality;
-    }
-
-    if (!supportsOption(option) || !ensureParsed()) {
-        return QVariant();
-    }
-
-    switch (option) {
-    case Size:
+    if (option == Size && ensureParsed())
         return m_current_image.size();
-    case ImageTransformation:
-        return int(MicroExif::orientationToTransformation(m_orientation));
-    default:
-        return QVariant();
-    }
+    return QVariant();
 }
 
 void HEIFHandler::setOption(ImageOption option, const QVariant &value)
 {
-    switch (option) {
-    case Quality:
-        m_quality = value.toInt();
-        if (m_quality > 100) {
-            m_quality = 100;
-        } else if (m_quality < 0) {
-            m_quality = 100;
-        }
-        break;
-    case ImageTransformation:
-        m_orientation = MicroExif::transformationToOrientation(QImageIOHandler::Transformation(value.toUInt()));
-        break;
-    default:
-        QImageIOHandler::setOption(option, value);
-        break;
+    if (option == Quality) {
+        m_quality = qBound(0, value.toInt(), 100);
     }
 }
 
 bool HEIFHandler::supportsOption(ImageOption option) const
 {
-    auto ok = option == Quality || option == Size;
-#ifndef HEIF_DISABLE_QT_TRANSFORMATION
-    ok = ok || option == ImageTransformation;
-#endif
-    return ok;
+    return option == Quality || option == Size;
 }
 
 bool HEIFHandler::ensureParsed() const
 {
-    if (m_parseState == ParseHeicSuccess) {
-        return true;
-    }
-    if (m_parseState == ParseHeicError) {
-        return false;
-    }
-
-    HEIFHandler *that = const_cast<HEIFHandler *>(this);
-
-    startHeifLib();
-
-    bool success = that->ensureDecoder();
-
-    finishHeifLib();
-
-    return success;
+    if (m_parseState == ParseSuccess) return true;
+    if (m_parseState == ParseError) return false;
+    return const_cast<HEIFHandler *>(this)->decodeWithFFmpeg();
 }
 
-bool HEIFHandler::ensureDecoder()
+bool HEIFHandler::decodeWithFFmpeg()
 {
-    if (m_parseState != ParseHeicNotParsed) {
-        if (m_parseState == ParseHeicSuccess) {
-            return true;
+    // Read all data from device
+    QByteArray fileData = device()->readAll();
+    if (fileData.isEmpty()) {
+        qCWarning(LOG_HEIFPLUGIN) << "Empty input data";
+        m_parseState = ParseError;
+        return false;
+    }
+
+    // Set up custom AVIO context for in-memory reading
+    MemBuffer mb;
+    mb.data = reinterpret_cast<const uint8_t *>(fileData.constData());
+    mb.size = fileData.size();
+    mb.pos = 0;
+
+    const int avioBufSize = 32768;
+    auto *avioBuf = static_cast<uint8_t *>(av_malloc(avioBufSize));
+    if (!avioBuf) {
+        m_parseState = ParseError;
+        return false;
+    }
+
+    AVIOContext *avioCtx = avio_alloc_context(avioBuf, avioBufSize, 0, &mb, memRead, nullptr, memSeek);
+    if (!avioCtx) {
+        av_free(avioBuf);
+        m_parseState = ParseError;
+        return false;
+    }
+
+    AVFormatContext *fmtCtx = avformat_alloc_context();
+    fmtCtx->pb = avioCtx;
+
+    int ret = avformat_open_input(&fmtCtx, nullptr, nullptr, nullptr);
+    if (ret < 0) {
+        qCWarning(LOG_HEIFPLUGIN) << "avformat_open_input failed:" << ret;
+        avio_context_free(&avioCtx);
+        m_parseState = ParseError;
+        return false;
+    }
+
+    ret = avformat_find_stream_info(fmtCtx, nullptr);
+    if (ret < 0) {
+        qCWarning(LOG_HEIFPLUGIN) << "avformat_find_stream_info failed:" << ret;
+        avformat_close_input(&fmtCtx);
+        avio_context_free(&avioCtx);
+        m_parseState = ParseError;
+        return false;
+    }
+
+    // Find video stream
+    int videoIdx = -1;
+    for (unsigned i = 0; i < fmtCtx->nb_streams; i++) {
+        if (fmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+            videoIdx = static_cast<int>(i);
+            break;
         }
+    }
+    if (videoIdx < 0) {
+        qCWarning(LOG_HEIFPLUGIN) << "No video stream found";
+        avformat_close_input(&fmtCtx);
+        avio_context_free(&avioCtx);
+        m_parseState = ParseError;
         return false;
     }
 
-    const QByteArray buffer = device()->readAll();
-    if (!HEIFHandler::isSupportedBMFFType(buffer) && !HEIFHandler::isSupportedHEJ2(buffer) && !HEIFHandler::isSupportedAVCI(buffer)) {
-        m_parseState = ParseHeicError;
+    AVCodecParameters *codecpar = fmtCtx->streams[videoIdx]->codecpar;
+    const AVCodec *codec = avcodec_find_decoder(codecpar->codec_id);
+    if (!codec) {
+        qCWarning(LOG_HEIFPLUGIN) << "No decoder found for codec id" << codecpar->codec_id;
+        avformat_close_input(&fmtCtx);
+        avio_context_free(&avioCtx);
+        m_parseState = ParseError;
         return false;
     }
 
-    struct heif_context *ctx = heif_context_alloc();
-    struct heif_error err = heif_context_read_from_memory(ctx, static_cast<const void *>(buffer.constData()), buffer.size(), nullptr);
-
-    if (err.code) {
-        qCWarning(LOG_HEIFPLUGIN) << "heif_context_read_from_memory error:" << err.message;
-        heif_context_free(ctx);
-        m_parseState = ParseHeicError;
+    AVCodecContext *codecCtx = avcodec_alloc_context3(codec);
+    avcodec_parameters_to_context(codecCtx, codecpar);
+    ret = avcodec_open2(codecCtx, codec, nullptr);
+    if (ret < 0) {
+        qCWarning(LOG_HEIFPLUGIN) << "avcodec_open2 failed:" << ret;
+        avcodec_free_context(&codecCtx);
+        avformat_close_input(&fmtCtx);
+        avio_context_free(&avioCtx);
+        m_parseState = ParseError;
         return false;
     }
 
-    struct heif_image_handle *handle = nullptr;
-    err = heif_context_get_primary_image_handle(ctx, &handle);
-    if (err.code) {
-        qCWarning(LOG_HEIFPLUGIN) << "heif_context_get_primary_image_handle error:" << err.message;
-        heif_context_free(ctx);
-        m_parseState = ParseHeicError;
-        return false;
-    }
+    // Decode the first frame
+    AVPacket *pkt = av_packet_alloc();
+    AVFrame *frame = av_frame_alloc();
+    bool decoded = false;
 
-    if ((heif_image_handle_get_width(handle) == 0) || (heif_image_handle_get_height(handle) == 0)) {
-        m_parseState = ParseHeicError;
-        heif_image_handle_release(handle);
-        heif_context_free(ctx);
-        qCWarning(LOG_HEIFPLUGIN) << "HEIC image has zero dimension";
-        return false;
-    }
-
-    const int bit_depth = heif_image_handle_get_luma_bits_per_pixel(handle);
-
-    if (bit_depth < 8) {
-        m_parseState = ParseHeicError;
-        heif_image_handle_release(handle);
-        heif_context_free(ctx);
-        qCWarning(LOG_HEIFPLUGIN) << "HEIF image with undefined or unsupported bit depth.";
-        return false;
-    }
-
-    const bool hasAlphaChannel = heif_image_handle_has_alpha_channel(handle);
-    heif_chroma chroma;
-
-    QImage::Format target_image_format;
-
-    if (bit_depth == 10 || bit_depth == 12 || bit_depth == 16) {
-        if (hasAlphaChannel) {
-            chroma = (QSysInfo::ByteOrder == QSysInfo::LittleEndian) ? heif_chroma_interleaved_RRGGBBAA_LE : heif_chroma_interleaved_RRGGBBAA_BE;
-            target_image_format = QImage::Format_RGBA64;
-        } else {
-            chroma = (QSysInfo::ByteOrder == QSysInfo::LittleEndian) ? heif_chroma_interleaved_RRGGBB_LE : heif_chroma_interleaved_RRGGBB_BE;
-            target_image_format = QImage::Format_RGBX64;
+    while (av_read_frame(fmtCtx, pkt) >= 0) {
+        if (pkt->stream_index != videoIdx) {
+            av_packet_unref(pkt);
+            continue;
         }
-    } else if (bit_depth == 8) {
-        if (hasAlphaChannel) {
-            chroma = heif_chroma_interleaved_RGBA;
-            target_image_format = QImage::Format_ARGB32;
-        } else {
-            chroma = heif_chroma_interleaved_RGB;
-            target_image_format = QImage::Format_RGB32;
+        ret = avcodec_send_packet(codecCtx, pkt);
+        av_packet_unref(pkt);
+        if (ret < 0) break;
+
+        ret = avcodec_receive_frame(codecCtx, frame);
+        if (ret == 0) {
+            decoded = true;
+            break;
         }
-    } else {
-        m_parseState = ParseHeicError;
-        heif_image_handle_release(handle);
-        heif_context_free(ctx);
-        qCWarning(LOG_HEIFPLUGIN) << "Unsupported bit depth:" << bit_depth;
+    }
+
+    // Flush decoder if we haven't got a frame yet
+    if (!decoded) {
+        avcodec_send_packet(codecCtx, nullptr);
+        if (avcodec_receive_frame(codecCtx, frame) == 0)
+            decoded = true;
+    }
+
+    if (!decoded || frame->width <= 0 || frame->height <= 0) {
+        qCWarning(LOG_HEIFPLUGIN) << "Failed to decode HEIF frame";
+        av_frame_free(&frame);
+        av_packet_free(&pkt);
+        avcodec_free_context(&codecCtx);
+        avformat_close_input(&fmtCtx);
+        avio_context_free(&avioCtx);
+        m_parseState = ParseError;
         return false;
     }
 
-    bool ignore_transformations = false;
-    struct heif_decoding_options *decoder_option = heif_decoding_options_alloc();
+    // Convert to BGRA → QImage::Format_ARGB32
+    const int w = frame->width;
+    const int h = frame->height;
 
-    decoder_option->strict_decoding = 1;
-#ifdef HEIF_DISABLE_QT_TRANSFORMATION
-    decoder_option->ignore_transformations = ignore_transformations;
-#else
-    decoder_option->ignore_transformations = ignore_transformations = read_orientation_helper(handle, ctx);
-#endif
-
-    struct heif_image *img = nullptr;
-    err = heif_decode_image(handle, &img, heif_colorspace_RGB, chroma, decoder_option);
-
-    if (err.code == heif_error_Invalid_input && err.subcode == heif_suberror_Unknown_NCLX_matrix_coefficients && img == nullptr && buffer.contains("Xiaomi")) {
-        qCWarning(LOG_HEIFPLUGIN) << "Non-standard HEIF image with invalid matrix_coefficients, probably made by a Xiaomi device!";
-
-        // second try to decode with strict decoding disabled
-        decoder_option->strict_decoding = 0;
-        err = heif_decode_image(handle, &img, heif_colorspace_RGB, chroma, decoder_option);
-    }
-
-    if (decoder_option) {
-        heif_decoding_options_free(decoder_option);
-    }
-
-    if (err.code) {
-        qCWarning(LOG_HEIFPLUGIN) << "heif_decode_image error:" << err.message;
-        heif_image_handle_release(handle);
-        heif_context_free(ctx);
-        m_parseState = ParseHeicError;
-        return false;
-    }
-
-    const int imageWidth = heif_image_get_width(img, heif_channel_interleaved);
-    const int imageHeight = heif_image_get_height(img, heif_channel_interleaved);
-
-    QSize imageSize(imageWidth, imageHeight);
-
-    if (!imageSize.isValid()) {
-        heif_image_release(img);
-        heif_image_handle_release(handle);
-        heif_context_free(ctx);
-        m_parseState = ParseHeicError;
-        qCWarning(LOG_HEIFPLUGIN) << "HEIC image size invalid:" << imageSize;
-        return false;
-    }
-
-    int stride = 0;
-    const uint8_t *const src = heif_image_get_plane_readonly(img, heif_channel_interleaved, &stride);
-
-    if (!src || stride <= 0) {
-        heif_image_release(img);
-        heif_image_handle_release(handle);
-        heif_context_free(ctx);
-        m_parseState = ParseHeicError;
-        qCWarning(LOG_HEIFPLUGIN) << "HEIC data pixels information not valid!";
-        return false;
-    }
-
-    m_current_image = imageAlloc(imageSize, target_image_format);
+    m_current_image = QImage(w, h, QImage::Format_ARGB32);
     if (m_current_image.isNull()) {
-        heif_image_release(img);
-        heif_image_handle_release(handle);
-        heif_context_free(ctx);
-        m_parseState = ParseHeicError;
-        qCWarning(LOG_HEIFPLUGIN) << "Unable to allocate memory!";
+        qCWarning(LOG_HEIFPLUGIN) << "Failed to allocate QImage" << w << "x" << h;
+        av_frame_free(&frame);
+        av_packet_free(&pkt);
+        avcodec_free_context(&codecCtx);
+        avformat_close_input(&fmtCtx);
+        avio_context_free(&avioCtx);
+        m_parseState = ParseError;
         return false;
     }
 
-    switch (bit_depth) {
-    case 16:
-        if (hasAlphaChannel) {
-            for (int y = 0; y < imageHeight; y++) {
-                memcpy(m_current_image.scanLine(y), src + (y * stride), 8 * size_t(imageWidth));
-            }
-        } else { // no alpha channel
-            for (int y = 0; y < imageHeight; y++) {
-                const uint16_t *src_word = reinterpret_cast<const uint16_t *>(src + (y * stride));
-                uint16_t *dest_data = reinterpret_cast<uint16_t *>(m_current_image.scanLine(y));
-                for (int x = 0; x < imageWidth; x++) {
-                    // R
-                    *dest_data = *src_word;
-                    src_word++;
-                    dest_data++;
-                    // G
-                    *dest_data = *src_word;
-                    src_word++;
-                    dest_data++;
-                    // B
-                    *dest_data = *src_word;
-                    src_word++;
-                    dest_data++;
-                    // X = 0xffff
-                    *dest_data = 0xffff;
-                    dest_data++;
-                }
-            }
-        }
-        break;
-    case 12:
-        if (hasAlphaChannel) {
-            for (int y = 0; y < imageHeight; y++) {
-                const uint16_t *src_word = reinterpret_cast<const uint16_t *>(src + (y * stride));
-                uint16_t *dest_data = reinterpret_cast<uint16_t *>(m_current_image.scanLine(y));
-                for (int x = 0; x < imageWidth; x++) {
-                    int tmpvalue;
-                    // R
-                    tmpvalue = (int)(((float)(0x0fff & (*src_word)) / 4095.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // G
-                    tmpvalue = (int)(((float)(0x0fff & (*src_word)) / 4095.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // B
-                    tmpvalue = (int)(((float)(0x0fff & (*src_word)) / 4095.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // A
-                    tmpvalue = (int)(((float)(0x0fff & (*src_word)) / 4095.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                }
-            }
-        } else { // no alpha channel
-            for (int y = 0; y < imageHeight; y++) {
-                const uint16_t *src_word = reinterpret_cast<const uint16_t *>(src + (y * stride));
-                uint16_t *dest_data = reinterpret_cast<uint16_t *>(m_current_image.scanLine(y));
-                for (int x = 0; x < imageWidth; x++) {
-                    int tmpvalue;
-                    // R
-                    tmpvalue = (int)(((float)(0x0fff & (*src_word)) / 4095.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // G
-                    tmpvalue = (int)(((float)(0x0fff & (*src_word)) / 4095.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // B
-                    tmpvalue = (int)(((float)(0x0fff & (*src_word)) / 4095.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // X = 0xffff
-                    *dest_data = 0xffff;
-                    dest_data++;
-                }
-            }
-        }
-        break;
-    case 10:
-        if (hasAlphaChannel) {
-            for (int y = 0; y < imageHeight; y++) {
-                const uint16_t *src_word = reinterpret_cast<const uint16_t *>(src + (y * stride));
-                uint16_t *dest_data = reinterpret_cast<uint16_t *>(m_current_image.scanLine(y));
-                for (int x = 0; x < imageWidth; x++) {
-                    int tmpvalue;
-                    // R
-                    tmpvalue = (int)(((float)(0x03ff & (*src_word)) / 1023.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // G
-                    tmpvalue = (int)(((float)(0x03ff & (*src_word)) / 1023.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // B
-                    tmpvalue = (int)(((float)(0x03ff & (*src_word)) / 1023.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // A
-                    tmpvalue = (int)(((float)(0x03ff & (*src_word)) / 1023.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                }
-            }
-        } else { // no alpha channel
-            for (int y = 0; y < imageHeight; y++) {
-                const uint16_t *src_word = reinterpret_cast<const uint16_t *>(src + (y * stride));
-                uint16_t *dest_data = reinterpret_cast<uint16_t *>(m_current_image.scanLine(y));
-                for (int x = 0; x < imageWidth; x++) {
-                    int tmpvalue;
-                    // R
-                    tmpvalue = (int)(((float)(0x03ff & (*src_word)) / 1023.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // G
-                    tmpvalue = (int)(((float)(0x03ff & (*src_word)) / 1023.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // B
-                    tmpvalue = (int)(((float)(0x03ff & (*src_word)) / 1023.0f) * 65535.0f + 0.5f);
-                    tmpvalue = qBound(0, tmpvalue, 65535);
-                    *dest_data = (uint16_t)tmpvalue;
-                    src_word++;
-                    dest_data++;
-                    // X = 0xffff
-                    *dest_data = 0xffff;
-                    dest_data++;
-                }
-            }
-        }
-        break;
-    case 8:
-        if (hasAlphaChannel) {
-            for (int y = 0; y < imageHeight; y++) {
-                const uint8_t *src_byte = src + (y * stride);
-                uint32_t *dest_pixel = reinterpret_cast<uint32_t *>(m_current_image.scanLine(y));
-                for (int x = 0; x < imageWidth; x++) {
-                    int red = *src_byte++;
-                    int green = *src_byte++;
-                    int blue = *src_byte++;
-                    int alpha = *src_byte++;
-                    *dest_pixel = qRgba(red, green, blue, alpha);
-                    dest_pixel++;
-                }
-            }
-        } else { // no alpha channel
-            for (int y = 0; y < imageHeight; y++) {
-                const uint8_t *src_byte = src + (y * stride);
-                uint32_t *dest_pixel = reinterpret_cast<uint32_t *>(m_current_image.scanLine(y));
-                for (int x = 0; x < imageWidth; x++) {
-                    int red = *src_byte++;
-                    int green = *src_byte++;
-                    int blue = *src_byte++;
-                    *dest_pixel = qRgb(red, green, blue);
-                    dest_pixel++;
-                }
-            }
-        }
-        break;
-    default:
-        heif_image_release(img);
-        heif_image_handle_release(handle);
-        heif_context_free(ctx);
-        m_parseState = ParseHeicError;
-        qCWarning(LOG_HEIFPLUGIN) << "Unsupported bit depth:" << bit_depth;
+    SwsContext *swsCtx = sws_getContext(
+        w, h, static_cast<AVPixelFormat>(frame->format),
+        w, h, AV_PIX_FMT_BGRA,
+        SWS_BILINEAR, nullptr, nullptr, nullptr);
+
+    if (!swsCtx) {
+        qCWarning(LOG_HEIFPLUGIN) << "sws_getContext failed";
+        m_current_image = QImage();
+        av_frame_free(&frame);
+        av_packet_free(&pkt);
+        avcodec_free_context(&codecCtx);
+        avformat_close_input(&fmtCtx);
+        avio_context_free(&avioCtx);
+        m_parseState = ParseError;
         return false;
-        break;
     }
 
-    if (ignore_transformations) {
-        QRect crop_rect;
-        if (read_crop(handle, ctx, m_current_image.size(), crop_rect))
-            m_current_image = m_current_image.copy(crop_rect);
-    }
+    uint8_t *dstData[1] = { m_current_image.bits() };
+    int dstLinesize[1] = { static_cast<int>(m_current_image.bytesPerLine()) };
+    sws_scale(swsCtx, frame->data, frame->linesize, 0, h, dstData, dstLinesize);
+    sws_freeContext(swsCtx);
 
-    heif_color_profile_type profileType = heif_image_handle_get_color_profile_type(handle);
-    if (profileType == heif_color_profile_type_prof || profileType == heif_color_profile_type_rICC) {
-        size_t rawProfileSize = heif_image_handle_get_raw_color_profile_size(handle);
-        if (rawProfileSize > 0 && rawProfileSize < std::numeric_limits<int>::max()) {
-            QByteArray ba(rawProfileSize, 0);
-            err = heif_image_handle_get_raw_color_profile(handle, ba.data());
-            if (err.code) {
-                qCWarning(LOG_HEIFPLUGIN) << "icc profile loading failed";
-            } else {
-                QColorSpace colorspace = QColorSpace::fromIccProfile(ba);
-                if (!colorspace.isValid()) {
-                    qCWarning(LOG_HEIFPLUGIN) << "HEIC image has Qt-unsupported or invalid ICC profile!";
-                } else if (colorspace.colorModel() == QColorSpace::ColorModel::Cmyk) {
-                    qCWarning(LOG_HEIFPLUGIN) << "CMYK ICC profile is not expected for HEIF, discarding the ICCprofile!";
-                    colorspace = QColorSpace();
-                } else if (colorspace.colorModel() == QColorSpace::ColorModel::Gray) {
-                    if (hasAlphaChannel) {
-                        QPointF gray_whitePoint = colorspace.whitePoint();
-                        if (gray_whitePoint.isNull()) {
-                            gray_whitePoint = QPointF(0.3127f, 0.329f);
-                        }
+    // Try to set sRGB color space
+    m_current_image.setColorSpace(QColorSpace(QColorSpace::SRgb));
 
-                        const QPointF redP(0.64f, 0.33f);
-                        const QPointF greenP(0.3f, 0.6f);
-                        const QPointF blueP(0.15f, 0.06f);
+    // Cleanup
+    av_frame_free(&frame);
+    av_packet_free(&pkt);
+    avcodec_free_context(&codecCtx);
+    avformat_close_input(&fmtCtx);
+    avio_context_free(&avioCtx);
 
-                        QColorSpace::TransferFunction trc_new = colorspace.transferFunction();
-                        float gamma_new = colorspace.gamma();
-                        if (trc_new == QColorSpace::TransferFunction::Custom) {
-                            trc_new = QColorSpace::TransferFunction::SRgb;
-                        }
-                        colorspace = QColorSpace(gray_whitePoint, redP, greenP, blueP, trc_new, gamma_new);
-                        if (!colorspace.isValid()) {
-                            qCWarning(LOG_HEIFPLUGIN) << "HEIF plugin created invalid QColorSpace!";
-                        }
-                    } else { // no alpha channel
-                        m_current_image.convertTo(bit_depth > 8 ? QImage::Format_Grayscale16 : QImage::Format_Grayscale8);
-                    }
-                }
-                m_current_image.setColorSpace(colorspace);
-            }
-        } else {
-            qCWarning(LOG_HEIFPLUGIN) << "icc profile is empty or above limits";
-        }
-
-    } else if (profileType == heif_color_profile_type_nclx) {
-        struct heif_color_profile_nclx *nclx = nullptr;
-        err = heif_image_handle_get_nclx_color_profile(handle, &nclx);
-        if (err.code || !nclx) {
-            qCWarning(LOG_HEIFPLUGIN) << "nclx profile loading failed";
-        } else {
-            const QPointF redPoint(nclx->color_primary_red_x, nclx->color_primary_red_y);
-            const QPointF greenPoint(nclx->color_primary_green_x, nclx->color_primary_green_y);
-            const QPointF bluePoint(nclx->color_primary_blue_x, nclx->color_primary_blue_y);
-            const QPointF whitePoint(nclx->color_primary_white_x, nclx->color_primary_white_y);
-
-            QColorSpace::TransferFunction q_trc = QColorSpace::TransferFunction::Custom;
-            float q_trc_gamma = 0.0f;
-
-            switch (nclx->transfer_characteristics) {
-            case 4:
-                q_trc = QColorSpace::TransferFunction::Gamma;
-                q_trc_gamma = 2.2f;
-                break;
-            case 5:
-                q_trc = QColorSpace::TransferFunction::Gamma;
-                q_trc_gamma = 2.8f;
-                break;
-            case 8:
-                q_trc = QColorSpace::TransferFunction::Linear;
-                break;
-            case 2:
-            case 13:
-                q_trc = QColorSpace::TransferFunction::SRgb;
-                break;
-            case 16:
-                q_trc = QColorSpace::TransferFunction::St2084;
-                break;
-            case 18:
-                q_trc = QColorSpace::TransferFunction::Hlg;
-                break;
-            default:
-                qCWarning(LOG_HEIFPLUGIN) << "CICP color_primaries: %d, transfer_characteristics: %d\nThe colorspace is unsupported by this plug-in yet."
-                                          << nclx->color_primaries
-                                          << nclx->transfer_characteristics;
-                q_trc = QColorSpace::TransferFunction::SRgb;
-                break;
-            }
-
-            if (q_trc != QColorSpace::TransferFunction::Custom) { // we create new colorspace using Qt
-                switch (nclx->color_primaries) {
-                case 1:
-                case 2:
-                    m_current_image.setColorSpace(QColorSpace(QColorSpace::Primaries::SRgb, q_trc, q_trc_gamma));
-                    break;
-                case 12:
-                    m_current_image.setColorSpace(QColorSpace(QColorSpace::Primaries::DciP3D65, q_trc, q_trc_gamma));
-                    break;
-                default:
-                    m_current_image.setColorSpace(QColorSpace(whitePoint, redPoint, greenPoint, bluePoint, q_trc, q_trc_gamma));
-                    break;
-                }
-            }
-            heif_nclx_color_profile_free(nclx);
-
-            if (!m_current_image.colorSpace().isValid()) {
-                qCWarning(LOG_HEIFPLUGIN) << "HEIC plugin created invalid QColorSpace from NCLX!";
-            }
-        }
-
-    } else {
-        m_current_image.setColorSpace(QColorSpace(QColorSpace::SRgb));
-    }
-
-    // read metadata
-    if (auto numMetadata = heif_image_handle_get_number_of_metadata_blocks(handle, nullptr)) {
-        QVector<heif_item_id> ids(numMetadata);
-        heif_image_handle_get_list_of_metadata_block_IDs(handle, nullptr, ids.data(), numMetadata);
-        for (int n = 0; n < numMetadata; ++n) {
-            auto itemtype = heif_image_handle_get_metadata_type(handle, ids[n]);
-            auto contenttype = heif_image_handle_get_metadata_content_type(handle, ids[n]);
-            auto isExif = !std::strcmp(itemtype, "Exif");
-            auto isXmp = !std::strcmp(contenttype, "application/rdf+xml");
-            if (isExif || isXmp) {
-                auto sz = heif_image_handle_get_metadata_size(handle, ids[n]);
-                if (sz == 0 || sz >= HEIF_MAX_METADATA_SIZE)
-                    continue;
-                QByteArray ba(sz, char());
-                auto err = heif_image_handle_get_metadata(handle, ids[n], ba.data());
-                if (err.code != heif_error_Ok) {
-                    qCWarning(LOG_HEIFPLUGIN) << "Error while reading metadata" << err.message;
-                    continue;
-                }
-                if (isXmp) {
-                    m_current_image.setText(QStringLiteral(META_KEY_XMP_ADOBE), QString::fromUtf8(ba));
-                } else if (isExif) {
-                    auto exif = MicroExif::fromByteArray(ba, true);
-                    if (!exif.isEmpty()) {
-                        exif.updateImageResolution(m_current_image);
-                        exif.updateImageMetadata(m_current_image);
-                    }
-                }
-            }
-        }
-    }
-
-    heif_image_release(img);
-    heif_image_handle_release(handle);
-    heif_context_free(ctx);
-    m_parseState = ParseHeicSuccess;
+    m_parseState = ParseSuccess;
     return true;
 }
 
-bool HEIFHandler::isHeifDecoderAvailable()
-{
-    HEIFHandler::queryHeifLib();
-
-    return m_heif_decoder_available;
-}
-
-bool HEIFHandler::isHeifEncoderAvailable()
-{
-    HEIFHandler::queryHeifLib();
-
-    return m_heif_encoder_available;
-}
-
-bool HEIFHandler::isHej2DecoderAvailable()
-{
-    HEIFHandler::queryHeifLib();
-
-    return m_hej2_decoder_available;
-}
-
-bool HEIFHandler::isHej2EncoderAvailable()
-{
-    HEIFHandler::queryHeifLib();
-
-    return m_hej2_encoder_available;
-}
-
-bool HEIFHandler::isAVCIDecoderAvailable()
-{
-    HEIFHandler::queryHeifLib();
-
-    return m_avci_decoder_available;
-}
-
-void HEIFHandler::queryHeifLib()
-{
-    QMutexLocker locker(&getHEIFHandlerMutex());
-
-    if (!m_plugins_queried) {
-        if (m_initialized_count == 0) {
-            heif_init(nullptr);
-        }
-
-        m_heif_encoder_available = heif_have_encoder_for_format(heif_compression_HEVC);
-        m_heif_decoder_available = heif_have_decoder_for_format(heif_compression_HEVC);
-        m_hej2_decoder_available = heif_have_decoder_for_format(heif_compression_JPEG2000);
-        m_hej2_encoder_available = heif_have_encoder_for_format(heif_compression_JPEG2000);
-#if LIBHEIF_HAVE_VERSION(1, 19, 6)
-        m_avci_decoder_available = heif_have_decoder_for_format(heif_compression_AVC);
-#endif
-        m_plugins_queried = true;
-
-        if (m_initialized_count == 0) {
-            heif_deinit();
-        }
-    }
-}
-
-void HEIFHandler::startHeifLib()
-{
-    QMutexLocker locker(&getHEIFHandlerMutex());
-
-    if (m_initialized_count == 0) {
-        heif_init(nullptr);
-    }
-
-    m_initialized_count++;
-}
-
-void HEIFHandler::finishHeifLib()
-{
-    QMutexLocker locker(&getHEIFHandlerMutex());
-
-    if (m_initialized_count == 0) {
-        return;
-    }
-
-    m_initialized_count--;
-    if (m_initialized_count == 0) {
-        heif_deinit();
-    }
-}
-
-QMutex &HEIFHandler::getHEIFHandlerMutex()
-{
-    static QMutex heif_handler_mutex;
-    return heif_handler_mutex;
-}
+// ─── Plugin ────────────────────────────────────────────────────────
 
 QImageIOPlugin::Capabilities HEIFPlugin::capabilities(QIODevice *device, const QByteArray &format) const
 {
-    if (format == "heif" || format == "heic") {
-        Capabilities format_cap;
-        if (HEIFHandler::isHeifDecoderAvailable()) {
-            format_cap |= CanRead;
-        }
-        if (HEIFHandler::isHeifEncoderAvailable()) {
-            format_cap |= CanWrite;
-        }
-        return format_cap;
-    }
+    if (format == "heif" || format == "heic")
+        return CanRead;
 
-    if (format == "hej2") {
-        Capabilities format_cap;
-        if (HEIFHandler::isHej2DecoderAvailable()) {
-            format_cap |= CanRead;
-        }
-        if (HEIFHandler::isHej2EncoderAvailable()) {
-            format_cap |= CanWrite;
-        }
-        return format_cap;
-    }
-
-    if (format == "avci") {
-        Capabilities format_cap;
-        if (HEIFHandler::isAVCIDecoderAvailable()) {
-            format_cap |= CanRead;
-        }
-        return format_cap;
-    }
-
-    if (!format.isEmpty()) {
+    if (!format.isEmpty())
         return {};
-    }
-    if (!device->isOpen()) {
+    if (!device || !device->isOpen())
         return {};
-    }
 
     Capabilities cap;
     if (device->isReadable()) {
         const QByteArray header = device->peek(28);
-
-        if ((HEIFHandler::isSupportedBMFFType(header) && HEIFHandler::isHeifDecoderAvailable())
-            || (HEIFHandler::isSupportedHEJ2(header) && HEIFHandler::isHej2DecoderAvailable())
-            || (HEIFHandler::isSupportedAVCI(header) && HEIFHandler::isAVCIDecoderAvailable())) {
+        if (HEIFHandler::isSupportedBMFFType(header))
             cap |= CanRead;
-        }
-    }
-
-    if (device->isWritable() && (HEIFHandler::isHeifEncoderAvailable() || HEIFHandler::isHej2EncoderAvailable())) {
-        cap |= CanWrite;
     }
     return cap;
 }
