@@ -607,6 +607,13 @@
                         </property>
                        </widget>
                       </item>
+                      <item row="2" column="1" colspan="2">
+                       <widget class="QCheckBox" name="enableSmoothZoomCheckBox">
+                        <property name="text">
+                         <string>Enable smooth zooming</string>
+                        </property>
+                       </widget>
+                      </item>
                       <item row="0" column="2">
                        <spacer name="horizontalSpacer_20">
                         <property name="orientation">
@@ -2258,13 +2265,7 @@
                     </property>
                    </widget>
                   </item>
-                   <item>
-                    <widget class="QCheckBox" name="enableSmoothZoomCheckBox">
-                     <property name="text">
-                      <string>Enable smooth zooming</string>
-                     </property>
-                    </widget>
-                   </item>
+
                   <item>
                    <widget class="QWidget" name="widget_11" native="true">
                     <property name="accessibleName">
