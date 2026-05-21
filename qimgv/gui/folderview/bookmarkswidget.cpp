@@ -2,6 +2,7 @@
 #include <QDropEvent>
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
+#include <QFileInfo>
 
 BookmarksWidget::BookmarksWidget(QWidget *parent) : QWidget(parent), highlightedPath("") {
     setAcceptDrops(true);
@@ -35,6 +36,7 @@ void BookmarksWidget::addBookmark(QString dirPath) {
     QUrl url(dirPath);
     BookmarksItem *item = new BookmarksItem(url.fileName(), dirPath);
     layout.addWidget(item);
+    item->show();
     connect(item, &BookmarksItem::clicked, this, &BookmarksWidget::bookmarkClicked);
     connect(item, &BookmarksItem::removeClicked, this, &BookmarksWidget::removeBookmark);
     connect(item, &BookmarksItem::droppedIn, this, &BookmarksWidget::droppedIn);
@@ -100,6 +102,19 @@ void BookmarksWidget::dropEvent(QDropEvent *event) {
             saveBookmarks();
         }
         event->acceptProposedAction();
+    } else if(event->mimeData()->hasUrls()) {
+        const auto urls = event->mimeData()->urls();
+        bool accepted = false;
+        for(const auto &url : urls) {
+            QString localPath = url.toLocalFile();
+            if(!localPath.isEmpty() && QFileInfo(localPath).isDir()) {
+                addBookmark(localPath);
+                accepted = true;
+            }
+        }
+        if(accepted) {
+            event->acceptProposedAction();
+        }
     }
 }
 

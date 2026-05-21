@@ -6,6 +6,7 @@
  */
 
 #include "core.h"
+#include <QRegularExpression>
 
 #ifdef __WIN32
 #include <tchar.h>
@@ -1331,12 +1332,24 @@ bool Core::loadPath(QString path) {
   if (fileInfo.isFile()) {
     int index = model->indexOfFile(fileInfo.absoluteFilePath());
     // DirectoryManager only checks file extensions via regex (performance
-    // reasons) But in this case we force check mimetype
+    // reasons) But in this case we force check mimetype.
+    // If the file index is not found (e.g. delayed loading), check against supported regex.
+    // Falls back to QMimeDatabase query if regex check is not matched.
     if (index == -1) {
-      QStringList types = settings->supportedMimeTypes();
-      QMimeDatabase db;
-      QMimeType type = db.mimeTypeForFile(fileInfo.absoluteFilePath());
-      if (types.contains(type.name())) {
+      bool isSupported = false;
+      QRegularExpression re(settings->supportedFormatsRegex(), QRegularExpression::CaseInsensitiveOption);
+      if (re.match(fileInfo.fileName()).hasMatch()) {
+        isSupported = true;
+      } else {
+        QStringList types = settings->supportedMimeTypes();
+        QMimeDatabase db;
+        QMimeType type = db.mimeTypeForFile(fileInfo.absoluteFilePath());
+        if (types.contains(type.name())) {
+          isSupported = true;
+        }
+      }
+
+      if (isSupported) {
         if (model->forceInsert(fileInfo.absoluteFilePath())) {
           index = model->indexOfFile(fileInfo.absoluteFilePath());
         }

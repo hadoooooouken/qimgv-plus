@@ -4,8 +4,11 @@
 
 $ErrorActionPreference = "Stop"
 
-$projectRoot = $PSScriptRoot
+$projectRoot = Split-Path $PSScriptRoot -Parent
 $buildDir    = Join-Path $projectRoot "out\build\qimgv-vs\imageformats\Release"
+if (-not (Test-Path $buildDir) -or (Get-ChildItem -Path $buildDir -Filter "kimg_*.dll" -ErrorAction SilentlyContinue).Count -eq 0) {
+    $buildDir = Join-Path $projectRoot "out\build\qimgv-x64-release\imageformats"
+}
 $releaseDir  = Join-Path $projectRoot "release\imageformats"
 
 if (-not (Test-Path $buildDir)) {
@@ -43,3 +46,39 @@ if ($copied -eq 0) {
 } else {
     Write-Host "Deployed $copied / $($dlls.Count) plugins." -ForegroundColor Green
 }
+
+# Copy EXR/Imath/OpenJPH dependency DLLs to main release/ directory
+$mainReleaseDir = Join-Path $projectRoot "release"
+if (-not (Test-Path $mainReleaseDir)) {
+    New-Item -ItemType Directory -Path $mainReleaseDir -Force | Out-Null
+}
+
+$depDlls = @(
+    "formats\openexr\install\bin\OpenEXR-4_0.dll"
+    "formats\openexr\install\bin\OpenEXRCore-4_0.dll"
+    "formats\openexr\install\bin\Iex-4_0.dll"
+    "formats\openexr\install\bin\IlmThread-4_0.dll"
+    "formats\openexr\install\bin\OpenEXRUtil-4_0.dll"
+    "formats\Imath\install\bin\Imath-3_2.dll"
+    "formats\OpenJPH\out\build\x64-Release\src\core\openjph.0.27.dll"
+)
+
+Write-Host "Deploying EXR dependency DLLs..." -ForegroundColor Cyan
+foreach ($relPath in $depDlls) {
+    $srcPath = Join-Path $projectRoot $relPath
+    if (Test-Path $srcPath) {
+        $dllFile = Get-Item $srcPath
+        $destPath = Join-Path $mainReleaseDir $dllFile.Name
+        
+        $needsDepCopy = (-not (Test-Path $destPath)) -or ($dllFile.LastWriteTime -gt (Get-Item $destPath).LastWriteTime)
+        if ($needsDepCopy) {
+            Copy-Item $srcPath -Destination $destPath -Force
+            Write-Host "  Copied Dependency: $($dllFile.Name)" -ForegroundColor Green
+        } else {
+            Write-Host "  Up to date: $($dllFile.Name)" -ForegroundColor DarkGreen
+        }
+    } else {
+        Write-Warning "Dependency DLL not found: $srcPath"
+    }
+}
+

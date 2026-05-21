@@ -39,6 +39,7 @@ QDataStream &operator>>(QDataStream &in, Script &v) {
   in >> v.blocking;
   return in;
 }
+
 //------------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
 
@@ -64,6 +65,8 @@ int main(int argc, char *argv[]) {
   QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 
   QApplication a(argc, argv);
+  QCoreApplication::setLibraryPaths(QStringList() << QCoreApplication::applicationDirPath());
+
   // use some style workarounds
   a.setStyle(new ProxyStyle);
 

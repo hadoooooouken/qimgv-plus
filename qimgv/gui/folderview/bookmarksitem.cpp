@@ -1,6 +1,8 @@
 #include "bookmarksitem.h"
 #include <QDrag>
 #include <QApplication>
+#include "bookmarkswidget.h"
+#include <QFileInfo>
 
 BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent)
     : QWidget(parent), dirName(_dirName), dirPath(_dirPath), mHighlighted(false)
@@ -89,12 +91,42 @@ void BookmarksItem::paintEvent(QPaintEvent *event) {
 }
 
 void BookmarksItem::dropEvent(QDropEvent *event) {
-    QList<QString> paths;
-    // TODO: QUrl gave me some issues previosly, test
+    QList<QString> files;
+    QList<QString> folders;
     const auto urls = event->mimeData()->urls();
-    for(const auto &url : urls)
-        paths << url.toLocalFile();
-    emit droppedIn(paths, dirPath);
+    for(const auto &url : urls) {
+        QString localPath = url.toLocalFile();
+        if(!localPath.isEmpty()) {
+            QFileInfo fi(localPath);
+            bool isDir = fi.isDir();
+            if (!isDir && fi.isSymLink()) {
+                QFileInfo target(fi.symLinkTarget());
+                isDir = target.isDir();
+            }
+            if (isDir) {
+                folders << localPath;
+            } else if (fi.isFile()) {
+                files << localPath;
+            }
+        }
+    }
+
+    if(!folders.isEmpty()) {
+        auto parent = qobject_cast<BookmarksWidget*>(parentWidget());
+        if(parent) {
+            for(const auto &folder : folders) {
+                parent->addBookmark(folder);
+            }
+        }
+    }
+
+    if(!files.isEmpty()) {
+        emit droppedIn(files, dirPath);
+    }
+
+    setProperty("hover", false);
+    update();
+    event->acceptProposedAction();
 }
 
 void BookmarksItem::dragEnterEvent(QDragEnterEvent *event) {

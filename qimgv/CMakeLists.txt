@@ -205,4 +205,31 @@ if(WIN32)
     else()
         message(WARNING "OpenMP runtime NOT found at: ${OPENMP_DLL_PATH}")
     endif()
+
+    # 9. Copy OpenEXR, Imath, and OpenJPH runtime dependencies for kimg_exr
+    set(OPENEXR_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/openexr/install/bin")
+    set(IMATH_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/Imath/install/bin")
+    set(OPENJPH_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/OpenJPH/out/build/x64-Release/src/core")
+
+    set(EXR_DLLS
+        "${OPENEXR_BIN_DIR}/OpenEXR-4_0.dll"
+        "${OPENEXR_BIN_DIR}/OpenEXRCore-4_0.dll"
+        "${OPENEXR_BIN_DIR}/Iex-4_0.dll"
+        "${OPENEXR_BIN_DIR}/IlmThread-4_0.dll"
+        "${OPENEXR_BIN_DIR}/OpenEXRUtil-4_0.dll"
+        "${IMATH_BIN_DIR}/Imath-3_2.dll"
+        "${OPENJPH_BIN_DIR}/openjph.0.27.dll"
+    )
+
+    foreach(_dll ${EXR_DLLS})
+        if(EXISTS "${_dll}")
+            add_custom_command(TARGET qimgv-plus POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_dll}" "$<TARGET_FILE_DIR:qimgv-plus>/"
+                COMMENT "Deploying OpenEXR/Imath/OpenJPH dependency: ${_dll}..."
+            )
+        else()
+            message(WARNING "EXR dependency DLL NOT found at: ${_dll}")
+        endif()
+    endforeach()
 endif()
+

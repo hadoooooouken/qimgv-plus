@@ -18,6 +18,7 @@ extern "C" {
 #include <QIODevice>
 #include <QLoggingCategory>
 #include <cstring>
+#include <vector>
 
 #ifdef QT_DEBUG
 Q_LOGGING_CATEGORY(LOG_HEIFPLUGIN, "kf.imageformats.plugins.heif", QtDebugMsg)
@@ -194,7 +195,165 @@ bool HEIFHandler::decodeWithFFmpeg()
         return false;
     }
 
-    // Find video stream
+    // Look for Tile Grid stream group
+    AVStreamGroup *tileGridGroup = nullptr;
+    AVStreamGroupTileGrid *tileGrid = nullptr;
+    for (unsigned i = 0; i < fmtCtx->nb_stream_groups; i++) {
+        AVStreamGroup *group = fmtCtx->stream_groups[i];
+        if (group->type == AV_STREAM_GROUP_PARAMS_TILE_GRID) {
+            tileGridGroup = group;
+            tileGrid = group->params.tile_grid;
+            break;
+        }
+    }
+
+    if (tileGridGroup && tileGrid && tileGrid->nb_tiles > 0) {
+        // 1. Allocate codec contexts for all tiles
+        std::vector<AVCodecContext *> codecContexts(tileGrid->nb_tiles, nullptr);
+        bool hasCodecs = false;
+
+        for (unsigned i = 0; i < tileGrid->nb_tiles; i++) {
+            AVStream *stream = tileGridGroup->streams[i];
+            const AVCodec *codec = avcodec_find_decoder(stream->codecpar->codec_id);
+            if (!codec) continue;
+
+            AVCodecContext *codecCtx = avcodec_alloc_context3(codec);
+            if (!codecCtx) continue;
+
+            if (avcodec_parameters_to_context(codecCtx, stream->codecpar) < 0 ||
+                avcodec_open2(codecCtx, codec, nullptr) < 0) {
+                avcodec_free_context(&codecCtx);
+                continue;
+            }
+            codecContexts[i] = codecCtx;
+            hasCodecs = true;
+        }
+
+        if (!hasCodecs) {
+            qCWarning(LOG_HEIFPLUGIN) << "Failed to open any decoders for tile grid";
+            for (auto *ctx : codecContexts) {
+                if (ctx) avcodec_free_context(&ctx);
+            }
+            avformat_close_input(&fmtCtx);
+            avio_context_free(&avioCtx);
+            m_parseState = ParseError;
+            return false;
+        }
+
+        // 2. Allocate canvas QImage (coded_width x coded_height)
+        const int canvasW = tileGrid->coded_width;
+        const int canvasH = tileGrid->coded_height;
+
+        QImage canvasImage(canvasW, canvasH, QImage::Format_ARGB32);
+        if (canvasImage.isNull()) {
+            qCWarning(LOG_HEIFPLUGIN) << "Failed to allocate canvas QImage" << canvasW << "x" << canvasH;
+            for (auto *ctx : codecContexts) {
+                if (ctx) avcodec_free_context(&ctx);
+            }
+            avformat_close_input(&fmtCtx);
+            avio_context_free(&avioCtx);
+            m_parseState = ParseError;
+            return false;
+        }
+
+        canvasImage.fill(Qt::transparent);
+
+        // 3. Read and send all packets to the respective codecs
+        AVPacket *pkt = av_packet_alloc();
+        while (av_read_frame(fmtCtx, pkt) >= 0) {
+            int tileIdx = -1;
+            for (unsigned i = 0; i < tileGrid->nb_tiles; i++) {
+                if (tileGridGroup->streams[i]->index == pkt->stream_index) {
+                    tileIdx = static_cast<int>(i);
+                    break;
+                }
+            }
+
+            if (tileIdx != -1 && codecContexts[tileIdx]) {
+                avcodec_send_packet(codecContexts[tileIdx], pkt);
+            }
+            av_packet_unref(pkt);
+        }
+        av_packet_free(&pkt);
+
+        // 4. Decode all frames and copy them onto the canvas
+        bool success = true;
+        for (unsigned i = 0; i < tileGrid->nb_tiles; i++) {
+            AVCodecContext *codecCtx = codecContexts[i];
+            if (!codecCtx) {
+                success = false;
+                continue;
+            }
+
+            // Flush decoder
+            avcodec_send_packet(codecCtx, nullptr);
+
+            AVFrame *frame = av_frame_alloc();
+            int decodeRet = avcodec_receive_frame(codecCtx, frame);
+            if (decodeRet != 0) {
+                qCWarning(LOG_HEIFPLUGIN) << "Failed to decode frame for tile" << i << "error:" << decodeRet;
+                av_frame_free(&frame);
+                success = false;
+                continue;
+            }
+
+            int posX = tileGrid->offsets[i].horizontal;
+            int posY = tileGrid->offsets[i].vertical;
+
+            if (posX >= 0 && posY >= 0 &&
+                posX + frame->width <= canvasW &&
+                posY + frame->height <= canvasH) {
+
+                SwsContext *swsCtx = sws_getContext(
+                    frame->width, frame->height, static_cast<AVPixelFormat>(frame->format),
+                    frame->width, frame->height, AV_PIX_FMT_BGRA,
+                    SWS_BILINEAR, nullptr, nullptr, nullptr);
+
+                if (swsCtx) {
+                    uint8_t *dstData[1] = { canvasImage.bits() + posY * canvasImage.bytesPerLine() + posX * 4 };
+                    int dstLinesize[1] = { static_cast<int>(canvasImage.bytesPerLine()) };
+                    sws_scale(swsCtx, frame->data, frame->linesize, 0, frame->height, dstData, dstLinesize);
+                    sws_freeContext(swsCtx);
+                } else {
+                    success = false;
+                }
+            } else {
+                qCWarning(LOG_HEIFPLUGIN) << "Tile" << i << "is out of canvas bounds:" << posX << posY;
+                success = false;
+            }
+
+            av_frame_free(&frame);
+        }
+
+        // Free decoders
+        for (auto *ctx : codecContexts) {
+            if (ctx) avcodec_free_context(&ctx);
+        }
+
+        // 5. Crop canvas to final presentation size
+        int cropX = tileGrid->horizontal_offset;
+        int cropY = tileGrid->vertical_offset;
+        int cropW = tileGrid->width;
+        int cropH = tileGrid->height;
+
+        if (cropW > 0 && cropH > 0 && cropX >= 0 && cropY >= 0 &&
+            cropX + cropW <= canvasW && cropY + cropH <= canvasH) {
+            m_current_image = canvasImage.copy(cropX, cropY, cropW, cropH);
+        } else {
+            m_current_image = canvasImage;
+        }
+
+        m_current_image.setColorSpace(QColorSpace(QColorSpace::SRgb));
+
+        // Cleanup format context
+        avformat_close_input(&fmtCtx);
+        avio_context_free(&avioCtx);
+
+        m_parseState = ParseSuccess;
+        return true;
+    }
+
+    // Fallback to standard single stream decoding
     int videoIdx = -1;
     for (unsigned i = 0; i < fmtCtx->nb_streams; i++) {
         if (fmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
