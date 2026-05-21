@@ -1,5 +1,7 @@
 #include "imageviewerv2.h"
 #include <QOpenGLWidget>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #include "panoramagraphicsitem.h"
 
 ImageViewerV2::ImageViewerV2(QWidget *parent)
@@ -14,7 +16,7 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
       mViewLock(LOCK_NONE), imageFitMode(FIT_WINDOW),
       mScalingFilter(QI_FILTER_BILINEAR), imageFitModeDefault(FIT_WINDOW),
       scene(nullptr) {
-  setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+  setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
   this->viewport()->setAttribute(Qt::WA_OpaquePaintEvent, false);
   setFocusPolicy(Qt::NoFocus);
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -827,6 +829,17 @@ void ImageViewerV2::showEvent(QShowEvent *event) {
 }
 
 void ImageViewerV2::drawBackground(QPainter *painter, const QRectF &rect) {
+  if (QOpenGLWidget *glWidget = qobject_cast<QOpenGLWidget*>(viewport())) {
+    painter->beginNativePainting();
+    if (QOpenGLContext *ctx = QOpenGLContext::currentContext()) {
+      if (QOpenGLFunctions *f = ctx->functions()) {
+        f->glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        f->glClear(GL_COLOR_BUFFER_BIT);
+      }
+    }
+    painter->endNativePainting();
+  }
+
   QGraphicsView::drawBackground(painter, rect);
   if (!isDisplaying() || !transparencyGrid || !pixmap->hasAlphaChannel())
     return;
