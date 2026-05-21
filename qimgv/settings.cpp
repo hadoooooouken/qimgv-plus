@@ -416,18 +416,6 @@ void Settings::setBackgroundOpacity(qreal value) {
     value = 0.0;
   settings->settingsConf->setValue("backgroundOpacity", value);
 }
-//------------------------------------------------------------------------------
-bool Settings::blurBackground() {
-#ifndef USE_KDE_BLUR
-  return false;
-#endif
-  return settings->settingsConf->value("blurBackground", true).toBool();
-}
-
-void Settings::setBlurBackground(bool mode) {
-  settings->settingsConf->setValue("blurBackground", mode);
-}
-//------------------------------------------------------------------------------
 void Settings::setSortingMode(SortingMode mode) {
   if (mode >= 6)
     mode = SortingMode::SORT_NAME;

@@ -79,9 +79,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   ui->colorSelectorThumbpanel->setDescription(tr("Thumbnail panel"));
   ui->colorSelectorThumbpanel->setShowAlpha(true);
 
-#ifndef USE_KDE_BLUR
-  ui->blurBackgroundCheckBox->setEnabled(false);
-#endif
 
   ui->scalingQualityComboBox->clear();
   ui->scalingQualityComboBox->addItem("Nearest", QI_FILTER_NEAREST);
@@ -214,7 +211,6 @@ void SettingsDialog::readSettings() {
       settings->smoothAnimatedImages());
   ui->bgOpacitySlider->setValue(
       static_cast<int>(settings->backgroundOpacity() * 100));
-  ui->blurBackgroundCheckBox->setChecked(settings->blurBackground());
   ui->sortingComboBox->setCurrentIndex(settings->sortingMode());
   ui->confirmDeleteCheckBox->setChecked(settings->confirmDelete());
   ui->confirmTrashCheckBox->setChecked(settings->confirmTrash());
@@ -374,7 +370,6 @@ void SettingsDialog::saveSettings() {
 
   settings->setBackgroundOpacity(
       static_cast<qreal>(ui->bgOpacitySlider->value()) / 100.f);
-  settings->setBlurBackground(ui->blurBackgroundCheckBox->isChecked());
   settings->setSortingMode(
       static_cast<SortingMode>(ui->sortingComboBox->currentIndex()));
   settings->setConfirmDelete(ui->confirmDeleteCheckBox->isChecked());

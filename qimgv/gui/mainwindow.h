@@ -39,9 +39,6 @@
 #include "gui/folderview/folderviewproxy.h"
 #include "gui/panels/infobar/infobarproxy.h"
 
-#ifdef USE_KDE_BLUR
-#include <KWindowEffects>
-#endif
 
 struct CurrentInfo {
     int index;
@@ -122,8 +119,6 @@ private:
     void saveCurrentDisplay();
     void setupUi();
 
-    void applyWindowedBackground();
-    void applyFullscreenBackground();
     void mouseDoubleClickEvent(QMouseEvent *event);
 
     void setupCropPanel();

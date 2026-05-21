@@ -3570,13 +3570,6 @@
                     </item>
                    </layout>
                   </item>
-                  <item>
-                   <widget class="QCheckBox" name="blurBackgroundCheckBox">
-                    <property name="text">
-                     <string>Background blur (KDE)</string>
-                    </property>
-                   </widget>
-                  </item>
                  </layout>
                 </widget>
                </item>

@@ -184,12 +184,12 @@ Root: HKA; Subkey: "Software\Classes\.exr"; ValueType: string; ValueName: ""; Va
 Root: HKA; Subkey: "Software\Classes\.exr\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.exr"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.hdr"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.hdr"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.hdr\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.hdr"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
-Root: HKA; Subkey: "Software\Classes\.jxr"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile"; Flags: uninsdeletevalue; Tasks: associate
-Root: HKA; Subkey: "Software\Classes\.jxr\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
-Root: HKA; Subkey: "Software\Classes\.hdp"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile"; Flags: uninsdeletevalue; Tasks: associate
-Root: HKA; Subkey: "Software\Classes\.hdp\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
-Root: HKA; Subkey: "Software\Classes\.wdp"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile"; Flags: uninsdeletevalue; Tasks: associate
-Root: HKA; Subkey: "Software\Classes\.wdp\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.jxr"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.jxr\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.jxr"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.hdp"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.hdp\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.jxr"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.wdp"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.wdp\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.jxr"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.ai"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.ai"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.ai\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.ai"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.pdf"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.pdf"; Flags: uninsdeletevalue; Tasks: associate
@@ -238,6 +238,10 @@ Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jpeg\shell\open\command
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jpg"; ValueType: string; ValueName: ""; ValueData: "JPEG Image (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jpg\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\jpg.ico"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jpg\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
+
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jxr"; ValueType: string; ValueName: ""; ValueData: "JPEG XR Image (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jxr\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\jxr.ico"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jxr\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
 
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.pdf"; ValueType: string; ValueName: ""; ValueData: "PDF Document (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.pdf\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\pdf.ico"; Flags: uninsdeletekey; Tasks: associate
@@ -339,9 +343,9 @@ Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueT
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ora"; ValueData: "qimgvplus.AssocFile.ora"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".exr"; ValueData: "qimgvplus.AssocFile.exr"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".hdr"; ValueData: "qimgvplus.AssocFile.hdr"; Flags: uninsdeletekey; Tasks: associate
-Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jxr"; ValueData: "qimgvplus.AssocFile"; Flags: uninsdeletekey; Tasks: associate
-Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".hdp"; ValueData: "qimgvplus.AssocFile"; Flags: uninsdeletekey; Tasks: associate
-Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".wdp"; ValueData: "qimgvplus.AssocFile"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jxr"; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".hdp"; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".wdp"; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ai"; ValueData: "qimgvplus.AssocFile.ai"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".pdf"; ValueData: "qimgvplus.AssocFile.pdf"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".psb"; ValueData: "qimgvplus.AssocFile.psb"; Flags: uninsdeletekey; Tasks: associate
