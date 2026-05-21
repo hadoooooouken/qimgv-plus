@@ -1253,8 +1253,8 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636"/>
-        <source>Enable smooth scrolling</source>
-        <translation>Activer le défilement « fluide »</translation>
+        <source>Smooth thumbnail scrolling</source>
+        <translation>Défilement fluide des miniatures</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>

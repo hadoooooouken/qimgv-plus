@@ -1886,8 +1886,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636"/>
-        <source>Enable smooth scrolling</source>
-        <translation>Увімкнути плавну прокрутку</translation>
+        <source>Smooth thumbnail scrolling</source>
+        <translation>Плавна прокрутка мініатюр</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>

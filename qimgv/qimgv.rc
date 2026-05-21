@@ -1,3 +1,5 @@
+#include <winres.h>
+
 IDI_ICON1               ICON    DISCARDABLE     "res/icons/common/logo/app/qimgv.ico"
 
 VS_VERSION_INFO VERSIONINFO

@@ -1908,8 +1908,8 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636"/>
-        <source>Enable smooth scrolling</source>
-        <translation>开启平滑滚动</translation>
+        <source>Smooth thumbnail scrolling</source>
+        <translation>缩略图平滑滚动</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>

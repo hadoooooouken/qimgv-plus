@@ -1181,8 +1181,8 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636"/>
-        <source>Enable smooth scrolling</source>
-        <translation type="unfinished"></translation>
+        <source>Smooth thumbnail scrolling</source>
+        <translation>Smooth thumbnail scrolling</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>

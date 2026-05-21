@@ -1253,8 +1253,8 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636"/>
-        <source>Enable smooth scrolling</source>
-        <translation>Akıcı kaydırmayı etkinleştir</translation>
+        <source>Smooth thumbnail scrolling</source>
+        <translation>Akıcı küçük resim kaydırması</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>

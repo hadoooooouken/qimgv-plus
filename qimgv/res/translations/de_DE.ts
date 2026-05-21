@@ -1259,8 +1259,8 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636"/>
-        <source>Enable smooth scrolling</source>
-        <translation>Sanftes Scrollen aktivieren</translation>
+        <source>Smooth thumbnail scrolling</source>
+        <translation>Sanftes Scrollen der Miniaturansichten</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>

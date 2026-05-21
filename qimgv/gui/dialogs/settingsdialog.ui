@@ -633,7 +633,7 @@
                          <string>Turn this off if you are using a touchpad with libinput driver.</string>
                         </property>
                         <property name="text">
-                         <string>Enable smooth scrolling</string>
+                         <string>Smooth thumbnail scrolling</string>
                         </property>
                        </widget>
                       </item>
