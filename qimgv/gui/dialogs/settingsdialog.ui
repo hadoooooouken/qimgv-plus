@@ -2258,6 +2258,13 @@
                     </property>
                    </widget>
                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="enableSmoothZoomCheckBox">
+                     <property name="text">
+                      <string>Enable smooth zooming</string>
+                     </property>
+                    </widget>
+                   </item>
                   <item>
                    <widget class="QWidget" name="widget_11" native="true">
                     <property name="accessibleName">

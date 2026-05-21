@@ -1257,6 +1257,11 @@
         <translation>スムーズスクロールを有効にする</translation>
     </message>
     <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>
+        <source>Enable smooth zooming</source>
+        <translation>スムーズズームを有効にする</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="643"/>
         <source>Fullscreen info bar</source>
         <translation>フルスクリーン情報バー</translation>

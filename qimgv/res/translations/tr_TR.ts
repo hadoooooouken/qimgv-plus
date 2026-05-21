@@ -1257,6 +1257,11 @@
         <translation>Akıcı kaydırmayı etkinleştir</translation>
     </message>
     <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>
+        <source>Enable smooth zooming</source>
+        <translation>Akıcı yakınlaştırmayı etkinleştir</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="643"/>
         <source>Fullscreen info bar</source>
         <translation>Tam ekranda bilgi çubuğunu göster</translation>

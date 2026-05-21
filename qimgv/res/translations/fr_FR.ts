@@ -1257,6 +1257,11 @@
         <translation>Activer le défilement « fluide »</translation>
     </message>
     <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>
+        <source>Enable smooth zooming</source>
+        <translation>Activer le zoom « fluide »</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="643"/>
         <source>Fullscreen info bar</source>
         <translation>Barre d&apos;information plein écran</translation>

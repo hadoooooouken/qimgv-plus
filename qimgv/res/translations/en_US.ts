@@ -1185,6 +1185,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>
+        <source>Enable smooth zooming</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="643"/>
         <source>Fullscreen info bar</source>
         <translation type="unfinished"></translation>

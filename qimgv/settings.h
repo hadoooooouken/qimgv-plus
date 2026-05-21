@@ -114,6 +114,8 @@ public:
   void setTransparencyGrid(bool mode);
   bool enableSmoothScroll();
   void setEnableSmoothScroll(bool mode);
+  bool enableSmoothZoom();
+  void setEnableSmoothZoom(bool mode);
   bool useThumbnailCache();
   void setUseThumbnailCache(bool mode);
   QStringList savedPaths();

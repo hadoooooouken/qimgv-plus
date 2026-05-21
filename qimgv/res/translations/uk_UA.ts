@@ -1890,6 +1890,11 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation>Увімкнути плавну прокрутку</translation>
     </message>
     <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>
+        <source>Enable smooth zooming</source>
+        <translation>Увімкнути плавний зум</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2020"/>
         <source>Part of image that&apos;s focused after switching to 1:1</source>
         <translation>Яку частину зображення фокусувати в режимі 1:1</translation>

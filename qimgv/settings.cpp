@@ -694,6 +694,14 @@ void Settings::setEnableSmoothScroll(bool mode) {
   settings->settingsConf->setValue("enableSmoothScroll", mode);
 }
 //------------------------------------------------------------------------------
+bool Settings::enableSmoothZoom() {
+  return settings->settingsConf->value("enableSmoothZoom", true).toBool();
+}
+
+void Settings::setEnableSmoothZoom(bool mode) {
+  settings->settingsConf->setValue("enableSmoothZoom", mode);
+}
+//------------------------------------------------------------------------------
 bool Settings::useThumbnailCache() {
   return settings->settingsConf->value("thumbnailCache", true).toBool();
 }

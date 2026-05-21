@@ -1912,6 +1912,11 @@
         <translation>开启平滑滚动</translation>
     </message>
     <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>
+        <source>Enable smooth zooming</source>
+        <translation>开启平滑缩放</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2020"/>
         <source>Part of image that&apos;s focused after switching to 1:1</source>
         <translation type="unfinished"></translation>

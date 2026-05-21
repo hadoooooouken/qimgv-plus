@@ -1257,6 +1257,11 @@
         <translation>Usar desplazamiento suave</translation>
     </message>
     <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2270"/>
+        <source>Enable smooth zooming</source>
+        <translation>Usar zoom suave</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="643"/>
         <source>Fullscreen info bar</source>
         <translation>Barra de información en pantalla completa</translation>
