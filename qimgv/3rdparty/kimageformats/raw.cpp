@@ -621,7 +621,7 @@ void setParams(QImageIOHandler *handler, LibRaw *rawProcessor)
      * Professional cameras (and even some smartphones) generate images at 10 or more bits per sample.
      * When using 16-bit images, the highest quality should be maintained.
      */
-    params.output_bps = T_BT(quality) ? 16 : 8;
+    /* params.output_bps = T_BT(quality) ? 16 : 8;
 
     /**
      * @brief output_color
@@ -675,11 +675,12 @@ void setParams(QImageIOHandler *handler, LibRaw *rawProcessor)
     params.use_fuji_rotate = T_SR(quality) ? 0 : 1;
 
     /* hado tweaks */
+    params.output_bps = 8;
     params.user_qual = 2;
     params.fbdd_noiserd = 0;
     params.four_color_rgb = 0;
     params.no_auto_bright = 0;
-    params.auto_bright_thr = 0.001;
+    params.auto_bright_thr = 0.001f;
 }
 
 bool LoadTHUMB(QImageIOHandler *handler, QImage &img)
