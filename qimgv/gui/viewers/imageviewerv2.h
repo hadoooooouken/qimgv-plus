@@ -117,6 +117,7 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent* event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
     virtual void resizeEvent(QResizeEvent* event);
+    void keyPressEvent(QKeyEvent *event);
     void wheelEvent(QWheelEvent *event);
     void showEvent(QShowEvent *event);
     void drawBackground(QPainter *painter, const QRectF &rect);

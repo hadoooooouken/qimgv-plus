@@ -1,7 +1,7 @@
 # qimgv root
 cmake_minimum_required(VERSION 3.13)
 project(qimgv-plus
-    VERSION 1.0.1
+    VERSION 1.0.2
     HOMEPAGE_URL "https://github.com/hadoooooouken/qimgv-plus"
     LANGUAGES C CXX RC)
 
@@ -47,13 +47,10 @@ if(EXIV2)
 endif()
 
 if(OPENCV_SUPPORT)
+    # Hint to find the local OpenCV build in formats/opencv-install
+    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/formats/opencv-install")
+    set(OpenCV_STATIC ON)
     find_package(OpenCV REQUIRED core imgproc)
-endif()
-
-find_package(CUDAToolkit QUIET)
-if(CUDAToolkit_FOUND)
-    message(STATUS "CUDA found, enabling NPP scaling")
-    set(USE_CUDA_NPP ON)
 endif()
 
 ##############################################################

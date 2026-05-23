@@ -92,13 +92,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
                                       QI_FILTER_CV_CUBIC_SHARPEN);
   ui->scalingQualityComboBox->addItem("Lanczos (OpenCV)", QI_FILTER_CV_LANCZOS);
   ui->scalingQualityComboBox->addItem("Area (OpenCV)", QI_FILTER_CV_AREA);
-#endif
-
-#ifdef USE_CUDA_NPP
-  ui->scalingQualityComboBox->addItem("Bicubic (CUDA)", QI_FILTER_CUDA_CUBIC);
-  ui->scalingQualityComboBox->addItem("Lanczos (CUDA)", QI_FILTER_CUDA_LANCZOS);
-  ui->scalingQualityComboBox->addItem("Experimental (CUDA)",
-                                      QI_FILTER_CUDA_ULTRA);
+  ui->scalingQualityComboBox->addItem("Smart sharpen (OpenCV)", QI_FILTER_CV_SMART);
 #endif
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)

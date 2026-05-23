@@ -1,12 +1,12 @@
-qimgv-plus | Current version: 1.0.1
+qimgv-plus | Current version: 1.0.2
 ==========
-A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image viewer, featuring GPU-accelerated scaling and native support for modern image formats.
+A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image viewer, featuring high-quality CPU-accelerated scaling and native support for modern image formats.
 
 ## Key features:
 
 - **Simple UI & Fast**: Lightweight and extremely responsive interface.
 
-- **NVIDIA GPU-Accelerated Scaling (CUDA)**: Extremely smooth and high-quality zooming offloaded to your GPU, including an experimental mode that applies median 3×3 noise filtering, Lanczos upscaling, and a cross-kernel sharpening pass.
+- **Smart Sharpen Scaling (OpenCV)**: High-quality, fast scaling performed on the CPU using OpenCV. The default "Smart sharpen" mode combines Bicubic upscaling with a custom cross-kernel sharpening pass, and Area downscaling with an anti-aliasing Gaussian unsharp mask, ensuring maximum texture detail without jagged edges.
 
 - **Real-Time Color Adjustments**: Instant, lag-free adjustments of Brightness, Contrast, Saturation, and Hue calculated on the graphics card via shaders. Accessible via the right-click context menu while viewing an image.
 
@@ -118,9 +118,9 @@ When you've created your script go to __Settings > Controls > Add__, then select
 
 ## High quality scaling
 
-qimgv-plus supports high-quality, hardware-accelerated scaling filters:
-- **GPU-Accelerated Scaling (NVIDIA CUDA)**: Offloads scaling to your NVIDIA graphics card using CUDA/NPP (when built with CUDA support). Filter options in __Settings > Scaling__ include **Bicubic (CUDA)**, **Lanczos (CUDA)**, and the **Experimental (CUDA)** mode (upscaling: median 3×3 denoise → Lanczos → cross-kernel sharpen; downscaling: NPPI_INTER_SUPER).
-- **CPU Scaling**: Standard high-quality CPU scaling filters (**Bicubic** or **Bilinear+Sharpen**) are available when built with OpenCV support (enabled by default).
+qimgv-plus supports high-quality, OpenCV-accelerated CPU scaling filters:
+- **Smart sharpen (OpenCV)** (Default): The ultimate scaling mode. For upscaling, it uses Bicubic interpolation combined with a $0.25$ strength cross-kernel sharpening pass. For downscaling, it uses Area relation interpolation with a $0.15$ strength Gaussian unsharp mask to restore textures without introducing aliasing.
+- **Standard Filters**: Custom high-quality options include Bicubic, Lanczos, Bilinear+sharpen, and Area scaling.
 
 # Supported Image Formats
 

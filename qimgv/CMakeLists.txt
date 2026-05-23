@@ -77,10 +77,6 @@ if(OPENCV_SUPPORT)
     target_link_libraries(qimgv-plus PRIVATE ${OpenCV_LIBS})
     target_compile_definitions(qimgv-plus PRIVATE USE_OPENCV)
 endif()
-if(USE_CUDA_NPP)
-    target_link_libraries(qimgv-plus PRIVATE CUDA::nppig CUDA::nppif CUDA::nppisu CUDA::nppc CUDA::cudart)
-    target_compile_definitions(qimgv-plus PRIVATE USE_CUDA_NPP)
-endif()
 
 # generate proper GUI program on specified platform
 if(MSVC) # Check if we are using the Visual Studio compiler
@@ -107,7 +103,7 @@ if(WIN32)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6Core_DIR}/../../../bin" "${Qt5Core_DIR}/../../../bin")
     if(WINDEPLOYQT_EXECUTABLE)
         add_custom_command(TARGET qimgv-plus POST_BUILD
-            COMMAND ${WINDEPLOYQT_EXECUTABLE} --no-translations --no-compiler-runtime "$<TARGET_FILE:qimgv-plus>"
+            COMMAND ${WINDEPLOYQT_EXECUTABLE} --no-translations --no-compiler-runtime --no-opengl-sw "$<TARGET_FILE:qimgv-plus>"
             COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE_DIR:qimgv-plus>/vc_redist.x64.exe"
             COMMENT "Deploying Qt dependencies and cleaning up redistributable..."
         )
@@ -123,27 +119,25 @@ if(WIN32)
 
     # 3. OpenCV
     if(OPENCV_SUPPORT)
-        add_custom_command(TARGET qimgv-plus POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "E:/opencv/build/x64/vc16/bin/opencv_world4130.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-            COMMENT "Copying OpenCV DLL..."
-        )
-    endif()
-
-    # 4. CUDA (NPP and Runtime)
-    if(USE_CUDA_NPP)
-        # Find specific DLLs in CUDA bin directory (look in both bin/ and bin/x64/)
-        file(GLOB _cuda_dlls 
-            "E:/CUDA/bin/nppc64_*.dll" "E:/CUDA/bin/x64/nppc64_*.dll"
-            "E:/CUDA/bin/nppig64_*.dll" "E:/CUDA/bin/x64/nppig64_*.dll"
-            "E:/CUDA/bin/nppif64_*.dll" "E:/CUDA/bin/x64/nppif64_*.dll"
-            "E:/CUDA/bin/nppisu64_*.dll" "E:/CUDA/bin/x64/nppisu64_*.dll"
-            "E:/CUDA/bin/cudart64_*.dll" "E:/CUDA/bin/x64/cudart64_*.dll"
-        )
-        foreach(_dll ${_cuda_dlls})
-            add_custom_command(TARGET qimgv-plus POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_dll}" "$<TARGET_FILE_DIR:qimgv-plus>/"
-            )
-        endforeach()
+        # Try to locate and copy split DLLs (core and imgproc) if available
+        if(TARGET opencv_core)
+            get_target_property(OPENCV_CORE_DLL opencv_core IMPORTED_LOCATION_RELEASE)
+            if(OPENCV_CORE_DLL AND OPENCV_CORE_DLL MATCHES "\\.dll$")
+                add_custom_command(TARGET qimgv-plus POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OPENCV_CORE_DLL}" "$<TARGET_FILE_DIR:qimgv-plus>/"
+                    COMMENT "Copying OpenCV core DLL..."
+                )
+            endif()
+        endif()
+        if(TARGET opencv_imgproc)
+            get_target_property(OPENCV_IMGPROC_DLL opencv_imgproc IMPORTED_LOCATION_RELEASE)
+            if(OPENCV_IMGPROC_DLL AND OPENCV_IMGPROC_DLL MATCHES "\\.dll$")
+                add_custom_command(TARGET qimgv-plus POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OPENCV_IMGPROC_DLL}" "$<TARGET_FILE_DIR:qimgv-plus>/"
+                    COMMENT "Copying OpenCV imgproc DLL..."
+                )
+            endif()
+        endif()
     endif()
 
     # 5. kimageformats dependencies (safe check)

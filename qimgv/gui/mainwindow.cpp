@@ -305,13 +305,21 @@ void MW::toggleLockView() {
 }
 
 void MW::toggleFullscreenInfoBar() {
-    if(!this->isFullScreen())
-        return;
-    showInfoBarFullscreen = !showInfoBarFullscreen;
-    if(showInfoBarFullscreen)
-        infoBarFullscreen->showWhenReady();
-    else
-        infoBarFullscreen->hide();
+    if(this->isFullScreen()) {
+        showInfoBarFullscreen = !showInfoBarFullscreen;
+        settings->setInfoBarFullscreen(showInfoBarFullscreen);
+        if(showInfoBarFullscreen)
+            infoBarFullscreen->showWhenReady();
+        else
+            infoBarFullscreen->hide();
+    } else {
+        showInfoBarWindowed = !showInfoBarWindowed;
+        settings->setInfoBarWindowed(showInfoBarWindowed);
+        if(showInfoBarWindowed)
+            infoBarWindowed->show();
+        else
+            infoBarWindowed->hide();
+    }
 }
 
 void MW::toggleImageInfoOverlay() {
@@ -798,13 +806,15 @@ void MW::closeFullScreenOrExit() {
 }
 
 // todo: this is crap, use shared state object
-void MW::setCurrentInfo(int _index, int _fileCount, QString _filePath, QString _fileName, QSize _imageSize, qint64 _fileSize, bool slideshow, bool shuffle, bool edited) {
+void MW::setCurrentInfo(int _index, int _fileCount, QString _filePath, QString _fileName, QSize _imageSize, qint64 _fileSize, QString _format, QString _colorProfile, bool slideshow, bool shuffle, bool edited) {
     info.index = _index;
     info.fileCount = _fileCount;
     info.fileName = _fileName;
     info.filePath = _filePath;
     info.imageSize = _imageSize;
     info.fileSize = _fileSize;
+    info.format = _format;
+    info.colorProfile = _colorProfile;
     info.slideshow = slideshow;
     info.shuffle = shuffle;
     info.edited = edited;
@@ -817,11 +827,25 @@ void MW::onInfoUpdated() {
     if(info.fileCount)
         posString = "[ " + QString::number(info.index + 1) + "/" + QString::number(info.fileCount) + " ]";
     QString resString;
-    if(info.imageSize.width())
+    if(info.imageSize.width()) {
         resString = QString::number(info.imageSize.width()) + " x " + QString::number(info.imageSize.height());
+        int w = info.imageSize.width();
+        int h = info.imageSize.height();
+        if(w > 0 && h > 0) {
+            int a = w, b = h;
+            while(b != 0) {
+                int t = b;
+                b = a % b;
+                a = t;
+            }
+            int gcd = a;
+            resString += " (" + QString::number(w / gcd) + ":" + QString::number(h / gcd) + ")";
+        }
+    }
     QString sizeString;
     if(info.fileSize)
         sizeString = this->locale().formattedDataSize(info.fileSize, 1);
+    QString formatString = info.format.toUpper();
 
     if(renameOverlay)
         renameOverlay->setName(info.fileName);
@@ -861,8 +885,36 @@ void MW::onInfoUpdated() {
         if(info.edited)
             windowTitle.prepend("* ");
 
-        infoBarFullscreen->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), resString + "  " + sizeString);
-        infoBarWindowed->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), resString + "  " + sizeString + " " + states);
+        QString rightInfo = resString;
+        if(!info.colorProfile.isEmpty()) {
+            if(!rightInfo.isEmpty())
+                rightInfo += "  " + info.colorProfile;
+            else
+                rightInfo = info.colorProfile;
+        }
+        if(!formatString.isEmpty()) {
+            if(!rightInfo.isEmpty())
+                rightInfo += "  " + formatString;
+            else
+                rightInfo = formatString;
+        }
+        if(!sizeString.isEmpty()) {
+            if(!rightInfo.isEmpty())
+                rightInfo += "  " + sizeString;
+            else
+                rightInfo = sizeString;
+        }
+
+        QString rightInfoWindowed = rightInfo;
+        if(!states.isEmpty()) {
+            if(!rightInfoWindowed.isEmpty())
+                rightInfoWindowed += " " + states;
+            else
+                rightInfoWindowed = states;
+        }
+
+        infoBarFullscreen->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), rightInfo);
+        infoBarWindowed->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), rightInfoWindowed);
     }
     setWindowTitle(windowTitle);
 }

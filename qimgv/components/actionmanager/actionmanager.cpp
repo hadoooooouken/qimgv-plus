@@ -47,8 +47,8 @@ void ActionManager::initDefaults() {
     actionManager->defaults.insert("-", "zoomOut");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+Down", "zoomOut");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+Up", "zoomIn");
-    actionManager->defaults.insert("Up", "scrollUp");
-    actionManager->defaults.insert("Down", "scrollDown");
+    actionManager->defaults.insert("Up", "fitNormal");
+    actionManager->defaults.insert("Down", "fitWindow");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+O", "open");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+S", "save");
     actionManager->defaults.insert(InputMap::keyNameCtrl() + "+" + InputMap::keyNameShift() + "+S", "saveAs");

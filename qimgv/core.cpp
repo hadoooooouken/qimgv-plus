@@ -8,13 +8,13 @@
 #include "core.h"
 #include <QRegularExpression>
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+#include <QColorSpace>
+#endif
+
 #ifdef __WIN32
 #include <tchar.h>
 #include <windows.h>
-#endif
-
-#ifdef USE_CUDA_NPP
-#include <cuda_runtime.h>
 #endif
 
 Core::Core()
@@ -68,11 +68,13 @@ void Core::raiseWindow() {
     if (IsIconic(hwnd)) {
       ShowWindow(hwnd, SW_RESTORE);
     }
-    
-    // Classic topmost-toggle trick to force window activation and bypass focus prevention
+
+    // Classic topmost-toggle trick to force window activation and bypass focus
+    // prevention
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-    SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
-    
+    SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0,
+                 SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
+
     SetForegroundWindow(hwnd);
     SetActiveWindow(hwnd);
 #endif
@@ -80,7 +82,6 @@ void Core::raiseWindow() {
     mw->activateWindow();
   }
 }
-
 
 // create MainWindow and all widgets
 void Core::initGui() {
@@ -259,8 +260,10 @@ void Core::initActions() {
           &Core::toggleFullscreenInfoBar);
   connect(actionManager, &ActionManager::pasteFile, this,
           &Core::openFromClipboard);
-  connect(actionManager, &ActionManager::togglePanorama, mw, &MW::togglePanorama);
-  connect(actionManager, &ActionManager::colorAdjustments, mw, &MW::toggleColorAdjustments);
+  connect(actionManager, &ActionManager::togglePanorama, mw,
+          &MW::togglePanorama);
+  connect(actionManager, &ActionManager::colorAdjustments, mw,
+          &MW::toggleColorAdjustments);
 }
 
 void Core::loadTranslation() {
@@ -324,16 +327,7 @@ void Core::onFirstRun() {
                       tr(" version ") + appVersion.toString() + "!",
                   4000);
 
-#ifdef USE_CUDA_NPP
-  int deviceCount = 0;
-  if (cudaGetDeviceCount(&deviceCount) == cudaSuccess && deviceCount > 0) {
-      settings->setScalingFilter(QI_FILTER_CUDA_ULTRA);
-  } else {
-      settings->setScalingFilter(QI_FILTER_CV_CUBIC);
-  }
-#else
-  settings->setScalingFilter(QI_FILTER_CV_CUBIC);
-#endif
+  settings->setScalingFilter(QI_FILTER_CV_SMART);
 
   settings->setFirstRun(false);
   settings->setLastVersion(appVersion);
@@ -661,7 +655,8 @@ void Core::onDraggedOut(QList<QString> paths) {
   QMimeData *mimeData;
   // single selection, image
   if (paths.count() == 1 && model->containsFile(paths.constFirst())) {
-    mimeData = getMimeDataForImage(model->getImage(paths.constLast()), TARGET_DROP);
+    mimeData =
+        getMimeDataForImage(model->getImage(paths.constLast()), TARGET_DROP);
   } else { // multi-selection, or single directory. drag urls
     mimeData = new QMimeData();
     QList<QUrl> urlList;
@@ -1332,11 +1327,13 @@ bool Core::loadPath(QString path) {
     int index = model->indexOfFile(fileInfo.absoluteFilePath());
     // DirectoryManager only checks file extensions via regex (performance
     // reasons) But in this case we force check mimetype.
-    // If the file index is not found (e.g. delayed loading), check against supported regex.
-    // Falls back to QMimeDatabase query if regex check is not matched.
+    // If the file index is not found (e.g. delayed loading), check against
+    // supported regex. Falls back to QMimeDatabase query if regex check is not
+    // matched.
     if (index == -1) {
       bool isSupported = false;
-      QRegularExpression re(settings->supportedFormatsRegex(), QRegularExpression::CaseInsensitiveOption);
+      QRegularExpression re(settings->supportedFormatsRegex(),
+                            QRegularExpression::CaseInsensitiveOption);
       if (re.match(fileInfo.fileName()).hasMatch()) {
         isSupported = true;
       } else {
@@ -1663,15 +1660,49 @@ void Core::updateInfoString() {
   QSize imageSize(0, 0);
   qint64 fileSize = 0;
   bool edited = false;
+  QString format;
+  QString colorProfile;
 
   if (model->isLoaded(state.currentFilePath)) {
     auto img = model->getImage(state.currentFilePath);
-    imageSize = img->size();
-    fileSize = img->fileSize();
-    edited = img->isEdited();
+    if (img) {
+      imageSize = img->size();
+      fileSize = img->fileSize();
+      edited = img->isEdited();
+      format = img->format();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+      auto qimg = img->getImage();
+      if (qimg) {
+        QColorSpace cs = qimg->colorSpace();
+        if (cs.isValid()) {
+          QString desc = cs.description();
+          if (desc.isEmpty()) {
+            if (cs == QColorSpace(QColorSpace::SRgb)) {
+              desc = "sRGB";
+            } else if (cs == QColorSpace(QColorSpace::SRgbLinear)) {
+              desc = "Linear sRGB";
+            } else if (cs == QColorSpace(QColorSpace::AdobeRgb)) {
+              desc = "Adobe RGB";
+            } else if (cs == QColorSpace(QColorSpace::DisplayP3)) {
+              desc = "Display P3";
+#if QT_VERSION >= QT_VERSION_CHECK(6, 1, 0)
+            } else if (cs == QColorSpace(QColorSpace::ProPhotoRgb)) {
+              desc = "ProPhoto RGB";
+            } else if (cs == QColorSpace(QColorSpace::Bt2020)) {
+              desc = "BT.2020";
+#endif
+            } else {
+              desc = "Custom";
+            }
+          }
+          colorProfile = desc;
+        }
+      }
+#endif
+    }
   }
   int index = model->indexOfFile(state.currentFilePath);
   mw->setCurrentInfo(index, model->fileCount(), model->filePathAt(index),
-                     model->fileNameAt(index), imageSize, fileSize, slideshow,
-                     shuffle, edited);
+                     model->fileNameAt(index), imageSize, fileSize, format, colorProfile,
+                     slideshow, shuffle, edited);
 }

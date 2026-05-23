@@ -827,8 +827,8 @@ void Settings::setJPEGSaveQuality(int value) {
 }
 //------------------------------------------------------------------------------
 ScalingFilter Settings::scalingFilter() {
-  int mode = settings->settingsConf->value("scalingFilter", 3).toInt();
-  if (mode < 0 || mode > 9)
+  int mode = settings->settingsConf->value("scalingFilter", QI_FILTER_CV_SMART).toInt();
+  if (mode < 0 || mode > 7)
     mode = 1; // default to Bilinear if out of range
   return static_cast<ScalingFilter>(mode);
 }
@@ -1129,7 +1129,7 @@ void Settings::setUseFixedZoomLevels(bool mode) {
 //------------------------------------------------------------------------------
 QString Settings::defaultZoomLevels() {
   return QString(
-      "0.05,0.1,0.125,0.166,0.25,0.333,0.5,0.66,1,1.5,2,3,4,5,6,7,8");
+      "0.05,0.1,0.125,0.166,0.25,0.333,0.5,0.66,1,1.25,1.5,2,3,4,5,6,7,8");
 }
 QString Settings::zoomLevels() {
   return settingsConf->value("fixedZoomLevels", defaultZoomLevels()).toString();

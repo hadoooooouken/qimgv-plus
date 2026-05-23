@@ -1,4 +1,5 @@
 #include "imageviewerv2.h"
+#include <QKeyEvent>
 #include <QOpenGLWidget>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
@@ -836,6 +837,15 @@ void ImageViewerV2::showEvent(QShowEvent *event) {
   // reapply fitmode to fix viewport position
   if (imageFitMode == FIT_ORIGINAL)
     applyFitMode();
+}
+
+void ImageViewerV2::keyPressEvent(QKeyEvent *event) {
+  if (event->key() == Qt::Key_Left || event->key() == Qt::Key_Right ||
+      event->key() == Qt::Key_Up || event->key() == Qt::Key_Down) {
+    event->ignore();
+    return;
+  }
+  QGraphicsView::keyPressEvent(event);
 }
 
 void ImageViewerV2::drawBackground(QPainter *painter, const QRectF &rect) {
