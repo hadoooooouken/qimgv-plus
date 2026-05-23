@@ -1253,8 +1253,12 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636"/>
-        <source>Enable smooth scrolling</source>
-        <translation>Akıcı kaydırmayı etkinleştir</translation>
+        <source>Smooth thumbnail scrolling</source>
+        <translation>Akıcı küçük resim kaydırması</translation>
+    </message>
+    <message>
+        <source>Smooth zooming</source>
+        <translation>Pürüzsüz yakınlaştırma</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="643"/>
@@ -1758,11 +1762,6 @@
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3551"/>
         <source>%</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3576"/>
-        <source>Background blur (KDE)</source>
-        <translation>Arka plan bulanıklığı (KDE)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3628"/>

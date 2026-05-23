@@ -1,5 +1,7 @@
 #include "imageviewerv2.h"
 #include <QOpenGLWidget>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #include "panoramagraphicsitem.h"
 
 ImageViewerV2::ImageViewerV2(QWidget *parent)
@@ -13,8 +15,8 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
       maxScale(500.0f), fitWindowScale(0.125f), fitWindowStretchScale(0.125f),
       mViewLock(LOCK_NONE), imageFitMode(FIT_WINDOW),
       mScalingFilter(QI_FILTER_BILINEAR), imageFitModeDefault(FIT_WINDOW),
-      scene(nullptr) {
-  setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+      scene(nullptr), zoomTimeLine(nullptr), zoomStartScale(1.0f), zoomTargetScale(1.0f) {
+  setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
   this->viewport()->setAttribute(Qt::WA_OpaquePaintEvent, false);
   setFocusPolicy(Qt::NoFocus);
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -36,6 +38,16 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
           &ImageViewerV2::onScrollTimelineFinished);
   connect(scrollTimeLineY, &QTimeLine::finished, this,
           &ImageViewerV2::onScrollTimelineFinished);
+
+  zoomTimeLine = new QTimeLine(ANIMATION_SPEED, this);
+  QEasingCurve zoomCurve(QEasingCurve::Custom);
+  zoomCurve.setCustomType(smootherstepEasing);
+  zoomTimeLine->setEasingCurve(zoomCurve);
+  zoomTimeLine->setUpdateInterval(SCROLL_UPDATE_RATE);
+  connect(zoomTimeLine, &QTimeLine::valueChanged, this,
+          &ImageViewerV2::onZoomTimelineValueChanged);
+  connect(zoomTimeLine, &QTimeLine::finished, this,
+          &ImageViewerV2::saveViewportPos);
 
   animationTimer = new QTimer(this);
   animationTimer->setSingleShot(true);
@@ -827,6 +839,17 @@ void ImageViewerV2::showEvent(QShowEvent *event) {
 }
 
 void ImageViewerV2::drawBackground(QPainter *painter, const QRectF &rect) {
+  if (QOpenGLWidget *glWidget = qobject_cast<QOpenGLWidget*>(viewport())) {
+    painter->beginNativePainting();
+    if (QOpenGLContext *ctx = QOpenGLContext::currentContext()) {
+      if (QOpenGLFunctions *f = ctx->functions()) {
+        f->glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        f->glClear(GL_COLOR_BUFFER_BIT);
+      }
+    }
+    painter->endNativePainting();
+  }
+
   QGraphicsView::drawBackground(painter, rect);
   if (!isDisplaying() || !transparencyGrid || !pixmap->hasAlphaChannel())
     return;
@@ -1102,6 +1125,8 @@ void ImageViewerV2::stopPosAnimation() {
     scrollTimeLineX->stop();
   if (scrollTimeLineY->state() == QTimeLine::Running)
     scrollTimeLineY->stop();
+  if (zoomTimeLine->state() == QTimeLine::Running)
+    zoomTimeLine->stop();
 }
 
 inline void ImageViewerV2::scroll(int dx, int dy, bool smooth) {
@@ -1228,30 +1253,46 @@ void ImageViewerV2::doZoomIn(bool atCursor) {
     setZoomAnchor(mapFromGlobal(cursor().pos()));
   else
     setZoomAnchor(viewport()->rect().center());
-  float newScale = currentScale() * (1.0f + zoomStep);
+
+  float baseScale = currentScale();
+  if (settings->enableSmoothZoom() && zoomTimeLine->state() == QTimeLine::Running) {
+    baseScale = zoomTargetScale;
+  }
+
+  float newScale = baseScale * (1.0f + zoomStep);
   if (useFixedZoomLevels && zoomLevels.count()) {
-    if (currentScale() < zoomLevels.first()) {
-      newScale = qMin(currentScale() * (1.0f + zoomStep), zoomLevels.first());
-    } else if (currentScale() >= zoomLevels.last()) {
-      newScale = currentScale() * (1.0f + zoomStep);
+    if (baseScale < zoomLevels.first()) {
+      newScale = qMin(baseScale * (1.0f + zoomStep), zoomLevels.first());
+    } else if (baseScale >= zoomLevels.last()) {
+      newScale = baseScale * (1.0f + zoomStep);
     } else {
       for (int i = 0; i < zoomLevels.count(); i++) {
         float level = zoomLevels.at(i);
-        if (currentScale() < level) {
+        if (baseScale < level) {
           newScale = level;
           break;
         }
       }
     }
   }
-  zoomAnchored(newScale);
-  centerIfNecessary();
-  snapToEdges();
-  imageFitMode = FIT_FREE;
-  if (pixmapItem.scale() == fitWindowScale)
-    imageFitMode = FIT_WINDOW;
-  else if (pixmapItem.scale() == fitWindowStretchScale)
-    imageFitMode = FIT_WINDOW_STRETCH;
+
+  newScale = qBound(minScale, newScale, 500.0f);
+
+  if (settings->enableSmoothZoom()) {
+    zoomStartScale = currentScale();
+    zoomTargetScale = newScale;
+    zoomTimeLine->stop();
+    zoomTimeLine->start();
+  } else {
+    zoomAnchored(newScale);
+    centerIfNecessary();
+    snapToEdges();
+    imageFitMode = FIT_FREE;
+    if (pixmapItem.scale() == fitWindowScale)
+      imageFitMode = FIT_WINDOW;
+    else if (pixmapItem.scale() == fitWindowStretchScale)
+      imageFitMode = FIT_WINDOW_STRETCH;
+  }
 }
 
 // zoom out around viewport center
@@ -1265,30 +1306,46 @@ void ImageViewerV2::doZoomOut(bool atCursor) {
     setZoomAnchor(mapFromGlobal(cursor().pos()));
   else
     setZoomAnchor(viewport()->rect().center());
-  float newScale = currentScale() / (1.0f + zoomStep);
+
+  float baseScale = currentScale();
+  if (settings->enableSmoothZoom() && zoomTimeLine->state() == QTimeLine::Running) {
+    baseScale = zoomTargetScale;
+  }
+
+  float newScale = baseScale / (1.0f + zoomStep);
   if (useFixedZoomLevels && zoomLevels.count()) {
-    if (currentScale() > zoomLevels.last()) {
-      newScale = qMax(zoomLevels.last(), currentScale() / (1.0f + zoomStep));
-    } else if (currentScale() <= zoomLevels.first()) {
-      newScale = currentScale() / (1.0f + zoomStep);
+    if (baseScale > zoomLevels.last()) {
+      newScale = qMax(zoomLevels.last(), baseScale / (1.0f + zoomStep));
+    } else if (baseScale <= zoomLevels.first()) {
+      newScale = baseScale / (1.0f + zoomStep);
     } else {
       for (int i = zoomLevels.count() - 1; i >= 0; i--) {
         float level = zoomLevels.at(i);
-        if (currentScale() > level) {
+        if (baseScale > level) {
           newScale = level;
           break;
         }
       }
     }
   }
-  zoomAnchored(newScale);
-  centerIfNecessary();
-  snapToEdges();
-  imageFitMode = FIT_FREE;
-  if (pixmapItem.scale() == fitWindowScale)
-    imageFitMode = FIT_WINDOW;
-  else if (pixmapItem.scale() == fitWindowStretchScale)
-    imageFitMode = FIT_WINDOW_STRETCH;
+
+  newScale = qBound(minScale, newScale, 500.0f);
+
+  if (settings->enableSmoothZoom()) {
+    zoomStartScale = currentScale();
+    zoomTargetScale = newScale;
+    zoomTimeLine->stop();
+    zoomTimeLine->start();
+  } else {
+    zoomAnchored(newScale);
+    centerIfNecessary();
+    snapToEdges();
+    imageFitMode = FIT_FREE;
+    if (pixmapItem.scale() == fitWindowScale)
+      imageFitMode = FIT_WINDOW;
+    else if (pixmapItem.scale() == fitWindowStretchScale)
+      imageFitMode = FIT_WINDOW_STRETCH;
+  }
 }
 
 void ImageViewerV2::toggleLockZoom() {
@@ -1467,4 +1524,21 @@ void ImageViewerV2::setColorAdjustments(float brightness, float contrast, float 
     if (panoramaItem) {
         panoramaItem->setColorAdjustments(brightness, contrast, saturation, hue);
     }
+}
+
+qreal ImageViewerV2::smootherstepEasing(qreal t) {
+  return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+}
+
+void ImageViewerV2::onZoomTimelineValueChanged(qreal value) {
+  float currentAnimScale = zoomStartScale + (zoomTargetScale - zoomStartScale) * value;
+  zoomAnchored(currentAnimScale);
+  centerIfNecessary();
+  snapToEdges();
+
+  imageFitMode = FIT_FREE;
+  if (pixmapItem.scale() == fitWindowScale)
+    imageFitMode = FIT_WINDOW;
+  else if (pixmapItem.scale() == fitWindowStretchScale)
+    imageFitMode = FIT_WINDOW_STRETCH;
 }

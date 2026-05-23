@@ -533,7 +533,6 @@ void Core::copyFileClipboard() {
   QByteArray gnomeFormat =
       QByteArray("copy\n").append(QUrl(mimeData->text()).toEncoded());
   mimeData->setData("x-special/gnome-copied-files", gnomeFormat);
-  mimeData->setData("application/x-kde-cutselection", "0");
 
   QApplication::clipboard()->setMimeData(mimeData);
   mw->showMessage(tr("File copied"));

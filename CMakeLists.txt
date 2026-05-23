@@ -1,9 +1,9 @@
 # qimgv root
 cmake_minimum_required(VERSION 3.13)
 project(qimgv-plus
-    VERSION 1.0.0
+    VERSION 1.0.1
     HOMEPAGE_URL "https://github.com/hadoooooouken/qimgv-plus"
-    LANGUAGES C CXX)
+    LANGUAGES C CXX RC)
 
 message(STATUS "Build configuration: " ${CMAKE_BUILD_TYPE})
 

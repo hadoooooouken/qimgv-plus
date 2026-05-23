@@ -114,6 +114,8 @@ public:
   void setTransparencyGrid(bool mode);
   bool enableSmoothScroll();
   void setEnableSmoothScroll(bool mode);
+  bool enableSmoothZoom();
+  void setEnableSmoothZoom(bool mode);
   bool useThumbnailCache();
   void setUseThumbnailCache(bool mode);
   QStringList savedPaths();
@@ -138,8 +140,6 @@ public:
   bool showChangelogs();
   qreal backgroundOpacity();
   void setBackgroundOpacity(qreal value);
-  bool blurBackground();
-  void setBlurBackground(bool mode);
   void setSortingMode(SortingMode mode);
   SortingMode sortingMode();
   void readScripts(QMap<QString, Script> &scripts);

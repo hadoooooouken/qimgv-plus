@@ -950,32 +950,10 @@ void MW::readSettings() {
     adaptToWindowState();
 }
 
-// todo: remove/rename?
-void MW::applyWindowedBackground() {
-#ifdef USE_KDE_BLUR
-    QWindow* window = this->windowHandle();
-    if(window) {
-        if(settings->backgroundOpacity() == 1.0)
-            KWindowEffects::enableBlurBehind(window, false);
-        else
-            KWindowEffects::enableBlurBehind(window, settings->blurBackground());
-    }
-#endif
-}
-
-void MW::applyFullscreenBackground() {
-#ifdef USE_KDE_BLUR
-    QWindow* window = this->windowHandle();
-    if(window)
-        KWindowEffects::enableBlurBehind(window, false);
-#endif
-}
-
 // changes ui elements according to fullscreen state
 void MW::adaptToWindowState() {
     docWidget->hideFloatingPanel();
     if(isFullScreen()) { //-------------------------------------- fullscreen ---
-        applyFullscreenBackground();
         infoBarWindowed->hide();
 
         if(showInfoBarFullscreen)
@@ -989,7 +967,6 @@ void MW::adaptToWindowState() {
         else
             controlsOverlay->hide();
     } else { //------------------------------------------------------ window ---
-        applyWindowedBackground();
         infoBarFullscreen->hide();
 
         if(showInfoBarWindowed)

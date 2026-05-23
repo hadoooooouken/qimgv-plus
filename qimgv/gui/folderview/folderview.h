@@ -51,6 +51,7 @@ protected:
     void focusInEvent(QFocusEvent *event) override;
     void paintEvent(QPaintEvent *) override;
     void resizeEvent(QResizeEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 protected slots:
     void onThumbnailSizeChanged(int newSize);

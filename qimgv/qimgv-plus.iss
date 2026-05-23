@@ -1,5 +1,5 @@
 #define MyAppName "qimgv-plus"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "hadoooooouken"
 #define MyAppURL "https://github.com/hadoooooouken/qimgv-plus"
 #define MyAppExeName "qimgv-plus.exe"

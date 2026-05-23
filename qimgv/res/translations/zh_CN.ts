@@ -1661,11 +1661,6 @@
         <translation>滚动条</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3576"/>
-        <source>Background blur (KDE)</source>
-        <translation>背景防蓝光 (KDE)</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3498"/>
         <source>Window opacity:</source>
         <translation>窗口不透明度:</translation>
@@ -1908,8 +1903,12 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636"/>
-        <source>Enable smooth scrolling</source>
-        <translation>开启平滑滚动</translation>
+        <source>Smooth thumbnail scrolling</source>
+        <translation>开启缩略图平滑滚动</translation>
+    </message>
+    <message>
+        <source>Smooth zooming</source>
+        <translation>平滑缩放</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2020"/>

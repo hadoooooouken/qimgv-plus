@@ -1,5 +1,10 @@
 #include "folderview.h"
 #include "ui_folderview.h"
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QMimeData>
+#include <QFileInfo>
 
 FolderView::FolderView(QWidget *parent) :
     FloatingWidgetContainer(parent),
@@ -48,6 +53,11 @@ FolderView::FolderView(QWidget *parent) :
     ui->newBookmarkButton->setIconPath(":res/icons/common/buttons/panel-small/add-new12.png");
     ui->homeButton->setIconPath(":res/icons/common/buttons/panel-small/home12.png");
     ui->rootButton->setIconPath(":res/icons/common/buttons/panel-small/root12.png");
+
+    ui->bookmarksLabel->setAcceptDrops(true);
+    ui->newBookmarkButton->setAcceptDrops(true);
+    ui->bookmarksLabel->installEventFilter(this);
+    ui->newBookmarkButton->installEventFilter(this);
 
     int min = ui->thumbnailGrid->THUMBNAIL_SIZE_MIN;
     int max = ui->thumbnailGrid->THUMBNAIL_SIZE_MAX;
@@ -367,4 +377,40 @@ void FolderView::resizeEvent(QResizeEvent *event) {
         ui->pathbarSpacer->changeSize(12, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
         ui->topBar->layout()->invalidate();
     }
+}
+
+bool FolderView::eventFilter(QObject *watched, QEvent *event) {
+    if(watched == ui->bookmarksLabel || watched == ui->newBookmarkButton) {
+        if(event->type() == QEvent::DragEnter) {
+            auto *dragEnterEvent = static_cast<QDragEnterEvent*>(event);
+            if(dragEnterEvent->mimeData()->hasUrls()) {
+                dragEnterEvent->acceptProposedAction();
+                return true;
+            }
+        } else if(event->type() == QEvent::DragMove) {
+            auto *dragMoveEvent = static_cast<QDragMoveEvent*>(event);
+            if(dragMoveEvent->mimeData()->hasUrls()) {
+                dragMoveEvent->acceptProposedAction();
+                return true;
+            }
+        } else if(event->type() == QEvent::Drop) {
+            auto *dropEvent = static_cast<QDropEvent*>(event);
+            if(dropEvent->mimeData()->hasUrls()) {
+                const auto urls = dropEvent->mimeData()->urls();
+                bool accepted = false;
+                for(const auto &url : urls) {
+                    QString localPath = url.toLocalFile();
+                    if(!localPath.isEmpty() && QFileInfo(localPath).isDir()) {
+                        ui->bookmarksWidget->addBookmark(localPath);
+                        accepted = true;
+                    }
+                }
+                if(accepted) {
+                    dropEvent->acceptProposedAction();
+                    return true;
+                }
+            }
+        }
+    }
+    return QWidget::eventFilter(watched, event);
 }

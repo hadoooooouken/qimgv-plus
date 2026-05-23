@@ -131,6 +131,7 @@ private slots:
     void scrollToY(int y);
     void centerOnPixmap();
     void onScrollTimelineFinished();
+    void onZoomTimelineValueChanged(qreal value);
 
     void onDPRChanged();
 private:
@@ -192,6 +193,10 @@ private:
     void applyFitMode();
 
     QTimeLine *scrollTimeLineX, *scrollTimeLineY;
+    QTimeLine *zoomTimeLine;
+    float zoomStartScale;
+    float zoomTargetScale;
+    static qreal smootherstepEasing(qreal t);
     void stopPosAnimation();
     QPointF sceneRoundPos(QPointF scenePoint) const;
     QRectF sceneRoundRect(QRectF sceneRect) const;

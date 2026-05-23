@@ -417,17 +417,6 @@ void Settings::setBackgroundOpacity(qreal value) {
   settings->settingsConf->setValue("backgroundOpacity", value);
 }
 //------------------------------------------------------------------------------
-bool Settings::blurBackground() {
-#ifndef USE_KDE_BLUR
-  return false;
-#endif
-  return settings->settingsConf->value("blurBackground", true).toBool();
-}
-
-void Settings::setBlurBackground(bool mode) {
-  settings->settingsConf->setValue("blurBackground", mode);
-}
-//------------------------------------------------------------------------------
 void Settings::setSortingMode(SortingMode mode) {
   if (mode >= 6)
     mode = SortingMode::SORT_NAME;
@@ -704,6 +693,14 @@ bool Settings::enableSmoothScroll() {
 
 void Settings::setEnableSmoothScroll(bool mode) {
   settings->settingsConf->setValue("enableSmoothScroll", mode);
+}
+//------------------------------------------------------------------------------
+bool Settings::enableSmoothZoom() {
+  return settings->settingsConf->value("enableSmoothZoom", true).toBool();
+}
+
+void Settings::setEnableSmoothZoom(bool mode) {
+  settings->settingsConf->setValue("enableSmoothZoom", mode);
 }
 //------------------------------------------------------------------------------
 bool Settings::useThumbnailCache() {

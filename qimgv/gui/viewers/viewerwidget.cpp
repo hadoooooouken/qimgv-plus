@@ -86,11 +86,11 @@ void ViewerWidget::disableImageViewer() {
 void ViewerWidget::onScaleChanged(qreal scale) {
     if(!this->isVisible())
         return;
-    if(scale != 1.0f) {
-        zoomIndicator->setScale(scale);
-        if(settings->zoomIndicatorMode() == ZoomIndicatorMode::INDICATOR_ENABLED)
-            zoomIndicator->show();
-        else if((settings->zoomIndicatorMode() == ZoomIndicatorMode::INDICATOR_AUTO))
+    zoomIndicator->setScale(scale);
+    if(settings->zoomIndicatorMode() == ZoomIndicatorMode::INDICATOR_ENABLED) {
+        zoomIndicator->show();
+    } else if(scale != 1.0f) {
+        if(settings->zoomIndicatorMode() == ZoomIndicatorMode::INDICATOR_AUTO)
             zoomIndicator->show(1500);
     } else {
         zoomIndicator->hide();
@@ -151,6 +151,7 @@ bool ViewerWidget::showImage(std::unique_ptr<QPixmap> pixmap, QString filePath) 
         return false;
     enableImageViewer();
     imageViewer->showImage(std::move(pixmap), filePath);
+    onScaleChanged(imageViewer->currentScale());
     hideCursorTimed(false);
     return true;
 }
@@ -160,6 +161,7 @@ bool ViewerWidget::showAnimation(std::shared_ptr<QMovie> movie) {
         return false;
     enableImageViewer();
     imageViewer->showAnimation(movie);
+    onScaleChanged(imageViewer->currentScale());
     hideCursorTimed(false);
     return true;
 }

@@ -1,4 +1,4 @@
-qimgv-plus | Current version: 1.0.0
+qimgv-plus | Current version: 1.0.1
 ==========
 A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image viewer, featuring GPU-accelerated scaling and native support for modern image formats.
 

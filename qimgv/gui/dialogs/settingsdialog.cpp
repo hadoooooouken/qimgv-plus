@@ -79,9 +79,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   ui->colorSelectorThumbpanel->setDescription(tr("Thumbnail panel"));
   ui->colorSelectorThumbpanel->setShowAlpha(true);
 
-#ifndef USE_KDE_BLUR
-  ui->blurBackgroundCheckBox->setEnabled(false);
-#endif
 
   ui->scalingQualityComboBox->clear();
   ui->scalingQualityComboBox->addItem("Nearest", QI_FILTER_NEAREST);
@@ -205,6 +202,7 @@ void SettingsDialog::readSettings() {
   ui->squareThumbnailsCheckBox->setChecked(settings->squareThumbnails());
   ui->transparencyGridCheckBox->setChecked(settings->transparencyGrid());
   ui->enableSmoothScrollCheckBox->setChecked(settings->enableSmoothScroll());
+  ui->enableSmoothZoomCheckBox->setChecked(settings->enableSmoothZoom());
   ui->usePreloaderCheckBox->setChecked(settings->usePreloader());
   ui->useThumbnailCacheCheckBox->setChecked(settings->useThumbnailCache());
   ui->smoothUpscalingCheckBox->setChecked(settings->smoothUpscaling());
@@ -214,7 +212,6 @@ void SettingsDialog::readSettings() {
       settings->smoothAnimatedImages());
   ui->bgOpacitySlider->setValue(
       static_cast<int>(settings->backgroundOpacity() * 100));
-  ui->blurBackgroundCheckBox->setChecked(settings->blurBackground());
   ui->sortingComboBox->setCurrentIndex(settings->sortingMode());
   ui->confirmDeleteCheckBox->setChecked(settings->confirmDelete());
   ui->confirmTrashCheckBox->setChecked(settings->confirmTrash());
@@ -365,6 +362,7 @@ void SettingsDialog::saveSettings() {
   settings->setTransparencyGrid(ui->transparencyGridCheckBox->isChecked());
   settings->setShowHiddenFiles(ui->showHiddenFilesCheckBox->isChecked());
   settings->setEnableSmoothScroll(ui->enableSmoothScrollCheckBox->isChecked());
+  settings->setEnableSmoothZoom(ui->enableSmoothZoomCheckBox->isChecked());
   settings->setUsePreloader(ui->usePreloaderCheckBox->isChecked());
   settings->setUseThumbnailCache(ui->useThumbnailCacheCheckBox->isChecked());
   settings->setSmoothUpscaling(ui->smoothUpscalingCheckBox->isChecked());
@@ -374,7 +372,6 @@ void SettingsDialog::saveSettings() {
 
   settings->setBackgroundOpacity(
       static_cast<qreal>(ui->bgOpacitySlider->value()) / 100.f);
-  settings->setBlurBackground(ui->blurBackgroundCheckBox->isChecked());
   settings->setSortingMode(
       static_cast<SortingMode>(ui->sortingComboBox->currentIndex()));
   settings->setConfirmDelete(ui->confirmDeleteCheckBox->isChecked());

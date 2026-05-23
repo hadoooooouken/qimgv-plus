@@ -1253,8 +1253,12 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636"/>
-        <source>Enable smooth scrolling</source>
-        <translation>Activer le défilement « fluide »</translation>
+        <source>Smooth thumbnail scrolling</source>
+        <translation>Défilement fluide des miniatures</translation>
+    </message>
+    <message>
+        <source>Smooth zooming</source>
+        <translation>Zoom fluide</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="643"/>
@@ -1758,11 +1762,6 @@
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3551"/>
         <source>%</source>
         <translation>%</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3576"/>
-        <source>Background blur (KDE)</source>
-        <translation>Flou d&apos;arrière-plan (KDE)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3628"/>

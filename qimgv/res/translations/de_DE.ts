@@ -1259,8 +1259,12 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636"/>
-        <source>Enable smooth scrolling</source>
-        <translation>Sanftes Scrollen aktivieren</translation>
+        <source>Smooth thumbnail scrolling</source>
+        <translation>Sanftes Scrollen der Vorschaubilder</translation>
+    </message>
+    <message>
+        <source>Smooth zooming</source>
+        <translation>Sanftes Zoomen</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="643"/>
@@ -1765,11 +1769,6 @@
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3551"/>
         <source>%</source>
         <translation>%</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3576"/>
-        <source>Background blur (KDE)</source>
-        <translation>Hintergrundverschwommenheit (KDE)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3628"/>

@@ -1717,11 +1717,6 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation type="obsolete">Фон-сітка на прозорих зображеннях</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3576"/>
-        <source>Background blur (KDE)</source>
-        <translation>Розмиття фону вікна (KDE)</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3498"/>
         <source>Window opacity:</source>
         <translation>Непрозорість вікна:</translation>
@@ -1886,8 +1881,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636"/>
-        <source>Enable smooth scrolling</source>
-        <translation>Увімкнути плавну прокрутку</translation>
+        <source>Smooth thumbnail scrolling</source>
+        <translation>Увімкнути плавну прокрутку превью</translation>
+    </message>
+    <message>
+        <source>Smooth zooming</source>
+        <translation>Плавне масштабування</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2020"/>
