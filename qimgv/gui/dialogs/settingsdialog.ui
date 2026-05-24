@@ -4480,6 +4480,20 @@
                    </layout>
                   </item>
                   <item>
+                   <widget class="QLabel" name="labelExcludedCachePaths">
+                    <property name="text">
+                     <string>Exclude paths from caching (separated by semicolon ';'):</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="excludedCachePathsLineEdit">
+                    <property name="toolTip">
+                     <string>Paths to folders that should not be cached, separated by ';'. Example: D:\Downloads\1c_bases; E:\Tuts</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <widget class="QCheckBox" name="unloadThumbsCheckBox">
                     <property name="text">
                      <string>Unload off-screen thumbnails</string>

@@ -2054,6 +2054,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <source>Navigate to mpv binary</source>
         <translation type="vanished">定位mpv文件路径</translation>
     </message>
+    <message>
+        <source>Exclude paths from caching (separated by semicolon ';'):</source>
+        <translation>排除缓存路径（用分号“;”分隔）：</translation>
+    </message>
+    <message>
+        <source>Paths to folders that should not be cached, separated by ';'. Example: D:\Downloads\1c_bases; E:\Tuts</source>
+        <translation>不应缓存的文件夹路径，用“;”分隔。例如：D:\Downloads\1c_bases; E:\Tuts</translation>
+    </message>
 </context>
 <context>
     <name>ShortcutCreatorDialog</name>

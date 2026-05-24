@@ -1221,3 +1221,46 @@ bool Settings::multiInstance() {
 void Settings::setMultiInstance(bool mode) {
   settings->settingsConf->setValue("multiInstance", mode);
 }
+//------------------------------------------------------------------------------
+QString Settings::excludedCachePaths() {
+  return settings->settingsConf->value("excludedCachePaths", "").toString();
+}
+
+void Settings::setExcludedCachePaths(QString paths) {
+  settings->settingsConf->setValue("excludedCachePaths", paths);
+}
+
+bool Settings::isPathExcludedFromCache(const QString &path) {
+  QString excludedStr = excludedCachePaths();
+  if (excludedStr.isEmpty()) {
+    return false;
+  }
+
+  QString cleanPath = QDir::cleanPath(path);
+  QStringList parts = excludedStr.split(';');
+  for (const QString &part : parts) {
+    QString trimmed = part.trimmed();
+    if (trimmed.isEmpty()) {
+      continue;
+    }
+    QString cleanExcluded = QDir::cleanPath(trimmed);
+
+    Qt::CaseSensitivity cs = Qt::CaseSensitive;
+#ifdef Q_OS_WIN
+    cs = Qt::CaseInsensitive;
+#endif
+
+    if (cleanPath.compare(cleanExcluded, cs) == 0) {
+      return true;
+    }
+    QString prefix = cleanExcluded;
+    if (!prefix.endsWith('/')) {
+      prefix.append('/');
+    }
+    if (cleanPath.startsWith(prefix, cs)) {
+      return true;
+    }
+  }
+  return false;
+}
+

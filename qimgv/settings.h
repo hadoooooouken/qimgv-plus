@@ -289,6 +289,10 @@ public:
   bool multiInstance();
   void setMultiInstance(bool mode);
 
+  QString excludedCachePaths();
+  void setExcludedCachePaths(QString paths);
+  bool isPathExcludedFromCache(const QString &path);
+
 
 private:
   explicit Settings(QObject *parent = nullptr);

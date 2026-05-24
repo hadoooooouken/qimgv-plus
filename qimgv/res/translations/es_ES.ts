@@ -2078,6 +2078,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <source>Navigate to mpv binary</source>
         <translation type="vanished">Ubicar el ejecutable mpv</translation>
     </message>
+    <message>
+        <source>Exclude paths from caching (separated by semicolon ';'):</source>
+        <translation>Excluir rutas de la caché (separadas por punto y coma ';'):</translation>
+    </message>
+    <message>
+        <source>Paths to folders that should not be cached, separated by ';'. Example: D:\Downloads\1c_bases; E:\Tuts</source>
+        <translation>Rutas a carpetas que no deben ser almacenadas en caché, separadas por ';'. Ejemplo: D:\Downloads\1c_bases; E:\Tuts</translation>
+    </message>
 </context>
 <context>
     <name>ShortcutCreatorDialog</name>

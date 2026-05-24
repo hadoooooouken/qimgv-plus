@@ -33,8 +33,13 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
 
   QString time = QString::number(imgInfo.lastModified().toMSecsSinceEpoch());
 
-  if (!force && cache) {
-    image.reset(cache->readThumbnail(thumbnailId));
+  ThumbnailCache *activeCache = cache;
+  if (activeCache && settings->isPathExcludedFromCache(path)) {
+    activeCache = nullptr;
+  }
+
+  if (!force && activeCache) {
+    image.reset(activeCache->readThumbnail(thumbnailId));
     if (image && image->text("lastModified") != time)
       image.reset(nullptr);
   }
@@ -74,9 +79,9 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
       if (imgInfo.type() == ANIMATED)
         image->setText("label", " [a]");
 
-      if (cache) {
+      if (activeCache) {
         if (originalSize.width() > settings->thumbnailResolution() || originalSize.height() > settings->thumbnailResolution())
-          cache->saveThumbnail(image.get(), thumbnailId);
+          activeCache->saveThumbnail(image.get(), thumbnailId);
       }
     }
   }

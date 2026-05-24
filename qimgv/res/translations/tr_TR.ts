@@ -2091,6 +2091,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <source>Navigate to mpv binary</source>
         <translation type="vanished">mpv program dosyasına git</translation>
     </message>
+    <message>
+        <source>Exclude paths from caching (separated by semicolon ';'):</source>
+        <translation>Yolları önbelleğe almaktan hariç tut (noktalı virgül ';' ile ayrılmış):</translation>
+    </message>
+    <message>
+        <source>Paths to folders that should not be cached, separated by ';'. Example: D:\Downloads\1c_bases; E:\Tuts</source>
+        <translation>Önbelleğe alınmaması gereken klasörlerin yolları, ';' ile ayrılmış. Örnek: D:\Downloads\1c_bases; E:\Tuts</translation>
+    </message>
 </context>
 <context>
     <name>ShortcutCreatorDialog</name>

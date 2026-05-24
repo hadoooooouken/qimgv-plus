@@ -2095,6 +2095,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <source>Navigate to mpv binary</source>
         <translation type="vanished">mpvバイナリに移動</translation>
     </message>
+    <message>
+        <source>Exclude paths from caching (separated by semicolon ';'):</source>
+        <translation>キャッシュから除外するパス（セミコロン「;」で区切る）:</translation>
+    </message>
+    <message>
+        <source>Paths to folders that should not be cached, separated by ';'. Example: D:\Downloads\1c_bases; E:\Tuts</source>
+        <translation>キャッシュしないフォルダへのパス。セミコロン「;」で区切ります。例：D:\Downloads\1c_bases; E:\Tuts</translation>
+    </message>
 </context>
 <context>
     <name>ShortcutCreatorDialog</name>

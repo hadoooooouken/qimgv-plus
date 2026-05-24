@@ -296,6 +296,7 @@ void SettingsDialog::readSettings() {
   onThumbnailResolutionSliderChanged(ui->thumbnailResolutionSlider->value());
 
   ui->memoryLimitSpinBox->setValue(settings->memoryAllocationLimit());
+  ui->excludedCachePathsLineEdit->setText(settings->excludedCachePaths());
 
   // language
   QString langName = langs.value(settings->language());
@@ -453,6 +454,7 @@ void SettingsDialog::saveSettings() {
   settings->setExpandLimit(ui->expandLimitSlider->value());
   settings->setThumbnailerThreadCount(ui->thumbnailerThreadsSlider->value());
   settings->setMemoryAllocationLimit(ui->memoryLimitSpinBox->value());
+  settings->setExcludedCachePaths(ui->excludedCachePathsLineEdit->text());
 
   int oldRes = settings->thumbnailResolution();
   int newRes = ui->thumbnailResolutionSlider->value();

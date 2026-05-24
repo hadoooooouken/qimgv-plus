@@ -2057,6 +2057,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <source>Navigate to mpv binary</source>
         <translation type="vanished">Перейдіть до бінарного файлу mpv</translation>
     </message>
+    <message>
+        <source>Exclude paths from caching (separated by semicolon ';'):</source>
+        <translation>Виключити шляхи з кешування (через крапку з комою ';'):</translation>
+    </message>
+    <message>
+        <source>Paths to folders that should not be cached, separated by ';'. Example: D:\Downloads\1c_bases; E:\Tuts</source>
+        <translation>Шляхи до папок, які не потрібно кешувати, розділені ';'. Приклад: D:\Downloads\1c_bases; E:\Tuts</translation>
+    </message>
 </context>
 <context>
     <name>ShortcutCreatorDialog</name>
