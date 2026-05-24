@@ -9,20 +9,21 @@ Settings::Settings(QObject *parent) : QObject(parent) {
 
   bool isWritable = true;
   if (!confDir.exists()) {
-      isWritable = confDir.mkpath(confPath);
+    isWritable = confDir.mkpath(confPath);
   }
   if (isWritable) {
-      QFile testFile(confPath + "/.write_test");
-      if (testFile.open(QIODevice::WriteOnly)) {
-          testFile.close();
-          testFile.remove();
-      } else {
-          isWritable = false;
-      }
+    QFile testFile(confPath + "/.write_test");
+    if (testFile.open(QIODevice::WriteOnly)) {
+      testFile.close();
+      testFile.remove();
+    } else {
+      isWritable = false;
+    }
   }
 
   if (!isWritable) {
-      confPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    confPath =
+        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
   }
 
   mConfDir = new QDir(confPath);
@@ -62,11 +63,11 @@ void Settings::setupCache() {
   QString confPath = QDir::cleanPath(mConfDir->absolutePath());
 
   if (confPath == QDir::cleanPath(appDirPath + "/conf")) {
-      cachePath = appDirPath + "/cache";
-      thumbPath = appDirPath + "/thumbnails";
+    cachePath = appDirPath + "/cache";
+    thumbPath = appDirPath + "/thumbnails";
   } else {
-      cachePath = mConfDir->absolutePath() + "/cache";
-      thumbPath = mConfDir->absolutePath() + "/thumbnails";
+    cachePath = mConfDir->absolutePath() + "/cache";
+    thumbPath = mConfDir->absolutePath() + "/thumbnails";
   }
 
   mTmpDir = new QDir(cachePath);
@@ -81,6 +82,16 @@ void Settings::sync() {
 }
 //------------------------------------------------------------------------------
 QString Settings::thumbnailCacheDir() { return mThumbCacheDir->path() + "/"; }
+//------------------------------------------------------------------------------
+int Settings::thumbnailResolution() {
+  return settings->settingsConf->value("thumbnailResolution", 256).toInt();
+}
+
+void Settings::setThumbnailResolution(int size) {
+  size = qBound(128, size, 512);
+  settings->settingsConf->setValue("thumbnailResolution", size);
+}
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 QString Settings::tmpDir() { return mTmpDir->path() + "/"; }
 //------------------------------------------------------------------------------
@@ -430,6 +441,21 @@ SortingMode Settings::sortingMode() {
   return static_cast<SortingMode>(mode);
 }
 //------------------------------------------------------------------------------
+void Settings::setFolderIconSortingMode(SortingMode mode) {
+  if (mode < 0 || mode > SortingMode::SORT_TIME_DESC)
+    mode = SortingMode::SORT_TIME_DESC;
+  settings->settingsConf->setValue("folderIconSortingMode", mode);
+}
+
+SortingMode Settings::folderIconSortingMode() {
+  int mode = settings->settingsConf
+                 ->value("folderIconSortingMode", SortingMode::SORT_TIME_DESC)
+                 .toInt();
+  if (mode < 0 || mode > SortingMode::SORT_TIME_DESC)
+    mode = SortingMode::SORT_TIME_DESC;
+  return static_cast<SortingMode>(mode);
+}
+//------------------------------------------------------------------------------
 FolderViewMode Settings::folderViewMode() {
   int mode = settings->settingsConf->value("folderViewMode", 2).toInt();
   if (mode < 0 || mode >= 3)
@@ -455,10 +481,10 @@ void Settings::setThumbPanelStyle(ThumbPanelStyle mode) {
 //------------------------------------------------------------------------------
 int Settings::panelPreviewsSize() {
   bool ok = true;
-  int size = settings->settingsConf->value("panelPreviewsSize", 250).toInt(&ok);
+  int size = settings->settingsConf->value("panelPreviewsSize", 256).toInt(&ok);
   if (!ok)
-    size = 250;
-  size = qBound(100, size, 250);
+    size = 256;
+  size = qBound(100, size, 256);
   return size;
 }
 
@@ -793,7 +819,7 @@ void Settings::setSmoothUpscaling(bool mode) {
 }
 //------------------------------------------------------------------------------
 int Settings::folderViewIconSize() {
-  return settings->settingsConf->value("folderViewIconSize", 260).toInt();
+  return settings->settingsConf->value("folderViewIconSize", 256).toInt();
 }
 
 void Settings::setFolderViewIconSize(int value) {
@@ -827,7 +853,8 @@ void Settings::setJPEGSaveQuality(int value) {
 }
 //------------------------------------------------------------------------------
 ScalingFilter Settings::scalingFilter() {
-  int mode = settings->settingsConf->value("scalingFilter", QI_FILTER_CV_SMART).toInt();
+  int mode = settings->settingsConf->value("scalingFilter", QI_FILTER_CV_SMART)
+                 .toInt();
   if (mode < 0 || mode > 7)
     mode = 1; // default to Bilinear if out of range
   return static_cast<ScalingFilter>(mode);
@@ -1194,4 +1221,3 @@ bool Settings::multiInstance() {
 void Settings::setMultiInstance(bool mode) {
   settings->settingsConf->setValue("multiInstance", mode);
 }
-

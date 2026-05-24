@@ -1834,6 +1834,10 @@
         <translation>创建略缩图的线程数:</translation>
     </message>
     <message>
+        <source>Thumbnail cache resolution:</source>
+        <translation>缩略图缓存分辨率:</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1050"/>
         <source>Disable in windowed mode</source>
         <translation type="unfinished"></translation>

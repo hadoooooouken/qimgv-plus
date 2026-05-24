@@ -1922,6 +1922,10 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation>サムネイル生成のスレッド数:</translation>
     </message>
     <message>
+        <source>Thumbnail cache resolution:</source>
+        <translation>サムネイルキャッシュの解像度:</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4367"/>
         <source>2</source>
         <translation>2</translation>

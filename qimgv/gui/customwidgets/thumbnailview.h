@@ -52,6 +52,7 @@ public:
     int lastSelected();
     void clearSelection();
     void deselect(int index);
+    void unloadAllThumbnails();
 
 public slots:
     void show();
@@ -159,7 +160,6 @@ protected:
     void scrollSmooth(int delta);
     void scrollSmooth(int angleDelta, qreal multiplier, qreal acceleration);
     void scrollSmooth(int angleDelta, qreal multiplier, qreal acceleration, bool additive);
-    void unloadAllThumbnails();
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
 

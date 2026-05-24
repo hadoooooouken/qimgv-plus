@@ -5,6 +5,7 @@ FolderViewProxy::FolderViewProxy(QWidget *parent)
       folderView(nullptr)
 {
     stateBuf.sortingMode = settings->sortingMode();
+    stateBuf.folderSortingMode = settings->folderIconSortingMode();
     layout.setContentsMargins(0,0,0,0);
 }
 
@@ -23,6 +24,7 @@ void FolderViewProxy::init() {
     connect(folderView.get(), &FolderView::itemActivated, this, &FolderViewProxy::itemActivated);
     connect(folderView.get(), &FolderView::thumbnailsRequested, this, &FolderViewProxy::thumbnailsRequested);
     connect(folderView.get(), &FolderView::sortingSelected, this, &FolderViewProxy::sortingSelected);
+    connect(folderView.get(), &FolderView::folderSortingSelected, this, &FolderViewProxy::folderSortingSelected);
     connect(folderView.get(), &FolderView::showFoldersChanged, this, &FolderViewProxy::showFoldersChanged);
     connect(folderView.get(), &FolderView::directorySelected, this, &FolderViewProxy::directorySelected);
     connect(folderView.get(), &FolderView::draggedOut, this, &FolderViewProxy::draggedOut);
@@ -46,6 +48,7 @@ void FolderViewProxy::init() {
     qApp->processEvents();
     folderView->focusOnSelection();
     folderView->onSortingChanged(stateBuf.sortingMode);
+    folderView->onFolderSortingChanged(stateBuf.folderSortingMode);
 }
 
 void FolderViewProxy::populate(int count) {
@@ -164,6 +167,14 @@ void FolderViewProxy::onSortingChanged(SortingMode mode) {
         folderView->onSortingChanged(mode);
     } else {
         stateBuf.sortingMode = mode;
+    }
+}
+
+void FolderViewProxy::onFolderSortingChanged(SortingMode mode) {
+    if(folderView) {
+        folderView->onFolderSortingChanged(mode);
+    } else {
+        stateBuf.folderSortingMode = mode;
     }
 }
 

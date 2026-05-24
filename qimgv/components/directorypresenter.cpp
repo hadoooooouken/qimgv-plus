@@ -218,7 +218,31 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
         filters << "*." + QString::fromLatin1(format);
       filters << "*.jfif" << "*.tga" << "*.webp";
 
-      QFileInfoList list = dir.entryInfoList(filters, QDir::Files, QDir::Time);
+      QDir::SortFlags sortFlags = QDir::Time;
+      SortingMode folderIconSort = settings->folderIconSortingMode();
+      switch (folderIconSort) {
+        case SORT_NAME:
+          sortFlags = QDir::Name | QDir::IgnoreCase | QDir::LocaleAware;
+          break;
+        case SORT_NAME_DESC:
+          sortFlags = QDir::Name | QDir::IgnoreCase | QDir::LocaleAware | QDir::Reversed;
+          break;
+        case SORT_SIZE:
+          sortFlags = QDir::Size | QDir::Reversed; // smallest first
+          break;
+        case SORT_SIZE_DESC:
+          sortFlags = QDir::Size; // largest first
+          break;
+        case SORT_TIME:
+          sortFlags = QDir::Time | QDir::Reversed; // oldest first
+          break;
+        case SORT_TIME_DESC:
+        default:
+          sortFlags = QDir::Time; // newest first
+          break;
+      }
+
+      QFileInfoList list = dir.entryInfoList(filters, QDir::Files, sortFlags);
       if (!list.isEmpty()) {
         QString latestImage = QDir::fromNativeSeparators(list.first().absoluteFilePath());
         dirThumbnailTasks.insert(latestImage, i);

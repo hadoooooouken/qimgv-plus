@@ -1929,6 +1929,10 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation>Anzahl an Thumbnailerthreads:</translation>
     </message>
     <message>
+        <source>Thumbnail cache resolution:</source>
+        <translation>Auflösung des Miniaturansicht-Caches:</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4367"/>
         <source>2</source>
         <translation>2</translation>

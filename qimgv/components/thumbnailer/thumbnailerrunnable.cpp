@@ -28,7 +28,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
                                                          bool crop,
                                                          bool force) {
   DocumentInfo imgInfo(path);
-  QString thumbnailId = generateIdString(path, size, crop);
+  QString thumbnailId = generateIdString(path, settings->thumbnailResolution(), false);
   std::unique_ptr<QImage> image;
 
   QString time = QString::number(imgInfo.lastModified().toMSecsSinceEpoch());
@@ -47,7 +47,8 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
     }
     std::pair<QImage *, QSize> pair;
     pair = createThumbnail(imgInfo.filePath(),
-                           imgInfo.format().toStdString().c_str(), size, crop);
+                           imgInfo.format().toStdString().c_str(), 
+                           settings->thumbnailResolution(), false);
     image.reset(pair.first);
     QSize originalSize = pair.second;
 
@@ -60,23 +61,62 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
       *image = opaqueImg;
     }
 
-    image = ImageLib::exifRotated(std::move(image), imgInfo.exifOrientation());
+    if (image) {
+      image = ImageLib::exifRotated(std::move(image), imgInfo.exifOrientation());
+    }
 
-    // put in image info
-    image->setText("originalWidth", QString::number(originalSize.width()));
-    image->setText("originalHeight", QString::number(originalSize.height()));
-    image->setText("lastModified", time);
+    if (image) {
+      // put in image info
+      image->setText("originalWidth", QString::number(originalSize.width()));
+      image->setText("originalHeight", QString::number(originalSize.height()));
+      image->setText("lastModified", time);
 
-    if (imgInfo.type() == ANIMATED)
-      image->setText("label", " [a]");
+      if (imgInfo.type() == ANIMATED)
+        image->setText("label", " [a]");
 
-    if (cache) {
-      // save thumbnail if it makes sense
-      // FIXME: avoid too much i/o
-      if (originalSize.width() > size || originalSize.height() > size)
-        cache->saveThumbnail(image.get(), thumbnailId);
+      if (cache) {
+        if (originalSize.width() > settings->thumbnailResolution() || originalSize.height() > settings->thumbnailResolution())
+          cache->saveThumbnail(image.get(), thumbnailId);
+      }
     }
   }
+
+  if (!image) {
+    std::shared_ptr<Thumbnail> thumbnail(
+        new Thumbnail(imgInfo.fileName(), "error", size, nullptr));
+    return thumbnail;
+  }
+
+  // scale and crop to the requested grid size
+  bool needsScaling = crop ? (image->width() != size || image->height() != size)
+                           : (std::max(image->width(), image->height()) != size);
+  if (needsScaling) {
+    Qt::AspectRatioMode ARMode = crop ? (Qt::KeepAspectRatioByExpanding) : (Qt::KeepAspectRatio);
+    QImage scaled = image->scaled(size, size, ARMode, Qt::SmoothTransformation);
+    
+    for (const QString &key : image->textKeys()) {
+      scaled.setText(key, image->text(key));
+    }
+    
+    if (crop) {
+      QRect clip(0, 0, size, size);
+      QRect scaledRect(QPoint(0, 0), scaled.size());
+      clip.moveCenter(scaledRect.center());
+      
+      std::unique_ptr<QImage> cropped(ImageLib::croppedRaw(&scaled, clip));
+      if (cropped) {
+        for (const QString &key : image->textKeys()) {
+          cropped->setText(key, image->text(key));
+        }
+        image = std::move(cropped);
+      } else {
+        image.reset(new QImage(scaled));
+      }
+    } else {
+      image.reset(new QImage(scaled));
+    }
+  }
+
   if (image && imgInfo.format() == "pdf" && image->hasAlphaChannel()) {
     QImage opaqueImg(image->size(), QImage::Format_RGB32);
     opaqueImg.fill(Qt::white);

@@ -49,6 +49,8 @@ void Core::readSettings() {
 
   if (shuffle)
     syncRandomizer();
+
+  mw->onFolderSortingChanged(settings->folderIconSortingMode());
 }
 
 void Core::showGui() {
@@ -145,6 +147,7 @@ void Core::connectComponents() {
   connect(mw, &MW::resizeRequested, this, &Core::resize);
   connect(mw, &MW::renameRequested, this, &Core::renameCurrentSelection);
   connect(mw, &MW::sortingSelected, this, &Core::sortBy);
+  connect(mw, &MW::folderSortingSelected, this, &Core::onFolderSortingSelected);
   connect(mw, &MW::showFoldersChanged, this, &Core::setFoldersDisplay);
   connect(mw, &MW::discardEditsRequested, this, &Core::discardEdits);
   connect(mw, &MW::draggedOut, this, qOverload<>(&Core::onDraggedOut));
@@ -1637,6 +1640,12 @@ void Core::onModelSortingChanged(SortingMode mode) {
   thumbPanelPresenter.selectAndFocus(state.currentFilePath);
   folderViewPresenter.reloadModel();
   folderViewPresenter.selectAndFocus(state.currentFilePath);
+}
+
+void Core::onFolderSortingSelected(SortingMode mode) {
+  settings->setFolderIconSortingMode(mode);
+  mw->onFolderSortingChanged(mode);
+  folderViewPresenter.reloadModel();
 }
 
 void Core::guiSetImage(std::shared_ptr<Image> img) {

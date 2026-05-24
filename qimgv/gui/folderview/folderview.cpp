@@ -49,6 +49,7 @@ FolderView::FolderView(QWidget *parent) :
     ui->optionsPopupButton->setIconPath(":res/icons/common/buttons/panel/folderview20.png");
 
     ui->sortingComboBox->setIconPath(":res/icons/common/other/sorting-mode16.png");
+    ui->folderSortingComboBox->setIconPath(":/res/icons/common/menuitem/document-view16.png");
 
     ui->newBookmarkButton->setIconPath(":res/icons/common/buttons/panel-small/add-new12.png");
     ui->homeButton->setIconPath(":res/icons/common/buttons/panel-small/home12.png");
@@ -87,6 +88,7 @@ FolderView::FolderView(QWidget *parent) :
 
     connect(ui->zoomSlider, &QSlider::valueChanged, this, &FolderView::onZoomSliderValueChanged);
     connect(ui->sortingComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &FolderView::onSortingSelected);
+    connect(ui->folderSortingComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &FolderView::onFolderSortingSelected);
     connect(ui->togglePlacesPanelButton, &ActionButton::toggled, this, &FolderView::onPlacesPanelButtonChecked);
 
     connect(ui->optionsPopupButton, &IconButton::toggled, this, &FolderView::onOptionsPopupButtonToggled);
@@ -99,6 +101,8 @@ FolderView::FolderView(QWidget *parent) :
 
     ui->sortingComboBox->setItemDelegate(new QStyledItemDelegate(ui->sortingComboBox));
     ui->sortingComboBox->view()->setTextElideMode(Qt::ElideNone);
+    ui->folderSortingComboBox->setItemDelegate(new QStyledItemDelegate(ui->folderSortingComboBox));
+    ui->folderSortingComboBox->view()->setTextElideMode(Qt::ElideNone);
 
     connect(ui->splitter, &QSplitter::splitterMoved, this, &FolderView::onSplitterMoved);
 
@@ -113,9 +117,18 @@ FolderView::FolderView(QWidget *parent) :
 }
 
 void FolderView::readSettings() {
+    int currentRes = settings->thumbnailResolution();
+    if (currentRes != lastThumbnailResolution) {
+        ui->thumbnailGrid->unloadAllThumbnails();
+        lastThumbnailResolution = currentRes;
+    }
     ui->thumbnailGrid->setThumbnailSize(settings->folderViewIconSize());
     ui->thumbnailGrid->setShowLabels((settings->folderViewMode() != FV_SIMPLE));
     ui->togglePlacesPanelButton->setChecked(settings->placesPanel());
+
+    ui->folderSortingComboBox->blockSignals(true);
+    ui->folderSortingComboBox->setCurrentIndex(static_cast<int>(settings->folderIconSortingMode()));
+    ui->folderSortingComboBox->blockSignals(false);
 
     setPlacesPanel(settings->placesPanel());
     ui->bookmarksWidget->setVisible(settings->placesPanelBookmarksExpanded());
@@ -210,6 +223,16 @@ void FolderView::onSortingChanged(SortingMode mode) {
     ui->sortingComboBox->blockSignals(true);
     ui->sortingComboBox->setCurrentIndex(static_cast<int>(mode));
     ui->sortingComboBox->blockSignals(false);
+}
+
+void FolderView::onFolderSortingSelected(int mode) {
+    emit folderSortingSelected(static_cast<SortingMode>(mode));
+}
+
+void FolderView::onFolderSortingChanged(SortingMode mode) {
+    ui->folderSortingComboBox->blockSignals(true);
+    ui->folderSortingComboBox->setCurrentIndex(static_cast<int>(mode));
+    ui->folderSortingComboBox->blockSignals(false);
 }
 
 FolderView::~FolderView() {

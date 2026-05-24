@@ -1922,6 +1922,10 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation>Número de hilos del generador de miniaturas:</translation>
     </message>
     <message>
+        <source>Thumbnail cache resolution:</source>
+        <translation>Resolución de caché de miniaturas:</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4367"/>
         <source>2</source>
         <translation>2</translation>

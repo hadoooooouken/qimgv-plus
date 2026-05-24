@@ -66,6 +66,7 @@ void MW::setupUi() {
     docWidget.reset(new DocumentWidget(viewerWidget, infoBarWindowed));
     folderView.reset(new FolderViewProxy(this));
     connect(folderView.get(), &FolderViewProxy::sortingSelected, this, &MW::sortingSelected);
+    connect(folderView.get(), &FolderViewProxy::folderSortingSelected, this, &MW::folderSortingSelected);
     connect(folderView.get(), &FolderViewProxy::directorySelected, this, &MW::opened);
     connect(folderView.get(), &FolderViewProxy::copyUrlsRequested, this, &MW::copyUrlsRequested);
     connect(folderView.get(), &FolderViewProxy::moveUrlsRequested, this, &MW::moveUrlsRequested);
@@ -274,6 +275,20 @@ void MW::onSortingChanged(SortingMode mode) {
             case SortingMode::SORT_TIME_DESC: showMessage("Sorting: By Time (desc.)");      break;
             case SortingMode::SORT_SIZE:      showMessage("Sorting: By File Size");         break;
             case SortingMode::SORT_SIZE_DESC: showMessage("Sorting: By File Size (desc.)"); break;
+        }
+    }
+}
+
+void MW::onFolderSortingChanged(SortingMode mode) {
+    folderView.get()->onFolderSortingChanged(mode);
+    if(centralWidget.get()->currentViewMode() == ViewMode::MODE_FOLDERVIEW) {
+        switch(mode) {
+            case SortingMode::SORT_NAME:      showMessage(tr("Folder Thumbnails: By Name"));              break;
+            case SortingMode::SORT_NAME_DESC: showMessage(tr("Folder Thumbnails: By Name (desc.)"));      break;
+            case SortingMode::SORT_TIME:      showMessage(tr("Folder Thumbnails: Oldest"));               break;
+            case SortingMode::SORT_TIME_DESC: showMessage(tr("Folder Thumbnails: Newest"));               break;
+            case SortingMode::SORT_SIZE:      showMessage(tr("Folder Thumbnails: By File Size"));         break;
+            case SortingMode::SORT_SIZE_DESC: showMessage(tr("Folder Thumbnails: By File Size (desc.)")); break;
         }
     }
 }

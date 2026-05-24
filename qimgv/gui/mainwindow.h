@@ -171,6 +171,7 @@ signals:
   void saveRequested();
   void saveAsRequested(QString);
   void sortingSelected(SortingMode);
+  void folderSortingSelected(SortingMode);
 
   // viewerWidget
   void scalingRequested(QSize, ScalingFilter);
@@ -233,6 +234,7 @@ public slots:
   void closeImage();
   void showContextMenu();
   void onSortingChanged(SortingMode);
+  void onFolderSortingChanged(SortingMode);
   void toggleImageInfoOverlay();
   void toggleRenameOverlay(QString currentName);
   void toggleColorAdjustments();

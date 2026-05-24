@@ -44,6 +44,7 @@ public slots:
     void addItem();
     void onFullscreenModeChanged(bool mode);
     void onSortingChanged(SortingMode mode);
+    void onFolderSortingChanged(SortingMode mode);
 
 
 protected:
@@ -63,6 +64,7 @@ signals:
     void draggedOut() override;
     void draggedToBookmarks(QList<int>) override;
     void sortingSelected(SortingMode);
+    void folderSortingSelected(SortingMode);
     void directorySelected(QString path);
     void showFoldersChanged(bool mode);
     void copyUrlsRequested(QList<QString>, QString path);
@@ -74,6 +76,7 @@ signals:
 
 private slots:
     void onSortingSelected(int);
+    void onFolderSortingSelected(int);
     void readSettings();
 
     void onTreeViewClicked(QModelIndex index);
@@ -96,6 +99,7 @@ private slots:
     void onTreeViewTabOut();
 
 private:
+    int lastThumbnailResolution = 256;
     Ui::FolderView *ui;
     FileSystemModelCustom *dirModel;
     FVOptionsPopup *optionsPopup;

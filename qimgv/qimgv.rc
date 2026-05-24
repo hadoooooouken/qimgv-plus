@@ -21,12 +21,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "hadoooooouken"
             VALUE "FileDescription", "qimgv-plus - Fast, easy to use, and beautiful image viewer"
-            VALUE "FileVersion", "1.0.2.0"
+            VALUE "FileVersion", "1.0.3.0"
             VALUE "InternalName", "qimgv-plus.exe"
             VALUE "LegalCopyright", "Copyright (C) 2026 hadooooouken"
             VALUE "OriginalFilename", "qimgv-plus.exe"
             VALUE "ProductName", "qimgv-plus"
-            VALUE "ProductVersion", "1.0.2.0"
+            VALUE "ProductVersion", "1.0.3.0"
         END
     END
     BLOCK "VarFileInfo"

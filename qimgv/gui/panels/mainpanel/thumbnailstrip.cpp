@@ -126,6 +126,11 @@ void ThumbnailStrip::focusOnSelection() {
 }
 
 void ThumbnailStrip::readSettings() {
+    int currentRes = settings->thumbnailResolution();
+    if (currentRes != lastThumbnailResolution) {
+        unloadAllThumbnails();
+        lastThumbnailResolution = currentRes;
+    }
     if(settings->thumbPanelStyle() == TH_PANEL_SIMPLE)
         mCurrentStyle = THUMB_SIMPLE;
     else

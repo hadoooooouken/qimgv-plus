@@ -120,6 +120,8 @@ public:
   void setSavedPaths(QStringList paths);
   QString tmpDir();
   QString thumbnailCacheDir();
+  int thumbnailResolution();
+  void setThumbnailResolution(int size);
   int thumbnailerThreadCount();
   void setThumbnailerThreadCount(int count);
   bool smoothUpscaling();
@@ -269,6 +271,9 @@ public:
   void setSortFolders(bool mode);
   bool trackpadDetection();
   void setTrackpadDetection(bool mode);
+
+  void setFolderIconSortingMode(SortingMode mode);
+  SortingMode folderIconSortingMode();
 
   bool clickableEdges();
   void setClickableEdges(bool mode);

@@ -1,7 +1,7 @@
 # qimgv root
 cmake_minimum_required(VERSION 3.13)
 project(qimgv-plus
-    VERSION 1.0.2
+    VERSION 1.0.3
     HOMEPAGE_URL "https://github.com/hadoooooouken/qimgv-plus"
     LANGUAGES C CXX RC)
 
@@ -34,9 +34,9 @@ option(USE_QT5 "Build with Qt5 if available" ON)
 find_package(Qt6 COMPONENTS Widgets QUIET)
 if(Qt6_FOUND)
     set(QT_VERSION_MAJOR 6)
-    find_package(Qt6 REQUIRED COMPONENTS Core Widgets Svg SvgWidgets PrintSupport OpenGLWidgets Network)
+    find_package(Qt6 REQUIRED COMPONENTS Core Widgets Svg SvgWidgets PrintSupport OpenGLWidgets Network Sql)
 else()
-    find_package(Qt5 REQUIRED COMPONENTS Core Widgets Svg PrintSupport Network)
+    find_package(Qt5 REQUIRED COMPONENTS Core Widgets Svg PrintSupport Network Sql)
 
     set(QT_VERSION_MAJOR 5)
 endif()

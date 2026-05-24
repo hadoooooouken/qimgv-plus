@@ -1922,6 +1922,10 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation>Küçük resim oluşturucu iş parçacığı sayısı:</translation>
     </message>
     <message>
+        <source>Thumbnail cache resolution:</source>
+        <translation>Küçük resim önbellek çözünürlüğü:</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4367"/>
         <source>2</source>
         <translation type="unfinished"></translation>

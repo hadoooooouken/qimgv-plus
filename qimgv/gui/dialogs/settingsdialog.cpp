@@ -1,9 +1,13 @@
 #include "settingsdialog.h"
 #include "ui_settingsdialog.h"
+#include "components/cache/thumbnailcache.h"
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent), ui(new Ui::SettingsDialog) {
   ui->setupUi(this);
+  ui->panelSizeSlider->setMinimum(13);
+  ui->panelSizeSlider->setMaximum(32);
+  ui->panelSizeSlider->setSingleStep(1);
   this->setWindowTitle(tr("Preferences — ") + qApp->applicationName());
 
   ui->shortcutsTableWidget->horizontalHeader()->setSectionResizeMode(
@@ -132,6 +136,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   langs.insert("system", "System language");
   ui->langComboBox->insertItem(0, "System language");
 
+  connect(ui->thumbnailResolutionSlider, &QSlider::valueChanged, this, &SettingsDialog::onThumbnailResolutionSliderChanged);
   connect(this, &SettingsDialog::settingsChanged, settings,
           &Settings::sendChangeNotification);
   readSettings();
@@ -287,6 +292,9 @@ void SettingsDialog::readSettings() {
   ui->thumbnailerThreadsSlider->setValue(settings->thumbnailerThreadCount());
   onThumbnailerThreadsSliderChanged(ui->thumbnailerThreadsSlider->value());
 
+  ui->thumbnailResolutionSlider->setValue(settings->thumbnailResolution());
+  onThumbnailResolutionSliderChanged(ui->thumbnailResolutionSlider->value());
+
   ui->memoryLimitSpinBox->setValue(settings->memoryAllocationLimit());
 
   // language
@@ -317,8 +325,8 @@ void SettingsDialog::readSettings() {
   ui->pinPanelCheckBox->setChecked(settings->panelPinned());
   ui->panelPositionComboBox->setCurrentIndex(settings->panelPosition());
 
-  // reduce by 10x to have nice granular control in qslider
-  ui->panelSizeSlider->setValue(settings->panelPreviewsSize() / 10);
+  // reduce by 8x to have nice granular control in qslider
+  ui->panelSizeSlider->setValue(settings->panelPreviewsSize() / 8);
 
   ui->useSystemColorsCheckBox->setChecked(settings->useSystemColorScheme());
   ui->modifySystemSchemeLabel->setVisible(settings->useSystemColorScheme());
@@ -434,7 +442,7 @@ void SettingsDialog::saveSettings() {
   int panelPos = ui->panelPositionComboBox->currentIndex();
   settings->setPanelPosition(static_cast<PanelPosition>(panelPos));
 
-  settings->setPanelPreviewsSize(ui->panelSizeSlider->value() * 10);
+  settings->setPanelPreviewsSize(ui->panelSizeSlider->value() * 8);
 
   settings->setJPEGSaveQuality(ui->JPEGQualitySlider->value());
   settings->setZoomStep(
@@ -445,6 +453,14 @@ void SettingsDialog::saveSettings() {
   settings->setExpandLimit(ui->expandLimitSlider->value());
   settings->setThumbnailerThreadCount(ui->thumbnailerThreadsSlider->value());
   settings->setMemoryAllocationLimit(ui->memoryLimitSpinBox->value());
+
+  int oldRes = settings->thumbnailResolution();
+  int newRes = ui->thumbnailResolutionSlider->value();
+  if (oldRes != newRes) {
+    settings->setThumbnailResolution(newRes);
+    ThumbnailCache cache;
+    cache.clear();
+  }
 
   settings->setUseSystemColorScheme(ui->useSystemColorsCheckBox->isChecked());
 
@@ -712,6 +728,16 @@ void SettingsDialog::onZoomStepSliderChanged(int value) {
 void SettingsDialog::onMouseScrollingSpeedSliderChanged(int value) {
   ui->mouseScrollingSpeedLabel->setText(
       QString::number(0.5f + (value * 0.25f), 'f', 2) + "x");
+}
+//------------------------------------------------------------------------------
+void SettingsDialog::onThumbnailResolutionSliderChanged(int value) {
+  // Snap value to nearest multiple of 16
+  int snapped = ((value + 8) / 16) * 16;
+  if (snapped != value) {
+    ui->thumbnailResolutionSlider->setValue(snapped);
+    return;
+  }
+  ui->thumbnailResolutionValueLabel->setText(QString::number(snapped) + " px");
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onThumbnailerThreadsSliderChanged(int value) {

@@ -8,6 +8,7 @@ struct FolderViewStateBuffer {
     QList<int> selection;
     int itemCount = 0;
     SortingMode sortingMode;
+    SortingMode folderSortingMode = SortingMode::SORT_TIME_DESC;
     bool fullscreenMode;
 };
 
@@ -34,6 +35,7 @@ public slots:
     void addItem();
     void onFullscreenModeChanged(bool mode);
     void onSortingChanged(SortingMode mode);
+    void onFolderSortingChanged(SortingMode mode);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -44,6 +46,7 @@ signals:
     void draggedOut() override;
     void draggedToBookmarks(QList<int>) override;
     void sortingSelected(SortingMode);
+    void folderSortingSelected(SortingMode);
     void showFoldersChanged(bool mode);
     void directorySelected(QString);
     void copyUrlsRequested(QList<QString>, QString path);

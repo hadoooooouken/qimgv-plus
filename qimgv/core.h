@@ -111,6 +111,7 @@ private slots:
     void onModelItemReady(std::shared_ptr<Image>, const QString&);
     void onModelItemUpdated(QString fileName);
     void onModelSortingChanged(SortingMode mode);
+    void onFolderSortingSelected(SortingMode mode);
     void onLoadFailed(const QString &path);
     void rotateLeft();
     void rotateRight();

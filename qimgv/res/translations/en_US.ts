@@ -1800,6 +1800,10 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Thumbnail cache resolution:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4306"/>
         <source>2</source>
         <translation type="unfinished"></translation>
