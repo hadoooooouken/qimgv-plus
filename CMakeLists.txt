@@ -1,7 +1,7 @@
 # qimgv root
 cmake_minimum_required(VERSION 3.13)
 project(qimgv-plus
-    VERSION 1.0.3.1
+    VERSION 1.0.4.0
     HOMEPAGE_URL "https://github.com/hadoooooouken/qimgv-plus"
     LANGUAGES C CXX RC)
 
@@ -56,3 +56,5 @@ endif()
 ##############################################################
 
 add_subdirectory(qimgv)
+add_subdirectory(shellex)
+

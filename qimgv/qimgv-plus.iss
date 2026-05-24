@@ -1,5 +1,5 @@
 #define MyAppName "qimgv-plus"
-#define MyAppVersion "1.0.3.1"
+#define MyAppVersion "1.0.4.0"
 #define MyAppPublisher "hadoooooouken"
 #define MyAppURL "https://github.com/hadoooooouken/qimgv-plus"
 #define MyAppExeName "qimgv-plus.exe"
@@ -43,6 +43,7 @@ Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 
 [CustomMessages]
+; Compacting status
 english.CompactingFiles=Optimizing file sizes on disk...
 ukrainian.CompactingFiles=Оптимізація розміру файлів на диску...
 german.CompactingFiles=Dateigrößen auf dem Datenträger optimieren...
@@ -51,24 +52,65 @@ french.CompactingFiles=Optimisation de la taille des fichiers sur le disque...
 japanese.CompactingFiles=ディスク上のファイルサイズを最適化しています...
 turkish.CompactingFiles=Disk üzerindeki dosya boyutları optimize ediliyor...
 
+; Group names
+english.GroupFileAssociations=File Associations:
+ukrainian.GroupFileAssociations=Асоціації файлів:
+german.GroupFileAssociations=Dateizuordnungen:
+spanish.GroupFileAssociations=Asociaciones de archivos:
+french.GroupFileAssociations=Associations de fichiers :
+japanese.GroupFileAssociations=ファイル関連付け:
+turkish.GroupFileAssociations=Dosya İlişkilendirmeleri:
+
+english.GroupAdditionalOptions=Additional options:
+ukrainian.GroupAdditionalOptions=Додаткові параметри:
+german.GroupAdditionalOptions=Zusätzliche Optionen:
+spanish.GroupAdditionalOptions=Opciones adicionales:
+french.GroupAdditionalOptions=Options supplémentaires :
+japanese.GroupAdditionalOptions=追加オプション:
+turkish.GroupAdditionalOptions=Ek seçenekler:
+
+; Task description for compacting
+english.CompactFilesTaskDesc=Optimize file sizes on disk (compress with LZX)
+ukrainian.CompactFilesTaskDesc=Оптимізувати розмір файлів на диску (стиснення LZX)
+german.CompactFilesTaskDesc=Dateigrößen auf Datenträger optimieren (LZX-Komprimierung)
+spanish.CompactFilesTaskDesc=Optimizar el tamaño de los archivos en disco (compresión LZX)
+french.CompactFilesTaskDesc=Optimiser la taille des fichiers sur le disque (compression LZX)
+japanese.CompactFilesTaskDesc=ディスク上のファイルサイズを最適化 (LZX圧縮)
+turkish.CompactFilesTaskDesc=Dosya boyutlarını diskte optimize et (LZX ile sıkıştır)
+
+; Task description for thumbnails
+english.ThumbnailsTaskDesc=Generate thumbnails in Windows Explorer
+ukrainian.ThumbnailsTaskDesc=Створювати мініатюри у Провіднику Windows
+german.ThumbnailsTaskDesc=Minivorschauen im Windows-Explorer generieren
+spanish.ThumbnailsTaskDesc=Generar miniaturas en el Explorador de Windows
+french.ThumbnailsTaskDesc=Générer des miniatures dans l'Explorateur Windows
+japanese.ThumbnailsTaskDesc=Windowsエクスプローラーでサムネイルを生成
+turkish.ThumbnailsTaskDesc=Windows Gezgini'nde küçük resimler oluştur
+
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "associate"; Description: "Associate {#MyAppName} with common image file formats"; GroupDescription: "File Associations:"
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
+Name: "associate"; Description: "Associate {#MyAppName} with common image file formats"; GroupDescription: "{cm:GroupFileAssociations}"
+Name: "compact"; Description: "{cm:CompactFilesTaskDesc}"; GroupDescription: "{cm:GroupAdditionalOptions}"
+Name: "thumbnails"; Description: "{cm:ThumbnailsTaskDesc}"; GroupDescription: "{cm:GroupAdditionalOptions}"
 
 [Files]
 Source: "..\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "{#MyAppExeName},cache\*,conf\*,thumbnails\*"
 Source: "res\icons\common\logo\app\{#MyAppIconName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "res\filetypes\*"; DestDir: "{app}\res\filetypes"; Flags: ignoreversion
-
+Source: "..\release\qimgvshellex.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppIconName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon; IconFilename: "{app}\{#MyAppIconName}"
 
 [Run]
-Filename: "compact.exe"; Parameters: "/c /f /s:""{app}"" /exe:lzx /i"; WorkingDir: "{app}"; StatusMsg: "{cm:CompactingFiles}"; Flags: runhidden
+Filename: "compact.exe"; Parameters: "/c /f /s:""{app}"" /exe:lzx /i"; WorkingDir: "{app}"; StatusMsg: "{cm:CompactingFiles}"; Flags: runhidden; Tasks: compact
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
+Filename: "regsvr32.exe"; Parameters: "/s ""{app}\qimgvshellex.dll"""; WorkingDir: "{app}"; Flags: runhidden; Tasks: thumbnails
+
+[UninstallRun]
+Filename: "regsvr32.exe"; Parameters: "/u /s ""{app}\qimgvshellex.dll"""; WorkingDir: "{app}"; Flags: runhidden; RunOnceId: "UninstallShellex"
 
 [Registry]
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "qimgv-plus"; Flags: uninsdeletekey; Tasks: associate
