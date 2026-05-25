@@ -40,6 +40,7 @@ Settings::Settings(QObject *parent) : QObject(parent) {
 //------------------------------------------------------------------------------
 Settings::~Settings() {
   saveTheme();
+  delete mConfDir;
   delete mThumbCacheDir;
   delete mTmpDir;
   delete settingsConf;

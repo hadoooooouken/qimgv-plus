@@ -27,12 +27,12 @@ Scaler::Scaler(Cache *_cache, QObject *parent)
 }
 
 Scaler::~Scaler() {
-    disconnect(runnable, nullptr, this, nullptr);
-    disconnect(this, nullptr, nullptr, nullptr);
     clear();
     if(pool) {
         pool->waitForDone();
     }
+    disconnect(runnable, nullptr, this, nullptr);
+    disconnect(this, nullptr, nullptr, nullptr);
     delete sem;
     delete runnable;
 }

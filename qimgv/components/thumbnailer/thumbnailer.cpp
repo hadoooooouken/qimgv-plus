@@ -13,6 +13,7 @@ Thumbnailer::Thumbnailer() {
 Thumbnailer::~Thumbnailer() {
     pool->clear();
     pool->waitForDone();
+    delete cache;
 }
 
 void Thumbnailer::waitForDone() {

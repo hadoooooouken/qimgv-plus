@@ -37,6 +37,7 @@ Core::Core()
 }
 
 Core::~Core() {
+  delete translator;
 }
 
 void Core::readSettings() {
