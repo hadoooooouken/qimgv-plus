@@ -1,19 +1,17 @@
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QCryptographicHash>
+#include <QDataStream>
+#include <QDir>
 #include <QEvent>
-#include <QStyleFactory>
+#include <QFileInfo>
 #include <QLocalServer>
 #include <QLocalSocket>
-#include <QCryptographicHash>
-#include <QFileInfo>
-#include <QDir>
-#include <QDataStream>
+#include <QStyleFactory>
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
-
-
 
 #include "appversion.h"
 #include "components/actionmanager/actionmanager.h"
@@ -25,9 +23,21 @@
 #include "utils/cmdoptionsrunner.h"
 #include "utils/inputmap.h"
 
-
 //------------------------------------------------------------------------------
-void saveSettings() { delete settings; }
+void cleanupSingletons() {
+  delete actionManager;
+  actionManager = nullptr;
+  delete scriptManager;
+  scriptManager = nullptr;
+  delete settings;
+  settings = nullptr;
+  delete inputMap;
+  inputMap = nullptr;
+  delete appActions;
+  appActions = nullptr;
+  delete shrRes;
+  shrRes = nullptr;
+}
 //------------------------------------------------------------------------------
 QDataStream &operator<<(QDataStream &out, const Script &v) {
   out << v.command << v.blocking;
@@ -65,13 +75,15 @@ int main(int argc, char *argv[]) {
   QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 
   QApplication a(argc, argv);
-  QCoreApplication::setLibraryPaths(QStringList() << QCoreApplication::applicationDirPath());
+  QCoreApplication::setLibraryPaths(QStringList()
+                                    << QCoreApplication::applicationDirPath());
 
   // use some style workarounds
   a.setStyle(new ProxyStyle);
 
   QCoreApplication::setOrganizationName("qimgv-plus");
-  QCoreApplication::setOrganizationDomain("github.com/hadoooooouken/qimgv-plus");
+  QCoreApplication::setOrganizationDomain(
+      "github.com/hadoooooouken/qimgv-plus");
   QCoreApplication::setApplicationName("qimgv-plus");
   QCoreApplication::setApplicationVersion(appVersion.toString());
   QApplication::setEffectEnabled(Qt::UI_AnimateCombo, false);
@@ -92,8 +104,6 @@ int main(int argc, char *argv[]) {
   scriptManager = ScriptManager::getInstance();
   actionManager = ActionManager::getInstance();
   shrRes = SharedResources::getInstance();
-
-  atexit(saveSettings);
 
   // parse args
   // ------------------------------------------------------------------
@@ -121,10 +131,11 @@ int main(int argc, char *argv[]) {
   });
   parser.process(a);
 
+  int exitCode = 0;
   if (parser.isSet("build-options")) {
     CmdOptionsRunner r;
     QTimer::singleShot(0, &r, &CmdOptionsRunner::showBuildOptions);
-    return a.exec();
+    exitCode = a.exec();
   } else if (parser.isSet("gen-thumbs")) {
     int size = settings->folderViewIconSize();
     if (parser.isSet("gen-thumbs-size"))
@@ -134,73 +145,85 @@ int main(int argc, char *argv[]) {
     QTimer::singleShot(0, &r,
                        std::bind(&CmdOptionsRunner::generateThumbs, &r,
                                  parser.value("gen-thumbs"), size));
-    return a.exec();
-  }
+    exitCode = a.exec();
+  } else {
+    // -----------------------------------------------------------------------------
 
-  // -----------------------------------------------------------------------------
+    QString serverName = "qimgv-plus-single-instance-" +
+                         QCryptographicHash::hash(QDir::tempPath().toUtf8(),
+                                                  QCryptographicHash::Md5)
+                             .toHex();
+    QLocalServer *server = nullptr;
 
-  QString serverName = "qimgv-plus-single-instance-" + QCryptographicHash::hash(QDir::tempPath().toUtf8(), QCryptographicHash::Md5).toHex();
-  QLocalServer *server = nullptr;
-
-  if (!settings->multiInstance()) {
-    QLocalSocket socket;
-    socket.connectToServer(serverName);
-    if (socket.waitForConnected(500)) {
-      QByteArray data;
-      QDataStream out(&data, QIODevice::WriteOnly);
-      QString pathToSend;
-      if (parser.positionalArguments().count()) {
-        pathToSend = QFileInfo(parser.positionalArguments().at(0)).absoluteFilePath();
-      }
-      out << pathToSend;
+    if (!settings->multiInstance()) {
+      QLocalSocket socket;
+      socket.connectToServer(serverName);
+      if (socket.waitForConnected(500)) {
+        QByteArray data;
+        QDataStream out(&data, QIODevice::WriteOnly);
+        QString pathToSend;
+        if (parser.positionalArguments().count()) {
+          pathToSend =
+              QFileInfo(parser.positionalArguments().at(0)).absoluteFilePath();
+        }
+        out << pathToSend;
 #ifdef _WIN32
-      AllowSetForegroundWindow(ASFW_ANY);
+        AllowSetForegroundWindow(ASFW_ANY);
 #endif
-      socket.write(data);
-      socket.waitForBytesWritten(1000);
-      socket.disconnectFromServer();
-      return 0;
+        socket.write(data);
+        socket.waitForBytesWritten(1000);
+        socket.disconnectFromServer();
+        cleanupSingletons();
+        return 0;
+      }
+
+      QLocalServer::removeServer(serverName);
+      server = new QLocalServer(&a);
     }
 
-    QLocalServer::removeServer(serverName);
-    server = new QLocalServer(&a);
+    {
+      Core core;
+
+      if (server) {
+        QObject::connect(server, &QLocalServer::newConnection, [server, &core]() {
+          QLocalSocket *clientSocket = server->nextPendingConnection();
+          if (!clientSocket)
+            return;
+          QObject::connect(clientSocket, &QLocalSocket::disconnected, clientSocket,
+                           &QLocalSocket::deleteLater);
+          QObject::connect(clientSocket, &QLocalSocket::readyRead,
+                           [clientSocket, &core]() {
+                             QDataStream in(clientSocket);
+                             QString pathReceived;
+                             in >> pathReceived;
+                             core.raiseWindow();
+                             if (!pathReceived.isEmpty()) {
+                               core.loadPath(pathReceived);
+                             }
+                           });
+        });
+        server->listen(serverName);
+      }
+
+      if (parser.positionalArguments().count())
+        core.loadPath(parser.positionalArguments().at(0));
+      else if (settings->defaultViewMode() == MODE_FOLDERVIEW) {
+        QStringList bookmarks = settings->bookmarks();
+        if (!bookmarks.isEmpty())
+          core.loadPath(bookmarks.first());
+        else
+          core.loadPath(QDir::homePath());
+      }
+
+      // wait for event queue to catch up before showing window
+      // this avoids white background flicker on windows (or not?)
+      qApp->processEvents();
+
+      core.showGui();
+      exitCode = a.exec();
+    }
   }
 
-  Core core;
-
-  if (server) {
-    QObject::connect(server, &QLocalServer::newConnection, [server, &core]() {
-      QLocalSocket *clientSocket = server->nextPendingConnection();
-      if (!clientSocket) return;
-      QObject::connect(clientSocket, &QLocalSocket::disconnected, clientSocket, &QLocalSocket::deleteLater);
-      QObject::connect(clientSocket, &QLocalSocket::readyRead, [clientSocket, &core]() {
-        QDataStream in(clientSocket);
-        QString pathReceived;
-        in >> pathReceived;
-        core.raiseWindow();
-        if (!pathReceived.isEmpty()) {
-          core.loadPath(pathReceived);
-        }
-      });
-    });
-    server->listen(serverName);
-  }
-
-  if (parser.positionalArguments().count())
-    core.loadPath(parser.positionalArguments().at(0));
-  else if (settings->defaultViewMode() == MODE_FOLDERVIEW) {
-    QStringList bookmarks = settings->bookmarks();
-    if (!bookmarks.isEmpty())
-      core.loadPath(bookmarks.first());
-    else
-      core.loadPath(QDir::homePath());
-  }
-
-  // wait for event queue to catch up before showing window
-  // this avoids white background flicker on windows (or not?)
-  qApp->processEvents();
-
-  core.showGui();
-  return a.exec();
+  cleanupSingletons();
+  return exitCode;
 }
-

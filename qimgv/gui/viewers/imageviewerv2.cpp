@@ -27,13 +27,11 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   hs = horizontalScrollBar();
   vs = verticalScrollBar();
 
-  scrollTimeLineY = new QTimeLine();
+  scrollTimeLineY = new QTimeLine(ANIMATION_SPEED, this);
   scrollTimeLineY->setEasingCurve(QEasingCurve::OutSine);
-  scrollTimeLineY->setDuration(ANIMATION_SPEED);
   scrollTimeLineY->setUpdateInterval(SCROLL_UPDATE_RATE);
-  scrollTimeLineX = new QTimeLine();
+  scrollTimeLineX = new QTimeLine(ANIMATION_SPEED, this);
   scrollTimeLineX->setEasingCurve(QEasingCurve::OutSine);
-  scrollTimeLineX->setDuration(ANIMATION_SPEED);
   scrollTimeLineX->setUpdateInterval(SCROLL_UPDATE_RATE);
   connect(scrollTimeLineX, &QTimeLine::finished, this,
           &ImageViewerV2::onScrollTimelineFinished);
@@ -74,7 +72,7 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-  scene = new QGraphicsScene();
+  scene = new QGraphicsScene(this);
   scene->setSceneRect(0, 0, 200000, 200000);
   scene->setBackgroundBrush(QColor(60, 60, 103));
   scene->addItem(&pixmapItem);
@@ -107,7 +105,7 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
           &ImageViewerV2::readSettings);
 }
 
-ImageViewerV2::~ImageViewerV2() {}
+ImageViewerV2::~ImageViewerV2() = default;
 
 // devicePixelRatioF() does not provide correct value on wayland until the first
 // paint event occurs catch change event & do the needful

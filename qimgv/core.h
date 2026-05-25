@@ -38,6 +38,7 @@ class Core : public QObject {
     Q_OBJECT
 public:
     Core();
+    ~Core();
     void showGui();
 
 public slots:

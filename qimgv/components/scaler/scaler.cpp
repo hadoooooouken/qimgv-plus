@@ -26,6 +26,17 @@ Scaler::Scaler(Cache *_cache, QObject *parent)
     connect(this, &Scaler::acceptScalingResult, this, &Scaler::slotForwardScaledResult, Qt::QueuedConnection);
 }
 
+Scaler::~Scaler() {
+    disconnect(runnable, nullptr, this, nullptr);
+    disconnect(this, nullptr, nullptr, nullptr);
+    clear();
+    if(pool) {
+        pool->waitForDone();
+    }
+    delete sem;
+    delete runnable;
+}
+
 void Scaler::requestScaled(ScalerRequest req) {
     sem->acquire(1);
     if(!running) {

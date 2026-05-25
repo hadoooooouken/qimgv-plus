@@ -36,6 +36,9 @@ Core::Core()
     onUpdate();
 }
 
+Core::~Core() {
+}
+
 void Core::readSettings() {
   loopSlideshow = settings->loopSlideshow();
   folderEndAction = settings->folderEndAction();

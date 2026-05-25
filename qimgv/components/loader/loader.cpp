@@ -5,6 +5,12 @@ Loader::Loader() {
     pool->setMaxThreadCount(2);
 }
 
+Loader::~Loader() {
+    disconnect(nullptr, nullptr, this, nullptr);
+    clearTasks();
+    tasks.clear();
+}
+
 void Loader::clearTasks() {
     clearPool();
     pool->waitForDone();

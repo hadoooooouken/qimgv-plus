@@ -8,6 +8,7 @@ class Loader : public QObject {
     Q_OBJECT
 public:
     explicit Loader();
+    ~Loader();
     std::shared_ptr<Image> load(QString path);
     void loadAsyncPriority(QString path);
     void loadAsync(QString path);
