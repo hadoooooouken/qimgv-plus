@@ -1341,7 +1341,7 @@ bool Core::loadPath(QString path) {
         isSupported = true;
       } else {
         QStringList types = settings->supportedMimeTypes();
-        QMimeDatabase db;
+        static QMimeDatabase db;
         QMimeType type = db.mimeTypeForFile(fileInfo.absoluteFilePath());
         if (types.contains(type.name())) {
           isSupported = true;

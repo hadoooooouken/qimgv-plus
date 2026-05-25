@@ -18,6 +18,7 @@ class ClickZoneOverlay : public FloatingWidget
     Q_OBJECT
 public:
     explicit ClickZoneOverlay(FloatingWidgetContainer *parent);
+    ~ClickZoneOverlay();
     QRect leftZone();
     QRect rightZone();
     void highlightLeft();

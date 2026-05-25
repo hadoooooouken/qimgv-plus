@@ -8,7 +8,9 @@ TreeViewCustom::TreeViewCustom(QWidget *parent) : QTreeView(parent) {
     // proxy scrollbar
     this->verticalScrollBar()->setStyleSheet("max-width: 0px;");
     overlayScrollbar.setParent(this);
-    overlayScrollbar.setStyleSheet("background-color: transparent;");
+    overlayScrollbar.setProperty("treeHovered", false);
+    initScrollbarStyle();
+    connect(settings, &Settings::settingsChanged, this, &TreeViewCustom::initScrollbarStyle);
     connect(verticalScrollBar(), &QScrollBar::rangeChanged, &overlayScrollbar, &QScrollBar::setRange);
     connect(verticalScrollBar(), &QScrollBar::valueChanged, &overlayScrollbar, &QScrollBar::setValue);
     connect(&overlayScrollbar, &QScrollBar::valueChanged, [this]() {
@@ -57,14 +59,30 @@ void TreeViewCustom::resizeEvent(QResizeEvent *event) {
     updateScrollbarStyle();
 }
 
+void TreeViewCustom::initScrollbarStyle() {
+    auto scheme = settings->colorScheme();
+    QString baseStyle = 
+        "QScrollBar { background-color: transparent; }"
+        "QScrollBar::handle:vertical { background-color: %1; }"
+        "QScrollBar[treeHovered=\"true\"]::handle:vertical { background-color: %2; }"
+        "QScrollBar::handle:vertical:hover { background-color: %3; }";
+    overlayScrollbar.setStyleSheet(baseStyle.arg(
+        scheme.folderview_hc.name(),
+        scheme.scrollbar.name(),
+        scheme.scrollbar_hover.name()
+    ));
+}
+
 void TreeViewCustom::updateScrollbarStyle() {
-    QString handle, hover = settings->colorScheme().scrollbar_hover.name();
-    if(rect().contains(mapFromGlobal(cursor().pos())))
-        handle = settings->colorScheme().scrollbar.name();
-    else
-        handle = settings->colorScheme().folderview_hc.name();
+    bool isHovered = rect().contains(mapFromGlobal(cursor().pos()));
+
+    if (overlayScrollbar.property("treeHovered").toBool() != isHovered) {
+        overlayScrollbar.setProperty("treeHovered", isHovered);
+        overlayScrollbar.style()->unpolish(&overlayScrollbar);
+        overlayScrollbar.style()->polish(&overlayScrollbar);
+        overlayScrollbar.update();
+    }
     overlayScrollbar.setGeometry(width() - SCROLLBAR_WIDTH, 0, SCROLLBAR_WIDTH, height());
-    overlayScrollbar.setStyleSheet( "QScrollBar { background-color: transparent; } QScrollBar::handle:vertical { background-color: "+ handle +" } QScrollBar::handle:vertical:hover { background-color: " + hover + " }" );
 
     overlayScrollbar.setVisible( (this->verticalScrollBar()->maximum()) );
 }

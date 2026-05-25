@@ -1,4 +1,5 @@
 #include "imageanimated.h"
+#include <QImageReader>
 #include <time.h>
 
 // TODO: this class is kinda useless now. redesign?
@@ -25,17 +26,15 @@ ImageAnimated::~ImageAnimated() {
 void ImageAnimated::load() {
     if(isLoaded())
         return;
-    loadMovie();
+    QImageReader reader(mPath, mDocInfo->format().toStdString().c_str());
+    if(reader.canRead()) {
+        mSize = reader.size();
+        mFrameCount = reader.imageCount();
+    } else {
+        mSize = QSize(0, 0);
+        mFrameCount = 0;
+    }
     mLoaded = true;
-}
-
-void ImageAnimated::loadMovie() {
-    movie.reset(new QMovie());
-    movie->setFileName(mPath);
-    movie->setFormat(mDocInfo->format().toStdString().c_str());
-    movie->jumpToFrame(0);
-    mSize = movie->frameRect().size();
-    mFrameCount = movie->frameCount();
 }
 
 int ImageAnimated::frameCount() {
@@ -78,8 +77,12 @@ std::shared_ptr<const QImage> ImageAnimated::getImage() {
 }
 
 std::shared_ptr<QMovie> ImageAnimated::getMovie() {
-    if(movie == nullptr)
-        loadMovie();
+
+    if(movie == nullptr) {
+        movie.reset(new QMovie());
+        movie->setFileName(mPath);
+        movie->setFormat(mDocInfo->format().toStdString().c_str());
+    }
     return movie;
 }
 

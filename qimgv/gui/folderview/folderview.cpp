@@ -17,7 +17,7 @@ FolderView::FolderView(QWidget *parent) :
     style = style.arg(QApplication::font().pointSize());
     ui->dirTreeView->setStyleSheet(style);
 
-    optionsPopup = new FVOptionsPopup();
+    optionsPopup = new FVOptionsPopup(this);
     popupTimerClutch.start();
 
     dirModel = new FileSystemModelCustom(this);
@@ -236,6 +236,7 @@ void FolderView::onFolderSortingChanged(SortingMode mode) {
 }
 
 FolderView::~FolderView() {
+    ui->dirTreeView->setModel(nullptr);
     delete ui;
 }
 

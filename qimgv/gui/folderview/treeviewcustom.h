@@ -31,6 +31,7 @@ protected:
 
 private slots:
     void updateScrollbarStyle();
+    void initScrollbarStyle();
 private:
     QScrollBar overlayScrollbar;
 

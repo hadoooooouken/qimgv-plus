@@ -11,6 +11,7 @@ class FileSystemModelCustom : public QFileSystemModel
 {
 public:
     FileSystemModelCustom(QObject *parent = nullptr);
+    ~FileSystemModelCustom() override;
     QVariant data(const QModelIndex &index, int role) const override;
 
 protected:

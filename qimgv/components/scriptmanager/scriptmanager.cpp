@@ -8,8 +8,10 @@ ScriptManager::ScriptManager(QObject *parent)
 }
 
 ScriptManager::~ScriptManager() {
-    scriptManager->saveScripts();
-    delete scriptManager;
+    saveScripts();
+    if (scriptManager == this) {
+        scriptManager = nullptr;
+    }
 }
 
 ScriptManager *ScriptManager::getInstance() {

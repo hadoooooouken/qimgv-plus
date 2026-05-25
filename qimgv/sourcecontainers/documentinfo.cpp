@@ -74,7 +74,7 @@ int DocumentInfo::exifOrientation() const {
 void DocumentInfo::detectFormat() {
     if(mDocumentType != DocumentType::NONE)
         return;
-    QMimeDatabase mimeDb;
+    static QMimeDatabase mimeDb;
     // Fast check by extension first to bail out on videos
     QMimeType fastMime = mimeDb.mimeTypeForFile(fileInfo.filePath(), QMimeDatabase::MatchExtension);
     if(fastMime.name().startsWith("video/")) {
