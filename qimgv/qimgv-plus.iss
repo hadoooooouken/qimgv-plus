@@ -4,9 +4,9 @@
 #define MyAppURL "https://github.com/hadoooooouken/qimgv-plus"
 #define MyAppExeName "qimgv-plus.exe"
 #define MyAppIconName "qimgv.ico"
+#define MyAppCLSID "{{978A692C-CD23-4A59-8664-98F1E1B9200B}"
 
 [Setup]
-; NOTE: The value of AppId uniquely identifies this application.
 AppId={{9F57BDCD-C82D-4EBD-93F9-8260CDA2EA53}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
@@ -17,7 +17,6 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
-; PrivilegesRequired=lowest allows non-admin installation. Can be overridden in dialog.
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=..\INSTALL
@@ -56,8 +55,8 @@ turkish.CompactingFiles=Disk üzerindeki dosya boyutları optimize ediliyor...
 english.GroupFileAssociations=File Associations:
 ukrainian.GroupFileAssociations=Асоціації файлів:
 german.GroupFileAssociations=Dateizuordnungen:
-spanish.GroupFileAssociations=Asociaciones de archivos:
-french.GroupFileAssociations=Associations de fichiers :
+spanish.GroupFileAssociations=Asociaciones de arquivos:
+french.GroupFileAssociations=Associations de fichiers :
 japanese.GroupFileAssociations=ファイル関連付け:
 turkish.GroupFileAssociations=Dosya İlişkilendirmeleri:
 
@@ -65,7 +64,7 @@ english.GroupAdditionalOptions=Additional options:
 ukrainian.GroupAdditionalOptions=Додаткові параметри:
 german.GroupAdditionalOptions=Zusätzliche Optionen:
 spanish.GroupAdditionalOptions=Opciones adicionales:
-french.GroupAdditionalOptions=Options supplémentaires :
+french.GroupAdditionalOptions=Options supplémentaires :
 japanese.GroupAdditionalOptions=追加オプション:
 turkish.GroupAdditionalOptions=Ek seçenekler:
 
@@ -107,10 +106,6 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDi
 [Run]
 Filename: "compact.exe"; Parameters: "/c /f /s:""{app}"" /exe:lzx /i"; WorkingDir: "{app}"; StatusMsg: "{cm:CompactingFiles}"; Flags: runhidden; Tasks: compact
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
-Filename: "regsvr32.exe"; Parameters: "/s ""{app}\qimgvshellex.dll"""; WorkingDir: "{app}"; Flags: runhidden; Tasks: thumbnails
-
-[UninstallRun]
-Filename: "regsvr32.exe"; Parameters: "/u /s ""{app}\qimgvshellex.dll"""; WorkingDir: "{app}"; Flags: runhidden; RunOnceId: "UninstallShellex"
 
 [Registry]
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "qimgv-plus"; Flags: uninsdeletekey; Tasks: associate
@@ -306,7 +301,6 @@ Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.raw"; ValueType: string
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.raw\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\raw.ico"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.raw\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
 
-
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.svg"; ValueType: string; ValueName: ""; ValueData: "SVG Image (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.svg\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\svg.ico"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.svg\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
@@ -346,7 +340,6 @@ Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jxl\shell\open\command"
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.ico"; ValueType: string; ValueName: ""; ValueData: "Icon File (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.ico\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\ico.ico"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.ico\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
-
 
 ; Register in Default Programs (Windows Vista / 7 / 8 / 10 / 11)
 Root: HKA; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "{#MyAppName}"; ValueData: "Software\{#MyAppName}\Capabilities"; Flags: uninsdeletevalue; Tasks: associate
@@ -392,3 +385,50 @@ Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueT
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ai"; ValueData: "qimgvplus.AssocFile.ai"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".pdf"; ValueData: "qimgvplus.AssocFile.pdf"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".psb"; ValueData: "qimgvplus.AssocFile.psb"; Flags: uninsdeletekey; Tasks: associate
+
+; --- COM / Shell Extension Declarative Registration ---
+Root: HKA; Subkey: "Software\Classes\CLSID\{#MyAppCLSID}"; ValueType: string; ValueName: ""; ValueData: "qimgv-plus Shell Extension"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\CLSID\{#MyAppCLSID}\InprocServer32"; ValueType: string; ValueName: ""; ValueData: "{app}\qimgvshellex.dll"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\CLSID\{#MyAppCLSID}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Apartment"; Flags: uninsdeletekey; Tasks: thumbnails
+
+; System File Associations (IThumbnailProvider GUID: {E357FCCD-A995-4576-B01F-234630154E96})
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpg\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpeg\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpe\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jfif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.png\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.gif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.webp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.bmp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.dib\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tiff\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tga\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.svg\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.svgz\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ico\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.avif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.heic\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.heif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jxl\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.psd\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.dng\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.cr2\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.cr3\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.nef\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.arw\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.orf\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.rw2\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.pef\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raf\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raw\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.kra\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ora\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.exr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.hdr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jxr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.hdp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wdp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ai\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.pdf\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.psb\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
