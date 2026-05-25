@@ -78,6 +78,12 @@ if(OPENCV_SUPPORT)
     target_compile_definitions(qimgv-plus PRIVATE USE_OPENCV)
 endif()
 
+if(UPSCAYL_SUPPORT)
+    target_link_libraries(qimgv-plus PRIVATE upscayl-ncnn)
+    target_compile_definitions(qimgv-plus PRIVATE USE_UPSCAYL)
+endif()
+
+
 # generate proper GUI program on specified platform
 if(MSVC) # Check if we are using the Visual Studio compiler
     set_target_properties(qimgv-plus PROPERTIES WIN32_EXECUTABLE ON)
@@ -225,5 +231,19 @@ if(WIN32)
             message(WARNING "EXR dependency DLL NOT found at: ${_dll}")
         endif()
     endforeach()
+
+    # 10. Copy upscayl-ncnn DLL and models directory
+    if(UPSCAYL_SUPPORT)
+        add_custom_command(TARGET qimgv-plus POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:upscayl-ncnn>" "$<TARGET_FILE_DIR:qimgv-plus>/"
+            COMMENT "Deploying upscayl-ncnn DLL..."
+        )
+        add_custom_command(TARGET qimgv-plus POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:qimgv-plus>/models"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/../upscayl-ncnn/models" "$<TARGET_FILE_DIR:qimgv-plus>/models"
+            COMMENT "Deploying Upscayl models directory..."
+        )
+    endif()
 endif()
+
 

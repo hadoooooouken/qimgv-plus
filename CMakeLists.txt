@@ -30,9 +30,11 @@ option(OPENCV_SUPPORT "Enable HQ scaling via OpenCV" ON)
 option(USE_QT5 "Build with Qt5 if available" ON)
 
 # FIND PACKAGES
-# FIND PACKAGES
-find_package(Qt6 COMPONENTS Widgets QUIET)
-if(Qt6_FOUND)
+if(NOT USE_QT5)
+    find_package(Qt6 COMPONENTS Widgets QUIET)
+endif()
+
+if(Qt6_FOUND AND NOT USE_QT5)
     set(QT_VERSION_MAJOR 6)
     find_package(Qt6 REQUIRED COMPONENTS Core Widgets Svg SvgWidgets PrintSupport OpenGLWidgets Network Sql)
 else()
@@ -55,6 +57,22 @@ endif()
 
 ##############################################################
 
+# --- UPSCAYL NCNN INTEGRATION ---
+option(UPSCAYL_SUPPORT "Enable Upscayl NCNN integration" ON)
+
+if(UPSCAYL_SUPPORT)
+    message(STATUS "Configuring Upscayl NCNN library support using Vulkan SDK at E:/VULKAN")
+    set(ENV{VULKAN_SDK} "E:/VULKAN")
+    list(APPEND CMAKE_PREFIX_PATH "E:/VULKAN")
+    
+    # Configure NCNN options for Vulkan support
+    set(NCNN_VULKAN ON CACHE BOOL "Build NCNN with Vulkan support" FORCE)
+    set(NCNN_VULKAN_ONLINE_SPIRV ON CACHE BOOL "Build NCNN with Vulkan online SPIRV compilation support" FORCE)
+    
+    add_subdirectory(upscayl-ncnn/src)
+endif()
+
 add_subdirectory(qimgv)
 add_subdirectory(shellex)
+
 
