@@ -176,7 +176,19 @@ class UpscaylPreloadTask : public QRunnable {
 public:
   void run() override {
     QString appDir = QCoreApplication::applicationDirPath();
-    UpscaylScaler::getInstance()->init(appDir);
+    if (UpscaylScaler::getInstance()->init(appDir)) {
+      // Run a dummy upscale of a 512x512 image (matching the auto tilesize)
+      // to force full Vulkan device memory pages allocation and shader warming.
+      QImage dummy(512, 512, QImage::Format_ARGB32);
+      dummy.fill(Qt::black);
+      qDebug() << "[Upscayl] Running full tile dummy upscale (512x512) to warm up Vulkan/GPU VRAM...";
+      QImage warmed = UpscaylScaler::getInstance()->upscale(dummy);
+      if (!warmed.isNull()) {
+        qDebug() << "[Upscayl] Vulkan full tile warm-up completed successfully!";
+      } else {
+        qDebug() << "[Upscayl] Vulkan full tile warm-up failed!";
+      }
+    }
   }
 };
 
@@ -214,10 +226,6 @@ Core::Core()
   upscaylTimer.setInterval(
       100); // 100ms debounce interval to wait until zoom/scroll has stopped
   connect(&upscaylTimer, &QTimer::timeout, this, &Core::onUpscaylTimerTimeout);
-
-  if (settings->useUpscayl() && settings->preloadUpscayl()) {
-    QThreadPool::globalInstance()->start(new UpscaylPreloadTask());
-  }
 #endif
 
   QVersionNumber lastVersion = settings->lastVersion();

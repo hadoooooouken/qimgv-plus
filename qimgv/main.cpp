@@ -49,7 +49,6 @@ QDataStream &operator>>(QDataStream &in, Script &v) {
   in >> v.blocking;
   return in;
 }
-
 //------------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
 
