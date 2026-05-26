@@ -501,6 +501,32 @@ void Settings::setUsePreloader(bool mode) {
   settings->settingsConf->setValue("usePreloader", mode);
 }
 //------------------------------------------------------------------------------
+#ifdef USE_UPSCAYL
+bool Settings::useUpscayl() {
+  return settings->settingsConf->value("useUpscayl", false).toBool();
+}
+
+void Settings::setUseUpscayl(bool mode) {
+  settings->settingsConf->setValue("useUpscayl", mode);
+}
+
+bool Settings::preloadUpscayl() {
+  return settings->settingsConf->value("preloadUpscayl", false).toBool();
+}
+
+void Settings::setPreloadUpscayl(bool mode) {
+  settings->settingsConf->setValue("preloadUpscayl", mode);
+}
+
+QString Settings::upscaylModel() {
+  return settings->settingsConf->value("upscaylModel", "remacri-4x").toString();
+}
+
+void Settings::setUpscaylModel(const QString &model) {
+  settings->settingsConf->setValue("upscaylModel", model);
+}
+//------------------------------------------------------------------------------
+#endif
 bool Settings::keepFitMode() {
   return settings->settingsConf->value("keepFitMode", false).toBool();
 }

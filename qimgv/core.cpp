@@ -8,6 +8,186 @@
 #include "core.h"
 #include <QRegularExpression>
 
+#ifdef USE_UPSCAYL
+#include "realesrgan.h"
+#include <QFile>
+#include <QMutex>
+#include <QMutexLocker>
+#include <QPainter>
+#include <QRunnable>
+#include <QThreadPool>
+
+class UpscaylScaler {
+public:
+  static UpscaylScaler *getInstance() {
+    static UpscaylScaler instance;
+    return &instance;
+  }
+
+  bool init(const QString &appDir) {
+    QMutexLocker locker(&mutex);
+    QString modelName = settings->upscaylModel();
+    if (realesrgan && loadedModel == modelName) {
+      qDebug() << "[Upscayl] already initialised with model" << modelName << ", skipping init";
+      return true;
+    }
+    if (realesrgan) {
+      qDebug() << "[Upscayl] model changed, destroying old model";
+      delete realesrgan;
+      realesrgan = nullptr;
+      loadedModel = "";
+    }
+
+    realesrgan = new RealESRGAN(-1, false);
+    realesrgan->scale = 4;
+    realesrgan->prepadding = 10;
+
+    // Auto-detect tilesize based on available GPU VRAM.
+    // The query runs inside the DLL (which is linked against ncnn),
+    // so core.cpp does not need to link ncnn directly.
+    //
+    // Thresholds relative to our 1280px crop cap:
+    //   tilesize 1280 -> 1 tile (one-shot), tilesize 640 -> 4 tiles (2x2), ...
+    {
+      int autoTile = realesrgan->autoTilesize();
+      qDebug() << "[Upscayl] auto tilesize:" << autoTile;
+      realesrgan->tilesize = autoTile;
+    }
+
+    QString paramQStr = appDir + "/models/" + modelName + ".param";
+    QString binQStr = appDir + "/models/" + modelName + ".bin";
+    qDebug() << "[Upscayl] loading model:" << paramQStr;
+    qDebug() << "[Upscayl]   param exists:" << QFile::exists(paramQStr);
+    qDebug() << "[Upscayl]   bin   exists:" << QFile::exists(binQStr);
+
+    int res =
+        realesrgan->load(paramQStr.toStdWString(), binQStr.toStdWString());
+    if (res != 0) {
+      qDebug() << "[Upscayl] Failed to load model, error code:" << res;
+      delete realesrgan;
+      realesrgan = nullptr;
+      loadedModel = "";
+      return false;
+    }
+    loadedModel = modelName;
+    qDebug() << "[Upscayl] model loaded OK";
+    return true;
+  }
+
+  QImage upscale(const QImage &inputImage) {
+    QMutexLocker locker(&mutex);
+    if (!realesrgan) {
+      qDebug() << "[Upscayl] upscale() called but realesrgan is null";
+      return QImage();
+    }
+
+    QImage imgRgba = inputImage.convertToFormat(QImage::Format_ARGB32);
+    int inW = imgRgba.width(), inH = imgRgba.height();
+    int outW = inW * 4, outH = inH * 4;
+
+    QImage outImg(outW, outH, QImage::Format_ARGB32);
+
+    int ret = realesrgan->processPixels(imgRgba.constBits(), inW, inH,
+                                        outImg.bits(), outW, outH);
+
+    if (ret != 0) {
+      qDebug() << "[Upscayl] processPixels failed, code:" << ret;
+      return QImage();
+    }
+
+    return outImg;
+  }
+
+  ~UpscaylScaler() {
+    // Do not delete here, as this destructor is called during global static
+    // destruction, after the RealESRGAN DLL might have already been unloaded.
+  }
+
+  void destroy() {
+    QMutexLocker locker(&mutex);
+    if (realesrgan) {
+      delete realesrgan;
+      realesrgan = nullptr;
+      loadedModel = "";
+      qDebug() << "[Upscayl] Scaler destroyed";
+    }
+  }
+
+private:
+  UpscaylScaler() : realesrgan(nullptr) {}
+  RealESRGAN *realesrgan;
+  QString loadedModel;
+  QMutex mutex;
+};
+
+class UpscaylTask : public QRunnable {
+public:
+  UpscaylTask(Core *core, QImage croppedImage, QSize cropTargetSize,
+              QRect origCrop, QString path, QSize targetSize)
+      : core(core), croppedImage(croppedImage), cropTargetSize(cropTargetSize),
+        origCrop(origCrop), path(path), targetSize(targetSize) {}
+
+  void run() override {
+    // Abort early if a newer upscale request has already been registered
+    if (targetSize != core->latestUpscaylSize ||
+        path != core->state.currentFilePath) {
+      QMetaObject::invokeMethod(core, "onUpscaleAborted", Qt::QueuedConnection);
+      return;
+    }
+
+    // Initialize scaler on the background thread if not already done
+    QString appDir = QCoreApplication::applicationDirPath();
+    if (!UpscaylScaler::getInstance()->init(appDir)) {
+      qDebug() << "[Upscayl] background init() failed";
+      QMetaObject::invokeMethod(core, "onUpscaleAborted", Qt::QueuedConnection);
+      return;
+    }
+
+    QImage upscaled = UpscaylScaler::getInstance()->upscale(croppedImage);
+    if (upscaled.isNull()) {
+      QMetaObject::invokeMethod(core, "onUpscaleAborted", Qt::QueuedConnection);
+      return;
+    }
+
+    // Abort if a newer upscale request came in while we were processing this
+    // one
+    if (targetSize != core->latestUpscaylSize ||
+        path != core->state.currentFilePath) {
+      QMetaObject::invokeMethod(core, "onUpscaleAborted", Qt::QueuedConnection);
+      return;
+    }
+
+    QMetaObject::invokeMethod(core, "onUpscaleFinished", Qt::QueuedConnection,
+                              Q_ARG(QImage, upscaled),
+                              Q_ARG(QRect, origCrop),
+                              Q_ARG(QString, path), Q_ARG(QSize, targetSize));
+  }
+
+private:
+  Core *core;
+  QImage croppedImage;
+  QSize cropTargetSize;
+  QRect origCrop;
+  QString path;
+  QSize targetSize;
+};
+
+class UpscaylPreloadTask : public QRunnable {
+public:
+  void run() override {
+    QString appDir = QCoreApplication::applicationDirPath();
+    UpscaylScaler::getInstance()->init(appDir);
+  }
+};
+
+class UpscaylDestroyTask : public QRunnable {
+public:
+  void run() override {
+    UpscaylScaler::getInstance()->destroy();
+  }
+};
+#endif
+
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 #include <QColorSpace>
 #endif
@@ -29,6 +209,17 @@ Core::Core()
   slideshowTimer.setSingleShot(true);
   connect(settings, &Settings::settingsChanged, this, &Core::readSettings);
 
+#ifdef USE_UPSCAYL
+  upscaylTimer.setSingleShot(true);
+  upscaylTimer.setInterval(
+      100); // 100ms debounce interval to wait until zoom/scroll has stopped
+  connect(&upscaylTimer, &QTimer::timeout, this, &Core::onUpscaylTimerTimeout);
+
+  if (settings->useUpscayl() && settings->preloadUpscayl()) {
+    QThreadPool::globalInstance()->start(new UpscaylPreloadTask());
+  }
+#endif
+
   QVersionNumber lastVersion = settings->lastVersion();
   if (settings->firstRun())
     onFirstRun();
@@ -37,10 +228,22 @@ Core::Core()
 }
 
 Core::~Core() {
+#ifdef USE_UPSCAYL
+  UpscaylScaler::getInstance()->destroy();
+#endif
   delete translator;
 }
 
 void Core::readSettings() {
+#ifdef USE_UPSCAYL
+  qDebug() << "[Upscayl] readSettings: useUpscayl =" << settings->useUpscayl()
+           << "preloadUpscayl =" << settings->preloadUpscayl();
+  if (!settings->useUpscayl() || !settings->preloadUpscayl()) {
+    QThreadPool::globalInstance()->start(new UpscaylDestroyTask());
+  } else {
+    QThreadPool::globalInstance()->start(new UpscaylPreloadTask());
+  }
+#endif
   loopSlideshow = settings->loopSlideshow();
   folderEndAction = settings->folderEndAction();
   slideshowTimer.setInterval(settings->slideshowInterval());
@@ -1287,18 +1490,186 @@ void Core::scalingRequest(QSize size, ScalingFilter filter) {
   }
 }
 
-// TODO: don't use connect? otherwise there is no point using unique_ptr
 void Core::onScalingFinished(QPixmap *scaled, ScalerRequest req) {
   if (state.hasActiveImage /* TODO: a better fix > */ &&
       req.path == state.currentFilePath) {
     mw->onScalingFinished(std::unique_ptr<QPixmap>(scaled));
+#ifdef USE_UPSCAYL
+    if (settings->useUpscayl() && req.image &&
+        req.image->type() == DocumentType::STATIC) {
+      qDebug() << "[Upscayl] scaling finished: req.size" << req.size
+               << "image size" << req.image->width() << "x"
+               << req.image->height();
+      if (req.size.width() > req.image->width()) {
+        // Store pending request parameters and restart the debounce timer
+        pendingUpscaylImage = req.image;
+        pendingUpscaylSize = req.size;
+        pendingUpscaylPath = req.path;
+        upscaylTimer.stop();
+        upscaylTimer.start();
+      } else {
+        qDebug() << "[Upscayl] skipped: req.size.width()" << req.size.width()
+                 << "<= image.width()" << req.image->width();
+      }
+    } else if (!settings->useUpscayl()) {
+      qDebug() << "[Upscayl] disabled in settings";
+    }
+#endif
   } else {
     delete scaled;
   }
 }
 
+#ifdef USE_UPSCAYL
+void Core::onUpscaylTimerTimeout() {
+  if (state.hasActiveImage && pendingUpscaylImage &&
+      pendingUpscaylPath == state.currentFilePath) {
+    if (upscaylActive) {
+      upscaylPendingRun = true;
+      qDebug() << "[Upscayl] upscaling is active, deferring new request";
+    } else {
+      qDebug() << "[Upscayl] triggering processing after debounce delay";
+      triggerUpscaylProcessing(pendingUpscaylImage, pendingUpscaylSize,
+                               pendingUpscaylPath);
+    }
+  }
+}
+
+void Core::triggerUpscaylProcessing(std::shared_ptr<Image> image,
+                                    QSize targetSize, QString path) {
+  if (!image)
+    return;
+
+  upscaylActive = true;
+  upscaylPendingRun = false;
+
+  // Get the visible crop region in the ORIGINAL image space
+  QRect origCrop = mw->visibleOriginalImageRect();
+
+  // Align width and height of origCrop to multiples of 32 to prevent Vulkan/ncnn
+  // shape mismatch errors (which cause silent black output on odd/non-divisible dimensions)
+  int alignedW = (origCrop.width() / 32) * 32;
+  int alignedH = (origCrop.height() / 32) * 32;
+  if (alignedW < 32) alignedW = 32;
+  if (alignedH < 32) alignedH = 32;
+  origCrop.setWidth(alignedW);
+  origCrop.setHeight(alignedH);
+
+  qDebug() << "[Upscayl] origCrop:" << origCrop;
+  if (origCrop.isEmpty()) {
+    qDebug() << "[Upscayl] origCrop is empty, bail";
+    upscaylActive = false;
+    return;
+  }
+
+  // Get the original un-stretched QImage
+  std::shared_ptr<const QImage> origQImage = image->getImage();
+  if (!origQImage || origQImage->isNull()) {
+    qDebug() << "[Upscayl] origQImage is null, bail";
+    upscaylActive = false;
+    return;
+  }
+
+  // Crop the visible region from the original un-stretched image
+  QImage croppedImg = origQImage->copy(origCrop);
+  if (croppedImg.isNull()) {
+    qDebug() << "[Upscayl] bail: croppedImg null";
+    upscaylActive = false;
+    return;
+  }
+
+  // Cap the crop resolution to prevent Vulkan/GPU out-of-memory or driver
+  // crashes
+  if (croppedImg.width() > 1280 || croppedImg.height() > 1280) {
+    qDebug() << "[Upscayl] crop too large, downscaling to safe limit:"
+             << croppedImg.size() << "-> 1280 max";
+    croppedImg = croppedImg.scaled(1280, 1280, Qt::KeepAspectRatio,
+                                   Qt::SmoothTransformation);
+    // Re-align downscaled dimensions to multiples of 32
+    int w = (croppedImg.width() / 32) * 32;
+    int h = (croppedImg.height() / 32) * 32;
+    if (w < 32) w = 32;
+    if (h < 32) h = 32;
+    if (w != croppedImg.width() || h != croppedImg.height()) {
+      croppedImg = croppedImg.copy(0, 0, w, h);
+    }
+  }
+
+  latestUpscaylSize = targetSize;
+
+  // Calculate the scale ratios to map the original crop to scaled display space
+  double scaleX = mw->getDpr() * mw->currentScale();
+  double scaleY = mw->getDpr() * mw->currentScale();
+
+  QSize cropTargetSize(qRound(origCrop.width() * scaleX),
+                       qRound(origCrop.height() * scaleY));
+
+  qDebug() << "[Upscayl] submitting task, original crop:" << croppedImg.size()
+           << "targetCropSize:" << cropTargetSize;
+
+  UpscaylTask *task = new UpscaylTask(this, croppedImg, cropTargetSize,
+                                      origCrop, path, targetSize);
+  QThreadPool::globalInstance()->start(task);
+}
+
+void Core::onUpscaleFinished(QImage cropImg, QRect origCrop, QString path,
+                             QSize targetSize) {
+  upscaylActive = false;
+  if (cropImg.isNull()) {
+    qDebug() << "[Upscayl] onUpscaleFinished: null image";
+    if (upscaylPendingRun && state.hasActiveImage && pendingUpscaylImage &&
+        pendingUpscaylPath == state.currentFilePath) {
+      upscaylPendingRun = false;
+      qDebug() << "[Upscayl] triggering deferred request after null image";
+      triggerUpscaylProcessing(pendingUpscaylImage, pendingUpscaylSize,
+                               pendingUpscaylPath);
+    }
+    return;
+  }
+  qDebug() << "[Upscayl] onUpscaleFinished: img" << cropImg.size() << "crop"
+           << origCrop << "target" << targetSize;
+
+  if (state.hasActiveImage && path == state.currentFilePath &&
+      targetSize == latestUpscaylSize) {
+    mw->onUpscaleFinished(cropImg, origCrop);
+  } else {
+    qDebug() << "[Upscayl] onUpscaleFinished: stale result, discarding";
+  }
+
+  if (upscaylPendingRun && state.hasActiveImage && pendingUpscaylImage &&
+      pendingUpscaylPath == state.currentFilePath) {
+    upscaylPendingRun = false;
+    qDebug() << "[Upscayl] active task finished, triggering deferred request";
+    triggerUpscaylProcessing(pendingUpscaylImage, pendingUpscaylSize,
+                             pendingUpscaylPath);
+  }
+}
+
+void Core::onUpscaleAborted() {
+  upscaylActive = false;
+  if (upscaylPendingRun && state.hasActiveImage && pendingUpscaylImage &&
+      pendingUpscaylPath == state.currentFilePath) {
+    upscaylPendingRun = false;
+    qDebug() << "[Upscayl] active task aborted, triggering deferred request";
+    triggerUpscaylProcessing(pendingUpscaylImage, pendingUpscaylSize,
+                             pendingUpscaylPath);
+  }
+}
+#endif
+
 // reset state; clear cache; etc
 void Core::reset() {
+#ifdef USE_UPSCAYL
+  upscaylTimer.stop();
+  pendingUpscaylImage.reset();
+  pendingUpscaylPath = "";
+  upscaylActive = false;
+  upscaylPendingRun = false;
+  qDebug() << "[Upscayl] reset: preloadUpscayl =" << settings->preloadUpscayl();
+  if (!settings->preloadUpscayl()) {
+    QThreadPool::globalInstance()->start(new UpscaylDestroyTask());
+  }
+#endif
   state.hasActiveImage = false;
   state.currentFilePath = "";
   state.currentImg.reset();
@@ -1307,6 +1678,17 @@ void Core::reset() {
 }
 
 bool Core::loadPath(QString path) {
+#ifdef USE_UPSCAYL
+  upscaylTimer.stop();
+  pendingUpscaylImage.reset();
+  pendingUpscaylPath = "";
+  upscaylActive = false;
+  upscaylPendingRun = false;
+  qDebug() << "[Upscayl] loadPath: preloadUpscayl =" << settings->preloadUpscayl();
+  if (!settings->preloadUpscayl()) {
+    QThreadPool::globalInstance()->start(new UpscaylDestroyTask());
+  }
+#endif
   if (path.isEmpty())
     return false;
   if (path.startsWith("file://", Qt::CaseInsensitive))
@@ -1716,6 +2098,6 @@ void Core::updateInfoString() {
   }
   int index = model->indexOfFile(state.currentFilePath);
   mw->setCurrentInfo(index, model->fileCount(), model->filePathAt(index),
-                     model->fileNameAt(index), imageSize, fileSize, format, colorProfile,
-                     slideshow, shuffle, edited);
+                     model->fileNameAt(index), imageSize, fileSize, format,
+                     colorProfile, slideshow, shuffle, edited);
 }

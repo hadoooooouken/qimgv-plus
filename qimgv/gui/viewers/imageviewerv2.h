@@ -46,6 +46,8 @@ public:
     virtual void showImage(std::unique_ptr<QPixmap> _pixmap, QString filePath = "");
     virtual void showAnimation(std::shared_ptr<QMovie> _animation);
     virtual void setScaledPixmap(std::unique_ptr<QPixmap> newFrame);
+    void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
+    void hideUpscaledCrop();
     virtual bool isDisplaying() const;
     void setColorAdjustments(float brightness, float contrast, float saturation, float hue);
 
@@ -56,6 +58,11 @@ public:
     bool hasAnimation() const;
 
     QSize scaledSizeR() const;
+
+    virtual QRect visibleImageRect() const;
+    virtual QRect visibleOriginalImageRect() const;
+    virtual QPixmap currentScaledPixmapCopy() const;
+    float getDpr() const;
 
     void pauseResume();
     void enableDrags();
@@ -122,7 +129,7 @@ protected:
     void showEvent(QShowEvent *event);
     void drawBackground(QPainter *painter, const QRectF &rect);
 
-    bool eventFilter(QObject *o, QEvent *ev);
+    bool event(QEvent *ev) override;
 protected slots:
     void onAnimationTimer();
 
@@ -140,7 +147,7 @@ private:
     std::shared_ptr<QPixmap> pixmap;
     std::unique_ptr<QPixmap> pixmapScaled;
     std::shared_ptr<QMovie> movie;
-    FilterPixmapItem pixmapItem, pixmapItemScaled;
+    FilterPixmapItem pixmapItem, pixmapItemScaled, pixmapItemCrop;
     QTimer *animationTimer, *scaleTimer;
     QScrollBar *hs, *vs;
     QPoint mouseMoveStartPos, mousePressPos, drawPos;

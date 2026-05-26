@@ -90,6 +90,14 @@ public:
   void setPanelPreviewsSize(int size);
   bool usePreloader();
   void setUsePreloader(bool mode);
+#ifdef USE_UPSCAYL
+  bool useUpscayl();
+  void setUseUpscayl(bool mode);
+  bool preloadUpscayl();
+  void setPreloadUpscayl(bool mode);
+  QString upscaylModel();
+  void setUpscaylModel(const QString &model);
+#endif
   bool fullscreenMode();
   void setFullscreenMode(bool mode);
   ImageFitMode imageFitMode();

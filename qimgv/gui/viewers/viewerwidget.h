@@ -19,6 +19,10 @@ public:
     explicit ViewerWidget(QWidget *parent = nullptr);
     QRect imageRect();
     float currentScale();
+    QRect visibleImageRect() const;
+    QRect visibleOriginalImageRect() const;
+    QPixmap currentScaledPixmapCopy() const;
+    float getDpr() const;
     QSize sourceSize();
 
     void setInteractionEnabled(bool mode);
@@ -27,6 +31,7 @@ public:
     bool showImage(std::unique_ptr<QPixmap> pixmap, QString filePath = "");
     bool showAnimation(std::shared_ptr<QMovie> movie);
     void onScalingFinished(std::unique_ptr<QPixmap> scaled);
+    void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
     bool isDisplaying();
     bool lockZoomEnabled();
     bool lockViewEnabled();

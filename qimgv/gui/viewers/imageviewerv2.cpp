@@ -1,9 +1,9 @@
 #include "imageviewerv2.h"
+#include "panoramagraphicsitem.h"
 #include <QKeyEvent>
-#include <QOpenGLWidget>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
-#include "panoramagraphicsitem.h"
+#include <QOpenGLWidget>
 
 ImageViewerV2::ImageViewerV2(QWidget *parent)
     : QGraphicsView(parent), pixmap(nullptr), pixmapScaled(nullptr),
@@ -13,10 +13,11 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
       scrollBarWorkaround(true), useFixedZoomLevels(false),
       trackpadDetection(true),
       mouseInteraction(MouseInteractionState::MOUSE_NONE), minScale(0.01f),
-      maxScale(500.0f), fitWindowScale(0.125f), fitWindowStretchScale(0.125f),
+      maxScale(40.0f), fitWindowScale(0.125f), fitWindowStretchScale(0.125f),
       mViewLock(LOCK_NONE), imageFitMode(FIT_WINDOW),
       mScalingFilter(QI_FILTER_BILINEAR), imageFitModeDefault(FIT_WINDOW),
-      scene(nullptr), zoomTimeLine(nullptr), zoomStartScale(1.0f), zoomTargetScale(1.0f) {
+      scene(nullptr), zoomTimeLine(nullptr), zoomStartScale(1.0f),
+      zoomTargetScale(1.0f) {
   setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
   this->viewport()->setAttribute(Qt::WA_OpaquePaintEvent, false);
   setFocusPolicy(Qt::NoFocus);
@@ -47,6 +48,8 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
           &ImageViewerV2::onZoomTimelineValueChanged);
   connect(zoomTimeLine, &QTimeLine::finished, this,
           &ImageViewerV2::saveViewportPos);
+  connect(zoomTimeLine, &QTimeLine::finished, this,
+          &ImageViewerV2::requestScaling);
 
   animationTimer = new QTimer(this);
   animationTimer->setSingleShot(true);
@@ -68,6 +71,9 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   pixmapItemScaled.setScale(1.0f);
   pixmapItemScaled.setOffset(10000, 10000);
   pixmapItemScaled.setTransformOriginPoint(10000, 10000);
+  pixmapItemCrop.setScale(1.0f);
+  pixmapItemCrop.setOffset(10000, 10000);
+  pixmapItemCrop.setTransformOriginPoint(10000, 10000);
 
   this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -77,11 +83,13 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   scene->setBackgroundBrush(QColor(60, 60, 103));
   scene->addItem(&pixmapItem);
   scene->addItem(&pixmapItemScaled);
+  scene->addItem(&pixmapItemCrop);
   panoramaItem = new PanoramaGraphicsItem();
   scene->addItem(panoramaItem);
   panoramaItem->hide();
-  
+
   pixmapItemScaled.hide();
+  pixmapItemCrop.hide();
 
   this->setFrameShape(QFrame::NoFrame);
   this->setScene(scene);
@@ -93,6 +101,19 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
           &ImageViewerV2::scrollToX);
   connect(scrollTimeLineY, &QTimeLine::frameChanged, this,
           &ImageViewerV2::scrollToY);
+
+  connect(hs, &QScrollBar::valueChanged, this, [this]() {
+    if (scaleTimer->isActive())
+      scaleTimer->stop();
+    scaleTimer->start();
+    hideUpscaledCrop();
+  });
+  connect(vs, &QScrollBar::valueChanged, this, [this]() {
+    if (scaleTimer->isActive())
+      scaleTimer->stop();
+    scaleTimer->start();
+    hideUpscaledCrop();
+  });
 
   connect(animationTimer, &QTimer::timeout, this,
           &ImageViewerV2::onAnimationTimer, Qt::UniqueConnection);
@@ -109,13 +130,13 @@ ImageViewerV2::~ImageViewerV2() = default;
 
 // devicePixelRatioF() does not provide correct value on wayland until the first
 // paint event occurs catch change event & do the needful
-bool ImageViewerV2::eventFilter(QObject *o, QEvent *ev) {
+bool ImageViewerV2::event(QEvent *ev) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
   if (ev->type() == QEvent::DevicePixelRatioChange) {
     onDPRChanged();
   }
 #endif
-  return QObject::eventFilter(o, ev);
+  return QGraphicsView::event(ev);
 }
 
 void ImageViewerV2::onDPRChanged() {
@@ -178,7 +199,8 @@ void ImageViewerV2::onFullscreenModeChanged(bool mode) {
     bgColor.setAlphaF(settings->backgroundOpacity());
   }
   scene->setBackgroundBrush(bgColor);
-  this->viewport()->setAttribute(Qt::WA_OpaquePaintEvent, (bgColor.alpha() == 255));
+  this->viewport()->setAttribute(Qt::WA_OpaquePaintEvent,
+                                 (bgColor.alpha() == 255));
 }
 
 void ImageViewerV2::startAnimation() {
@@ -287,31 +309,38 @@ void ImageViewerV2::updatePixmap(std::unique_ptr<QPixmap> newPixmap) {
   pixmapItem.setPixmap(*pixmap);
   pixmapItem.update();
   if (mPanoramaMode) {
-      panoramaItem->setPixmap(pixmap);
-      panoramaItem->show();
-      pixmapItem.hide();
-      if (svgItem) {
-          svgItem->hide();
-      }
+    panoramaItem->setPixmap(pixmap);
+    panoramaItem->show();
+    pixmapItem.hide();
+    if (svgItem) {
+      svgItem->hide();
+    }
   } else if (mSvgMode) {
-      panoramaItem->hide();
-      pixmapItem.hide();
-      pixmapItemScaled.hide();
-      if (svgItem) {
-          svgItem->show();
-          svgItem->setScale(pixmapItem.scale());
-      }
+    panoramaItem->hide();
+    pixmapItem.hide();
+    pixmapItemScaled.hide();
+    if (svgItem) {
+      svgItem->show();
+      svgItem->setScale(pixmapItem.scale());
+    }
   } else {
-      panoramaItem->hide();
-      if (svgItem) {
-          svgItem->hide();
-      }
-      pixmapItem.show();
+    panoramaItem->hide();
+    if (svgItem) {
+      svgItem->hide();
+    }
+    pixmapItem.show();
   }
 }
 
 void ImageViewerV2::showAnimation(std::shared_ptr<QMovie> _movie) {
   if (_movie && _movie->isValid()) {
+    // Update DPR just in case an event was missed or not delivered yet
+    float newDpr = this->devicePixelRatioF();
+    if (dpr != newDpr) {
+      dpr = newDpr;
+      zoomThreshold = static_cast<int>(dpr * 4.);
+      gestureThreshold = static_cast<int>(dpr * 40.);
+    }
     reset();
     movie = _movie;
     movie->jumpToFrame(0);
@@ -341,13 +370,22 @@ void ImageViewerV2::showAnimation(std::shared_ptr<QMovie> _movie) {
   }
 }
 
-void ImageViewerV2::showImage(std::unique_ptr<QPixmap> _pixmap, QString filePath) {
+void ImageViewerV2::showImage(std::unique_ptr<QPixmap> _pixmap,
+                              QString filePath) {
   if (_pixmap && !_pixmap->isNull()) {
+    // Update DPR just in case an event was missed or not delivered yet
+    float newDpr = this->devicePixelRatioF();
+    if (dpr != newDpr) {
+      dpr = newDpr;
+      zoomThreshold = static_cast<int>(dpr * 4.);
+      gestureThreshold = static_cast<int>(dpr * 40.);
+    }
     bool isSameFile = (!filePath.isEmpty() && filePath == currentFilePath);
     QSize oldSize = sourceSize();
     QSize newSize = _pixmap->size();
     bool isRotationOrMirror = (isSameFile && oldSize.isValid() &&
-                               (oldSize.width() * oldSize.height() == newSize.width() * newSize.height()));
+                               (oldSize.width() * oldSize.height() ==
+                                newSize.width() * newSize.height()));
 
     float prevScale = currentScale();
     ImageFitMode prevFitMode = imageFitMode;
@@ -355,34 +393,39 @@ void ImageViewerV2::showImage(std::unique_ptr<QPixmap> _pixmap, QString filePath
 
     if (isRotationOrMirror && isDisplaying()) {
       QGraphicsPixmapItem *item = &pixmapItem;
-      QPointF sceneCenter = mapToScene(viewport()->rect().center()) + QPointF(1, 1);
+      QPointF sceneCenter =
+          mapToScene(viewport()->rect().center()) + QPointF(1, 1);
       auto itemRect = item->sceneBoundingRect();
       if (itemRect.width() > 0 && itemRect.height() > 0) {
-        relativePos.setX(qBound(qreal(0), (sceneCenter.x() - itemRect.left()) / itemRect.width(), qreal(1)));
-        relativePos.setY(qBound(qreal(0), (sceneCenter.y() - itemRect.top()) / itemRect.height(), qreal(1)));
+        relativePos.setX(qBound(
+            qreal(0), (sceneCenter.x() - itemRect.left()) / itemRect.width(),
+            qreal(1)));
+        relativePos.setY(qBound(
+            qreal(0), (sceneCenter.y() - itemRect.top()) / itemRect.height(),
+            qreal(1)));
       }
     }
 
     reset();
-    
+
     currentFilePath = filePath;
-    
+
     if (filePath.endsWith(".svg", Qt::CaseInsensitive)) {
-        svgItem = new QGraphicsSvgItem(filePath);
-        if (svgItem->renderer() && svgItem->renderer()->isValid()) {
-            svgItem->setPos(10000, 10000);
-            svgItem->setCacheMode(QGraphicsItem::NoCache);
-            scene->addItem(svgItem);
-            mSvgMode = true;
-        } else {
-            mSvgMode = false;
-            delete svgItem;
-            svgItem = nullptr;
-        }
-    } else {
+      svgItem = new QGraphicsSvgItem(filePath);
+      if (svgItem->renderer() && svgItem->renderer()->isValid()) {
+        svgItem->setPos(10000, 10000);
+        svgItem->setCacheMode(QGraphicsItem::NoCache);
+        scene->addItem(svgItem);
+        mSvgMode = true;
+      } else {
         mSvgMode = false;
+        delete svgItem;
+        svgItem = nullptr;
+      }
+    } else {
+      mSvgMode = false;
     }
-    
+
     updatePixmap(std::move(_pixmap));
     updateMinScale();
 
@@ -425,14 +468,15 @@ void ImageViewerV2::showImage(std::unique_ptr<QPixmap> _pixmap, QString filePath
 void ImageViewerV2::reset() {
   stopPosAnimation();
   pixmapItemScaled.setPixmap(QPixmap());
+  pixmapItemCrop.setPixmap(QPixmap());
   pixmapScaled.reset(nullptr);
   pixmapItem.setPixmap(QPixmap());
   pixmapItem.setScale(1.0f);
   pixmapItem.setOffset(10000, 10000);
   if (svgItem) {
-      scene->removeItem(svgItem);
-      delete svgItem;
-      svgItem = nullptr;
+    scene->removeItem(svgItem);
+    delete svgItem;
+    svgItem = nullptr;
   }
   pixmap.reset();
   stopAnimation();
@@ -445,6 +489,7 @@ void ImageViewerV2::reset() {
   panoramaItem->hide();
   pixmapItem.show();
   pixmapItemScaled.hide();
+  pixmapItemCrop.hide();
   currentFilePath = "";
 }
 
@@ -553,24 +598,40 @@ void ImageViewerV2::hide() {
 }
 
 void ImageViewerV2::requestScaling() {
-  if (mSvgMode || !pixmap || pixmapItem.scale() == 1.0f ||
-      (mScalingFilter <= 1 && !smoothUpscaling && pixmapItem.scale() >= 1.0f) ||
-      movie) {
+  if (mSvgMode || !pixmap || std::abs(pixmapItem.scale() - 1.0) < 0.001 ||
+      (mScalingFilter <= 1 && !smoothUpscaling && pixmapItem.scale() >= 0.999) ||
+      movie || (zoomTimeLine && zoomTimeLine->state() == QTimeLine::Running) ||
+      mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
+      mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM) {
     return;
   }
-  // safety cap for extreme zoom levels
-  // GPU handles upscaling better and faster beyond this point
+
   QSize targetSize = scaledSizeR() * dpr;
-  if (currentScale() > 8.0f || targetSize.width() > 12288 ||
-      targetSize.height() > 12288 ||
-      (qint64)targetSize.width() * targetSize.height() > 64000000) {
-    return;
+
+  // Default limits (same as ImageLib::scaled)
+  int maxDim = 12288;
+  qint64 maxPixels = 100000000; // 100 megapixels
+  float maxScale = 8.0f;
+
+#ifdef USE_UPSCAYL
+  if (settings->useUpscayl()) {
+    maxScale = 40.0f;       // allow extreme zoom with Upscayl (up to 4000%)
+    if (currentScale() > maxScale) {
+      return;
+    }
+  } else
+#endif
+  {
+    if (currentScale() > maxScale || targetSize.width() > maxDim ||
+        targetSize.height() > maxDim ||
+        (qint64)targetSize.width() * targetSize.height() > maxPixels) {
+      return;
+    }
   }
+
   if (scaleTimer->isActive())
     scaleTimer->stop();
-  // request "real" scaling when graphicsscene scaling is insufficient
-  // (it uses a single pass bilinear which is sharp but produces artifacts on
-  // low zoom levels)
+
   emit scalingRequested(scaledSizeR() * dpr, mScalingFilter);
 }
 
@@ -622,18 +683,22 @@ void ImageViewerV2::mouseMoveEvent(QMouseEvent *event) {
     viewport()->update();
   }
   if (mPanoramaMode && (event->buttons() & Qt::LeftButton)) {
-      int dx = event->pos().x() - mouseMoveStartPos.x();
-      int dy = event->pos().y() - mouseMoveStartPos.y();
-      float speedMultiplier = 2.0f;
-      mPanoramaYaw -= (float)dx * mPanoramaFov / viewport()->width() * speedMultiplier;
-      mPanoramaPitch -= (float)dy * mPanoramaFov / viewport()->width() * speedMultiplier;
+    int dx = event->pos().x() - mouseMoveStartPos.x();
+    int dy = event->pos().y() - mouseMoveStartPos.y();
+    float speedMultiplier = 2.0f;
+    mPanoramaYaw -=
+        (float)dx * mPanoramaFov / viewport()->width() * speedMultiplier;
+    mPanoramaPitch -=
+        (float)dy * mPanoramaFov / viewport()->width() * speedMultiplier;
 
-      if (mPanoramaPitch > 89.0f) mPanoramaPitch = 89.0f;
-      if (mPanoramaPitch < -89.0f) mPanoramaPitch = -89.0f;
+    if (mPanoramaPitch > 89.0f)
+      mPanoramaPitch = 89.0f;
+    if (mPanoramaPitch < -89.0f)
+      mPanoramaPitch = -89.0f;
 
-      panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
-      mouseMoveStartPos = event->pos();
-      return;
+    panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
+    mouseMoveStartPos = event->pos();
+    return;
   }
 
   if (!pixmap || mouseInteraction == MouseInteractionState::MOUSE_DRAG ||
@@ -714,24 +779,32 @@ void ImageViewerV2::mouseReleaseEvent(QMouseEvent *event) {
     forceFastScale = false;
     pixmapItem.setTransformationMode(selectTransformationMode());
   }
+  bool needScale = (mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
+                    mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM);
+
   if (!pixmap || mouseInteraction == MouseInteractionState::MOUSE_NONE) {
     QGraphicsView::mouseReleaseEvent(event);
     event->ignore();
   }
   mouseInteraction = MouseInteractionState::MOUSE_NONE;
+  if (needScale) {
+    requestScaling();
+  }
 }
 
 // warning for future me:
 // for some reason in qgraphicsview wheelEvent is followed by moveEvent (wtf?)
 void ImageViewerV2::wheelEvent(QWheelEvent *event) {
   if (mPanoramaMode) {
-      int delta = event->angleDelta().y();
-      mPanoramaFov *= (delta > 0) ? 0.9f : 1.1f;
-      if (mPanoramaFov < 10.0f) mPanoramaFov = 10.0f;
-      if (mPanoramaFov > 140.0f) mPanoramaFov = 140.0f;
-      panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
-      event->accept();
-      return;
+    int delta = event->angleDelta().y();
+    mPanoramaFov *= (delta > 0) ? 0.9f : 1.1f;
+    if (mPanoramaFov < 10.0f)
+      mPanoramaFov = 10.0f;
+    if (mPanoramaFov > 140.0f)
+      mPanoramaFov = 140.0f;
+    panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
+    event->accept();
+    return;
   }
 
   if (event->buttons() & Qt::RightButton) {
@@ -847,7 +920,7 @@ void ImageViewerV2::keyPressEvent(QKeyEvent *event) {
 }
 
 void ImageViewerV2::drawBackground(QPainter *painter, const QRectF &rect) {
-  if (QOpenGLWidget *glWidget = qobject_cast<QOpenGLWidget*>(viewport())) {
+  if (QOpenGLWidget *glWidget = qobject_cast<QOpenGLWidget *>(viewport())) {
     painter->beginNativePainting();
     if (QOpenGLContext *ctx = QOpenGLContext::currentContext()) {
       if (QOpenGLFunctions *f = ctx->functions()) {
@@ -884,13 +957,16 @@ inline void ImageViewerV2::mouseMoveZoom(QMouseEvent *event) {
   int moveDistance = mouseMoveStartPos.y() - currentPos;
 
   if (mPanoramaMode) {
-      // In panorama mode, we decrease FOV to zoom in (moving mouse up decreases currentPos, increases moveDistance)
-      mPanoramaFov *= (1.0f - stepMultiplier * moveDistance * dpr);
-      if (mPanoramaFov < 10.0f) mPanoramaFov = 10.0f;
-      if (mPanoramaFov > 140.0f) mPanoramaFov = 140.0f;
-      panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
-      mouseMoveStartPos = event->pos();
-      return;
+    // In panorama mode, we decrease FOV to zoom in (moving mouse up decreases
+    // currentPos, increases moveDistance)
+    mPanoramaFov *= (1.0f - stepMultiplier * moveDistance * dpr);
+    if (mPanoramaFov < 10.0f)
+      mPanoramaFov = 10.0f;
+    if (mPanoramaFov > 140.0f)
+      mPanoramaFov = 140.0f;
+    panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
+    mouseMoveStartPos = event->pos();
+    return;
   }
 
   float newScale =
@@ -1221,6 +1297,7 @@ void ImageViewerV2::scrollToY(int y) {
 void ImageViewerV2::onScrollTimelineFinished() { saveViewportPos(); }
 
 void ImageViewerV2::swapToOriginalPixmap() {
+  hideUpscaledCrop();
   if (!pixmap || !pixmapItemScaled.isVisible())
     return;
   pixmapItemScaled.hide();
@@ -1263,7 +1340,8 @@ void ImageViewerV2::doZoomIn(bool atCursor) {
     setZoomAnchor(viewport()->rect().center());
 
   float baseScale = currentScale();
-  if (settings->enableSmoothZoom() && zoomTimeLine->state() == QTimeLine::Running) {
+  if (settings->enableSmoothZoom() &&
+      zoomTimeLine->state() == QTimeLine::Running) {
     baseScale = zoomTargetScale;
   }
 
@@ -1284,7 +1362,7 @@ void ImageViewerV2::doZoomIn(bool atCursor) {
     }
   }
 
-  newScale = qBound(minScale, newScale, 500.0f);
+  newScale = qBound(minScale, newScale, maxScale);
 
   if (settings->enableSmoothZoom()) {
     zoomStartScale = currentScale();
@@ -1316,7 +1394,8 @@ void ImageViewerV2::doZoomOut(bool atCursor) {
     setZoomAnchor(viewport()->rect().center());
 
   float baseScale = currentScale();
-  if (settings->enableSmoothZoom() && zoomTimeLine->state() == QTimeLine::Running) {
+  if (settings->enableSmoothZoom() &&
+      zoomTimeLine->state() == QTimeLine::Running) {
     baseScale = zoomTargetScale;
   }
 
@@ -1337,7 +1416,7 @@ void ImageViewerV2::doZoomOut(bool atCursor) {
     }
   }
 
-  newScale = qBound(minScale, newScale, 500.0f);
+  newScale = qBound(minScale, newScale, maxScale);
 
   if (settings->enableSmoothZoom()) {
     zoomStartScale = currentScale();
@@ -1454,13 +1533,13 @@ void ImageViewerV2::snapToEdges() {
 void ImageViewerV2::doZoom(float newScale) {
   if (!pixmap)
     return;
-  newScale = qBound(minScale, newScale, 500.0f);
+  newScale = qBound(minScale, newScale, maxScale);
   // fix scene position to integer values
   auto tl = pixmapItem.sceneBoundingRect().topLeft().toPoint();
   pixmapItem.setOffset(tl);
   pixmapItem.setScale(newScale);
   if (mSvgMode && svgItem) {
-      svgItem->setScale(newScale);
+    svgItem->setScale(newScale);
   }
 
   pixmapItem.setTransformationMode(selectTransformationMode());
@@ -1505,33 +1584,87 @@ QSize ImageViewerV2::sourceSize() const {
   return pixmap->size();
 }
 
-void ImageViewerV2::togglePanorama() {
-    if (!isDisplaying()) return;
-    mPanoramaMode = !mPanoramaMode;
-    if (mPanoramaMode) {
-        pixmapItem.hide();
-        pixmapItemScaled.hide();
-        panoramaItem->setPixmap(pixmap);
-        panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
-        panoramaItem->show();
-    } else {
-        panoramaItem->hide();
-        if (mSvgMode) {
-            svgItem->show();
-        } else {
-            pixmapItem.show();
-        }
-        applyFitMode();
-    }
-    update();
+QRect ImageViewerV2::visibleImageRect() const {
+  if (!pixmap || pixmap->isNull())
+    return QRect();
+
+  QRectF sceneRect = mapToScene(viewport()->rect()).boundingRect();
+  QRectF imageRectF = pixmapItem.mapRectFromScene(sceneRect);
+
+  // Correct for the 10000, 10000 offset in pixmapItem
+  imageRectF.translate(-pixmapItem.offset());
+
+  QRect imgBounds(0, 0, pixmap->width(), pixmap->height());
+  QRect intersected = imageRectF.toAlignedRect().intersected(imgBounds);
+
+  QPixmap scaled = currentScaledPixmapCopy();
+  if (scaled.isNull())
+    return QRect();
+
+  double scaleX = (double)scaled.width() / pixmap->width();
+  double scaleY = (double)scaled.height() / pixmap->height();
+
+  QRect scaledVisibleRect(qRound(intersected.x() * scaleX),
+                          qRound(intersected.y() * scaleY),
+                          qRound(intersected.width() * scaleX),
+                          qRound(intersected.height() * scaleY));
+
+  QRect scaledBounds(0, 0, scaled.width(), scaled.height());
+  return scaledVisibleRect.intersected(scaledBounds);
 }
 
-void ImageViewerV2::setColorAdjustments(float brightness, float contrast, float saturation, float hue) {
-    pixmapItem.setColorAdjustments(brightness, contrast, saturation, hue);
-    pixmapItemScaled.setColorAdjustments(brightness, contrast, saturation, hue);
-    if (panoramaItem) {
-        panoramaItem->setColorAdjustments(brightness, contrast, saturation, hue);
+QPixmap ImageViewerV2::currentScaledPixmapCopy() const {
+  if (!pixmap || pixmap->isNull())
+    return QPixmap();
+
+  if (pixmapScaled && !pixmapScaled->isNull()) {
+    return *pixmapScaled;
+  }
+
+  QSize tSize = scaledSizeR() * dpr;
+  if (tSize.isEmpty())
+    return QPixmap();
+
+  // Qt::TransformationMode
+  Qt::TransformationMode mode = Qt::SmoothTransformation;
+  if (mScalingFilter == QI_FILTER_NEAREST) {
+    mode = Qt::FastTransformation;
+  }
+  return pixmap->scaled(tSize, Qt::KeepAspectRatio, mode);
+}
+
+float ImageViewerV2::getDpr() const { return dpr; }
+
+void ImageViewerV2::togglePanorama() {
+  if (!isDisplaying())
+    return;
+  mPanoramaMode = !mPanoramaMode;
+  if (mPanoramaMode) {
+    pixmapItem.hide();
+    pixmapItemScaled.hide();
+    panoramaItem->setPixmap(pixmap);
+    panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
+    panoramaItem->show();
+  } else {
+    panoramaItem->hide();
+    if (mSvgMode) {
+      svgItem->show();
+    } else {
+      pixmapItem.show();
     }
+    applyFitMode();
+  }
+  update();
+}
+
+void ImageViewerV2::setColorAdjustments(float brightness, float contrast,
+                                        float saturation, float hue) {
+  pixmapItem.setColorAdjustments(brightness, contrast, saturation, hue);
+  pixmapItemScaled.setColorAdjustments(brightness, contrast, saturation, hue);
+  pixmapItemCrop.setColorAdjustments(brightness, contrast, saturation, hue);
+  if (panoramaItem) {
+    panoramaItem->setColorAdjustments(brightness, contrast, saturation, hue);
+  }
 }
 
 qreal ImageViewerV2::smootherstepEasing(qreal t) {
@@ -1539,14 +1672,56 @@ qreal ImageViewerV2::smootherstepEasing(qreal t) {
 }
 
 void ImageViewerV2::onZoomTimelineValueChanged(qreal value) {
-  float currentAnimScale = zoomStartScale + (zoomTargetScale - zoomStartScale) * value;
+  float currentAnimScale = (value >= 1.0) ? zoomTargetScale :
+      zoomStartScale + (zoomTargetScale - zoomStartScale) * value;
   zoomAnchored(currentAnimScale);
   centerIfNecessary();
   snapToEdges();
 
   imageFitMode = FIT_FREE;
-  if (pixmapItem.scale() == fitWindowScale)
+  if (std::abs(pixmapItem.scale() - fitWindowScale) < 0.001)
     imageFitMode = FIT_WINDOW;
-  else if (pixmapItem.scale() == fitWindowStretchScale)
+  else if (std::abs(pixmapItem.scale() - fitWindowStretchScale) < 0.001)
     imageFitMode = FIT_WINDOW_STRETCH;
+}
+
+QRect ImageViewerV2::visibleOriginalImageRect() const {
+  if (!pixmap || pixmap->isNull())
+    return QRect();
+
+  QRectF sceneRect = mapToScene(viewport()->rect()).boundingRect();
+  QRectF imageRectF = pixmapItem.mapRectFromScene(sceneRect);
+
+  imageRectF.translate(-pixmapItem.offset());
+
+  QRect imgBounds(0, 0, pixmap->width(), pixmap->height());
+  return imageRectF.toAlignedRect().intersected(imgBounds);
+}
+
+void ImageViewerV2::setUpscaledCrop(const QImage &cropImg, QRect origCrop) {
+  if (!pixmap || pixmap->isNull() || origCrop.isEmpty())
+    return;
+
+  QPixmap cropPixmap = QPixmap::fromImage(cropImg);
+  pixmapItemCrop.setPixmap(cropPixmap);
+
+  // Position at scene coordinates corresponding to the original crop
+  QPointF scenePos = pixmapItem.mapToScene(pixmapItem.offset() + origCrop.topLeft());
+  scenePos = sceneRoundPos(scenePos);
+
+  // Calculate the net upscale factor of this crop relative to its original crop size
+  double upscaleFactor = (double)cropImg.width() / origCrop.width();
+  double cropScale = pixmapItem.scale() / upscaleFactor;
+
+  pixmapItemCrop.setTransformationMode(pixmapItem.transformationMode());
+  pixmapItemCrop.setScale(cropScale);
+  pixmapItemCrop.setTransformOriginPoint(0, 0);
+  pixmapItemCrop.setOffset(0, 0);
+  pixmapItemCrop.setPos(scenePos);
+  pixmapItemCrop.show();
+}
+
+void ImageViewerV2::hideUpscaledCrop() {
+  pixmapItemCrop.hide();
+  pixmapItemCrop.setPixmap(QPixmap());
 }

@@ -64,8 +64,15 @@ public:
   explicit MW(QWidget *parent = nullptr);
   bool isCropPanelActive();
   void onScalingFinished(std::unique_ptr<QPixmap> scaled);
+  void onUpscaleFinished(const QImage &cropImg, QRect origCrop);
   void showImage(std::unique_ptr<QPixmap> pixmap, QString filePath = "");
   void showAnimation(std::shared_ptr<QMovie> movie);
+
+  QRect visibleImageRect() const;
+  QRect visibleOriginalImageRect() const;
+  QPixmap currentScaledPixmapCopy() const;
+  float getDpr() const;
+  float currentScale() const;
 
   void setCurrentInfo(int fileIndex, int fileCount, QString filePath,
                       QString fileName, QSize imageSize, qint64 fileSize,

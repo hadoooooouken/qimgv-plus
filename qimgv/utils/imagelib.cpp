@@ -144,8 +144,17 @@ Qt::SmoothTransformation); QRect target(QPoint(0, 0), targetRes.size());
 
 QImage *ImageLib::scaled(std::shared_ptr<const QImage> source, QSize destSize,
                          ScalingFilter filter) {
-  if (!source || destSize.width() > 12288 || destSize.height() > 12288 ||
-      (qint64)destSize.width() * destSize.height() > 100000000)
+  int maxDim = 12288;
+  qint64 maxPixels = 100000000;
+#ifdef USE_UPSCAYL
+  if (settings->useUpscayl()) {
+    maxDim = 16384;         // Cap to GPU max texture size / GDI memory safety limit (16384)
+    maxPixels = 268435456;  // Cap to 256 Megapixels (~1.07 GB RAM) to prevent drawing allocations crashes
+  }
+#endif
+
+  if (!source || destSize.width() > maxDim || destSize.height() > maxDim ||
+      (qint64)destSize.width() * destSize.height() > maxPixels)
     return new QImage();
   auto scaleTarget = source;
   if (source->format() == QImage::Format_Indexed8) {
@@ -258,13 +267,12 @@ QImage *ImageLib::scaled_CV_Smart(std::shared_ptr<const QImage> source,
 
     // --- 3. Cross-kernel sharpen ---
     // Custom 3x3 cross sharpen kernel: [ 0 -1 0; -1 20 -1; 0 -1 0 ] divisor 16
-    cv::Mat kernel = (cv::Mat_<float>(3, 3) <<
-         0.0f, -1.0f / 16.0f,  0.0f,
-        -1.0f / 16.0f, 20.0f / 16.0f, -1.0f / 16.0f,
-         0.0f, -1.0f / 16.0f,  0.0f
-    );
+    cv::Mat kernel =
+        (cv::Mat_<float>(3, 3) << 0.0f, -1.0f / 16.0f, 0.0f, -1.0f / 16.0f,
+         20.0f / 16.0f, -1.0f / 16.0f, 0.0f, -1.0f / 16.0f, 0.0f);
     cv::Mat sharpenedMat;
-    cv::filter2D(dstMat, sharpenedMat, -1, kernel, cv::Point(-1, -1), 0, cv::BORDER_REPLICATE);
+    cv::filter2D(dstMat, sharpenedMat, -1, kernel, cv::Point(-1, -1), 0,
+                 cv::BORDER_REPLICATE);
 
     *dest = QtOcv::mat2Image(sharpenedMat, order, source->format());
   } else {
@@ -272,7 +280,8 @@ QImage *ImageLib::scaled_CV_Smart(std::shared_ptr<const QImage> source,
     cv::Mat dstMat(destSizeCv, srcMat.type());
     cv::resize(srcMat, dstMat, destSizeCv, 0, 0, cv::INTER_AREA);
 
-    // Gaussian Unsharp Mask (strength: 0.15) to restore textures without introducing aliasing (no jagged edges)
+    // Gaussian Unsharp Mask (strength: 0.15) to restore textures without
+    // introducing aliasing (no jagged edges)
     cv::Mat dstMat_blurred;
     cv::GaussianBlur(dstMat, dstMat_blurred, cv::Size(0, 0), 2.0);
     cv::Mat sharpenedMat;
@@ -283,4 +292,4 @@ QImage *ImageLib::scaled_CV_Smart(std::shared_ptr<const QImage> source,
 
   return dest;
 }
-#endif
+#endif

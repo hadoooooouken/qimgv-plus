@@ -5,6 +5,17 @@
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent), ui(new Ui::SettingsDialog) {
   ui->setupUi(this);
+#ifndef USE_UPSCAYL
+  ui->stackedWidget->removeWidget(ui->AIUpscale);
+#else
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->preloadUpscaylCheckBox, &QCheckBox::setEnabled);
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->upscaylModelComboBox, &QComboBox::setEnabled);
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->label_upscaylModel, &QLabel::setEnabled);
+
+  ui->upscaylModelComboBox->addItem("remacri-4x");
+  ui->upscaylModelComboBox->addItem("high-fidelity-4x");
+  ui->upscaylModelComboBox->addItem("upscayl-lite-4x");
+#endif
   ui->panelSizeSlider->setMinimum(13);
   ui->panelSizeSlider->setMaximum(32);
   ui->panelSizeSlider->setSingleStep(1);
@@ -250,6 +261,20 @@ void SettingsDialog::readSettings() {
     ui->thumbStyleExtended->setChecked(true);
   ui->animatedJxlCheckBox->setChecked(settings->jxlAnimation());
   ui->multiInstanceCheckBox->setChecked(settings->multiInstance());
+#ifdef USE_UPSCAYL
+  ui->useUpscaylCheckBox->setChecked(settings->useUpscayl());
+  ui->preloadUpscaylCheckBox->setChecked(settings->preloadUpscayl());
+  ui->preloadUpscaylCheckBox->setEnabled(settings->useUpscayl());
+  ui->upscaylModelComboBox->setEnabled(settings->useUpscayl());
+  ui->label_upscaylModel->setEnabled(settings->useUpscayl());
+
+  int modelIdx = ui->upscaylModelComboBox->findText(settings->upscaylModel());
+  if (modelIdx != -1) {
+    ui->upscaylModelComboBox->setCurrentIndex(modelIdx);
+  } else {
+    ui->upscaylModelComboBox->setCurrentText("remacri-4x");
+  }
+#endif
 
   ui->autoResizeWindowCheckBox->setChecked(settings->autoResizeWindow());
   ui->panelCenterSelectionCheckBox->setChecked(
@@ -430,6 +455,11 @@ void SettingsDialog::saveSettings() {
     settings->setThumbPanelStyle(TH_PANEL_EXTENDED);
   settings->setJxlAnimation(ui->animatedJxlCheckBox->isChecked());
   settings->setMultiInstance(ui->multiInstanceCheckBox->isChecked());
+#ifdef USE_UPSCAYL
+  settings->setUseUpscayl(ui->useUpscaylCheckBox->isChecked());
+  settings->setPreloadUpscayl(ui->preloadUpscaylCheckBox->isChecked());
+  settings->setUpscaylModel(ui->upscaylModelComboBox->currentText());
+#endif
 
   settings->setAutoResizeWindow(ui->autoResizeWindowCheckBox->isChecked());
   settings->setPanelCenterSelection(

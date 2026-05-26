@@ -66,6 +66,34 @@ QSize ViewerWidget::sourceSize() {
         return QSize(0,0);
 }
 
+QRect ViewerWidget::visibleImageRect() const {
+    if (imageViewer && currentWidget == IMAGEVIEWER) {
+        return imageViewer->visibleImageRect();
+    }
+    return QRect();
+}
+
+QRect ViewerWidget::visibleOriginalImageRect() const {
+    if (imageViewer && currentWidget == IMAGEVIEWER) {
+        return imageViewer->visibleOriginalImageRect();
+    }
+    return QRect();
+}
+
+QPixmap ViewerWidget::currentScaledPixmapCopy() const {
+    if (imageViewer && currentWidget == IMAGEVIEWER) {
+        return imageViewer->currentScaledPixmapCopy();
+    }
+    return QPixmap();
+}
+
+float ViewerWidget::getDpr() const {
+    if (imageViewer && currentWidget == IMAGEVIEWER) {
+        return imageViewer->getDpr();
+    }
+    return 1.0f;
+}
+
 // show imageViewer
 void ViewerWidget::enableImageViewer() {
     if(currentWidget != IMAGEVIEWER) {
@@ -181,6 +209,10 @@ ImageFitMode ViewerWidget::fitMode() {
 
 void ViewerWidget::onScalingFinished(std::unique_ptr<QPixmap> scaled) {
     imageViewer->setScaledPixmap(std::move(scaled));
+}
+
+void ViewerWidget::setUpscaledCrop(const QImage &cropImg, QRect origCrop) {
+    imageViewer->setUpscaledCrop(cropImg, origCrop);
 }
 
 void ViewerWidget::closeImage() {

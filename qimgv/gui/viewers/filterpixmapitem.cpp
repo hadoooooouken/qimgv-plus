@@ -2,6 +2,7 @@
 #include <QPainter>
 #include <QOpenGLWidget>
 #include <QMatrix4x4>
+#include <QOpenGLContext>
 #include <cmath>
 
 #ifndef M_PI
@@ -14,8 +15,10 @@ FilterPixmapItem::FilterPixmapItem(QGraphicsItem *parent)
 }
 
 FilterPixmapItem::~FilterPixmapItem() {
-    if (mProgram) delete mProgram;
-    if (mTexture) delete mTexture;
+    if (QOpenGLContext::currentContext()) {
+        if (mProgram) delete mProgram;
+        if (mTexture) delete mTexture;
+    }
 }
 
 void FilterPixmapItem::setColorAdjustments(float brightness, float contrast, float saturation, float hue) {

@@ -430,6 +430,45 @@ void MW::onScalingFinished(std::unique_ptr<QPixmap> scaled) {
     viewerWidget->onScalingFinished(std::move(scaled));
 }
 
+void MW::onUpscaleFinished(const QImage &cropImg, QRect origCrop) {
+    viewerWidget->setUpscaledCrop(cropImg, origCrop);
+}
+
+QRect MW::visibleImageRect() const {
+    if (viewerWidget) {
+        return viewerWidget->visibleImageRect();
+    }
+    return QRect();
+}
+
+QRect MW::visibleOriginalImageRect() const {
+    if (viewerWidget) {
+        return viewerWidget->visibleOriginalImageRect();
+    }
+    return QRect();
+}
+
+QPixmap MW::currentScaledPixmapCopy() const {
+    if (viewerWidget) {
+        return viewerWidget->currentScaledPixmapCopy();
+    }
+    return QPixmap();
+}
+
+float MW::getDpr() const {
+    if (viewerWidget) {
+        return viewerWidget->getDpr();
+    }
+    return 1.0f;
+}
+
+float MW::currentScale() const {
+    if (viewerWidget) {
+        return viewerWidget->currentScale();
+    }
+    return 1.0f;
+}
+
 void MW::saveWindowGeometry() {
     if(this->windowState() == Qt::WindowNoState)
         settings->setWindowGeometry(geometry());
