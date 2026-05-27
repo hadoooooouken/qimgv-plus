@@ -23,7 +23,6 @@ target_sources(qimgv-plus PRIVATE
     directorymanager/directorymanager.cpp
 
     directorymanager/watchers/directorywatcher.cpp
-    directorymanager/watchers/dummywatcher.cpp
     directorymanager/watchers/watcherevent.cpp
     directorymanager/watchers/watcherworker.cpp
 
