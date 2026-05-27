@@ -4,6 +4,10 @@
 #include <QOpenGLWidget>
 #include <cmath>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 PanoramaGraphicsItem::PanoramaGraphicsItem(QGraphicsItem *parent)
     : QGraphicsObject(parent)
 {
@@ -120,7 +124,10 @@ void PanoramaGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsIt
     mProgram->setUniformValue("brightness", mBrightness);
     mProgram->setUniformValue("contrast", mContrast);
     mProgram->setUniformValue("saturation", mSaturation);
-    mProgram->setUniformValue("hue", mHue);
+    
+    // Convert hue degrees to radians
+    float hueRad = (float)(mHue * M_PI / 180.0);
+    mProgram->setUniformValue("hue", hueRad);
 
     // Use NDC coordinates directly to fill the viewport
     GLfloat vertices[] = {

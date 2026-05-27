@@ -96,8 +96,12 @@ void ActionManager::initDefaults() {
                                  "toggleFullscreenInfoBar");
   actionManager->defaults.insert(InputMap::keyNameCtrl() + "+V", "pasteFile");
   actionManager->defaults.insert("P", "openSettings");
+  actionManager->defaults.insert("N", "toggleScalingFilter");
   actionManager->defaults.insert(InputMap::keyNameShift() + "+P",
                                  "togglePanorama");
+#ifdef USE_UPSCAYL
+  actionManager->defaults.insert(InputMap::keyNameAlt() + "+I", "toggleUpscayl");
+#endif
 }
 //------------------------------------------------------------------------------
 void ActionManager::initShortcuts() {
@@ -229,6 +233,21 @@ inline ActionType ActionManager::validateAction(const QString &actionName) {
 void ActionManager::readShortcuts() {
   settings->readShortcuts(shortcuts);
   actionManager->validateShortcuts();
+
+  // If the user doesn't have a shortcut for toggleScalingFilter, and "N" is not bound to anything else,
+  // we bind it to "N" by default.
+  if (shortcuts.key("toggleScalingFilter", "").isEmpty() && !shortcuts.contains("N")) {
+    shortcuts.insert("N", "toggleScalingFilter");
+  }
+
+#ifdef USE_UPSCAYL
+  // If the user doesn't have a shortcut for toggleUpscayl, and Alt+I is not bound to anything else,
+  // we bind it to Alt+I by default.
+  QString altI = InputMap::keyNameAlt() + "+I";
+  if (shortcuts.key("toggleUpscayl", "").isEmpty() && !shortcuts.contains(altI)) {
+    shortcuts.insert(altI, "toggleUpscayl");
+  }
+#endif
 }
 //------------------------------------------------------------------------------
 bool ActionManager::processEvent(QInputEvent *event) {

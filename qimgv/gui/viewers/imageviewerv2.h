@@ -49,6 +49,7 @@ public:
     void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
     void hideUpscaledCrop();
     virtual bool isDisplaying() const;
+    bool panoramaMode() const { return mPanoramaMode; }
     void setColorAdjustments(float brightness, float contrast, float saturation, float hue);
 
     virtual bool imageFits() const;

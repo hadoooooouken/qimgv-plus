@@ -387,12 +387,12 @@ void MW::toggleScalingFilter() {
 }
 
 void MW::setFilterNearest() {
-    showMessage("Filter: nearest", 600);
+    showMessage("Filter: Nearest", 600);
     viewerWidget->setFilterNearest();
 }
 
 void MW::setFilterBilinear() {
-    showMessage("Filter: bilinear", 600);
+    showMessage("Filter: Bilinear", 600);
     viewerWidget->setFilterBilinear();
 }
 
@@ -400,27 +400,48 @@ void MW::setFilter(ScalingFilter filter) {
     QString filterName;
     switch (filter) {
         case QI_FILTER_NEAREST:
-            filterName = "nearest";
+            filterName = "Nearest";
             break;
         case ScalingFilter::QI_FILTER_BILINEAR:
-            filterName = "bilinear";
+            filterName = "Bilinear";
             break;
         case QI_FILTER_CV_BILINEAR_SHARPEN:
-            filterName = "bilinear + sharpen";
+            filterName = "Bilinear+sharpen (OpenCV)";
             break;
         case QI_FILTER_CV_CUBIC:
-            filterName = "bicubic";
+            filterName = "Bicubic (OpenCV)";
             break;
         case QI_FILTER_CV_CUBIC_SHARPEN:
-            filterName = "bicubic + sharpen";
+            filterName = "Bicubic+sharpen (OpenCV)";
+            break;
+        case QI_FILTER_CV_LANCZOS:
+            filterName = "Lanczos (OpenCV)";
+            break;
+        case QI_FILTER_CV_AREA:
+            filterName = "Area (OpenCV)";
+            break;
+        case QI_FILTER_CV_SMART:
+            filterName = "Smart sharpen (OpenCV)";
             break;
         default:
-            filterName = "configured " + QString::number(static_cast<int>(filter));
+            filterName = "Configured " + QString::number(static_cast<int>(filter));
             break;
     }
-    showMessage("Filter " + filterName, 600);
+    showMessage("Filter: " + filterName, 600);
     viewerWidget->setScalingFilter(filter);
 }
+
+#ifdef USE_UPSCAYL
+void MW::toggleUpscayl() {
+    bool current = settings->useUpscayl();
+    settings->setUseUpscayl(!current);
+    settings->sendChangeNotification();
+    showMessage(settings->useUpscayl() ? "Use Upscayl: ON" : "Use Upscayl: OFF", 600);
+    if (!settings->useUpscayl()) {
+        hideUpscaledCrop();
+    }
+}
+#endif
 
 bool MW::isCropPanelActive() {
     return (activeSidePanel == SIDEPANEL_CROP);
@@ -475,6 +496,14 @@ float MW::currentScale() const {
     return 1.0f;
 }
 
+bool MW::panoramaMode() const {
+    if (viewerWidget) {
+        return viewerWidget->panoramaMode();
+    }
+    return false;
+}
+
+
 void MW::saveWindowGeometry() {
     if(this->windowState() == Qt::WindowNoState)
         settings->setWindowGeometry(geometry());
@@ -526,8 +555,11 @@ bool MW::event(QEvent *event) {
         maximized = isMaximized();
     if(event->type() == QEvent::Move || event->type() == QEvent::Resize)
         windowGeometryChangeTimer.start();
-    if(event->type() == QEvent::WindowDeactivate)
+    if(event->type() == QEvent::WindowDeactivate) {
         docWidget->hideFloatingPanel(true);
+        if(viewerWidget)
+            viewerWidget->hideContextMenu();
+    }
     return QWidget::event(event);
 }
 
@@ -701,12 +733,16 @@ DialogResult MW::fileReplaceDialog(QString src, QString dst, FileReplaceMode mod
 
 void MW::showSettings() {
     docWidget->hideFloatingPanel();
+    if(viewerWidget)
+        viewerWidget->hideContextMenu();
     SettingsDialog settingsDialog(this);
     settingsDialog.exec();
 }
 
 void MW::showScriptSettings() {
     docWidget->hideFloatingPanel();
+    if(viewerWidget)
+        viewerWidget->hideContextMenu();
     SettingsDialog settingsDialog(this);
     settingsDialog.switchToPage(4);
     settingsDialog.exec();

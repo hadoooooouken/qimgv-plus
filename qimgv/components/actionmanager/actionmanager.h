@@ -118,6 +118,9 @@ signals:
     void pasteFile();
     void togglePanorama();
     void colorAdjustments();
+#ifdef USE_UPSCAYL
+    void toggleUpscayl();
+#endif
 };
 
 extern ActionManager *actionManager;

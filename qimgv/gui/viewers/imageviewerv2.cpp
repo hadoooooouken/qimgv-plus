@@ -185,7 +185,21 @@ void ImageViewerV2::readSettings() {
   onFullscreenModeChanged(mIsFullscreen);
   updateMinScale();
   setScalingFilter(settings->scalingFilter());
-  setFitMode(imageFitModeDefault);
+  if (isDisplaying()) {
+    if (imageFitMode == FIT_FREE) {
+      if (currentScale() < minScale) {
+        doZoom(minScale);
+        centerIfNecessary();
+        snapToEdges();
+      }
+      requestScaling();
+    } else {
+      applyFitMode();
+      requestScaling();
+    }
+  } else {
+    setFitMode(imageFitModeDefault);
+  }
 }
 
 void ImageViewerV2::onFullscreenModeChanged(bool mode) {
@@ -1640,6 +1654,7 @@ void ImageViewerV2::togglePanorama() {
     return;
   mPanoramaMode = !mPanoramaMode;
   if (mPanoramaMode) {
+    hideUpscaledCrop();
     pixmapItem.hide();
     pixmapItemScaled.hide();
     panoramaItem->setPixmap(pixmap);
@@ -1699,6 +1714,8 @@ QRect ImageViewerV2::visibleOriginalImageRect() const {
 }
 
 void ImageViewerV2::setUpscaledCrop(const QImage &cropImg, QRect origCrop) {
+  if (mPanoramaMode)
+    return;
   if (!pixmap || pixmap->isNull() || origCrop.isEmpty())
     return;
 

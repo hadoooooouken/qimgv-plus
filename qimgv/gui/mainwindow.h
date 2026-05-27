@@ -74,6 +74,7 @@ public:
   QPixmap currentScaledPixmapCopy() const;
   float getDpr() const;
   float currentScale() const;
+  bool panoramaMode() const;
 
   void setCurrentInfo(int fileIndex, int fileCount, QString filePath,
                       QString fileName, QSize imageSize, qint64 fileSize,
@@ -256,4 +257,7 @@ public slots:
   void toggleLockView();
   void toggleFullscreenInfoBar();
   void togglePanorama();
+#ifdef USE_UPSCAYL
+  void toggleUpscayl();
+#endif
 };

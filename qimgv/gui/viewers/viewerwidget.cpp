@@ -114,6 +114,10 @@ void ViewerWidget::disableImageViewer() {
 void ViewerWidget::onScaleChanged(qreal scale) {
     if(!this->isVisible())
         return;
+    if(imageViewer && imageViewer->panoramaMode()) {
+        zoomIndicator->hide();
+        return;
+    }
     zoomIndicator->setScale(scale);
     if(settings->zoomIndicatorMode() == ZoomIndicatorMode::INDICATOR_ENABLED) {
         zoomIndicator->show();
@@ -441,7 +445,12 @@ void ViewerWidget::leaveEvent(QEvent *event) {
     QWidget::leaveEvent(event);
 }
 
-void ViewerWidget::togglePanorama() { imageViewer->togglePanorama(); }
+void ViewerWidget::togglePanorama() {
+    imageViewer->togglePanorama();
+    if(imageViewer && imageViewer->panoramaMode()) {
+        zoomIndicator->hide();
+    }
+}
 
 void ViewerWidget::setColorAdjustments(float brightness, float contrast, float saturation, float hue) {
     if(imageViewer)

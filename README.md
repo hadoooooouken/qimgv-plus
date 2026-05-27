@@ -73,6 +73,8 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 | Folder view | Enter / Backspace |
 | Open | Ctrl+O |
 | Print / Export PDF | Ctrl+P |
+| Toggle scaling filter (nearest / configured) | N |
+| Toggle Use Upscayl | Alt+I |
 | Settings  | P |
 | Exit application | Esc / Ctrl+Q / Alt+X / MiddleClick |
 | Toggle panorama mode | Shift+P |

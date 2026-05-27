@@ -462,6 +462,10 @@ void Core::initActions() {
           &Core::toggleShuffle);
   connect(actionManager, &ActionManager::toggleScalingFilter, mw,
           &MW::toggleScalingFilter);
+#ifdef USE_UPSCAYL
+  connect(actionManager, &ActionManager::toggleUpscayl, mw,
+          &MW::toggleUpscayl);
+#endif
   connect(actionManager, &ActionManager::showInDirectory, this,
           &Core::showInDirectory);
   connect(actionManager, &ActionManager::toggleSlideshow, this,
@@ -1503,7 +1507,14 @@ void Core::onScalingFinished(QPixmap *scaled, ScalerRequest req) {
       req.path == state.currentFilePath) {
     mw->onScalingFinished(std::unique_ptr<QPixmap>(scaled));
 #ifdef USE_UPSCAYL
-    if (settings->useUpscayl() && req.image &&
+    if (mw->panoramaMode()) {
+      mw->hideUpscaledCrop();
+      upscaylTimer.stop();
+      pendingUpscaylImage.reset();
+      pendingUpscaylPath = "";
+      upscaylActive = false;
+      upscaylPendingRun = false;
+    } else if (settings->useUpscayl() && req.image &&
         req.image->type() == DocumentType::STATIC) {
       // qDebug() << "[Upscayl] scaling finished: req.size" << req.size
       //          << "image size" << req.image->width() << "x"
@@ -1544,6 +1555,10 @@ void Core::onScalingFinished(QPixmap *scaled, ScalerRequest req) {
 
 #ifdef USE_UPSCAYL
 void Core::onUpscaylTimerTimeout() {
+  if (mw->panoramaMode()) {
+    mw->hideUpscaledCrop();
+    return;
+  }
   if (state.hasActiveImage && pendingUpscaylImage &&
       pendingUpscaylPath == state.currentFilePath) {
     bool limitExceeded = true;
@@ -1581,12 +1596,11 @@ void Core::triggerUpscaylProcessing(std::shared_ptr<Image> image,
   // Get the visible crop region in the ORIGINAL image space
   QRect origCrop = mw->visibleOriginalImageRect();
 
-  // Align width and height of origCrop to multiples of 32 to prevent Vulkan/ncnn
-  // shape mismatch errors (which cause silent black output on odd/non-divisible dimensions)
-  int alignedW = (origCrop.width() / 32) * 32;
-  int alignedH = (origCrop.height() / 32) * 32;
-  if (alignedW < 32) alignedW = 32;
-  if (alignedH < 32) alignedH = 32;
+  // Align width and height of origCrop to multiples of 2 to prevent any odd-dimension issues
+  int alignedW = (origCrop.width() / 2) * 2;
+  int alignedH = (origCrop.height() / 2) * 2;
+  if (alignedW < 2) alignedW = 2;
+  if (alignedH < 2) alignedH = 2;
   origCrop.setWidth(alignedW);
   origCrop.setHeight(alignedH);
 
@@ -1616,18 +1630,23 @@ void Core::triggerUpscaylProcessing(std::shared_ptr<Image> image,
   // Cap the crop resolution to prevent Vulkan/GPU out-of-memory or driver
   // crashes
   if (croppedImg.width() > 1280 || croppedImg.height() > 1280) {
+    // Calculate precise scaling factor before downscaling
+    double scaleFactor = (std::min)(1280.0 / origCrop.width(), 1280.0 / origCrop.height());
     // qDebug() << "[Upscayl] crop too large, downscaling to safe limit:"
     //          << croppedImg.size() << "-> 1280 max";
     croppedImg = croppedImg.scaled(1280, 1280, Qt::KeepAspectRatio,
                                    Qt::SmoothTransformation);
-    // Re-align downscaled dimensions to multiples of 32
-    int w = (croppedImg.width() / 32) * 32;
-    int h = (croppedImg.height() / 32) * 32;
-    if (w < 32) w = 32;
-    if (h < 32) h = 32;
+    // Re-align downscaled dimensions to multiples of 2
+    int w = (croppedImg.width() / 2) * 2;
+    int h = (croppedImg.height() / 2) * 2;
+    if (w < 2) w = 2;
+    if (h < 2) h = 2;
     if (w != croppedImg.width() || h != croppedImg.height()) {
       croppedImg = croppedImg.copy(0, 0, w, h);
     }
+    // Update origCrop to match the scaled and cropped bounds exactly, preventing misalignment/stretching of overlay
+    origCrop.setWidth(qRound(w / scaleFactor));
+    origCrop.setHeight(qRound(h / scaleFactor));
   }
 
   latestUpscaylSize = targetSize;
@@ -1653,6 +1672,10 @@ void Core::onUpscaleFinished(QImage cropImg, QRect origCrop, QString path,
                              QSize targetSize) {
   upscaylActive = false;
   mw->hideMessage();
+  if (mw->panoramaMode()) {
+    mw->hideUpscaledCrop();
+    return;
+  }
   if (cropImg.isNull()) {
     qDebug() << "[Upscayl] onUpscaleFinished: null image";
     if (upscaylPendingRun && state.hasActiveImage && pendingUpscaylImage &&

@@ -33,6 +33,7 @@ public:
     void onScalingFinished(std::unique_ptr<QPixmap> scaled);
     void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
     void hideUpscaledCrop();
+    bool panoramaMode() const { return imageViewer ? imageViewer->panoramaMode() : false; }
     bool isDisplaying();
     bool lockZoomEnabled();
     bool lockViewEnabled();
