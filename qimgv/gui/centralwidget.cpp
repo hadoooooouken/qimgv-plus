@@ -13,7 +13,14 @@ CentralWidget::CentralWidget(std::shared_ptr<DocumentWidget> _docWidget, std::sh
     addWidget(documentView.get());
     if(folderView)
         addWidget(folderView.get());
-    showDocumentView();
+
+    if (settings->defaultViewMode() == MODE_FOLDERVIEW) {
+        mode = MODE_DOCUMENT;
+        showFolderView();
+    } else {
+        mode = MODE_FOLDERVIEW;
+        showDocumentView();
+    }
 }
 
 void CentralWidget::showDocumentView() {

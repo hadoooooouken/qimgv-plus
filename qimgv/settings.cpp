@@ -457,17 +457,7 @@ SortingMode Settings::folderIconSortingMode() {
   return static_cast<SortingMode>(mode);
 }
 //------------------------------------------------------------------------------
-FolderViewMode Settings::folderViewMode() {
-  int mode = settings->settingsConf->value("folderViewMode", 2).toInt();
-  if (mode < 0 || mode >= 3)
-    mode = 2;
-  return static_cast<FolderViewMode>(mode);
-}
 
-void Settings::setFolderViewMode(FolderViewMode mode) {
-  settings->settingsConf->setValue("folderViewMode", mode);
-}
-//------------------------------------------------------------------------------
 ThumbPanelStyle Settings::thumbPanelStyle() {
   int mode = settings->settingsConf->value("thumbPanelStyle", 0).toInt();
   if (mode < 0 || mode > 1)

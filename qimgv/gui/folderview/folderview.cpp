@@ -17,8 +17,6 @@ FolderView::FolderView(QWidget *parent) :
     style = style.arg(QApplication::font().pointSize());
     ui->dirTreeView->setStyleSheet(style);
 
-    optionsPopup = new FVOptionsPopup(this);
-    popupTimerClutch.start();
 
     dirModel = new FileSystemModelCustom(this);
     dirModel->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
@@ -45,8 +43,6 @@ FolderView::FolderView(QWidget *parent) :
     ui->togglePlacesPanelButton->setIconPath(":res/icons/common/buttons/panel/toggle-panel20.png");
     ui->togglePlacesPanelButton->setIconOffset(1, 0);
 
-    ui->optionsPopupButton->setCheckable(true);
-    ui->optionsPopupButton->setIconPath(":res/icons/common/buttons/panel/folderview20.png");
 
     ui->sortingComboBox->setIconPath(":res/icons/common/other/sorting-mode16.png");
     ui->folderSortingComboBox->setIconPath(":/res/icons/common/menuitem/document-view16.png");
@@ -91,9 +87,6 @@ FolderView::FolderView(QWidget *parent) :
     connect(ui->folderSortingComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &FolderView::onFolderSortingSelected);
     connect(ui->togglePlacesPanelButton, &ActionButton::toggled, this, &FolderView::onPlacesPanelButtonChecked);
 
-    connect(ui->optionsPopupButton, &IconButton::toggled, this, &FolderView::onOptionsPopupButtonToggled);
-    connect(optionsPopup, &FVOptionsPopup::dismissed, this, &FolderView::onOptionsPopupDismissed);
-    connect(optionsPopup, &FVOptionsPopup::viewModeSelected, this, &FolderView::onViewModeSelected);
 
     connect(ui->dirTreeView, &TreeViewCustom::droppedIn, this, &FolderView::onDroppedInByIndex);
     connect(ui->dirTreeView, &TreeViewCustom::tabbedOut, this, &FolderView::onTreeViewTabOut);
@@ -123,7 +116,7 @@ void FolderView::readSettings() {
         lastThumbnailResolution = currentRes;
     }
     ui->thumbnailGrid->setThumbnailSize(settings->folderViewIconSize());
-    ui->thumbnailGrid->setShowLabels((settings->folderViewMode() != FV_SIMPLE));
+    ui->thumbnailGrid->setShowLabels(true);
     ui->togglePlacesPanelButton->setChecked(settings->placesPanel());
 
     ui->folderSortingComboBox->blockSignals(true);
@@ -179,31 +172,6 @@ void FolderView::onDroppedInByIndex(QList<QString> paths, QModelIndex index) {
     emit moveUrlsRequested(paths, dirModel->filePath(index));
 }
 
-void FolderView::onOptionsPopupButtonToggled(bool mode) {
-    if(mode) {
-        // Fixes popup being shown again right after dismissing it
-        // by clicking on this toggle button.
-        // This issue is only present on windows (different Qt::Popup behavior)
-        if(popupTimerClutch.elapsed() < 10) {
-            ui->optionsPopupButton->setChecked(false);
-            return;
-        }
-        QPoint pos = ui->optionsPopupButton->geometry().bottomRight() -
-                     QPoint(optionsPopup->width(), 0);
-        optionsPopup->showAt(mapToGlobal(pos));
-    }
-}
-
-void FolderView::onOptionsPopupDismissed() {
-    popupTimerClutch.start();
-    ui->optionsPopupButton->setChecked(false);
-}
-
-void FolderView::onViewModeSelected(FolderViewMode mode) {
-    settings->setFolderViewMode(mode);
-    ui->thumbnailGrid->setShowLabels((settings->folderViewMode() != FV_SIMPLE));
-    emit showFoldersChanged((mode == FV_EXT_FOLDERS));
-}
 
 void FolderView::onThumbnailSizeChanged(int newSize) {
     ui->zoomSlider->setValue(newSize / ui->thumbnailGrid->ZOOM_STEP);

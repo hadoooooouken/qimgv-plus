@@ -73,7 +73,6 @@ enum FolderEndAction {
   FOLDER_END_GOTO_ADJACENT
 };
 
-enum FolderViewMode { FV_SIMPLE, FV_EXTENDED, FV_EXT_FOLDERS };
 
 enum ThumbPanelStyle { TH_PANEL_SIMPLE, TH_PANEL_EXTENDED };
 
@@ -234,8 +233,6 @@ public:
   bool confirmTrash();
   void setConfirmTrash(bool mode);
 
-  FolderViewMode folderViewMode();
-  void setFolderViewMode(FolderViewMode mode);
 
   bool printLandscape();
   void setPrintLandscape(bool mode);

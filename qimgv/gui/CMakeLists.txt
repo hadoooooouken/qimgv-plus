@@ -76,7 +76,6 @@ target_sources(qimgv-plus PRIVATE
     folderview/treeviewcustom.cpp
     folderview/bookmarkswidget.cpp
     folderview/bookmarksitem.cpp
-    folderview/fvoptionspopup.cpp
 )
 
 # UI Files
@@ -106,5 +105,4 @@ target_sources(qimgv-plus PRIVATE
     panels/infobar/infobar.ui
 
     folderview/folderview.ui
-    folderview/fvoptionspopup.ui
 )

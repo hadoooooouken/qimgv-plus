@@ -13,7 +13,6 @@
 #include "gui/folderview/bookmarkswidget.h"
 #include "gui/customwidgets/actionbutton.h"
 #include "gui/customwidgets/styledcombobox.h"
-#include "gui/folderview/fvoptionspopup.h"
 
 namespace Ui {
     class FolderView;
@@ -89,10 +88,6 @@ private slots:
     void newBookmark();
     void fsTreeScrollToCurrent();
 
-    void onOptionsPopupButtonToggled(bool mode);
-    void onOptionsPopupDismissed();
-    void onViewModeSelected(FolderViewMode mode);
-
     void onSplitterMoved();
     void onHomeBtn();
     void onRootBtn();
@@ -102,6 +97,5 @@ private:
     int lastThumbnailResolution = 256;
     Ui::FolderView *ui;
     FileSystemModelCustom *dirModel;
-    FVOptionsPopup *optionsPopup;
     QElapsedTimer popupTimerClutch;
 };

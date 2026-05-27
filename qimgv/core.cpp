@@ -255,7 +255,7 @@ void Core::readSettings() {
   loopSlideshow = settings->loopSlideshow();
   folderEndAction = settings->folderEndAction();
   slideshowTimer.setInterval(settings->slideshowInterval());
-  bool showDirs = (settings->folderViewMode() == FV_EXT_FOLDERS);
+  bool showDirs = true;
   if (folderViewPresenter.showDirs() != showDirs)
     folderViewPresenter.setShowDirs(showDirs);
 
@@ -310,7 +310,7 @@ void Core::attachModel(DirectoryModel *_model) {
   model.reset(_model);
   thumbPanelPresenter.setModel(model);
   folderViewPresenter.setModel(model);
-  bool showDirs = (settings->folderViewMode() == FV_EXT_FOLDERS);
+  bool showDirs = true;
   folderViewPresenter.setShowDirs(showDirs);
   if (shuffle)
     syncRandomizer();
