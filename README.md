@@ -48,7 +48,6 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 | Fit mode: window stretch | 4 |
 | Switch fit modes  | Space |
 | Toggle fullscreen mode  | DoubleClick / F / F11 |
-| Exit fullscreen mode | Esc |
 | Show EXIF panel  | I |
 | Crop image  | X |
 | Resize image  | R |
@@ -72,13 +71,13 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 | Reload image | F5 |
 | Next directory | Shift+Right |
 | Previous directory | Shift+Left |
-| Folder view | Enter / Backspace |
+| Folder view | Backspace / Esc / MiddleClick |
 | Open | Ctrl+O |
 | Print / Export PDF | Ctrl+P |
 | Toggle scaling filter (nearest / configured) | N |
 | Toggle Use Upscayl | Alt+I |
 | Settings  | P |
-| Exit application | Esc / Ctrl+Q / Alt+X / MiddleClick |
+| Exit application | Ctrl+Q / Alt+X |
 | Toggle panorama mode | Shift+P |
 | Panorama: Look around | Click & drag mouse (360° view) |
 | Panorama: Zoom | MouseWheel (360° view) |
@@ -131,7 +130,10 @@ qimgv-plus supports high-quality, OpenCV-accelerated CPU scaling filters:
 qimgv-plus integrates **[upscayl-ncnn](https://github.com/upscayl/upscayl-ncnn) (NCNN/Vulkan & RealESRGAN)** for real-time AI image upscaling:
 - **Viewport Crop Upscaling**: Conserves GPU resources and VRAM by upscaling only the currently visible region of the image.
 - **Vulkan GPU Acceleration**: Heavy lifting is performed on background GPU threads, ensuring the main user interface remains smooth and interactive.
-- **Model Options**: Supports three 4x upscaling models: `remacri-4x` (default), `high-fidelity-4x` (for fine texture details), and `upscayl-lite-4x` (fast and lightweight).
+- **Model Options**: Supports three 4x upscaling models:
+  * `remacri-4x` (Default): Punchy and sharp with enhanced contrast; ideal for photos and digital art.
+  * `high-fidelity-4x`: Produces smoother, more natural results and preserves original textures.
+  * `upscayl-lite-4x`: Fast and lightweight model for quicker processing.
 - **VRAM Safety & Limits**: Auto-tile detection and input limits prevent out-of-memory errors on a wide range of GPUs.
 - **Vulkan Preloading**: An optional pre-warm feature processes a dummy texture at startup to pre-allocate memory and eliminate initial rendering lag.
 - **Hotkey**: Press **`Alt + I`** to instantly toggle AI upscaling.

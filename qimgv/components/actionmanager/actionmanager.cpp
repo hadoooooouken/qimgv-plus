@@ -31,6 +31,7 @@ void ActionManager::initDefaults() {
   actionManager->defaults.insert("LMB_DoubleClick", "fitNormal");
   actionManager->defaults.insert("MiddleButton", "folderView");
   actionManager->defaults.insert("Backspace", "folderView");
+  actionManager->defaults.insert("Esc", "folderView");
   actionManager->defaults.insert("Space", "toggleFitMode");
   actionManager->defaults.insert("1", "fitWindow");
   actionManager->defaults.insert("2", "fitWidth");
@@ -63,7 +64,6 @@ void ActionManager::initDefaults() {
   actionManager->defaults.insert(InputMap::keyNameCtrl() + "+P", "print");
   actionManager->defaults.insert(InputMap::keyNameAlt() + "+X", "exit");
   actionManager->defaults.insert(InputMap::keyNameCtrl() + "+Q", "exit");
-  actionManager->defaults.insert("Esc", "closeFullScreenOrExit");
   actionManager->defaults.insert("Del", "moveToTrash");
   actionManager->defaults.insert(InputMap::keyNameShift() + "+Del",
                                  "removeFile");
@@ -106,9 +106,6 @@ void ActionManager::initDefaults() {
 //------------------------------------------------------------------------------
 void ActionManager::initShortcuts() {
   actionManager->readShortcuts();
-  if (actionManager->shortcuts.isEmpty()) {
-    actionManager->resetDefaults();
-  }
 }
 //------------------------------------------------------------------------------
 void ActionManager::addShortcut(const QString &keys, const QString &action) {
@@ -232,6 +229,9 @@ inline ActionType ActionManager::validateAction(const QString &actionName) {
 //------------------------------------------------------------------------------
 void ActionManager::readShortcuts() {
   settings->readShortcuts(shortcuts);
+  if (shortcuts.isEmpty()) {
+    resetDefaults();
+  }
   actionManager->validateShortcuts();
 
   // If the user doesn't have a shortcut for toggleScalingFilter, and "N" is not bound to anything else,
