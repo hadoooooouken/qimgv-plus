@@ -215,6 +215,11 @@ void ViewerWidget::setUpscaledCrop(const QImage &cropImg, QRect origCrop) {
     imageViewer->setUpscaledCrop(cropImg, origCrop);
 }
 
+void ViewerWidget::hideUpscaledCrop() {
+    if (imageViewer)
+        imageViewer->hideUpscaledCrop();
+}
+
 void ViewerWidget::closeImage() {
     imageViewer->closeImage();
     showCursor();

@@ -97,6 +97,10 @@ public:
   void setPreloadUpscayl(bool mode);
   QString upscaylModel();
   void setUpscaylModel(const QString &model);
+  bool upscaylLimitEnabled();
+  void setUpscaylLimitEnabled(bool enabled);
+  int upscaylLimitValue();
+  void setUpscaylLimitValue(int value);
 #endif
   bool fullscreenMode();
   void setFullscreenMode(bool mode);

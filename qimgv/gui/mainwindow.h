@@ -65,6 +65,7 @@ public:
   bool isCropPanelActive();
   void onScalingFinished(std::unique_ptr<QPixmap> scaled);
   void onUpscaleFinished(const QImage &cropImg, QRect origCrop);
+  void hideUpscaledCrop();
   void showImage(std::unique_ptr<QPixmap> pixmap, QString filePath = "");
   void showAnimation(std::shared_ptr<QMovie> movie);
 
@@ -221,6 +222,7 @@ public slots:
   void triggerCopyOverlay();
   void showMessage(QString text);
   void showMessage(QString text, int duration);
+  void hideMessage();
   void showMessageSuccess(QString text);
   void showWarning(QString text);
   void showError(QString text);

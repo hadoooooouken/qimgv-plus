@@ -525,6 +525,22 @@ QString Settings::upscaylModel() {
 void Settings::setUpscaylModel(const QString &model) {
   settings->settingsConf->setValue("upscaylModel", model);
 }
+
+bool Settings::upscaylLimitEnabled() {
+  return settings->settingsConf->value("upscaylLimitEnabled", false).toBool();
+}
+
+void Settings::setUpscaylLimitEnabled(bool enabled) {
+  settings->settingsConf->setValue("upscaylLimitEnabled", enabled);
+}
+
+int Settings::upscaylLimitValue() {
+  return settings->settingsConf->value("upscaylLimitValue", 200).toInt();
+}
+
+void Settings::setUpscaylLimitValue(int value) {
+  settings->settingsConf->setValue("upscaylLimitValue", value);
+}
 //------------------------------------------------------------------------------
 #endif
 bool Settings::keepFitMode() {

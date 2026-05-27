@@ -11,6 +11,24 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->preloadUpscaylCheckBox, &QCheckBox::setEnabled);
   connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->upscaylModelComboBox, &QComboBox::setEnabled);
   connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->label_upscaylModel, &QLabel::setEnabled);
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->upscaylLimitCheckBox, &QCheckBox::setEnabled);
+
+  auto updateLimitControls = [this]() {
+    bool enabled = ui->useUpscaylCheckBox->isChecked() && ui->upscaylLimitCheckBox->isChecked();
+    ui->upscaylLimitSlider->setEnabled(enabled);
+    ui->upscaylLimitValueLabel->setEnabled(enabled);
+  };
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, this, updateLimitControls);
+  connect(ui->upscaylLimitCheckBox, &QCheckBox::toggled, this, updateLimitControls);
+
+  connect(ui->upscaylLimitSlider, &QSlider::valueChanged, this, [this](int value) {
+    int snapped = ((value + 2) / 5) * 5;
+    if (snapped != value) {
+      ui->upscaylLimitSlider->setValue(snapped);
+      return;
+    }
+    ui->upscaylLimitValueLabel->setText(QString::number(snapped) + "%");
+  });
 
   ui->upscaylModelComboBox->addItem("remacri-4x");
   ui->upscaylModelComboBox->addItem("high-fidelity-4x");
@@ -274,6 +292,15 @@ void SettingsDialog::readSettings() {
   } else {
     ui->upscaylModelComboBox->setCurrentText("remacri-4x");
   }
+
+  ui->upscaylLimitCheckBox->setChecked(settings->upscaylLimitEnabled());
+  ui->upscaylLimitSlider->setValue(settings->upscaylLimitValue());
+  ui->upscaylLimitValueLabel->setText(QString::number(settings->upscaylLimitValue()) + "%");
+
+  ui->upscaylLimitCheckBox->setEnabled(settings->useUpscayl());
+  bool limitEnabled = settings->useUpscayl() && settings->upscaylLimitEnabled();
+  ui->upscaylLimitSlider->setEnabled(limitEnabled);
+  ui->upscaylLimitValueLabel->setEnabled(limitEnabled);
 #endif
 
   ui->autoResizeWindowCheckBox->setChecked(settings->autoResizeWindow());
@@ -459,6 +486,8 @@ void SettingsDialog::saveSettings() {
   settings->setUseUpscayl(ui->useUpscaylCheckBox->isChecked());
   settings->setPreloadUpscayl(ui->preloadUpscaylCheckBox->isChecked());
   settings->setUpscaylModel(ui->upscaylModelComboBox->currentText());
+  settings->setUpscaylLimitEnabled(ui->upscaylLimitCheckBox->isChecked());
+  settings->setUpscaylLimitValue(ui->upscaylLimitSlider->value());
 #endif
 
   settings->setAutoResizeWindow(ui->autoResizeWindowCheckBox->isChecked());

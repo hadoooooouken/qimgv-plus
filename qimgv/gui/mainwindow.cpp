@@ -434,6 +434,12 @@ void MW::onUpscaleFinished(const QImage &cropImg, QRect origCrop) {
     viewerWidget->setUpscaledCrop(cropImg, origCrop);
 }
 
+void MW::hideUpscaledCrop() {
+    if (viewerWidget) {
+        viewerWidget->hideUpscaledCrop();
+    }
+}
+
 QRect MW::visibleImageRect() const {
     if (viewerWidget) {
         return viewerWidget->visibleImageRect();
@@ -1020,6 +1026,12 @@ void MW::showMessage(QString text) {
 
 void MW::showMessage(QString text, int duration) {
     floatingMessage->showMessage(text, FloatingMessageIcon::NO_ICON, duration);
+}
+
+void MW::hideMessage() {
+    if(floatingMessage) {
+        floatingMessage->hide();
+    }
 }
 
 void MW::showMessageSuccess(QString text) {

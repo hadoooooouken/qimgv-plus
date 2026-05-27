@@ -32,6 +32,7 @@ public:
     bool showAnimation(std::shared_ptr<QMovie> movie);
     void onScalingFinished(std::unique_ptr<QPixmap> scaled);
     void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
+    void hideUpscaledCrop();
     bool isDisplaying();
     bool lockZoomEnabled();
     bool lockViewEnabled();

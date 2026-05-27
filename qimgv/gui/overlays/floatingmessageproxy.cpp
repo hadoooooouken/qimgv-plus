@@ -27,3 +27,9 @@ void FloatingMessageProxy::init() {
     overlay = new FloatingMessage(container);
 }
 
+void FloatingMessageProxy::hide() {
+    if(overlay) {
+        overlay->hideAnimated();
+    }
+}
+
