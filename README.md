@@ -1,4 +1,4 @@
-qimgv-plus | Current version: 1.0.5.0
+qimgv-plus | Current version: 2.0.0
 ==========
 A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image viewer, featuring high-quality CPU-accelerated scaling and native support for modern image formats.
 
@@ -7,6 +7,8 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 - **Simple UI & Fast**: Lightweight and extremely responsive interface.
 
 - **Smart Sharpen Scaling (OpenCV)**: High-quality, fast scaling performed on the CPU using OpenCV. The default "Smart sharpen" mode combines Bicubic upscaling with a custom cross-kernel sharpening pass, and Area downscaling with an anti-aliasing Gaussian unsharp mask, ensuring maximum texture detail without jagged edges.
+
+- **Real-Time AI Upscaling (Upscayl)**: Real-time AI image upscaling powered by **[upscayl-ncnn](https://github.com/upscayl/upscayl-ncnn) (NCNN/Vulkan & RealESRGAN)**. Upscales only the visible viewport crop to conserve VRAM, using background threads to keep the UI fully responsive. Includes an optional preloading mechanism to warm up Vulkan shader pipelines and eliminate startup latency.
 
 - **Real-Time Color Adjustments**: Instant, lag-free adjustments of Brightness, Contrast, Saturation, and Hue calculated on the graphics card via shaders. Accessible via the right-click context menu while viewing an image.
 
@@ -123,6 +125,16 @@ When you've created your script go to __Settings > Controls > Add__, then select
 qimgv-plus supports high-quality, OpenCV-accelerated CPU scaling filters:
 - **Smart sharpen (OpenCV)** (Default): The ultimate scaling mode. For upscaling, it uses Bicubic interpolation combined with a $0.25$ strength cross-kernel sharpening pass. For downscaling, it uses Area relation interpolation with a $0.15$ strength Gaussian unsharp mask to restore textures without introducing aliasing.
 - **Standard Filters**: Custom high-quality options include Bicubic, Lanczos, Bilinear+sharpen, and Area scaling.
+
+## Real-Time AI Upscaling
+
+qimgv-plus integrates **[upscayl-ncnn](https://github.com/upscayl/upscayl-ncnn) (NCNN/Vulkan & RealESRGAN)** for real-time AI image upscaling:
+- **Viewport Crop Upscaling**: Conserves GPU resources and VRAM by upscaling only the currently visible region of the image.
+- **Vulkan GPU Acceleration**: Heavy lifting is performed on background GPU threads, ensuring the main user interface remains smooth and interactive.
+- **Model Options**: Supports three 4x upscaling models: `remacri-4x` (default), `high-fidelity-4x` (for fine texture details), and `upscayl-lite-4x` (fast and lightweight).
+- **VRAM Safety & Limits**: Auto-tile detection and input limits prevent out-of-memory errors on a wide range of GPUs.
+- **Vulkan Preloading**: An optional pre-warm feature processes a dummy texture at startup to pre-allocate memory and eliminate initial rendering lag.
+- **Hotkey**: Press **`Alt + I`** to instantly toggle AI upscaling.
 
 # Supported Image Formats
 
