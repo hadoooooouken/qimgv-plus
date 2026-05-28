@@ -811,10 +811,14 @@ void Core::openFromClipboard() {
     QString ext = fi.suffix();
     int quality = 95;
     if (ext.compare("png", Qt::CaseInsensitive) == 0)
-      quality = 30;
+      quality = settings->pngSaveQuality() * 10;
     else if (ext.compare("jpg", Qt::CaseInsensitive) == 0 ||
              ext.compare("jpeg", Qt::CaseInsensitive) == 0)
       quality = settings->JPEGSaveQuality();
+    else if (ext.compare("jxl", Qt::CaseInsensitive) == 0 ||
+             ext.compare("webp", Qt::CaseInsensitive) == 0 ||
+             ext.compare("avif", Qt::CaseInsensitive) == 0)
+      quality = settings->modernSaveQuality();
 
     bool backupExists = false, success = false, originalExists = false;
 
@@ -1311,9 +1315,41 @@ void Core::rotateByDegrees(int degrees) {
                 {ImageLib::rotated}, degrees);
 }
 
-void Core::resize(QSize size) {
-  edit_template(false, tr("Resize"), {ImageLib::scaled}, size,
-                QI_FILTER_BILINEAR);
+void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString upscaylModel) {
+#ifdef USE_UPSCAYL
+  if (useUpscayl) {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    std::function<QImage *(std::shared_ptr<const QImage>)> editFunc = [size, filter, upscaylModel](std::shared_ptr<const QImage> source) -> QImage * {
+      if (!source) return nullptr;
+      QString appDir = QCoreApplication::applicationDirPath();
+      QString oldModel = settings->upscaylModel();
+      settings->setUpscaylModel(upscaylModel);
+      QImage upscaled;
+      if (UpscaylScaler::getInstance()->init(appDir)) {
+          upscaled = UpscaylScaler::getInstance()->upscale(*source);
+      }
+      settings->setUpscaylModel(oldModel);
+      if (upscaled.isNull()) {
+          return new QImage(*source);
+      }
+      // If the target size is not equal to the 4x upscaled size, scale it to the requested size
+      if (upscaled.size() != size) {
+          std::shared_ptr<const QImage> upscaledPtr = std::make_shared<const QImage>(upscaled);
+          QImage *finalImg = ImageLib::scaled(upscaledPtr, size, filter);
+          return finalImg;
+      }
+      return new QImage(upscaled);
+    };
+    edit_template(false, tr("Resize (AI)"), {editFunc});
+    QApplication::restoreOverrideCursor();
+    return;
+  }
+#else
+  Q_UNUSED(useUpscayl);
+  Q_UNUSED(upscaylModel);
+#endif
+
+  edit_template(false, tr("Resize"), {ImageLib::scaled}, size, filter);
 }
 
 void Core::crop(QRect rect) {

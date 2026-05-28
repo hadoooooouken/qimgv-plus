@@ -663,25 +663,10 @@ QString MW::getSaveFileName(QString filePath) {
     if(writerFormats.contains("jpg"))  filters.append("JPEG (*.jpg *.jpeg *jpe *jfif)");
     if(writerFormats.contains("png"))  filters.append("PNG (*.png)");
     if(writerFormats.contains("webp")) filters.append("WebP (*.webp)");
-    // may not work..
-    if(writerFormats.contains("jp2"))  filters.append("JPEG 2000 (*.jp2 *.j2k *.jpf *.jpx *.jpm *.jpgx)");
     if(writerFormats.contains("jxl"))  filters.append("JPEG-XL (*.jxl)");
     if(writerFormats.contains("avif")) filters.append("AVIF (*.avif *.avifs)");
-    if(writerFormats.contains("tif"))  filters.append("TIFF (*.tif *.tiff)");
     if(writerFormats.contains("bmp"))  filters.append("BMP (*.bmp)");
-#ifdef _WIN32
-    if(writerFormats.contains("ico"))  filters.append("Icon Files (*.ico)");
-#endif
-    if(writerFormats.contains("ppm"))  filters.append("PPM (*.ppm)");
-    if(writerFormats.contains("xbm"))  filters.append("XBM (*.xbm)");
-    if(writerFormats.contains("xpm"))  filters.append("XPM (*.xpm)");
-    if(writerFormats.contains("dds"))  filters.append("DDS (*.dds)");
-    if(writerFormats.contains("wbmp")) filters.append("WBMP (*.wbmp)");
-    // add everything else from imagewriter
-    for(const auto &fmt : std::as_const(writerFormats)) {
-        if(filters.filter(fmt).isEmpty())
-            filters.append(fmt.toUpper() + " (*." + fmt + ")");
-    }
+    if(writerFormats.contains("tif"))  filters.append("TIFF (*.tif *.tiff)");
     QString filterString = filters.join(";; ");
 
     // find matching filter for the current image

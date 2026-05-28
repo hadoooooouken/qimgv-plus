@@ -12,6 +12,9 @@
 #include <QRadioButton>
 #include <QSpinBox>
 #include <QVBoxLayout>
+#include <QComboBox>
+
+#include "settings.h"
 
 namespace Ui {
     class ResizeDialog;
@@ -37,6 +40,11 @@ private:
     void updateToTargetValues();
     int lastEdited; // 0 - width, 1 - height
     void resetResCheckBox();
+#ifdef USE_UPSCAYL
+    QCheckBox *useUpscaylCheckBox = nullptr;
+    QComboBox *upscaylModelComboBox = nullptr;
+    QLabel *upscaylModelLabel = nullptr;
+#endif
 
 private slots:
     void widthChanged(int);
@@ -52,5 +60,5 @@ private slots:
     void onPercentageRadioButton();
     void onAbsoluteSizeRadioButton();
 signals:
-    void sizeSelected(QSize);
+    void sizeSelected(QSize, ScalingFilter, bool, QString);
 };

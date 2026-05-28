@@ -100,6 +100,8 @@ public:
   void setUpscaylLimitEnabled(bool enabled);
   int upscaylLimitValue();
   void setUpscaylLimitValue(int value);
+  bool resizeUseUpscayl();
+  void setResizeUseUpscayl(bool enabled);
 #endif
   bool fullscreenMode();
   void setFullscreenMode(bool mode);
@@ -186,6 +188,10 @@ public:
   void setZoomStep(float value);
   int JPEGSaveQuality();
   void setJPEGSaveQuality(int value);
+  int pngSaveQuality();
+  void setPngSaveQuality(int value);
+  int modernSaveQuality();
+  void setModernSaveQuality(int value);
   void setZoomIndicatorMode(ZoomIndicatorMode mode);
   ZoomIndicatorMode zoomIndicatorMode();
   void setFocusPointIn1to1Mode(ImageFocusPoint mode);

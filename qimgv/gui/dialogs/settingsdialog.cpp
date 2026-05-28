@@ -183,6 +183,60 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   ui->langComboBox->insertItem(0, "System language");
 
   connect(ui->thumbnailResolutionSlider, &QSlider::valueChanged, this, &SettingsDialog::onThumbnailResolutionSliderChanged);
+
+  // Modern formats quality row
+  QHBoxLayout *modernLayout = new QHBoxLayout();
+  modernLayout->setContentsMargins(0, 0, 0, 0);
+  QLabel *modernTitleLabel = new QLabel(tr("Modern formats quality (WebP, JXL, AVIF):"), this);
+  modernQualitySlider = new QSlider(Qt::Horizontal, this);
+  modernQualitySlider->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  modernQualitySlider->setMinimumSize(180, 25);
+  modernQualitySlider->setRange(0, 100);
+  modernQualitySlider->setPageStep(5);
+  modernQualitySlider->setTickPosition(QSlider::TicksBelow);
+  modernQualitySlider->setTickInterval(10);
+  modernQualityLabel = new QLabel(this);
+  QSpacerItem *modernSpacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+  modernLayout->addWidget(modernTitleLabel);
+  modernLayout->addWidget(modernQualitySlider);
+  modernLayout->addWidget(modernQualityLabel);
+  modernLayout->addSpacerItem(modernSpacer);
+
+  // PNG quality row
+  QHBoxLayout *pngLayout = new QHBoxLayout();
+  pngLayout->setContentsMargins(0, 0, 0, 0);
+  QLabel *pngTitleLabel = new QLabel(tr("PNG compression level:"), this);
+  pngQualitySlider = new QSlider(Qt::Horizontal, this);
+  pngQualitySlider->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  pngQualitySlider->setMinimumSize(180, 25);
+  pngQualitySlider->setRange(0, 9);
+  pngQualitySlider->setPageStep(1);
+  pngQualitySlider->setSingleStep(1);
+  pngQualitySlider->setTickPosition(QSlider::TicksBelow);
+  pngQualitySlider->setTickInterval(1);
+  pngQualityLabel = new QLabel(this);
+  QSpacerItem *pngSpacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+  pngLayout->addWidget(pngTitleLabel);
+  pngLayout->addWidget(pngQualitySlider);
+  pngLayout->addWidget(pngQualityLabel);
+  pngLayout->addSpacerItem(pngSpacer);
+
+  // Connect signals
+  connect(pngQualitySlider, &QSlider::valueChanged, this, &SettingsDialog::onPNGQualitySliderChanged);
+  connect(modernQualitySlider, &QSlider::valueChanged, this, &SettingsDialog::onModernQualitySliderChanged);
+
+  // Insert into vertical layout right after JPEG save quality row (ui->horizontalLayout_10)
+  int idx = ui->verticalLayout_34->indexOf(ui->horizontalLayout_10);
+  if (idx != -1) {
+      ui->verticalLayout_34->insertLayout(idx + 1, modernLayout);
+      ui->verticalLayout_34->insertLayout(idx + 2, pngLayout);
+  } else {
+      ui->verticalLayout_34->addLayout(modernLayout);
+      ui->verticalLayout_34->addLayout(pngLayout);
+  }
+
   connect(this, &SettingsDialog::settingsChanged, settings,
           &Settings::sendChangeNotification);
   readSettings();
@@ -360,6 +414,12 @@ void SettingsDialog::readSettings() {
   ui->JPEGQualitySlider->setValue(settings->JPEGSaveQuality());
   onJPEGQualitySliderChanged(ui->JPEGQualitySlider->value());
 
+  pngQualitySlider->setValue(settings->pngSaveQuality());
+  onPNGQualitySliderChanged(pngQualitySlider->value());
+
+  modernQualitySlider->setValue(settings->modernSaveQuality());
+  onModernQualitySliderChanged(modernQualitySlider->value());
+
   ui->expandLimitSlider->setValue(settings->expandLimit());
   onExpandLimitSliderChanged(ui->expandLimitSlider->value());
 
@@ -528,6 +588,8 @@ void SettingsDialog::saveSettings() {
   settings->setPanelPreviewsSize(ui->panelSizeSlider->value() * 8);
 
   settings->setJPEGSaveQuality(ui->JPEGQualitySlider->value());
+  settings->setPngSaveQuality(pngQualitySlider->value());
+  settings->setModernSaveQuality(modernQualitySlider->value());
   settings->setZoomStep(
       static_cast<qreal>(ui->zoomStepSlider->value() / 100.f));
   settings->setMouseScrollingSpeed(static_cast<qreal>(
@@ -803,6 +865,19 @@ void SettingsDialog::onExpandLimitSliderChanged(int value) {
 //------------------------------------------------------------------------------
 void SettingsDialog::onJPEGQualitySliderChanged(int value) {
   ui->JPEGQualityLabel->setText(QString::number(value) + "%");
+}
+//------------------------------------------------------------------------------
+void SettingsDialog::onPNGQualitySliderChanged(int value) {
+  QString desc;
+  if (value == 0) desc = tr("None (Uncompressed)");
+  else if (value <= 3) desc = tr("Fast");
+  else if (value <= 6) desc = tr("Balanced");
+  else desc = tr("Maximum");
+  pngQualityLabel->setText(QString("Level %1 (%2)").arg(value).arg(desc));
+}
+//------------------------------------------------------------------------------
+void SettingsDialog::onModernQualitySliderChanged(int value) {
+  modernQualityLabel->setText(QString::number(value) + "%");
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onZoomStepSliderChanged(int value) {

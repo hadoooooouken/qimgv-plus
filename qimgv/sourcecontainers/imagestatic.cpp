@@ -112,10 +112,14 @@ bool ImageStatic::save(QString destPath) {
   // as well as level 9 for PNG images, and do considerably fewer caclulations
   int quality = 95;
   if (ext.compare("png", Qt::CaseInsensitive) == 0)
-    quality = 30;
+    quality = settings->pngSaveQuality() * 10;
   else if (ext.compare("jpg", Qt::CaseInsensitive) == 0 ||
            ext.compare("jpeg", Qt::CaseInsensitive) == 0)
     quality = settings->JPEGSaveQuality();
+  else if (ext.compare("jxl", Qt::CaseInsensitive) == 0 ||
+           ext.compare("webp", Qt::CaseInsensitive) == 0 ||
+           ext.compare("avif", Qt::CaseInsensitive) == 0)
+    quality = settings->modernSaveQuality();
 
   bool backupExists = false, success = false, originalExists = false;
 

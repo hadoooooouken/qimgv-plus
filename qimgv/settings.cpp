@@ -531,6 +531,14 @@ int Settings::upscaylLimitValue() {
 void Settings::setUpscaylLimitValue(int value) {
   settings->settingsConf->setValue("upscaylLimitValue", value);
 }
+
+bool Settings::resizeUseUpscayl() {
+  return settings->settingsConf->value("resizeUseUpscayl", false).toBool();
+}
+
+void Settings::setResizeUseUpscayl(bool enabled) {
+  settings->settingsConf->setValue("resizeUseUpscayl", enabled);
+}
 //------------------------------------------------------------------------------
 #endif
 bool Settings::keepFitMode() {
@@ -874,7 +882,6 @@ int Settings::expandLimit() {
 void Settings::setExpandLimit(int value) {
   settings->settingsConf->setValue("expandLimit", value);
 }
-//------------------------------------------------------------------------------
 int Settings::JPEGSaveQuality() {
   int quality = std::clamp(
       settings->settingsConf->value("JPEGSaveQuality", 95).toInt(), 0, 100);
@@ -883,6 +890,26 @@ int Settings::JPEGSaveQuality() {
 
 void Settings::setJPEGSaveQuality(int value) {
   settings->settingsConf->setValue("JPEGSaveQuality", value);
+}
+//------------------------------------------------------------------------------
+int Settings::pngSaveQuality() {
+  int quality = std::clamp(
+      settings->settingsConf->value("pngSaveQuality", 3).toInt(), 0, 9);
+  return quality;
+}
+
+void Settings::setPngSaveQuality(int value) {
+  settings->settingsConf->setValue("pngSaveQuality", value);
+}
+//------------------------------------------------------------------------------
+int Settings::modernSaveQuality() {
+  int quality = std::clamp(
+      settings->settingsConf->value("modernSaveQuality", 90).toInt(), 0, 100);
+  return quality;
+}
+
+void Settings::setModernSaveQuality(int value) {
+  settings->settingsConf->setValue("modernSaveQuality", value);
 }
 //------------------------------------------------------------------------------
 ScalingFilter Settings::scalingFilter() {

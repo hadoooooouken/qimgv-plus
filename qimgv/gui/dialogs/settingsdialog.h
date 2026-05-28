@@ -73,6 +73,8 @@ private slots:
     void onExpandLimitSliderChanged(int value);
     void onZoomStepSliderChanged(int value);
     void onJPEGQualitySliderChanged(int value);
+    void onPNGQualitySliderChanged(int value);
+    void onModernQualitySliderChanged(int value);
     void resetToDesktopTheme();    
     void onAutoResizeLimitSliderChanged(int value);
     void onMouseScrollingSpeedSliderChanged(int value);
@@ -81,4 +83,9 @@ private slots:
     void resetZoomLevels();
 signals:
     void settingsChanged();
+private:
+    QSlider *pngQualitySlider = nullptr;
+    QLabel *pngQualityLabel = nullptr;
+    QSlider *modernQualitySlider = nullptr;
+    QLabel *modernQualityLabel = nullptr;
 };
