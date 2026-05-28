@@ -55,6 +55,7 @@ private slots:
     void setFocusCropSaveBtn();
 
     void doCropDefaultAction();
+    void doReset();
 private:
     Ui::CropPanel *ui;
     QRect cropRect;

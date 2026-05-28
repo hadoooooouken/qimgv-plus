@@ -47,6 +47,7 @@ CropPanel::CropPanel(CropOverlay *_overlay, QWidget *parent) :
     connect(overlay, SIGNAL(cropDefault()), this, SLOT(doCropDefaultAction()));
     connect(overlay, SIGNAL(cropSave()), this, SLOT(doCropSave()));
     connect(this, SIGNAL(selectAll()), overlay, SLOT(selectAll()));
+    connect(ui->resetButton, SIGNAL(clicked()), this, SLOT(doReset()));
 }
 
 CropPanel::~CropPanel() {
@@ -235,6 +236,11 @@ void CropPanel::keyPressEvent(QKeyEvent *event) {
     } else {
         event->ignore();
     }
+}
+
+void CropPanel::doReset() {
+    ui->ARcomboBox->setCurrentIndex(0);
+    overlay->fitSelectionToAspectRatio();
 }
 
 void CropPanel::wheelEvent(QWheelEvent *event) {

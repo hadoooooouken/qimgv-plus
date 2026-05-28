@@ -48,7 +48,7 @@ void CropOverlay::prepareDrawElements() {
 //------------------------------------------------------------------------------
 void CropOverlay::setImageRealSize(QSize sz) {
     imageRect.setSize(sz);
-    clearSelection();
+    fitSelectionToAspectRatio();
 }
 
 //------------------------------------------------------------------------------
@@ -102,12 +102,42 @@ void CropOverlay::setAspectRatio(QPointF ratio) {
         return;
     ar = ratio;
     setLockAspectRatio(true);
-    // force resize selection area
-    if(hasSelection()) {
-        resizeSelection(QPoint(0,0));
-        update();
-        emit selectionChanged(selectionRect);
+    fitSelectionToAspectRatio();
+}
+
+//------------------------------------------------------------------------------
+void CropOverlay::fitSelectionToAspectRatio() {
+    if(imageRect.isEmpty())
+        return;
+
+    if(!lockAspectRatio) {
+        selectionRect = imageRect;
+    } else {
+        qreal targetAR = ar.x() / ar.y();
+        qreal imageAR = qreal(imageRect.width()) / imageRect.height();
+        int newW = imageRect.width();
+        int newH = imageRect.height();
+
+        if (targetAR > imageAR) {
+            // target is wider than image: fit to width
+            newW = imageRect.width();
+            newH = qRound(newW / targetAR);
+        } else {
+            // target is taller than image: fit to height
+            newH = imageRect.height();
+            newW = qRound(newH * targetAR);
+        }
+
+        // Center the rectangle
+        int posX = (imageRect.width() - newW) / 2;
+        int posY = (imageRect.height() - newH) / 2;
+        selectionRect = QRect(posX, posY, newW, newH).intersected(imageRect);
     }
+
+    updateSelectionDrawRect();
+    updateHandlePositions();
+    update();
+    emit selectionChanged(selectionRect);
 }
 
 //------------------------------------------------------------------------------
