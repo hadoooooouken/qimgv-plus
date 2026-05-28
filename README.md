@@ -1,4 +1,4 @@
-qimgv-plus | Current version: 2.0.0
+qimgv-plus | Current version: 2.0.1
 ==========
 A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image viewer, featuring high-quality CPU-accelerated scaling and native support for modern image formats.
 
@@ -130,10 +130,9 @@ qimgv-plus supports high-quality, OpenCV-accelerated CPU scaling filters:
 qimgv-plus integrates **[upscayl-ncnn](https://github.com/upscayl/upscayl-ncnn) (NCNN/Vulkan & RealESRGAN)** for real-time AI image upscaling:
 - **Viewport Crop Upscaling**: Conserves GPU resources and VRAM by upscaling only the currently visible region of the image.
 - **Vulkan GPU Acceleration**: Heavy lifting is performed on background GPU threads, ensuring the main user interface remains smooth and interactive.
-- **Model Options**: Supports three 4x upscaling models:
-  * `remacri-4x` (Default): Punchy and sharp with enhanced contrast; ideal for photos and digital art.
-  * `high-fidelity-4x`: Produces smoother, more natural results and preserves original textures.
-  * `upscayl-lite-4x`: Fast and lightweight model for quicker processing.
+- **Model Options**: 
+  * `remacri-4x` (Default): Included by default. Punchy and sharp with enhanced contrast; ideal for photos and digital art.
+  * **Custom Models Support**: The application dynamically scans the `models/` directory. You can easily add more compatible models (e.g. from the [Upscayl Custom Models repository](https://github.com/upscayl/custom-models/tree/main/models)) by placing their `.param` and `.bin` files into the `models/` folder, and they will be automatically detected and made available in the settings menu.
 - **VRAM Safety & Limits**: Auto-tile detection and input limits prevent out-of-memory errors on a wide range of GPUs.
 - **Vulkan Preloading**: An optional pre-warm feature processes a dummy texture at startup to pre-allocate memory and eliminate initial rendering lag.
 - **Hotkey**: Press **`Alt + I`** to instantly toggle AI upscaling.

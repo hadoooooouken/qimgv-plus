@@ -1,6 +1,8 @@
 #include "settingsdialog.h"
 #include "ui_settingsdialog.h"
 #include "components/cache/thumbnailcache.h"
+#include <QDir>
+#include <QFileInfo>
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent), ui(new Ui::SettingsDialog) {
@@ -11,6 +13,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->preloadUpscaylCheckBox, &QCheckBox::setEnabled);
   connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->upscaylModelComboBox, &QComboBox::setEnabled);
   connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->label_upscaylModel, &QLabel::setEnabled);
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->label_upscaylGetModels, &QLabel::setEnabled);
   connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->upscaylLimitCheckBox, &QCheckBox::setEnabled);
 
   auto updateLimitControls = [this]() {
@@ -30,9 +33,23 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     ui->upscaylLimitValueLabel->setText(QString::number(snapped) + "%");
   });
 
-  ui->upscaylModelComboBox->addItem("remacri-4x");
-  ui->upscaylModelComboBox->addItem("high-fidelity-4x");
-  ui->upscaylModelComboBox->addItem("upscayl-lite-4x");
+  // Auto-scan models directory for compatible models
+  QDir modelsDir(qApp->applicationDirPath() + "/models");
+  QStringList filters;
+  filters << "*.param";
+  QStringList files = modelsDir.entryList(filters, QDir::Files);
+  QStringList modelNames;
+  for (const QString &file : files) {
+    QFileInfo fi(file);
+    QString modelName = fi.baseName();
+    if (modelsDir.exists(modelName + ".bin")) {
+      modelNames.append(modelName);
+    }
+  }
+  if (modelNames.isEmpty()) {
+    modelNames.append("remacri-4x");
+  }
+  ui->upscaylModelComboBox->addItems(modelNames);
 #endif
   ui->panelSizeSlider->setMinimum(13);
   ui->panelSizeSlider->setMaximum(32);
@@ -285,12 +302,18 @@ void SettingsDialog::readSettings() {
   ui->preloadUpscaylCheckBox->setEnabled(settings->useUpscayl());
   ui->upscaylModelComboBox->setEnabled(settings->useUpscayl());
   ui->label_upscaylModel->setEnabled(settings->useUpscayl());
+  ui->label_upscaylGetModels->setEnabled(settings->useUpscayl());
 
   int modelIdx = ui->upscaylModelComboBox->findText(settings->upscaylModel());
   if (modelIdx != -1) {
     ui->upscaylModelComboBox->setCurrentIndex(modelIdx);
   } else {
-    ui->upscaylModelComboBox->setCurrentText("remacri-4x");
+    int defaultIdx = ui->upscaylModelComboBox->findText("remacri-4x");
+    if (defaultIdx != -1) {
+      ui->upscaylModelComboBox->setCurrentIndex(defaultIdx);
+    } else if (ui->upscaylModelComboBox->count() > 0) {
+      ui->upscaylModelComboBox->setCurrentIndex(0);
+    }
   }
 
   ui->upscaylLimitCheckBox->setChecked(settings->upscaylLimitEnabled());

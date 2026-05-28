@@ -4899,6 +4899,16 @@ Example: D:\Downloads\1c_bases; E:\Tuts</string>
                       </widget>
                      </item>
                      <item>
+                      <widget class="QLabel" name="label_upscaylGetModels">
+                       <property name="text">
+                        <string>&lt;a href=&quot;https://github.com/upscayl/custom-models/tree/main/models&quot;&gt;&lt;span style=&quot;text-decoration: underline; color:#007af4;&quot;&gt;Get more models&lt;/span&gt;&lt;/a&gt;</string>
+                       </property>
+                       <property name="openExternalLinks">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
                       <spacer name="horizontalSpacer_upscaylModel">
                        <property name="orientation">
                         <enum>Qt::Horizontal</enum>
