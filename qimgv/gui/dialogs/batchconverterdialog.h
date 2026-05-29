@@ -17,6 +17,10 @@ namespace Ui {
 class BatchConverterDialog;
 }
 
+#ifdef USE_UPSCAYL
+class RealESRGAN;
+#endif
+
 class BatchItemWidget : public QWidget {
   Q_OBJECT
 public:
@@ -120,6 +124,11 @@ private:
   void finalizeConversion();
   void updateSelectedCount();
   void updateToTargetValues();
+  void cleanupSharedUpscayl();
+
+#ifdef USE_UPSCAYL
+  RealESRGAN *sharedResrgan = nullptr;
+#endif
 
   friend class BatchWorkerTask;
 };

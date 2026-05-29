@@ -475,6 +475,7 @@ BatchConverterDialog::~BatchConverterDialog() {
   isCancelled = true;
   threadPool.clear();
   threadPool.waitForDone();
+  cleanupSharedUpscayl();
   thumbnailer->clearTasks();
   thumbnailer->waitForDone();
   delete thumbnailer;
@@ -859,6 +860,31 @@ void BatchConverterDialog::startConversion() {
         QThread::idealThreadCount()); // CPU Multi-threading
   }
 
+#ifdef USE_UPSCAYL
+  if (useUpscayl && doResize) {
+    ui->statusLabel->setText(tr("Loading AI Model..."));
+    qApp->processEvents();
+
+    sharedResrgan = new RealESRGAN(-1, false);
+    sharedResrgan->scale = 4;
+    sharedResrgan->prepadding = 10;
+    sharedResrgan->tilesize = sharedResrgan->autoTilesize();
+
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString paramQStr = appDir + "/models/" + upscaylModel + ".param";
+    QString binQStr = appDir + "/models/" + upscaylModel + ".bin";
+
+    int loadRes = sharedResrgan->load(paramQStr.toStdWString(), binQStr.toStdWString());
+    if (loadRes != 0) {
+      delete sharedResrgan;
+      sharedResrgan = nullptr;
+      ui->statusLabel->setText(tr("Failed to load AI model."));
+      QMessageBox::warning(this, tr("AI Error"), tr("Failed to load AI upscaling model: %1").arg(upscaylModel));
+      return;
+    }
+  }
+#endif
+
   int activeIndex = 0;
   for (int i = 0; i < ui->fileListWidget->count(); ++i) {
     QListWidgetItem *item = ui->fileListWidget->item(i);
@@ -937,6 +963,7 @@ void BatchConverterDialog::onProgressUpdated(int index, QString status,
 
 void BatchConverterDialog::finalizeConversion() {
   isConverting = false;
+  cleanupSharedUpscayl();
   updateUiState();
   ui->statusLabel->setText(tr("Finished. Success: %1, Failed: %2")
                                .arg(successCount)
@@ -955,12 +982,22 @@ void BatchConverterDialog::onCancelClicked() {
     isCancelled = true;
     threadPool.clear();
     threadPool.waitForDone();
+    cleanupSharedUpscayl();
     isConverting = false;
     updateUiState();
     ui->statusLabel->setText(tr("Stopped by user."));
   } else {
     reject();
   }
+}
+
+void BatchConverterDialog::cleanupSharedUpscayl() {
+#ifdef USE_UPSCAYL
+  if (sharedResrgan) {
+    delete sharedResrgan;
+    sharedResrgan = nullptr;
+  }
+#endif
 }
 
 // ==================== BatchWorkerTask Implementation ====================
@@ -996,23 +1033,13 @@ void BatchWorkerTask::run() {
   // 2. AI Upscayl / Resizing
   if (useUpscayl) {
 #ifdef USE_UPSCAYL
-    RealESRGAN realesrgan(-1, false);
-    realesrgan.scale = 4;
-    realesrgan.prepadding = 10;
-    realesrgan.tilesize = realesrgan.autoTilesize();
-
-    QString appDir = QCoreApplication::applicationDirPath();
-    QString paramQStr = appDir + "/models/" + upscaylModel + ".param";
-    QString binQStr = appDir + "/models/" + upscaylModel + ".bin";
-
-    if (realesrgan.load(paramQStr.toStdWString(), binQStr.toStdWString()) ==
-        0) {
+    if (dialog->sharedResrgan) {
       QImage imgRgba = processedImg.convertToFormat(QImage::Format_ARGB32);
       int inW = imgRgba.width(), inH = imgRgba.height();
       int outW = inW * 4, outH = inH * 4;
       QImage outImg(outW, outH, QImage::Format_ARGB32);
-      if (realesrgan.processPixels(imgRgba.constBits(), inW, inH, outImg.bits(),
-                                   outW, outH) == 0) {
+      if (dialog->sharedResrgan->processPixels(imgRgba.constBits(), inW, inH, outImg.bits(),
+                                               outW, outH) == 0) {
         processedImg = outImg;
       }
     }

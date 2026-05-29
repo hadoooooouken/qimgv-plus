@@ -159,13 +159,13 @@
              <layout class="QHBoxLayout" name="resListLayout">
               <item>
                <widget class="QFrame" name="resFrame">
-                 <property name="maximumSize">
-                  <size>
-                   <width>260</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
-                 <property name="frameShape">
+                <property name="maximumSize">
+                 <size>
+                  <width>280</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="frameShape">
                  <enum>QFrame::StyledPanel</enum>
                 </property>
                 <property name="frameShadow">
@@ -497,7 +497,7 @@
                  <widget class="QGroupBox" name="groupBoxCommonSizes">
                    <property name="maximumSize">
                     <size>
-                     <width>220</width>
+                     <width>240</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -537,7 +537,7 @@
                  <widget class="QPushButton" name="fitDesktopButton">
                    <property name="maximumSize">
                     <size>
-                     <width>220</width>
+                     <width>240</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -556,7 +556,7 @@
                  <widget class="QPushButton" name="fillDesktopButton">
                    <property name="maximumSize">
                     <size>
-                     <width>220</width>
+                     <width>240</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -575,7 +575,7 @@
                  <widget class="QPushButton" name="resetButton">
                    <property name="maximumSize">
                     <size>
-                     <width>220</width>
+                     <width>240</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -605,19 +605,6 @@
                 </item>
                </layout>
               </item>
-              <item>
-                <spacer name="horizontalSpacer_ResizeListRightSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
              </layout>
             </item>
            </layout>
