@@ -61,7 +61,8 @@ BatchItemWidget::BatchItemWidget(const QString &filePath, QWidget *parent)
       QString("color: %1; font-size: 10px;").arg(colors.text_lc.name()));
   leftInfo->addWidget(srcInfoLabel);
 
-  mainLayout->addLayout(leftInfo, 1); // takes all available space but can shrink
+  mainLayout->addLayout(leftInfo,
+                        1); // takes all available space but can shrink
 
   QVBoxLayout *rightInfo = new QVBoxLayout();
   rightInfo->setSpacing(2);
@@ -138,7 +139,6 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths,
     : QDialog(parent), ui(new Ui::BatchConverterDialog), inputPaths(filePaths) {
   ui->setupUi(this);
   setWindowModality(Qt::ApplicationModal);
-
 
   // Style dialog with active theme colors
   auto colors = settings->colorScheme();
@@ -480,7 +480,6 @@ BatchConverterDialog::~BatchConverterDialog() {
   delete thumbnailer;
   delete ui;
 }
-
 
 void BatchConverterDialog::onQualitySliderChanged(int value) {
   ui->qualitySpinBox->blockSignals(true);
