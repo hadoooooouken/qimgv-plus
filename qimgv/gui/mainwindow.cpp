@@ -71,6 +71,7 @@ void MW::setupUi() {
     connect(folderView.get(), &FolderViewProxy::copyUrlsRequested, this, &MW::copyUrlsRequested);
     connect(folderView.get(), &FolderViewProxy::moveUrlsRequested, this, &MW::moveUrlsRequested);
     connect(folderView.get(), &FolderViewProxy::showFoldersChanged, this, &MW::showFoldersChanged);
+    connect(folderView.get(), &FolderViewProxy::batchRequested, this, &MW::batchRequested);
 
     centralWidget.reset(new CentralWidget(docWidget, folderView, this));
     layout.addWidget(centralWidget.get());
@@ -702,6 +703,11 @@ void MW::showOpenDialog(QString path) {
 void MW::showResizeDialog(QSize initialSize) {
     ResizeDialog dialog(initialSize, this);
     connect(&dialog, &ResizeDialog::sizeSelected, this, &MW::resizeRequested);
+    dialog.exec();
+}
+
+void MW::showBatchConverter(const QList<QString> &paths) {
+    BatchConverterDialog dialog(paths, this);
     dialog.exec();
 }
 

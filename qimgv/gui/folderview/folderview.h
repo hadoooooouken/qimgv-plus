@@ -73,6 +73,7 @@ signals:
     void draggedOver(int) override;
     void backRequested() override;
     void forwardRequested() override;
+    void batchRequested();
 
 private slots:
     void onSortingSelected(int);

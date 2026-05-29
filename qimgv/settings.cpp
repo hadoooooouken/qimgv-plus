@@ -287,7 +287,7 @@ void Settings::loadTheme() {
         QColor(themeConf->value("background_fullscreen", "#000000").toString());
     base.text = QColor(themeConf->value("text", "#ffffff").toString());
     base.icons = QColor(themeConf->value("icons", "#acacac").toString());
-    base.widget = QColor(themeConf->value("widget", "#080808").toString());
+    base.widget = QColor(themeConf->value("widget", "#111111").toString());
     base.widget_border =
         QColor(themeConf->value("widget_border", "#181818").toString());
     base.accent = QColor(themeConf->value("accent", "#0080ff").toString());
@@ -1323,4 +1323,3 @@ bool Settings::isPathExcludedFromCache(const QString &path) {
   }
   return false;
 }
-

@@ -20,6 +20,7 @@
 #include "gui/customwidgets/floatingwidgetcontainer.h"
 #include "gui/dialogs/filereplacedialog.h"
 #include "gui/dialogs/resizedialog.h"
+#include "gui/dialogs/batchconverterdialog.h"
 #include "gui/dialogs/settingsdialog.h"
 #include "gui/folderview/folderviewproxy.h"
 #include "gui/overlays/changelogwindow.h"
@@ -182,6 +183,7 @@ signals:
   void sortingSelected(SortingMode);
   void folderSortingSelected(SortingMode);
   void colorAdjustmentsApplyRequested(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+  void batchRequested();
 
   // viewerWidget
   void scalingRequested(QSize, ScalingFilter);
@@ -261,4 +263,5 @@ public slots:
 #ifdef USE_UPSCAYL
   void toggleUpscayl();
 #endif
+  void showBatchConverter(const QList<QString> &paths);
 };

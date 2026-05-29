@@ -441,5 +441,5 @@ void FolderView::setDirCount(int count) {
 }
 
 void FolderView::onBatchClicked() {
-    // Placeholder for batch convert
+    emit batchRequested();
 }

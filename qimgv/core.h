@@ -132,6 +132,7 @@ private slots:
     void onFileAdded(QString filePath);
     void onFileModified(QString filePath);
     void showResizeDialog();
+    void showBatchConverter();
     void resize(QSize size, ScalingFilter filter, bool useUpscayl = false, QString upscaylModel = "");
     void flipH();
     void flipV();

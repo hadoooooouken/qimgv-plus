@@ -30,6 +30,7 @@ target_sources(qimgv-plus PRIVATE
     customwidgets/ssidebar.cpp
 
     dialogs/filereplacedialog.cpp
+    dialogs/batchconverterdialog.cpp
     dialogs/resizedialog.cpp
     dialogs/scripteditordialog.cpp
     dialogs/settingsdialog.cpp
@@ -84,6 +85,7 @@ target_sources(qimgv-plus PRIVATE
     contextmenu.ui
 
     dialogs/filereplacedialog.ui
+    dialogs/batchconverterdialog.ui
     dialogs/resizedialog.ui
     dialogs/scripteditordialog.ui
     dialogs/settingsdialog.ui

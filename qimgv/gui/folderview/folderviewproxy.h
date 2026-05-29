@@ -57,6 +57,7 @@ signals:
     void draggedOver(int) override;
     void backRequested() override;
     void forwardRequested() override;
+    void batchRequested();
 
 private:
     std::shared_ptr<FolderView> folderView;

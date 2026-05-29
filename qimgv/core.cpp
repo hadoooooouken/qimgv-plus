@@ -361,6 +361,7 @@ void Core::connectComponents() {
   connect(mw, &MW::saveRequested, this, &Core::saveCurrentFile);
   connect(mw, &MW::saveAsRequested, this, &Core::saveCurrentFileAs);
   connect(mw, &MW::resizeRequested, this, &Core::resize);
+  connect(mw, &MW::batchRequested, this, &Core::showBatchConverter);
   connect(mw, &MW::renameRequested, this, &Core::renameCurrentSelection);
   connect(mw, &MW::sortingSelected, this, &Core::sortBy);
   connect(mw, &MW::folderSortingSelected, this, &Core::onFolderSortingSelected);
@@ -1263,6 +1264,19 @@ void Core::showResizeDialog() {
   auto img = model->getImage(selectedPath());
   if (img)
     mw->showResizeDialog(img->size());
+}
+
+void Core::showBatchConverter() {
+  QList<QString> selected = folderViewPresenter.selectedPaths();
+  QList<QString> filePaths;
+  for (const QString &path : selected) {
+    if (QFileInfo(path).isFile()) {
+      filePaths.append(path);
+    }
+  }
+  if (!filePaths.isEmpty()) {
+    mw->showBatchConverter(filePaths);
+  }
 }
 
 // ---------------------------------------------------------------- image
