@@ -51,6 +51,7 @@ private slots:
     void onSelectionChange();
     void onAspectRatioChange(); // via manual input
     void onAspectRatioSelected(); // via ComboBox
+    void onSwapARClicked();
     void setFocusCropBtn();
     void setFocusCropSaveBtn();
 

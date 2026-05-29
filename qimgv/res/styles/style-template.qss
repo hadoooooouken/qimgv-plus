@@ -380,6 +380,26 @@ SidePanel QDoubleSpinBox::down-button
     width:0px;
 }
 /*----------------------------------------------------------------------------*/
+SidePanel QPushButton[accessibleName="SwapButton"] {
+    color: %text_hc%;
+    background-color: transparent;
+    border: 2px solid transparent;
+    border-radius: 3px;
+    padding: 0 4px 0 4px;
+    min-width: 22px;
+    min-height: 20px;
+}
+
+SidePanel QPushButton[accessibleName="SwapButton"]:hover {
+    background-color: %button_hover%;
+    border-color: %button_hover%;
+}
+
+SidePanel QPushButton[accessibleName="SwapButton"]:pressed {
+    background-color: %button_pressed%;
+    border-color: %button_pressed%;
+}
+/*----------------------------------------------------------------------------*/
 SidePanel QLabel {
     color: %text_hc%;
 }

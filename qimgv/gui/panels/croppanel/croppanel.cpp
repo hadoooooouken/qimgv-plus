@@ -36,6 +36,7 @@ CropPanel::CropPanel(CropOverlay *_overlay, QWidget *parent) :
     connect(ui->ARX, SIGNAL(valueChanged(double)), this, SLOT(onAspectRatioChange()));
     connect(ui->ARY, SIGNAL(valueChanged(double)), this, SLOT(onAspectRatioChange()));
     connect(ui->ARcomboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onAspectRatioSelected()));
+    connect(ui->swapARButton, &QPushButton::clicked, this, &CropPanel::onSwapARClicked);
 
     connect(overlay, SIGNAL(selectionChanged(QRect)),
             this, SLOT(onSelectionOutsideChange(QRect)));
@@ -236,6 +237,20 @@ void CropPanel::keyPressEvent(QKeyEvent *event) {
     } else {
         event->ignore();
     }
+}
+
+void CropPanel::onSwapARClicked() {
+    double x = ui->ARX->value();
+    double y = ui->ARY->value();
+    ui->ARX->blockSignals(true);
+    ui->ARY->blockSignals(true);
+    ui->ARX->setValue(y);
+    ui->ARY->setValue(x);
+    ui->ARX->blockSignals(false);
+    ui->ARY->blockSignals(false);
+
+    ui->ARcomboBox->setCurrentIndex(1); // "Custom"
+    emit aspectRatioChanged(QPointF(y, x));
 }
 
 void CropPanel::doReset() {

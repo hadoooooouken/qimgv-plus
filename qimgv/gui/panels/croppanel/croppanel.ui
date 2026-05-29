@@ -414,18 +414,24 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_8">
+          <widget class="QPushButton" name="swapARButton">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
+           </property>
            <property name="accessibleName">
-            <string notr="true"/>
+            <string notr="true">SwapButton</string>
            </property>
            <property name="text">
-            <string notr="true">:</string>
+            <string notr="true">⇄</string>
+           </property>
+           <property name="toolTip">
+            <string>Swap aspect ratio</string>
            </property>
           </widget>
          </item>
