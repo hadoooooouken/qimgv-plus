@@ -289,7 +289,7 @@ void Settings::loadTheme() {
     base.icons = QColor(themeConf->value("icons", "#acacac").toString());
     base.widget = QColor(themeConf->value("widget", "#111111").toString());
     base.widget_border =
-        QColor(themeConf->value("widget_border", "#181818").toString());
+        QColor(themeConf->value("widget_border", "#222222").toString());
     base.accent = QColor(themeConf->value("accent", "#0080ff").toString());
     base.folderview =
         QColor(themeConf->value("folderview", "#111111").toString());

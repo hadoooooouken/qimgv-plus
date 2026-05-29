@@ -58,7 +58,7 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.text = QColor(0xffffffff);
     base.icons = QColor(0xffacacac);
     base.widget = QColor(0xff111111);
-    base.widget_border = QColor(0xff181818);
+    base.widget_border = QColor(0xff222222);
     base.accent = QColor(0xff0080ff);
     base.folderview = QColor(0xff111111);
     base.folderview_topbar = QColor(0xff111111);
