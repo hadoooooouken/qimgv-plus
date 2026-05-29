@@ -367,9 +367,17 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths,
   }
   ui->upscaylModelComboBox->addItems(modelNames);
 
-  // Enable AI upscaling controls
+  // Enable AI upscaling controls and restore from settings
+  int modelIdx = ui->upscaylModelComboBox->findText(settings->upscaylModel());
+  if (modelIdx != -1) {
+    ui->upscaylModelComboBox->setCurrentIndex(modelIdx);
+  } else {
+    ui->upscaylModelComboBox->setCurrentIndex(0);
+  }
+
+  ui->useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
   ui->useUpscaylCheckBox->setEnabled(true);
-  ui->upscaylModelComboBox->setEnabled(false);
+  ui->upscaylModelComboBox->setEnabled(ui->useUpscaylCheckBox->isChecked());
 #else
   ui->useUpscaylCheckBox->setEnabled(false);
   ui->useUpscaylCheckBox->setToolTip(
@@ -822,8 +830,15 @@ void BatchConverterDialog::startConversion() {
   bool doResize = ui->groupBoxResize->isChecked();
   QSize resizeTarget = targetSize;
   bool keepAspect = ui->keepAspectRatio->isChecked();
-  bool useUpscayl = ui->useUpscaylCheckBox->isChecked();
+  bool useUpscayl = doResize && ui->useUpscaylCheckBox->isChecked();
   QString upscaylModel = ui->upscaylModelComboBox->currentText();
+
+#ifdef USE_UPSCAYL
+  // Save current Upscayl preferences to settings
+  settings->setResizeUseUpscayl(ui->useUpscaylCheckBox->isChecked());
+  settings->setUpscaylModel(upscaylModel);
+  settings->sync();
+#endif
   int filter = ui->filterComboBox->currentData().toInt();
 
   bool doColor = ui->groupBoxColor->isChecked();

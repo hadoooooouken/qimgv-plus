@@ -369,26 +369,44 @@
                   </layout>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="keepAspectRatio">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>Keep aspect ratio</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
+                  <layout class="QHBoxLayout" name="horizontalLayoutCheckBoxes">
+                   <item>
+                    <widget class="QCheckBox" name="keepAspectRatio">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="text">
+                      <string>Keep aspect ratio</string>
+                     </property>
+                     <property name="checked">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="useUpscaylCheckBox">
+                     <property name="text">
+                      <string>Use Upscayl</string>
+                     </property>
+                    </widget>
+                   </item>
+                    <item>
+                     <spacer name="horizontalSpacer_CheckBoxes">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
                  </item>
                  <item>
                   <spacer name="verticalSpacer_ResizeLeft">
@@ -407,21 +425,50 @@
                   </spacer>
                  </item>
                  <item>
-                  <widget class="QLabel" name="labelFilter">
-                   <property name="text">
-                    <string>Filter:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QComboBox" name="filterComboBox">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                  </widget>
+                  <layout class="QHBoxLayout" name="horizontalLayoutFiltersAndModels">
+                   <item>
+                    <layout class="QVBoxLayout" name="verticalLayoutFilterColumn">
+                     <item>
+                      <widget class="QLabel" name="labelFilter">
+                       <property name="text">
+                        <string>Filter:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QComboBox" name="filterComboBox">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QVBoxLayout" name="verticalLayoutModelColumn">
+                     <item>
+                      <widget class="QLabel" name="labelModel">
+                       <property name="text">
+                        <string>Model:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QComboBox" name="upscaylModelComboBox">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
                  </item>
                 </layout>
                </widget>
@@ -515,27 +562,6 @@
                  </spacer>
                 </item>
                </layout>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="useUpscaylCheckBox">
-              <property name="text">
-               <string>Use Upscayl</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayoutModel">
-              <item>
-               <widget class="QLabel" name="labelModel">
-                <property name="text">
-                 <string>Model:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QComboBox" name="upscaylModelComboBox"/>
               </item>
              </layout>
             </item>
