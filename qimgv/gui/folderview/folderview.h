@@ -40,6 +40,7 @@ public slots:
     virtual void removeItem(int index) override;
     virtual void reloadItem(int index) override;
     virtual void setDragHover(int) override;
+    virtual void setDirCount(int count) override;
     void addItem();
     void onFullscreenModeChanged(bool mode);
     void onSortingChanged(SortingMode mode);
@@ -92,10 +93,13 @@ private slots:
     void onHomeBtn();
     void onRootBtn();
     void onTreeViewTabOut();
+    void onSelectionChanged();
+    void onBatchClicked();
 
 private:
     int lastThumbnailResolution = 256;
     Ui::FolderView *ui;
     FileSystemModelCustom *dirModel;
     QElapsedTimer popupTimerClutch;
+    int dirCount = 0;
 };

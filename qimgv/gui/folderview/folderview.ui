@@ -166,6 +166,29 @@
        </spacer>
       </item>
       <item>
+       <widget class="QLabel" name="selectionCountLabel">
+        <property name="accessibleName">
+         <string notr="true">SelectionCountLabel</string>
+        </property>
+        <property name="text">
+         <string notr="true">15 images selected</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="batchButton">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="accessibleName">
+         <string notr="true">FolderViewBatchButton</string>
+        </property>
+        <property name="text">
+         <string notr="true">Batch convert  ⇄</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QSlider" name="zoomSlider">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">

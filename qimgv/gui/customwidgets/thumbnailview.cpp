@@ -147,6 +147,7 @@ void ThumbnailView::select(QList<int> indices) {
     }
     mSelection = indices;
     updateScrollbarIndicator();
+    emit selectionChanged();
 }
 
 void ThumbnailView::select(int index) {
@@ -162,6 +163,7 @@ void ThumbnailView::deselect(int index) {
     if(mSelection.count() > 1) {
         mSelection.removeAll(index);
         thumbnails.at(index)->setHighlighted(false);
+        emit selectionChanged();
     }
 }
 
@@ -193,6 +195,7 @@ void ThumbnailView::clearSelection() {
     for(auto i : std::as_const(mSelection))
         thumbnails.at(i)->setHighlighted(false);
     mSelection.clear();
+    emit selectionChanged();
 }
 
 int ThumbnailView::lastSelected() {

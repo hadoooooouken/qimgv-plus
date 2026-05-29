@@ -83,6 +83,7 @@ void DirectoryPresenter::populateView() {
     return;
   dirThumbnailTasks.clear();
   view->populate(mShowDirs ? model->totalCount() : model->fileCount());
+  view->setDirCount(mShowDirs ? model->dirCount() : 0);
   selectAndFocus(0);
 }
 
@@ -142,6 +143,7 @@ void DirectoryPresenter::onDirRemoved(QString dirPath, int index) {
   if (!view || !mShowDirs)
     return;
   view->removeItem(index);
+  view->setDirCount(model->dirCount());
 }
 
 void DirectoryPresenter::onDirRenamed(QString fromPath, int indexFrom,
@@ -169,6 +171,7 @@ void DirectoryPresenter::onDirAdded(QString dirPath) {
     return;
   int index = model->indexOfDir(dirPath);
   view->insertItem(index);
+  view->setDirCount(model->dirCount());
 }
 
 bool DirectoryPresenter::showDirs() { return mShowDirs; }

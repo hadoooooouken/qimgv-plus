@@ -42,6 +42,7 @@ void FolderViewProxy::init() {
         folderView->setDirectoryPath(stateBuf.directory);
     folderView->onFullscreenModeChanged(stateBuf.fullscreenMode);
     folderView->populate(stateBuf.itemCount);
+    folderView->setDirCount(stateBuf.dirCount);
     folderView->select(stateBuf.selection);
     // wait till layout stuff happens
     // before calling focusOn()
@@ -144,6 +145,12 @@ void FolderViewProxy::reloadItem(int index) {
 void FolderViewProxy::setDragHover(int index) {
     if(folderView)
         folderView->setDragHover(index);
+}
+
+void FolderViewProxy::setDirCount(int count) {
+    stateBuf.dirCount = count;
+    if(folderView)
+        folderView->setDirCount(count);
 }
 
 void FolderViewProxy::addItem() {

@@ -106,6 +106,12 @@ FolderView::FolderView(QWidget *parent) :
     setSizePolicy(sp_retain);
     connect(settings, &Settings::settingsChanged, this, &FolderView::readSettings);
 
+    ui->selectionCountLabel->hide();
+    ui->batchButton->hide();
+
+    connect(ui->thumbnailGrid, &FolderGridView::selectionChanged, this, &FolderView::onSelectionChanged);
+    connect(ui->batchButton, &QPushButton::clicked, this, &FolderView::onBatchClicked);
+
     hide();
 }
 
@@ -405,4 +411,35 @@ bool FolderView::eventFilter(QObject *watched, QEvent *event) {
         }
     }
     return QWidget::eventFilter(watched, event);
+}
+
+void FolderView::onSelectionChanged() {
+    int imageCount = 0;
+    for(int index : selection()) {
+        if(index >= dirCount) {
+            imageCount++;
+        }
+    }
+
+    if(imageCount > 0) {
+        if(imageCount == 1) {
+            ui->selectionCountLabel->setText(tr("1 image selected"));
+        } else {
+            ui->selectionCountLabel->setText(tr("%1 images selected").arg(imageCount));
+        }
+        ui->selectionCountLabel->show();
+        ui->batchButton->show();
+    } else {
+        ui->selectionCountLabel->hide();
+        ui->batchButton->hide();
+    }
+}
+
+void FolderView::setDirCount(int count) {
+    dirCount = count;
+    onSelectionChanged();
+}
+
+void FolderView::onBatchClicked() {
+    // Placeholder for batch convert
 }

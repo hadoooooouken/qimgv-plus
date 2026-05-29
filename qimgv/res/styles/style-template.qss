@@ -550,6 +550,33 @@ FolderView {
     padding-right: 9px;
 }
 
+QLabel[accessibleName="SelectionCountLabel"] {
+    color: %text_hc%;
+    margin-right: 8px;
+}
+
+QPushButton[accessibleName="FolderViewBatchButton"] {
+    color: %text_hc%;
+    background-color: %panel_button%;
+    border: 2px solid %panel_button%;
+    border-radius: 3px;
+    padding: 4px 8px 4px 8px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    margin-left: 2px;
+    margin-right: 8px;
+}
+
+QPushButton[accessibleName="FolderViewBatchButton"]:hover {
+    background-color: %panel_button_hover%;
+    border-color: %panel_button_hover%;
+}
+
+QPushButton[accessibleName="FolderViewBatchButton"]:pressed {
+    background-color: %panel_button_pressed%;
+    border-color: %panel_button_pressed%;
+}
+
 [accessibleName="PathBarButton"] {
     border: 1px solid transparent;
     border-top-left-radius: 3px;

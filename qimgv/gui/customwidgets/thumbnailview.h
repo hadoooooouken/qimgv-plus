@@ -81,6 +81,7 @@ signals:
     void droppedInto(const QMimeData*, QObject*, int) override;
     void backRequested() override;
     void forwardRequested() override;
+    void selectionChanged();
 
 private:
     QTimer loadTimer;

@@ -7,6 +7,7 @@ struct FolderViewStateBuffer {
     QString directory;
     QList<int> selection;
     int itemCount = 0;
+    int dirCount = 0;
     SortingMode sortingMode;
     SortingMode folderSortingMode = SortingMode::SORT_TIME_DESC;
     bool fullscreenMode;
@@ -32,6 +33,7 @@ public slots:
     virtual void removeItem(int index) override;
     virtual void reloadItem(int index) override;
     virtual void setDragHover(int) override;
+    virtual void setDirCount(int count) override;
     void addItem();
     void onFullscreenModeChanged(bool mode);
     void onSortingChanged(SortingMode mode);

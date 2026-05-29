@@ -24,6 +24,7 @@ public:
     virtual void removeItem(int index) = 0;
     virtual void reloadItem(int index) = 0;
     virtual void setDragHover(int index) = 0;
+    virtual void setDirCount(int count) { Q_UNUSED(count) }
 
 //signals
     virtual void itemActivated(int) = 0;
