@@ -136,17 +136,10 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
   }
 
 #ifdef USE_UPSCAYL
-  // Create Upscayl dynamic layout & controls
-  QWidget *upscaylContainer = new QWidget(this);
-  QVBoxLayout *upscaylLayout = new QVBoxLayout(upscaylContainer);
-  upscaylLayout->setContentsMargins(0, 5, 0, 0);
-
-  useUpscaylCheckBox = new QCheckBox(tr("Use Upscayl"), this);
-  upscaylLayout->addWidget(useUpscaylCheckBox);
-
-  QHBoxLayout *modelLayout = new QHBoxLayout();
-  upscaylModelLabel = new QLabel(tr("Model:"), this);
-  upscaylModelComboBox = new QComboBox(this);
+  // Initialize Upscayl controls mapped to UI elements
+  useUpscaylCheckBox = ui->useUpscaylCheckBox;
+  upscaylModelComboBox = ui->upscaylModelComboBox;
+  upscaylModelLabel = ui->labelModel;
 
   // Auto-scan models directory for compatible models
   QDir modelsDir(qApp->applicationDirPath() + "/models");
@@ -174,11 +167,6 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
     upscaylModelComboBox->setCurrentIndex(0);
   }
 
-  modelLayout->addWidget(upscaylModelLabel);
-  modelLayout->addWidget(upscaylModelComboBox);
-  modelLayout->setStretch(1, 1);
-  upscaylLayout->addLayout(modelLayout);
-
   connect(useUpscaylCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
     upscaylModelLabel->setEnabled(checked);
     upscaylModelComboBox->setEnabled(checked);
@@ -187,10 +175,11 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
   useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
   upscaylModelLabel->setEnabled(useUpscaylCheckBox->isChecked());
   upscaylModelComboBox->setEnabled(useUpscaylCheckBox->isChecked());
-
-  // Insert container widget into verticalLayout_5 right before the spacer
-  // (index 4)
-  ui->verticalLayout_5->insertWidget(4, upscaylContainer);
+#else
+  // Hide Upscayl elements if not compiled with Upscayl support
+  ui->useUpscaylCheckBox->hide();
+  ui->labelModel->hide();
+  ui->upscaylModelComboBox->hide();
 #endif
 }
 
@@ -207,6 +196,8 @@ void ResizeDialog::sizeSelect() {
       useUpscayl = useUpscaylCheckBox->isChecked();
       upscaylModel = upscaylModelComboBox->currentText();
       settings->setResizeUseUpscayl(useUpscayl);
+      settings->setUpscaylModel(upscaylModel);
+      settings->sync();
     }
 #endif
     emit sizeSelected(targetSize, selectedFilter, useUpscayl, upscaylModel);
