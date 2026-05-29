@@ -1673,10 +1673,10 @@ void ImageViewerV2::togglePanorama() {
 }
 
 void ImageViewerV2::setColorAdjustments(float brightness, float contrast,
-                                        float saturation, float hue) {
-  pixmapItem.setColorAdjustments(brightness, contrast, saturation, hue);
-  pixmapItemScaled.setColorAdjustments(brightness, contrast, saturation, hue);
-  pixmapItemCrop.setColorAdjustments(brightness, contrast, saturation, hue);
+                                        float saturation, float hue, float exposure, float temperature, float tint) {
+  pixmapItem.setColorAdjustments(brightness, contrast, saturation, hue, exposure, temperature, tint);
+  pixmapItemScaled.setColorAdjustments(brightness, contrast, saturation, hue, exposure, temperature, tint);
+  pixmapItemCrop.setColorAdjustments(brightness, contrast, saturation, hue, exposure, temperature, tint);
   if (panoramaItem) {
     panoramaItem->setColorAdjustments(brightness, contrast, saturation, hue);
   }

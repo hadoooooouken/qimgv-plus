@@ -43,4 +43,5 @@ class ImageLib {
         static std::unique_ptr<const QImage> exifRotated(std::unique_ptr<const QImage> src, int orientation);
         static std::unique_ptr<QImage> exifRotated(std::unique_ptr<QImage> src, int orientation);
         static void recolor(QPixmap &pixmap, QColor color);
+        static QImage *applyColorAdjustments(std::shared_ptr<const QImage> source, float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
 };

@@ -181,6 +181,7 @@ signals:
   void saveAsRequested(QString);
   void sortingSelected(SortingMode);
   void folderSortingSelected(SortingMode);
+  void colorAdjustmentsApplyRequested(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
 
   // viewerWidget
   void scalingRequested(QSize, ScalingFilter);

@@ -364,9 +364,11 @@ void MW::toggleColorAdjustments() {
     if(!colorAdjustmentsOverlay) {
         colorAdjustmentsOverlay = new ColorAdjustmentsOverlayProxy(viewerWidget.get());
         connect(colorAdjustmentsOverlay, &ColorAdjustmentsOverlayProxy::adjustmentsChanged,
-                this, [this](float b, float c, float s, float h) {
-            viewerWidget->setColorAdjustments(b, c, s, h);
+                this, [this](float b, float c, float s, float h, float exp, float temp, float tint) {
+            viewerWidget->setColorAdjustments(b, c, s, h, exp, temp, tint);
         });
+        connect(colorAdjustmentsOverlay, &ColorAdjustmentsOverlayProxy::applyRequested,
+                this, &MW::colorAdjustmentsApplyRequested);
     }
     if(colorAdjustmentsOverlay->isHidden()) {
         colorAdjustmentsOverlay->setCustomPosition(QCursor::pos());

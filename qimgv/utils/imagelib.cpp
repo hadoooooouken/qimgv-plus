@@ -293,3 +293,81 @@ QImage *ImageLib::scaled_CV_Smart(std::shared_ptr<const QImage> source,
   return dest;
 }
 #endif
+
+QImage *ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint) {
+  if (!source)
+    return new QImage();
+
+  QImage *dst = new QImage(source->convertToFormat(QImage::Format_ARGB32));
+  float hueRad = hue * 3.14159265358979323846f / 180.0f;
+  float cosAngle = std::cos(hueRad);
+  float sinAngle = std::sin(hueRad);
+  float k = 0.57735f;
+
+  for (int y = 0; y < dst->height(); ++y) {
+    QRgb *line = reinterpret_cast<QRgb*>(dst->scanLine(y));
+    for (int x = 0; x < dst->width(); ++x) {
+      QRgb pixel = line[x];
+      int a = qAlpha(pixel);
+      float r = qRed(pixel) / 255.0f;
+      float g = qGreen(pixel) / 255.0f;
+      float b = qBlue(pixel) / 255.0f;
+
+      // 1. White balance (Temperature & Tint)
+      if (std::abs(temperature) > 0.001f || std::abs(tint) > 0.001f) {
+        r *= (1.0f + temperature + tint * 0.5f);
+        g *= (1.0f - tint);
+        b *= (1.0f - temperature + tint * 0.5f);
+      }
+
+      // 2. Exposure
+      if (std::abs(exposure) > 0.001f) {
+        float factor = std::pow(2.0f, exposure);
+        r *= factor;
+        g *= factor;
+        b *= factor;
+      }
+
+      // 3. Hue rotate
+      if (std::abs(hue) > 0.001f) {
+        float cx = k * b - k * g;
+        float cy = k * r - k * b;
+        float cz = k * g - k * r;
+        float dot = k * r + k * g + k * b;
+
+        float nr = r * cosAngle + cx * sinAngle + k * dot * (1.0f - cosAngle);
+        float ng = g * cosAngle + cy * sinAngle + k * dot * (1.0f - cosAngle);
+        float nb = b * cosAngle + cz * sinAngle + k * dot * (1.0f - cosAngle);
+        r = nr; g = ng; b = nb;
+      }
+
+      // 4. Saturation
+      if (std::abs(saturation - 1.0f) > 0.001f) {
+        float gray = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+        r = gray + (r - gray) * saturation;
+        g = gray + (g - gray) * saturation;
+        b = gray + (b - gray) * saturation;
+      }
+
+      // 5. Brightness
+      r += brightness;
+      g += brightness;
+      b += brightness;
+
+      // 6. Contrast
+      r = (r - 0.5f) * contrast + 0.5f;
+      g = (g - 0.5f) * contrast + 0.5f;
+      b = (b - 0.5f) * contrast + 0.5f;
+
+      // Clamp and convert back
+      int nr = qBound(0, static_cast<int>(r * 255.0f + 0.5f), 255);
+      int ng = qBound(0, static_cast<int>(g * 255.0f + 0.5f), 255);
+      int nb = qBound(0, static_cast<int>(b * 255.0f + 0.5f), 255);
+
+      line[x] = qRgba(nr, ng, nb, a);
+    }
+  }
+
+  return dst;
+}
+

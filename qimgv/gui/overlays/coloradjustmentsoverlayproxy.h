@@ -18,7 +18,8 @@ public:
     void setCustomPosition(const QPoint &globalPos);
 
 signals:
-    void adjustmentsChanged(float brightness, float contrast, float saturation, float hue);
+    void adjustmentsChanged(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+    void applyRequested(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
 
 private:
     FloatingWidgetContainer *container;

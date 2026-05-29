@@ -17,11 +17,15 @@ public:
     float contrast() const;
     float saturation() const;
     float hue() const;
+    float exposure() const;
+    float temperature() const;
+    float tint() const;
 
     void setCustomPosition(const QPoint &globalPos);
 
 signals:
-    void adjustmentsChanged(float brightness, float contrast, float saturation, float hue);
+    void adjustmentsChanged(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+    void applyRequested(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
 
 public slots:
     void show();

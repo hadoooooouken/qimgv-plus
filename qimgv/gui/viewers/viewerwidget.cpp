@@ -452,7 +452,7 @@ void ViewerWidget::togglePanorama() {
     }
 }
 
-void ViewerWidget::setColorAdjustments(float brightness, float contrast, float saturation, float hue) {
+void ViewerWidget::setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint) {
     if(imageViewer)
-        imageViewer->setColorAdjustments(brightness, contrast, saturation, hue);
+        imageViewer->setColorAdjustments(brightness, contrast, saturation, hue, exposure, temperature, tint);
 }

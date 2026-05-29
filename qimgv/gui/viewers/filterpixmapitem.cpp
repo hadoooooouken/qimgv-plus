@@ -21,11 +21,14 @@ FilterPixmapItem::~FilterPixmapItem() {
     }
 }
 
-void FilterPixmapItem::setColorAdjustments(float brightness, float contrast, float saturation, float hue) {
+void FilterPixmapItem::setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint) {
     mBrightness = brightness;
     mContrast = contrast;
     mSaturation = saturation;
     mHue = hue;
+    mExposure = exposure;
+    mTemperature = temperature;
+    mTint = tint;
     update();
 }
 
@@ -53,6 +56,9 @@ void FilterPixmapItem::initShader() {
         "uniform highp float contrast;\n"
         "uniform highp float saturation;\n"
         "uniform highp float hue;\n"
+        "uniform highp float exposure;\n"
+        "uniform highp float temperature;\n"
+        "uniform highp float tint;\n"
         "\n"
         "vec3 hueRotate(vec3 color, float angle) {\n"
         "    vec3 k = vec3(0.57735, 0.57735, 0.57735);\n"
@@ -63,6 +69,14 @@ void FilterPixmapItem::initShader() {
         "void main() {\n"
         "    highp vec4 color = texture2D(tex, texCoord);\n"
         "    highp vec3 rgb = color.rgb;\n"
+        "    if (abs(temperature) > 0.001 || abs(tint) > 0.001) {\n"
+        "        rgb.r *= (1.0 + temperature + tint * 0.5);\n"
+        "        rgb.g *= (1.0 - tint);\n"
+        "        rgb.b *= (1.0 - temperature + tint * 0.5);\n"
+        "    }\n"
+        "    if (abs(exposure) > 0.001) {\n"
+        "        rgb *= pow(2.0, exposure);\n"
+        "    }\n"
         "    if (abs(hue) > 0.001) {\n"
         "        rgb = hueRotate(rgb, hue);\n"
         "    }\n"
@@ -86,7 +100,8 @@ void FilterPixmapItem::initShader() {
 
 void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     // 1. Fallback to default QGraphicsPixmapItem paint if there are no adjustments
-    if (qAbs(mBrightness) < 0.001f && qAbs(mContrast - 1.0f) < 0.001f && qAbs(mSaturation - 1.0f) < 0.001f && qAbs(mHue) < 0.001f) {
+    if (qAbs(mBrightness) < 0.001f && qAbs(mContrast - 1.0f) < 0.001f && qAbs(mSaturation - 1.0f) < 0.001f && qAbs(mHue) < 0.001f &&
+        qAbs(mExposure) < 0.001f && qAbs(mTemperature) < 0.001f && qAbs(mTint) < 0.001f) {
         QGraphicsPixmapItem::paint(painter, option, widget);
         return;
     }
@@ -138,6 +153,9 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     mProgram->setUniformValue("brightness", mBrightness);
     mProgram->setUniformValue("contrast", mContrast);
     mProgram->setUniformValue("saturation", mSaturation);
+    mProgram->setUniformValue("exposure", mExposure);
+    mProgram->setUniformValue("temperature", mTemperature);
+    mProgram->setUniformValue("tint", mTint);
     
     // Convert hue degrees to radians
     float hueRad = (float)(mHue * M_PI / 180.0);

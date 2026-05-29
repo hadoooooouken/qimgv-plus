@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>360</width>
-    <height>190</height>
+    <height>320</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,13 +19,13 @@
   <property name="minimumSize">
    <size>
     <width>360</width>
-    <height>190</height>
+    <height>320</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>360</width>
-    <height>190</height>
+    <height>320</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -51,6 +51,12 @@
     <widget class="QWidget" name="header" native="true">
      <property name="accessibleName">
       <string>OverlayHeaderWidget</string>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="spacing">
@@ -104,7 +110,7 @@
    <item>
     <layout class="QVBoxLayout" name="contentLayout">
      <property name="spacing">
-      <number>6</number>
+      <number>10</number>
      </property>
      <property name="leftMargin">
       <number>12</number>
@@ -112,6 +118,168 @@
      <property name="rightMargin">
       <number>12</number>
      </property>
+     <item>
+      <layout class="QHBoxLayout" name="exposureLayout">
+       <item>
+        <widget class="QLabel" name="exposureLabel">
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Exposure</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="IconButton" name="exposureMinus" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="exposureSlider">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="minimum">
+          <number>-300</number>
+         </property>
+         <property name="maximum">
+          <number>300</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="IconButton" name="exposurePlus" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="exposureValLabel">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignVCenter</set>
+         </property>
+         <property name="text">
+          <string>+0.00</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="contrastLayout">
+       <item>
+        <widget class="QLabel" name="contrastLabel">
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Contrast</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="IconButton" name="contrastMinus" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="contrastSlider">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="maximum">
+          <number>300</number>
+         </property>
+         <property name="value">
+          <number>100</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="IconButton" name="contrastPlus" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="contrastValLabel">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignVCenter</set>
+         </property>
+         <property name="text">
+          <string>100%</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
      <item>
       <layout class="QHBoxLayout" name="brightnessLayout">
        <item>
@@ -194,9 +362,9 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="contrastLayout">
+      <layout class="QHBoxLayout" name="temperatureLayout">
        <item>
-        <widget class="QLabel" name="contrastLabel">
+        <widget class="QLabel" name="temperatureLabel">
          <property name="minimumSize">
           <size>
            <width>80</width>
@@ -204,12 +372,12 @@
           </size>
          </property>
          <property name="text">
-          <string>Contrast</string>
+          <string>Temperature</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="IconButton" name="contrastMinus" native="true">
+        <widget class="IconButton" name="temperatureMinus" native="true">
          <property name="minimumSize">
           <size>
            <width>18</width>
@@ -225,7 +393,169 @@
         </widget>
        </item>
        <item>
-        <widget class="QSlider" name="contrastSlider">
+        <widget class="QSlider" name="temperatureSlider">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="minimum">
+          <number>-50</number>
+         </property>
+         <property name="maximum">
+          <number>50</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="IconButton" name="temperaturePlus" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="temperatureValLabel">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignVCenter</set>
+         </property>
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="tintLayout">
+       <item>
+        <widget class="QLabel" name="tintLabel">
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Tint</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="IconButton" name="tintMinus" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="tintSlider">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="minimum">
+          <number>-50</number>
+         </property>
+         <property name="maximum">
+          <number>50</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="IconButton" name="tintPlus" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="tintValLabel">
+         <property name="minimumSize">
+          <size>
+           <width>40</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignVCenter</set>
+         </property>
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="saturationLayout">
+       <item>
+        <widget class="QLabel" name="saturationLabel">
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Saturation</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="IconButton" name="saturationMinus" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>18</width>
+           <height>18</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="saturationSlider">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -233,7 +563,7 @@
           <number>0</number>
          </property>
          <property name="maximum">
-          <number>300</number>
+          <number>200</number>
          </property>
          <property name="value">
           <number>100</number>
@@ -241,7 +571,7 @@
         </widget>
        </item>
        <item>
-        <widget class="IconButton" name="contrastPlus" native="true">
+        <widget class="IconButton" name="saturationPlus" native="true">
          <property name="minimumSize">
           <size>
            <width>18</width>
@@ -257,7 +587,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="contrastValLabel">
+        <widget class="QLabel" name="saturationValLabel">
          <property name="minimumSize">
           <size>
            <width>40</width>
@@ -356,114 +686,50 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="saturationLayout">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>8</height>
+         </size>
+        </property>
+       </spacer>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="buttonLayout">
        <item>
-        <widget class="QLabel" name="saturationLabel">
-         <property name="minimumSize">
-          <size>
-           <width>80</width>
-           <height>0</height>
-          </size>
+        <widget class="QPushButton" name="applyButton">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
+         <property name="accessibleName">
+          <string notr="true">Button</string>
          </property>
          <property name="text">
-          <string>Saturation</string>
+          <string>Apply</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="IconButton" name="saturationMinus" native="true">
-         <property name="minimumSize">
-          <size>
-           <width>18</width>
-           <height>18</height>
-          </size>
+        <widget class="QPushButton" name="resetButton">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
          </property>
-         <property name="maximumSize">
-          <size>
-           <width>18</width>
-           <height>18</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSlider" name="saturationSlider">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="minimum">
-          <number>0</number>
-         </property>
-         <property name="maximum">
-          <number>200</number>
-         </property>
-         <property name="value">
-          <number>100</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="IconButton" name="saturationPlus" native="true">
-         <property name="minimumSize">
-          <size>
-           <width>18</width>
-           <height>18</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>18</width>
-           <height>18</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="saturationValLabel">
-         <property name="minimumSize">
-          <size>
-           <width>40</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignVCenter</set>
+         <property name="accessibleName">
+          <string notr="true">Button</string>
          </property>
          <property name="text">
-          <string>100%</string>
+          <string>Reset</string>
          </property>
         </widget>
        </item>
       </layout>
-     </item>
-     <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>8</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="resetButton">
-       <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
-       </property>
-       <property name="accessibleName">
-        <string notr="true">Button</string>
-       </property>
-       <property name="text">
-        <string>Reset</string>
-       </property>
-      </widget>
      </item>
     </layout>
    </item>

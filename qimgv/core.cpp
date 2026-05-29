@@ -356,6 +356,7 @@ void Core::connectComponents() {
   connect(mw, &MW::moveUrlsRequested, this, &Core::movePathsTo);
   connect(mw, &MW::cropRequested, this, &Core::crop);
   connect(mw, &MW::cropAndSaveRequested, this, &Core::cropAndSave);
+  connect(mw, &MW::colorAdjustmentsApplyRequested, this, &Core::applyColorAdjustments);
   connect(mw, &MW::saveAsClicked, this, &Core::requestSavePath);
   connect(mw, &MW::saveRequested, this, &Core::saveCurrentFile);
   connect(mw, &MW::saveAsRequested, this, &Core::saveCurrentFileAs);
@@ -1363,6 +1364,24 @@ void Core::cropAndSave(QRect rect) {
     return;
   edit_template(false, tr("Crop"), {ImageLib::cropped}, rect);
   saveFile(selectedPath());
+  updateInfoString();
+}
+
+void Core::applyColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint) {
+  if (model->isEmpty())
+    return;
+
+  QString path = state.currentFilePath;
+  auto img = getEditableImage(path);
+  if (!img)
+    return;
+
+  QImage *adjusted = ImageLib::applyColorAdjustments(img->getImage(), brightness, contrast, saturation, hue, exposure, temperature, tint);
+  if (!adjusted)
+    return;
+
+  img->setEditedImage(std::unique_ptr<const QImage>(adjusted));
+  model->updateImage(path, std::static_pointer_cast<Image>(img));
   updateInfoString();
 }
 

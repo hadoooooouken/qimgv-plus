@@ -17,6 +17,7 @@ void ColorAdjustmentsOverlayProxy::init() {
     }
     overlay = new ColorAdjustmentsOverlay(container);
     connect(overlay, &ColorAdjustmentsOverlay::adjustmentsChanged, this, &ColorAdjustmentsOverlayProxy::adjustmentsChanged);
+    connect(overlay, &ColorAdjustmentsOverlay::applyRequested, this, &ColorAdjustmentsOverlayProxy::applyRequested);
 }
 
 void ColorAdjustmentsOverlayProxy::show() {
