@@ -119,7 +119,7 @@ if(WIN32)
     # 2. Exiv2
     if(EXIV2)
         add_custom_command(TARGET qimgv-plus POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/exiv2-0.28.8-2022msvc-AMD64/bin/exiv2.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/exiv2/bin/exiv2.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
             COMMENT "Copying Exiv2 DLL..."
         )
     endif()
