@@ -2752,4 +2752,11 @@ li.checked::marker { content: "\2612"; }
         <translation>显示编译选项.</translation>
     </message>
 </context>
+<context>
+    <name>DirectoryPresenter</name>
+    <message>
+        <source>Folder</source>
+        <translation>文件夹</translation>
+    </message>
+</context>
 </TS>

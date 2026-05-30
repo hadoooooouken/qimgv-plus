@@ -2869,4 +2869,11 @@ li.checked::marker { content: "\2612"; }
         <translation>Afficher les options de build.</translation>
     </message>
 </context>
+<context>
+    <name>DirectoryPresenter</name>
+    <message>
+        <source>Folder</source>
+        <translation>Dossier</translation>
+    </message>
+</context>
 </TS>

@@ -2785,4 +2785,11 @@ li.checked::marker { content: "\2612"; }
         <translation>Derleme seçeneklerini göster.</translation>
     </message>
 </context>
+<context>
+    <name>DirectoryPresenter</name>
+    <message>
+        <source>Folder</source>
+        <translation>Klasör</translation>
+    </message>
+</context>
 </TS>

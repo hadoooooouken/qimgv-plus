@@ -2747,4 +2747,11 @@ Example: D:\Downloads\1c_bases; E:\Tuts</source>
         <translation>Показати опції зборки.</translation>
     </message>
 </context>
+<context>
+    <name>DirectoryPresenter</name>
+    <message>
+        <source>Folder</source>
+        <translation>Папка</translation>
+    </message>
+</context>
 </TS>

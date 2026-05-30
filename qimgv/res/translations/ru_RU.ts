@@ -2668,4 +2668,11 @@ text-decoration: underline; color:#007af4;"&gt;здесь&lt;/span&gt;&lt;/a&gt;
         <translation>Показать опции сборки.</translation>
     </message>
 </context>
+<context>
+    <name>DirectoryPresenter</name>
+    <message>
+        <source>Folder</source>
+        <translation>Папка</translation>
+    </message>
+</context>
 </TS>

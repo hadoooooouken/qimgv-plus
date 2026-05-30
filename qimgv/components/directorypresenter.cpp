@@ -266,7 +266,7 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
       ImageLib::recolor(*pixmap, settings->colorScheme().icons);
 
       std::shared_ptr<Thumbnail> thumb(
-          new Thumbnail(model->dirNameAt(i), "Folder", size,
+          new Thumbnail(model->dirNameAt(i), tr("Folder"), size,
                         std::shared_ptr<QPixmap>(pixmap)));
       view->setThumbnail(i, thumb);
     } else {
@@ -384,14 +384,14 @@ DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
       QString(":/res/icons/common/other/folder32-scalable.svg"));
   if (!svgRenderer.isValid() || svgRenderer.defaultSize().width() <= 0)
     return std::shared_ptr<Thumbnail>(
-        new Thumbnail(dirName, "Folder", size, nullptr));
+        new Thumbnail(dirName, tr("Folder"), size, nullptr));
 
   int factor = (size * 0.90f) / svgRenderer.defaultSize().width();
   QSize baseSize = svgRenderer.defaultSize() * factor;
 
   if (baseSize.isEmpty())
     return std::shared_ptr<Thumbnail>(
-        new Thumbnail(dirName, "Folder", size, nullptr));
+        new Thumbnail(dirName, tr("Folder"), size, nullptr));
 
   qreal dpr = qApp->devicePixelRatio();
   QPixmap *pixmap = new QPixmap(baseSize);
@@ -428,5 +428,5 @@ DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
   painter.end();
 
   return std::shared_ptr<Thumbnail>(
-      new Thumbnail(dirName, "Folder", size, std::shared_ptr<QPixmap>(pixmap)));
+      new Thumbnail(dirName, tr("Folder"), size, std::shared_ptr<QPixmap>(pixmap)));
 }

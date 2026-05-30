@@ -2772,4 +2772,11 @@ li.checked::marker { content: "\2612"; }
         <translation>Opciones de visualización.</translation>
     </message>
 </context>
+<context>
+    <name>DirectoryPresenter</name>
+    <message>
+        <source>Folder</source>
+        <translation>Carpeta</translation>
+    </message>
+</context>
 </TS>

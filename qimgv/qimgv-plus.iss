@@ -40,6 +40,7 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
+Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 
 [CustomMessages]
 ; Compacting status
@@ -50,6 +51,7 @@ spanish.CompactingFiles=Optimizar el tamaño de los archivos en el disco...
 french.CompactingFiles=Optimisation de la taille des fichiers sur le disque...
 japanese.CompactingFiles=ディスク上のファイルサイズを最適化しています...
 turkish.CompactingFiles=Disk üzerindeki dosya boyutları optimize ediliyor...
+russian.CompactingFiles=Оптимизация размера файлов на диске...
 
 ; Group names
 english.GroupFileAssociations=File Associations:
@@ -59,6 +61,7 @@ spanish.GroupFileAssociations=Asociaciones de arquivos:
 french.GroupFileAssociations=Associations de fichiers :
 japanese.GroupFileAssociations=ファイル関連付け:
 turkish.GroupFileAssociations=Dosya İlişkilendirmeleri:
+russian.GroupFileAssociations=Ассоциации файлов:
 
 english.GroupAdditionalOptions=Additional options:
 ukrainian.GroupAdditionalOptions=Додаткові параметри:
@@ -67,6 +70,7 @@ spanish.GroupAdditionalOptions=Opciones adicionales:
 french.GroupAdditionalOptions=Options supplémentaires :
 japanese.GroupAdditionalOptions=追加オプション:
 turkish.GroupAdditionalOptions=Ek seçenekler:
+russian.GroupAdditionalOptions=Дополнительные параметры:
 
 ; Task description for compacting
 english.CompactFilesTaskDesc=Optimize file sizes on disk (compress with LZX)
@@ -76,6 +80,7 @@ spanish.CompactFilesTaskDesc=Optimizar el tamaño de los archivos en disco (comp
 french.CompactFilesTaskDesc=Optimiser la taille des fichiers sur le disque (compression LZX)
 japanese.CompactFilesTaskDesc=ディスク上のファイルサイズを最適化 (LZX圧縮)
 turkish.CompactFilesTaskDesc=Dosya boyutlarını diskte optimize et (LZX ile sıkıştır)
+russian.CompactFilesTaskDesc=Оптимизировать размер файлов на диске (сжатие LZX)
 
 ; Task description for thumbnails
 english.ThumbnailsTaskDesc=Generate thumbnails in Windows Explorer
@@ -85,6 +90,7 @@ spanish.ThumbnailsTaskDesc=Generar miniaturas en el Explorador de Windows
 french.ThumbnailsTaskDesc=Générer des miniatures dans l'Explorateur Windows
 japanese.ThumbnailsTaskDesc=Windowsエクスプローラーでサムネイルを生成
 turkish.ThumbnailsTaskDesc=Windows Gezgini'nde küçük resimler oluştur
+russian.ThumbnailsTaskDesc=Создавать эскизы в Проводнике Windows
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
@@ -105,6 +111,7 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDi
 
 [Run]
 Filename: "compact.exe"; Parameters: "/c /f /s:""{app}"" /exe:lzx /i"; WorkingDir: "{app}"; StatusMsg: "{cm:CompactingFiles}"; Flags: runhidden; Tasks: compact
+Filename: "compact.exe"; Parameters: "/u /s:""{app}\models"" /i"; WorkingDir: "{app}"; Flags: runhidden; Tasks: compact
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [Registry]

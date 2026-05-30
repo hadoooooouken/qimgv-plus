@@ -1,8 +1,9 @@
 #include "settingsdialog.h"
-#include "ui_settingsdialog.h"
 #include "components/cache/thumbnailcache.h"
+#include "ui_settingsdialog.h"
 #include <QDir>
 #include <QFileInfo>
+
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent), ui(new Ui::SettingsDialog) {
@@ -10,28 +11,37 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 #ifndef USE_UPSCAYL
   ui->stackedWidget->removeWidget(ui->AIUpscale);
 #else
-  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->preloadUpscaylCheckBox, &QCheckBox::setEnabled);
-  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->upscaylModelComboBox, &QComboBox::setEnabled);
-  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->label_upscaylModel, &QLabel::setEnabled);
-  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->label_upscaylGetModels, &QLabel::setEnabled);
-  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->upscaylLimitCheckBox, &QCheckBox::setEnabled);
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled,
+          ui->preloadUpscaylCheckBox, &QCheckBox::setEnabled);
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->upscaylModelComboBox,
+          &QComboBox::setEnabled);
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->label_upscaylModel,
+          &QLabel::setEnabled);
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled,
+          ui->label_upscaylGetModels, &QLabel::setEnabled);
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, ui->upscaylLimitCheckBox,
+          &QCheckBox::setEnabled);
 
   auto updateLimitControls = [this]() {
-    bool enabled = ui->useUpscaylCheckBox->isChecked() && ui->upscaylLimitCheckBox->isChecked();
+    bool enabled = ui->useUpscaylCheckBox->isChecked() &&
+                   ui->upscaylLimitCheckBox->isChecked();
     ui->upscaylLimitSlider->setEnabled(enabled);
     ui->upscaylLimitValueLabel->setEnabled(enabled);
   };
-  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, this, updateLimitControls);
-  connect(ui->upscaylLimitCheckBox, &QCheckBox::toggled, this, updateLimitControls);
+  connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, this,
+          updateLimitControls);
+  connect(ui->upscaylLimitCheckBox, &QCheckBox::toggled, this,
+          updateLimitControls);
 
-  connect(ui->upscaylLimitSlider, &QSlider::valueChanged, this, [this](int value) {
-    int snapped = ((value + 2) / 5) * 5;
-    if (snapped != value) {
-      ui->upscaylLimitSlider->setValue(snapped);
-      return;
-    }
-    ui->upscaylLimitValueLabel->setText(QString::number(snapped) + "%");
-  });
+  connect(ui->upscaylLimitSlider, &QSlider::valueChanged, this,
+          [this](int value) {
+            int snapped = ((value + 2) / 5) * 5;
+            if (snapped != value) {
+              ui->upscaylLimitSlider->setValue(snapped);
+              return;
+            }
+            ui->upscaylLimitValueLabel->setText(QString::number(snapped) + "%");
+          });
 
   // Auto-scan models directory for compatible models
   QDir modelsDir(qApp->applicationDirPath() + "/models");
@@ -129,7 +139,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   ui->colorSelectorThumbpanel->setDescription(tr("Thumbnail panel"));
   ui->colorSelectorThumbpanel->setShowAlpha(true);
 
-
   ui->scalingQualityComboBox->clear();
   ui->scalingQualityComboBox->addItem("Nearest", QI_FILTER_NEAREST);
   ui->scalingQualityComboBox->addItem("Bilinear", QI_FILTER_BILINEAR);
@@ -142,7 +151,8 @@ SettingsDialog::SettingsDialog(QWidget *parent)
                                       QI_FILTER_CV_CUBIC_SHARPEN);
   ui->scalingQualityComboBox->addItem("Lanczos (OpenCV)", QI_FILTER_CV_LANCZOS);
   ui->scalingQualityComboBox->addItem("Area (OpenCV)", QI_FILTER_CV_AREA);
-  ui->scalingQualityComboBox->addItem("Smart sharpen (OpenCV)", QI_FILTER_CV_SMART);
+  ui->scalingQualityComboBox->addItem("Smart sharpen (OpenCV)",
+                                      QI_FILTER_CV_SMART);
 #endif
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
@@ -172,22 +182,25 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   langs.insert("en_US", "English");
   langs.insert("es_ES", "Español");
   langs.insert("fr_FR", "Français");
-  langs.insert("ja_JP", "日本語");
   langs.insert("tr_TR", "Türkçe");
   langs.insert("uk_UA", "Українська");
+  langs.insert("ja_JP", "日本語");
   langs.insert("zh_CN", "简体中文");
+  langs.insert("ru_RU", "Русский");
   // fill langs combobox, sorted by locale
   ui->langComboBox->addItems(langs.values());
   // insert system language entry manually at the beginning
   langs.insert("system", "System language");
   ui->langComboBox->insertItem(0, "System language");
 
-  connect(ui->thumbnailResolutionSlider, &QSlider::valueChanged, this, &SettingsDialog::onThumbnailResolutionSliderChanged);
+  connect(ui->thumbnailResolutionSlider, &QSlider::valueChanged, this,
+          &SettingsDialog::onThumbnailResolutionSliderChanged);
 
   // Modern formats quality row
   QHBoxLayout *modernLayout = new QHBoxLayout();
   modernLayout->setContentsMargins(0, 0, 0, 0);
-  QLabel *modernTitleLabel = new QLabel(tr("Modern formats quality (WebP, JXL, AVIF):"), this);
+  QLabel *modernTitleLabel =
+      new QLabel(tr("Modern formats quality (WebP, JXL, AVIF):"), this);
   modernQualitySlider = new QSlider(Qt::Horizontal, this);
   modernQualitySlider->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   modernQualitySlider->setMinimumSize(180, 25);
@@ -196,7 +209,8 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   modernQualitySlider->setTickPosition(QSlider::TicksBelow);
   modernQualitySlider->setTickInterval(10);
   modernQualityLabel = new QLabel(this);
-  QSpacerItem *modernSpacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+  QSpacerItem *modernSpacer =
+      new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
   modernLayout->addWidget(modernTitleLabel);
   modernLayout->addWidget(modernQualitySlider);
@@ -216,7 +230,8 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   pngQualitySlider->setTickPosition(QSlider::TicksBelow);
   pngQualitySlider->setTickInterval(1);
   pngQualityLabel = new QLabel(this);
-  QSpacerItem *pngSpacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+  QSpacerItem *pngSpacer =
+      new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
   pngLayout->addWidget(pngTitleLabel);
   pngLayout->addWidget(pngQualitySlider);
@@ -224,17 +239,20 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   pngLayout->addSpacerItem(pngSpacer);
 
   // Connect signals
-  connect(pngQualitySlider, &QSlider::valueChanged, this, &SettingsDialog::onPNGQualitySliderChanged);
-  connect(modernQualitySlider, &QSlider::valueChanged, this, &SettingsDialog::onModernQualitySliderChanged);
+  connect(pngQualitySlider, &QSlider::valueChanged, this,
+          &SettingsDialog::onPNGQualitySliderChanged);
+  connect(modernQualitySlider, &QSlider::valueChanged, this,
+          &SettingsDialog::onModernQualitySliderChanged);
 
-  // Insert into vertical layout right after JPEG save quality row (ui->horizontalLayout_10)
+  // Insert into vertical layout right after JPEG save quality row
+  // (ui->horizontalLayout_10)
   int idx = ui->verticalLayout_34->indexOf(ui->horizontalLayout_10);
   if (idx != -1) {
-      ui->verticalLayout_34->insertLayout(idx + 1, modernLayout);
-      ui->verticalLayout_34->insertLayout(idx + 2, pngLayout);
+    ui->verticalLayout_34->insertLayout(idx + 1, modernLayout);
+    ui->verticalLayout_34->insertLayout(idx + 2, pngLayout);
   } else {
-      ui->verticalLayout_34->addLayout(modernLayout);
-      ui->verticalLayout_34->addLayout(pngLayout);
+    ui->verticalLayout_34->addLayout(modernLayout);
+    ui->verticalLayout_34->addLayout(pngLayout);
   }
 
   connect(this, &SettingsDialog::settingsChanged, settings,
@@ -372,7 +390,8 @@ void SettingsDialog::readSettings() {
 
   ui->upscaylLimitCheckBox->setChecked(settings->upscaylLimitEnabled());
   ui->upscaylLimitSlider->setValue(settings->upscaylLimitValue());
-  ui->upscaylLimitValueLabel->setText(QString::number(settings->upscaylLimitValue()) + "%");
+  ui->upscaylLimitValueLabel->setText(
+      QString::number(settings->upscaylLimitValue()) + "%");
 
   ui->upscaylLimitCheckBox->setEnabled(settings->useUpscayl());
   bool limitEnabled = settings->useUpscayl() && settings->upscaylLimitEnabled();
@@ -869,10 +888,14 @@ void SettingsDialog::onJPEGQualitySliderChanged(int value) {
 //------------------------------------------------------------------------------
 void SettingsDialog::onPNGQualitySliderChanged(int value) {
   QString desc;
-  if (value == 0) desc = tr("None (Uncompressed)");
-  else if (value <= 3) desc = tr("Fast");
-  else if (value <= 6) desc = tr("Balanced");
-  else desc = tr("Maximum");
+  if (value == 0)
+    desc = tr("None (Uncompressed)");
+  else if (value <= 3)
+    desc = tr("Fast");
+  else if (value <= 6)
+    desc = tr("Balanced");
+  else
+    desc = tr("Maximum");
   pngQualityLabel->setText(QString("Level %1 (%2)").arg(value).arg(desc));
 }
 //------------------------------------------------------------------------------
