@@ -655,6 +655,18 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="exposureSpinBox">
+                <property name="minimumSize">
+                 <size>
+                  <width>80</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="minimum">
                  <double>-2.000000000000000</double>
                 </property>
@@ -701,6 +713,18 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="contrastSpinBox">
+                <property name="minimumSize">
+                 <size>
+                  <width>80</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="maximum">
                  <double>3.000000000000000</double>
                 </property>
@@ -747,6 +771,18 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="brightnessSpinBox">
+                <property name="minimumSize">
+                 <size>
+                  <width>80</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="minimum">
                  <double>-1.000000000000000</double>
                 </property>
@@ -793,6 +829,18 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="tempSpinBox">
+                <property name="minimumSize">
+                 <size>
+                  <width>80</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="minimum">
                  <double>-1.000000000000000</double>
                 </property>
@@ -839,6 +887,18 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="tintSpinBox">
+                <property name="minimumSize">
+                 <size>
+                  <width>80</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="minimum">
                  <double>-1.000000000000000</double>
                 </property>
@@ -885,6 +945,18 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="saturationSpinBox">
+                <property name="minimumSize">
+                 <size>
+                  <width>80</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="maximum">
                  <double>3.000000000000000</double>
                 </property>
@@ -931,6 +1003,18 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="hueSpinBox">
+                <property name="minimumSize">
+                 <size>
+                  <width>80</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
                 <property name="minimum">
                  <double>-180.000000000000000</double>
                 </property>
