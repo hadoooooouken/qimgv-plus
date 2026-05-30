@@ -111,7 +111,7 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDi
 
 [Run]
 Filename: "compact.exe"; Parameters: "/c /f /s:""{app}"" /exe:lzx /i"; WorkingDir: "{app}"; StatusMsg: "{cm:CompactingFiles}"; Flags: runhidden; Tasks: compact
-Filename: "compact.exe"; Parameters: "/u /s:""{app}\models"" /i"; WorkingDir: "{app}"; Flags: runhidden; Tasks: compact
+Filename: "compact.exe"; Parameters: "/u /f /s:""{app}\models"" /i"; WorkingDir: "{app}"; Flags: runhidden; Tasks: compact
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [Registry]
