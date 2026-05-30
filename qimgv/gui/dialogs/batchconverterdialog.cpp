@@ -1007,8 +1007,8 @@ void BatchWorkerTask::run() {
   if (srcImg.isNull()) {
     QMetaObject::invokeMethod(
         dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
-        Q_ARG(QString, dialog->tr("Failed")),
-        Q_ARG(QString, dialog->tr("Load Error")), Q_ARG(bool, false));
+        Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
+        Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Load Error")), Q_ARG(bool, false));
     return;
   }
 
@@ -1086,12 +1086,12 @@ void BatchWorkerTask::run() {
   if (saved) {
     QMetaObject::invokeMethod(dialog, "onProgressUpdated", Qt::QueuedConnection,
                               Q_ARG(int, index),
-                              Q_ARG(QString, dialog->tr("Done")),
+                              Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Done")),
                               Q_ARG(QString, detailsStr), Q_ARG(bool, true));
   } else {
     QMetaObject::invokeMethod(
         dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
-        Q_ARG(QString, dialog->tr("Failed")),
-        Q_ARG(QString, dialog->tr("Save Error")), Q_ARG(bool, false));
+        Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
+        Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Save Error")), Q_ARG(bool, false));
   }
 }

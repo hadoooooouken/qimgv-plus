@@ -184,7 +184,7 @@
          <string notr="true">FolderViewBatchButton</string>
         </property>
         <property name="text">
-         <string notr="true">Batch convert  ⇄</string>
+         <string>Batch convert  ⇄</string>
         </property>
        </widget>
       </item>

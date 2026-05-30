@@ -1,152 +1,152 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="es_ES">
+<TS version="2.1" language="ru_RU">
 <context>
     <name>BatchConverterDialog</name>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="14" />
         <source>Batch Converter</source>
-        <translation>Conversor por lotes</translation>
+        <translation>Пакетный конвертер</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="38" />
         <source>Select all</source>
-        <translation>Seleccionar todo</translation>
+        <translation>Выделить все</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="45" />
         <source>Deselect all</source>
-        <translation>Deseleccionar todo</translation>
+        <translation>Снять выделение</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="61" />
         <source>0 files selected (0.0 MB)</source>
-        <translation>0 archivos seleccionados (0.0 MB)</translation>
+        <translation>Выбрано файлов: 0 (0.0 МБ)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="104" />
         <source>Save as type:</source>
-        <translation>Guardar como tipo:</translation>
+        <translation>Тип файла:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="149" />
         <source>Resize</source>
-        <translation>Redimensionar</translation>
+        <translation>Изменение размера</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="192" />
         <source>By Percent:</source>
-        <translation>Por porcentaje:</translation>
+        <translation>В процентах:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="208" />
         <source>By Absolute Size:</source>
-        <translation>Por tamaño absoluto:</translation>
+        <translation>Точный размер:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="227" />
         <source>Percent:</source>
-        <translation>Porcentaje:</translation>
+        <translation>Процент:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="248" />
         <source>Width:</source>
-        <translation>Ancho:</translation>
+        <translation>Ширина:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="334" />
         <source>Height:</source>
-        <translation>Alto:</translation>
+        <translation>Высота:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="400" />
         <source>Keep aspect ratio</source>
-        <translation>Mantener relación de aspecto</translation>
+        <translation>Сохранять пропорции</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="410" />
         <source>Use Upscayl</source>
-        <translation>Usar Upscayl</translation>
+        <translation>Использовать Upscayl</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="452" />
         <source>Filter:</source>
-        <translation>Filtro:</translation>
+        <translation>Фильтр:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="473" />
         <source>Model:</source>
-        <translation>Modelo:</translation>
+        <translation>Модель:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="505" />
         <source>Common sizes:</source>
-        <translation>Tamaños comunes:</translation>
+        <translation>Стандартные размеры:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="551" />
         <source>Fit to desktop</source>
-        <translation>Ajustar al escritorio</translation>
+        <translation>Вписать в рабочий стол</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="570" />
         <source>Fill desktop (expanding)</source>
-        <translation>Rellenar escritorio (expandiendo)</translation>
+        <translation>Заполнить рабочий стол (с расширением)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="589" />
         <source>Reset</source>
-        <translation>Restablecer</translation>
+        <translation>Сбросить</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="616" />
         <source>Color adjustments</source>
-        <translation>Ajustes de color</translation>
+        <translation>Цветокоррекция</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="636" />
         <source>Exposure:</source>
-        <translation>Exposición:</translation>
+        <translation>Экспозиция:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="682" />
         <source>Contrast:</source>
-        <translation>Contraste:</translation>
+        <translation>Контрастность:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="728" />
         <source>Brightness:</source>
-        <translation>Brillo:</translation>
+        <translation>Яркость:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="774" />
         <source>Temperature:</source>
-        <translation>Temperatura:</translation>
+        <translation>Температура:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="820" />
         <source>Tint:</source>
-        <translation>Matiz:</translation>
+        <translation>Оттенок:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="866" />
         <source>Saturation:</source>
-        <translation>Saturación:</translation>
+        <translation>Насыщенность:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="912" />
         <source>Hue:</source>
-        <translation>Tono (Hue):</translation>
+        <translation>Цветовой тон:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="953" />
         <source>Output</source>
-        <translation>Salida</translation>
+        <translation>Вывод</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="959" />
         <source>Output folder:</source>
-        <translation>Carpeta de salida:</translation>
+        <translation>Выходная папка:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="971" />
@@ -156,12 +156,12 @@
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="980" />
         <source>Create subfolder for batch</source>
-        <translation>Crear subcarpeta para el lote</translation>
+        <translation>Создать подпапку для пакета</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="987" />
         <source>Filename pattern:</source>
-        <translation>Patrón de nombre de archivo:</translation>
+        <translation>Шаблон имени файла:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="994" />
@@ -171,130 +171,130 @@
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1001" />
         <source>Available: {name}, {ext}, {date}, {index}</source>
-        <translation>Disponible: {name}, {ext}, {date}, {index}</translation>
+        <translation>Доступно: {name}, {ext}, {date}, {index}</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1013" />
         <source>Overwrite existing files</source>
-        <translation>Sobrescribir archivos existentes</translation>
+        <translation>Перезаписывать существующие файлы</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1051" />
         <source>Ready to convert.</source>
-        <translation>Listo para convertir.</translation>
+        <translation>Готов к конвертации.</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1071" />
         <source>Convert</source>
-        <translation>Convertir</translation>
+        <translation>Конвертировать</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1081" />
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="768" />
         <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="344" />
         <source>Reset: %1 x %2</source>
-        <translation>Restablecer: %1 x %2</translation>
+        <translation>Сбросить: %1 x %2</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="384" />
         <source>AI Upscaling is disabled in this build.</source>
-        <translation>El escalado por IA está deshabilitado en esta compilación.</translation>
+        <translation>Масштабирование ИИ отключено в этой сборке.</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="740" />
         <source>%1 files selected (%2 MB)</source>
-        <translation>%1 archivos seleccionados (%2 MB)</translation>
+        <translation>Выбрано файлов: %1 (%2 МБ)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="747" />
         <source>Select Output Directory</source>
-        <translation>Seleccionar directorio de salida</translation>
+        <translation>Выбрать выходную папку</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="766" />
         <source>Stop</source>
-        <translation>Detener</translation>
+        <translation>Стоп</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="778" />
         <source>Invalid Directory</source>
-        <translation>Directorio no válido</translation>
+        <translation>Неверная папка</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="779" />
         <source>Please select a valid output directory.</source>
-        <translation>Por favor, seleccione un directorio de salida válido.</translation>
+        <translation>Пожалуйста, выберите существующую выходную папку.</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="795" />
         <source>No files</source>
-        <translation>Sin archivos</translation>
+        <translation>Нет файлов</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="796" />
         <source>No files selected in the queue. Please check at least one file.</source>
-        <translation>No hay archivos seleccionados en la cola. Por favor, marque al menos un archivo.</translation>
+        <translation>В очереди нет выбранных файлов. Пожалуйста, отметьте хотя бы один файл.</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="808" />
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="923" />
         <source>Processing...</source>
-        <translation>Procesando...</translation>
+        <translation>Обработка...</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="865" />
         <source>Loading AI Model...</source>
-        <translation>Cargando modelo de IA...</translation>
+        <translation>Загрузка модели ИИ...</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="881" />
         <source>Failed to load AI model.</source>
-        <translation>Error al cargar el modelo de IA.</translation>
+        <translation>Не удалось загрузить модель ИИ.</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="882" />
         <source>AI Error</source>
-        <translation>Error de IA</translation>
+        <translation>Ошибка ИИ</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="882" />
         <source>Failed to load AI upscaling model: %1</source>
-        <translation>Error al cargar el modelo de escalado por IA: %1</translation>
+        <translation>Не удалось загрузить модель масштабирования ИИ: %1</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="897" />
         <source>Pending</source>
-        <translation>Pendiente</translation>
+        <translation>Ожидание</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="919" />
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1089" />
         <source>Done</source>
-        <translation>Completado</translation>
+        <translation>Готово</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="919" />
         <source>Skipped (Exists)</source>
-        <translation>Omitido (Ya existe)</translation>
+        <translation>Пропущено (уже существует)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="955" />
         <source>Processed %1 / %2 files.</source>
-        <translation>Procesados %1 / %2 archivos.</translation>
+        <translation>Обработано %1 из %2 файлов.</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="968" />
         <source>Finished. Success: %1, Failed: %2</source>
-        <translation>Finalizado. Éxito: %1, Error: %2</translation>
+        <translation>Завершено. Успешно: %1, Ошибок: %2</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="972" />
         <source>Batch Conversion Complete</source>
-        <translation>Conversión por lotes completa</translation>
+        <translation>Пакетное преобразование завершено</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="973" />
@@ -303,32 +303,32 @@
 Successfully converted: %1
 Failed: %2
 Total files: %3</source>
-        <translation>Proceso por lotes completo.
+        <translation>Пакетный процесс завершен.
 
-Convertidos con éxito: %1
-Fallidos: %2
-Archivos totales: %3</translation>
+Успешно обработано: %1
+Ошибок: %2
+Всего файлов: %3</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="988" />
         <source>Stopped by user.</source>
-        <translation>Detenido por el usuario.</translation>
+        <translation>Остановлено пользователем.</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1010" />
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1094" />
         <source>Failed</source>
-        <translation>Error</translation>
+        <translation>Ошибка</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1011" />
         <source>Load Error</source>
-        <translation>Error de carga</translation>
+        <translation>Ошибка загрузки</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1095" />
         <source>Save Error</source>
-        <translation>Error de guardado</translation>
+        <translation>Ошибка сохранения</translation>
     </message>
 </context>
 <context>
@@ -336,17 +336,17 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="71" />
         <source>Pending</source>
-        <translation>Pendiente</translation>
+        <translation>Ожидание</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="122" />
         <source>Processing...</source>
-        <translation>Procesando...</translation>
+        <translation>Обработка...</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="125" />
         <source>Done</source>
-        <translation>Completado</translation>
+        <translation>Готово</translation>
     </message>
 </context>
 <context>
@@ -354,12 +354,12 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/overlays/changelogwindow.ui" line="154" />
         <source>Close, never show changelogs</source>
-        <translation>Cerrar y no mostrar más</translation>
+        <translation>Закрыть, больше не показывать</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/changelogwindow.ui" line="170" />
         <source>Close</source>
-        <translation>Cerrar</translation>
+        <translation>Закрыть</translation>
     </message>
 </context>
 <context>
@@ -367,17 +367,17 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="53" />
         <source>OverlayHeaderWidget</source>
-        <translation>OverlayHeaderWidget</translation>
+        <translation>Информационная панель</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="96" />
         <source>Color adjustments</source>
-        <translation>Ajustes de color</translation>
+        <translation>Цветокоррекция</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="132" />
         <source>Exposure</source>
-        <translation>Exposición</translation>
+        <translation>Экспозиция</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="196" />
@@ -385,19 +385,9 @@ Archivos totales: %3</translation>
         <translation>+0.00</translation>
     </message>
     <message>
-        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="294" />
-        <source>Brightness</source>
-        <translation>Brillo</translation>
-    </message>
-    <message>
-        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="358" />
-        <source>0%</source>
-        <translation>0%</translation>
-    </message>
-    <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="213" />
         <source>Contrast</source>
-        <translation>Contraste</translation>
+        <translation>Контрастность</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="277" />
@@ -406,9 +396,19 @@ Archivos totales: %3</translation>
         <translation>100%</translation>
     </message>
     <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="294" />
+        <source>Brightness</source>
+        <translation>Яркость</translation>
+    </message>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="358" />
+        <source>0%</source>
+        <translation>0%</translation>
+    </message>
+    <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="375" />
         <source>Temperature</source>
-        <translation>Temperatura</translation>
+        <translation>Температура</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="439" />
@@ -419,12 +419,17 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="456" />
         <source>Tint</source>
-        <translation>Matiz</translation>
+        <translation>Оттенок</translation>
+    </message>
+    <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="537" />
+        <source>Saturation</source>
+        <translation>Насыщенность</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="618" />
         <source>Hue</source>
-        <translation>Tono</translation>
+        <translation>Цветовой тон</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="682" />
@@ -432,19 +437,14 @@ Archivos totales: %3</translation>
         <translation>0°</translation>
     </message>
     <message>
-        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="537" />
-        <source>Saturation</source>
-        <translation>Saturación</translation>
-    </message>
-    <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="715" />
         <source>Apply</source>
-        <translation>Aplicar</translation>
+        <translation>Применить</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="728" />
         <source>Reset</source>
-        <translation>Restablecer</translation>
+        <translation>Сбросить</translation>
     </message>
 </context>
 <context>
@@ -452,72 +452,72 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/contextmenu.ui" line="236" />
         <source>Edit</source>
-        <translation>Editar</translation>
+        <translation>Редактировать</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="59" />
         <source>Print</source>
-        <translation>Imprimir</translation>
+        <translation>Печать</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="63" />
         <source>Quick copy</source>
-        <translation>Copiar</translation>
+        <translation>Быстрое копирование</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="67" />
         <source>Quick move</source>
-        <translation>Renombrar</translation>
+        <translation>Быстрое перемещение</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="71" />
         <source>Move to trash</source>
-        <translation>Enviar a la papelera</translation>
+        <translation>Переместить в корзину</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="76" />
         <source>Color adjustments</source>
-        <translation>Ajustes de color</translation>
+        <translation>Цветокоррекция</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="80" />
         <source>Panorama mode</source>
-        <translation>Modo panorama</translation>
+        <translation>Режим панорамы</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="84" />
         <source>Open</source>
-        <translation>Abrir</translation>
+        <translation>Открыть</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="89" />
         <source>Folder View</source>
-        <translation>Vista de Carpetas</translation>
+        <translation>Режим галереи</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="94" />
         <source>Settings</source>
-        <translation>Preferencias</translation>
+        <translation>Настройки</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="97" />
         <source>Open with...</source>
-        <translation>Abrir con...</translation>
+        <translation>Открыть с помощью...</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="103" />
         <source>Show in folder</source>
-        <translation>Mostrar en carpeta</translation>
+        <translation>Показать в папке</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="111" />
         <source>Back</source>
-        <translation>Atras</translation>
+        <translation>Назад</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="114" />
         <source>Configure menu</source>
-        <translation>Menu de configuracion</translation>
+        <translation>Настроить меню</translation>
     </message>
 </context>
 <context>
@@ -526,12 +526,12 @@ Archivos totales: %3</translation>
         <location filename="../../gui/overlays/copyoverlay.cpp" line="14" />
         <location filename="../../gui/overlays/copyoverlay.cpp" line="50" />
         <source>Copy to...</source>
-        <translation>Copiar a...</translation>
+        <translation>Копировать в...</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/copyoverlay.cpp" line="53" />
         <source>Move to...</source>
-        <translation>Mover a...</translation>
+        <translation>Переместить в...</translation>
     </message>
 </context>
 <context>
@@ -539,238 +539,238 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../core.cpp" line="542" />
         <source>Updated: </source>
-        <translation>Actualizado: </translation>
+        <translation>Обновлено: </translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="550" />
         <source>Welcome to </source>
-        <translation>Bienvenido a </translation>
+        <translation>Добро пожаловать в </translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="551" />
         <source> version </source>
-        <translation> versión </translation>
+        <translation> версия </translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="562" />
         <source>Shuffle mode: OFF</source>
-        <translation>Modo aleatorio: Apagado</translation>
+        <translation>Режим перемешивания: Выключен</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="565" />
         <source>Shuffle mode: ON</source>
-        <translation>Modo aleatorio: Encendido</translation>
+        <translation>Режим перемешивания: Включен</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="574" />
         <source>Slideshow: OFF</source>
-        <translation>Diapositivas: Apagado</translation>
+        <translation>Слайд-шоу: Выключено</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="578" />
         <source>Slideshow: ON</source>
-        <translation>Diapositivas: Encendido</translation>
+        <translation>Слайд-шоу: Включено</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="641" />
         <source>Delete </source>
-        <translation>Eliminar </translation>
+        <translation>Удалить </translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="642" />
         <source> items permanently?</source>
-        <translation> ítems permanentemente?</translation>
+        <translation> файлов навсегда?</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="644" />
         <source>Delete item permanently?</source>
-        <translation>Eliminar permanentemente?</translation>
+        <translation>Удалить файл навсегда?</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="645" />
         <source>Delete permanently</source>
-        <translation>Eliminar permanentemente</translation>
+        <translation>Удалить навсегда</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="661" />
         <source>File removed</source>
-        <translation>Archivo eliminado</translation>
+        <translation>Файл удален</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="665" />
         <source>Removed: </source>
-        <translation>Eliminado: </translation>
+        <translation>Удалено: </translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="666" />
         <location filename="../../core.cpp" line="702" />
         <source> files</source>
-        <translation> archivos</translation>
+        <translation> файлов</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="678" />
         <source>Move </source>
-        <translation>Mover </translation>
+        <translation>Переместить </translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="678" />
         <source> items to trash?</source>
-        <translation> ítems a la papelera?</translation>
+        <translation> файлов в корзину?</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="680" />
         <source>Move item to trash?</source>
-        <translation>Mover ítem a la papelera?</translation>
+        <translation>Переместить файл в корзину?</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="681" />
         <source>Move to trash</source>
-        <translation>Mover a la papelera</translation>
+        <translation>Переместить в корзину</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="697" />
         <source>Moved to trash</source>
-        <translation>Movido a la papelera</translation>
+        <translation>Перемещено в корзину</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="701" />
         <source>Moved to trash: </source>
-        <translation>Movido a la papelera: </translation>
+        <translation>Перемещено в корзину: </translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="756" />
         <source>File copied</source>
-        <translation>Archivo copiado</translation>
+        <translation>Файл скопирован</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="763" />
         <source>Path copied</source>
-        <translation>Ruta copiada</translation>
+        <translation>Путь скопирован</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="942" />
         <location filename="../../core.cpp" line="1212" />
         <location filename="../../core.cpp" line="1234" />
         <source>File exists</source>
-        <translation>Archivo existente</translation>
+        <translation>Файл существует</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="942" />
         <source>Overwrite file?</source>
-        <translation>Sobre escribir archivo?</translation>
+        <translation>Перезаписать файл?</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1092" />
         <location filename="../../core.cpp" line="1171" />
         <source>Could not create directory </source>
-        <translation>No se pudo crear la carpeta </translation>
+        <translation>Не удалось создать папку </translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1210" />
         <source>File moved.</source>
-        <translation>Archivo movido.</translation>
+        <translation>Файл перемещен.</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1213" />
         <location filename="../../core.cpp" line="1235" />
         <source>Destination file exists. Overwrite?</source>
-        <translation>El archivo de destino existe. Sobre escribe?</translation>
+        <translation>Файл назначения существует. Перезаписать?</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1232" />
         <source>File copied.</source>
-        <translation>Archivo copiado.</translation>
+        <translation>Файл скопирован.</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1298" />
         <source>Perform action "</source>
-        <translation>Ejecutar acción "</translation>
+        <translation>Выполнить действие "</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1299" />
         <source>Changes will be saved immediately.</source>
-        <translation>Los cambios serán guardados inmediatamente.</translation>
+        <translation>Изменения будут сохранены немедленно.</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1320" />
         <source>Flip horizontal</source>
-        <translation>Voltear horizontalmente</translation>
+        <translation>Отразить по горизонтали</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1324" />
         <source>Flip vertical</source>
-        <translation>Voltear verticalmente</translation>
+        <translation>Отразить по вертикали</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1329" />
         <source>Rotate</source>
-        <translation>Rotar</translation>
+        <translation>Повернуть</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1358" />
         <source>Resize (AI)</source>
-        <translation>Redimensionar (IA)</translation>
+        <translation>Изменение размера (ИИ)</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1367" />
         <source>Resize</source>
-        <translation>Cambiar tamaño</translation>
+        <translation>Изменение размера</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1373" />
         <location filename="../../core.cpp" line="1379" />
         <source>Crop</source>
-        <translation>Recortar</translation>
+        <translation>Обрезать</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1428" />
         <source>File saved</source>
-        <translation>Archivo grabado</translation>
+        <translation>Файл сохранен</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1431" />
         <source>Could not save file</source>
-        <translation>No se pudo grabar el archivo</translation>
+        <translation>Не удалось сохранить файл</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1550" />
         <source>Could not open image</source>
-        <translation>No se pudo abrir la imágen</translation>
+        <translation>Не удалось открыть изображение</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1554" />
         <source>Can only print static images</source>
-        <translation>Solo se pueden imprimir imágenes estáticas</translation>
+        <translation>Печать доступна только для статических изображений</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1733" />
         <source>AI Upscaling...</source>
-        <translation>Escalando por IA...</translation>
+        <translation>Масштабирование ИИ...</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1840" />
         <source>Could not open path: </source>
-        <translation>No se pudo abrir la ruta: </translation>
+        <translation>Не удалось открыть путь: </translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="1897" />
         <source>Could not load folder: </source>
-        <translation>No se pudo cargar la carpeta: </translation>
+        <translation>Не удалось загрузить папку: </translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="2083" />
         <source>End of directory.</source>
-        <translation>Fin de la carpeta.</translation>
+        <translation>Конец папки.</translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="2121" />
         <source>Load failed: </source>
-        <translation>Carga fallida: </translation>
+        <translation>Ошибка загрузки: </translation>
     </message>
     <message>
         <location filename="../../core.cpp" line="2173" />
         <source>Error: could not load image.</source>
-        <translation>Error: no se pudo cargar la imagen.</translation>
+        <translation>Ошибка: не удалось загрузить изображение.</translation>
     </message>
 </context>
 <context>
@@ -778,42 +778,42 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="107" />
         <source>Selection</source>
-        <translation>Seleccionar</translation>
+        <translation>Выделение</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="125" />
         <source>Width</source>
-        <translation>Ancho</translation>
+        <translation>Ширина</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="161" />
         <source>Height</source>
-        <translation>Altura</translation>
+        <translation>Высота</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="322" />
         <source>Aspect Ratio</source>
-        <translation>Relacion de aspecto</translation>
+        <translation>Соотношение сторон</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="336" />
         <source>Free</source>
-        <translation>Libre</translation>
+        <translation>Произвольно</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="341" />
         <source>Custom</source>
-        <translation>Manual</translation>
+        <translation>Пользовательские</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="346" />
         <source>Current Image</source>
-        <translation>Imagen actual</translation>
+        <translation>Текущее изображение</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="351" />
         <source>This Screen</source>
-        <translation>Esta pantalla</translation>
+        <translation>Этот экран</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="356" />
@@ -838,34 +838,27 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="434" />
         <source>Swap aspect ratio</source>
-        <translation>Intercambiar relación de aspecto</translation>
+        <translation>Поменять стороны</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="505" />
         <source>Crop</source>
-        <translation>Recortar</translation>
+        <translation>Обрезать</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="518" />
         <source>Crop &amp;&amp; Save</source>
-        <translation>Recortar y grabar</translation>
+        <translation>Обрезать и сохранить</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="533" />
         <source>Reset</source>
-        <translation>Restablecer</translation>
+        <translation>Сбросить</translation>
     </message>
     <message>
         <location filename="../../gui/panels/croppanel/croppanel.ui" line="546" />
         <source>Cancel</source>
-        <translation>Cancelar</translation>
-    </message>
-</context>
-<context>
-    <name>FVOptionsPopup</name>
-    <message>
-        <source>View options</source>
-        <translation type="vanished">Opciones de visualización</translation>
+        <translation>Отмена</translation>
     </message>
 </context>
 <context>
@@ -873,22 +866,22 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="14" />
         <source>Dialog</source>
-        <translation>Dialogo</translation>
+        <translation>Диалог</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="20" />
         <source>title</source>
-        <translation>title</translation>
+        <translation>название</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="33" />
         <source>Source:</source>
-        <translation>Origen:</translation>
+        <translation>Источник:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="40" />
         <source>src</source>
-        <translation>src</translation>
+        <translation>источник</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="50" />
@@ -898,32 +891,32 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="63" />
         <source>Destination:</source>
-        <translation>Destino:</translation>
+        <translation>Назначение:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="70" />
         <source>dst</source>
-        <translation>dst</translation>
+        <translation>приемник</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="111" />
         <source>Apply to all</source>
-        <translation>Aplicar a todo</translation>
+        <translation>Применить ко всем</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="118" />
         <source>Yes</source>
-        <translation>Si</translation>
+        <translation>Да</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="125" />
         <source>No</source>
-        <translation>No</translation>
+        <translation>Нет</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="132" />
         <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <translation>Отмена</translation>
     </message>
 </context>
 <context>
@@ -931,7 +924,7 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/folderview/foldergridview.cpp" line="465" />
         <source>Move to trash</source>
-        <translation>Mover a la papelera</translation>
+        <translation>Переместить в корзину</translation>
     </message>
 </context>
 <context>
@@ -939,26 +932,22 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="17" />
         <source>Form</source>
-        <translation>Form</translation>
+        <translation>Форма</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="145" />
         <source>[path]</source>
-        <translation>[path]</translation>
+        <translation>[путь]</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="187" />
         <source>Batch convert  ⇄</source>
-        <translation>Conversión por lotes  ⇄</translation>
+        <translation>Пакетная конвертация  ⇄</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="218" />
         <source>FolderViewSlider</source>
         <translation>FolderViewSlider</translation>
-    </message>
-    <message>
-        <source>CheckableButton</source>
-        <translation type="vanished">CheckableButton</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="273" />
@@ -970,37 +959,37 @@ Archivos totales: %3</translation>
         <location filename="../../gui/folderview/folderview.ui" line="280" />
         <location filename="../../gui/folderview/folderview.ui" line="345" />
         <source>A - Z</source>
-        <translation>A - Z</translation>
+        <translation>А - Я</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="285" />
         <location filename="../../gui/folderview/folderview.ui" line="350" />
         <source>Z - A</source>
-        <translation>Z - A</translation>
+        <translation>Я - А</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="290" />
         <location filename="../../gui/folderview/folderview.ui" line="355" />
         <source>Size</source>
-        <translation>Tamaño</translation>
+        <translation>Размер</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="295" />
         <location filename="../../gui/folderview/folderview.ui" line="360" />
         <source>Size (desc)</source>
-        <translation>Tamaño (desc)</translation>
+        <translation>Размер (убыв.)</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="300" />
         <location filename="../../gui/folderview/folderview.ui" line="365" />
         <source>Oldest</source>
-        <translation>Más viejo</translation>
+        <translation>Старые</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="305" />
         <location filename="../../gui/folderview/folderview.ui" line="370" />
         <source>Newest</source>
-        <translation>Más nuevo</translation>
+        <translation>Новые</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="412" />
@@ -1021,7 +1010,7 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="596" />
         <source>BOOKMARKS</source>
-        <translation>Marcadores</translation>
+        <translation>ЗАКЛАДКИ</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="615" />
@@ -1033,17 +1022,17 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="675" />
         <source>FILESYSTEM</source>
-        <translation>Mi equipo</translation>
+        <translation>ФАЙЛОВАЯ СИСТЕМА</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.cpp" line="426" />
         <source>1 image selected</source>
-        <translation>1 imagen seleccionada</translation>
+        <translation>выбрано 1 изображение</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.cpp" line="428" />
         <source>%1 images selected</source>
-        <translation>%1 imágenes seleccionadas</translation>
+        <translation>выбрано изображений: %1</translation>
     </message>
 </context>
 <context>
@@ -1051,12 +1040,12 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/overlays/imageinfooverlay.ui" line="65" />
         <source>OverlayHeaderWidget</source>
-        <translation>OverlayHeaderWidget</translation>
+        <translation>Информационная панель</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/imageinfooverlay.ui" line="99" />
         <source>EXIF Tags</source>
-        <translation>Etiquetas EXIF</translation>
+        <translation>Теги EXIF</translation>
     </message>
 </context>
 <context>
@@ -1064,7 +1053,7 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/customwidgets/keysequenceedit.cpp" line="4" />
         <source>[Enter sequence]</source>
-        <translation>[Introducir atajo]</translation>
+        <translation>[Введите сочетание]</translation>
     </message>
 </context>
 <context>
@@ -1072,42 +1061,42 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="287" />
         <source>Folder Thumbnails: By Name</source>
-        <translation>Miniaturas de carpeta: por nombre</translation>
+        <translation>Эскизы папок: По имени</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="288" />
         <source>Folder Thumbnails: By Name (desc.)</source>
-        <translation>Miniaturas de carpeta: por nombre (desc.)</translation>
+        <translation>Эскизы папок: По имени (обр.)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="289" />
         <source>Folder Thumbnails: Oldest</source>
-        <translation>Miniaturas de carpeta: más antiguas</translation>
+        <translation>Эскизы папок: Старые</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="290" />
         <source>Folder Thumbnails: Newest</source>
-        <translation>Miniaturas de carpeta: más recientes</translation>
+        <translation>Эскизы папок: Новые</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="291" />
         <source>Folder Thumbnails: By File Size</source>
-        <translation>Miniaturas de carpeta: por tamaño</translation>
+        <translation>Эскизы папок: По размеру файла</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="292" />
         <source>Folder Thumbnails: By File Size (desc.)</source>
-        <translation>Miniaturas de carpeta: por tamaño (desc.)</translation>
+        <translation>Эскизы папок: По размеру файла (убыв.)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="684" />
         <source>Save File as...</source>
-        <translation>Guardar como...</translation>
+        <translation>Сохранить файл как...</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="944" />
         <source>Folder view</source>
-        <translation>Vista de carpetas</translation>
+        <translation>Галерея</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="945" />
@@ -1115,22 +1104,22 @@ Archivos totales: %3</translation>
         <location filename="../../gui/mainwindow.cpp" line="949" />
         <location filename="../../gui/mainwindow.cpp" line="950" />
         <source>No file opened.</source>
-        <translation>No se abrió el archivo.</translation>
+        <translation>Файл не открыт.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1041" />
         <source>Fit Window</source>
-        <translation>Encajar en la ventana</translation>
+        <translation>Вписать в окно</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1045" />
         <source>Fit Width</source>
-        <translation>Encajar ancho</translation>
+        <translation>По ширине</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1049" />
         <source>Fit 1:1</source>
-        <translation>Proporción 1:1</translation>
+        <translation>Масштаб 1:1</translation>
     </message>
 </context>
 <context>
@@ -1138,199 +1127,187 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="20" />
         <source>Print image</source>
-        <translation>Imprimir imagen</translation>
+        <translation>Печать изображения</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="126" />
         <source>Preview</source>
-        <translation>Previsualización</translation>
+        <translation>Предпросмотр</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="179" />
         <source>Printer:</source>
-        <translation>Impresora:</translation>
+        <translation>Принтер:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="189" />
         <source>&lt;No printers found&gt;</source>
-        <translation>&lt;Sin impresoras&gt;</translation>
+        <translation>&lt;Принтеры не найдены&gt;</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="271" />
         <source>Page orientation:</source>
-        <translation>Orientación de página:</translation>
+        <translation>Ориентация страницы:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="297" />
         <source>Portrait</source>
-        <translation>Vertical</translation>
+        <translation>Книжная</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="307" />
         <source>Landscape</source>
-        <translation>Horizontal</translation>
+        <translation>Альбомная</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="348" />
         <source>Color mode:</source>
-        <translation>Modo de color:</translation>
+        <translation>Цветовой режим:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="374" />
         <source>Grayscale</source>
-        <translation>Escala de grises</translation>
+        <translation>Оттенки серого</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="384" />
         <source>Color</source>
-        <translation>Color</translation>
+        <translation>Цветной</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="409" />
         <source>Fit to page</source>
-        <translation>Encajar en la página</translation>
+        <translation>Вписать в страницу</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="434" />
         <source>Export PDF</source>
-        <translation>Exportar a PDF</translation>
+        <translation>Экспорт в PDF</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="454" />
         <source>Print</source>
-        <translation>Imprimir</translation>
+        <translation>Печать</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.ui" line="464" />
         <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/printdialog.cpp" line="70" />
         <source>Choose pdf location</source>
-        <translation>Seleccionar ubicacion del PDF</translation>
+        <translation>Выберите место сохранения PDF</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
-        <source>Simple</source>
-        <translation type="vanished">Sencillo</translation>
-    </message>
-    <message>
-        <source>Extended</source>
-        <translation type="vanished">Extendido</translation>
-    </message>
-    <message>
-        <source>Extended + Folders</source>
-        <translation type="vanished">Extendido + Carpetas</translation>
-    </message>
-    <message>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="251" />
         <source>Make</source>
-        <translation>Capturar</translation>
+        <translation>Производитель</translation>
     </message>
     <message>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="255" />
         <source>Model</source>
-        <translation>Modelo</translation>
+        <translation>Модель</translation>
     </message>
     <message>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="259" />
         <source>Date/Time</source>
-        <translation>Fecha/Hora</translation>
+        <translation>Дата/Время</translation>
     </message>
     <message>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="266" />
         <location filename="../../sourcecontainers/documentinfo.cpp" line="269" />
         <source>ExposureTime</source>
-        <translation>Tiempo de exposición</translation>
+        <translation>Выдержка</translation>
     </message>
     <message>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="266" />
         <location filename="../../sourcecontainers/documentinfo.cpp" line="269" />
         <source> sec</source>
-        <translation> seg</translation>
+        <translation> сек</translation>
     </message>
     <message>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="277" />
         <source>F Number</source>
-        <translation>Número F</translation>
+        <translation>Диафрагма (F)</translation>
     </message>
     <message>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="282" />
         <source>ISO Speed ratings</source>
-        <translation>Rangos de velocidad ISO</translation>
+        <translation>Чувствительность ISO</translation>
     </message>
     <message>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="286" />
         <source>Flash</source>
-        <translation>Flash</translation>
+        <translation>Вспышка</translation>
     </message>
     <message>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="292" />
         <source>Focal Length</source>
-        <translation>Longitud focal</translation>
+        <translation>Фокусное расстояние</translation>
     </message>
     <message>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="292" />
         <source> mm</source>
-        <translation> mm</translation>
+        <translation> мм</translation>
     </message>
     <message>
         <location filename="../../sourcecontainers/documentinfo.cpp" line="301" />
         <source>UserComment</source>
-        <translation>Comentarios</translation>
+        <translation>Комментарий</translation>
     </message>
     <message>
         <location filename="../../utils/fileoperations.cpp" line="41" />
         <source>Operation completed succesfully.</source>
-        <translation>Operación completada satisfactoriamente.</translation>
+        <translation>Операция успешно завершена.</translation>
     </message>
     <message>
         <location filename="../../utils/fileoperations.cpp" line="43" />
         <source>Destination file exists.</source>
-        <translation>El archivo de destino existe.</translation>
+        <translation>Файл назначения уже существует.</translation>
     </message>
     <message>
         <location filename="../../utils/fileoperations.cpp" line="45" />
         <source>Destination directory exists.</source>
-        <translation>La carpeta de destino ya existe.</translation>
+        <translation>Папка назначения уже существует.</translation>
     </message>
     <message>
         <location filename="../../utils/fileoperations.cpp" line="47" />
         <source>Source file is not writable.</source>
-        <translation>El archivo de origen es de sólo lectura.</translation>
+        <translation>Нет прав на чтение/запись исходного файла.</translation>
     </message>
     <message>
         <location filename="../../utils/fileoperations.cpp" line="49" />
         <source>Destination is not writable.</source>
-        <translation>El archivo de destino es de solo lectura.</translation>
+        <translation>Нет прав на запись в путь назначения.</translation>
     </message>
     <message>
         <location filename="../../utils/fileoperations.cpp" line="51" />
         <source>Source file does not exist.</source>
-        <translation>El archivo de origen no existe.</translation>
+        <translation>Исходный файл не существует.</translation>
     </message>
     <message>
         <location filename="../../utils/fileoperations.cpp" line="53" />
         <source>Destination does not exist.</source>
-        <translation>La carpeta de destino no existe.</translation>
+        <translation>Путь назначения не существует.</translation>
     </message>
     <message>
         <location filename="../../utils/fileoperations.cpp" line="55" />
         <source>Directory is not empty.</source>
-        <translation>La carpeta no esta vacía.</translation>
+        <translation>Папка не пуста.</translation>
     </message>
     <message>
         <location filename="../../utils/fileoperations.cpp" line="57" />
         <source>Nothing to do.</source>
-        <translation>Nada por hacer.</translation>
+        <translation>Нечего делать.</translation>
     </message>
     <message>
         <location filename="../../utils/fileoperations.cpp" line="59" />
         <source>Other error.</source>
-        <translation>Otro error.</translation>
+        <translation>Другая ошибка.</translation>
     </message>
 </context>
 <context>
@@ -1339,12 +1316,12 @@ Archivos totales: %3</translation>
         <location filename="../../gui/overlays/renameoverlay.ui" line="171" />
         <location filename="../../gui/overlays/renameoverlay.ui" line="260" />
         <source>Rename</source>
-        <translation>Renombrar</translation>
+        <translation>Переименовать</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/renameoverlay.ui" line="273" />
         <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <translation>Отмена</translation>
     </message>
 </context>
 <context>
@@ -1352,82 +1329,82 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="32" />
         <source>Resize</source>
-        <translation>Cambiar tamaño</translation>
+        <translation>Изменение размера</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="69" />
         <source>By Percent:</source>
-        <translation>Por porcentaje:</translation>
+        <translation>В процентах:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="85" />
         <source>By Absolute Size:</source>
-        <translation>Por tamaño absoluto:</translation>
+        <translation>Точный размер:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="104" />
         <source>Percent:</source>
-        <translation>Porcentaje:</translation>
+        <translation>В процентах:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="125" />
         <source>Width:</source>
-        <translation>Ancho:</translation>
+        <translation>Ширина:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="223" />
         <source>Height:</source>
-        <translation>Altura:</translation>
+        <translation>Высота:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="301" />
         <source>Keep aspect ratio</source>
-        <translation>Mantener relacion de aspecto</translation>
+        <translation>Сохранять пропорции</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="311" />
         <source>Use Upscayl</source>
-        <translation>Usar Upscayl</translation>
+        <translation>Использовать Upscayl</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="356" />
         <source>Filter:</source>
-        <translation>Filtro:</translation>
+        <translation>Фильтр:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="382" />
         <source>Nearest</source>
-        <translation>Más cercano</translation>
+        <translation>По соседним пикселям</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="387" />
         <source>Bilinear</source>
-        <translation>Bilineal</translation>
+        <translation>Билинейная</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="392" />
         <source>Bicubic</source>
-        <translation>Bicubico</translation>
+        <translation>Бикубическая</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="397" />
         <source>Lanczos3</source>
-        <translation>Lanczos3</translation>
+        <translation>Ланцош 3</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="412" />
         <source>Model:</source>
-        <translation>Modelo:</translation>
+        <translation>Модель:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="447" />
         <source>Common sizes:</source>
-        <translation>Tamaños comunes:</translation>
+        <translation>Стандартные размеры:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="481" />
         <source>Select:</source>
-        <translation>Seleccionar:</translation>
+        <translation>Выбрать:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="486" />
@@ -1487,32 +1464,32 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="559" />
         <source>Fit to desktop</source>
-        <translation>Encajar al escritorio</translation>
+        <translation>Вписать в рабочий стол</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="578" />
         <source>Fill desktop (expanding)</source>
-        <translation>Rellenar escritorio (expandiendo)</translation>
+        <translation>Заполнить рабочий стол</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="597" />
         <source>Reset</source>
-        <translation>Resetear</translation>
+        <translation>Сбросить</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="664" />
         <source>OK</source>
-        <translation>Confirmar</translation>
+        <translation>OK</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.ui" line="683" />
         <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.cpp" line="86" />
         <source>Reset:</source>
-        <translation>Resetear:</translation>
+        <translation>Сбросить:</translation>
     </message>
 </context>
 <context>
@@ -1520,42 +1497,42 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/customwidgets/ssidebar.cpp" line="9" />
         <source>General</source>
-        <translation>General</translation>
+        <translation>Общие</translation>
     </message>
     <message>
         <location filename="../../gui/customwidgets/ssidebar.cpp" line="10" />
         <source>View</source>
-        <translation>Ver</translation>
+        <translation>Просмотр</translation>
     </message>
     <message>
         <location filename="../../gui/customwidgets/ssidebar.cpp" line="11" />
         <source>Theme</source>
-        <translation>Tema</translation>
+        <translation>Тема</translation>
     </message>
     <message>
         <location filename="../../gui/customwidgets/ssidebar.cpp" line="12" />
         <source>Controls</source>
-        <translation>Controles</translation>
+        <translation>Управление</translation>
     </message>
     <message>
         <location filename="../../gui/customwidgets/ssidebar.cpp" line="13" />
         <source>Scripts</source>
-        <translation>Scripts</translation>
+        <translation>Скрипты</translation>
     </message>
     <message>
         <location filename="../../gui/customwidgets/ssidebar.cpp" line="14" />
         <source>Advanced</source>
-        <translation>Avanzado</translation>
+        <translation>Дополнительно</translation>
     </message>
     <message>
         <location filename="../../gui/customwidgets/ssidebar.cpp" line="16" />
         <source>AI Upscale</source>
-        <translation>Escalar por IA</translation>
+        <translation>Масштабирование ИИ</translation>
     </message>
     <message>
         <location filename="../../gui/customwidgets/ssidebar.cpp" line="18" />
         <source>About</source>
-        <translation>Acerca de</translation>
+        <translation>О программе</translation>
     </message>
 </context>
 <context>
@@ -1563,22 +1540,22 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/overlays/saveconfirmoverlay.ui" line="81" />
         <source>Unsaved edits</source>
-        <translation>Cambios sin guardar</translation>
+        <translation>Несохраненные изменения</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/saveconfirmoverlay.ui" line="127" />
         <source>Save</source>
-        <translation>Guardar</translation>
+        <translation>Сохранить</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/saveconfirmoverlay.ui" line="140" />
         <source>Save as</source>
-        <translation>Guardar como</translation>
+        <translation>Сохранить как</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/saveconfirmoverlay.ui" line="169" />
         <source>Discard</source>
-        <translation>Descartar</translation>
+        <translation>Сбросить</translation>
     </message>
 </context>
 <context>
@@ -1586,186 +1563,181 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.ui" line="48" />
         <source>Command:</source>
-        <translation>Comando:</translation>
+        <translation>Команда:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.ui" line="84" />
         <source>NOTE: make sure your .sh script has execute flag.</source>
-        <translation>NOTA: Asegúrese que el script sea ejecutable.</translation>
+        <translation>Прим.: убедитесь, что ваш .sh файл является исполняемым.</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.ui" line="91" />
         <source>Name:</source>
-        <translation>Nombre:</translation>
+        <translation>Имя:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.ui" line="148" />
         <source>Wait to finish</source>
-        <translation>Esperar hasta finalizar</translation>
+        <translation>Ожидать завершения</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.ui" line="218" />
         <source>Create</source>
-        <translation>Crear</translation>
+        <translation>Создать</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.ui" line="225" />
         <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.cpp" line="10" />
         <source>New application/script</source>
-        <translation>Nuevo script/aplicación</translation>
+        <translation>Новое приложение/скрипт</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.cpp" line="11" />
         <source>Keywords:</source>
-        <translation>Palabras clave:</translation>
+        <translation>Ключевые слова:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.cpp" line="22" />
         <source>Edit</source>
-        <translation>Editar</translation>
+        <translation>Редактировать</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.cpp" line="46" />
         <source>Enter script name</source>
-        <translation>Nombre del script</translation>
+        <translation>Введите имя скрипта</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.cpp" line="58" />
         <location filename="../../gui/dialogs/scripteditordialog.cpp" line="65" />
         <source>A script with this same name exists</source>
-        <translation>Existe un script de igual nombre</translation>
+        <translation>Скрипт с таким именем уже существует</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.cpp" line="78" />
         <source>Select an executable/script</source>
-        <translation>Seleccionar script/ejecutable</translation>
+        <translation>Выберите приложение или скрипт</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/scripteditordialog.cpp" line="80" />
         <source>Select a script file</source>
-        <translation>Seleccionar archivo del script</translation>
+        <translation>Выберите файл скрипта</translation>
     </message>
 </context>
 <context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4904" />
-        <source>&lt;a href="https://github.com/upscayl/custom-models/tree/main/models"&gt;&lt;span style="text-decoration: underline; color:#007af4;"&gt;Get more models&lt;/span&gt;&lt;/a&gt;</source>
-        <translation>&lt;a href="https://github.com/upscayl/custom-models/tree/main/models"&gt;&lt;span style="text-decoration: underline; color:#007af4;"&gt;Obtener más modelos&lt;/span&gt;&lt;/a&gt;</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="47" />
         <source>Preferences</source>
-        <translation>Preferencias</translation>
+        <translation>Настройки</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="53" />
         <source>SettingsDialog</source>
-        <translation>Ventana de configuracion</translation>
+        <translation>Диалог настроек</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="339" />
         <source>General</source>
-        <translation>General</translation>
+        <translation>Общие</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="415" />
         <source>Language:</source>
-        <translation>Idioma:</translation>
+        <translation>Язык:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="435" />
         <source>Requires application restart</source>
-        <translation>Requiere reiniciar</translation>
+        <translation>Требуется перезапуск приложения</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="473" />
         <source>Open in fullscreen</source>
-        <translation>Abrir en pantalla completa</translation>
+        <translation>Открывать во весь экран</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="480" />
         <source>Start in folder view by default</source>
-        <translation>Abrir por defecto en vista de carpetas</translation>
+        <translation>Запускавать в режиме галереи по умолчанию</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="551" />
         <source>User interface</source>
-        <translation>Interfaz de usuario</translation>
+        <translation>Интерфейс пользователя</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="606" />
         <source>Image info in window title</source>
-        <translation>Informacion de la imagen en barra de titulos</translation>
+        <translation>Информация о картинке в заголовке окна</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="626" />
         <source>Auto-hide cursor</source>
-        <translation>Ocultar cursor automaticamente</translation>
+        <translation>Автоматически скрывать курсор</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="633" />
         <source>Turn this off if you are using a touchpad with libinput driver.</source>
-        <translation>Desactivar si esta utilizando un panel táctil con el controlador de libimput.</translation>
+        <translation>Отключите, если используете тачпад с драйвером libinput.</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="636" />
         <source>Smooth thumbnail scrolling</source>
-        <translation>Usar desplazamiento suave de miniaturas</translation>
+        <translation>Плавная прокрутка эскизов</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="643" />
         <source>Smooth zooming</source>
-        <translation>Zoom suave</translation>
+        <translation>Плавное масштабирование</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="650" />
         <source>Fullscreen info bar</source>
-        <translation>Barra de información en pantalla completa</translation>
+        <translation>Полноэкранная панель информации</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="663" />
         <source>Status bar</source>
-        <translation>Barra de estado</translation>
+        <translation>Строка состояния</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="696" />
         <source>Zoom indicator:</source>
-        <translation>Indicador de zoom:</translation>
+        <translation>Индикатор масштаба:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="706" />
         <source>On</source>
-        <translation>Encendido</translation>
+        <translation>Вкл</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="713" />
         <source>Off</source>
-        <translation>Apagado</translation>
+        <translation>Выкл</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="720" />
         <source>Auto</source>
-        <translation>Automático</translation>
+        <translation>Авто</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="760" />
         <source>Automatic window resize</source>
-        <translation>Redimensionar la ventana automáticamente</translation>
+        <translation>Автоматический размер окна</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="770" />
         <source>Match displayed content</source>
-        <translation>Ajustar al contenido mostrado</translation>
+        <translation>Подгонять под размер содержимого</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="806" />
         <source>Screen area limit for auto resize:</source>
-        <translation>límite de pantalla para auto dimensionado:</translation>
+        <translation>Лимит размера экрана для авторазмера:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="871" />
@@ -1778,178 +1750,691 @@ Archivos totales: %3</translation>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3412" />
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="129" />
         <source>Thumbnail panel</source>
-        <translation>Panel de miniaturas</translation>
+        <translation>Панель миниатюр</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1025" />
         <source>Crop previews</source>
-        <translation>Recortar miniaturas</translation>
+        <translation>Обрезать эскизы</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1038" />
         <source>Pinned</source>
-        <translation>Fijo</translation>
+        <translation>Закреплена</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1057" />
         <source>Disable in windowed mode</source>
-        <translation>Desactivar en modo ventana</translation>
+        <translation>Отключить в оконном режиме</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1064" />
         <source>Center selected image</source>
-        <translation>Centrar la imagen seleccionada</translation>
+        <translation>Центрировать выбранное изображение</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1071" />
         <source>Show subfolders</source>
-        <translation>Mostrar subcarpetas</translation>
+        <translation>Показывать подпапки</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1123" />
         <source>Extended</source>
-        <translation>Extendido</translation>
+        <translation>Расширенный</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1133" />
         <source>Previews only</source>
-        <translation>Solo vistas previas</translation>
+        <translation>Только миниатюры</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1140" />
         <source>Display style:</source>
-        <translation>Estilo de visualización:</translation>
+        <translation>Стиль отображения:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1153" />
         <source>Show filename and resolution</source>
-        <translation>Mostrar nombre y resolución</translation>
+        <translation>Показывать имя файла и разрешение</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1173" />
         <source>Simple</source>
-        <translation>Sencillo</translation>
+        <translation>Простой</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1197" />
         <source>Preview size:</source>
-        <translation>Tamaño de previsualización:</translation>
+        <translation>Размер миниатюр:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1272" />
         <source>Position:</source>
-        <translation>Ubicación:</translation>
+        <translation>Положение:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1280" />
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1988" />
         <source>Top</source>
-        <translation>Arriba</translation>
+        <translation>Вверху</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1285" />
         <source>Bottom</source>
-        <translation>Abajo</translation>
+        <translation>Внизу</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1290" />
         <source>Left</source>
-        <translation>Izquierda</translation>
+        <translation>Слева</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1295" />
         <source>Right</source>
-        <translation>Derecha</translation>
+        <translation>Справа</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1388" />
         <source>Folder navigation</source>
-        <translation>Navegador de carpetas</translation>
+        <translation>Навигация по папкам</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1414" />
         <source>Stop</source>
-        <translation>Detener</translation>
+        <translation>Стоп</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1424" />
         <source>Loop folder</source>
-        <translation>Carpetas en bucle</translation>
+        <translation>Зациклить папку</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1431" />
         <source>Go to the next folder</source>
-        <translation>Ir a la siguiente carpeta</translation>
+        <translation>Перейти к следующей папке</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1438" />
         <source>After reaching the end:</source>
-        <translation>Despues de alcanzar el final:</translation>
+        <translation>После достижения конца:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1490" />
         <source>Default sorting mode:</source>
-        <translation>Ordenamiento por defecto:</translation>
+        <translation>Сортировка по умолчанию:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1507" />
         <source>A - Z</source>
-        <translation>A - Z</translation>
+        <translation>А - Я</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1512" />
         <source>Z - A</source>
-        <translation>Z - A</translation>
+        <translation>Я - А</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1517" />
         <source>Size</source>
-        <translation>Tamaño</translation>
+        <translation>Размер</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1522" />
         <source>Size (desc)</source>
-        <translation>Tamaño (descendiente)</translation>
+        <translation>Размер (убыв.)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1527" />
         <source>Oldest</source>
-        <translation>Más antiguo</translation>
+        <translation>Старые</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1532" />
         <source>Newest</source>
-        <translation>Más reciente</translation>
+        <translation>Новые</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="1555" />
         <source>Apply sorting to folders</source>
-        <translation>Aplicar ordenamiento a carpetar</translation>
+        <translation>Применять сортировку к папкам</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1569" />
+        <source>Show hidden files</source>
+        <translation>Показывать скрытые файлы</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1637" />
+        <source>Slideshow</source>
+        <translation>Слайд-шоу</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1657" />
+        <source>Switch interval:</source>
+        <translation>Интервал переключения:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1688" />
+        <source>ms</source>
+        <translation>мс</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1720" />
+        <source>Loop slideshow</source>
+        <translation>Зациклить слайд-шоу</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1817" />
+        <source>View</source>
+        <translation>Просмотр</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1873" />
+        <source>Display options</source>
+        <translation>Параметры отображения</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1897" />
+        <source>Image fit:</source>
+        <translation>Масштабирование изображений:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1904" />
+        <source>Fit in window</source>
+        <translation>Вписать в окно</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1914" />
+        <source>Stretch to width</source>
+        <translation>Растянуть по ширине</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1921" />
+        <source>1:1</source>
+        <translation>1:1</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1928" />
+        <source>Fit in window (stretch)</source>
+        <translation>Вписать в окно (растягивать)</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1950" />
+        <source>Keep fit mode when switching images</source>
+        <translation>Сохранять режим масштабирования при смене картинок</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1981" />
+        <source>Focus in 1:1 mode:</source>
+        <translation>Фокус в масштабе 1:1:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="1995" />
+        <source>Center</source>
+        <translation>По центру</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2002" />
+        <source>At cursor</source>
+        <translation>К курсору</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2027" />
+        <source>Part of image that's focused after switching to 1:1</source>
+        <translation>Часть изображения для фокусировки при переходе в 1:1</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2050" />
+        <source>Grid background on images with transparency</source>
+        <translation>Сетка на прозрачных изображениях</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2087" />
+        <source>Expand images, up to:</source>
+        <translation>Увеличивать изображения до:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2195" />
+        <source>Images smaller than window will be zoomed in</source>
+        <translation>Изображения меньше окна будут увеличиваться</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2247" />
+        <source>Zoom options</source>
+        <translation>Настройки масштаба</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2254" />
+        <source>Unlock minimum zoom</source>
+        <translation>Разблокировать минимальный зум</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2264" />
+        <source>Always allow zooming below 100%</source>
+        <translation>Всегда разрешать уменьшение менее 100%</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2289" />
+        <source>Zoom step:</source>
+        <translation>Шаг масштаба:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2357" />
+        <source>[step]</source>
+        <translation>[шаг]</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2386" />
+        <source>Use fixed zoom levels:</source>
+        <translation>Использовать фиксированные уровни зума:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2430" />
+        <source>Load defaults</source>
+        <translation>Сбросить</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2498" />
+        <source>Scaling quality</source>
+        <translation>Качество масштабирования</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2525" />
+        <source>Scaling filter:</source>
+        <translation>Фильтр масштабирования:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2557" />
+        <source>Nearest neighbor</source>
+        <translation>Ближайший сосед</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2562" />
+        <source>Bilinear</source>
+        <translation>Билинейная</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2604" />
+        <source>When unchecked, nearest neighbor algorithm will be used for upscaling.</source>
+        <translation>Если выключено, для увеличения будет использоваться алгоритм "ближайший сосед".</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2607" />
+        <source>Smooth upscaling</source>
+        <translation>Плавное увеличение</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2626" />
+        <source>Smooth animated images</source>
+        <translation>Сглаживать анимированные изображения</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2705" />
+        <source>Theme</source>
+        <translation>Тема</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2764" />
+        <source>Load preset:</source>
+        <translation>Загрузить пресет:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2777" />
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2781" />
+        <source>Black</source>
+        <translation>Черный</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2786" />
+        <source>Dark</source>
+        <translation>Темная</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2791" />
+        <source>Dark Blue</source>
+        <translation>Темно-синяя</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2796" />
+        <source>Light</source>
+        <translation>Светлая</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2820" />
+        <source>Use system colors</source>
+        <translation>Использовать системные цвета</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="2830" />
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style="text-decoration: underline;"&gt;modify&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style="text-decoration: underline;"&gt;изменить&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3056" />
+        <source>Accent</source>
+        <translation>Акцент</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3063" />
+        <source>Background</source>
+        <translation>Фон</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3070" />
+        <source>Background (fullscreen mode)</source>
+        <translation>Фон (полноэкранный режим)</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3108" />
+        <source>Text</source>
+        <translation>Текст</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3115" />
+        <source>Icons</source>
+        <translation>Значки</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3215" />
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="126" />
+        <source>Overlay background</source>
+        <translation>Фон оверлеев</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3253" />
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="124" />
+        <source>Widget background</source>
+        <translation>Фон виджетов</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3260" />
+        <source>Folder view top panel</source>
+        <translation>Верхняя панель галереи</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3267" />
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="125" />
+        <source>Widget border</source>
+        <translation>Границы виджетов</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3336" />
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="127" />
+        <source>Overlay text</source>
+        <translation>Текст оверлеев</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3374" />
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="128" />
+        <source>Scrollbars</source>
+        <translation>Полосы прокрутки</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3419" />
+        <source>Folder view background</source>
+        <translation>Фон галереи</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3490" />
+        <source>Other window tweaks</source>
+        <translation>Другие настройки окна</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3505" />
+        <source>Window opacity:</source>
+        <translation>Непрозрачность окна:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3558" />
+        <source>%</source>
+        <translation>%</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3628" />
+        <source>Controls</source>
+        <translation>Управление</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3689" />
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4134" />
+        <source>Add</source>
+        <translation>Добавить</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3696" />
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4141" />
+        <source>Edit</source>
+        <translation>Изменить</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3709" />
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4148" />
+        <source>Remove</source>
+        <translation>Удалить</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3738" />
+        <source>Reset to defaults</source>
+        <translation>Сбросить к умолчанию</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3772" />
+        <source>Action</source>
+        <translation>Действие</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3777" />
+        <source>Shortcut</source>
+        <translation>Сочетание</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3832" />
+        <source>Switch image by clicking window edges</source>
+        <translation>Переключать картинки кликом по краям окна</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3839" />
+        <source>Visible edges</source>
+        <translation>Видимые края</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3869" />
+        <source>Scroll image with:</source>
+        <translation>Прокручивать изображение с помощью:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3877" />
+        <source>None</source>
+        <translation>Ничего</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3882" />
+        <source>Touchpad</source>
+        <translation>Тачпад</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3887" />
+        <source>Touchpad &amp; Mouse Wheel</source>
+        <translation>Тачпад и колесо мыши</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3913" />
+        <source>Note: you can also zoom by holding RMB and moving the mouse</source>
+        <translation>Прим.: также можно масштабировать, зажав ПКМ и двигая мышь</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3941" />
+        <source>Mouse scrolling speed:</source>
+        <translation>Скорость прокрутки мыши:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3985" />
+        <source>[x]</source>
+        <translation>[x]</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4014" />
+        <source>Trackpad detection</source>
+        <translation>Обнаружение тачпада</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4024" />
+        <source>Disable if you have issues with mouse scrolling</source>
+        <translation>Отключите, если есть проблемы с прокруткой мыши</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4056" />
+        <source>Scripts</source>
+        <translation>Скрипты</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4112" />
+        <source>Note: these will appear in "Open with" menu.</source>
+        <translation>Прим.: эти приложения появятся в меню "Открыть с помощью".</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4122" />
+        <source>Also, you can assign shortcuts to scripts (in "Controls" section).</source>
+        <translation>Также вы можете назначить сочетания клавиш для скриптов (в разделе "Управление").</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4231" />
+        <source>Advanced</source>
+        <translation>Дополнительно</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4288" />
+        <source>Preload the next/previous image.
+Results in a much faster image switching (at the expense of wasting more RAM).</source>
+        <translation>Предзагрузка следующей/предыдущей картинки.
+Обеспечивает гораздо более быстрое переключение (ценой большего расхода ОЗУ).</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4292" />
+        <source>Use preloader (recommended)</source>
+        <translation>Использовать предзагрузчик (рекомендуется)</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4302" />
+        <source>Load adjacent images in background</source>
+        <translation>Загружать соседние изображения в фоне</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4330" />
+        <source>Thumbnailer thread count:</source>
+        <translation>Количество потоков миниатюр:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4368" />
+        <source>2</source>
+        <translation>2</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4399" />
+        <source>Use thumbnail cache (recommended)</source>
+        <translation>Использовать кэш эскизов (рекомендуется)</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4420" />
+        <source>Thumbnail cache resolution:</source>
+        <translation>Разрешение кэша эскизов:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4464" />
+        <source>256 px</source>
+        <translation>256 px</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4486" />
+        <source>Exclude paths from caching (separated by semicolon ';'):</source>
+        <translation>Исключить пути из кэшивания (через точку с запятой ';'):</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4493" />
+        <source>Paths to folders that should not be cached, separated by ';'.
+Example: D:\Downloads\1c_bases; E:\Tuts</source>
+        <translation>Пути к папкам, которые не нужно кэшировать, через ';'.
+Пример: D:\Downloads\1c_bases; E:\Tuts</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4501" />
+        <source>Unload off-screen thumbnails</source>
+        <translation>Выгружать внеэкранные миниатюры</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4511" />
+        <source>Dynamically unload items to save memory</source>
+        <translation>Динамически выгружать элементы для экономии памяти</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4525" />
+        <source>Show save overlay when editing images</source>
+        <translation>Показывать оверлей сохранения при изменении картинок</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4540" />
+        <source>JPEG save quality:</source>
+        <translation>Качество сохранения JPEG:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4584" />
+        <source>q</source>
+        <translation>q</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4613" />
+        <source>Confirm moving to trash</source>
+        <translation>Подтверждать перемещение в корзину</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4625" />
+        <source>Confirm file delete (!)</source>
+        <translation>Подтверждать удаление файлов (!)</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4639" />
+        <source>JXL animation support (experimental)</source>
+        <translation>Поддержка анимации JXL (экспериментально)</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4653" />
+        <source>Allow multiple instances</source>
+        <translation>Разрешить несколько окон</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4681" />
+        <source>Memory allocation limit per image, MB:</source>
+        <translation>Лимит памяти на изображение, МБ:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4803" />
         <source>AI Upscale</source>
-        <translation>Escalar por IA</translation>
+        <translation>Масштабирование ИИ</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4860" />
         <source>Use Upscayl</source>
-        <translation>Usar Upscayl</translation>
+        <translation>Использовать Upscayl</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4881" />
         <source>Model:</source>
-        <translation>Modelo:</translation>
+        <translation>Модель:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4904" />
+        <source>&lt;a href="https://github.com/upscayl/custom-models/tree/main/models"&gt;&lt;span style="text-decoration: underline; color:#007af4;"&gt;Get more models&lt;/span&gt;&lt;/a&gt;</source>
+        <translation>&lt;a href="https://github.com/upscayl/custom-models/tree/main/models"&gt;&lt;span style="text-decoration: underline; color:#007af4;"&gt;Скачать еще модели&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4935" />
         <source>Load engine at startup and keep ready in video memory</source>
-        <translation>Cargar el motor al inicio y mantenerlo listo en la memoria de video</translation>
+        <translation>Загружать движок при запуске и держать готовым в видеопамяти</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4948" />
         <source>Enable upscaling only when zoom exceeds:</source>
-        <translation>Habilitar el escalado solo cuando el zoom supere:</translation>
+        <translation>Включать масштабирование ИИ только при зуме более:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="5043" />
@@ -1959,7 +2444,7 @@ Archivos totales: %3</translation>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="5140" />
         <source>About qimgv-plus</source>
-        <translation>Acerca de qimgv-plus</translation>
+        <translation>О qimgv-plus</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="5191" />
@@ -2009,608 +2494,32 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Noto Sans'; font-size:11pt; font-weight:400; font-style:normal;"&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px;
-margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Este es un visor de imágenes rápido y fácil de usar&lt;/span&gt;&lt;/p&gt;
+margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Это быстрый и простой в использовании просмотрщик изображений&lt;/span&gt;&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty;
 margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2';
-font-size:10pt; font-weight:600; font-style:italic;"&gt;Página de GitHub:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv-plus"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;
+font-size:10pt; font-weight:600; font-style:italic;"&gt;Страница GitHub:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv-plus"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;
 text-decoration: underline; color:#007af4;"&gt;https://github.com/hadoooooouken/qimgv-plus&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600;
-font-style:italic;"&gt;Proyecto original:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/easymodo/qimgv"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic; text-decoration: underline;
+font-style:italic;"&gt;Оригинальный проект:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/easymodo/qimgv"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic; text-decoration: underline;
 color:#007af4;"&gt;https://github.com/easymodo/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style="
-font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Desarrollador de la versión Plus:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken"&gt;&lt;span style="
+font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Разработчик Plus версии:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken"&gt;&lt;span style="
 font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;"&gt;hadooooouken&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style="
-font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Desarrollador original:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/easymodo"&gt;&lt;span style="
+font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Оригинальный разработчик:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/easymodo"&gt;&lt;span style="
 font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;"&gt;easymodo&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;a href="https://github.com/hadoooooouken/qimgv-plus/graphs/contributors"&gt;&lt;span style="
-font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;Colaboradores&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;Участники разработки&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;
 font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style="
-font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;qimgv tiene licencia bajo &lt;/span&gt;&lt;a href="https://www.gnu.org/licenses/gpl-3.0.en.html"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;GNU GPL Versión 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;qimgv распространяется под лицензией &lt;/span&gt;&lt;a href="https://www.gnu.org/licenses/gpl-3.0.en.html"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;GNU GPL версии 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;
--qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Reportar problemas / solicitar funciones &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv-plus/issues"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt;
-text-decoration: underline; color:#007af4;"&gt;aquí&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Video playback</source>
-        <translation type="vanished">Reproducción de vídeo</translation>
-    </message>
-    <message>
-        <source>Play sounds</source>
-        <translation type="vanished">Reproducir sonidos</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1569" />
-        <source>Show hidden files</source>
-        <translation>Mostrar archivos ocultos</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1637" />
-        <source>Slideshow</source>
-        <translation>Diapositivas</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1657" />
-        <source>Switch interval:</source>
-        <translation>Intervalo entre diapositivas:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1688" />
-        <source>ms</source>
-        <translation>ms</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1720" />
-        <source>Loop slideshow</source>
-        <translation>Diapositivas en bucle</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1817" />
-        <source>View</source>
-        <translation>Ver</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1873" />
-        <source>Display options</source>
-        <translation>Opciones de visualización</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1897" />
-        <source>Image fit:</source>
-        <translation>Encajar imagen:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1904" />
-        <source>Fit in window</source>
-        <translation>Encajar en la ventana</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1914" />
-        <source>Stretch to width</source>
-        <translation>Encajar al ancho</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1921" />
-        <source>1:1</source>
-        <translation>1:1</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1928" />
-        <source>Fit in window (stretch)</source>
-        <translation>Ajustar a ventana (estirar)</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1950" />
-        <source>Keep fit mode when switching images</source>
-        <translation>Mantener modo de encaje al cambiar de imagen</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1981" />
-        <source>Focus in 1:1 mode:</source>
-        <translation>Enfoque en modo 1:1:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="1995" />
-        <source>Center</source>
-        <translation>Centrar</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2002" />
-        <source>At cursor</source>
-        <translation>Sobre el cursor</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2027" />
-        <source>Part of image that's focused after switching to 1:1</source>
-        <translation>Parte de la imagen enfocada después de cambiar a 1:1</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2050" />
-        <source>Grid background on images with transparency</source>
-        <translation>Fondo de cuadrícula en imágenes con transparencia</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2087" />
-        <source>Expand images, up to:</source>
-        <translation>Ampliar imágenes, hasta:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2195" />
-        <source>Images smaller than window will be zoomed in</source>
-        <translation>Las imágenes más pequeñas que la ventana se ampliarán</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2247" />
-        <source>Zoom options</source>
-        <translation>Opciones de zoom</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2254" />
-        <source>Unlock minimum zoom</source>
-        <translation>Desbloquear zoom mínimo</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2264" />
-        <source>Always allow zooming below 100%</source>
-        <translation>Permitir siempre hacer zoom por debajo del 100%</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2289" />
-        <source>Zoom step:</source>
-        <translation>Paso de zoom:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2357" />
-        <source>[step]</source>
-        <translation>[salto]</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2386" />
-        <source>Use fixed zoom levels:</source>
-        <translation>Usar niveles de zoom fijos:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2430" />
-        <source>Load defaults</source>
-        <translation>Cargar opciones por defecto</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2498" />
-        <source>Scaling quality</source>
-        <translation>Calidad de escala</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2525" />
-        <source>Scaling filter:</source>
-        <translation>Filtro de escala:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2557" />
-        <source>Nearest neighbor</source>
-        <translation>Más cercano</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2562" />
-        <source>Bilinear</source>
-        <translation>Bilinear</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2604" />
-        <source>When unchecked, nearest neighbor algorithm will be used for upscaling.</source>
-        <translation>Cuando no está marcado, se utilizará el algoritmo del vecino más cercano para la ampliación.</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2607" />
-        <source>Smooth upscaling</source>
-        <translation>Suavizar ampliacion</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2626" />
-        <source>Smooth animated images</source>
-        <translation>Suavizar imágenes animadas</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2705" />
-        <source>Theme</source>
-        <translation>Tema</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2764" />
-        <source>Load preset:</source>
-        <translation>Cargar preajuste:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2777" />
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2781" />
-        <source>Black</source>
-        <translation>Negro</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2786" />
-        <source>Dark</source>
-        <translation>Oscuro</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2791" />
-        <source>Dark Blue</source>
-        <translation>Azul oscuro</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2796" />
-        <source>Light</source>
-        <translation>Ligero</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2820" />
-        <source>Use system colors</source>
-        <translation>Usar colores del sistema</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=" text-decoration: underline;"&gt;modify&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="vanished">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=" text-decoration: underline;"&gt;modificar&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3056" />
-        <source>Accent</source>
-        <translation>Primer plano</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3063" />
-        <source>Background</source>
-        <translation>Fondo</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3070" />
-        <source>Background (fullscreen mode)</source>
-        <translation>Fondo (modo de pantalla completa)</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3108" />
-        <source>Text</source>
-        <translation>Texto</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3115" />
-        <source>Icons</source>
-        <translation>Iconos</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3215" />
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="126" />
-        <source>Overlay background</source>
-        <translation>Fondo superpuesto</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3253" />
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="124" />
-        <source>Widget background</source>
-        <translation>Fondo de widgets</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3260" />
-        <source>Folder view top panel</source>
-        <translation>Panel superior de vista de carpetas</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3267" />
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="125" />
-        <source>Widget border</source>
-        <translation>Borde del widget</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3336" />
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="127" />
-        <source>Overlay text</source>
-        <translation>Texto superpuesto</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3374" />
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="128" />
-        <source>Scrollbars</source>
-        <translation>Barras de desplazamiento</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3419" />
-        <source>Folder view background</source>
-        <translation>Fondo de vista de carpeta</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3490" />
-        <source>Other window tweaks</source>
-        <translation>Otros ajustes de ventana</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3505" />
-        <source>Window opacity:</source>
-        <translation>Opacidad de la ventana:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3558" />
-        <source>%</source>
-        <translation>%</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3628" />
-        <source>Controls</source>
-        <translation>Controles</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3689" />
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4134" />
-        <source>Add</source>
-        <translation>Agregar</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3696" />
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4141" />
-        <source>Edit</source>
-        <translation>Editar</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3709" />
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4148" />
-        <source>Remove</source>
-        <translation>Eliminar</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3738" />
-        <source>Reset to defaults</source>
-        <translation>Restablecer valores predeterminados</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3772" />
-        <source>Action</source>
-        <translation>Acción</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3777" />
-        <source>Shortcut</source>
-        <translation>Atajo</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3832" />
-        <source>Switch image by clicking window edges</source>
-        <translation>Cambiar de imagen al hacer clic en los bordes de la ventana</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3839" />
-        <source>Visible edges</source>
-        <translation>Bordes visibles</translation>
-    </message>
-    <message>
-        <source>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;meta charset="utf-8" /&gt;&lt;style type="text/css"&gt;
-p, li { white-space: pre-wrap; }
-hr { height: 1px; border-width: 0; }
-li.unchecked::marker { content: "\2610"; }
-li.checked::marker { content: "\2612"; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Noto Sans'; font-size:11pt; font-weight:400; font-style:normal;"&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;This is a fast and easy to use image viewer&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Github page:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;"&gt;https://github.com/hadoooooouken/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Main developer:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; easymodo&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;a href="https://github.com/hadoooooouken/qimgv/graphs/contributors"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;Contributors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;qimgv is licensed under &lt;/span&gt;&lt;a href="https://www.gnu.org/licenses/gpl-3.0.en.html"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;GNU GPL Version 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Report any issues / request features &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv/issues"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;here&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="vanished">&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;qimgv está bajo la licencia &lt;/span&gt;&lt;a href="https://www.gnu.org/licenses/gpl-3.0.en.html"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;GNU GPL Versión 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Reportar problemas / solicitar características &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv/issues"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;aquí&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Mouse &amp; touchpad</source>
-        <translation type="vanished">Ratón y panel táctil</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3869" />
-        <source>Scroll image with:</source>
-        <translation>Desplazar la imagen con:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3877" />
-        <source>None</source>
-        <translation>Ninguno</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3882" />
-        <source>Touchpad</source>
-        <translation>Panel táctil</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3887" />
-        <source>Touchpad &amp; Mouse Wheel</source>
-        <translation>Panel táctil y rueda del ratón</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3913" />
-        <source>Note: you can also zoom by holding RMB and moving the mouse</source>
-        <translation>Nota: también puedes hacer zoom manteniendo presionado el botón derecho y moviendo el ratón</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3941" />
-        <source>Mouse scrolling speed:</source>
-        <translation>Velocidad de desplazamiento del ratón:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3985" />
-        <source>[x]</source>
-        <translation>[x]</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4014" />
-        <source>Trackpad detection</source>
-        <translation>Detección de panel táctil</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4024" />
-        <source>Disable if you have issues with mouse scrolling</source>
-        <translation>Desactívelo si tiene problemas con el desplazamiento del ratón</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4056" />
-        <source>Scripts</source>
-        <translation>Scripts</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4112" />
-        <source>Note: these will appear in "Open with" menu.</source>
-        <translation>Nota: aparecerán en el menú "Abrir con".</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4122" />
-        <source>Also, you can assign shortcuts to scripts (in "Controls" section).</source>
-        <translation>Además, puede asignar accesos directos a los scripts (en la sección "Controles").</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4231" />
-        <source>Advanced</source>
-        <translation>Avanzado</translation>
-    </message>
-    <message>
-        <source>Preload the next/previous image. Results in a much faster image switching (at the expense of wasting more RAM).</source>
-        <translation type="vanished">Precarga la imagen siguiente/anterior. Provoca un cambio de imagen mucho más rápido (a expensas de desperdiciar más RAM).</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4292" />
-        <source>Use preloader (recommended)</source>
-        <translation>Usar precargador (recomendado)</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4302" />
-        <source>Load adjacent images in background</source>
-        <translation>Cargar imágenes adyacentes en segundo plano</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4330" />
-        <source>Thumbnailer thread count:</source>
-        <translation>Número de hilos del generador de miniaturas:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4420" />
-        <source>Thumbnail cache resolution:</source>
-        <translation>Resolución de caché de miniaturas:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4368" />
-        <source>2</source>
-        <translation>2</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="2830" />
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style="text-decoration: underline;"&gt;modify&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style="text-decoration: underline;"&gt;modificar&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4288" />
-        <source>Preload the next/previous image.
-Results in a much faster image switching (at the expense of wasting more RAM).</source>
-        <translation>Precargar la imagen siguiente/anterior.
-Permite cambiar de imagen mucho más rápido (a costa de consumir más RAM).</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4399" />
-        <source>Use thumbnail cache (recommended)</source>
-        <translation>Usar caché de miniaturas (recomendado)</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4464" />
-        <source>256 px</source>
-        <translation>256 px</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4493" />
-        <source>Paths to folders that should not be cached, separated by ';'.
-Example: D:\Downloads\1c_bases; E:\Tuts</source>
-        <translation>Rutas a carpetas que no deben ser almacenadas en caché, separadas por ';'.
-Ejemplo: D:\Downloads\1c_bases; E:\Tuts</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4501" />
-        <source>Unload off-screen thumbnails</source>
-        <translation>Descargar miniaturas fuera de pantalla</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4511" />
-        <source>Dynamically unload items to save memory</source>
-        <translation>Descargue elementos dinámicamente para ahorrar memoria</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4525" />
-        <source>Show save overlay when editing images</source>
-        <translation>Mostrar superposición de guardado al editar imágenes</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4540" />
-        <source>JPEG save quality:</source>
-        <translation>Calidad de guardado JPEG:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4584" />
-        <source>q</source>
-        <translation>q</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4613" />
-        <source>Confirm moving to trash</source>
-        <translation>Confirmar mover a la papelera</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4625" />
-        <source>Confirm file delete (!)</source>
-        <translation>Confirmar eliminación del archivo (!)</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4639" />
-        <source>JXL animation support (experimental)</source>
-        <translation>Soporte de animación JXL (experimental)</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4653" />
-        <source>Allow multiple instances</source>
-        <translation>Permitir múltiples instancias</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4681" />
-        <source>Memory allocation limit per image, MB:</source>
-        <translation>Límite de asignación de memoria por imagen, MB:</translation>
-    </message>
-    <message>
-        <source>Mpv binary:</source>
-        <translation type="vanished">Ruta del ejecutable mpv:</translation>
-    </message>
-    <message>
-        <source>...</source>
-        <translation type="vanished">...</translation>
-    </message>
-    <message>
-        <source>About qimgv</source>
-        <translation type="vanished">Acerca de qimgv</translation>
-    </message>
-    <message>
-        <source>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;meta charset="utf-8" /&gt;&lt;style type="text/css"&gt;
-p, li { white-space: pre-wrap; }
-hr { height: 1px; border-width: 0; }
-li.unchecked::marker { content: "\2610"; }
-li.checked::marker { content: "\2612"; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Noto Sans'; font-size:11pt; font-weight:400; font-style:normal;"&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;This is a fast and easy to use image viewer&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Features video support via libmpv&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Github page:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;"&gt;https://github.com/hadoooooouken/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Main developer:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; easymodo (easymodofrf@gmail.com)&lt;/span&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;a href="https://github.com/hadoooooouken/qimgv/graphs/contributors"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;Contributors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;OpenCV enabled builds use &lt;/span&gt;&lt;a href="https://github.com/dbzhang800/QtOpenCV"&gt;&lt;span style=" font-family:'Ubuntu'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;QtOpenCV&lt;/span&gt;&lt;/a&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt; by dbzhang800&lt;/span&gt;&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;qimgv is licensed under &lt;/span&gt;&lt;a href="https://www.gnu.org/licenses/gpl-3.0.en.html"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;GNU GPL Version 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Report any issues / request features &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv/issues"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;here&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="obsolete">&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;&lt;html&gt;&lt;head&gt; &lt;meta name="qrichtext" content="1" /&gt; &lt;meta charset="utf-8" /&gt; &lt;style type="text/css"&gt; p, li { white-space: pre-wrap; } hr { height: 1px; border-width: 0; } li.unchecked::marker { content: "\2610"; } li.checked::marker { content: "\2612"; } &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Noto Sans'; font-size:11pt; font-weight:400; font-style:normal;"&gt; &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt; &lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Este es un visor de imágenes sencillo y rápido&lt;/span&gt; &lt;/p&gt; &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt; &lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Incluye soporte de vídeo a través de libmpv.&lt;/span&gt;&lt;/p&gt; &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt; &lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Proyecto en GitHub:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;"&gt;https://github.com/hadoooooouken/qimgv&lt;/span&gt;&lt;/a&gt; &lt;/p&gt; &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt; &lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Desarrollado por:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; easymodo (easymodofrf@gmail.com)&lt;/span&gt;&lt;/p&gt; &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt; &lt;a href="https://github.com/hadoooooouken/qimgv/graphs/contributors"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;Contributors&lt;/span&gt;&lt;/a&gt; &lt;/p&gt; &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt; &lt;br /&gt;&lt;/p&gt; &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt; &lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Compilaciones con OpenCV habilitado a trav&amp;eacute;s de &lt;/span&gt;&lt;a href="https://github.com/dbzhang800/QtOpenCV"&gt;&lt;span style=" font-family:'Ubuntu'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;QtOpenCV&lt;/span&gt;&lt;/a&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt; by dbzhang800&lt;/span&gt;&lt;/p&gt; &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt; &lt;br /&gt;&lt;/p&gt; &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt; &lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;qimgv est&amp;aacute; licenciado bajo &lt;/span&gt;&lt;a href="https://www.gnu.org/licenses/gpl-3.0.en.html"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;GNU GPL Versi&amp;oacute;n 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt; &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt; &lt;br /&gt;&lt;/p&gt; &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt; &lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Informar cualquier problema o solicitar funciones &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv/issues"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;aqu&amp;iacute;&lt;/span&gt;&lt;/a&gt; &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+-qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Сообщить об ошибках / предложить новые функции &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv-plus/issues"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt;
+text-decoration: underline; color:#007af4;"&gt;здесь&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="5302" />
@@ -2620,95 +2529,82 @@ li.checked::marker { content: "\2612"; }
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="5309" />
         <source>Apply</source>
-        <translation>Aplicar</translation>
+        <translation>Применить</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="5316" />
         <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <translation>Отмена</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="57" />
         <source>Preferences — </source>
-        <translation>Preferencias — </translation>
+        <translation>Настройки — </translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="118" />
         <source>Accent color</source>
-        <translation>Color de primer plano</translation>
+        <translation>Цвет акцента</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="119" />
         <source>Windowed mode background</source>
-        <translation>Fondo en modo ventana</translation>
+        <translation>Фон во оконном режиме</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="120" />
         <source>Fullscreen mode background</source>
-        <translation>Fondo del modo pantalla completa</translation>
+        <translation>Фон в полноэкранном режиме</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="121" />
         <source>FolderView background</source>
-        <translation>Fondo de la vista de carpetas</translation>
+        <translation>Фон галереи</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="122" />
         <source>FolderView top panel</source>
-        <translation>Panel superior de la vista de carpetas</translation>
+        <translation>Верхняя панель галереи</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="123" />
         <source>Text color</source>
-        <translation>Color del texto</translation>
+        <translation>Цвет текста</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="190" />
         <source>Modern formats quality (WebP, JXL, AVIF):</source>
-        <translation>Calidad de formatos modernos (WebP, JXL, AVIF):</translation>
+        <translation>Качество современных форматов (WebP, JXL, AVIF):</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="209" />
         <source>PNG compression level:</source>
-        <translation>Nivel de compresión PNG:</translation>
+        <translation>Уровень сжатия PNG:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="810" />
         <source>Edit shortcut</source>
-        <translation>Editar atajo</translation>
+        <translation>Редактировать сочетание клавиш</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="872" />
         <source>None (Uncompressed)</source>
-        <translation>Ninguno (Sin comprimir)</translation>
+        <translation>Без сжатия</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="873" />
         <source>Fast</source>
-        <translation>Rápido</translation>
+        <translation>Быстрое</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="874" />
         <source>Balanced</source>
-        <translation>Equilibrado</translation>
+        <translation>Сбалансированное</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="875" />
         <source>Maximum</source>
-        <translation>Máximo</translation>
-    </message>
-    <message>
-        <source>Navigate to mpv binary</source>
-        <translation type="vanished">Ubicar el ejecutable mpv</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4486" />
-        <source>Exclude paths from caching (separated by semicolon ';'):</source>
-        <translation>Excluir rutas de la caché (separadas por punto y coma ';'):</translation>
-    </message>
-    <message>
-        <source>Paths to folders that should not be cached, separated by ';'. Example: D:\Downloads\1c_bases; E:\Tuts</source>
-        <translation type="vanished">Rutas a carpetas que no deben ser almacenadas en caché, separadas por ';'. Ejemplo: D:\Downloads\1c_bases; E:\Tuts</translation>
+        <translation>Максимальное</translation>
     </message>
 </context>
 <context>
@@ -2716,27 +2612,27 @@ li.checked::marker { content: "\2612"; }
     <message>
         <location filename="../../gui/dialogs/shortcutcreatordialog.ui" line="14" />
         <source>New shortcut</source>
-        <translation>Nuevo atajo</translation>
+        <translation>Новое сочетание клавиш</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/shortcutcreatordialog.ui" line="34" />
         <source>Action:</source>
-        <translation>Acción:</translation>
+        <translation>Действие:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/shortcutcreatordialog.ui" line="73" />
         <source>Script:</source>
-        <translation>Script:</translation>
+        <translation>Скрипт:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/shortcutcreatordialog.ui" line="117" />
         <source>Shortcut:</source>
-        <translation>Atajo de teclado:</translation>
+        <translation>Сочетание:</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/shortcutcreatordialog.ui" line="124" />
         <source>[Enter shortcut]</source>
-        <translation>[Introducir atajo]</translation>
+        <translation>[Введите сочетание]</translation>
     </message>
 </context>
 <context>
@@ -2744,32 +2640,32 @@ li.checked::marker { content: "\2612"; }
     <message>
         <location filename="../../main.cpp" line="121" />
         <source>File or directory path.</source>
-        <translation>Ruta del archivo o carpeta.</translation>
+        <translation>Путь к файлу или папке.</translation>
     </message>
     <message>
         <location filename="../../main.cpp" line="124" />
         <source>Generate all thumbnails for directory.</source>
-        <translation>Generar todas las miniaturas de la carpeta.</translation>
+        <translation>Сгенерировать миниатюры для папки.</translation>
     </message>
     <message>
         <location filename="../../main.cpp" line="126" />
         <source>directory-path</source>
-        <translation>ruta-de-la-carpeta</translation>
+        <translation>путь-до-папки</translation>
     </message>
     <message>
         <location filename="../../main.cpp" line="128" />
         <source>Thumbnail size. Current size is used if not specified.</source>
-        <translation>Tamaño de las miniaturas. Si no se especifica se utilizara el tamaño original.</translation>
+        <translation>Размер миниатюр. Если не указан, используется текущий.</translation>
     </message>
     <message>
         <location filename="../../main.cpp" line="130" />
         <source>thumbnail-size</source>
-        <translation>tamaño-de-miniatura</translation>
+        <translation>размер-эскиза</translation>
     </message>
     <message>
         <location filename="../../main.cpp" line="132" />
         <source>Show build options.</source>
-        <translation>Opciones de visualización.</translation>
+        <translation>Показать опции сборки.</translation>
     </message>
 </context>
 </TS>
