@@ -49,7 +49,13 @@
          <item>
           <spacer name="horizontalSpacerHeader">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
            </property>
           </spacer>
          </item>
@@ -57,21 +63,20 @@
        </item>
        <item>
         <widget class="QLabel" name="selectedCountLabel">
-         <property name="text">
-          <string>0 files selected (0.0 MB)</string>
-         </property>
          <property name="font">
           <font>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
+         </property>
+         <property name="text">
+          <string>0 files selected (0.0 MB)</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QListWidget" name="fileListWidget">
          <property name="selectionMode">
-          <enum>QAbstractItemView::NoSelection</enum>
+          <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
          </property>
         </widget>
        </item>
@@ -95,6 +100,14 @@
         <bool>true</bool>
        </property>
        <widget class="QWidget" name="scrollAreaWidgetContents">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>588</width>
+          <height>934</height>
+         </rect>
+        </property>
         <layout class="QVBoxLayout" name="verticalLayoutScroll">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayoutFormat">
@@ -124,7 +137,7 @@
               <number>90</number>
              </property>
              <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
             </widget>
            </item>
@@ -158,18 +171,12 @@
             <item>
              <layout class="QHBoxLayout" name="resListLayout">
               <item>
-               <widget class="QFrame" name="resFrame">
+               <widget class="QWidget" name="resWidget" native="true">
                 <property name="maximumSize">
                  <size>
                   <width>280</width>
                   <height>16777215</height>
                  </size>
-                </property>
-                <property name="frameShape">
-                 <enum>QFrame::StyledPanel</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_3">
                  <item>
@@ -220,14 +227,17 @@
                     <widget class="QLabel" name="labelPercent">
                      <property name="font">
                       <font>
-                       <italic>true</italic>
+                       <italic>false</italic>
                       </font>
+                     </property>
+                     <property name="layoutDirection">
+                      <enum>Qt::LayoutDirection::LeftToRight</enum>
                      </property>
                      <property name="text">
                       <string>Percent:</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -241,14 +251,14 @@
                      </property>
                      <property name="font">
                       <font>
-                       <italic>true</italic>
+                       <italic>false</italic>
                       </font>
                      </property>
                      <property name="text">
                       <string>Width:</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -270,13 +280,13 @@
                       </size>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignCenter</set>
+                      <set>Qt::AlignmentFlag::AlignCenter</set>
                      </property>
                      <property name="readOnly">
                       <bool>false</bool>
                      </property>
                      <property name="buttonSymbols">
-                      <enum>QAbstractSpinBox::NoButtons</enum>
+                      <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
                      </property>
                      <property name="keyboardTracking">
                       <bool>true</bool>
@@ -307,14 +317,14 @@
                       </size>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignCenter</set>
+                      <set>Qt::AlignmentFlag::AlignCenter</set>
                      </property>
                      <property name="buttonSymbols">
-                      <enum>QAbstractSpinBox::NoButtons</enum>
+                      <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
                      </property>
                      <property name="keyboardTracking">
                       <bool>true</bool>
-                      </property>
+                     </property>
                      <property name="minimum">
                       <number>1</number>
                      </property>
@@ -327,21 +337,21 @@
                     <widget class="QLabel" name="labelHeight">
                      <property name="font">
                       <font>
-                       <italic>true</italic>
+                       <italic>false</italic>
                       </font>
                      </property>
                      <property name="text">
                       <string>Height:</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <widget class="QDoubleSpinBox" name="percent">
                      <property name="enabled">
-                      <bool>true</bool>
+                      <bool>false</bool>
                      </property>
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -356,13 +366,13 @@
                       </size>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignCenter</set>
+                      <set>Qt::AlignmentFlag::AlignCenter</set>
                      </property>
                      <property name="readOnly">
                       <bool>false</bool>
                      </property>
                      <property name="buttonSymbols">
-                      <enum>QAbstractSpinBox::NoButtons</enum>
+                      <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
                      </property>
                      <property name="decimals">
                       <number>1</number>
@@ -377,7 +387,7 @@
                       <double>1.000000000000000</double>
                      </property>
                      <property name="stepType">
-                      <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
+                      <enum>QAbstractSpinBox::StepType::AdaptiveDecimalStepType</enum>
                      </property>
                      <property name="value">
                       <double>100.000000000000000</double>
@@ -411,28 +421,28 @@
                      </property>
                     </widget>
                    </item>
-                    <item>
-                     <spacer name="horizontalSpacer_CheckBoxes">
-                      <property name="orientation">
-                       <enum>Qt::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                   </layout>
+                   <item>
+                    <spacer name="horizontalSpacer_CheckBoxes">
+                     <property name="orientation">
+                      <enum>Qt::Orientation::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
                  </item>
                  <item>
                   <spacer name="verticalSpacer_ResizeLeft">
                    <property name="orientation">
-                    <enum>Qt::Vertical</enum>
+                    <enum>Qt::Orientation::Vertical</enum>
                    </property>
                    <property name="sizeType">
-                    <enum>QSizePolicy::Maximum</enum>
+                    <enum>QSizePolicy::Policy::Maximum</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -495,13 +505,13 @@
                <layout class="QVBoxLayout" name="verticalLayout_ResizeRight">
                 <item>
                  <widget class="QGroupBox" name="groupBoxCommonSizes">
-                   <property name="maximumSize">
-                    <size>
-                     <width>240</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="title">
+                  <property name="maximumSize">
+                   <size>
+                    <width>240</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="title">
                    <string>Common sizes:</string>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_CommonSizesInner">
@@ -535,17 +545,17 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="fitDesktopButton">
-                   <property name="maximumSize">
-                    <size>
-                     <width>240</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="sizePolicy">
+                  <property name="sizePolicy">
                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>240</width>
+                    <height>16777215</height>
+                   </size>
                   </property>
                   <property name="text">
                    <string>Fit to desktop</string>
@@ -554,17 +564,17 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="fillDesktopButton">
-                   <property name="maximumSize">
-                    <size>
-                     <width>240</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="sizePolicy">
+                  <property name="sizePolicy">
                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>240</width>
+                    <height>16777215</height>
+                   </size>
                   </property>
                   <property name="text">
                    <string>Fill desktop (expanding)</string>
@@ -573,17 +583,17 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="resetButton">
-                   <property name="maximumSize">
-                    <size>
-                     <width>240</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="sizePolicy">
+                  <property name="sizePolicy">
                    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>240</width>
+                    <height>16777215</height>
+                   </size>
                   </property>
                   <property name="text">
                    <string>Reset</string>
@@ -593,7 +603,7 @@
                 <item>
                  <spacer name="verticalSpacer_ResizeRightBottom">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -649,7 +659,7 @@
                  <number>0</number>
                 </property>
                 <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
                </widget>
               </item>
@@ -707,7 +717,7 @@
                  <number>100</number>
                 </property>
                 <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
                </widget>
               </item>
@@ -765,7 +775,7 @@
                  <number>0</number>
                 </property>
                 <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
                </widget>
               </item>
@@ -823,7 +833,7 @@
                  <number>0</number>
                 </property>
                 <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
                </widget>
               </item>
@@ -881,7 +891,7 @@
                  <number>0</number>
                 </property>
                 <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
                </widget>
               </item>
@@ -939,7 +949,7 @@
                  <number>100</number>
                 </property>
                 <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
                </widget>
               </item>
@@ -997,7 +1007,7 @@
                  <number>0</number>
                 </property>
                 <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
                </widget>
               </item>
@@ -1081,13 +1091,13 @@
             </item>
             <item>
              <widget class="QLabel" name="patternHelpLabel">
-              <property name="text">
-               <string>Available: {name}, {ext}, {date}, {index}</string>
-              </property>
               <property name="font">
                <font>
                 <italic>true</italic>
                </font>
+              </property>
+              <property name="text">
+               <string>Available: {name}, {ext}, {date}, {index}</string>
               </property>
              </widget>
             </item>
@@ -1104,7 +1114,7 @@
          <item>
           <spacer name="verticalSpacer">
            <property name="orientation">
-            <enum>Qt::Vertical</enum>
+            <enum>Qt::Orientation::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -1139,7 +1149,7 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
