@@ -193,6 +193,9 @@ QSize ImageStatic::size() {
 bool ImageStatic::setEditedImage(std::unique_ptr<const QImage> imageEditedNew) {
   if (imageEditedNew && imageEditedNew->width() != 0) {
     discardEditedImage();
+    if (image && *image == *imageEditedNew) {
+      return true;
+    }
     imageEdited = std::move(imageEditedNew);
     mEdited = true;
     return true;
