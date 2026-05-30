@@ -4,7 +4,6 @@
 #include <QDir>
 #include <QFileInfo>
 
-
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent), ui(new Ui::SettingsDialog) {
   ui->setupUi(this);
@@ -57,7 +56,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     }
   }
   if (modelNames.isEmpty()) {
-    modelNames.append("remacri-4x");
+    modelNames.append("4xLSDIRCompactC3");
   }
   ui->upscaylModelComboBox->addItems(modelNames);
 #endif
@@ -380,7 +379,7 @@ void SettingsDialog::readSettings() {
   if (modelIdx != -1) {
     ui->upscaylModelComboBox->setCurrentIndex(modelIdx);
   } else {
-    int defaultIdx = ui->upscaylModelComboBox->findText("remacri-4x");
+    int defaultIdx = ui->upscaylModelComboBox->findText("4xLSDIRCompactC3");
     if (defaultIdx != -1) {
       ui->upscaylModelComboBox->setCurrentIndex(defaultIdx);
     } else if (ui->upscaylModelComboBox->count() > 0) {

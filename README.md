@@ -131,7 +131,7 @@ qimgv-plus integrates **[upscayl-ncnn](https://github.com/upscayl/upscayl-ncnn) 
 - **Viewport Crop Upscaling**: Conserves GPU resources and VRAM by upscaling only the currently visible region of the image.
 - **Vulkan GPU Acceleration**: Heavy lifting is performed on background GPU threads, ensuring the main user interface remains smooth and interactive.
 - **Model Options**: 
-  * `remacri-4x` (Default): Included by default. Punchy and sharp with enhanced contrast; ideal for photos and digital art.
+  * `4xLSDIRCompactC3` (Default): Included by default. Optimized for JPEG artifacts and general image restoration.
   * **Custom Models Support**: The application dynamically scans the `models/` directory. You can easily add more compatible models (e.g. from the [Upscayl Custom Models repository](https://github.com/upscayl/custom-models/tree/main/models)) by placing their `.param` and `.bin` files into the `models/` folder, and they will be automatically detected and made available in the settings menu.
 - **VRAM Safety & Limits**: Auto-tile detection and input limits prevent out-of-memory errors on a wide range of GPUs.
 - **Vulkan Preloading**: An optional pre-warm feature processes a dummy texture at startup to pre-allocate memory and eliminate initial rendering lag.

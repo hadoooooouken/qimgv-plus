@@ -155,7 +155,7 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
     }
   }
   if (modelNames.isEmpty()) {
-    modelNames.append("remacri-4x");
+    modelNames.append("4xLSDIRCompactC3");
   }
   upscaylModelComboBox->addItems(modelNames);
 

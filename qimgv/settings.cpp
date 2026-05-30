@@ -509,7 +509,8 @@ void Settings::setPreloadUpscayl(bool mode) {
 }
 
 QString Settings::upscaylModel() {
-  return settings->settingsConf->value("upscaylModel", "remacri-4x").toString();
+  return settings->settingsConf->value("upscaylModel", "4xLSDIRCompactC3")
+      .toString();
 }
 
 void Settings::setUpscaylModel(const QString &model) {

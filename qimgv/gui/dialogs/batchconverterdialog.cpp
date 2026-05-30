@@ -363,7 +363,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths,
     }
   }
   if (modelNames.isEmpty()) {
-    modelNames.append("remacri-4x");
+    modelNames.append("4xLSDIRCompactC3");
   }
   ui->upscaylModelComboBox->addItems(modelNames);
 
@@ -804,7 +804,6 @@ void BatchConverterDialog::onFormatChanged(int index) {
   }
 }
 
-
 void BatchConverterDialog::updateUiState() {
   ui->scrollArea->setEnabled(!isConverting);
   ui->convertButton->setEnabled(!isConverting);
@@ -922,12 +921,15 @@ void BatchConverterDialog::startConversion() {
     QString paramQStr = appDir + "/models/" + upscaylModel + ".param";
     QString binQStr = appDir + "/models/" + upscaylModel + ".bin";
 
-    int loadRes = sharedResrgan->load(paramQStr.toStdWString(), binQStr.toStdWString());
+    int loadRes =
+        sharedResrgan->load(paramQStr.toStdWString(), binQStr.toStdWString());
     if (loadRes != 0) {
       delete sharedResrgan;
       sharedResrgan = nullptr;
       ui->statusLabel->setText(tr("Failed to load AI model."));
-      QMessageBox::warning(this, tr("AI Error"), tr("Failed to load AI upscaling model: %1").arg(upscaylModel));
+      QMessageBox::warning(
+          this, tr("AI Error"),
+          tr("Failed to load AI upscaling model: %1").arg(upscaylModel));
       return;
     }
   }
@@ -1055,8 +1057,11 @@ void BatchWorkerTask::run() {
   if (srcImg.isNull()) {
     QMetaObject::invokeMethod(
         dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
-        Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
-        Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Load Error")), Q_ARG(bool, false));
+        Q_ARG(QString,
+              QCoreApplication::translate("BatchConverterDialog", "Failed")),
+        Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog",
+                                                   "Load Error")),
+        Q_ARG(bool, false));
     return;
   }
 
@@ -1086,8 +1091,8 @@ void BatchWorkerTask::run() {
       int inW = imgRgba.width(), inH = imgRgba.height();
       int outW = inW * 4, outH = inH * 4;
       QImage outImg(outW, outH, QImage::Format_ARGB32);
-      if (dialog->sharedResrgan->processPixels(imgRgba.constBits(), inW, inH, outImg.bits(),
-                                               outW, outH) == 0) {
+      if (dialog->sharedResrgan->processPixels(
+              imgRgba.constBits(), inW, inH, outImg.bits(), outW, outH) == 0) {
         processedImg = outImg;
       }
     }
@@ -1132,14 +1137,18 @@ void BatchWorkerTask::run() {
                            .arg(processedImg.height());
 
   if (saved) {
-    QMetaObject::invokeMethod(dialog, "onProgressUpdated", Qt::QueuedConnection,
-                              Q_ARG(int, index),
-                              Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Done")),
-                              Q_ARG(QString, detailsStr), Q_ARG(bool, true));
+    QMetaObject::invokeMethod(
+        dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
+        Q_ARG(QString,
+              QCoreApplication::translate("BatchConverterDialog", "Done")),
+        Q_ARG(QString, detailsStr), Q_ARG(bool, true));
   } else {
     QMetaObject::invokeMethod(
         dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
-        Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
-        Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Save Error")), Q_ARG(bool, false));
+        Q_ARG(QString,
+              QCoreApplication::translate("BatchConverterDialog", "Failed")),
+        Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog",
+                                                   "Save Error")),
+        Q_ARG(bool, false));
   }
 }
