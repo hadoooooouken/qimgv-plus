@@ -752,10 +752,58 @@ void BatchConverterDialog::onBrowseClicked() {
 
 void BatchConverterDialog::onFormatChanged(int index) {
   QString ext = ui->formatComboBox->itemData(index).toString();
-  bool lossy = (ext == "jpg" || ext == "webp" || ext == "jxl" || ext == "avif");
-  ui->qualitySlider->setEnabled(lossy);
-  ui->qualitySpinBox->setEnabled(lossy);
+  if (ext == "png") {
+    ui->qualitySlider->setEnabled(true);
+    ui->qualitySpinBox->setEnabled(true);
+
+    ui->qualitySlider->blockSignals(true);
+    ui->qualitySpinBox->blockSignals(true);
+
+    ui->qualitySlider->setRange(0, 9);
+    ui->qualitySpinBox->setRange(0, 9);
+    ui->qualitySlider->setValue(settings->pngSaveQuality());
+    ui->qualitySpinBox->setValue(settings->pngSaveQuality());
+
+    ui->qualitySlider->blockSignals(false);
+    ui->qualitySpinBox->blockSignals(false);
+
+    QString tooltip = tr("PNG Compression level (0 - none, 9 - max)");
+    ui->qualitySlider->setToolTip(tooltip);
+    ui->qualitySpinBox->setToolTip(tooltip);
+  } else if (ext == "jpg" || ext == "webp" || ext == "jxl" || ext == "avif") {
+    ui->qualitySlider->setEnabled(true);
+    ui->qualitySpinBox->setEnabled(true);
+
+    ui->qualitySlider->blockSignals(true);
+    ui->qualitySpinBox->blockSignals(true);
+
+    ui->qualitySlider->setRange(1, 100);
+    ui->qualitySpinBox->setRange(1, 100);
+
+    int val = 90;
+    if (ext == "jpg") {
+      val = settings->JPEGSaveQuality();
+    } else if (ext == "webp" || ext == "jxl" || ext == "avif") {
+      val = settings->modernSaveQuality();
+    }
+
+    ui->qualitySlider->setValue(val);
+    ui->qualitySpinBox->setValue(val);
+
+    ui->qualitySlider->blockSignals(false);
+    ui->qualitySpinBox->blockSignals(false);
+
+    QString tooltip = tr("Quality (1 - lowest, 100 - highest)");
+    ui->qualitySlider->setToolTip(tooltip);
+    ui->qualitySpinBox->setToolTip(tooltip);
+  } else {
+    ui->qualitySlider->setEnabled(false);
+    ui->qualitySpinBox->setEnabled(false);
+    ui->qualitySlider->setToolTip("");
+    ui->qualitySpinBox->setToolTip("");
+  }
 }
+
 
 void BatchConverterDialog::updateUiState() {
   ui->scrollArea->setEnabled(!isConverting);
