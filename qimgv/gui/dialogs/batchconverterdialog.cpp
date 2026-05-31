@@ -140,6 +140,21 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths,
   ui->setupUi(this);
   setWindowModality(Qt::ApplicationModal);
 
+  // Collect widgets for Resize block (excluding the enable checkbox itself)
+  collectResizeWidgets();
+  // Collect widgets for Color adjustments block
+  collectColorWidgets();
+
+  // Set initial enabled state based on checkboxes
+  setResizeWidgetsEnabled(ui->resizeEnableCheckBox->isChecked());
+  setColorWidgetsEnabled(ui->colorEnableCheckBox->isChecked());
+
+  // Connect toggled signals
+  connect(ui->resizeEnableCheckBox, &QCheckBox::toggled,
+          this, &BatchConverterDialog::onResizeEnabledChanged);
+  connect(ui->colorEnableCheckBox, &QCheckBox::toggled,
+          this, &BatchConverterDialog::onColorEnabledChanged);
+
   // Style dialog with active theme colors
   auto colors = settings->colorScheme();
   QString dialogStyle =
@@ -1048,6 +1063,52 @@ void BatchConverterDialog::cleanupSharedUpscayl() {
     sharedResrgan = nullptr;
   }
 #endif
+}
+
+// ========== Enable/Disable blocks based on checkboxes ==========
+
+void BatchConverterDialog::collectResizeWidgets()
+{
+    const QList<QWidget*> children = ui->resizeContainer->findChildren<QWidget*>();
+    for (QWidget *w : children) {
+        if (w != ui->resizeEnableCheckBox) {
+            m_resizeWidgets.append(w);
+        }
+    }
+}
+
+void BatchConverterDialog::collectColorWidgets()
+{
+    const QList<QWidget*> children = ui->colorContainer->findChildren<QWidget*>();
+    for (QWidget *w : children) {
+        if (w != ui->colorEnableCheckBox) {
+            m_colorWidgets.append(w);
+        }
+    }
+}
+
+void BatchConverterDialog::setResizeWidgetsEnabled(bool enabled)
+{
+    for (QWidget *w : m_resizeWidgets) {
+        if (w) w->setEnabled(enabled);
+    }
+}
+
+void BatchConverterDialog::setColorWidgetsEnabled(bool enabled)
+{
+    for (QWidget *w : m_colorWidgets) {
+        if (w) w->setEnabled(enabled);
+    }
+}
+
+void BatchConverterDialog::onResizeEnabledChanged(bool enabled)
+{
+    setResizeWidgetsEnabled(enabled);
+}
+
+void BatchConverterDialog::onColorEnabledChanged(bool enabled)
+{
+    setColorWidgetsEnabled(enabled);
 }
 
 // ==================== BatchWorkerTask Implementation ====================

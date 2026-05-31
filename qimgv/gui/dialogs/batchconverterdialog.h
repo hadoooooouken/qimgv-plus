@@ -83,7 +83,7 @@ private slots:
   void onHueSliderChanged(int value);
   void onHueSpinBoxChanged(double value);
 
-  // Resize sync slots (mirroring ResizeDialog)
+  // Resize sync slots
   void onPercentChanged(double val);
   void onWidthChanged(int val);
   void onHeightChanged(int val);
@@ -102,6 +102,10 @@ private slots:
   void onConvertClicked();
   void onCancelClicked();
 
+  // Enable/disable blocks when checkboxes are toggled
+  void onResizeEnabledChanged(bool enabled);
+  void onColorEnabledChanged(bool enabled);
+
 private:
   Ui::BatchConverterDialog *ui;
   QStringList inputPaths;
@@ -119,12 +123,20 @@ private:
   QSize originalSize, targetSize, desktopSize;
   int lastEdited = 0; // 0 for width, 1 for height
 
+  QList<QWidget*> m_resizeWidgets;
+  QList<QWidget*> m_colorWidgets;
+
   void updateUiState();
   void startConversion();
   void finalizeConversion();
   void updateSelectedCount();
   void updateToTargetValues();
   void cleanupSharedUpscayl();
+
+  void collectResizeWidgets();
+  void collectColorWidgets();
+  void setResizeWidgetsEnabled(bool enabled);
+  void setColorWidgetsEnabled(bool enabled);
 
 #ifdef USE_UPSCAYL
   RealESRGAN *sharedResrgan = nullptr;

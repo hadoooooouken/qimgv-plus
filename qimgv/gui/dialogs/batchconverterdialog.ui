@@ -155,6 +155,12 @@
            </item>
            <item>
             <widget class="QSpinBox" name="qualitySpinBox">
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+             </property>
              <property name="minimum">
               <number>1</number>
              </property>
@@ -197,7 +203,6 @@
              <layout class="QHBoxLayout" name="horizontalLayoutResizeColumns">
               <item>
                <layout class="QVBoxLayout" name="verticalLayoutLeftColumn">
-                <!-- By Percent radio button -->
                 <item>
                  <widget class="QRadioButton" name="byPercentage">
                   <property name="text">
@@ -208,7 +213,6 @@
                   </property>
                  </widget>
                 </item>
-                <!-- Percent field below By Percent -->
                 <item>
                  <layout class="QHBoxLayout" name="percentLayout">
                   <property name="leftMargin">
@@ -260,7 +264,6 @@
                   </item>
                  </layout>
                 </item>
-                <!-- By Absolute Size radio button -->
                 <item>
                  <widget class="QRadioButton" name="byAbsoluteSize">
                   <property name="text">
@@ -271,7 +274,6 @@
                   </property>
                  </widget>
                 </item>
-                <!-- Width and Height fields below By Absolute Size -->
                 <item>
                  <layout class="QVBoxLayout" name="absoluteSizeLayout">
                   <property name="leftMargin">
@@ -357,7 +359,6 @@
                   </item>
                  </layout>
                 </item>
-                <!-- Keep aspect ratio and Use Upscayl checkboxes -->
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayoutCheckBoxes">
                   <item>
@@ -391,7 +392,6 @@
                   </item>
                  </layout>
                 </item>
-                <!-- Filter and Model comboboxes -->
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayoutFiltersAndModels">
                   <property name="spacing">
@@ -658,6 +658,12 @@
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                  <property name="buttonSymbols">
+                   <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  </property>
                   <property name="minimum">
                    <double>-2.000000000000000</double>
                   </property>
@@ -715,6 +721,12 @@
                     <width>80</width>
                     <height>16777215</height>
                    </size>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                  <property name="buttonSymbols">
+                   <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
                   </property>
                   <property name="maximum">
                    <double>3.000000000000000</double>
@@ -774,6 +786,12 @@
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                  <property name="buttonSymbols">
+                   <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  </property>
                   <property name="minimum">
                    <double>-1.000000000000000</double>
                   </property>
@@ -831,6 +849,12 @@
                     <width>80</width>
                     <height>16777215</height>
                    </size>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                  <property name="buttonSymbols">
+                   <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
                   </property>
                   <property name="minimum">
                    <double>-1.000000000000000</double>
@@ -890,6 +914,12 @@
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                  <property name="buttonSymbols">
+                   <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  </property>
                   <property name="minimum">
                    <double>-1.000000000000000</double>
                   </property>
@@ -948,6 +978,12 @@
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                  <property name="buttonSymbols">
+                   <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  </property>
                   <property name="maximum">
                    <double>3.000000000000000</double>
                   </property>
@@ -1005,6 +1041,12 @@
                     <width>80</width>
                     <height>16777215</height>
                    </size>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                  <property name="buttonSymbols">
+                   <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
                   </property>
                   <property name="minimum">
                    <double>-180.000000000000000</double>
