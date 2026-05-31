@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1034</width>
-    <height>925</height>
+    <width>1048</width>
+    <height>910</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -111,7 +111,7 @@
           <x>0</x>
           <y>0</y>
           <width>598</width>
-          <height>835</height>
+          <height>820</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayoutScroll">
@@ -585,6 +585,22 @@
             </item>
            </layout>
           </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Orientation::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Policy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
          </item>
          <item>
           <widget class="QWidget" name="colorContainer" native="true">
@@ -1065,6 +1081,22 @@
             </item>
            </layout>
           </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Orientation::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Policy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
          </item>
          <item>
           <widget class="QWidget" name="outputContainer" native="true">
