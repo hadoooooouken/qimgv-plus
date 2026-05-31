@@ -874,7 +874,7 @@ void BatchConverterDialog::startConversion() {
 
   QString formatExt = ui->formatComboBox->currentData().toString();
   int quality = ui->qualitySlider->value();
-  bool doResize = ui->groupBoxResize->isChecked();
+  bool doResize = ui->resizeEnableCheckBox->isChecked();
   QSize resizeTarget = targetSize;
   bool keepAspect = ui->keepAspectRatio->isChecked();
   bool useUpscayl = doResize && ui->useUpscaylCheckBox->isChecked();
@@ -888,7 +888,7 @@ void BatchConverterDialog::startConversion() {
 #endif
   int filter = ui->filterComboBox->currentData().toInt();
 
-  bool doColor = ui->groupBoxColor->isChecked();
+  bool doColor = ui->colorEnableCheckBox->isChecked();
   float exposure = doColor ? ui->exposureSpinBox->value() : 0.0f;
   float contrast = doColor ? ui->contrastSpinBox->value() : 1.0f;
   float saturation = doColor ? ui->saturationSpinBox->value() : 1.0f;

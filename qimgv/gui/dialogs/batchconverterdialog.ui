@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>980</width>
+    <width>1034</width>
     <height>925</height>
    </rect>
   </property>
@@ -75,6 +75,12 @@
        </item>
        <item>
         <widget class="QListWidget" name="fileListWidget">
+         <property name="minimumSize">
+          <size>
+           <width>400</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="selectionMode">
           <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
          </property>
@@ -109,13 +115,18 @@
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayoutScroll">
-         <!-- Format & quality -->
          <item>
           <layout class="QHBoxLayout" name="horizontalLayoutFormat">
            <item>
             <widget class="QLabel" name="labelFormat">
+             <property name="layoutDirection">
+              <enum>Qt::LayoutDirection::LeftToRight</enum>
+             </property>
              <property name="text">
               <string>Save as type:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
             </widget>
            </item>
@@ -157,8 +168,6 @@
            </item>
           </layout>
          </item>
-
-         <!-- Resize section – replaced QGroupBox with a QCheckBox -->
          <item>
           <widget class="QWidget" name="resizeContainer" native="true">
            <layout class="QVBoxLayout" name="verticalLayoutResizeContainer">
@@ -330,6 +339,12 @@
                  <layout class="QHBoxLayout" name="horizontalLayoutCheckBoxes">
                   <item>
                    <widget class="QCheckBox" name="keepAspectRatio">
+                    <property name="minimumSize">
+                     <size>
+                      <width>136</width>
+                      <height>0</height>
+                     </size>
+                    </property>
                     <property name="text">
                      <string>Keep aspect ratio</string>
                     </property>
@@ -340,6 +355,12 @@
                   </item>
                   <item>
                    <widget class="QCheckBox" name="useUpscaylCheckBox">
+                    <property name="minimumSize">
+                     <size>
+                      <width>136</width>
+                      <height>0</height>
+                     </size>
+                    </property>
                     <property name="text">
                      <string>Use Upscayl</string>
                     </property>
@@ -349,6 +370,9 @@
                 </item>
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayoutFiltersAndModels">
+                  <property name="spacing">
+                   <number>6</number>
+                  </property>
                   <item>
                    <layout class="QVBoxLayout" name="verticalLayoutFilterColumn">
                     <item>
@@ -393,60 +417,81 @@
                   </item>
                  </layout>
                 </item>
-                <item>
-                 <spacer name="verticalSpacer_ResizeLeft">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Vertical</enum>
-                  </property>
-                  <property name="sizeType">
-                   <enum>QSizePolicy::Policy::Maximum</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>10</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
                </layout>
               </item>
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_ResizeRight">
+                <property name="spacing">
+                 <number>6</number>
+                </property>
+                <property name="sizeConstraint">
+                 <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+                </property>
                 <item>
-                 <widget class="QGroupBox" name="groupBoxCommonSizes">
+                 <widget class="QLabel" name="labelCommonSizes">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Common sizes:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QWidget" name="commonSizesWidget" native="true">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="maximumSize">
                    <size>
-                    <width>240</width>
+                    <width>16777215</width>
                     <height>16777215</height>
                    </size>
                   </property>
-                  <property name="title">
-                   <string>Common sizes:</string>
-                  </property>
                   <layout class="QVBoxLayout" name="verticalLayout_CommonSizesInner">
                    <property name="spacing">
-                    <number>0</number>
+                    <number>2</number>
                    </property>
                    <property name="leftMargin">
-                    <number>5</number>
+                    <number>0</number>
                    </property>
                    <property name="topMargin">
-                    <number>5</number>
+                    <number>0</number>
                    </property>
                    <property name="rightMargin">
-                    <number>5</number>
+                    <number>0</number>
                    </property>
                    <property name="bottomMargin">
-                    <number>5</number>
+                    <number>0</number>
                    </property>
                    <item>
                     <widget class="QComboBox" name="resComboBox">
+                     <property name="enabled">
+                      <bool>true</bool>
+                     </property>
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
+                     </property>
+                     <property name="insertPolicy">
+                      <enum>QComboBox::InsertPolicy::InsertAtBottom</enum>
                      </property>
                     </widget>
                    </item>
@@ -456,14 +501,14 @@
                 <item>
                  <widget class="QPushButton" name="fitDesktopButton">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>240</width>
+                    <width>16777215</width>
                     <height>16777215</height>
                    </size>
                   </property>
@@ -475,14 +520,14 @@
                 <item>
                  <widget class="QPushButton" name="fillDesktopButton">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>240</width>
+                    <width>16777215</width>
                     <height>16777215</height>
                    </size>
                   </property>
@@ -494,14 +539,14 @@
                 <item>
                  <widget class="QPushButton" name="resetButton">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>240</width>
+                    <width>16777215</width>
                     <height>16777215</height>
                    </size>
                   </property>
@@ -510,19 +555,6 @@
                   </property>
                  </widget>
                 </item>
-                <item>
-                 <spacer name="verticalSpacer_ResizeRightBottom">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
                </layout>
               </item>
              </layout>
@@ -530,8 +562,6 @@
            </layout>
           </widget>
          </item>
-
-         <!-- Color adjustments section – replaced QGroupBox with a QCheckBox -->
          <item>
           <widget class="QWidget" name="colorContainer" native="true">
            <layout class="QVBoxLayout" name="verticalLayoutColorContainer">
@@ -970,14 +1000,21 @@
            </layout>
           </widget>
          </item>
-
-         <!-- Output group (unchanged) -->
          <item>
-          <widget class="QGroupBox" name="groupBoxOutput">
-           <property name="title">
-            <string>Output</string>
-           </property>
+          <widget class="QWidget" name="outputContainer" native="true">
            <layout class="QVBoxLayout" name="verticalLayoutOutput">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="QLabel" name="labelOutFolder">
               <property name="text">
