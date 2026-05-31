@@ -197,6 +197,7 @@
              <layout class="QHBoxLayout" name="horizontalLayoutResizeColumns">
               <item>
                <layout class="QVBoxLayout" name="verticalLayoutLeftColumn">
+                <!-- By Percent radio button -->
                 <item>
                  <widget class="QRadioButton" name="byPercentage">
                   <property name="text">
@@ -207,19 +208,13 @@
                   </property>
                  </widget>
                 </item>
+                <!-- Percent field below By Percent -->
                 <item>
-                 <widget class="QRadioButton" name="byAbsoluteSize">
-                  <property name="text">
-                   <string>By Absolute Size:</string>
+                 <layout class="QHBoxLayout" name="percentLayout">
+                  <property name="leftMargin">
+                   <number>20</number>
                   </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <layout class="QGridLayout" name="resGridLayoutSimplified">
-                  <item row="0" column="0">
+                  <item>
                    <widget class="QLabel" name="labelPercent">
                     <property name="text">
                      <string>Percent:</string>
@@ -229,7 +224,7 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="1">
+                  <item>
                    <widget class="QDoubleSpinBox" name="percent">
                     <property name="enabled">
                      <bool>false</bool>
@@ -263,78 +258,106 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="labelWidth">
-                    <property name="text">
-                     <string>Width:</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-                    </property>
-                   </widget>
+                 </layout>
+                </item>
+                <!-- By Absolute Size radio button -->
+                <item>
+                 <widget class="QRadioButton" name="byAbsoluteSize">
+                  <property name="text">
+                   <string>By Absolute Size:</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <!-- Width and Height fields below By Absolute Size -->
+                <item>
+                 <layout class="QVBoxLayout" name="absoluteSizeLayout">
+                  <property name="leftMargin">
+                   <number>20</number>
+                  </property>
+                  <item>
+                   <layout class="QHBoxLayout" name="widthLayout">
+                    <item>
+                     <widget class="QLabel" name="labelWidth">
+                      <property name="text">
+                       <string>Width:</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="width">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignmentFlag::AlignCenter</set>
+                      </property>
+                      <property name="buttonSymbols">
+                       <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                      </property>
+                      <property name="minimum">
+                       <number>1</number>
+                      </property>
+                      <property name="maximum">
+                       <number>65535</number>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </item>
-                  <item row="1" column="1">
-                   <widget class="QSpinBox" name="width">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>30</height>
-                     </size>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignmentFlag::AlignCenter</set>
-                    </property>
-                    <property name="buttonSymbols">
-                     <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
-                    </property>
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>65535</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="labelHeight">
-                    <property name="text">
-                     <string>Height:</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QSpinBox" name="height">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>30</height>
-                     </size>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignmentFlag::AlignCenter</set>
-                    </property>
-                    <property name="buttonSymbols">
-                     <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
-                    </property>
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>65535</number>
-                    </property>
-                   </widget>
+                  <item>
+                   <layout class="QHBoxLayout" name="heightLayout">
+                    <item>
+                     <widget class="QLabel" name="labelHeight">
+                      <property name="text">
+                       <string>Height:</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QSpinBox" name="height">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignmentFlag::AlignCenter</set>
+                      </property>
+                      <property name="buttonSymbols">
+                       <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                      </property>
+                      <property name="minimum">
+                       <number>1</number>
+                      </property>
+                      <property name="maximum">
+                       <number>65535</number>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </item>
                  </layout>
                 </item>
+                <!-- Keep aspect ratio and Use Upscayl checkboxes -->
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayoutCheckBoxes">
                   <item>
@@ -368,6 +391,7 @@
                   </item>
                  </layout>
                 </item>
+                <!-- Filter and Model comboboxes -->
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayoutFiltersAndModels">
                   <property name="spacing">
