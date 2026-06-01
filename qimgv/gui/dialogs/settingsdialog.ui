@@ -3501,6 +3501,12 @@
                     </property>
                     <item>
                      <widget class="QLabel" name="label_5">
+                      <property name="minimumSize">
+                       <size>
+                        <width>140</width>
+                        <height>0</height>
+                       </size>
+                      </property>
                       <property name="text">
                        <string>Window opacity:</string>
                       </property>
@@ -3577,6 +3583,102 @@
                     </item>
                    </layout>
                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_14_thumb">
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <item>
+                      <widget class="QLabel" name="label_5_thumb">
+                       <property name="minimumSize">
+                        <size>
+                         <width>140</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string>Thumbnail bar opacity:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSlider" name="thumbOpacitySlider">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>190</width>
+                         <height>10</height>
+                        </size>
+                       </property>
+                       <property name="maximum">
+                        <number>100</number>
+                       </property>
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="tickPosition">
+                        <enum>QSlider::TicksBelow</enum>
+                       </property>
+                       <property name="tickInterval">
+                        <number>10</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="thumbOpacityPercentLabel">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>60</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>60</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string>%</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_14_thumb">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </item>
+                    <item>
+                     <widget class="QCheckBox" name="useBlackBackgroundCheckBox">
+                      <property name="text">
+                       <string>Use black for background and thumbnail bar</string>
+                      </property>
+                     </widget>
+                    </item>
                  </layout>
                 </widget>
                </item>
@@ -4923,8 +5025,9 @@ Example: D:\Downloads\1c_bases; E:\Tuts</string>
                      </item>
                     </layout>
                    </item>
-                    <item>
-                     <widget class="QCheckBox" name="preloadUpscaylCheckBox">
+                   
+                   <item>
+                    <widget class="QCheckBox" name="preloadUpscaylCheckBox">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
                         <horstretch>0</horstretch>

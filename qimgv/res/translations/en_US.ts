@@ -19,285 +19,302 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="61"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="72"/>
         <source>0 files selected (0.0 MB)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="104"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="126"/>
         <source>Save as type:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="149"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="195"/>
         <source>Resize</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="192"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="209"/>
         <source>By Percent:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="208"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="270"/>
         <source>By Absolute Size:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="227"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="224"/>
         <source>Percent:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="248"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="287"/>
         <source>Width:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="334"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="326"/>
         <source>Height:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="400"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="373"/>
         <source>Keep aspect ratio</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="410"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="389"/>
         <source>Use Upscayl</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="452"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="405"/>
         <source>Filter:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="473"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="426"/>
         <source>Model:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="505"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="469"/>
         <source>Common sizes:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="551"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="540"/>
         <source>Fit to desktop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="570"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="559"/>
         <source>Fill desktop (expanding)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="589"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="578"/>
         <source>Reset</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="616"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="623"/>
         <source>Color adjustments</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="636"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="643"/>
         <source>Exposure:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="682"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="707"/>
         <source>Contrast:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="728"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="771"/>
         <source>Brightness:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="774"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="835"/>
         <source>Temperature:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="820"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="899"/>
         <source>Tint:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="866"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="963"/>
         <source>Saturation:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="912"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1027"/>
         <source>Hue:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="953"/>
-        <source>Output</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="959"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1119"/>
         <source>Output folder:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="971"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1131"/>
         <source>...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="980"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1140"/>
         <source>Create subfolder for batch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="987"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1147"/>
         <source>Filename pattern:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="994"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1154"/>
         <source>{name}_converted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1001"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1166"/>
         <source>Available: {name}, {ext}, {date}, {index}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1013"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1173"/>
         <source>Overwrite existing files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1051"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1198"/>
         <source>Ready to convert.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1071"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1218"/>
         <source>Convert</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1081"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="768"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.ui" line="1228"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="682"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="344"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="132"/>
+        <source>Reset Color Adjustments</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="292"/>
+        <source>Original size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="314"/>
         <source>Reset: %1 x %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="384"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="339"/>
         <source>AI Upscaling is disabled in this build.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="740"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="630"/>
         <source>%1 files selected (%2 MB)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="747"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="634"/>
         <source>Select Output Directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="766"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="651"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="652"/>
+        <source>PNG Compression level (0 - none, 9 - max)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="667"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="668"/>
+        <source>Quality (1 - lowest, 100 - highest)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="682"/>
         <source>Stop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="778"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="690"/>
         <source>Invalid Directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="779"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="690"/>
         <source>Please select a valid output directory.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="795"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="702"/>
         <source>No files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="796"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="702"/>
         <source>No files selected in the queue. Please check at least one file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="808"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="923"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="714"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="817"/>
         <source>Processing...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="865"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="766"/>
         <source>Loading AI Model...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="881"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="782"/>
         <source>Failed to load AI model.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="882"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="783"/>
         <source>AI Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="882"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="783"/>
         <source>Failed to load AI upscaling model: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="897"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="795"/>
         <source>Pending</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="919"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1089"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="813"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="989"/>
         <source>Done</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="919"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="813"/>
         <source>Skipped (Exists)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="955"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="839"/>
         <source>Processed %1 / %2 files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="968"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="848"/>
         <source>Finished. Success: %1, Failed: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="972"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="849"/>
         <source>Batch Conversion Complete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="973"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="850"/>
         <source>Batch process complete.
 
 Successfully converted: %1
@@ -306,23 +323,23 @@ Total files: %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="988"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="862"/>
         <source>Stopped by user.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1010"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1094"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="919"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="994"/>
         <source>Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1011"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="920"/>
         <source>Load Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1095"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="995"/>
         <source>Save Error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -330,17 +347,17 @@ Total files: %3</source>
 <context>
     <name>BatchItemWidget</name>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="71"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="69"/>
         <source>Pending</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="122"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="114"/>
         <source>Processing...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="125"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="116"/>
         <source>Done</source>
         <translation type="unfinished"></translation>
     </message>
@@ -858,6 +875,17 @@ Total files: %3</source>
     </message>
 </context>
 <context>
+    <name>DirectoryPresenter</name>
+    <message>
+        <location filename="../../components/directorypresenter.cpp" line="269"/>
+        <location filename="../../components/directorypresenter.cpp" line="387"/>
+        <location filename="../../components/directorypresenter.cpp" line="394"/>
+        <location filename="../../components/directorypresenter.cpp" line="431"/>
+        <source>Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FileReplaceDialog</name>
     <message>
         <location filename="../../gui/dialogs/filereplacedialog.ui" line="14"/>
@@ -933,6 +961,11 @@ Total files: %3</source>
     <message>
         <location filename="../../gui/folderview/folderview.ui" line="145"/>
         <source>[path]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/folderview/folderview.ui" line="187"/>
+        <source>Batch convert  ⇄</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1323,157 +1356,137 @@ Total files: %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="69"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="45"/>
         <source>By Percent:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="85"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="88"/>
         <source>By Absolute Size:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="104"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="57"/>
         <source>Percent:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="125"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="97"/>
         <source>Width:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="223"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="123"/>
         <source>Height:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="301"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="151"/>
         <source>Keep aspect ratio</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="311"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="178"/>
         <source>Use Upscayl</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="356"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="163"/>
         <source>Filter:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="382"/>
-        <source>Nearest</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="387"/>
-        <source>Bilinear</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="392"/>
-        <source>Bicubic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="397"/>
-        <source>Lanczos3</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="412"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="187"/>
         <source>Model:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="447"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="209"/>
         <source>Common sizes:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="481"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="217"/>
         <source>Select:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="486"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="222"/>
         <source>1366 x 768</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="491"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="227"/>
         <source>1440 x 900</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="496"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="232"/>
         <source>1440 x 1050</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="501"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="237"/>
         <source>1600 x 1200</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="506"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="242"/>
         <source>1920 x 1080 (FullHD)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="511"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="247"/>
         <source>1920 x 1200 (FullHD)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="516"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="252"/>
         <source>2560 x 1080</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="521"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="257"/>
         <source>2560 x 1440</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="526"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="262"/>
         <source>2560 x 1600</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="531"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="267"/>
         <source>3840 x 1600 (UW 4K)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="536"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="272"/>
         <source>3840 x 2160 (UHD-1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="559"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="280"/>
         <source>Fit to desktop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="578"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="287"/>
         <source>Fill desktop (expanding)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="597"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="294"/>
         <source>Reset</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="664"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="333"/>
         <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.ui" line="683"/>
+        <location filename="../../gui/dialogs/resizedialog.ui" line="340"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1621,7 +1634,7 @@ Total files: %3</source>
 <context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4904"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="5006"/>
         <source>&lt;a href=&quot;https://github.com/upscayl/custom-models/tree/main/models&quot;&gt;&lt;span style=&quot;text-decoration: underline; color:#007af4;&quot;&gt;Get more models&lt;/span&gt;&lt;/a&gt;</source>
         <translation>&lt;a href=&quot;https://github.com/upscayl/custom-models/tree/main/models&quot;&gt;&lt;span style=&quot;text-decoration: underline; color:#007af4;&quot;&gt;Get more models&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
@@ -1744,7 +1757,7 @@ Total files: %3</source>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="969"/>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3412"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="129"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="177"/>
         <source>Thumbnail panel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1895,42 +1908,42 @@ Total files: %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4803"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4905"/>
         <source>AI Upscale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4860"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4962"/>
         <source>Use Upscayl</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4881"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4983"/>
         <source>Model:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4935"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="5038"/>
         <source>Load engine at startup and keep ready in video memory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4948"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="5051"/>
         <source>Enable upscaling only when zoom exceeds:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="5043"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="5146"/>
         <source>200%</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="5140"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="5243"/>
         <source>About qimgv-plus</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="5191"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="5294"/>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot;
 &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
@@ -2152,6 +2165,7 @@ text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2786"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="85"/>
         <source>Dark</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2162,6 +2176,7 @@ text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="2796"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="86"/>
         <source>Light</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2197,13 +2212,13 @@ text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3215"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="126"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="174"/>
         <source>Overlay background</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3253"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="124"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="172"/>
         <source>Widget background</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2214,19 +2229,19 @@ text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3267"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="125"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="173"/>
         <source>Widget border</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3336"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="127"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="175"/>
         <source>Overlay text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="3374"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="128"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="176"/>
         <source>Scrollbars</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2241,130 +2256,141 @@ text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3505"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3511"/>
         <source>Window opacity:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3558"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3564"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3653"/>
         <source>%</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3628"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3600"/>
+        <source>Thumbnail bar opacity:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3678"/>
+        <source>Use black for background and thumbnail bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3730"/>
         <source>Controls</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3689"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4134"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3791"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4236"/>
         <source>Add</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3696"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4141"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3798"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4243"/>
         <source>Edit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3709"/>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4148"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3811"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4250"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3738"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3840"/>
         <source>Reset to defaults</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3772"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3874"/>
         <source>Action</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3777"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3879"/>
         <source>Shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3869"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3971"/>
         <source>Scroll image with:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3877"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3979"/>
         <source>None</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3882"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3984"/>
         <source>Touchpad</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3887"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3989"/>
         <source>Touchpad &amp; Mouse Wheel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3913"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4015"/>
         <source>Note: you can also zoom by holding RMB and moving the mouse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4014"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4116"/>
         <source>Trackpad detection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4024"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4126"/>
         <source>Disable if you have issues with mouse scrolling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4056"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4158"/>
         <source>Scripts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4112"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4214"/>
         <source>Note: these will appear in &quot;Open with&quot; menu.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4122"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4224"/>
         <source>Also, you can assign shortcuts to scripts (in &quot;Controls&quot; section).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4231"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4333"/>
         <source>Advanced</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4292"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4394"/>
         <source>Use preloader (recommended)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4302"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4404"/>
         <source>Load adjacent images in background</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4330"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4432"/>
         <source>Thumbnailer thread count:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4420"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4522"/>
         <source>Thumbnail cache resolution:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4368"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4470"/>
         <source>2</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2379,184 +2405,194 @@ text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3832"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3934"/>
         <source>Switch image by clicking window edges</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3839"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="3941"/>
         <source>Visible edges</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3941"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4043"/>
         <source>Mouse scrolling speed:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="3985"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4087"/>
         <source>[x]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4288"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4390"/>
         <source>Preload the next/previous image.
 Results in a much faster image switching (at the expense of wasting more RAM).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4399"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4501"/>
         <source>Use thumbnail cache (recommended)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4464"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4566"/>
         <source>256 px</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4493"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4595"/>
         <source>Paths to folders that should not be cached, separated by &apos;;&apos;.
 Example: D:\Downloads\1c_bases; E:\Tuts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4501"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4603"/>
         <source>Unload off-screen thumbnails</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4511"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4613"/>
         <source>Dynamically unload items to save memory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4525"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4627"/>
         <source>Show save overlay when editing images</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4540"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4642"/>
         <source>JPEG save quality:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4584"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4686"/>
         <source>q</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4613"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4715"/>
         <source>Confirm moving to trash</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4625"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4727"/>
         <source>Confirm file delete (!)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4639"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4741"/>
         <source>JXL animation support (experimental)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4653"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4755"/>
         <source>Allow multiple instances</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4681"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4783"/>
         <source>Memory allocation limit per image, MB:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="5302"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="5405"/>
         <source>OK</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="5309"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="5412"/>
         <source>Apply</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="5316"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="5419"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="57"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="66"/>
         <source>Preferences — </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="118"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="82"/>
+        <source>Theme mode:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="84"/>
+        <source>System Default (Auto)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="166"/>
         <source>Accent color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="119"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="167"/>
         <source>Windowed mode background</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="120"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="168"/>
         <source>Fullscreen mode background</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="121"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="169"/>
         <source>FolderView background</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="122"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="170"/>
         <source>FolderView top panel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="123"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="171"/>
         <source>Text color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="190"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="241"/>
         <source>Modern formats quality (WebP, JXL, AVIF):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="209"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="261"/>
         <source>PNG compression level:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="810"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="860"/>
         <source>Edit shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="872"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="923"/>
         <source>None (Uncompressed)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="873"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="925"/>
         <source>Fast</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="874"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="927"/>
         <source>Balanced</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="875"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="929"/>
         <source>Maximum</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.ui" line="4486"/>
+        <location filename="../../gui/dialogs/settingsdialog.ui" line="4588"/>
         <source>Exclude paths from caching (separated by semicolon &apos;;&apos;):</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2592,32 +2628,32 @@ Example: D:\Downloads\1c_bases; E:\Tuts</source>
 <context>
     <name>main</name>
     <message>
-        <location filename="../../main.cpp" line="121"/>
+        <location filename="../../main.cpp" line="122"/>
         <source>File or directory path.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="124"/>
+        <location filename="../../main.cpp" line="125"/>
         <source>Generate all thumbnails for directory.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="126"/>
+        <location filename="../../main.cpp" line="127"/>
         <source>directory-path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="128"/>
+        <location filename="../../main.cpp" line="129"/>
         <source>Thumbnail size. Current size is used if not specified.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="130"/>
+        <location filename="../../main.cpp" line="131"/>
         <source>thumbnail-size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../main.cpp" line="132"/>
+        <location filename="../../main.cpp" line="133"/>
         <source>Show build options.</source>
         <translation type="unfinished"></translation>
     </message>

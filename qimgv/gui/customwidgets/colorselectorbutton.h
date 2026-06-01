@@ -15,6 +15,9 @@ public:
     void setDescription(QString text);
     void setShowAlpha(bool showAlpha);
 
+signals:
+    void colorChanged(QColor color);
+
 protected:
     void paintEvent(QPaintEvent *e);
 

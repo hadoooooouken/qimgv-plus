@@ -48,6 +48,7 @@ private:
 
 protected:
     void paintEvent(QPaintEvent *event);
+    void changeEvent(QEvent *event) override;
 };
 
 #endif // SSIDEBAR_H

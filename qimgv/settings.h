@@ -76,6 +76,8 @@ enum FolderEndAction {
 
 enum ThumbPanelStyle { TH_PANEL_SIMPLE, TH_PANEL_EXTENDED };
 
+enum ThemeMode { THEME_AUTO, THEME_DARK, THEME_LIGHT };
+
 class Settings : public QObject {
   Q_OBJECT
 public:
@@ -230,6 +232,18 @@ public:
   bool useSystemColorScheme();
   void setUseSystemColorScheme(bool mode);
 
+  ThemeMode themeMode();
+  void setThemeMode(ThemeMode mode);
+
+  qreal thumbnailOpacity();
+  void setThumbnailOpacity(qreal value);
+
+  bool useBlackBackground();
+  void setUseBlackBackground(bool mode);
+
+  void loadTheme();
+  void saveTheme();
+
   void loadStylesheet();
 
   bool showSaveOverlay();
@@ -314,8 +328,6 @@ private:
   QSettings *settingsConf, *stateConf, *themeConf;
   QDir *mTmpDir, *mThumbCacheDir, *mConfDir;
   ColorScheme mColorScheme;
-  void loadTheme();
-  void saveTheme();
   void createColorVariants();
 
   void setupCache();

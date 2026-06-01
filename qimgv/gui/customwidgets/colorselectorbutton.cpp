@@ -7,6 +7,7 @@ ColorSelectorButton::ColorSelectorButton(QWidget *parent) : ClickableLabel(paren
 void ColorSelectorButton::setColor(QColor &newColor) {
     mColor = newColor;
     update();
+    emit colorChanged(mColor);
 }
 
 void ColorSelectorButton::setDescription(QString text) {
@@ -28,6 +29,7 @@ void ColorSelectorButton::showColorSelector() {
     if(newColor.isValid()) {
         mColor = newColor;
         update();
+        emit colorChanged(mColor);
     }
 }
 

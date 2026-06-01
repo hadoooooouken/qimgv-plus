@@ -108,3 +108,14 @@ void SSideBarItem::paintEvent(QPaintEvent *event) {
     QPainter p(this);
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }
+
+void SSideBarItem::changeEvent(QEvent *event) {
+    if (event->type() == QEvent::PaletteChange) {
+        QPalette p = palette();
+        if (p.base().color().valueF() <= 0.45f)
+            iconWidget.setColor(QColor(184,184,185));
+        else
+            iconWidget.setColor(QColor(70,70,70));
+    }
+    QWidget::changeEvent(event);
+}

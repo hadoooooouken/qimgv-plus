@@ -83,6 +83,7 @@ void IconWidget::setColor(QColor _color) {
     colorMode = ICON_COLOR_CUSTOM;
     color = _color;
     applyColor();
+    update();
 }
 
 void IconWidget::applyColor() {

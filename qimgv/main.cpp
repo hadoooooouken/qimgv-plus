@@ -77,8 +77,9 @@ int main(int argc, char *argv[]) {
   QCoreApplication::setLibraryPaths(QStringList()
                                     << QCoreApplication::applicationDirPath());
 
-  // use some style workarounds
-  a.setStyle(new ProxyStyle);
+  // use some style workarounds with platform-independent Fusion base to prevent
+  // uxtheme clashes in Windows 11
+  a.setStyle(new ProxyStyle(QStyleFactory::create("fusion")));
 
   QCoreApplication::setOrganizationName("qimgv-plus");
   QCoreApplication::setOrganizationDomain(
@@ -91,7 +92,7 @@ int main(int argc, char *argv[]) {
   qRegisterMetaType<ScalerRequest>("ScalerRequest");
   qRegisterMetaType<Script>("Script");
 #ifdef USE_UPSCAYL
-  qRegisterMetaType<QPixmap*>("QPixmap*");
+  qRegisterMetaType<QPixmap *>("QPixmap*");
 #endif
   qRegisterMetaType<std::shared_ptr<Image>>("std::shared_ptr<Image>");
   qRegisterMetaType<std::shared_ptr<Thumbnail>>("std::shared_ptr<Thumbnail>");
@@ -187,23 +188,24 @@ int main(int argc, char *argv[]) {
       Core core;
 
       if (server) {
-        QObject::connect(server, &QLocalServer::newConnection, [server, &core]() {
-          QLocalSocket *clientSocket = server->nextPendingConnection();
-          if (!clientSocket)
-            return;
-          QObject::connect(clientSocket, &QLocalSocket::disconnected, clientSocket,
-                           &QLocalSocket::deleteLater);
-          QObject::connect(clientSocket, &QLocalSocket::readyRead,
-                           [clientSocket, &core]() {
-                             QDataStream in(clientSocket);
-                             QString pathReceived;
-                             in >> pathReceived;
-                             core.raiseWindow();
-                             if (!pathReceived.isEmpty()) {
-                               core.loadPath(pathReceived);
-                             }
-                           });
-        });
+        QObject::connect(
+            server, &QLocalServer::newConnection, [server, &core]() {
+              QLocalSocket *clientSocket = server->nextPendingConnection();
+              if (!clientSocket)
+                return;
+              QObject::connect(clientSocket, &QLocalSocket::disconnected,
+                               clientSocket, &QLocalSocket::deleteLater);
+              QObject::connect(clientSocket, &QLocalSocket::readyRead,
+                               [clientSocket, &core]() {
+                                 QDataStream in(clientSocket);
+                                 QString pathReceived;
+                                 in >> pathReceived;
+                                 core.raiseWindow();
+                                 if (!pathReceived.isEmpty()) {
+                                   core.loadPath(pathReceived);
+                                 }
+                               });
+            });
         server->listen(serverName);
       }
 

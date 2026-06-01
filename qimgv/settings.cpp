@@ -109,6 +109,58 @@ void Settings::loadStylesheet() {
     QPalette p;
     QColor sys_text = p.text().color();
     QColor sys_window = p.window().color();
+
+    ThemeMode themeModeVal = settings->themeMode();
+    bool isDark = false;
+    if (themeModeVal == THEME_AUTO) {
+      if (sys_window.valueF() <= 0.45f) {
+        isDark = true;
+      }
+    } else if (themeModeVal == THEME_DARK) {
+      isDark = true;
+    }
+
+    if (isDark) {
+      sys_window = QColor(37, 37, 37);
+      sys_text = QColor(220, 220, 220);
+
+      QPalette darkPalette;
+      darkPalette.setColor(QPalette::Window, QColor(37, 37, 37));
+      darkPalette.setColor(QPalette::WindowText, QColor(220, 220, 220));
+      darkPalette.setColor(QPalette::Base, QColor(30, 30, 30));
+      darkPalette.setColor(QPalette::AlternateBase, QColor(45, 45, 45));
+      darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
+      darkPalette.setColor(QPalette::ToolTipText, Qt::white);
+      darkPalette.setColor(QPalette::Text, QColor(220, 220, 220));
+      darkPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(100, 100, 100));
+      darkPalette.setColor(QPalette::Button, QColor(45, 45, 45));
+      darkPalette.setColor(QPalette::ButtonText, QColor(220, 220, 220));
+      darkPalette.setColor(QPalette::BrightText, Qt::red);
+      darkPalette.setColor(QPalette::Link, colors.accent);
+      darkPalette.setColor(QPalette::Highlight, colors.accent);
+      darkPalette.setColor(QPalette::HighlightedText, Qt::white);
+      qApp->setPalette(darkPalette);
+    } else {
+      sys_window = QColor(245, 245, 245);
+      sys_text = QColor(30, 30, 30);
+
+      QPalette lightPalette;
+      lightPalette.setColor(QPalette::Window, QColor(245, 245, 245));
+      lightPalette.setColor(QPalette::WindowText, QColor(30, 30, 30));
+      lightPalette.setColor(QPalette::Base, QColor(255, 255, 255));
+      lightPalette.setColor(QPalette::AlternateBase, QColor(240, 240, 240));
+      lightPalette.setColor(QPalette::ToolTipBase, QColor(30, 30, 30));
+      lightPalette.setColor(QPalette::ToolTipText, Qt::white);
+      lightPalette.setColor(QPalette::Text, QColor(30, 30, 30));
+      lightPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(150, 150, 150));
+      lightPalette.setColor(QPalette::Button, QColor(240, 240, 240));
+      lightPalette.setColor(QPalette::ButtonText, QColor(30, 30, 30));
+      lightPalette.setColor(QPalette::BrightText, Qt::red);
+      lightPalette.setColor(QPalette::Link, colors.accent);
+      lightPalette.setColor(QPalette::Highlight, colors.accent);
+      lightPalette.setColor(QPalette::HighlightedText, Qt::white);
+      qApp->setPalette(lightPalette);
+    }
     QColor sys_window_tinted, sys_window_tinted_lc, sys_window_tinted_lc2,
         sys_window_tinted_hc, sys_window_tinted_hc2;
     if (sys_window.valueF() <= 0.45f) {
@@ -276,58 +328,50 @@ void Settings::loadStylesheet() {
 }
 //------------------------------------------------------------------------------
 void Settings::loadTheme() {
-  if (settings->useSystemColorScheme()) {
-    setColorScheme(ThemeStore::colorScheme(ColorSchemes::COLORS_SYSTEM));
-  } else {
-    BaseColorScheme base;
-    themeConf->beginGroup("Colors");
-    base.background =
-        QColor(themeConf->value("background", "#000000").toString());
-    base.background_fullscreen =
-        QColor(themeConf->value("background_fullscreen", "#000000").toString());
-    base.text = QColor(themeConf->value("text", "#ffffff").toString());
-    base.icons = QColor(themeConf->value("icons", "#acacac").toString());
-    base.widget = QColor(themeConf->value("widget", "#111111").toString());
-    base.widget_border =
-        QColor(themeConf->value("widget_border", "#222222").toString());
-    base.accent = QColor(themeConf->value("accent", "#0080ff").toString());
-    base.folderview =
-        QColor(themeConf->value("folderview", "#111111").toString());
-    base.folderview_topbar =
-        QColor(themeConf->value("folderview_topbar", "#111111").toString());
-    base.thumbpanel =
-        QColor(themeConf->value("thumbpanel", "#80000000").toString());
-    base.scrollbar =
-        QColor(themeConf->value("scrollbar", "#343434").toString());
-    base.overlay_text =
-        QColor(themeConf->value("overlay_text", "#999999").toString());
-    base.overlay = QColor(themeConf->value("overlay", "#000000").toString());
-    base.tid = themeConf->value("tid", "2").toInt(); // TID 2 is Black
-    themeConf->endGroup();
-    setColorScheme(ColorScheme(base));
+  ThemeMode mode = themeMode();
+  ColorSchemes baseSchemeName = COLORS_DARK; // Default to dark
+
+  if (mode == THEME_AUTO) {
+    QPalette p;
+    if (p.window().color().valueF() <= 0.45f) {
+      baseSchemeName = COLORS_DARK;
+    } else {
+      baseSchemeName = COLORS_LIGHT;
+    }
+  } else if (mode == THEME_DARK) {
+    baseSchemeName = COLORS_DARK;
+  } else if (mode == THEME_LIGHT) {
+    baseSchemeName = COLORS_LIGHT;
   }
+
+  ColorScheme baseScheme = ThemeStore::colorScheme(baseSchemeName);
+
+  themeConf->beginGroup("Colors");
+  QColor customAccent = QColor(themeConf->value("accent", baseScheme.accent.name()).toString());
+  themeConf->endGroup();
+
+  BaseColorScheme base;
+  base.background = useBlackBackground() ? QColor("#000000") : baseScheme.background;
+  base.background_fullscreen = useBlackBackground() ? QColor("#000000") : baseScheme.background_fullscreen;
+  base.text = baseScheme.text;
+  base.icons = baseScheme.icons;
+  base.widget = baseScheme.widget;
+  base.widget_border = baseScheme.widget_border;
+  base.accent = customAccent.isValid() ? customAccent : baseScheme.accent;
+  base.folderview = baseScheme.folderview;
+  base.folderview_topbar = baseScheme.folderview_topbar;
+  base.thumbpanel = useBlackBackground() ? QColor("#000000") : baseScheme.thumbpanel;
+  base.thumbpanel.setAlphaF(thumbnailOpacity());
+  base.scrollbar = baseScheme.scrollbar;
+  base.overlay = baseScheme.overlay;
+  base.overlay_text = baseScheme.overlay_text;
+  base.tid = baseScheme.tid;
+
+  setColorScheme(ColorScheme(base));
 }
 void Settings::saveTheme() {
-  if (settings->useSystemColorScheme())
-    return;
   themeConf->beginGroup("Colors");
-  themeConf->setValue("background", mColorScheme.background.name());
-  themeConf->setValue("background_fullscreen",
-                      mColorScheme.background_fullscreen.name());
-  themeConf->setValue("text", mColorScheme.text.name());
-  themeConf->setValue("icons", mColorScheme.icons.name());
-  themeConf->setValue("widget", mColorScheme.widget.name());
-  themeConf->setValue("widget_border", mColorScheme.widget_border.name());
   themeConf->setValue("accent", mColorScheme.accent.name());
-  themeConf->setValue("folderview", mColorScheme.folderview.name());
-  themeConf->setValue("folderview_topbar",
-                      mColorScheme.folderview_topbar.name());
-  themeConf->setValue("thumbpanel",
-                      mColorScheme.thumbpanel.name(QColor::HexArgb));
-  themeConf->setValue("scrollbar", mColorScheme.scrollbar.name());
-  themeConf->setValue("overlay_text", mColorScheme.overlay_text.name());
-  themeConf->setValue("overlay", mColorScheme.overlay.name());
-  themeConf->setValue("tid", mColorScheme.tid);
   themeConf->endGroup();
 }
 //------------------------------------------------------------------------------
@@ -385,6 +429,46 @@ bool Settings::useSystemColorScheme() {
 
 void Settings::setUseSystemColorScheme(bool mode) {
   settings->settingsConf->setValue("useSystemColorScheme", mode);
+}
+
+ThemeMode Settings::themeMode() {
+  int mode = settings->settingsConf->value("themeMode", static_cast<int>(THEME_AUTO)).toInt();
+  if (mode < 0 || mode > 2)
+    mode = static_cast<int>(THEME_AUTO);
+  return static_cast<ThemeMode>(mode);
+}
+
+void Settings::setThemeMode(ThemeMode mode) {
+  settings->settingsConf->setValue("themeMode", static_cast<int>(mode));
+}
+
+qreal Settings::thumbnailOpacity() {
+  bool ok = false;
+  qreal value =
+      settings->settingsConf->value("thumbnailOpacity", 0.5).toReal(&ok);
+  if (!ok)
+    return 0.5;
+  if (value > 1.0)
+    return 1.0;
+  if (value < 0.0)
+    return 0.0;
+  return value;
+}
+
+void Settings::setThumbnailOpacity(qreal value) {
+  if (value > 1.0)
+    value = 1.0;
+  else if (value < 0.0)
+    value = 0.0;
+  settings->settingsConf->setValue("thumbnailOpacity", value);
+}
+
+bool Settings::useBlackBackground() {
+  return settings->settingsConf->value("useBlackBackground", false).toBool();
+}
+
+void Settings::setUseBlackBackground(bool mode) {
+  settings->settingsConf->setValue("useBlackBackground", mode);
 }
 //------------------------------------------------------------------------------
 QVersionNumber Settings::lastVersion() {

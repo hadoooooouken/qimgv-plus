@@ -78,50 +78,89 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   // fake combobox that acts as a menu button
   // less code than using pushbutton with menu
   // will be replaced with something custom later
+  // Setup simplified theme mode selector
+  ui->loadPresetLabel->setText(tr("Theme mode:"));
+  ui->themeSelectorComboBox->clear();
+  ui->themeSelectorComboBox->addItem(tr("System Default (Auto)"));
+  ui->themeSelectorComboBox->addItem(tr("Dark"));
+  ui->themeSelectorComboBox->addItem(tr("Light"));
+
   connect(ui->themeSelectorComboBox,
           qOverload<int>(&QComboBox::currentIndexChanged), [this](int index) {
-            ui->themeSelectorComboBox->blockSignals(true);
-            ui->themeSelectorComboBox->setCurrentIndex(index);
-            ui->themeSelectorComboBox->blockSignals(false);
-            switch (index) {
-            case 0:
-              setColorScheme(ThemeStore::colorScheme(COLORS_BLACK));
-              settings->setColorTid(COLORS_BLACK);
-              break;
-            case 1:
-              setColorScheme(ThemeStore::colorScheme(COLORS_DARK));
-              settings->setColorTid(COLORS_DARK);
-              break;
-            case 2:
-              setColorScheme(ThemeStore::colorScheme(COLORS_DARKBLUE));
-              settings->setColorTid(COLORS_DARKBLUE);
-              break;
-            case 3:
-              setColorScheme(ThemeStore::colorScheme(COLORS_LIGHT));
-              settings->setColorTid(COLORS_LIGHT);
-              break;
+            if (index >= 0 && index <= 2) {
+              settings->setThemeMode(static_cast<ThemeMode>(index));
+              settings->loadTheme();
+              this->readColorScheme();
+              emit settingsChanged();
             }
           });
 
-  connect(ui->useSystemColorsCheckBox, &QCheckBox::toggled,
-          [this](bool useSystemTheme) {
-            if (useSystemTheme) {
-              ui->themeSelectorComboBox->setCurrentIndex(-1);
-              setColorScheme(ThemeStore::colorScheme(COLORS_SYSTEM));
-              settings->setColorTid(COLORS_SYSTEM);
-            } else {
-              readColorScheme();
-              settings->setColorTid(COLORS_CUSTOMIZED);
-            }
-            ui->themeSelectorComboBox->setEnabled(!useSystemTheme);
-            ui->colorConfigSubgroup->setEnabled(!useSystemTheme);
-            ui->modifySystemSchemeLabel->setVisible(useSystemTheme);
-          });
+  // Hide unused checkboxes and labels
+  ui->useSystemColorsCheckBox->hide();
+  ui->modifySystemSchemeLabel->hide();
 
-  connect(ui->modifySystemSchemeLabel, &ClickableLabel::clicked, [this]() {
-    ui->useSystemColorsCheckBox->setChecked(false);
-    setColorScheme(ThemeStore::colorScheme(COLORS_CUSTOMIZED));
-    settings->setColorTid(COLORS_CUSTOMIZED);
+  // Hide all color selectors except Accent
+  ui->colorSelectorBackground->hide();
+  ui->label_34->hide();
+  ui->colorSelectorFullscreen->hide();
+  ui->label_35->hide();
+  ui->colorSelectorText->hide();
+  ui->label_11->hide();
+  ui->colorSelectorIcons->hide();
+  ui->label_14->hide();
+  ui->colorSelectorFolderview->hide();
+  ui->label_36->hide();
+  ui->colorSelectorFolderviewPanel->hide();
+  ui->label_21->hide();
+  ui->colorSelectorWidget->hide();
+  ui->label_31->hide();
+  ui->colorSelectorWidgetBorder->hide();
+  ui->label_22->hide();
+  ui->colorSelectorOverlay->hide();
+  ui->label_37->hide();
+  ui->colorSelectorOverlayText->hide();
+  ui->label_32->hide();
+  ui->colorSelectorScrollbar->hide();
+  ui->label_23->hide();
+  ui->colorSelectorThumbpanel->hide();
+  ui->label_thumbpanel->hide();
+
+  // Connect accent color changes to update and save instantly
+  connect(ui->colorSelectorAccent, &ColorSelectorButton::colorChanged, [this](QColor color) {
+    ColorScheme scheme = settings->colorScheme();
+    BaseColorScheme base;
+    base.accent = color;
+    base.background = scheme.background;
+    base.background_fullscreen = scheme.background_fullscreen;
+    base.text = scheme.text;
+    base.icons = scheme.icons;
+    base.widget = scheme.widget;
+    base.widget_border = scheme.widget_border;
+    base.folderview = scheme.folderview;
+    base.folderview_topbar = scheme.folderview_topbar;
+    base.thumbpanel = scheme.thumbpanel;
+    base.scrollbar = scheme.scrollbar;
+    base.overlay = scheme.overlay;
+    base.overlay_text = scheme.overlay_text;
+    base.tid = scheme.tid;
+
+    settings->setColorScheme(ColorScheme(base));
+    settings->saveTheme();
+    emit settingsChanged();
+  });
+
+  // Align opacity labels to make sliders line up perfectly
+  ui->label_5->setMinimumWidth(140);
+  ui->label_5_thumb->setMinimumWidth(140);
+
+  // Connect thumbnail opacity slider
+  connect(ui->thumbOpacitySlider, &QSlider::valueChanged, this, &SettingsDialog::onThumbOpacitySliderChanged);
+
+  connect(ui->useBlackBackgroundCheckBox, &QCheckBox::toggled, [this](bool checked) {
+    settings->setUseBlackBackground(checked);
+    settings->loadTheme();
+    this->readColorScheme();
+    emit settingsChanged();
   });
 
   ui->colorSelectorAccent->setDescription(tr("Accent color"));
@@ -303,14 +342,28 @@ void SettingsDialog::adjustSizeToContents() {
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::resetToDesktopTheme() {
-  settings->setColorScheme(
-      ThemeStore::colorScheme(ColorSchemes::COLORS_SYSTEM));
+  settings->setThemeMode(THEME_AUTO);
+  settings->setThumbnailOpacity(0.5);
+  settings->setUseBlackBackground(false);
+  // Clear custom accent in themeConf
+  settings->saveTheme(); // this writes current Scheme (which we will load next) to themeConf
+  settings->loadTheme();
   this->readColorScheme();
+
+  // Update UI controls
+  ui->themeSelectorComboBox->setCurrentIndex(static_cast<int>(THEME_AUTO));
+  ui->thumbOpacitySlider->setValue(50);
+  ui->thumbOpacityPercentLabel->setText("50%");
+  ui->useBlackBackgroundCheckBox->setChecked(false);
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::setupSidebar() {}
 //------------------------------------------------------------------------------
 void SettingsDialog::readSettings() {
+  ui->themeSelectorComboBox->blockSignals(true);
+  ui->thumbOpacitySlider->blockSignals(true);
+  ui->useBlackBackgroundCheckBox->blockSignals(true);
+
   ui->loopSlideshowCheckBox->setChecked(settings->loopSlideshow());
   ui->enablePanelCheckBox->setChecked(settings->panelEnabled());
   ui->thumbnailPanelGroupContents->setEnabled(settings->panelEnabled());
@@ -482,14 +535,18 @@ void SettingsDialog::readSettings() {
   // reduce by 8x to have nice granular control in qslider
   ui->panelSizeSlider->setValue(settings->panelPreviewsSize() / 8);
 
-  ui->useSystemColorsCheckBox->setChecked(settings->useSystemColorScheme());
-  ui->modifySystemSchemeLabel->setVisible(settings->useSystemColorScheme());
-  ui->themeSelectorComboBox->setEnabled(!settings->useSystemColorScheme());
-  ui->colorConfigSubgroup->setEnabled(!settings->useSystemColorScheme());
+  ui->themeSelectorComboBox->setCurrentIndex(static_cast<int>(settings->themeMode()));
+  ui->thumbOpacitySlider->setValue(static_cast<int>(settings->thumbnailOpacity() * 100));
+  ui->thumbOpacityPercentLabel->setText(QString::number(ui->thumbOpacitySlider->value()) + "%");
+  ui->useBlackBackgroundCheckBox->setChecked(settings->useBlackBackground());
 
   readColorScheme();
   readShortcuts();
   readScripts();
+
+  ui->themeSelectorComboBox->blockSignals(false);
+  ui->thumbOpacitySlider->blockSignals(false);
+  ui->useBlackBackgroundCheckBox->blockSignals(false);
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::saveSettings() {
@@ -625,8 +682,9 @@ void SettingsDialog::saveSettings() {
     ThumbnailCache cache;
     cache.clear();
   }
-
-  settings->setUseSystemColorScheme(ui->useSystemColorsCheckBox->isChecked());
+  settings->setThemeMode(static_cast<ThemeMode>(ui->themeSelectorComboBox->currentIndex()));
+  settings->setThumbnailOpacity(ui->thumbOpacitySlider->value() / 100.f);
+  settings->setUseBlackBackground(ui->useBlackBackgroundCheckBox->isChecked());
 
   saveColorScheme();
   saveShortcuts();
@@ -647,56 +705,30 @@ void SettingsDialog::readColorScheme() {
 }
 
 void SettingsDialog::setColorScheme(ColorScheme colors) {
-  switch (colors.tid) {
-  case COLORS_LIGHT:
-    ui->themeSelectorComboBox->setCurrentIndex(3);
-    break;
-  case COLORS_BLACK:
-    ui->themeSelectorComboBox->setCurrentIndex(0);
-    break;
-  case COLORS_DARK:
-    ui->themeSelectorComboBox->setCurrentIndex(1);
-    break;
-  case COLORS_DARKBLUE:
-    ui->themeSelectorComboBox->setCurrentIndex(2);
-    break;
-  default:
-    ui->themeSelectorComboBox->setCurrentIndex(-1);
-    break;
-  }
   ui->colorSelectorAccent->setColor(colors.accent);
-  ui->colorSelectorBackground->setColor(colors.background);
-  ui->colorSelectorFullscreen->setColor(colors.background_fullscreen);
-  ui->colorSelectorFolderview->setColor(colors.folderview);
-  ui->colorSelectorFolderviewPanel->setColor(colors.folderview_topbar);
-  ui->colorSelectorText->setColor(colors.text);
-  ui->colorSelectorIcons->setColor(colors.icons);
-  ui->colorSelectorWidget->setColor(colors.widget);
-  ui->colorSelectorWidgetBorder->setColor(colors.widget_border);
-  ui->colorSelectorOverlay->setColor(colors.overlay);
-  ui->colorSelectorOverlayText->setColor(colors.overlay_text);
-  ui->colorSelectorScrollbar->setColor(colors.scrollbar);
-  ui->colorSelectorThumbpanel->setColor(colors.thumbpanel);
 }
 
 //------------------------------------------------------------------------------
 void SettingsDialog::saveColorScheme() {
+  ColorScheme scheme = settings->colorScheme();
   BaseColorScheme base;
   base.accent = ui->colorSelectorAccent->color();
-  base.background = ui->colorSelectorBackground->color();
-  base.background_fullscreen = ui->colorSelectorFullscreen->color();
-  base.folderview = ui->colorSelectorFolderview->color();
-  base.folderview_topbar = ui->colorSelectorFolderviewPanel->color();
-  base.text = ui->colorSelectorText->color();
-  base.icons = ui->colorSelectorIcons->color();
-  base.widget = ui->colorSelectorWidget->color();
-  base.widget_border = ui->colorSelectorWidgetBorder->color();
-  base.overlay = ui->colorSelectorOverlay->color();
-  base.overlay_text = ui->colorSelectorOverlayText->color();
-  base.scrollbar = ui->colorSelectorScrollbar->color();
-  base.thumbpanel = ui->colorSelectorThumbpanel->color();
-  base.tid = settings->colorScheme().tid;
+  base.background = scheme.background;
+  base.background_fullscreen = scheme.background_fullscreen;
+  base.text = scheme.text;
+  base.icons = scheme.icons;
+  base.widget = scheme.widget;
+  base.widget_border = scheme.widget_border;
+  base.folderview = scheme.folderview;
+  base.folderview_topbar = scheme.folderview_topbar;
+  base.thumbpanel = scheme.thumbpanel;
+  base.scrollbar = scheme.scrollbar;
+  base.overlay = scheme.overlay;
+  base.overlay_text = scheme.overlay_text;
+  base.tid = scheme.tid;
+
   settings->setColorScheme(ColorScheme(base));
+  settings->saveTheme();
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::readShortcuts() {
@@ -927,6 +959,13 @@ void SettingsDialog::onThumbnailerThreadsSliderChanged(int value) {
 //------------------------------------------------------------------------------
 void SettingsDialog::onBgOpacitySliderChanged(int value) {
   ui->bgOpacityPercentLabel->setText(QString::number(value) + "%");
+}
+//------------------------------------------------------------------------------
+void SettingsDialog::onThumbOpacitySliderChanged(int value) {
+  ui->thumbOpacityPercentLabel->setText(QString::number(value) + "%");
+  settings->setThumbnailOpacity(value / 100.f);
+  settings->loadTheme();
+  emit settingsChanged();
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onAutoResizeLimitSliderChanged(int value) {

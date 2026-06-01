@@ -69,6 +69,7 @@ private slots:
     void removeShortcut();
     void resetShortcuts();
     void onBgOpacitySliderChanged(int value);
+    void onThumbOpacitySliderChanged(int value);
     void onThumbnailerThreadsSliderChanged(int value);
     void onExpandLimitSliderChanged(int value);
     void onZoomStepSliderChanged(int value);
