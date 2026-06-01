@@ -330,6 +330,14 @@ Total files: %3</source>
         <source>Save Error</source>
         <translation>Помилка збереження</translation>
     </message>
+    <message>
+        <source>Original size</source>
+        <translation>Оригінальний розмір</translation>
+    </message>
+    <message>
+        <source>Reset Color Adjustments</source>
+        <translation>Скинути корекцію кольорів</translation>
+    </message>
 </context>
 <context>
     <name>BatchItemWidget</name>

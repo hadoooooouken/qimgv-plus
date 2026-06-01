@@ -104,7 +104,6 @@ private:
     Ui::BatchConverterDialog *ui;
     QStringList inputPaths;
     QThreadPool threadPool;
-    QMutex listMutex;
     Thumbnailer *thumbnailer;
 
     int totalFiles = 0;

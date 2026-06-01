@@ -330,6 +330,14 @@ Total files: %3</source>
         <source>Save Error</source>
         <translation>Ошибка сохранения</translation>
     </message>
+    <message>
+        <source>Original size</source>
+        <translation>Оригинальный размер</translation>
+    </message>
+    <message>
+        <source>Reset Color Adjustments</source>
+        <translation>Сбросить цветокоррекцию</translation>
+    </message>
 </context>
 <context>
     <name>BatchItemWidget</name>
@@ -1308,6 +1316,18 @@ Total files: %3</source>
         <location filename="../../utils/fileoperations.cpp" line="59" />
         <source>Other error.</source>
         <translation>Другая ошибка.</translation>
+    </message>
+    <message>
+        <source>Simple</source>
+        <translation type="vanished">Простой</translation>
+    </message>
+    <message>
+        <source>Extended</source>
+        <translation type="vanished">Расширенный</translation>
+    </message>
+    <message>
+        <source>Extended + Folders</source>
+        <translation type="vanished">Расширенный + Папки</translation>
     </message>
 </context>
 <context>
@@ -2606,6 +2626,78 @@ text-decoration: underline; color:#007af4;"&gt;здесь&lt;/span&gt;&lt;/a&gt;
         <source>Maximum</source>
         <translation>Максимальное</translation>
     </message>
+    <message>
+        <source>Video playback</source>
+        <translation type="vanished">Воспроизведение видео</translation>
+    </message>
+    <message>
+        <source>Play sounds</source>
+        <translation type="vanished">Воспроизводить звуки</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=" text-decoration: underline;"&gt;modify&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="vanished">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=" text-decoration: underline;"&gt;изменить&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>Grid background on transparent images</source>
+        <translation>Фон-сетка на прозрачных изображениях</translation>
+    </message>
+    <message>
+        <source>Preload the next/previous image. Results in a much faster image switching (at the expense of wasting more RAM).</source>
+        <translation type="vanished">Предзагружать следующее/предыдущее изображение. Значительно повышает скорость переключения картинок (за счет большего потребления ОЗУ).</translation>
+    </message>
+    <message>
+        <source>Mouse &amp; touchpad</source>
+        <translation type="vanished">Мышь и тачпад</translation>
+    </message>
+    <message>
+        <source>Mpv binary:</source>
+        <translation type="vanished">Путь к mpv:</translation>
+    </message>
+    <message>
+        <source>About qimgv</source>
+        <translation type="vanished">О программе qimgv</translation>
+    </message>
+    <message>
+        <source>Navigate to mpv binary</source>
+        <translation type="vanished">Укажите путь к mpv</translation>
+    </message>
+    <message>
+        <source>Paths to folders that should not be cached, separated by ';'. Example: D:\Downloads\1c_bases; E:\Tuts</source>
+        <translation type="vanished">Пути к папкам, которые не нужно кэшировать, разделенные ';'. Пример: D:\Downloads\1c_bases; E:\Tuts</translation>
+    </message>
+    <message>
+        <source>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;meta charset="utf-8" /&gt;&lt;style type="text/css"&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Noto Sans'; font-size:11pt; font-weight:400; font-style:normal;"&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;This is a fast and easy to use image viewer&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Github page:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;"&gt;https://github.com/hadoooooouken/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Main developer:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; easymodo&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;a href="https://github.com/hadoooooouken/qimgv/graphs/contributors"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;Contributors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;qimgv is licensed under &lt;/span&gt;&lt;a href="https://www.gnu.org/licenses/gpl-3.0.en.html"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;GNU GPL Version 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Report any issues / request features &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv/issues"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;here&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="vanished">&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;meta charset="utf-8" /&gt;&lt;style type="text/css"&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'Noto Sans'; font-size:11pt; font-weight:400; font-style:normal;"&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Быстрый и удобный просмотрщик изображений&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Страница Github:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;"&gt;https://github.com/hadoooooouken/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic;"&gt;Главный разработчик:&lt;/span&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-style:italic;"&gt; easymodo&lt;/span&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;a href="https://github.com/hadoooooouken/qimgv/graphs/contributors"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;Участники разработки&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;"&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;qimgv распространяется по лицензии &lt;/span&gt;&lt;a href="https://www.gnu.org/licenses/gpl-3.0.en.html"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;GNU GPL версии 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:10pt;"&gt;Сообщить об ошибках / предложить функции можно &lt;/span&gt;&lt;a href="https://github.com/hadoooooouken/qimgv/issues"&gt;&lt;span style=" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;"&gt;здесь&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
 </context>
 <context>
     <name>ShortcutCreatorDialog</name>
@@ -2673,6 +2765,13 @@ text-decoration: underline; color:#007af4;"&gt;здесь&lt;/span&gt;&lt;/a&gt;
     <message>
         <source>Folder</source>
         <translation>Папка</translation>
+    </message>
+</context>
+<context>
+    <name>FVOptionsPopup</name>
+    <message>
+        <source>View options</source>
+        <translation type="vanished">Параметры</translation>
     </message>
 </context>
 </TS>

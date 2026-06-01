@@ -128,6 +128,19 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     ui->setupUi(this);
     setWindowModality(Qt::ApplicationModal);
 
+    // Add Reset Color Adjustments button
+    QPushButton *resetColorButton = new QPushButton(tr("Reset Color Adjustments"), this);
+    ui->verticalLayoutColor->addWidget(resetColorButton);
+    connect(resetColorButton, &QPushButton::clicked, this, [this]() {
+        ui->exposureSlider->setValue(0);
+        ui->contrastSlider->setValue(100);
+        ui->brightnessSlider->setValue(0);
+        ui->saturationSlider->setValue(100);
+        ui->hueSlider->setValue(0);
+        ui->tempSlider->setValue(0);
+        ui->tintSlider->setValue(0);
+    });
+
     collectResizeWidgets();
     collectColorWidgets();
 
@@ -276,7 +289,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
 #endif
 
     desktopSize = qApp->primaryScreen()->size();
-    ui->resComboBox->addItem("Original size");
+    ui->resComboBox->addItem(tr("Original size"));
     ui->resComboBox->addItem("1366 x 768");
     ui->resComboBox->addItem("1440 x 900");
     ui->resComboBox->addItem("1440 x 1050");
@@ -318,8 +331,9 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     int modelIdx = ui->upscaylModelComboBox->findText(settings->upscaylModel());
     ui->upscaylModelComboBox->setCurrentIndex(modelIdx != -1 ? modelIdx : 0);
     ui->useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
-    ui->useUpscaylCheckBox->setEnabled(true);
-    ui->upscaylModelComboBox->setEnabled(ui->useUpscaylCheckBox->isChecked());
+    bool resizeEnabled = ui->resizeEnableCheckBox->isChecked();
+    ui->useUpscaylCheckBox->setEnabled(resizeEnabled);
+    ui->upscaylModelComboBox->setEnabled(resizeEnabled && ui->useUpscaylCheckBox->isChecked());
 #else
     ui->useUpscaylCheckBox->setEnabled(false);
     ui->useUpscaylCheckBox->setToolTip(tr("AI Upscaling is disabled in this build."));
@@ -794,6 +808,7 @@ void BatchConverterDialog::startConversion() {
 
         if (!overwrite && QFileInfo::exists(destPath)) {
             processedFiles++;
+            successCount++;
             ui->progressBar->setValue(processedFiles);
             widget->setStatus(tr("Done"), tr("Skipped (Exists)"), true);
             continue;
@@ -812,7 +827,6 @@ void BatchConverterDialog::startConversion() {
 }
 
 void BatchConverterDialog::onProgressUpdated(int index, QString status, QString details, bool success) {
-    QMutexLocker locker(&listMutex);
     QListWidgetItem *item = ui->fileListWidget->item(index);
     BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(ui->fileListWidget->itemWidget(item));
     if (widget) widget->setStatus(status, details, success);
@@ -884,6 +898,10 @@ void BatchConverterDialog::setColorWidgetsEnabled(bool enabled) {
 
 void BatchConverterDialog::onResizeEnabledChanged(bool enabled) {
     setResizeWidgetsEnabled(enabled);
+    if (enabled) {
+        onResizeRadioToggled();
+        ui->upscaylModelComboBox->setEnabled(ui->useUpscaylCheckBox->isChecked());
+    }
 }
 
 void BatchConverterDialog::onColorEnabledChanged(bool enabled) {
@@ -892,8 +910,10 @@ void BatchConverterDialog::onColorEnabledChanged(bool enabled) {
 
 // ==================== BatchWorkerTask ====================
 void BatchWorkerTask::run() {
+    if (dialog->isCancelled) return;
     QImage srcImg(srcPath);
     if (srcImg.isNull()) {
+        if (dialog->isCancelled) return;
         QMetaObject::invokeMethod(
             dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
             Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
@@ -908,6 +928,7 @@ void BatchWorkerTask::run() {
                           std::abs(saturation - 1.0f) > 0.001f || temp != 0.0f ||
                           tint != 0.0f || exposure != 0.0f || hue != 0.0f);
     if (colorModified) {
+        if (dialog->isCancelled) return;
         std::shared_ptr<const QImage> srcPtr = std::make_shared<const QImage>(processedImg);
         QImage *adj = ImageLib::applyColorAdjustments(
             srcPtr, brightness, contrast, saturation, hue, exposure, temp, tint);
@@ -918,6 +939,7 @@ void BatchWorkerTask::run() {
     }
 
     if (useUpscayl) {
+        if (dialog->isCancelled) return;
 #ifdef USE_UPSCAYL
         if (dialog->sharedResrgan) {
             QImage imgRgba = processedImg.convertToFormat(QImage::Format_ARGB32);
@@ -931,6 +953,7 @@ void BatchWorkerTask::run() {
         }
 #endif
         if (doResize && processedImg.size() != targetSize) {
+            if (dialog->isCancelled) return;
             QSize finalSize = targetSize;
             if (keepAspectRatio) finalSize = processedImg.size().scaled(targetSize, Qt::KeepAspectRatio);
             std::shared_ptr<const QImage> upscaledPtr = std::make_shared<const QImage>(processedImg);
@@ -941,6 +964,7 @@ void BatchWorkerTask::run() {
             }
         }
     } else if (doResize) {
+        if (dialog->isCancelled) return;
         QSize finalSize = targetSize;
         if (keepAspectRatio) finalSize = processedImg.size().scaled(targetSize, Qt::KeepAspectRatio);
         std::shared_ptr<const QImage> imgPtr = std::make_shared<const QImage>(processedImg);
@@ -951,6 +975,7 @@ void BatchWorkerTask::run() {
         }
     }
 
+    if (dialog->isCancelled) return;
     QByteArray formatBa = format.toLatin1();
     bool saved = processedImg.save(destPath, formatBa.constData(), quality);
     QString detailsStr = QString("%1 \xe2\x80\xa2 %2x%3")
