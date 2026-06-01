@@ -76,13 +76,16 @@ static bool isRawExtension(const QString &ext) {
          ext == QLatin1String("orf") || ext == QLatin1String("raw");
 }
 
-static QImage createQImageFromLibRawImage(const libraw_processed_image_t *processedImage) {
-  if (!processedImage || !processedImage->data || processedImage->data_size == 0)
+static QImage
+createQImageFromLibRawImage(const libraw_processed_image_t *processedImage) {
+  if (!processedImage || !processedImage->data ||
+      processedImage->data_size == 0)
     return QImage();
 
   if (processedImage->type == LIBRAW_IMAGE_JPEG) {
-    return QImage::fromData(reinterpret_cast<const uchar *>(processedImage->data),
-                             processedImage->data_size, "JPEG");
+    return QImage::fromData(
+        reinterpret_cast<const uchar *>(processedImage->data),
+        processedImage->data_size, "JPEG");
   }
 
   if (processedImage->type != LIBRAW_IMAGE_BITMAP || processedImage->bits != 8)
@@ -99,22 +102,25 @@ static QImage createQImageFromLibRawImage(const libraw_processed_image_t *proces
 
   const int bytesPerLine = processedImage->width * processedImage->colors;
   QImage img(reinterpret_cast<const uchar *>(processedImage->data),
-             processedImage->width, processedImage->height,
-             bytesPerLine, format);
+             processedImage->width, processedImage->height, bytesPerLine,
+             format);
   return img.copy();
 }
 
-static bool tryLibRawThumbnail(const QByteArray &rawBuffer, UINT cx, QImage &outImg) {
+static bool tryLibRawThumbnail(const QByteArray &rawBuffer, UINT cx,
+                               QImage &outImg) {
   if (rawBuffer.isEmpty())
     return false;
 
   LibRaw raw;
-  if (raw.open_buffer(rawBuffer.constData(), rawBuffer.size()) != LIBRAW_SUCCESS)
+  if (raw.open_buffer(rawBuffer.constData(), rawBuffer.size()) !=
+      LIBRAW_SUCCESS)
     return false;
 
   // 1) Try embedded JPEG preview first
   if (raw.unpack_thumb() == LIBRAW_SUCCESS) {
-    std::unique_ptr<libraw_processed_image_t, decltype(&LibRaw::dcraw_clear_mem)>
+    std::unique_ptr<libraw_processed_image_t,
+                    decltype(&LibRaw::dcraw_clear_mem)>
         thumb(raw.dcraw_make_mem_thumb(), LibRaw::dcraw_clear_mem);
     if (thumb) {
       QImage img = createQImageFromLibRawImage(thumb.get());
@@ -132,7 +138,8 @@ static bool tryLibRawThumbnail(const QByteArray &rawBuffer, UINT cx, QImage &out
   raw.imgdata.params.output_color = 1;
 
   if (raw.unpack() == LIBRAW_SUCCESS && raw.dcraw_process() == LIBRAW_SUCCESS) {
-    std::unique_ptr<libraw_processed_image_t, decltype(&LibRaw::dcraw_clear_mem)>
+    std::unique_ptr<libraw_processed_image_t,
+                    decltype(&LibRaw::dcraw_clear_mem)>
         processed(raw.dcraw_make_mem_image(), LibRaw::dcraw_clear_mem);
     if (processed) {
       QImage img = createQImageFromLibRawImage(processed.get());
@@ -148,7 +155,8 @@ static bool tryLibRawThumbnail(const QByteArray &rawBuffer, UINT cx, QImage &out
   return false;
 }
 
-static bool tryLibRawThumbnailFromStream(IStream *stream, UINT cx, QImage &outImg) {
+static bool tryLibRawThumbnailFromStream(IStream *stream, UINT cx,
+                                         QImage &outImg) {
   if (!stream)
     return false;
 
@@ -163,7 +171,8 @@ static bool tryLibRawThumbnailFromStream(IStream *stream, UINT cx, QImage &outIm
   return tryLibRawThumbnail(rawBuffer, cx, outImg);
 }
 
-static bool tryLibRawThumbnailFromFile(const QString &filePath, UINT cx, QImage &outImg) {
+static bool tryLibRawThumbnailFromFile(const QString &filePath, UINT cx,
+                                       QImage &outImg) {
   QFile file(filePath);
   if (!file.open(QIODevice::ReadOnly))
     return false;
@@ -188,17 +197,17 @@ long g_cDllRef = 0;
 
 // Supported extensions that we want to register directly
 const wchar_t *g_extensions[] = {
-    L".arw",  L".cr2",  L".cr3",  L".nef",  L".dng",  L".rw2",
-    L".pef",  L".raf",  L".orf",  L".raw",            // RAW formats
-    L".kra",  L".ora",                                // Krita / OpenRaster
-    L".webp", L".jxl",  L".avif", L".heic", L".heif", // Modern web/mobile
-                                                      // formats
-    L".exr",  L".hdr",                                // High dynamic range
-    L".tga",  L".jxr",  L".hdp",  L".wdp",            // Other image formats
-    L".psd",  L".psb",                                // Photoshop
-    L".ai",   L".pdf",                                // Adobe Illustrator / PDF
-    L".tif",  L".tiff",                               // TIFF
-    L".svg",  L".svgz" // Scalable Vector Graphics
+    L".arw", L".cr2", L".cr3", L".nef", L".dng", L".rw2", L".pef", L".raf",
+    L".orf", L".raw",                                // RAW formats
+    L".kra", L".ora",                                // Krita / OpenRaster
+    L".webp", L".jxl", L".avif", L".heic", L".heif", // Modern web/mobile
+                                                     // formats
+    L".exr", L".hdr",                                // High dynamic range
+    L".tga", L".jxr", L".hdp", L".wdp",              // Other image formats
+    L".psd", L".psb",                                // Photoshop
+    L".ai", L".pdf",                                 // Adobe Illustrator / PDF
+    L".tif", L".tiff",                               // TIFF
+    L".svg", L".svgz"                                // Scalable Vector Graphics
 };
 
 // ProgIDs to hook into
@@ -211,8 +220,7 @@ const wchar_t *g_progIds[] = {
     L"qimgvplus.AssocFile.ora",  L"qimgvplus.AssocFile.jxr",
     L"qimgvplus.AssocFile.psd",  L"qimgvplus.AssocFile.psb",
     L"qimgvplus.AssocFile.ai",   L"qimgvplus.AssocFile.pdf",
-    L"qimgvplus.AssocFile.tif",  L"qimgvplus.AssocFile.tiff",
-    L"qimgvplus.AssocFile.svg"};
+    L"qimgvplus.AssocFile.tif",  L"qimgvplus.AssocFile.tiff"};
 
 // Helper functions for registry manipulation
 HRESULT CreateRegistryKeyAndValue(HKEY hKeyParent, LPCWSTR pszSubKey,
@@ -453,12 +461,16 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
   QString rawExt;
   if (m_pStream) {
     STATSTG statstg;
-    if (SUCCEEDED(m_pStream->Stat(&statstg, STATFLAG_DEFAULT)) && statstg.pwcsName) {
-      rawExt = QFileInfo(QString::fromWCharArray(statstg.pwcsName)).suffix().toLower();
+    if (SUCCEEDED(m_pStream->Stat(&statstg, STATFLAG_DEFAULT)) &&
+        statstg.pwcsName) {
+      rawExt = QFileInfo(QString::fromWCharArray(statstg.pwcsName))
+                   .suffix()
+                   .toLower();
       CoTaskMemFree(statstg.pwcsName);
     }
   } else {
-    rawExt = QFileInfo(QString::fromWCharArray(m_szFilePath)).suffix().toLower();
+    rawExt =
+        QFileInfo(QString::fromWCharArray(m_szFilePath)).suffix().toLower();
   }
 
   if (isRawExtension(rawExt)) {
@@ -467,12 +479,14 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
     if (m_pStream) {
       rawOk = tryLibRawThumbnailFromStream(m_pStream, cx, rawImg);
     } else {
-      rawOk = tryLibRawThumbnailFromFile(QString::fromWCharArray(m_szFilePath), cx, rawImg);
+      rawOk = tryLibRawThumbnailFromFile(QString::fromWCharArray(m_szFilePath),
+                                         cx, rawImg);
     }
 
     if (rawOk && !rawImg.isNull()) {
       if (rawImg.width() > (int)cx || rawImg.height() > (int)cx) {
-        rawImg = rawImg.scaled(cx, cx, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        rawImg = rawImg.scaled(cx, cx, Qt::KeepAspectRatio,
+                               Qt::SmoothTransformation);
       }
       if (rawImg.format() != QImage::Format_ARGB32_Premultiplied) {
         rawImg = rawImg.convertToFormat(QImage::Format_ARGB32_Premultiplied);
@@ -506,6 +520,27 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
   }
 
   reader.setAutoTransform(true); // Rotate according to Exif orientation tags
+
+  // If the format has multiple images (e.g. ICO), choose the one closest to
+  // requested size cx
+  int imageCount = reader.imageCount();
+  if (imageCount > 1) {
+    int bestIndex = 0;
+    int bestDiff = 999999;
+    for (int i = 0; i < imageCount; ++i) {
+      if (reader.jumpToImage(i)) {
+        QSize frameSize = reader.size();
+        if (frameSize.isValid()) {
+          int diff = qAbs(frameSize.width() - (int)cx);
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            bestIndex = i;
+          }
+        }
+      }
+    }
+    reader.jumpToImage(bestIndex);
+  }
 
   // Scale size during read if supported by reader for major performance gains
   QSize size = reader.size();
