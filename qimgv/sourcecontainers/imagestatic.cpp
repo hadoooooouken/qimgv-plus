@@ -1,4 +1,5 @@
 #include "imagestatic.h"
+#include "utils/colormanager.h"
 #include <QPainter>
 #include <time.h>
 
@@ -165,9 +166,9 @@ bool ImageStatic::save() { return save(mPath); }
 std::unique_ptr<QPixmap> ImageStatic::getPixmap() {
   std::unique_ptr<QPixmap> pix(new QPixmap());
   if (isEdited() && imageEdited) {
-    pix->convertFromImage(*imageEdited);
+    pix->convertFromImage(ColorManager::applyColorManagement(*imageEdited));
   } else if (image) {
-    pix->convertFromImage(*image, Qt::NoFormatConversion);
+    pix->convertFromImage(ColorManager::applyColorManagement(*image));
   }
   return pix;
 }

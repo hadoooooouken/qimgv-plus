@@ -1,4 +1,5 @@
 #include "scaler.h"
+#include "utils/colormanager.h"
 
 /* What this should do in theory:
  * 1 request comes
@@ -152,7 +153,7 @@ void Scaler::slotStartBufferedRequest() {
 
 void Scaler::slotForwardScaledResult(QImage *image, ScalerRequest req) {
     QPixmap *pixmap = new QPixmap();
-    *pixmap = QPixmap::fromImage(*image);
+    *pixmap = QPixmap::fromImage(ColorManager::applyColorManagement(*image));
     delete image;
     emit scalingFinished(pixmap, req);
 }

@@ -759,6 +759,31 @@ bool Settings::loopSlideshow() {
 void Settings::setLoopSlideshow(bool mode) {
   settings->settingsConf->setValue("loopSlideshow", mode);
 }
+
+bool Settings::colorManagementEnabled() {
+  return settings->settingsConf->value("colorManagementEnabled", false).toBool();
+}
+
+void Settings::setColorManagementEnabled(bool enabled) {
+  settings->settingsConf->setValue("colorManagementEnabled", enabled);
+}
+
+QString Settings::monitorColorProfileType() {
+  return settings->settingsConf->value("monitorColorProfileType", "System").toString();
+}
+
+void Settings::setMonitorColorProfileType(const QString &type) {
+  settings->settingsConf->setValue("monitorColorProfileType", type);
+}
+
+QString Settings::monitorColorProfilePath() {
+  return settings->settingsConf->value("monitorColorProfilePath", "").toString();
+}
+
+void Settings::setMonitorColorProfilePath(const QString &path) {
+  settings->settingsConf->setValue("monitorColorProfilePath", path);
+}
+
 //------------------------------------------------------------------------------
 void Settings::sendChangeNotification() { emit settingsChanged(); }
 //------------------------------------------------------------------------------

@@ -209,6 +209,8 @@ public:
 #include <windows.h>
 #endif
 
+#include "utils/colormanager.h"
+
 Core::Core()
     : QObject(), folderEndAction(FOLDER_END_NO_ACTION), loopSlideshow(false),
       mDrag(nullptr), slideshow(false), shuffle(false) {
@@ -374,6 +376,16 @@ void Core::connectComponents() {
   connect(mw, &MW::scalingRequested, this, &Core::scalingRequest);
   connect(model->scaler, &Scaler::scalingFinished, this,
           &Core::onScalingFinished);
+
+  connect(settings, &Settings::settingsChanged, this, [this]() {
+      ColorManager::invalidateCache();
+      if (state.hasActiveImage && state.currentImg) {
+          model->scaler->clear();
+          guiSetImage(state.currentImg);
+      }
+      thumbPanelPresenter.reloadModel();
+      folderViewPresenter.reloadModel();
+  });
 
   connect(model.get(), &DirectoryModel::fileAdded, this, &Core::onFileAdded);
   connect(model.get(), &DirectoryModel::fileRemoved, this,

@@ -1,4 +1,5 @@
 #include "thumbnailerrunnable.h"
+#include "utils/colormanager.h"
 #include <QPainter>
 
 ThumbnailerRunnable::ThumbnailerRunnable(ThumbnailCache *_cache, QString _path,
@@ -131,7 +132,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
     *image = opaqueImg;
   }
   auto &&tmpPixmap = new QPixmap(image->size());
-  *tmpPixmap = QPixmap::fromImage(*image);
+  *tmpPixmap = QPixmap::fromImage(ColorManager::applyColorManagement(*image));
   tmpPixmap->setDevicePixelRatio(qApp->devicePixelRatio());
 
   QString label;

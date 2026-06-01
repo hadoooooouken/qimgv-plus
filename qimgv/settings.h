@@ -253,6 +253,14 @@ public:
   bool confirmTrash();
   void setConfirmTrash(bool mode);
 
+  bool colorManagementEnabled();
+  void setColorManagementEnabled(bool enabled);
+  QString monitorColorProfileType();
+  void setMonitorColorProfileType(const QString &type);
+  QString monitorColorProfilePath();
+  void setMonitorColorProfilePath(const QString &path);
+
+
 
   bool printLandscape();
   void setPrintLandscape(bool mode);

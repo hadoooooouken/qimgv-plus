@@ -12,6 +12,11 @@
 #include <QApplication>
 #include <QDebug>
 #include <QMenu>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QGroupBox>
 #include "gui/customwidgets/colorselectorbutton.h"
 #include "gui/dialogs/shortcutcreatordialog.h"
 #include "gui/dialogs/scripteditordialog.h"
@@ -89,4 +94,11 @@ private:
     QLabel *pngQualityLabel = nullptr;
     QSlider *modernQualitySlider = nullptr;
     QLabel *modernQualityLabel = nullptr;
+
+    QCheckBox *colorManagementCheckBox = nullptr;
+    QComboBox *monitorProfileComboBox = nullptr;
+    QLineEdit *customProfilePathEdit = nullptr;
+    QPushButton *customProfileBrowseButton = nullptr;
+    QWidget *customProfileContainer = nullptr;
+    QGroupBox *colorManagementGroupBox = nullptr;
 };

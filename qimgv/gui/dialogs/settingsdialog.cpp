@@ -3,6 +3,14 @@
 #include "ui_settingsdialog.h"
 #include <QDir>
 #include <QFileInfo>
+#include <QGroupBox>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QLabel>
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent), ui(new Ui::SettingsDialog) {
@@ -293,6 +301,77 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     ui->verticalLayout_34->addLayout(pngLayout);
   }
 
+  // --- Color Management GroupBox ---
+  colorManagementGroupBox = new QGroupBox(tr("Color Management"), this);
+  QVBoxLayout *cmLayout = new QVBoxLayout(colorManagementGroupBox);
+  cmLayout->setContentsMargins(10, 10, 10, 10);
+  cmLayout->setSpacing(8);
+
+  colorManagementCheckBox = new QCheckBox(tr("Enable color management"), this);
+  cmLayout->addWidget(colorManagementCheckBox);
+
+  // Monitor Profile row
+  QHBoxLayout *profileRowLayout = new QHBoxLayout();
+  QLabel *profileLabel = new QLabel(tr("Monitor profile:"), this);
+  monitorProfileComboBox = new QComboBox(this);
+  monitorProfileComboBox->addItem(tr("System / Auto (Recommended)"), "System");
+  monitorProfileComboBox->addItem(tr("sRGB"), "sRGB");
+  monitorProfileComboBox->addItem(tr("Display P3"), "DisplayP3");
+  monitorProfileComboBox->addItem(tr("Adobe RGB"), "AdobeRGB");
+  monitorProfileComboBox->addItem(tr("Rec. 2020"), "Rec2020");
+  monitorProfileComboBox->addItem(tr("ProPhoto RGB"), "ProPhoto");
+  monitorProfileComboBox->addItem(tr("Linear sRGB"), "LinearSRGB");
+  monitorProfileComboBox->addItem(tr("Custom Profile (.icc/.icm)..."), "Custom");
+  profileRowLayout->addWidget(profileLabel);
+  profileRowLayout->addWidget(monitorProfileComboBox);
+  profileRowLayout->addStretch(1);
+  cmLayout->addLayout(profileRowLayout);
+
+  // Custom Profile selection controls
+  customProfileContainer = new QWidget(this);
+  QHBoxLayout *customProfileLayout = new QHBoxLayout(customProfileContainer);
+  customProfileLayout->setContentsMargins(0, 0, 0, 0);
+  customProfileLayout->setSpacing(6);
+  
+  QLabel *customLabel = new QLabel(tr("Profile file:"), this);
+  customProfilePathEdit = new QLineEdit(this);
+  customProfilePathEdit->setReadOnly(true);
+  customProfileBrowseButton = new QPushButton(tr("Browse..."), this);
+  
+  customProfileLayout->addWidget(customLabel);
+  customProfileLayout->addWidget(customProfilePathEdit);
+  customProfileLayout->addWidget(customProfileBrowseButton);
+  cmLayout->addWidget(customProfileContainer);
+
+  // Add the whole GroupBox to the View page scroll area contents layout
+  if (ui->scrollAreaWidgetContents_3->layout()) {
+      ui->scrollAreaWidgetContents_3->layout()->addWidget(colorManagementGroupBox);
+  }
+
+  // Helper lambda or slot to enable/disable controls
+  auto updateCMControls = [this]() {
+      bool cmEnabled = colorManagementCheckBox->isChecked();
+      monitorProfileComboBox->setEnabled(cmEnabled);
+      
+      bool customSelected = (monitorProfileComboBox->currentData().toString() == "Custom");
+      customProfileContainer->setVisible(cmEnabled && customSelected);
+      customProfilePathEdit->setEnabled(cmEnabled);
+      customProfileBrowseButton->setEnabled(cmEnabled);
+  };
+
+  connect(colorManagementCheckBox, &QCheckBox::toggled, this, updateCMControls);
+  connect(monitorProfileComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, updateCMControls);
+
+  connect(customProfileBrowseButton, &QPushButton::clicked, this, [this]() {
+      QString path = QFileDialog::getOpenFileName(this, tr("Select Monitor Color Profile"), QString(), tr("Color Profiles (*.icc *.icm)"));
+      if (!path.isEmpty()) {
+          customProfilePathEdit->setText(path);
+      }
+  });
+
+  // Run update to set initial visibility/enabled states
+  updateCMControls();
+
   connect(this, &SettingsDialog::settingsChanged, settings,
           &Settings::sendChangeNotification);
   readSettings();
@@ -540,6 +619,28 @@ void SettingsDialog::readSettings() {
   ui->thumbOpacityPercentLabel->setText(QString::number(ui->thumbOpacitySlider->value()) + "%");
   ui->useBlackBackgroundCheckBox->setChecked(settings->useBlackBackground());
 
+  colorManagementCheckBox->blockSignals(true);
+  monitorProfileComboBox->blockSignals(true);
+
+  colorManagementCheckBox->setChecked(settings->colorManagementEnabled());
+  int cmIdx = monitorProfileComboBox->findData(settings->monitorColorProfileType());
+  if (cmIdx != -1) {
+      monitorProfileComboBox->setCurrentIndex(cmIdx);
+  } else {
+      monitorProfileComboBox->setCurrentIndex(0);
+  }
+  customProfilePathEdit->setText(settings->monitorColorProfilePath());
+
+  bool cmEnabled = colorManagementCheckBox->isChecked();
+  monitorProfileComboBox->setEnabled(cmEnabled);
+  bool customSelected = (monitorProfileComboBox->currentData().toString() == "Custom");
+  customProfileContainer->setVisible(cmEnabled && customSelected);
+  customProfilePathEdit->setEnabled(cmEnabled);
+  customProfileBrowseButton->setEnabled(cmEnabled);
+
+  colorManagementCheckBox->blockSignals(false);
+  monitorProfileComboBox->blockSignals(false);
+
   readColorScheme();
   readShortcuts();
   readScripts();
@@ -674,6 +775,11 @@ void SettingsDialog::saveSettings() {
   settings->setThumbnailerThreadCount(ui->thumbnailerThreadsSlider->value());
   settings->setMemoryAllocationLimit(ui->memoryLimitSpinBox->value());
   settings->setExcludedCachePaths(ui->excludedCachePathsLineEdit->text());
+
+  settings->setColorManagementEnabled(colorManagementCheckBox->isChecked());
+  settings->setMonitorColorProfileType(monitorProfileComboBox->currentData().toString());
+  settings->setMonitorColorProfilePath(customProfilePathEdit->text());
+
 
   int oldRes = settings->thumbnailResolution();
   int newRes = ui->thumbnailResolutionSlider->value();
