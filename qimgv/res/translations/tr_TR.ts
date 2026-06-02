@@ -2571,9 +2571,9 @@ Daha hızlı resim geçişi sağlar (daha fazla RAM tüketimi pahasına).</trans
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4595"/>
         <source>Paths to folders that should not be cached, separated by &apos;;&apos;.
-Example: D:\Downloads\1c_bases; E:\Tuts</source>
+Example: D:\Downloads; E:\Pictures</source>
         <translation>Önbelleğe alınmaması gereken klasörlerin yolları (&apos;;&apos; ile ayrılmış).
-Örnek: D:\Downloads\1c_bases; E:\Tuts</translation>
+Örnek: D:\Downloads; E:\Pictures</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4603"/>
@@ -2851,8 +2851,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation>Yolları önbelleğe almaktan hariç tut (noktalı virgül &apos;;&apos; ile ayrılmış):</translation>
     </message>
     <message>
-        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads\1c_bases; E:\Tuts</source>
-        <translation type="vanished">Önbelleğe alınmaması gereken klasörlerin yolları, &apos;;&apos; ile ayrılmış. Örnek: D:\Downloads\1c_bases; E:\Tuts</translation>
+        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads; E:\Pictures</source>
+        <translation type="vanished">Önbelleğe alınmaması gereken klasörlerin yolları, &apos;;&apos; ile ayrılmış. Örnek: D:\Downloads; E:\Pictures</translation>
     </message>
 </context>
 <context>

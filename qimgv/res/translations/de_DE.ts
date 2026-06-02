@@ -2650,8 +2650,8 @@ Results in a much faster image switching (at the expense of wasting more RAM).</
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4595"/>
         <source>Paths to folders that should not be cached, separated by &apos;;&apos;.
-Example: D:\Downloads\1c_bases; E:\Tuts</source>
-        <translation>Pfade zu Ordnern, die nicht zwischengespeichert werden sollen, getrennt durch &apos;;&apos;. Beispiel: D:\Downloads\1c_bases; E:\Tuts</translation>
+Example: D:\Downloads; E:\Pictures</source>
+        <translation>Pfade zu Ordnern, die nicht zwischengespeichert werden sollen, getrennt durch &apos;;&apos;. Beispiel: D:\Downloads; E:\Pictures</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4603"/>
@@ -2933,8 +2933,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation>Pfade von Zwischenspeicherung ausschließen (durch Semikolon &apos;;&apos; getrennt):</translation>
     </message>
     <message>
-        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads\1c_bases; E:\Tuts</source>
-        <translation type="vanished">Pfade zu Ordnern, die nicht zwischengespeichert werden sollen, getrennt durch &apos;;&apos;. Beispiel: D:\Downloads\1c_bases; E:\Tuts</translation>
+        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads; E:\Pictures</source>
+        <translation type="vanished">Pfade zu Ordnern, die nicht zwischengespeichert werden sollen, getrennt durch &apos;;&apos;. Beispiel: D:\Downloads; E:\Pictures</translation>
     </message>
 </context>
 <context>

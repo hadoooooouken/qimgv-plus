@@ -2652,8 +2652,8 @@ Results in a much faster image switching (at the expense of wasting more RAM).</
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4595"/>
         <source>Paths to folders that should not be cached, separated by &apos;;&apos;.
-Example: D:\Downloads\1c_bases; E:\Tuts</source>
-        <translation>Chemins des dossiers à ne pas mettre en cache, séparés par &apos;;&apos;. Exemple : D:\Downloads\1c_bases; E:\Tuts</translation>
+Example: D:\Downloads; E:\Pictures</source>
+        <translation>Chemins des dossiers à ne pas mettre en cache, séparés par &apos;;&apos;. Exemple : D:\Downloads; E:\Pictures</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4603"/>
@@ -2935,8 +2935,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation>Exclure les chemins de la mise en cache (séparés par un point-virgule &apos;;&apos;):</translation>
     </message>
     <message>
-        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads\1c_bases; E:\Tuts</source>
-        <translation type="vanished">Chemins des dossiers qui ne doivent pas être mis en cache, séparés par &apos;;&apos;. Exemple : D:\Downloads\1c_bases; E:\Tuts</translation>
+        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads; E:\Pictures</source>
+        <translation type="vanished">Chemins des dossiers qui ne doivent pas être mis en cache, séparés par &apos;;&apos;. Exemple : D:\Downloads; E:\Pictures</translation>
     </message>
 </context>
 <context>

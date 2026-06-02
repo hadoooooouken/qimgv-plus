@@ -2567,9 +2567,9 @@ Results in a much faster image switching (at the expense of wasting more RAM).</
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4595"/>
         <source>Paths to folders that should not be cached, separated by &apos;;&apos;.
-Example: D:\Downloads\1c_bases; E:\Tuts</source>
+Example: D:\Downloads; E:\Pictures</source>
         <translation>キャッシュしないフォルダのパス（セミコロン「;」で区切る）。
-例: D:\Downloads\1c_bases; E:\Tuts</translation>
+例: D:\Downloads; E:\Pictures</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4603"/>
@@ -2851,8 +2851,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation>キャッシュから除外するパス（セミコロン「;」で区切る）:</translation>
     </message>
     <message>
-        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads\1c_bases; E:\Tuts</source>
-        <translation type="vanished">キャッシュしないフォルダへのパス。セミコロン「;」で区切ります。例：D:\Downloads\1c_bases; E:\Tuts</translation>
+        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads; E:\Pictures</source>
+        <translation type="vanished">キャッシュしないフォルダへのパス。セミコロン「;」で区切ります。例：D:\Downloads; E:\Pictures</translation>
     </message>
 </context>
 <context>

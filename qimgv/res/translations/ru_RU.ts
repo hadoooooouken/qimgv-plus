@@ -2417,9 +2417,9 @@ Results in a much faster image switching (at the expense of wasting more RAM).</
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4595"/>
         <source>Paths to folders that should not be cached, separated by &apos;;&apos;.
-Example: D:\Downloads\1c_bases; E:\Tuts</source>
+Example: D:\Downloads; E:\Pictures</source>
         <translation>Пути к папкам, которые не нужно кэшировать, через &apos;;&apos;.
-Пример: D:\Downloads\1c_bases; E:\Tuts</translation>
+Пример: D:\Downloads; E:\Pictures</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4603"/>
@@ -2793,8 +2793,8 @@ text-decoration: underline; color:#007af4;&quot;&gt;здесь&lt;/span&gt;&lt;/
         <translation type="vanished">Укажите путь к mpv</translation>
     </message>
     <message>
-        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads\1c_bases; E:\Tuts</source>
-        <translation type="vanished">Пути к папкам, которые не нужно кэшировать, разделенные &apos;;&apos;. Пример: D:\Downloads\1c_bases; E:\Tuts</translation>
+        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads; E:\Pictures</source>
+        <translation type="vanished">Пути к папкам, которые не нужно кэшировать, разделенные &apos;;&apos;. Пример: D:\Downloads; E:\Pictures</translation>
     </message>
     <message>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;

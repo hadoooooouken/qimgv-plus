@@ -2590,9 +2590,9 @@ Results in a much faster image switching (at the expense of wasting more RAM).</
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4595"/>
         <source>Paths to folders that should not be cached, separated by &apos;;&apos;.
-Example: D:\Downloads\1c_bases; E:\Tuts</source>
+Example: D:\Downloads; E:\Pictures</source>
         <translation>不进行缓存 of 文件夹路径（用分号“;”分隔）。
-例如：D:\Downloads\1c_bases; E:\Tuts</translation>
+例如：D:\Downloads; E:\Pictures</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4715"/>
@@ -2818,8 +2818,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation>排除缓存路径（用分号“;”分隔）：</translation>
     </message>
     <message>
-        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads\1c_bases; E:\Tuts</source>
-        <translation type="vanished">不应缓存的文件夹路径，用“;”分隔。例如：D:\Downloads\1c_bases; E:\Tuts</translation>
+        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads; E:\Pictures</source>
+        <translation type="vanished">不应缓存的文件夹路径，用“;”分隔。例如：D:\Downloads; E:\Pictures</translation>
     </message>
 </context>
 <context>

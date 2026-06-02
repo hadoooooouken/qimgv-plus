@@ -2448,7 +2448,7 @@ Results in a much faster image switching (at the expense of wasting more RAM).</
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4595"/>
         <source>Paths to folders that should not be cached, separated by &apos;;&apos;.
-Example: D:\Downloads\1c_bases; E:\Tuts</source>
+Example: D:\Downloads; E:\Pictures</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

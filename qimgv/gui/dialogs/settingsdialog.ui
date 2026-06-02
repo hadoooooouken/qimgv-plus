@@ -4601,7 +4601,7 @@ Results in a much faster image switching (at the expense of wasting more RAM).</
                    <widget class="QLineEdit" name="excludedCachePathsLineEdit">
                     <property name="toolTip">
                      <string>Paths to folders that should not be cached, separated by ';'.
-Example: D:\Downloads\1c_bases; E:\Tuts</string>
+Example: D:\Downloads; E:\Pictures</string>
                     </property>
                    </widget>
                   </item>

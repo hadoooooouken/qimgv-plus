@@ -2571,9 +2571,9 @@ Permite cambiar de imagen mucho más rápido (a costa de consumir más RAM).</tr
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4595"/>
         <source>Paths to folders that should not be cached, separated by &apos;;&apos;.
-Example: D:\Downloads\1c_bases; E:\Tuts</source>
+Example: D:\Downloads; E:\Pictures</source>
         <translation>Rutas a carpetas que no deben ser almacenadas en caché, separadas por &apos;;&apos;.
-Ejemplo: D:\Downloads\1c_bases; E:\Tuts</translation>
+Ejemplo: D:\Downloads; E:\Pictures</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="4603"/>
@@ -2838,8 +2838,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <translation>Excluir rutas de la caché (separadas por punto y coma &apos;;&apos;):</translation>
     </message>
     <message>
-        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads\1c_bases; E:\Tuts</source>
-        <translation type="vanished">Rutas a carpetas que no deben ser almacenadas en caché, separadas por &apos;;&apos;. Ejemplo: D:\Downloads\1c_bases; E:\Tuts</translation>
+        <source>Paths to folders that should not be cached, separated by &apos;;&apos;. Example: D:\Downloads; E:\Pictures</source>
+        <translation type="vanished">Rutas a carpetas que no deben ser almacenadas en caché, separadas por &apos;;&apos;. Ejemplo: D:\Downloads; E:\Pictures</translation>
     </message>
 </context>
 <context>
