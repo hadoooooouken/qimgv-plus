@@ -1685,6 +1685,11 @@ Total des fichiers : %3</translation>
 <context>
     <name>SettingsDialog</name>
     <message>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="57"/>
+        <source>Use custom accent</source>
+        <translation>Utiliser une couleur d&apos;accentuation personnalisée</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="5006"/>
         <source>&lt;a href=&quot;https://github.com/upscayl/custom-models/tree/main/models&quot;&gt;&lt;span style=&quot;text-decoration: underline; color:#007af4;&quot;&gt;Get more models&lt;/span&gt;&lt;/a&gt;</source>
         <translation>&lt;a href=&quot;https://github.com/upscayl/custom-models/tree/main/models&quot;&gt;&lt;span style=&quot;text-decoration: underline; color:#007af4;&quot;&gt;Obtenir plus de modèles&lt;/span&gt;&lt;/a&gt;</translation>

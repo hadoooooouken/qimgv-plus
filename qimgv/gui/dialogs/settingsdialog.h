@@ -101,4 +101,5 @@ private:
     QPushButton *customProfileBrowseButton = nullptr;
     QWidget *customProfileContainer = nullptr;
     QGroupBox *colorManagementGroupBox = nullptr;
+    QCheckBox *useCustomAccentCheckBox = nullptr;
 };

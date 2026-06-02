@@ -1677,6 +1677,11 @@ Total files: %3</source>
 <context>
     <name>SettingsDialog</name>
     <message>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="57"/>
+        <source>Use custom accent</source>
+        <translation>Использовать собственный цвет акцента</translation>
+    </message>
+    <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="47"/>
         <source>Preferences</source>
         <translation>Настройки</translation>

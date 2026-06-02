@@ -1,7 +1,7 @@
 # qimgv root
 cmake_minimum_required(VERSION 3.13)
 project(qimgv-plus
-    VERSION 2.0.3.0
+    VERSION 2.0.4.0
     HOMEPAGE_URL "https://github.com/hadoooooouken/qimgv-plus"
     LANGUAGES C CXX RC)
 
@@ -45,6 +45,8 @@ endif()
 
 
 if(EXIV2)
+    # Hint to find the local exiv2 build in formats/exiv2
+    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/formats/exiv2")
     find_package(exiv2 REQUIRED)
 endif()
 

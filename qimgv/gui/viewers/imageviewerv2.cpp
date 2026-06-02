@@ -40,7 +40,7 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
           &ImageViewerV2::onScrollTimelineFinished);
 
   zoomTimeLine = new QTimeLine(ANIMATION_SPEED, this);
-  QEasingCurve zoomCurve(QEasingCurve::Custom);
+  QEasingCurve zoomCurve;
   zoomCurve.setCustomType(smootherstepEasing);
   zoomTimeLine->setEasingCurve(zoomCurve);
   zoomTimeLine->setUpdateInterval(SCROLL_UPDATE_RATE);
@@ -613,7 +613,8 @@ void ImageViewerV2::hide() {
 
 void ImageViewerV2::requestScaling() {
   if (mSvgMode || !pixmap || std::abs(pixmapItem.scale() - 1.0) < 0.001 ||
-      (mScalingFilter <= 1 && !smoothUpscaling && pixmapItem.scale() >= 0.999) ||
+      (mScalingFilter <= 1 && !smoothUpscaling &&
+       pixmapItem.scale() >= 0.999) ||
       movie || (zoomTimeLine && zoomTimeLine->state() == QTimeLine::Running) ||
       mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
       mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM) {
@@ -629,7 +630,7 @@ void ImageViewerV2::requestScaling() {
 
 #ifdef USE_UPSCAYL
   if (settings->useUpscayl()) {
-    maxScale = 40.0f;       // allow extreme zoom with Upscayl (up to 4000%)
+    maxScale = 40.0f; // allow extreme zoom with Upscayl (up to 4000%)
     if (currentScale() > maxScale) {
       return;
     }
@@ -793,8 +794,9 @@ void ImageViewerV2::mouseReleaseEvent(QMouseEvent *event) {
     forceFastScale = false;
     pixmapItem.setTransformationMode(selectTransformationMode());
   }
-  bool needScale = (mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
-                    mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM);
+  bool needScale =
+      (mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
+       mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM);
 
   if (!pixmap || mouseInteraction == MouseInteractionState::MOUSE_NONE) {
     QGraphicsView::mouseReleaseEvent(event);
@@ -1673,10 +1675,15 @@ void ImageViewerV2::togglePanorama() {
 }
 
 void ImageViewerV2::setColorAdjustments(float brightness, float contrast,
-                                        float saturation, float hue, float exposure, float temperature, float tint) {
-  pixmapItem.setColorAdjustments(brightness, contrast, saturation, hue, exposure, temperature, tint);
-  pixmapItemScaled.setColorAdjustments(brightness, contrast, saturation, hue, exposure, temperature, tint);
-  pixmapItemCrop.setColorAdjustments(brightness, contrast, saturation, hue, exposure, temperature, tint);
+                                        float saturation, float hue,
+                                        float exposure, float temperature,
+                                        float tint) {
+  pixmapItem.setColorAdjustments(brightness, contrast, saturation, hue,
+                                 exposure, temperature, tint);
+  pixmapItemScaled.setColorAdjustments(brightness, contrast, saturation, hue,
+                                       exposure, temperature, tint);
+  pixmapItemCrop.setColorAdjustments(brightness, contrast, saturation, hue,
+                                     exposure, temperature, tint);
   if (panoramaItem) {
     panoramaItem->setColorAdjustments(brightness, contrast, saturation, hue);
   }
@@ -1687,8 +1694,10 @@ qreal ImageViewerV2::smootherstepEasing(qreal t) {
 }
 
 void ImageViewerV2::onZoomTimelineValueChanged(qreal value) {
-  float currentAnimScale = (value >= 1.0) ? zoomTargetScale :
-      zoomStartScale + (zoomTargetScale - zoomStartScale) * value;
+  float currentAnimScale =
+      (value >= 1.0)
+          ? zoomTargetScale
+          : zoomStartScale + (zoomTargetScale - zoomStartScale) * value;
   zoomAnchored(currentAnimScale);
   centerIfNecessary();
   snapToEdges();
@@ -1723,10 +1732,12 @@ void ImageViewerV2::setUpscaledCrop(const QImage &cropImg, QRect origCrop) {
   pixmapItemCrop.setPixmap(cropPixmap);
 
   // Position at scene coordinates corresponding to the original crop
-  QPointF scenePos = pixmapItem.mapToScene(pixmapItem.offset() + origCrop.topLeft());
+  QPointF scenePos =
+      pixmapItem.mapToScene(pixmapItem.offset() + origCrop.topLeft());
   scenePos = sceneRoundPos(scenePos);
 
-  // Calculate the net upscale factor of this crop relative to its original crop size
+  // Calculate the net upscale factor of this crop relative to its original crop
+  // size
   double upscaleFactor = (double)cropImg.width() / origCrop.width();
   double cropScale = pixmapItem.scale() / upscaleFactor;
 
@@ -1736,9 +1747,11 @@ void ImageViewerV2::setUpscaledCrop(const QImage &cropImg, QRect origCrop) {
   pixmapItemCrop.setOffset(0, 0);
   pixmapItemCrop.setPos(scenePos);
   pixmapItemCrop.show();
+  viewport()->update();
 }
 
 void ImageViewerV2::hideUpscaledCrop() {
   pixmapItemCrop.hide();
   pixmapItemCrop.setPixmap(QPixmap());
+  viewport()->update();
 }

@@ -21,7 +21,7 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.tid = static_cast<int>(name);
     break;
   case COLORS_LIGHT: // v2, works with w10 titlebars
-    base.accent = QColor(0xff719ccd);
+    base.accent = p.highlight().color();
     base.background = QColor(0xff1a1a1a);
     base.background_fullscreen = QColor(0xff1a1a1a);
     base.folderview = QColor(0xfff2f2f2);
@@ -43,7 +43,7 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.icons = QColor(0xffbabec3);
     base.widget = QColor(0xff232629);
     base.widget_border = QColor(0xff26292d);
-    base.accent = QColor(0xff336ca5);
+    base.accent = p.highlight().color();
     base.folderview = QColor(0xff232629);
     base.folderview_topbar = QColor(0xff31363b);
     base.thumbpanel = QColor(0xff232629);
@@ -59,7 +59,7 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.icons = QColor(0xffacacac);
     base.widget = QColor(0xff111111);
     base.widget_border = QColor(0xff222222);
-    base.accent = QColor(0xff0080ff);
+    base.accent = p.highlight().color();
     base.folderview = QColor(0xff111111);
     base.folderview_topbar = QColor(0xff111111);
     base.thumbpanel = QColor(0x80000000);
@@ -75,7 +75,7 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.icons = QColor(0xffa4a4a4);
     base.widget = QColor(0xff252525);
     base.widget_border = QColor(0xff2c2c2c);
-    base.accent = QColor(0xff8c9b81);
+    base.accent = p.highlight().color();
     base.folderview = QColor(0xff242424);
     base.folderview_topbar = QColor(0xff383838);
     base.thumbpanel = QColor(0xff242424);

@@ -243,6 +243,9 @@ public:
 
   void loadTheme();
   void saveTheme();
+  bool hasCustomAccent() const { return mHasCustomAccent; }
+  void setHasCustomAccent(bool custom) { mHasCustomAccent = custom; }
+  void clearCustomAccent();
 
   void loadStylesheet();
 
@@ -336,6 +339,7 @@ private:
   QSettings *settingsConf, *stateConf, *themeConf;
   QDir *mTmpDir, *mThumbCacheDir, *mConfDir;
   ColorScheme mColorScheme;
+  bool mHasCustomAccent = false;
   void createColorVariants();
 
   void setupCache();

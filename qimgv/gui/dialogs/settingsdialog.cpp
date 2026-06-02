@@ -1,16 +1,16 @@
 #include "settingsdialog.h"
 #include "components/cache/thumbnailcache.h"
 #include "ui_settingsdialog.h"
+#include <QCheckBox>
+#include <QComboBox>
 #include <QDir>
 #include <QFileInfo>
 #include <QGroupBox>
-#include <QCheckBox>
-#include <QComboBox>
 #include <QHBoxLayout>
-#include <QVBoxLayout>
+#include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QLabel>
+#include <QVBoxLayout>
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent), ui(new Ui::SettingsDialog) {
@@ -133,43 +133,95 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   ui->colorSelectorThumbpanel->hide();
   ui->label_thumbpanel->hide();
 
-  // Connect accent color changes to update and save instantly
-  connect(ui->colorSelectorAccent, &ColorSelectorButton::colorChanged, [this](QColor color) {
-    ColorScheme scheme = settings->colorScheme();
-    BaseColorScheme base;
-    base.accent = color;
-    base.background = scheme.background;
-    base.background_fullscreen = scheme.background_fullscreen;
-    base.text = scheme.text;
-    base.icons = scheme.icons;
-    base.widget = scheme.widget;
-    base.widget_border = scheme.widget_border;
-    base.folderview = scheme.folderview;
-    base.folderview_topbar = scheme.folderview_topbar;
-    base.thumbpanel = scheme.thumbpanel;
-    base.scrollbar = scheme.scrollbar;
-    base.overlay = scheme.overlay;
-    base.overlay_text = scheme.overlay_text;
-    base.tid = scheme.tid;
+  // "Use custom accent" checkbox
+  ui->gridLayout_2->removeWidget(ui->colorSelectorAccent);
+  ui->gridLayout_2->removeWidget(ui->label_33);
+  ui->label_33->hide();
 
-    settings->setColorScheme(ColorScheme(base));
-    settings->saveTheme();
-    emit settingsChanged();
-  });
+  QHBoxLayout *accentLayout = new QHBoxLayout();
+  accentLayout->setContentsMargins(0, 0, 0, 0);
+  accentLayout->setSpacing(12);
+
+  useCustomAccentCheckBox = new QCheckBox(tr("Use custom accent"), this);
+
+  accentLayout->addWidget(useCustomAccentCheckBox);
+  accentLayout->addWidget(ui->colorSelectorAccent);
+  accentLayout->addStretch(1);
+
+  ui->gridLayout_2->addLayout(accentLayout, 0, 0, 1, 5);
+
+  connect(useCustomAccentCheckBox, &QCheckBox::toggled, this,
+          [this](bool checked) {
+            ui->colorSelectorAccent->setEnabled(checked);
+            if (checked) {
+              settings->setHasCustomAccent(true);
+              ColorScheme scheme = settings->colorScheme();
+              BaseColorScheme base;
+              base.accent = ui->colorSelectorAccent->color();
+              base.background = scheme.background;
+              base.background_fullscreen = scheme.background_fullscreen;
+              base.text = scheme.text;
+              base.icons = scheme.icons;
+              base.widget = scheme.widget;
+              base.widget_border = scheme.widget_border;
+              base.folderview = scheme.folderview;
+              base.folderview_topbar = scheme.folderview_topbar;
+              base.thumbpanel = scheme.thumbpanel;
+              base.scrollbar = scheme.scrollbar;
+              base.overlay = scheme.overlay;
+              base.overlay_text = scheme.overlay_text;
+              base.tid = scheme.tid;
+
+              settings->setColorScheme(ColorScheme(base));
+              settings->saveTheme();
+            } else {
+              settings->clearCustomAccent();
+              readColorScheme();
+            }
+            emit settingsChanged();
+          });
+
+  // Connect accent color changes to update and save instantly
+  connect(ui->colorSelectorAccent, &ColorSelectorButton::colorChanged,
+          [this](QColor color) {
+            ColorScheme scheme = settings->colorScheme();
+            BaseColorScheme base;
+            base.accent = color;
+            base.background = scheme.background;
+            base.background_fullscreen = scheme.background_fullscreen;
+            base.text = scheme.text;
+            base.icons = scheme.icons;
+            base.widget = scheme.widget;
+            base.widget_border = scheme.widget_border;
+            base.folderview = scheme.folderview;
+            base.folderview_topbar = scheme.folderview_topbar;
+            base.thumbpanel = scheme.thumbpanel;
+            base.scrollbar = scheme.scrollbar;
+            base.overlay = scheme.overlay;
+            base.overlay_text = scheme.overlay_text;
+            base.tid = scheme.tid;
+
+            settings->setHasCustomAccent(true);
+            settings->setColorScheme(ColorScheme(base));
+            settings->saveTheme();
+            emit settingsChanged();
+          });
 
   // Align opacity labels to make sliders line up perfectly
   ui->label_5->setMinimumWidth(140);
   ui->label_5_thumb->setMinimumWidth(140);
 
   // Connect thumbnail opacity slider
-  connect(ui->thumbOpacitySlider, &QSlider::valueChanged, this, &SettingsDialog::onThumbOpacitySliderChanged);
+  connect(ui->thumbOpacitySlider, &QSlider::valueChanged, this,
+          &SettingsDialog::onThumbOpacitySliderChanged);
 
-  connect(ui->useBlackBackgroundCheckBox, &QCheckBox::toggled, [this](bool checked) {
-    settings->setUseBlackBackground(checked);
-    settings->loadTheme();
-    this->readColorScheme();
-    emit settingsChanged();
-  });
+  connect(ui->useBlackBackgroundCheckBox, &QCheckBox::toggled,
+          [this](bool checked) {
+            settings->setUseBlackBackground(checked);
+            settings->loadTheme();
+            this->readColorScheme();
+            emit settingsChanged();
+          });
 
   ui->colorSelectorAccent->setDescription(tr("Accent color"));
   ui->colorSelectorBackground->setDescription(tr("Windowed mode background"));
@@ -321,7 +373,8 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   monitorProfileComboBox->addItem(tr("Rec. 2020"), "Rec2020");
   monitorProfileComboBox->addItem(tr("ProPhoto RGB"), "ProPhoto");
   monitorProfileComboBox->addItem(tr("Linear sRGB"), "LinearSRGB");
-  monitorProfileComboBox->addItem(tr("Custom Profile (.icc/.icm)..."), "Custom");
+  monitorProfileComboBox->addItem(tr("Custom Profile (.icc/.icm)..."),
+                                  "Custom");
   profileRowLayout->addWidget(profileLabel);
   profileRowLayout->addWidget(monitorProfileComboBox);
   profileRowLayout->addStretch(1);
@@ -332,12 +385,12 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   QHBoxLayout *customProfileLayout = new QHBoxLayout(customProfileContainer);
   customProfileLayout->setContentsMargins(0, 0, 0, 0);
   customProfileLayout->setSpacing(6);
-  
+
   QLabel *customLabel = new QLabel(tr("Profile file:"), this);
   customProfilePathEdit = new QLineEdit(this);
   customProfilePathEdit->setReadOnly(true);
   customProfileBrowseButton = new QPushButton(tr("Browse..."), this);
-  
+
   customProfileLayout->addWidget(customLabel);
   customProfileLayout->addWidget(customProfilePathEdit);
   customProfileLayout->addWidget(customProfileBrowseButton);
@@ -345,28 +398,34 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
   // Add the whole GroupBox to the View page scroll area contents layout
   if (ui->scrollAreaWidgetContents_3->layout()) {
-      ui->scrollAreaWidgetContents_3->layout()->addWidget(colorManagementGroupBox);
+    ui->scrollAreaWidgetContents_3->layout()->addWidget(
+        colorManagementGroupBox);
   }
 
   // Helper lambda or slot to enable/disable controls
   auto updateCMControls = [this]() {
-      bool cmEnabled = colorManagementCheckBox->isChecked();
-      monitorProfileComboBox->setEnabled(cmEnabled);
-      
-      bool customSelected = (monitorProfileComboBox->currentData().toString() == "Custom");
-      customProfileContainer->setVisible(cmEnabled && customSelected);
-      customProfilePathEdit->setEnabled(cmEnabled);
-      customProfileBrowseButton->setEnabled(cmEnabled);
+    bool cmEnabled = colorManagementCheckBox->isChecked();
+    monitorProfileComboBox->setEnabled(cmEnabled);
+
+    bool customSelected =
+        (monitorProfileComboBox->currentData().toString() == "Custom");
+    customProfileContainer->setVisible(cmEnabled && customSelected);
+    customProfilePathEdit->setEnabled(cmEnabled);
+    customProfileBrowseButton->setEnabled(cmEnabled);
   };
 
   connect(colorManagementCheckBox, &QCheckBox::toggled, this, updateCMControls);
-  connect(monitorProfileComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, updateCMControls);
+  connect(monitorProfileComboBox,
+          qOverload<int>(&QComboBox::currentIndexChanged), this,
+          updateCMControls);
 
   connect(customProfileBrowseButton, &QPushButton::clicked, this, [this]() {
-      QString path = QFileDialog::getOpenFileName(this, tr("Select Monitor Color Profile"), QString(), tr("Color Profiles (*.icc *.icm)"));
-      if (!path.isEmpty()) {
-          customProfilePathEdit->setText(path);
-      }
+    QString path = QFileDialog::getOpenFileName(
+        this, tr("Select Monitor Color Profile"), QString(),
+        tr("Color Profiles (*.icc *.icm)"));
+    if (!path.isEmpty()) {
+      customProfilePathEdit->setText(path);
+    }
   });
 
   // Run update to set initial visibility/enabled states
@@ -425,8 +484,7 @@ void SettingsDialog::resetToDesktopTheme() {
   settings->setThumbnailOpacity(0.5);
   settings->setUseBlackBackground(false);
   // Clear custom accent in themeConf
-  settings->saveTheme(); // this writes current Scheme (which we will load next) to themeConf
-  settings->loadTheme();
+  settings->clearCustomAccent();
   this->readColorScheme();
 
   // Update UI controls
@@ -434,6 +492,11 @@ void SettingsDialog::resetToDesktopTheme() {
   ui->thumbOpacitySlider->setValue(50);
   ui->thumbOpacityPercentLabel->setText("50%");
   ui->useBlackBackgroundCheckBox->setChecked(false);
+
+  useCustomAccentCheckBox->blockSignals(true);
+  useCustomAccentCheckBox->setChecked(false);
+  ui->colorSelectorAccent->setEnabled(false);
+  useCustomAccentCheckBox->blockSignals(false);
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::setupSidebar() {}
@@ -442,6 +505,7 @@ void SettingsDialog::readSettings() {
   ui->themeSelectorComboBox->blockSignals(true);
   ui->thumbOpacitySlider->blockSignals(true);
   ui->useBlackBackgroundCheckBox->blockSignals(true);
+  useCustomAccentCheckBox->blockSignals(true);
 
   ui->loopSlideshowCheckBox->setChecked(settings->loopSlideshow());
   ui->enablePanelCheckBox->setChecked(settings->panelEnabled());
@@ -614,26 +678,31 @@ void SettingsDialog::readSettings() {
   // reduce by 8x to have nice granular control in qslider
   ui->panelSizeSlider->setValue(settings->panelPreviewsSize() / 8);
 
-  ui->themeSelectorComboBox->setCurrentIndex(static_cast<int>(settings->themeMode()));
-  ui->thumbOpacitySlider->setValue(static_cast<int>(settings->thumbnailOpacity() * 100));
-  ui->thumbOpacityPercentLabel->setText(QString::number(ui->thumbOpacitySlider->value()) + "%");
+  ui->themeSelectorComboBox->setCurrentIndex(
+      static_cast<int>(settings->themeMode()));
+  ui->thumbOpacitySlider->setValue(
+      static_cast<int>(settings->thumbnailOpacity() * 100));
+  ui->thumbOpacityPercentLabel->setText(
+      QString::number(ui->thumbOpacitySlider->value()) + "%");
   ui->useBlackBackgroundCheckBox->setChecked(settings->useBlackBackground());
 
   colorManagementCheckBox->blockSignals(true);
   monitorProfileComboBox->blockSignals(true);
 
   colorManagementCheckBox->setChecked(settings->colorManagementEnabled());
-  int cmIdx = monitorProfileComboBox->findData(settings->monitorColorProfileType());
+  int cmIdx =
+      monitorProfileComboBox->findData(settings->monitorColorProfileType());
   if (cmIdx != -1) {
-      monitorProfileComboBox->setCurrentIndex(cmIdx);
+    monitorProfileComboBox->setCurrentIndex(cmIdx);
   } else {
-      monitorProfileComboBox->setCurrentIndex(0);
+    monitorProfileComboBox->setCurrentIndex(0);
   }
   customProfilePathEdit->setText(settings->monitorColorProfilePath());
 
   bool cmEnabled = colorManagementCheckBox->isChecked();
   monitorProfileComboBox->setEnabled(cmEnabled);
-  bool customSelected = (monitorProfileComboBox->currentData().toString() == "Custom");
+  bool customSelected =
+      (monitorProfileComboBox->currentData().toString() == "Custom");
   customProfileContainer->setVisible(cmEnabled && customSelected);
   customProfilePathEdit->setEnabled(cmEnabled);
   customProfileBrowseButton->setEnabled(cmEnabled);
@@ -645,9 +714,13 @@ void SettingsDialog::readSettings() {
   readShortcuts();
   readScripts();
 
+  useCustomAccentCheckBox->setChecked(settings->hasCustomAccent());
+  ui->colorSelectorAccent->setEnabled(settings->hasCustomAccent());
+
   ui->themeSelectorComboBox->blockSignals(false);
   ui->thumbOpacitySlider->blockSignals(false);
   ui->useBlackBackgroundCheckBox->blockSignals(false);
+  useCustomAccentCheckBox->blockSignals(false);
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::saveSettings() {
@@ -777,9 +850,9 @@ void SettingsDialog::saveSettings() {
   settings->setExcludedCachePaths(ui->excludedCachePathsLineEdit->text());
 
   settings->setColorManagementEnabled(colorManagementCheckBox->isChecked());
-  settings->setMonitorColorProfileType(monitorProfileComboBox->currentData().toString());
+  settings->setMonitorColorProfileType(
+      monitorProfileComboBox->currentData().toString());
   settings->setMonitorColorProfilePath(customProfilePathEdit->text());
-
 
   int oldRes = settings->thumbnailResolution();
   int newRes = ui->thumbnailResolutionSlider->value();
@@ -788,7 +861,8 @@ void SettingsDialog::saveSettings() {
     ThumbnailCache cache;
     cache.clear();
   }
-  settings->setThemeMode(static_cast<ThemeMode>(ui->themeSelectorComboBox->currentIndex()));
+  settings->setThemeMode(
+      static_cast<ThemeMode>(ui->themeSelectorComboBox->currentIndex()));
   settings->setThumbnailOpacity(ui->thumbOpacitySlider->value() / 100.f);
   settings->setUseBlackBackground(ui->useBlackBackgroundCheckBox->isChecked());
 
@@ -811,11 +885,16 @@ void SettingsDialog::readColorScheme() {
 }
 
 void SettingsDialog::setColorScheme(ColorScheme colors) {
+  ui->colorSelectorAccent->blockSignals(true);
   ui->colorSelectorAccent->setColor(colors.accent);
+  ui->colorSelectorAccent->blockSignals(false);
 }
 
 //------------------------------------------------------------------------------
 void SettingsDialog::saveColorScheme() {
+  bool customAccent = useCustomAccentCheckBox->isChecked();
+  settings->setHasCustomAccent(customAccent);
+
   ColorScheme scheme = settings->colorScheme();
   BaseColorScheme base;
   base.accent = ui->colorSelectorAccent->color();
@@ -833,7 +912,11 @@ void SettingsDialog::saveColorScheme() {
   base.overlay_text = scheme.overlay_text;
   base.tid = scheme.tid;
 
-  settings->setColorScheme(ColorScheme(base));
+  if (customAccent) {
+    settings->setColorScheme(ColorScheme(base));
+  } else {
+    settings->clearCustomAccent();
+  }
   settings->saveTheme();
 }
 //------------------------------------------------------------------------------
@@ -1078,7 +1161,11 @@ void SettingsDialog::onAutoResizeLimitSliderChanged(int value) {
   ui->autoResizeLimit->setText(QString::number(value * 5.f, 'f', 0) + "%");
 }
 //------------------------------------------------------------------------------
-int SettingsDialog::exec() { return QDialog::exec(); }
+int SettingsDialog::exec() {
+  adjustSizeToContents();
+  resize(sizeHint());
+  return QDialog::exec();
+}
 
 void SettingsDialog::switchToPage(int number) {
   ui->sideBar2->selectEntry(number);

@@ -347,7 +347,10 @@ void Settings::loadTheme() {
   ColorScheme baseScheme = ThemeStore::colorScheme(baseSchemeName);
 
   themeConf->beginGroup("Colors");
-  QColor customAccent = QColor(themeConf->value("accent", baseScheme.accent.name()).toString());
+  mHasCustomAccent = themeConf->contains("accent");
+  QColor customAccent = mHasCustomAccent
+                            ? QColor(themeConf->value("accent").toString())
+                            : QColor();
   themeConf->endGroup();
 
   BaseColorScheme base;
@@ -371,8 +374,17 @@ void Settings::loadTheme() {
 }
 void Settings::saveTheme() {
   themeConf->beginGroup("Colors");
-  themeConf->setValue("accent", mColorScheme.accent.name());
+  if (mHasCustomAccent) {
+    themeConf->setValue("accent", mColorScheme.accent.name());
+  } else {
+    themeConf->remove("accent");
+  }
   themeConf->endGroup();
+}
+void Settings::clearCustomAccent() {
+  mHasCustomAccent = false;
+  saveTheme();
+  loadTheme();
 }
 //------------------------------------------------------------------------------
 const ColorScheme &Settings::colorScheme() { return mColorScheme; }
