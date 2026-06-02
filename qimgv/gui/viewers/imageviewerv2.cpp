@@ -1685,7 +1685,8 @@ void ImageViewerV2::setColorAdjustments(float brightness, float contrast,
   pixmapItemCrop.setColorAdjustments(brightness, contrast, saturation, hue,
                                      exposure, temperature, tint);
   if (panoramaItem) {
-    panoramaItem->setColorAdjustments(brightness, contrast, saturation, hue);
+    panoramaItem->setColorAdjustments(brightness, contrast, saturation, hue,
+                                      exposure, temperature, tint);
   }
 }
 

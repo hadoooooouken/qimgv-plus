@@ -9,6 +9,9 @@ uniform highp float brightness;
 uniform highp float contrast;
 uniform highp float saturation;
 uniform highp float hue;
+uniform highp float exposure;
+uniform highp float temperature;
+uniform highp float tint;
 
 #define PI 3.14159265358979323846
 
@@ -52,6 +55,14 @@ void main() {
 
     highp vec4 color = texture2D(tex, uv);
     highp vec3 rgb = color.rgb;
+    if (abs(temperature) > 0.001 || abs(tint) > 0.001) {
+        rgb.r *= (1.0 + temperature + tint * 0.5);
+        rgb.g *= (1.0 - tint);
+        rgb.b *= (1.0 - temperature + tint * 0.5);
+    }
+    if (abs(exposure) > 0.001) {
+        rgb *= pow(2.0, exposure);
+    }
     if (abs(hue) > 0.001) {
         rgb = hueRotate(rgb, hue);
     }

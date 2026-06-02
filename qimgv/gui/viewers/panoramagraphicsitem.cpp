@@ -39,12 +39,15 @@ void PanoramaGraphicsItem::setViewParameters(float yaw, float pitch, float fov)
     update();
 }
 
-void PanoramaGraphicsItem::setColorAdjustments(float brightness, float contrast, float saturation, float hue)
+void PanoramaGraphicsItem::setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint)
 {
     mBrightness = brightness;
     mContrast = contrast;
     mSaturation = saturation;
     mHue = hue;
+    mExposure = exposure;
+    mTemperature = temperature;
+    mTint = tint;
     update();
 }
 
@@ -124,6 +127,9 @@ void PanoramaGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsIt
     mProgram->setUniformValue("brightness", mBrightness);
     mProgram->setUniformValue("contrast", mContrast);
     mProgram->setUniformValue("saturation", mSaturation);
+    mProgram->setUniformValue("exposure", mExposure);
+    mProgram->setUniformValue("temperature", mTemperature);
+    mProgram->setUniformValue("tint", mTint);
     
     // Convert hue degrees to radians
     float hueRad = (float)(mHue * M_PI / 180.0);
