@@ -1,4 +1,4 @@
-qimgv-plus | Current version: 2.0.2
+qimgv-plus | Current version: 2.0.3
 ==========
 A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image viewer, featuring high-quality CPU-accelerated scaling and native support for modern image formats.
 
@@ -17,6 +17,10 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 - **Native Support for Modern Formats**: Out-of-the-box support for AVIF, HEIF/HEIC, JPEG XL (JXL), PSD, DDS, RAW, KRA, and ORA.
 
 - **Modern CPU Optimization**: Compiled with AVX2 support for high-speed image processing on modern processors.
+
+- **Batch Image Converter**: Multi-threaded background queue to convert, resize, rename, adjust colors, and AI-upscale multiple images.
+
+- **Display Color Management**: Dynamic source-to-target color mapping supporting system monitor ICC profiles, standard spaces (sRGB, Adobe RGB, Display P3, etc.), or custom ICC/ICM files.
 
 - **Fully Configurable**: Highly customizable keyboard shortcuts and themes.
 
@@ -136,6 +140,28 @@ qimgv-plus integrates **[upscayl-ncnn](https://github.com/upscayl/upscayl-ncnn) 
 - **VRAM Safety & Limits**: Auto-tile detection and input limits prevent out-of-memory errors on a wide range of GPUs.
 - **Vulkan Preloading**: An optional pre-warm feature processes a dummy texture at startup to pre-allocate memory and eliminate initial rendering lag.
 - **Hotkey**: Press **`Alt + I`** to instantly toggle AI upscaling.
+
+## Batch Image Converter
+
+Multi-threaded background queue processor:
+
+- **Interactive Selection**: Includes filename, thumbnail, original format, and size info with checkboxes to filter the queue.
+- **Output Options**: Target path selection, filename pattern templates (e.g., `{name}`), optional timestamped subdirectories (`Batch_YYYY-MM-DD_HH-MM-SS`), and file overwrite settings.
+- **Formats**: Converts to **JPEG**, **PNG**, **WebP**, **JPEG-XL (JXL)**, **AVIF**, **BMP**, and **TIFF** with custom compression or quality sliders.
+- **Resizing**: Scaling by percentage or custom resolution, presets, aspect ratio lock, and quick enforcers ("Fit Desktop" / "Fill Desktop").
+- **Scaling Filters**: Supports standard filters (Nearest, Bilinear, Bicubic, Lanczos, Area, OpenCV Smart Sharpen) and **Vulkan-accelerated AI Upscaling (Upscayl)** using customizable models (e.g. `4xLSDIRCompactC3`).
+- **Color Correction**: Applies Exposure, Contrast, Brightness, Saturation, Hue, Temperature, and Tint adjustments.
+
+## Display Color Management
+
+Color space translation between source image and active display:
+
+- **Activation**: Toggle via __Settings > View > Color Management__.
+- **Display Profiles**: 
+  * **System / Auto (Recommended)**: Dynamically queries the active monitor's system ICC profile (updates automatically when moving the window between screens).
+  * **Preset spaces**: `sRGB`, `Display P3`, `Adobe RGB`, `Rec. 2020`, `ProPhoto RGB`, and `Linear sRGB`.
+  * **Custom target**: Browse and load custom `.icc` or `.icm` files from disk.
+- **Mapping**: Reads embedded source ICC profile (assumes standard `sRGB` if missing) and converts it to the display space.
 
 # Supported Image Formats
 
