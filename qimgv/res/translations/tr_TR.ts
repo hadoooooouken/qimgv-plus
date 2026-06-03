@@ -463,6 +463,11 @@ Toplam dosya: %3</translation>
         <translation>Uygula</translation>
     </message>
     <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="708"/>
+        <source>Compare</source>
+        <translation>Karşılaştır</translation>
+    </message>
+    <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="728"/>
         <source>Reset</source>
         <translation>Sıfırla</translation>

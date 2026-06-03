@@ -463,6 +463,11 @@ Archivos totales: %3</translation>
         <translation>Aplicar</translation>
     </message>
     <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="708"/>
+        <source>Compare</source>
+        <translation>Comparar</translation>
+    </message>
+    <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="728"/>
         <source>Reset</source>
         <translation>Restablecer</translation>

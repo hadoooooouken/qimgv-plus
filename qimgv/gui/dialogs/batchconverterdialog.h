@@ -100,6 +100,9 @@ private slots:
     void onResizeEnabledChanged(bool enabled);
     void onColorEnabledChanged(bool enabled);
 
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
 private:
     Ui::BatchConverterDialog *ui;
     QStringList inputPaths;

@@ -506,6 +506,13 @@ bool MW::panoramaMode() const {
     return false;
 }
 
+bool MW::isBusyInteracting() const {
+    if (viewerWidget) {
+        return viewerWidget->isBusyInteracting();
+    }
+    return false;
+}
+
 
 void MW::saveWindowGeometry() {
     if(this->windowState() == Qt::WindowNoState)

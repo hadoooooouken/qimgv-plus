@@ -463,6 +463,11 @@ Total files: %3</source>
         <translation>適用</translation>
     </message>
     <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="708"/>
+        <source>Compare</source>
+        <translation>比較</translation>
+    </message>
+    <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="728"/>
         <source>Reset</source>
         <translation>リセット</translation>

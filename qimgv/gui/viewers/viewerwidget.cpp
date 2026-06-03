@@ -456,3 +456,7 @@ void ViewerWidget::setColorAdjustments(float brightness, float contrast, float s
     if(imageViewer)
         imageViewer->setColorAdjustments(brightness, contrast, saturation, hue, exposure, temperature, tint);
 }
+
+bool ViewerWidget::isBusyInteracting() const {
+    return imageViewer ? imageViewer->isBusyInteracting() : false;
+}

@@ -50,6 +50,7 @@ public:
     void hideUpscaledCrop();
     virtual bool isDisplaying() const;
     bool panoramaMode() const { return mPanoramaMode; }
+    bool isBusyInteracting() const;
     void setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
 
     virtual bool imageFits() const;

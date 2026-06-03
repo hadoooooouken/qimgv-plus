@@ -463,6 +463,11 @@ Total files: %3</source>
         <translation>Применить</translation>
     </message>
     <message>
+        <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="708"/>
+        <source>Compare</source>
+        <translation>Сравнить</translation>
+    </message>
+    <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.ui" line="728"/>
         <source>Reset</source>
         <translation>Сбросить</translation>

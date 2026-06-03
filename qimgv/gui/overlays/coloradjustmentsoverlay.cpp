@@ -33,6 +33,21 @@ ColorAdjustmentsOverlay::ColorAdjustmentsOverlay(FloatingWidgetContainer *parent
         resetAdjustments();
     });
 
+    connect(ui->compareButton, &QPushButton::pressed, this, [this]() {
+        emit adjustmentsChanged(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    });
+    connect(ui->compareButton, &QPushButton::released, this, [this]() {
+        emit adjustmentsChanged(brightness(), contrast(), saturation(), hue(), exposure(), temperature(), tint());
+    });
+
+    ui->brightnessSlider->installEventFilter(this);
+    ui->contrastSlider->installEventFilter(this);
+    ui->saturationSlider->installEventFilter(this);
+    ui->hueSlider->installEventFilter(this);
+    ui->exposureSlider->installEventFilter(this);
+    ui->temperatureSlider->installEventFilter(this);
+    ui->tintSlider->installEventFilter(this);
+
     connect(ui->brightnessSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
     connect(ui->contrastSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
     connect(ui->saturationSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
@@ -252,5 +267,34 @@ void ColorAdjustmentsOverlay::mouseReleaseEvent(QMouseEvent *event) {
     }
 }
 
+bool ColorAdjustmentsOverlay::eventFilter(QObject *watched, QEvent *event) {
+    if (event->type() == QEvent::MouseButtonDblClick) {
+        if (watched == ui->brightnessSlider) {
+            ui->brightnessSlider->setValue(0);
+            return true;
+        } else if (watched == ui->contrastSlider) {
+            ui->contrastSlider->setValue(100);
+            return true;
+        } else if (watched == ui->saturationSlider) {
+            ui->saturationSlider->setValue(100);
+            return true;
+        } else if (watched == ui->hueSlider) {
+            ui->hueSlider->setValue(0);
+            return true;
+        } else if (watched == ui->exposureSlider) {
+            ui->exposureSlider->setValue(0);
+            return true;
+        } else if (watched == ui->temperatureSlider) {
+            ui->temperatureSlider->setValue(0);
+            return true;
+        } else if (watched == ui->tintSlider) {
+            ui->tintSlider->setValue(0);
+            return true;
+        }
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
 // Force rebuild to trigger UIC for coloradjustmentsoverlay.ui
+
 

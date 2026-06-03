@@ -796,7 +796,8 @@ void ImageViewerV2::mouseReleaseEvent(QMouseEvent *event) {
   }
   bool needScale =
       (mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
-       mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM);
+       mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM ||
+       mouseInteraction == MouseInteractionState::MOUSE_PAN);
 
   if (!pixmap || mouseInteraction == MouseInteractionState::MOUSE_NONE) {
     QGraphicsView::mouseReleaseEvent(event);
@@ -1755,4 +1756,8 @@ void ImageViewerV2::hideUpscaledCrop() {
   pixmapItemCrop.hide();
   pixmapItemCrop.setPixmap(QPixmap());
   viewport()->update();
+}
+
+bool ImageViewerV2::isBusyInteracting() const {
+  return mouseInteraction != MouseInteractionState::MOUSE_NONE;
 }

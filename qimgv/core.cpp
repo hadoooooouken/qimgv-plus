@@ -1636,7 +1636,7 @@ void Core::onScalingFinished(QPixmap *scaled, ScalerRequest req) {
 
 #ifdef USE_UPSCAYL
 void Core::onUpscaylTimerTimeout() {
-  if (mw->panoramaMode()) {
+  if (mw->panoramaMode() || mw->isBusyInteracting()) {
     mw->hideUpscaledCrop();
     return;
   }

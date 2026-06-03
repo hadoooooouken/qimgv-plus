@@ -141,6 +141,14 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
         ui->tintSlider->setValue(0);
     });
 
+    ui->exposureSlider->installEventFilter(this);
+    ui->contrastSlider->installEventFilter(this);
+    ui->brightnessSlider->installEventFilter(this);
+    ui->saturationSlider->installEventFilter(this);
+    ui->hueSlider->installEventFilter(this);
+    ui->tempSlider->installEventFilter(this);
+    ui->tintSlider->installEventFilter(this);
+
     collectResizeWidgets();
     collectColorWidgets();
 
@@ -1005,4 +1013,32 @@ void BatchWorkerTask::run() {
             Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Save Error")),
             Q_ARG(bool, false));
     }
+}
+
+bool BatchConverterDialog::eventFilter(QObject *watched, QEvent *event) {
+    if (event->type() == QEvent::MouseButtonDblClick) {
+        if (watched == ui->exposureSlider) {
+            ui->exposureSlider->setValue(0);
+            return true;
+        } else if (watched == ui->contrastSlider) {
+            ui->contrastSlider->setValue(100);
+            return true;
+        } else if (watched == ui->brightnessSlider) {
+            ui->brightnessSlider->setValue(0);
+            return true;
+        } else if (watched == ui->saturationSlider) {
+            ui->saturationSlider->setValue(100);
+            return true;
+        } else if (watched == ui->hueSlider) {
+            ui->hueSlider->setValue(0);
+            return true;
+        } else if (watched == ui->tempSlider) {
+            ui->tempSlider->setValue(0);
+            return true;
+        } else if (watched == ui->tintSlider) {
+            ui->tintSlider->setValue(0);
+            return true;
+        }
+    }
+    return QDialog::eventFilter(watched, event);
 }
