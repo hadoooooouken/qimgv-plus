@@ -1,5 +1,5 @@
 #define MyAppName "qimgv-plus"
-#define MyAppVersion "2.0.4.0"
+#define MyAppVersion "2.0.5.0"
 #define MyAppPublisher "hadoooooouken"
 #define MyAppURL "https://github.com/hadoooooouken/qimgv-plus"
 #define MyAppExeName "qimgv-plus.exe"
@@ -153,6 +153,8 @@ Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".ora"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".exr"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".hdr"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".qoi"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".dds"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".jxr"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".hdp"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".wdp"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
@@ -229,6 +231,10 @@ Root: HKA; Subkey: "Software\Classes\.exr"; ValueType: string; ValueName: ""; Va
 Root: HKA; Subkey: "Software\Classes\.exr\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.exr"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.hdr"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.hdr"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.hdr\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.hdr"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.qoi"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.qoi"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.qoi\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.qoi"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.dds"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.dds"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.dds\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.dds"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.jxr"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.jxr\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.jxr"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.hdp"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletevalue; Tasks: associate
@@ -267,6 +273,14 @@ Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.gif\shell\open\command"
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.hdr"; ValueType: string; ValueName: ""; ValueData: "Radiance HDR Image (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.hdr\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\hdr.ico"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.hdr\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
+
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.qoi"; ValueType: string; ValueName: ""; ValueData: "QOI Image (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.qoi\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\qoi.ico"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.qoi\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
+
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.dds"; ValueType: string; ValueName: ""; ValueData: "DirectDraw Surface Image (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.dds\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\dds.ico"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.dds\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
 
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.heic"; ValueType: string; ValueName: ""; ValueData: "HEIC Image (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.heic\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\heic.ico"; Flags: uninsdeletekey; Tasks: associate
@@ -386,6 +400,8 @@ Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueT
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ora"; ValueData: "qimgvplus.AssocFile.ora"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".exr"; ValueData: "qimgvplus.AssocFile.exr"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".hdr"; ValueData: "qimgvplus.AssocFile.hdr"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".qoi"; ValueData: "qimgvplus.AssocFile.qoi"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".dds"; ValueData: "qimgvplus.AssocFile.dds"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jxr"; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".hdp"; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".wdp"; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletekey; Tasks: associate
@@ -433,6 +449,8 @@ Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.kra\ShellEx\{{E357F
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ora\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.exr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.hdr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.qoi\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.dds\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jxr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.hdp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wdp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails

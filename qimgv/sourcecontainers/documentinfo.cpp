@@ -142,6 +142,12 @@ void DocumentInfo::detectFormat() {
     } else if(mimeName == "image/vnd.ms-photo" || mimeName == "image/jxr" || suffix == "jxr" || suffix == "hdp" || suffix == "wdp") {
         mFormat = "jxr";
         mDocumentType = DocumentType::STATIC;
+    } else if(mimeName == "image/x-qoi" || suffix == "qoi") {
+        mFormat = "qoi";
+        mDocumentType = DocumentType::STATIC;
+    } else if(mimeName == "image/x-dds" || mimeName == "image/dds" || mimeName == "image/vnd-ms.dds" || suffix == "dds") {
+        mFormat = "dds";
+        mDocumentType = DocumentType::STATIC;
     } else if(mimeName.startsWith("image/x-") || suffix == "arw" || suffix == "cr2" || suffix == "nef" || suffix == "dng" || suffix == "raf") {
         // RAW formats
         mFormat = "raw";

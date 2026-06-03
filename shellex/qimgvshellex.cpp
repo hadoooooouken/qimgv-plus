@@ -204,6 +204,7 @@ const wchar_t *g_extensions[] = {
                                                      // formats
     L".exr", L".hdr",                                // High dynamic range
     L".tga", L".jxr", L".hdp", L".wdp",              // Other image formats
+    L".qoi", L".dds",                                // QOI and DDS
     L".psd", L".psb",                                // Photoshop
     L".ai", L".pdf",                                 // Adobe Illustrator / PDF
     L".tif", L".tiff",                               // TIFF
@@ -220,7 +221,8 @@ const wchar_t *g_progIds[] = {
     L"qimgvplus.AssocFile.ora",  L"qimgvplus.AssocFile.jxr",
     L"qimgvplus.AssocFile.psd",  L"qimgvplus.AssocFile.psb",
     L"qimgvplus.AssocFile.ai",   L"qimgvplus.AssocFile.pdf",
-    L"qimgvplus.AssocFile.tif",  L"qimgvplus.AssocFile.tiff"};
+    L"qimgvplus.AssocFile.tif",  L"qimgvplus.AssocFile.tiff",
+    L"qimgvplus.AssocFile.qoi",  L"qimgvplus.AssocFile.dds"};
 
 // Helper functions for registry manipulation
 HRESULT CreateRegistryKeyAndValue(HKEY hKeyParent, LPCWSTR pszSubKey,

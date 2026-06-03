@@ -211,8 +211,11 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
                 "QGroupBox { background-color: %1; color: %3; border: 1px solid %4; border-radius: 4px; margin-top: 10px; padding-top: 12px; }"
                 "QGroupBox::title { subcontrol-origin: margin; subcontrol-position: top left; left: 8px; padding: 0 3px; color: %3; }"
                 "QLabel { color: %3; }"
+                "QLabel:disabled { color: %2; }"
                 "QCheckBox, QRadioButton { color: %3; }"
+                "QCheckBox:disabled, QRadioButton:disabled { color: %2; }"
                 "QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox { background-color: %5; color: %3; border: 1px solid %4; border-radius: 3px; padding: 3px; }"
+                "QLineEdit:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled, QComboBox:disabled { background-color: %1; color: %2; border-color: %4; }"
                 "QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover, QComboBox:hover,"
                 "QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus { border-color: %6; }"
                 "QPushButton { background-color: %5; color: %3; border: 1px solid %4; border-radius: 3px; padding: 5px 10px; }"
@@ -224,7 +227,13 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
                 "QScrollBar::handle:vertical:hover { background-color: %12; }"
                 "QScrollBar::sub-page, QScrollBar::add-page { background: none; }"
                 "QProgressBar { border: 1px solid %4; border-radius: 3px; text-align: center; color: %8; background-color: %10; }"
-                "QProgressBar::chunk { background-color: %6; }")
+                "QProgressBar::chunk { background-color: %6; }"
+                "QSlider { height: 18px; background: transparent; }"
+                "QSlider::groove:horizontal { height: 4px; background: %5; border-radius: 2px; }"
+                "QSlider::sub-page:horizontal { background: %6; border-radius: 2px; }"
+                "QSlider::sub-page:horizontal:disabled { background: %4; }"
+                "QSlider::handle:horizontal { background: %3; width: 12px; height: 12px; margin: -4px 0px; border-radius: 6px; }"
+                "QSlider::handle:horizontal:disabled { background: %2; }")
         .arg(colors.widget.name(), colors.text.name(), colors.text_hc.name(),
              colors.widget_border.name(), colors.button.name(), colors.accent.name(),
              colors.button_hover.name(), colors.text_hc2.name(), colors.button_pressed.name(),
@@ -238,6 +247,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     ui->formatComboBox->addItem("WebP (*.webp)", "webp");
     ui->formatComboBox->addItem("JPEG-XL (*.jxl)", "jxl");
     ui->formatComboBox->addItem("AVIF (*.avif *.avifs)", "avif");
+    ui->formatComboBox->addItem("QOI (*.qoi)", "qoi");
     ui->formatComboBox->addItem("BMP (*.bmp)", "bmp");
     ui->formatComboBox->addItem("TIFF (*.tif *.tiff)", "tif");
 

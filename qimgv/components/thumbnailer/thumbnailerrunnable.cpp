@@ -156,6 +156,27 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
                                      bool squared) {
   QImageReader *reader = new QImageReader(path, format);
   reader->setAllocationLimit(settings->memoryAllocationLimit());
+
+  // Select the optimal frame for multi-image formats like ICO
+  int bestIndex = 0;
+  int imageCount = reader->imageCount();
+  if (imageCount > 1) {
+    int bestDiff = 999999;
+    for (int i = 0; i < imageCount; ++i) {
+      if (reader->jumpToImage(i)) {
+        QSize frameSize = reader->size();
+        if (frameSize.isValid()) {
+          int diff = qAbs(frameSize.width() - size);
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            bestIndex = i;
+          }
+        }
+      }
+    }
+    reader->jumpToImage(bestIndex);
+  }
+
   Qt::AspectRatioMode ARMode =
       squared ? (Qt::KeepAspectRatioByExpanding) : (Qt::KeepAspectRatio);
   QImage *result = nullptr;
@@ -186,6 +207,9 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
       delete reader;
       reader = new QImageReader(path, format);
       reader->setAllocationLimit(settings->memoryAllocationLimit());
+      if (imageCount > 1) {
+        reader->jumpToImage(bestIndex);
+      }
     }
   }
   if (manualResize) { // manual resize & crop. slower but should just work

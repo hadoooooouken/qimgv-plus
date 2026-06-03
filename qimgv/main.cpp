@@ -8,6 +8,8 @@
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QStyleFactory>
+#include <QSettings>
+#include <QStandardPaths>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -100,14 +102,6 @@ int main(int argc, char *argv[]) {
   qRegisterMetaTypeStreamOperators<Script>("Script");
 #endif
 
-  // globals
-  inputMap = InputMap::getInstance();
-  appActions = Actions::getInstance();
-  settings = Settings::getInstance();
-  scriptManager = ScriptManager::getInstance();
-  actionManager = ActionManager::getInstance();
-  shrRes = SharedResources::getInstance();
-
   // parse args
   // ------------------------------------------------------------------
   QCommandLineParser parser;
@@ -136,10 +130,24 @@ int main(int argc, char *argv[]) {
 
   int exitCode = 0;
   if (parser.isSet("build-options")) {
+    inputMap = InputMap::getInstance();
+    appActions = Actions::getInstance();
+    settings = Settings::getInstance();
+    scriptManager = ScriptManager::getInstance();
+    actionManager = ActionManager::getInstance();
+    shrRes = SharedResources::getInstance();
+
     CmdOptionsRunner r;
     QTimer::singleShot(0, &r, &CmdOptionsRunner::showBuildOptions);
     exitCode = a.exec();
   } else if (parser.isSet("gen-thumbs")) {
+    inputMap = InputMap::getInstance();
+    appActions = Actions::getInstance();
+    settings = Settings::getInstance();
+    scriptManager = ScriptManager::getInstance();
+    actionManager = ActionManager::getInstance();
+    shrRes = SharedResources::getInstance();
+
     int size = settings->folderViewIconSize();
     if (parser.isSet("gen-thumbs-size"))
       size = parser.value("gen-thumbs-size").toInt();
@@ -152,13 +160,24 @@ int main(int argc, char *argv[]) {
   } else {
     // -----------------------------------------------------------------------------
 
+    bool isMultiInstance = false;
+    {
+      QString appDirPath = QCoreApplication::applicationDirPath();
+      QString confPath = appDirPath + "/conf";
+      if (!QFileInfo::exists(confPath + "/qimgv-plus.ini")) {
+        confPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+      }
+      QSettings tempSettings(confPath + "/qimgv-plus.ini", QSettings::IniFormat);
+      isMultiInstance = tempSettings.value("multiInstance", false).toBool();
+    }
+
     QString serverName = "qimgv-plus-single-instance-" +
                          QCryptographicHash::hash(QDir::tempPath().toUtf8(),
                                                   QCryptographicHash::Md5)
                              .toHex();
     QLocalServer *server = nullptr;
 
-    if (!settings->multiInstance()) {
+    if (!isMultiInstance) {
       QLocalSocket socket;
       socket.connectToServer(serverName);
       if (socket.waitForConnected(500)) {
@@ -176,13 +195,20 @@ int main(int argc, char *argv[]) {
         socket.write(data);
         socket.waitForBytesWritten(1000);
         socket.disconnectFromServer();
-        cleanupSingletons();
         return 0;
       }
 
       QLocalServer::removeServer(serverName);
       server = new QLocalServer(&a);
     }
+
+    // Primary instance, initialize all singletons
+    inputMap = InputMap::getInstance();
+    appActions = Actions::getInstance();
+    settings = Settings::getInstance();
+    scriptManager = ScriptManager::getInstance();
+    actionManager = ActionManager::getInstance();
+    shrRes = SharedResources::getInstance();
 
     {
       Core core;
