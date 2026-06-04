@@ -262,14 +262,14 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   QLabel *sharpLabel = new QLabel(tr("Sharpness:"), this);
   casSharpeningSlider = new QSlider(Qt::Horizontal, this);
   casSharpeningSlider->setRange(0, 100);
-  casSharpeningSlider->setFixedWidth(100);
+  casSharpeningSlider->setFixedWidth(170);
   casSharpeningLabel = new QLabel(this);
   casSharpeningLabel->setFixedWidth(30);
 
   QLabel *contrastLabel = new QLabel(tr("Contrast:"), this);
   casContrastSlider = new QSlider(Qt::Horizontal, this);
   casContrastSlider->setRange(0, 100);
-  casContrastSlider->setFixedWidth(100);
+  casContrastSlider->setFixedWidth(170);
   casContrastLabel = new QLabel(this);
   casContrastLabel->setFixedWidth(30);
 
@@ -280,8 +280,10 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   casLayout->addWidget(casContrastSlider, 1, 1);
   casLayout->addWidget(casContrastLabel, 1, 2);
 
-  int comboIdx = ui->horizontalLayout_5->indexOf(ui->scalingQualityComboBox);
-  ui->horizontalLayout_5->insertWidget(comboIdx + 1, casContainerWidget);
+  casLayout->setColumnStretch(3, 1);
+
+  int layoutIdx = ui->verticalLayout_24->indexOf(ui->horizontalLayout_5);
+  ui->verticalLayout_24->insertWidget(layoutIdx + 1, casContainerWidget);
 
   auto updateCasVisibility = [this]() {
     bool isCas = (ui->scalingQualityComboBox->currentData().toInt() == QI_FILTER_CAS);

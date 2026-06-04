@@ -1035,7 +1035,7 @@ void Settings::setModernSaveQuality(int value) {
 }
 //------------------------------------------------------------------------------
 ScalingFilter Settings::scalingFilter() {
-  int mode = settings->settingsConf->value("scalingFilter", QI_FILTER_CV_SMART)
+  int mode = settings->settingsConf->value("scalingFilter", QI_FILTER_CAS)
                  .toInt();
   if (mode < 0 || mode > 8)
     mode = 1; // default to Bilinear if out of range
