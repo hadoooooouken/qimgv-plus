@@ -208,7 +208,9 @@ const wchar_t *g_extensions[] = {
     L".psd", L".psb",                                // Photoshop
     L".ai", L".pdf",                                 // Adobe Illustrator / PDF
     L".tif", L".tiff",                               // TIFF
-    L".svg", L".svgz"                                // Scalable Vector Graphics
+    L".svg", L".svgz",                               // Scalable Vector Graphics
+    L".jp2", L".j2k", L".jpf", L".jpx", L".jpc",     // JPEG 2000
+    L".jph"                                          // HTJ2K / JPH
 };
 
 // ProgIDs to hook into
@@ -222,7 +224,9 @@ const wchar_t *g_progIds[] = {
     L"qimgvplus.AssocFile.psd",  L"qimgvplus.AssocFile.psb",
     L"qimgvplus.AssocFile.ai",   L"qimgvplus.AssocFile.pdf",
     L"qimgvplus.AssocFile.tif",  L"qimgvplus.AssocFile.tiff",
-    L"qimgvplus.AssocFile.qoi",  L"qimgvplus.AssocFile.dds"};
+    L"qimgvplus.AssocFile.qoi",  L"qimgvplus.AssocFile.dds",
+    L"qimgvplus.AssocFile.jp2",  L"qimgvplus.AssocFile.jph"};
+
 
 // Helper functions for registry manipulation
 HRESULT CreateRegistryKeyAndValue(HKEY hKeyParent, LPCWSTR pszSubKey,

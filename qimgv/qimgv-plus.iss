@@ -161,6 +161,13 @@ Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".ai"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".pdf"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".psb"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".jp2"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".j2k"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".jpf"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".jpx"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".jpc"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".jph"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+
 
 ; Default value and OpenWithProgids for Extensions
 Root: HKA; Subkey: "Software\Classes\.jpg"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jpg"; Flags: uninsdeletevalue; Tasks: associate
@@ -247,6 +254,19 @@ Root: HKA; Subkey: "Software\Classes\.pdf"; ValueType: string; ValueName: ""; Va
 Root: HKA; Subkey: "Software\Classes\.pdf\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.pdf"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.psb"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.psb"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.psb\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.psb"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+
+Root: HKA; Subkey: "Software\Classes\.jp2"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.jp2\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.jp2"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.j2k"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.j2k\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.jp2"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.jpf"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.jpf\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.jp2"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.jpx"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.jpx\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.jp2"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.jpc"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.jpc\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.jp2"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.jph"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.jph"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.jph\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.jph"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 
 ; Associate ProgID details
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile"; ValueType: string; ValueName: ""; ValueData: "Image File (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
@@ -362,6 +382,14 @@ Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.ico"; ValueType: string
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.ico\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\ico.ico"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.ico\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
 
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jp2"; ValueType: string; ValueName: ""; ValueData: "JPEG 2000 Image (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jp2\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\jp2.ico"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jp2\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
+
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jph"; ValueType: string; ValueName: ""; ValueData: "High-Throughput JPEG 2000 Image (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jph\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\jph.ico"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jph\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
+
 ; Register in Default Programs (Windows Vista / 7 / 8 / 10 / 11)
 Root: HKA; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "{#MyAppName}"; ValueData: "Software\{#MyAppName}\Capabilities"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "{#MyAppName}"; Flags: uninsdeletekey; Tasks: associate
@@ -408,6 +436,12 @@ Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueT
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ai"; ValueData: "qimgvplus.AssocFile.ai"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".pdf"; ValueData: "qimgvplus.AssocFile.pdf"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".psb"; ValueData: "qimgvplus.AssocFile.psb"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jp2"; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".j2k"; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jpf"; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jpx"; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jpc"; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jph"; ValueData: "qimgvplus.AssocFile.jph"; Flags: uninsdeletekey; Tasks: associate
 
 ; --- COM / Shell Extension Declarative Registration ---
 Root: HKA; Subkey: "Software\Classes\CLSID\{#MyAppCLSID}"; ValueType: string; ValueName: ""; ValueData: "qimgv-plus Shell Extension"; Flags: uninsdeletekey; Tasks: thumbnails
@@ -457,3 +491,9 @@ Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wdp\ShellEx\{{E357F
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ai\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.pdf\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.psb\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jp2\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.j2k\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpf\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpx\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpc\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jph\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails

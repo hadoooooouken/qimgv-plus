@@ -148,7 +148,7 @@ if(WIN32)
     endif()
 
     # 5. kimageformats dependencies (safe check)
-    set(_kimg_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw avif jxl kra ora jxr heif)
+    set(_kimg_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw avif jxl kra ora jxr heif jp2 jph)
     foreach(_plugin ${_kimg_plugins})
         if(TARGET kimg_${_plugin})
             add_dependencies(qimgv-plus kimg_${_plugin})
@@ -162,7 +162,7 @@ if(WIN32)
         COMMENT "Preparing imageformats output directory..."
     )
     # Copy each plugin only if its target was actually built
-    set(_kimg_required_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw kra ora)
+    set(_kimg_required_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw kra ora jp2 jph)
     foreach(_plugin ${_kimg_required_plugins})
         if(TARGET kimg_${_plugin})
             add_custom_command(TARGET qimgv-plus POST_BUILD
@@ -207,10 +207,9 @@ if(WIN32)
         message(WARNING "OpenMP runtime NOT found at: ${OPENMP_DLL_PATH}")
     endif()
 
-    # 9. Copy OpenEXR, Imath, and OpenJPH runtime dependencies for kimg_exr
+    # 9. Copy OpenEXR and Imath runtime dependencies for kimg_exr
     set(OPENEXR_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/openexr/install/bin")
     set(IMATH_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/Imath/install/bin")
-    set(OPENJPH_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/OpenJPH/out/build/x64-Release/src/core")
 
     set(EXR_DLLS
         "${OPENEXR_BIN_DIR}/OpenEXR-4_0.dll"
@@ -219,7 +218,6 @@ if(WIN32)
         "${OPENEXR_BIN_DIR}/IlmThread-4_0.dll"
         "${OPENEXR_BIN_DIR}/OpenEXRUtil-4_0.dll"
         "${IMATH_BIN_DIR}/Imath-3_2.dll"
-        "${OPENJPH_BIN_DIR}/openjph.0.27.dll"
     )
 
     foreach(_dll ${EXR_DLLS})

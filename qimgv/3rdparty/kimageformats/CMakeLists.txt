@@ -72,7 +72,7 @@ target_link_libraries(kimg_exr PRIVATE
     "${OPENEXR_ROOT}/lib/Iex-4_0.lib"
     "${OPENEXR_ROOT}/lib/IlmThread-4_0.lib"
     "${IMATH_ROOT}/lib/Imath-3_2.lib"
-    "E:/qimgv/formats/OpenJPH/out/build/x64-Release/src/core/openjph.0.27.lib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/OpenJPH/install/lib/openjph.0.27.lib"
 )
 
 # LibRaw (Enabled with local build)
@@ -158,3 +158,21 @@ if(EXISTS "${JXL_LIBRARY}")
     )
     target_compile_definitions(kimg_jxl PRIVATE JXL_STATIC_DEFINE JXL_THREADS_STATIC_DEFINE JXL_CMS_STATIC_DEFINE)
 endif()
+
+# OpenJPEG (Enabled with local build)
+set(OPENJPEG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/openjpeg/install")
+if(EXISTS "${OPENJPEG_ROOT}/lib/openjp2.lib")
+    kimageformats_add_plugin(kimg_jp2 SOURCES jp2.cpp scanlineconverter.cpp)
+    target_include_directories(kimg_jp2 SYSTEM PRIVATE "${OPENJPEG_ROOT}/include/openjpeg-2.5")
+    target_link_libraries(kimg_jp2 PRIVATE "${OPENJPEG_ROOT}/lib/openjp2.lib")
+    target_compile_definitions(kimg_jp2 PRIVATE OPJ_STATIC)
+endif()
+
+# OpenJPH (Enabled with local build)
+set(OPENJPH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/OpenJPH/install")
+if(EXISTS "${OPENJPH_ROOT}/lib/openjph.0.27.lib")
+    kimageformats_add_plugin(kimg_jph SOURCES jph.cpp)
+    target_include_directories(kimg_jph SYSTEM PRIVATE "${OPENJPH_ROOT}/include")
+    target_link_libraries(kimg_jph PRIVATE "${OPENJPH_ROOT}/lib/openjph.0.27.lib")
+endif()
+

@@ -47,7 +47,7 @@ if ($copied -eq 0) {
     Write-Host "Deployed $copied / $($dlls.Count) plugins." -ForegroundColor Green
 }
 
-# Copy EXR/Imath/OpenJPH dependency DLLs to main release/ directory
+# Copy EXR/Imath dependency DLLs to main release/ directory
 $mainReleaseDir = Join-Path $projectRoot "release"
 if (-not (Test-Path $mainReleaseDir)) {
     New-Item -ItemType Directory -Path $mainReleaseDir -Force | Out-Null
@@ -60,7 +60,6 @@ $depDlls = @(
     "formats\openexr\install\bin\IlmThread-4_0.dll"
     "formats\openexr\install\bin\OpenEXRUtil-4_0.dll"
     "formats\Imath\install\bin\Imath-3_2.dll"
-    "formats\OpenJPH\out\build\x64-Release\src\core\openjph.0.27.dll"
 )
 
 Write-Host "Deploying EXR dependency DLLs..." -ForegroundColor Cyan

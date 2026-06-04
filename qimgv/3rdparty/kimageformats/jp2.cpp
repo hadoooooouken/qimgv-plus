@@ -155,8 +155,12 @@ public:
     {
         auto ba = device->peek(32);
         if (ba.left(12) == QByteArray::fromHex("0000000c6a5020200d0a870a")) {
-            // if (ba.mid(20, 4) == QByteArray::fromHex("6a707820")) // 'jpx '
-            //     return OPJ_CODEC_JPX; // JPEG 2000 Part 2 (not supported -> try reading as JP2)
+            if (ba.size() >= 24) {
+                auto brand = ba.mid(20, 4);
+                if (brand == "jph " || brand == "jphb") {
+                    return OPJ_CODEC_UNKNOWN; // HTJ2K / JPH should be handled by OpenJPH
+                }
+            }
             return OPJ_CODEC_JP2;
         }
         if (ba.left(5) == QByteArray::fromHex("ff4fff5100")) {

@@ -148,6 +148,12 @@ void DocumentInfo::detectFormat() {
     } else if(mimeName == "image/x-dds" || mimeName == "image/dds" || mimeName == "image/vnd-ms.dds" || suffix == "dds") {
         mFormat = "dds";
         mDocumentType = DocumentType::STATIC;
+    } else if(mimeName == "image/jp2" || mimeName == "image/jpx" || mimeName == "image/jpm" || suffix == "jp2" || suffix == "j2k" || suffix == "jpf" || suffix == "jpx" || suffix == "jpc") {
+        mFormat = "jp2";
+        mDocumentType = DocumentType::STATIC;
+    } else if(mimeName == "image/jph" || suffix == "jph") {
+        mFormat = "jph";
+        mDocumentType = DocumentType::STATIC;
     } else if(mimeName.startsWith("image/x-") || suffix == "arw" || suffix == "cr2" || suffix == "nef" || suffix == "dng" || suffix == "raf") {
         // RAW formats
         mFormat = "raw";
