@@ -48,6 +48,7 @@ target_sources(qimgv-plus PRIVATE
     overlays/fullscreeninfooverlayproxy.cpp
     overlays/imageinfooverlay.cpp
     overlays/imageinfooverlayproxy.cpp
+    overlays/cassettingsoverlay.cpp
     overlays/coloradjustmentsoverlay.cpp
     overlays/coloradjustmentsoverlayproxy.cpp
     overlays/mapoverlay.cpp

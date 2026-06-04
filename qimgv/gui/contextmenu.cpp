@@ -79,6 +79,11 @@ ContextMenu::ContextMenu(QWidget *parent) :
     ui->panoramaMode->setAction("togglePanorama");
     ui->panoramaMode->setText(tr("Panorama mode"));
     ui->panoramaMode->setIconPath(":/res/icons/common/settings/view32.png");
+
+    ui->casSettings->setAction("casSettings");
+    ui->casSettings->setText(tr("CAS Settings"));
+    ui->casSettings->setIconPath(":/res/icons/common/settings/appearance32.png");
+    ui->casSettings->hide();
     // -------------------------------------------------------------------------
     ui->open->setAction("open");
     ui->open->setText(tr("Open"));
@@ -160,6 +165,11 @@ void ContextMenu::setImageEntriesEnabled(bool mode) {
     ui->panoramaMode->setEnabled(mode);
     ui->openWith->setEnabled(mode);
     ui->showLocation->setEnabled(mode);
+}
+
+void ContextMenu::setCasSettingsVisible(bool visible) {
+    ui->casSettings->setVisible(visible);
+    adjustSize();
 }
 
 void ContextMenu::showAt(QPoint pos) {

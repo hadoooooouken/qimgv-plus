@@ -310,7 +310,8 @@ FullscreenInfoOverlay QLabel {
     color: %overlay_text%;
 }
 
-ColorAdjustmentsOverlay QLabel {
+ColorAdjustmentsOverlay QLabel,
+CasSettingsOverlay QLabel {
     color: %text_hc%;
 }
 
@@ -946,25 +947,29 @@ PrintDialog QCheckBox:hover {
     /*  background-color: %sys_window_tinted%;  */
 }
 /*----------------------------------------------------------------------------*/
-/* Color Adjustments Overlay Sliders styling */
-ColorAdjustmentsOverlay QSlider {
+/* Color Adjustments & CAS Overlay Sliders styling */
+ColorAdjustmentsOverlay QSlider,
+CasSettingsOverlay QSlider {
     height: 18px;
     background: transparent;
 }
 
-ColorAdjustmentsOverlay QSlider::groove:horizontal {
+ColorAdjustmentsOverlay QSlider::groove:horizontal,
+CasSettingsOverlay QSlider::groove:horizontal {
     height: 2px;
     background: %sys_window_tinted_hc2%;
     border-radius: 1px;
 }
 
-ColorAdjustmentsOverlay QSlider::handle:horizontal {
+ColorAdjustmentsOverlay QSlider::handle:horizontal,
+CasSettingsOverlay QSlider::handle:horizontal {
     background: %accent%;
     width: 8px;
     margin: -8px 0px;
     border-radius: 1px;
 }
 
-ColorAdjustmentsOverlay QSlider::handle:horizontal:hover {
+ColorAdjustmentsOverlay QSlider::handle:horizontal:hover,
+CasSettingsOverlay QSlider::handle:horizontal:hover {
     background: %accent_hover_rgba%;
 }

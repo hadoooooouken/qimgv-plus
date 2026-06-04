@@ -396,6 +396,7 @@ void ViewerWidget::showContextMenu(QPoint pos) {
             connect(contextMenu.get(), &ContextMenu::showScriptSettings, this, &ViewerWidget::showScriptSettings);
         }
         contextMenu->setImageEntriesEnabled(isDisplaying());
+        contextMenu->setCasSettingsVisible(isDisplaying() && (scalingFilter() == QI_FILTER_CAS));
         if(!contextMenu->isVisible()) {
             QPoint localPos = mapFromGlobal(pos);
             contextMenu->showAt(localPos);
@@ -411,6 +412,7 @@ void ViewerWidget::onFullscreenModeChanged(bool mode) {
 }
 
 void ViewerWidget::readSettings() {
+    imageViewer->readSettings();
     if(settings->clickableEdges()) {
         imageViewer->viewport()->installEventFilter(this);
         clickZoneOverlay->show();
@@ -455,6 +457,11 @@ void ViewerWidget::togglePanorama() {
 void ViewerWidget::setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint) {
     if(imageViewer)
         imageViewer->setColorAdjustments(brightness, contrast, saturation, hue, exposure, temperature, tint);
+}
+
+void ViewerWidget::updateCasSettings() {
+    if(imageViewer)
+        imageViewer->updateCasSettings();
 }
 
 bool ViewerWidget::isBusyInteracting() const {

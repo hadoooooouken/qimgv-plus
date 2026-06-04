@@ -53,7 +53,7 @@ endif()
 if(OPENCV_SUPPORT)
     # Hint to find the local OpenCV build in formats/opencv-install
     list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/formats/opencv-install")
-    set(OpenCV_STATIC ON)
+    set(OpenCV_STATIC OFF)
     find_package(OpenCV REQUIRED core imgproc)
 endif()
 

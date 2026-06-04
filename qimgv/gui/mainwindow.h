@@ -24,6 +24,7 @@
 #include "gui/dialogs/settingsdialog.h"
 #include "gui/folderview/folderviewproxy.h"
 #include "gui/overlays/changelogwindow.h"
+#include "gui/overlays/cassettingsoverlay.h"
 #include "gui/overlays/coloradjustmentsoverlayproxy.h"
 #include "gui/overlays/controlsoverlay.h"
 #include "gui/overlays/copyoverlay.h"
@@ -113,6 +114,7 @@ private:
 
   RenameOverlay *renameOverlay;
   ColorAdjustmentsOverlayProxy *colorAdjustmentsOverlay = nullptr;
+  CasSettingsOverlay *casSettingsOverlay = nullptr;
 
   ImageInfoOverlayProxy *imageInfoOverlay;
 
@@ -252,6 +254,7 @@ public slots:
   void toggleImageInfoOverlay();
   void toggleRenameOverlay(QString currentName);
   void toggleColorAdjustments();
+  void toggleCasSettings();
   void setFilterNearest();
   void setFilterBilinear();
   void setFilter(ScalingFilter filter);

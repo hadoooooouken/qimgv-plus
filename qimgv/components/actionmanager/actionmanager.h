@@ -118,6 +118,7 @@ signals:
     void pasteFile();
     void togglePanorama();
     void colorAdjustments();
+    void casSettings();
 #ifdef USE_UPSCAYL
     void toggleUpscayl();
 #endif

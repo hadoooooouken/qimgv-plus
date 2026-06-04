@@ -442,6 +442,9 @@
           <widget class="ContextMenuItem" name="panoramaMode" native="true"/>
          </item>
          <item>
+          <widget class="ContextMenuItem" name="casSettings" native="true"/>
+         </item>
+         <item>
           <spacer name="verticalSpacer_trash">
            <property name="orientation">
             <enum>Qt::Vertical</enum>

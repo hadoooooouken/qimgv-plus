@@ -1037,13 +1037,29 @@ void Settings::setModernSaveQuality(int value) {
 ScalingFilter Settings::scalingFilter() {
   int mode = settings->settingsConf->value("scalingFilter", QI_FILTER_CV_SMART)
                  .toInt();
-  if (mode < 0 || mode > 7)
+  if (mode < 0 || mode > 8)
     mode = 1; // default to Bilinear if out of range
   return static_cast<ScalingFilter>(mode);
 }
 
 void Settings::setScalingFilter(ScalingFilter mode) {
   settings->settingsConf->setValue("scalingFilter", mode);
+}
+
+float Settings::casSharpening() {
+  return settings->settingsConf->value("casSharpening", 1.0f).toFloat();
+}
+
+void Settings::setCasSharpening(float value) {
+  settings->settingsConf->setValue("casSharpening", value);
+}
+
+float Settings::casContrast() {
+  return settings->settingsConf->value("casContrast", 0.0f).toFloat();
+}
+
+void Settings::setCasContrast(float value) {
+  settings->settingsConf->setValue("casContrast", value);
 }
 //------------------------------------------------------------------------------
 bool Settings::smoothAnimatedImages() {
@@ -1354,6 +1370,14 @@ bool Settings::unlockMinZoom() {
 
 void Settings::setUnlockMinZoom(bool mode) {
   settings->settingsConf->setValue("unlockMinZoom", mode);
+}
+//------------------------------------------------------------------------------
+bool Settings::applyFilterAt100() {
+  return settings->settingsConf->value("applyFilterAt100", false).toBool();
+}
+
+void Settings::setApplyFilterAt100(bool mode) {
+  settings->settingsConf->setValue("applyFilterAt100", mode);
 }
 //------------------------------------------------------------------------------
 bool Settings::sortFolders() {

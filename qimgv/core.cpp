@@ -500,6 +500,8 @@ void Core::initActions() {
           &MW::togglePanorama);
   connect(actionManager, &ActionManager::colorAdjustments, mw,
           &MW::toggleColorAdjustments);
+  connect(actionManager, &ActionManager::casSettings, mw,
+          &MW::toggleCasSettings);
 }
 
 void Core::loadTranslation() {

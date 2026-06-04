@@ -2627,6 +2627,19 @@
                     </property>
                    </widget>
                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="applyFilterAt100CheckBox">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Also use filter for 100% scale</string>
+                     </property>
+                    </widget>
+                   </item>
                  </layout>
                 </widget>
                </item>

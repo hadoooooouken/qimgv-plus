@@ -40,6 +40,7 @@ public:
     bool lockViewEnabled();
     ScalingFilter scalingFilter();
     void setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+    void updateCasSettings();
 
 private:
     QVBoxLayout layout;

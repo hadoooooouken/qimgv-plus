@@ -46,7 +46,8 @@ enum ScalingFilter {
   QI_FILTER_CV_CUBIC_SHARPEN,
   QI_FILTER_CV_LANCZOS,
   QI_FILTER_CV_AREA,
-  QI_FILTER_CV_SMART
+  QI_FILTER_CV_SMART,
+  QI_FILTER_CAS
 };
 
 enum ZoomIndicatorMode {
@@ -145,6 +146,10 @@ public:
   bool expandImage();
   ScalingFilter scalingFilter();
   void setScalingFilter(ScalingFilter mode);
+  float casSharpening();
+  void setCasSharpening(float value);
+  float casContrast();
+  void setCasContrast(float value);
   bool smoothAnimatedImages();
   void setSmoothAnimatedImages(bool mode);
   bool panelFullscreenOnly();
@@ -307,6 +312,8 @@ public:
   void setUseFixedZoomLevels(bool mode);
   bool unlockMinZoom();
   void setUnlockMinZoom(bool mode);
+  bool applyFilterAt100();
+  void setApplyFilterAt100(bool mode);
   bool sortFolders();
   void setSortFolders(bool mode);
   bool trackpadDetection();

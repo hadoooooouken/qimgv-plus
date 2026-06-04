@@ -95,6 +95,12 @@ private:
     QSlider *modernQualitySlider = nullptr;
     QLabel *modernQualityLabel = nullptr;
 
+    QWidget *casContainerWidget = nullptr;
+    QSlider *casSharpeningSlider = nullptr;
+    QLabel *casSharpeningLabel = nullptr;
+    QSlider *casContrastSlider = nullptr;
+    QLabel *casContrastLabel = nullptr;
+
     QCheckBox *colorManagementCheckBox = nullptr;
     QComboBox *monitorProfileComboBox = nullptr;
     QLineEdit *customProfilePathEdit = nullptr;

@@ -252,6 +252,52 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   ui->scalingQualityComboBox->addItem("Smart sharpen (OpenCV)",
                                       QI_FILTER_CV_SMART);
 #endif
+  ui->scalingQualityComboBox->addItem("FidelityFX-CAS (GPU)", QI_FILTER_CAS);
+
+  casContainerWidget = new QWidget(this);
+  QGridLayout *casLayout = new QGridLayout(casContainerWidget);
+  casLayout->setContentsMargins(12, 0, 0, 0);
+  casLayout->setSpacing(6);
+
+  QLabel *sharpLabel = new QLabel(tr("Sharpness:"), this);
+  casSharpeningSlider = new QSlider(Qt::Horizontal, this);
+  casSharpeningSlider->setRange(0, 100);
+  casSharpeningSlider->setFixedWidth(100);
+  casSharpeningLabel = new QLabel(this);
+  casSharpeningLabel->setFixedWidth(30);
+
+  QLabel *contrastLabel = new QLabel(tr("Contrast:"), this);
+  casContrastSlider = new QSlider(Qt::Horizontal, this);
+  casContrastSlider->setRange(0, 100);
+  casContrastSlider->setFixedWidth(100);
+  casContrastLabel = new QLabel(this);
+  casContrastLabel->setFixedWidth(30);
+
+  casLayout->addWidget(sharpLabel, 0, 0);
+  casLayout->addWidget(casSharpeningSlider, 0, 1);
+  casLayout->addWidget(casSharpeningLabel, 0, 2);
+  casLayout->addWidget(contrastLabel, 1, 0);
+  casLayout->addWidget(casContrastSlider, 1, 1);
+  casLayout->addWidget(casContrastLabel, 1, 2);
+
+  int comboIdx = ui->horizontalLayout_5->indexOf(ui->scalingQualityComboBox);
+  ui->horizontalLayout_5->insertWidget(comboIdx + 1, casContainerWidget);
+
+  auto updateCasVisibility = [this]() {
+    bool isCas = (ui->scalingQualityComboBox->currentData().toInt() == QI_FILTER_CAS);
+    casContainerWidget->setVisible(isCas);
+  };
+
+  connect(ui->scalingQualityComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, [updateCasVisibility](int) {
+    updateCasVisibility();
+  });
+
+  connect(casSharpeningSlider, &QSlider::valueChanged, this, [this](int val) {
+    casSharpeningLabel->setText(QString::number(val / 100.f, 'f', 2));
+  });
+  connect(casContrastSlider, &QSlider::valueChanged, this, [this](int val) {
+    casContrastLabel->setText(QString::number(val / 100.f, 'f', 2));
+  });
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
   ui->memoryLimitSpinBox->setEnabled(false);
@@ -522,6 +568,7 @@ void SettingsDialog::readSettings() {
   ui->expandImagesGroupContents->setEnabled(settings->expandImage());
   ui->smoothAnimatedImagesCheckBox->setChecked(
       settings->smoothAnimatedImages());
+  ui->applyFilterAt100CheckBox->setChecked(settings->applyFilterAt100());
   ui->bgOpacitySlider->setValue(
       static_cast<int>(settings->backgroundOpacity() * 100));
   ui->sortingComboBox->setCurrentIndex(settings->sortingMode());
@@ -665,12 +712,18 @@ void SettingsDialog::readSettings() {
     ui->fitMode1to1->setChecked(true);
 
   // ##### UI #####
+  casSharpeningSlider->setValue(static_cast<int>(settings->casSharpening() * 100.f));
+  casContrastSlider->setValue(static_cast<int>(settings->casContrast() * 100.f));
+
   int filterIndex =
       ui->scalingQualityComboBox->findData(settings->scalingFilter());
   if (filterIndex != -1)
     ui->scalingQualityComboBox->setCurrentIndex(filterIndex);
   else
     ui->scalingQualityComboBox->setCurrentIndex(1); // default to Bilinear
+
+  bool isCas = (settings->scalingFilter() == QI_FILTER_CAS);
+  casContainerWidget->setVisible(isCas);
   ui->fullscreenCheckBox->setChecked(settings->fullscreenMode());
   ui->pinPanelCheckBox->setChecked(settings->panelPinned());
   ui->panelPositionComboBox->setCurrentIndex(settings->panelPosition());
@@ -756,6 +809,7 @@ void SettingsDialog::saveSettings() {
   settings->setExpandImage(ui->expandImageCheckBox->isChecked());
   settings->setSmoothAnimatedImages(
       ui->smoothAnimatedImagesCheckBox->isChecked());
+  settings->setApplyFilterAt100(ui->applyFilterAt100CheckBox->isChecked());
 
   settings->setBackgroundOpacity(
       static_cast<qreal>(ui->bgOpacitySlider->value()) / 100.f);
@@ -804,6 +858,8 @@ void SettingsDialog::saveSettings() {
 
   settings->setScalingFilter(static_cast<ScalingFilter>(
       ui->scalingQualityComboBox->currentData().toInt()));
+  settings->setCasSharpening(casSharpeningSlider->value() / 100.f);
+  settings->setCasContrast(casContrastSlider->value() / 100.f);
   settings->setImageScrolling(
       static_cast<ImageScrolling>(ui->imageScrollingComboBox->currentIndex()));
   settings->setShowSaveOverlay(ui->saveOverlayCheckBox->isChecked());

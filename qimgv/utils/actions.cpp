@@ -80,6 +80,7 @@ void Actions::init() {
   mActions.insert("pasteFile", QVersionNumber(1, 0, 3));
   mActions.insert("togglePanorama", QVersionNumber(1, 0, 3));
   mActions.insert("colorAdjustments", QVersionNumber(1, 0, 3));
+  mActions.insert("casSettings", QVersionNumber(2, 0, 0));
 #ifdef USE_UPSCAYL
   mActions.insert("toggleUpscayl", QVersionNumber(2, 0, 0));
 #endif

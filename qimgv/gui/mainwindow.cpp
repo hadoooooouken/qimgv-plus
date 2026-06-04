@@ -11,6 +11,7 @@ MW::MW(QWidget *parent)
       saveOverlay(nullptr),
       renameOverlay(nullptr),
       colorAdjustmentsOverlay(nullptr),
+      casSettingsOverlay(nullptr),
       infoBarFullscreen(nullptr),
       imageInfoOverlay(nullptr),
       floatingMessage(nullptr),
@@ -144,6 +145,8 @@ void MW::toggleFolderView() {
         renameOverlay->hide();
     if(colorAdjustmentsOverlay)
         colorAdjustmentsOverlay->hide();
+    if(casSettingsOverlay)
+        casSettingsOverlay->hide();
     docWidget->hideFloatingPanel();
     imageInfoOverlay->hide();
     centralWidget->toggleViewMode();
@@ -158,6 +161,8 @@ void MW::enableFolderView() {
         renameOverlay->hide();
     if(colorAdjustmentsOverlay)
         colorAdjustmentsOverlay->hide();
+    if(casSettingsOverlay)
+        casSettingsOverlay->hide();
     docWidget->hideFloatingPanel();
     imageInfoOverlay->hide();
     centralWidget->showFolderView();
@@ -378,6 +383,25 @@ void MW::toggleColorAdjustments() {
         colorAdjustmentsOverlay->hide();
     }
 }
+
+void MW::toggleCasSettings() {
+    if(centralWidget->currentViewMode() == MODE_FOLDERVIEW)
+        return;
+    if(!casSettingsOverlay) {
+        casSettingsOverlay = new CasSettingsOverlay(viewerWidget.get());
+        connect(casSettingsOverlay, &CasSettingsOverlay::casSettingsChanged,
+                this, [this](float sharpening, float contrast) {
+            viewerWidget->updateCasSettings();
+        });
+    }
+    if(casSettingsOverlay->isHidden()) {
+        casSettingsOverlay->setCustomPosition(QCursor::pos());
+        casSettingsOverlay->show();
+    } else {
+        casSettingsOverlay->hide();
+    }
+}
+
 
 void MW::toggleScalingFilter() {
     ScalingFilter configuredFilter = settings->scalingFilter();
@@ -621,6 +645,10 @@ void MW::close() {
     if(colorAdjustmentsOverlay) {
         delete colorAdjustmentsOverlay;
         colorAdjustmentsOverlay = nullptr;
+    }
+    if(casSettingsOverlay) {
+        delete casSettingsOverlay;
+        casSettingsOverlay = nullptr;
     }
     QWidget::close();
 }

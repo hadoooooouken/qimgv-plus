@@ -185,6 +185,7 @@ void ImageViewerV2::readSettings() {
   onFullscreenModeChanged(mIsFullscreen);
   updateMinScale();
   setScalingFilter(settings->scalingFilter());
+  updateCasSettings();
   if (isDisplaying()) {
     if (imageFitMode == FIT_FREE) {
       if (currentScale() < minScale) {
@@ -545,7 +546,7 @@ void ImageViewerV2::setScalingFilter(ScalingFilter filter) {
   }
   pixmapItem.setTransformationMode(selectTransformationMode());
 
-  if (mScalingFilter == QI_FILTER_NEAREST)
+  if (mScalingFilter == QI_FILTER_NEAREST || mScalingFilter == QI_FILTER_CAS)
     swapToOriginalPixmap();
   requestScaling();
 }
@@ -612,9 +613,11 @@ void ImageViewerV2::hide() {
 }
 
 void ImageViewerV2::requestScaling() {
-  if (mSvgMode || !pixmap || std::abs(pixmapItem.scale() - 1.0) < 0.001 ||
+  bool isAt100 = std::abs(pixmapItem.scale() - 1.0) < 0.001;
+  if (mSvgMode || !pixmap || (isAt100 && !settings->applyFilterAt100()) ||
       (mScalingFilter <= 1 && !smoothUpscaling &&
        pixmapItem.scale() >= 0.999) ||
+      (mScalingFilter == QI_FILTER_CAS && !(settings->useUpscayl() && pixmapItem.scale() > 1.0)) ||
       movie || (zoomTimeLine && zoomTimeLine->state() == QTimeLine::Running) ||
       mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
       mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM) {
@@ -1325,6 +1328,20 @@ void ImageViewerV2::swapToOriginalPixmap() {
   }
 }
 
+void ImageViewerV2::updateCasSettings() {
+  if (mScalingFilter == QI_FILTER_CAS) {
+    float sharpening = settings->casSharpening();
+    float contrast = settings->casContrast();
+    pixmapItem.setCasSettings(sharpening, contrast);
+    pixmapItemScaled.setCasSettings(sharpening, contrast);
+    pixmapItemCrop.setCasSettings(sharpening, contrast);
+  } else {
+    pixmapItem.setCasSettings(0.0f, 0.0f);
+    pixmapItemScaled.setCasSettings(0.0f, 0.0f);
+    pixmapItemCrop.setCasSettings(0.0f, 0.0f);
+  }
+}
+
 void ImageViewerV2::setZoomAnchor(QPoint viewportPos) {
   zoomAnchor = QPair<QPointF, QPoint>(
       pixmapItem.mapFromScene(mapToScene(viewportPos)), viewportPos);
@@ -1689,6 +1706,7 @@ void ImageViewerV2::setColorAdjustments(float brightness, float contrast,
     panoramaItem->setColorAdjustments(brightness, contrast, saturation, hue,
                                       exposure, temperature, tint);
   }
+  updateCasSettings();
 }
 
 qreal ImageViewerV2::smootherstepEasing(qreal t) {

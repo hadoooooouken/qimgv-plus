@@ -17,6 +17,7 @@ public:
     explicit ContextMenu(QWidget *parent = nullptr);
     ~ContextMenu();
     void setImageEntriesEnabled(bool mode);
+    void setCasSettingsVisible(bool visible);
 
 public slots:
     void showAt(QPoint pos);

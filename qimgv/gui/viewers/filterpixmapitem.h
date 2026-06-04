@@ -11,6 +11,7 @@ public:
     ~FilterPixmapItem();
 
     void setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+    void setCasSettings(float sharpening, float contrast);
 
 protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -23,6 +24,8 @@ private:
     float mExposure = 0.0f;    // -3.0f to 3.0f
     float mTemperature = 0.0f; // -0.5f to 0.5f
     float mTint = 0.0f;        // -0.5f to 0.5f
+    float mCasSharpening = 0.0f;
+    float mCasContrast = 0.0f;
 
     bool mInitialized = false;
     QOpenGLShaderProgram *mProgram = nullptr;
