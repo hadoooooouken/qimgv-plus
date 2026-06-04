@@ -136,11 +136,17 @@ bool ImageStatic::save(QString destPath) {
     }
     backupExists = true;
   }
+  bool isOverwrite = (destPath.compare(mPath, Qt::CaseInsensitive) == 0);
+
   // save file
   if (isEdited()) {
     success = imageEdited->save(destPath, ext.toStdString().c_str(), quality);
-    image.swap(imageEdited);
-    discardEditedImage();
+    // only replace the base image when overwriting the original file;
+    // Save-As to a different path must keep the original image intact
+    if (isOverwrite) {
+      image.swap(imageEdited);
+      discardEditedImage();
+    }
   } else {
     success = image->save(destPath, ext.toStdString().c_str(), quality);
   }
@@ -156,7 +162,7 @@ bool ImageStatic::save(QString destPath) {
       QFile::remove(tmpPath);
     }
   }
-  if (destPath == mPath && success)
+  if (isOverwrite && success)
     mDocInfo->refresh();
   return success;
 }
