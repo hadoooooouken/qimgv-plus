@@ -675,6 +675,7 @@ QString MW::getSaveFileName(QString filePath) {
     if(writerFormats.contains("webp")) filters.append("WebP (*.webp)");
     if(writerFormats.contains("jxl"))  filters.append("JPEG-XL (*.jxl)");
     if(writerFormats.contains("avif")) filters.append("AVIF (*.avif *.avifs)");
+    if(writerFormats.contains("qoi"))  filters.append("QOI (*.qoi)");
     if(writerFormats.contains("bmp"))  filters.append("BMP (*.bmp)");
     if(writerFormats.contains("tif"))  filters.append("TIFF (*.tif *.tiff)");
     QString filterString = filters.join(";; ");
