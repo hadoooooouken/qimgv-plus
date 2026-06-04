@@ -565,7 +565,7 @@ void Core::onFirstRun() {
                       tr(" version ") + appVersion.toString() + "!",
                   4000);
 
-  settings->setScalingFilter(QI_FILTER_CV_SMART);
+  settings->setScalingFilter(QI_FILTER_CAS);
 
   settings->setFirstRun(false);
   settings->setLastVersion(appVersion);
