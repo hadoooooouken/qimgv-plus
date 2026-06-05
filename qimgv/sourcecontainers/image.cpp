@@ -39,6 +39,10 @@ QString Image::baseName() const {
     return mDocInfo->baseName();
 }
 
+QString Image::format() const {
+    return mDocInfo->format();
+}
+
 bool Image::isEdited() const {
     return mEdited;
 }

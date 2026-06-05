@@ -9,6 +9,7 @@ public:
     ~FloatingMessageProxy();
     void showMessage(QString text, FloatingMessageIcon icon, int duration);
     void showMessage(QString text, FloatingWidgetPosition position, FloatingMessageIcon icon, int duration);
+    void hide();
     void init();
 private:
     FloatingWidgetContainer *container;

@@ -8,9 +8,13 @@ FileSystemModelCustom::FileSystemModelCustom(QObject *parent) : QFileSystemModel
     folderIcon.load(iconPath);
     ImageLib::recolor(this->folderIcon, settings->colorScheme().icons);
 
-    connect(settings, &Settings::settingsChanged, [this]() {
+    connect(settings, &Settings::settingsChanged, this, [this]() {
         ImageLib::recolor(this->folderIcon, settings->colorScheme().icons);
     });
+}
+
+FileSystemModelCustom::~FileSystemModelCustom() {
+    setRootPath("");
 }
 
 QVariant FileSystemModelCustom::data( const QModelIndex& index, int role ) const {

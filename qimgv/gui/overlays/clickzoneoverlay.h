@@ -18,6 +18,7 @@ class ClickZoneOverlay : public FloatingWidget
     Q_OBJECT
 public:
     explicit ClickZoneOverlay(FloatingWidgetContainer *parent);
+    ~ClickZoneOverlay();
     QRect leftZone();
     QRect rightZone();
     void highlightLeft();
@@ -26,6 +27,9 @@ public:
     void setHighlightedZone(ActiveHighlightZone zone);
     bool isHighlighted();
     void setPressed(bool mode);
+
+private slots:
+    void onAnimationFinished();
 
 public slots:
     void readSettings();
@@ -41,6 +45,8 @@ private:
     bool leftHovered = false, rightHovered = false;
     bool drawZones = true;
     ActiveHighlightZone activeZone = HIGHLIGHT_NONE;
+    QGraphicsOpacityEffect *fadeEffect;
+    QPropertyAnimation *fadeAnimation;
     void drawPixmap(QPainter &p, QPixmap *pixmap, QRect rect);
 
 protected:

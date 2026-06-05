@@ -2,7 +2,9 @@
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
-#include <QGraphicsPixmapItem>
+#include "filterpixmapitem.h"
+#include <QGraphicsSvgItem>
+#include <QSvgRenderer>
 #include <QElapsedTimer>
 #include <QWheelEvent>
 #include <QTimeLine>
@@ -21,7 +23,8 @@ enum MouseInteractionState {
     MOUSE_DRAG,
     MOUSE_PAN,
     MOUSE_ZOOM,
-    MOUSE_WHEEL_ZOOM
+    MOUSE_WHEEL_ZOOM,
+    MOUSE_GESTURE
 };
 
 enum ViewLockMode {
@@ -40,10 +43,16 @@ public:
     virtual QRect scaledRectR() const;
     virtual float currentScale() const;
     virtual QSize sourceSize() const;
-    virtual void showImage(std::unique_ptr<QPixmap> _pixmap);
+    virtual void showImage(std::unique_ptr<QPixmap> _pixmap, QString filePath = "");
     virtual void showAnimation(std::shared_ptr<QMovie> _animation);
     virtual void setScaledPixmap(std::unique_ptr<QPixmap> newFrame);
+    void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
+    void hideUpscaledCrop();
     virtual bool isDisplaying() const;
+    bool panoramaMode() const { return mPanoramaMode; }
+    bool isBusyInteracting() const;
+    void setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+    void updateCasSettings();
 
     virtual bool imageFits() const;
     bool scaledImageFits() const;
@@ -52,6 +61,11 @@ public:
     bool hasAnimation() const;
 
     QSize scaledSizeR() const;
+
+    virtual QRect visibleImageRect() const;
+    virtual QRect visibleOriginalImageRect() const;
+    virtual QPixmap currentScaledPixmapCopy() const;
+    float getDpr() const;
 
     void pauseResume();
     void enableDrags();
@@ -67,6 +81,8 @@ signals:
     void animationPaused(bool);
     void frameChanged(int);
     void durationChanged(int);
+    void nextImageRequested();
+    void prevImageRequested();
 
 public slots:
     virtual void setFitMode(ImageFitMode mode);
@@ -94,6 +110,7 @@ public slots:
     virtual void setScalingFilter(ScalingFilter filter);
     void setLoopPlayback(bool mode);
     void toggleTransparencyGrid();
+    void togglePanorama();
 
     void nextFrame();
     void prevFrame();
@@ -110,11 +127,12 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent* event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
     virtual void resizeEvent(QResizeEvent* event);
+    void keyPressEvent(QKeyEvent *event);
     void wheelEvent(QWheelEvent *event);
     void showEvent(QShowEvent *event);
     void drawBackground(QPainter *painter, const QRectF &rect);
 
-    bool eventFilter(QObject *o, QEvent *ev);
+    bool event(QEvent *ev) override;
 protected slots:
     void onAnimationTimer();
 
@@ -124,6 +142,7 @@ private slots:
     void scrollToY(int y);
     void centerOnPixmap();
     void onScrollTimelineFinished();
+    void onZoomTimelineValueChanged(qreal value);
 
     void onDPRChanged();
 private:
@@ -131,7 +150,7 @@ private:
     std::shared_ptr<QPixmap> pixmap;
     std::unique_ptr<QPixmap> pixmapScaled;
     std::shared_ptr<QMovie> movie;
-    QGraphicsPixmapItem pixmapItem, pixmapItemScaled;
+    FilterPixmapItem pixmapItem, pixmapItemScaled, pixmapItemCrop;
     QTimer *animationTimer, *scaleTimer;
     QScrollBar *hs, *vs;
     QPoint mouseMoveStartPos, mousePressPos, drawPos;
@@ -151,11 +170,11 @@ private:
     // how many px you can move while holding RMB until it counts as a zoom attempt
     int zoomThreshold = 4;
     int dragThreshold = 10;
+    int gestureThreshold = 40;
 
     bool dragsEnabled = true;
-    bool wayland = false;
 
-    float zoomStep = 0.1, dpr;
+    float zoomStep = 0.1f, dpr;
     float minScale, maxScale, fitWindowScale, fitWindowStretchScale, expandLimit, lockedScale;
     QPointF savedViewportPos;
     ViewLockMode mViewLock;
@@ -185,6 +204,10 @@ private:
     void applyFitMode();
 
     QTimeLine *scrollTimeLineX, *scrollTimeLineY;
+    QTimeLine *zoomTimeLine;
+    float zoomStartScale;
+    float zoomTargetScale;
+    static qreal smootherstepEasing(qreal t);
     void stopPosAnimation();
     QPointF sceneRoundPos(QPointF scenePoint) const;
     QRectF sceneRoundRect(QRectF sceneRect) const;
@@ -206,4 +229,12 @@ private:
     void lockZoom();
     void doZoomIn(bool atCursor);
     void doZoomOut(bool atCursor);
+
+private:
+    class PanoramaGraphicsItem *panoramaItem = nullptr;
+    QGraphicsSvgItem *svgItem = nullptr;
+    bool mSvgMode = false;
+    bool mPanoramaMode = false;
+    float mPanoramaYaw = 0.0f, mPanoramaPitch = 0.0f, mPanoramaFov = 90.0f;
+    QString currentFilePath;
 };

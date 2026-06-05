@@ -31,6 +31,7 @@ ThumbnailWidget* ThumbnailStrip::createThumbnailWidget() {
     widget->setMargins(thumbMarginX, thumbMarginY);
     widget->setThumbStyle(mCurrentStyle);
     widget->setThumbnailSize(mThumbnailSize);
+    widget->setUseThumbPanelColors(true);
     return widget;
 }
 
@@ -93,7 +94,14 @@ void ThumbnailStrip::focusOn(int index) {
         return;
     auto th = thumbnails.at(index);
     if(settings->panelCenterSelection()) {
-        QGraphicsView::centerOn(th->sceneBoundingRect().center());
+        if(settings->enableSmoothScroll()) {
+            QPointF targetCenter = th->sceneBoundingRect().center();
+            QPointF currentCenter = mapToScene(viewport()->rect().center());
+            int delta = (orientation() == Qt::Horizontal) ? (currentCenter.x() - targetCenter.x()) : (currentCenter.y() - targetCenter.y());
+            scrollSmooth(delta);
+        } else {
+            QGraphicsView::centerOn(th->sceneBoundingRect().center());
+        }
     } else {
         // partially show the next thumb if possible
         if(orientation() == Qt::Vertical) {
@@ -114,10 +122,15 @@ void ThumbnailStrip::focusOn(int index) {
 void ThumbnailStrip::focusOnSelection() {
     if(selection().isEmpty())
         return;
-    focusOn(selection().last());
+    focusOn(selection().constLast());
 }
 
 void ThumbnailStrip::readSettings() {
+    int currentRes = settings->thumbnailResolution();
+    if (currentRes != lastThumbnailResolution) {
+        unloadAllThumbnails();
+        lastThumbnailResolution = currentRes;
+    }
     if(settings->thumbPanelStyle() == TH_PANEL_SIMPLE)
         mCurrentStyle = THUMB_SIMPLE;
     else
@@ -141,6 +154,7 @@ void ThumbnailStrip::readSettings() {
         thumbnails.at(i)->setMargins(thumbMarginX, thumbMarginY);
         thumbnails.at(i)->setThumbStyle(mCurrentStyle);
         thumbnails.at(i)->setThumbnailSize(mThumbnailSize);
+        thumbnails.at(i)->setUseThumbPanelColors(true);
     }
     updateThumbnailPositions(0, thumbnails.count() - 1);
     fitSceneToContents();

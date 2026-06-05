@@ -5,6 +5,12 @@ Loader::Loader() {
     pool->setMaxThreadCount(2);
 }
 
+Loader::~Loader() {
+    clearTasks();
+    qDeleteAll(tasks);
+    tasks.clear();
+}
+
 void Loader::clearTasks() {
     clearPool();
     pool->waitForDone();
@@ -54,11 +60,13 @@ void Loader::onLoadFinished(std::shared_ptr<Image> image, const QString &path) {
 }
 
 void Loader::clearPool() {
-    QHashIterator<QString, LoaderRunnable*> i(tasks);
-    while (i.hasNext()) {
-        i.next();
-        if(pool->tryTake(i.value())) {
-            delete tasks.take(i.key());
+    auto keys = tasks.keys();
+    for (const auto &key : keys) {
+        if (tasks.contains(key)) {
+            auto runnable = tasks.value(key);
+            if (pool->tryTake(runnable)) {
+                delete tasks.take(key);
+            }
         }
     }
 }

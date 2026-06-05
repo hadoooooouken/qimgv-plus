@@ -36,13 +36,17 @@ enum MimeDataTarget {
 
 class Core : public QObject {
     Q_OBJECT
+    friend class UpscaylTask;
 public:
     Core();
+    ~Core();
     void showGui();
 
 public slots:
     void updateInfoString();
     bool loadPath(QString);
+    void raiseWindow();
+
 
 private:
     QElapsedTimer t;
@@ -109,6 +113,7 @@ private slots:
     void onModelItemReady(std::shared_ptr<Image>, const QString&);
     void onModelItemUpdated(QString fileName);
     void onModelSortingChanged(SortingMode mode);
+    void onFolderSortingSelected(SortingMode mode);
     void onLoadFailed(const QString &path);
     void rotateLeft();
     void rotateRight();
@@ -127,12 +132,14 @@ private slots:
     void onFileAdded(QString filePath);
     void onFileModified(QString filePath);
     void showResizeDialog();
-    void resize(QSize size);
+    void showBatchConverter();
+    void resize(QSize size, ScalingFilter filter, bool useUpscayl = false, QString upscaylModel = "");
     void flipH();
     void flipV();
     void crop(QRect rect);
     void cropAndSave(QRect rect);
     void discardEdits();
+    void applyColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
     void toggleCropPanel();
     void toggleFullscreenInfoBar();
     void requestSavePath();
@@ -174,5 +181,26 @@ private slots:
     void prevDirectory(bool selectLast);
     void prevDirectory();
     void print();
+    void historyBack();
+    void historyForward();
     void modelDelayLoad();
+#ifdef USE_UPSCAYL
+private slots:
+    void onUpscaleFinished(QImage cropImg, QRect origCrop, QString path, QSize targetSize);
+    void onUpscaleAborted();
+    void onUpscaylTimerTimeout();
+private:
+    void triggerUpscaylProcessing(std::shared_ptr<Image> image, QSize targetSize, QString path);
+    QSize latestUpscaylSize;
+    std::shared_ptr<Image> pendingUpscaylImage;
+    QSize pendingUpscaylSize;
+    QString pendingUpscaylPath;
+    QTimer upscaylTimer;
+    bool upscaylActive = false;
+    bool upscaylPendingRun = false;
+    bool wasUpscaylEnabled = false;
+#endif
+private:
+    QStringList backHistory, forwardHistory;
+    bool blockHistory = false;
 };

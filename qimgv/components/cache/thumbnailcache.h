@@ -2,8 +2,10 @@
 
 #include <QObject>
 #include <QDir>
-#include <QMutex>
 #include <QDebug>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
 #include "settings.h"
 #include "sourcecontainers/thumbnail.h"
 
@@ -17,13 +19,13 @@ public:
     QImage* readThumbnail(QString id);
     QString thumbnailPath(QString id);
     bool exists(QString id);
+    void clear();
 
 signals:
 
 public slots:
 
 private:
-    // we are still bottlenecked by disk access anyway
-    QMutex mutex;
+    QSqlDatabase getDatabaseConnection();
     QString cacheDirPath;
 };

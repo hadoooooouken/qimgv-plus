@@ -5,6 +5,7 @@ FolderViewProxy::FolderViewProxy(QWidget *parent)
       folderView(nullptr)
 {
     stateBuf.sortingMode = settings->sortingMode();
+    stateBuf.folderSortingMode = settings->folderIconSortingMode();
     layout.setContentsMargins(0,0,0,0);
 }
 
@@ -23,6 +24,7 @@ void FolderViewProxy::init() {
     connect(folderView.get(), &FolderView::itemActivated, this, &FolderViewProxy::itemActivated);
     connect(folderView.get(), &FolderView::thumbnailsRequested, this, &FolderViewProxy::thumbnailsRequested);
     connect(folderView.get(), &FolderView::sortingSelected, this, &FolderViewProxy::sortingSelected);
+    connect(folderView.get(), &FolderView::folderSortingSelected, this, &FolderViewProxy::folderSortingSelected);
     connect(folderView.get(), &FolderView::showFoldersChanged, this, &FolderViewProxy::showFoldersChanged);
     connect(folderView.get(), &FolderView::directorySelected, this, &FolderViewProxy::directorySelected);
     connect(folderView.get(), &FolderView::draggedOut, this, &FolderViewProxy::draggedOut);
@@ -30,6 +32,9 @@ void FolderViewProxy::init() {
     connect(folderView.get(), &FolderView::moveUrlsRequested, this, &FolderViewProxy::moveUrlsRequested);
     connect(folderView.get(), &FolderView::droppedInto, this, &FolderViewProxy::droppedInto);
     connect(folderView.get(), &FolderView::draggedOver, this, &FolderViewProxy::draggedOver);
+    connect(folderView.get(), &FolderView::backRequested, this, &FolderViewProxy::backRequested);
+    connect(folderView.get(), &FolderView::forwardRequested, this, &FolderViewProxy::forwardRequested);
+    connect(folderView.get(), &FolderView::batchRequested, this, &FolderViewProxy::batchRequested);
 
     folderView->show();
 
@@ -38,12 +43,14 @@ void FolderViewProxy::init() {
         folderView->setDirectoryPath(stateBuf.directory);
     folderView->onFullscreenModeChanged(stateBuf.fullscreenMode);
     folderView->populate(stateBuf.itemCount);
+    folderView->setDirCount(stateBuf.dirCount);
     folderView->select(stateBuf.selection);
     // wait till layout stuff happens
     // before calling focusOn()
     qApp->processEvents();
     folderView->focusOnSelection();
     folderView->onSortingChanged(stateBuf.sortingMode);
+    folderView->onFolderSortingChanged(stateBuf.folderSortingMode);
 }
 
 void FolderViewProxy::populate(int count) {
@@ -141,6 +148,12 @@ void FolderViewProxy::setDragHover(int index) {
         folderView->setDragHover(index);
 }
 
+void FolderViewProxy::setDirCount(int count) {
+    stateBuf.dirCount = count;
+    if(folderView)
+        folderView->setDirCount(count);
+}
+
 void FolderViewProxy::addItem() {
     if(folderView) {
         folderView->addItem();
@@ -162,6 +175,14 @@ void FolderViewProxy::onSortingChanged(SortingMode mode) {
         folderView->onSortingChanged(mode);
     } else {
         stateBuf.sortingMode = mode;
+    }
+}
+
+void FolderViewProxy::onFolderSortingChanged(SortingMode mode) {
+    if(folderView) {
+        folderView->onFolderSortingChanged(mode);
+    } else {
+        stateBuf.folderSortingMode = mode;
     }
 }
 

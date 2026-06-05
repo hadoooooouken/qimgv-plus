@@ -10,13 +10,17 @@ MW::MW(QWidget *parent)
       copyOverlay(nullptr),
       saveOverlay(nullptr),
       renameOverlay(nullptr),
+      colorAdjustmentsOverlay(nullptr),
+      casSettingsOverlay(nullptr),
       infoBarFullscreen(nullptr),
       imageInfoOverlay(nullptr),
       floatingMessage(nullptr),
       cropPanel(nullptr),
-      cropOverlay(nullptr)
+      cropOverlay(nullptr),
+      panelPosition(PANEL_TOP)
 {
     setAttribute(Qt::WA_TranslucentBackground, true);
+    setAttribute(Qt::WA_NoSystemBackground, true);
     layout.setContentsMargins(0,0,0,0);
     layout.setSpacing(0);
 
@@ -51,7 +55,7 @@ MW::MW(QWidget *parent)
 
 /*                                                             |--[ImageViewer]
  *                        |--[DocumentWidget]--[ViewerWidget]--|
- * [MW]--[CentralWidget]--|                                    |--[VideoPlayer]
+ * [MW]--[CentralWidget]--|
  *                        |--[FolderView]
  *
  *  (not counting floating widgets)
@@ -63,10 +67,12 @@ void MW::setupUi() {
     docWidget.reset(new DocumentWidget(viewerWidget, infoBarWindowed));
     folderView.reset(new FolderViewProxy(this));
     connect(folderView.get(), &FolderViewProxy::sortingSelected, this, &MW::sortingSelected);
+    connect(folderView.get(), &FolderViewProxy::folderSortingSelected, this, &MW::folderSortingSelected);
     connect(folderView.get(), &FolderViewProxy::directorySelected, this, &MW::opened);
     connect(folderView.get(), &FolderViewProxy::copyUrlsRequested, this, &MW::copyUrlsRequested);
     connect(folderView.get(), &FolderViewProxy::moveUrlsRequested, this, &MW::moveUrlsRequested);
     connect(folderView.get(), &FolderViewProxy::showFoldersChanged, this, &MW::showFoldersChanged);
+    connect(folderView.get(), &FolderViewProxy::batchRequested, this, &MW::batchRequested);
 
     centralWidget.reset(new CentralWidget(docWidget, folderView, this));
     layout.addWidget(centralWidget.get());
@@ -77,8 +83,9 @@ void MW::setupUi() {
     imageInfoOverlay = new ImageInfoOverlayProxy(viewerWidget.get());
     floatingMessage = new FloatingMessageProxy(viewerWidget.get()); // todo: use additional one for folderview?
     connect(viewerWidget.get(), &ViewerWidget::scalingRequested, this, &MW::scalingRequested);
-    connect(viewerWidget.get(), &ViewerWidget::draggedOut, this, qOverload<>(&MW::draggedOut));
-    connect(viewerWidget.get(), &ViewerWidget::playbackFinished, this, &MW::playbackFinished);
+    connect(viewerWidget.get(), &ViewerWidget::draggedOut,       this, &MW::draggedOut);
+    connect(viewerWidget.get(), &ViewerWidget::nextImageRequested, this, &MW::nextImageRequested);
+    connect(viewerWidget.get(), &ViewerWidget::prevImageRequested, this, &MW::prevImageRequested);
     connect(viewerWidget.get(), &ViewerWidget::showScriptSettings, this, &MW::showScriptSettings);
     connect(this, &MW::zoomIn,        viewerWidget.get(), &ViewerWidget::zoomIn);
     connect(this, &MW::zoomOut,       viewerWidget.get(), &ViewerWidget::zoomOut);
@@ -88,17 +95,7 @@ void MW::setupUi() {
     connect(this, &MW::scrollDown,  viewerWidget.get(), &ViewerWidget::scrollDown);
     connect(this, &MW::scrollLeft,  viewerWidget.get(), &ViewerWidget::scrollLeft);
     connect(this, &MW::scrollRight, viewerWidget.get(), &ViewerWidget::scrollRight);
-    connect(this, &MW::pauseVideo,     viewerWidget.get(), &ViewerWidget::pauseResumePlayback);
-    connect(this, &MW::stopPlayback,   viewerWidget.get(), &ViewerWidget::stopPlayback);
-    connect(this, &MW::seekVideoForward, viewerWidget.get(), &ViewerWidget::seekForward);
-    connect(this, &MW::seekVideoBackward,  viewerWidget.get(), &ViewerWidget::seekBackward);
-    connect(this, &MW::frameStep,      viewerWidget.get(), &ViewerWidget::frameStep);
-    connect(this, &MW::frameStepBack,  viewerWidget.get(), &ViewerWidget::frameStepBack);
-    connect(this, &MW::toggleMute,  viewerWidget.get(), &ViewerWidget::toggleMute);
-    connect(this, &MW::volumeUp,  viewerWidget.get(), &ViewerWidget::volumeUp);
-    connect(this, &MW::volumeDown,  viewerWidget.get(), &ViewerWidget::volumeDown);
     connect(this, &MW::toggleTransparencyGrid, viewerWidget.get(), &ViewerWidget::toggleTransparencyGrid);
-    connect(this, &MW::setLoopPlayback,  viewerWidget.get(), &ViewerWidget::setLoopPlayback);
 }
 
 void MW::setupFullUi() {
@@ -146,6 +143,10 @@ void MW::toggleFolderView() {
         copyOverlay->hide();
     if(renameOverlay)
         renameOverlay->hide();
+    if(colorAdjustmentsOverlay)
+        colorAdjustmentsOverlay->hide();
+    if(casSettingsOverlay)
+        casSettingsOverlay->hide();
     docWidget->hideFloatingPanel();
     imageInfoOverlay->hide();
     centralWidget->toggleViewMode();
@@ -158,6 +159,10 @@ void MW::enableFolderView() {
         copyOverlay->hide();
     if(renameOverlay)
         renameOverlay->hide();
+    if(colorAdjustmentsOverlay)
+        colorAdjustmentsOverlay->hide();
+    if(casSettingsOverlay)
+        casSettingsOverlay->hide();
     docWidget->hideFloatingPanel();
     imageInfoOverlay->hide();
     centralWidget->showFolderView();
@@ -245,13 +250,12 @@ void MW::preShowResize(QSize sz) {
         setGeometry(newGeom);
     else // setGeometry wont work on hidden windows, so we just save for it to be restored later
         settings->setWindowGeometry(newGeom);
-    qApp->processEvents(); // not needed anymore with patched qt?
 }
 
-void MW::showImage(std::unique_ptr<QPixmap> pixmap) {
+void MW::showImage(std::unique_ptr<QPixmap> pixmap, QString filePath) {
     if(settings->autoResizeWindow())
         preShowResize(pixmap->size());
-    viewerWidget->showImage(std::move(pixmap));
+    viewerWidget->showImage(std::move(pixmap), filePath);
     updateCropPanelData();
 }
 
@@ -262,11 +266,6 @@ void MW::showAnimation(std::shared_ptr<QMovie> movie) {
     updateCropPanelData();
 }
 
-void MW::showVideo(QString file) {
-    if(settings->autoResizeWindow())
-        preShowResize(QSize()); // tmp. find a way to get this though mpv BEFORE playback
-    viewerWidget->showVideo(file);
-}
 
 void MW::showContextMenu() {
     viewerWidget->showContextMenu();
@@ -282,6 +281,20 @@ void MW::onSortingChanged(SortingMode mode) {
             case SortingMode::SORT_TIME_DESC: showMessage("Sorting: By Time (desc.)");      break;
             case SortingMode::SORT_SIZE:      showMessage("Sorting: By File Size");         break;
             case SortingMode::SORT_SIZE_DESC: showMessage("Sorting: By File Size (desc.)"); break;
+        }
+    }
+}
+
+void MW::onFolderSortingChanged(SortingMode mode) {
+    folderView.get()->onFolderSortingChanged(mode);
+    if(centralWidget.get()->currentViewMode() == ViewMode::MODE_FOLDERVIEW) {
+        switch(mode) {
+            case SortingMode::SORT_NAME:      showMessage(tr("Folder Thumbnails: By Name"));              break;
+            case SortingMode::SORT_NAME_DESC: showMessage(tr("Folder Thumbnails: By Name (desc.)"));      break;
+            case SortingMode::SORT_TIME:      showMessage(tr("Folder Thumbnails: Oldest"));               break;
+            case SortingMode::SORT_TIME_DESC: showMessage(tr("Folder Thumbnails: Newest"));               break;
+            case SortingMode::SORT_SIZE:      showMessage(tr("Folder Thumbnails: By File Size"));         break;
+            case SortingMode::SORT_SIZE_DESC: showMessage(tr("Folder Thumbnails: By File Size (desc.)")); break;
         }
     }
 }
@@ -313,13 +326,21 @@ void MW::toggleLockView() {
 }
 
 void MW::toggleFullscreenInfoBar() {
-    if(!this->isFullScreen())
-        return;
-    showInfoBarFullscreen = !showInfoBarFullscreen;
-    if(showInfoBarFullscreen)
-        infoBarFullscreen->showWhenReady();
-    else
-        infoBarFullscreen->hide();
+    if(this->isFullScreen()) {
+        showInfoBarFullscreen = !showInfoBarFullscreen;
+        settings->setInfoBarFullscreen(showInfoBarFullscreen);
+        if(showInfoBarFullscreen)
+            infoBarFullscreen->showWhenReady();
+        else
+            infoBarFullscreen->hide();
+    } else {
+        showInfoBarWindowed = !showInfoBarWindowed;
+        settings->setInfoBarWindowed(showInfoBarWindowed);
+        if(showInfoBarWindowed)
+            infoBarWindowed->show();
+        else
+            infoBarWindowed->hide();
+    }
 }
 
 void MW::toggleImageInfoOverlay() {
@@ -343,6 +364,45 @@ void MW::toggleRenameOverlay(QString currentName) {
     }
 }
 
+void MW::toggleColorAdjustments() {
+    if(centralWidget->currentViewMode() == MODE_FOLDERVIEW)
+        return;
+    if(!colorAdjustmentsOverlay) {
+        colorAdjustmentsOverlay = new ColorAdjustmentsOverlayProxy(viewerWidget.get());
+        connect(colorAdjustmentsOverlay, &ColorAdjustmentsOverlayProxy::adjustmentsChanged,
+                this, [this](float b, float c, float s, float h, float exp, float temp, float tint) {
+            viewerWidget->setColorAdjustments(b, c, s, h, exp, temp, tint);
+        });
+        connect(colorAdjustmentsOverlay, &ColorAdjustmentsOverlayProxy::applyRequested,
+                this, &MW::colorAdjustmentsApplyRequested);
+    }
+    if(colorAdjustmentsOverlay->isHidden()) {
+        colorAdjustmentsOverlay->setCustomPosition(QCursor::pos());
+        colorAdjustmentsOverlay->show();
+    } else {
+        colorAdjustmentsOverlay->hide();
+    }
+}
+
+void MW::toggleCasSettings() {
+    if(centralWidget->currentViewMode() == MODE_FOLDERVIEW)
+        return;
+    if(!casSettingsOverlay) {
+        casSettingsOverlay = new CasSettingsOverlay(viewerWidget.get());
+        connect(casSettingsOverlay, &CasSettingsOverlay::casSettingsChanged,
+                this, [this](float sharpening, float contrast) {
+            viewerWidget->updateCasSettings();
+        });
+    }
+    if(casSettingsOverlay->isHidden()) {
+        casSettingsOverlay->setCustomPosition(QCursor::pos());
+        casSettingsOverlay->show();
+    } else {
+        casSettingsOverlay->hide();
+    }
+}
+
+
 void MW::toggleScalingFilter() {
     ScalingFilter configuredFilter = settings->scalingFilter();
     if(viewerWidget->scalingFilter() == configuredFilter) {
@@ -354,12 +414,12 @@ void MW::toggleScalingFilter() {
 }
 
 void MW::setFilterNearest() {
-    showMessage("Filter: nearest", 600);
+    showMessage("Filter: Nearest", 600);
     viewerWidget->setFilterNearest();
 }
 
 void MW::setFilterBilinear() {
-    showMessage("Filter: bilinear", 600);
+    showMessage("Filter: Bilinear", 600);
     viewerWidget->setFilterBilinear();
 }
 
@@ -367,27 +427,48 @@ void MW::setFilter(ScalingFilter filter) {
     QString filterName;
     switch (filter) {
         case QI_FILTER_NEAREST:
-            filterName = "nearest";
+            filterName = "Nearest";
             break;
         case ScalingFilter::QI_FILTER_BILINEAR:
-            filterName = "bilinear";
+            filterName = "Bilinear";
             break;
         case QI_FILTER_CV_BILINEAR_SHARPEN:
-            filterName = "bilinear + sharpen";
+            filterName = "Bilinear+sharpen (OpenCV)";
             break;
         case QI_FILTER_CV_CUBIC:
-            filterName = "bicubic";
+            filterName = "Bicubic (OpenCV)";
             break;
         case QI_FILTER_CV_CUBIC_SHARPEN:
-            filterName = "bicubic + sharpen";
+            filterName = "Bicubic+sharpen (OpenCV)";
+            break;
+        case QI_FILTER_CV_LANCZOS:
+            filterName = "Lanczos (OpenCV)";
+            break;
+        case QI_FILTER_CV_AREA:
+            filterName = "Area (OpenCV)";
+            break;
+        case QI_FILTER_CV_SMART:
+            filterName = "Smart sharpen (OpenCV)";
             break;
         default:
-            filterName = "configured " + QString::number(static_cast<int>(filter));
+            filterName = "Configured " + QString::number(static_cast<int>(filter));
             break;
     }
-    showMessage("Filter " + filterName, 600);
+    showMessage("Filter: " + filterName, 600);
     viewerWidget->setScalingFilter(filter);
 }
+
+#ifdef USE_UPSCAYL
+void MW::toggleUpscayl() {
+    bool current = settings->useUpscayl();
+    settings->setUseUpscayl(!current);
+    settings->sendChangeNotification();
+    showMessage(settings->useUpscayl() ? "Use Upscayl: ON" : "Use Upscayl: OFF", 600);
+    if (!settings->useUpscayl()) {
+        hideUpscaledCrop();
+    }
+}
+#endif
 
 bool MW::isCropPanelActive() {
     return (activeSidePanel == SIDEPANEL_CROP);
@@ -396,6 +477,66 @@ bool MW::isCropPanelActive() {
 void MW::onScalingFinished(std::unique_ptr<QPixmap> scaled) {
     viewerWidget->onScalingFinished(std::move(scaled));
 }
+
+void MW::onUpscaleFinished(const QImage &cropImg, QRect origCrop) {
+    viewerWidget->setUpscaledCrop(cropImg, origCrop);
+}
+
+void MW::hideUpscaledCrop() {
+    if (viewerWidget) {
+        viewerWidget->hideUpscaledCrop();
+    }
+}
+
+QRect MW::visibleImageRect() const {
+    if (viewerWidget) {
+        return viewerWidget->visibleImageRect();
+    }
+    return QRect();
+}
+
+QRect MW::visibleOriginalImageRect() const {
+    if (viewerWidget) {
+        return viewerWidget->visibleOriginalImageRect();
+    }
+    return QRect();
+}
+
+QPixmap MW::currentScaledPixmapCopy() const {
+    if (viewerWidget) {
+        return viewerWidget->currentScaledPixmapCopy();
+    }
+    return QPixmap();
+}
+
+float MW::getDpr() const {
+    if (viewerWidget) {
+        return viewerWidget->getDpr();
+    }
+    return 1.0f;
+}
+
+float MW::currentScale() const {
+    if (viewerWidget) {
+        return viewerWidget->currentScale();
+    }
+    return 1.0f;
+}
+
+bool MW::panoramaMode() const {
+    if (viewerWidget) {
+        return viewerWidget->panoramaMode();
+    }
+    return false;
+}
+
+bool MW::isBusyInteracting() const {
+    if (viewerWidget) {
+        return viewerWidget->isBusyInteracting();
+    }
+    return false;
+}
+
 
 void MW::saveWindowGeometry() {
     if(this->windowState() == Qt::WindowNoState)
@@ -448,6 +589,11 @@ bool MW::event(QEvent *event) {
         maximized = isMaximized();
     if(event->type() == QEvent::Move || event->type() == QEvent::Resize)
         windowGeometryChangeTimer.start();
+    if(event->type() == QEvent::WindowDeactivate) {
+        docWidget->hideFloatingPanel(true);
+        if(viewerWidget)
+            viewerWidget->hideContextMenu();
+    }
     return QWidget::event(event);
 }
 
@@ -483,6 +629,7 @@ void MW::mouseDoubleClickEvent(QMouseEvent *event) {
     );
     actionManager->processEvent(fakePressEvent);
     actionManager->processEvent(event);
+    delete fakePressEvent;
 }
 
 void MW::close() {
@@ -495,6 +642,14 @@ void MW::close() {
 #endif
     if(copyOverlay)
         copyOverlay->saveSettings();
+    if(colorAdjustmentsOverlay) {
+        delete colorAdjustmentsOverlay;
+        colorAdjustmentsOverlay = nullptr;
+    }
+    if(casSettingsOverlay) {
+        delete casSettingsOverlay;
+        casSettingsOverlay = nullptr;
+    }
     QWidget::close();
 }
 
@@ -546,31 +701,17 @@ QString MW::getSaveFileName(QString filePath) {
     if(writerFormats.contains("jpg"))  filters.append("JPEG (*.jpg *.jpeg *jpe *jfif)");
     if(writerFormats.contains("png"))  filters.append("PNG (*.png)");
     if(writerFormats.contains("webp")) filters.append("WebP (*.webp)");
-    // may not work..
-    if(writerFormats.contains("jp2"))  filters.append("JPEG 2000 (*.jp2 *.j2k *.jpf *.jpx *.jpm *.jpgx)");
     if(writerFormats.contains("jxl"))  filters.append("JPEG-XL (*.jxl)");
     if(writerFormats.contains("avif")) filters.append("AVIF (*.avif *.avifs)");
-    if(writerFormats.contains("tif"))  filters.append("TIFF (*.tif *.tiff)");
+    if(writerFormats.contains("qoi"))  filters.append("QOI (*.qoi)");
     if(writerFormats.contains("bmp"))  filters.append("BMP (*.bmp)");
-#ifdef _WIN32
-    if(writerFormats.contains("ico"))  filters.append("Icon Files (*.ico)");
-#endif
-    if(writerFormats.contains("ppm"))  filters.append("PPM (*.ppm)");
-    if(writerFormats.contains("xbm"))  filters.append("XBM (*.xbm)");
-    if(writerFormats.contains("xpm"))  filters.append("XPM (*.xpm)");
-    if(writerFormats.contains("dds"))  filters.append("DDS (*.dds)");
-    if(writerFormats.contains("wbmp")) filters.append("WBMP (*.wbmp)");
-    // add everything else from imagewriter
-    for(auto fmt : writerFormats) {
-        if(filters.filter(fmt).isEmpty())
-            filters.append(fmt.toUpper() + " (*." + fmt + ")");
-    }
+    if(writerFormats.contains("tif"))  filters.append("TIFF (*.tif *.tiff)");
     QString filterString = filters.join(";; ");
 
     // find matching filter for the current image
     QString selectedFilter = "JPEG (*.jpg *.jpeg *jpe *jfif)";
     QFileInfo fi(filePath);
-    for(auto filter : filters) {
+    for(const auto &filter : std::as_const(filters)) {
         if(filter.contains(fi.suffix().toLower())) {
             selectedFilter = filter;
             break;
@@ -601,6 +742,11 @@ void MW::showResizeDialog(QSize initialSize) {
     dialog.exec();
 }
 
+void MW::showBatchConverter(const QList<QString> &paths) {
+    BatchConverterDialog dialog(paths, this);
+    dialog.exec();
+}
+
 DialogResult MW::fileReplaceDialog(QString src, QString dst, FileReplaceMode mode, bool multiple) {
     FileReplaceDialog dialog(this);
     dialog.setModal(true);
@@ -616,12 +762,16 @@ DialogResult MW::fileReplaceDialog(QString src, QString dst, FileReplaceMode mod
 
 void MW::showSettings() {
     docWidget->hideFloatingPanel();
+    if(viewerWidget)
+        viewerWidget->hideContextMenu();
     SettingsDialog settingsDialog(this);
     settingsDialog.exec();
 }
 
 void MW::showScriptSettings() {
     docWidget->hideFloatingPanel();
+    if(viewerWidget)
+        viewerWidget->hideContextMenu();
     SettingsDialog settingsDialog(this);
     settingsDialog.switchToPage(4);
     settingsDialog.exec();
@@ -781,13 +931,15 @@ void MW::closeFullScreenOrExit() {
 }
 
 // todo: this is crap, use shared state object
-void MW::setCurrentInfo(int _index, int _fileCount, QString _filePath, QString _fileName, QSize _imageSize, qint64 _fileSize, bool slideshow, bool shuffle, bool edited) {
+void MW::setCurrentInfo(int _index, int _fileCount, QString _filePath, QString _fileName, QSize _imageSize, qint64 _fileSize, QString _format, QString _colorProfile, bool slideshow, bool shuffle, bool edited) {
     info.index = _index;
     info.fileCount = _fileCount;
     info.fileName = _fileName;
     info.filePath = _filePath;
     info.imageSize = _imageSize;
     info.fileSize = _fileSize;
+    info.format = _format;
+    info.colorProfile = _colorProfile;
     info.slideshow = slideshow;
     info.shuffle = shuffle;
     info.edited = edited;
@@ -800,11 +952,25 @@ void MW::onInfoUpdated() {
     if(info.fileCount)
         posString = "[ " + QString::number(info.index + 1) + "/" + QString::number(info.fileCount) + " ]";
     QString resString;
-    if(info.imageSize.width())
+    if(info.imageSize.width()) {
         resString = QString::number(info.imageSize.width()) + " x " + QString::number(info.imageSize.height());
+        int w = info.imageSize.width();
+        int h = info.imageSize.height();
+        if(w > 0 && h > 0) {
+            int a = w, b = h;
+            while(b != 0) {
+                int t = b;
+                b = a % b;
+                a = t;
+            }
+            int gcd = a;
+            resString += " (" + QString::number(w / gcd) + ":" + QString::number(h / gcd) + ")";
+        }
+    }
     QString sizeString;
     if(info.fileSize)
         sizeString = this->locale().formattedDataSize(info.fileSize, 1);
+    QString formatString = info.format.toUpper();
 
     if(renameOverlay)
         renameOverlay->setName(info.fileName);
@@ -844,8 +1010,36 @@ void MW::onInfoUpdated() {
         if(info.edited)
             windowTitle.prepend("* ");
 
-        infoBarFullscreen->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), resString + "  " + sizeString);
-        infoBarWindowed->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), resString + "  " + sizeString + " " + states);
+        QString rightInfo = resString;
+        if(!info.colorProfile.isEmpty()) {
+            if(!rightInfo.isEmpty())
+                rightInfo += "  " + info.colorProfile;
+            else
+                rightInfo = info.colorProfile;
+        }
+        if(!formatString.isEmpty()) {
+            if(!rightInfo.isEmpty())
+                rightInfo += "  " + formatString;
+            else
+                rightInfo = formatString;
+        }
+        if(!sizeString.isEmpty()) {
+            if(!rightInfo.isEmpty())
+                rightInfo += "  " + sizeString;
+            else
+                rightInfo = sizeString;
+        }
+
+        QString rightInfoWindowed = rightInfo;
+        if(!states.isEmpty()) {
+            if(!rightInfoWindowed.isEmpty())
+                rightInfoWindowed += " " + states;
+            else
+                rightInfoWindowed = states;
+        }
+
+        infoBarFullscreen->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), rightInfo);
+        infoBarWindowed->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), rightInfoWindowed);
     }
     setWindowTitle(windowTitle);
 }
@@ -899,6 +1093,12 @@ void MW::showMessage(QString text, int duration) {
     floatingMessage->showMessage(text, FloatingMessageIcon::NO_ICON, duration);
 }
 
+void MW::hideMessage() {
+    if(floatingMessage) {
+        floatingMessage->hide();
+    }
+}
+
 void MW::showMessageSuccess(QString text) {
     floatingMessage->showMessage(text,  FloatingMessageIcon::ICON_SUCCESS, 1500);
 }
@@ -927,37 +1127,16 @@ bool MW::showConfirmation(QString title, QString msg) {
 }
 
 void MW::readSettings() {
+    panelPosition = settings->panelPosition();
     showInfoBarFullscreen = settings->infoBarFullscreen();
     showInfoBarWindowed = settings->infoBarWindowed();
     adaptToWindowState();
-}
-
-// todo: remove/rename?
-void MW::applyWindowedBackground() {
-#ifdef USE_KDE_BLUR
-    QWindow* window = this->windowHandle();
-    if(window) {
-        if(settings->backgroundOpacity() == 1.0)
-            KWindowEffects::enableBlurBehind(window, false);
-        else
-            KWindowEffects::enableBlurBehind(window, settings->blurBackground());
-    }
-#endif
-}
-
-void MW::applyFullscreenBackground() {
-#ifdef USE_KDE_BLUR
-    QWindow* window = this->windowHandle();
-    if(window)
-        KWindowEffects::enableBlurBehind(window, false);
-#endif
 }
 
 // changes ui elements according to fullscreen state
 void MW::adaptToWindowState() {
     docWidget->hideFloatingPanel();
     if(isFullScreen()) { //-------------------------------------- fullscreen ---
-        applyFullscreenBackground();
         infoBarWindowed->hide();
 
         if(showInfoBarFullscreen)
@@ -971,7 +1150,6 @@ void MW::adaptToWindowState() {
         else
             controlsOverlay->hide();
     } else { //------------------------------------------------------ window ---
-        applyWindowedBackground();
         infoBarFullscreen->hide();
 
         if(showInfoBarWindowed)
@@ -1001,3 +1179,5 @@ void MW::leaveEvent(QEvent *event) {
 //bool MW::focusNextPrevChild(bool) {
 //    return false;
 //}
+
+void MW::togglePanorama() { viewerWidget->togglePanorama(); }

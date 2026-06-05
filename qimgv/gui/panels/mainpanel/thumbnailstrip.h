@@ -24,6 +24,7 @@ public:
     void readSettings();
 
 private:
+    int lastThumbnailResolution = 256;
     const int thumbPadding = 9;
     int thumbMarginX = 2, thumbMarginY = 4;
     void updateThumbnailPositions(int start, int end);

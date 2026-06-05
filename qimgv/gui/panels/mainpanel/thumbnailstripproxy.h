@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "gui/panels/mainpanel/thumbnailstrip.h"
 #include <QMutexLocker>
@@ -43,6 +43,8 @@ signals:
     void draggedToBookmarks(QList<int>) override;
     void droppedInto(const QMimeData*, QObject*, int) override;
     void draggedOver(int) override;
+    void backRequested() override;
+    void forwardRequested() override;
 
 private:
     std::shared_ptr<ThumbnailStrip> thumbnailStrip = nullptr;

@@ -6,9 +6,10 @@ ContextMenu::ContextMenu(QWidget *parent) :
     ui(new Ui::ContextMenu)
 {
     ui->setupUi(this);
-    setWindowFlags(Qt::Popup);
+    setWindowFlags(Qt::SubWindow | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground, true);
     setAttribute(Qt::WA_NoMousePropagation, true);
+    qApp->installEventFilter(this);
     this->hide();
 
     // -------------------------------------------------------------------------
@@ -70,6 +71,19 @@ ContextMenu::ContextMenu(QWidget *parent) :
     ui->trash->setText(tr("Move to trash"));
     ui->trash->setIconPath(":/res/icons/common/menuitem/trash16.png");
     ui->trash->setShortcutText("");
+
+    ui->colorAdjustments->setAction("colorAdjustments");
+    ui->colorAdjustments->setText(tr("Color adjustments"));
+    ui->colorAdjustments->setIconPath(":/res/icons/common/settings/appearance32.png");
+
+    ui->panoramaMode->setAction("togglePanorama");
+    ui->panoramaMode->setText(tr("Panorama mode"));
+    ui->panoramaMode->setIconPath(":/res/icons/common/settings/view32.png");
+
+    ui->casSettings->setAction("casSettings");
+    ui->casSettings->setText(tr("CAS Settings"));
+    ui->casSettings->setIconPath(":/res/icons/common/settings/appearance32.png");
+    ui->casSettings->hide();
     // -------------------------------------------------------------------------
     ui->open->setAction("open");
     ui->open->setText(tr("Open"));
@@ -110,6 +124,7 @@ ContextMenu::ContextMenu(QWidget *parent) :
 }
 
 ContextMenu::~ContextMenu() {
+    qApp->removeEventFilter(this);
     delete ui;
 }
 
@@ -146,8 +161,15 @@ void ContextMenu::setImageEntriesEnabled(bool mode) {
     ui->copy->setEnabled(mode);
     ui->move->setEnabled(mode);
     ui->trash->setEnabled(mode);
+    ui->colorAdjustments->setEnabled(mode);
+    ui->panoramaMode->setEnabled(mode);
     ui->openWith->setEnabled(mode);
     ui->showLocation->setEnabled(mode);
+}
+
+void ContextMenu::setCasSettingsVisible(bool visible) {
+    ui->casSettings->setVisible(visible);
+    adjustSize();
 }
 
 void ContextMenu::showAt(QPoint pos) {
@@ -156,18 +178,24 @@ void ContextMenu::showAt(QPoint pos) {
     geom.moveTopLeft(pos);
     setGeometry(geom);
     show();
+    raise();
 }
 
 void ContextMenu::setGeometry(QRect geom) {
-    auto screen = QGuiApplication::screenAt(cursor().pos());
-    if(!screen) // fallback
-        screen = QGuiApplication::primaryScreen();
-    if(screen) {
-        // fit inside the current screen
-        if(geom.bottom() > screen->geometry().bottom())
-            geom.moveBottom(cursor().pos().y());
-        if(geom.right() > screen->geometry().right())
-            geom.moveRight(screen->geometry().right());
+    if (parentWidget()) {
+        QRect parentRect = parentWidget()->rect();
+        if (geom.bottom() > parentRect.bottom()) {
+            geom.moveBottom(parentRect.bottom());
+        }
+        if (geom.right() > parentRect.right()) {
+            geom.moveRight(parentRect.right());
+        }
+        if (geom.left() < 0) {
+            geom.moveLeft(0);
+        }
+        if (geom.top() < 0) {
+            geom.moveTop(0);
+        }
     }
     QWidget::setGeometry(geom);
 }
@@ -197,3 +225,15 @@ void ContextMenu::keyPressEvent(QKeyEvent *event) {
     else
         actionManager->processEvent(event);
 }
+
+bool ContextMenu::eventFilter(QObject *obj, QEvent *event) {
+    if (event->type() == QEvent::MouseButtonPress && isVisible()) {
+        QPoint clickPos = QCursor::pos();
+        if (!rect().contains(mapFromGlobal(clickPos))) {
+            hide();
+        }
+    }
+    return QWidget::eventFilter(obj, event);
+}
+// Trigger build rearranged menu items
+

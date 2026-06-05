@@ -1,7 +1,11 @@
 #include "windowsworker.h"
 
-WindowsWorker::WindowsWorker() : WatcherWorker() {
+WindowsWorker::WindowsWorker() : WatcherWorker(), hDir(INVALID_HANDLE_VALUE) {
 
+}
+
+WindowsWorker::~WindowsWorker() {
+    freeHandle();
 }
 
 void WindowsWorker::setDirectoryHandle(HANDLE hDir) {
@@ -11,8 +15,11 @@ void WindowsWorker::setDirectoryHandle(HANDLE hDir) {
 }
 
 void WindowsWorker::freeHandle() {
-    CancelIoEx(this->hDir, NULL);
-    CloseHandle(this->hDir);
+    if (this->hDir != INVALID_HANDLE_VALUE) {
+        CancelIoEx(this->hDir, NULL);
+        CloseHandle(this->hDir);
+        this->hDir = INVALID_HANDLE_VALUE;
+    }
 }
 
 void WindowsWorker::run() {
@@ -35,7 +42,7 @@ void WindowsWorker::run() {
         //qDebug() << "_1";
         bPending = ReadDirectoryChangesW(hDir,
                                          &buffer[0],
-                                         buffer.size(),
+                                         (DWORD)buffer.size(),
                                          FALSE,
                                          FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE,
                                          &dwBytes,

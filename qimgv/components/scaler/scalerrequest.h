@@ -2,6 +2,7 @@
 #define SCALERREQUEST_H
 
 #include <QPixmap>
+#include <QMetaType>
 #include "sourcecontainers/image.h"
 #include "settings.h" // move enums somewhere else?
 
@@ -9,6 +10,35 @@ class ScalerRequest {
 public:
     ScalerRequest() : image(nullptr), size(QSize(0,0)), filter(QI_FILTER_BILINEAR) { }
     ScalerRequest(std::shared_ptr<Image> _image, QSize _size, QString _path, ScalingFilter _filter) : image(_image), size(_size), path(_path), filter(_filter) {}
+
+    ScalerRequest(const ScalerRequest &other)
+        : image(other.image), size(other.size), path(other.path), filter(other.filter) {}
+
+    ScalerRequest(ScalerRequest &&other) noexcept
+        : image(std::move(other.image)), size(other.size), path(std::move(other.path)), filter(other.filter) {}
+
+    ScalerRequest &operator=(const ScalerRequest &other) {
+        if (this != &other) {
+            image = other.image;
+            size = other.size;
+            path = other.path;
+            filter = other.filter;
+        }
+        return *this;
+    }
+
+    ScalerRequest &operator=(ScalerRequest &&other) noexcept {
+        if (this != &other) {
+            image = std::move(other.image);
+            size = other.size;
+            path = std::move(other.path);
+            filter = other.filter;
+        }
+        return *this;
+    }
+
+    ~ScalerRequest() = default;
+
     std::shared_ptr<Image> image;
     QSize size;
     QString path;
@@ -20,5 +50,7 @@ public:
         return false;
     }
 };
+
+Q_DECLARE_METATYPE(ScalerRequest)
 
 #endif // SCALERREQUEST_H

@@ -7,7 +7,18 @@ ZoomIndicatorOverlay::ZoomIndicatorOverlay(FloatingWidgetContainer *parent) : Ov
 
     layout.setContentsMargins(0,0,0,0);
     layout.addWidget(&label);
-    fm = new QFontMetrics(QApplication::font());
+
+    QFont font = label.font();
+    if (font.pointSizeF() > 0) {
+        font.setPointSizeF(font.pointSizeF() * 2.0);
+    } else if (font.pixelSize() > 0) {
+        font.setPixelSize(font.pixelSize() * 2);
+    } else {
+        font.setPointSize(18);
+    }
+    label.setFont(font);
+
+    fm = new QFontMetrics(label.font());
     label.setAlignment(Qt::AlignCenter);
 
     this->setLayout(&layout);

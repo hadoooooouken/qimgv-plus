@@ -31,6 +31,7 @@ signals:
 protected:
     void dropEvent(QDropEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);
+    void dragMoveEvent(QDragMoveEvent *event);
 private:
     QVBoxLayout layout;
     QStringList paths;

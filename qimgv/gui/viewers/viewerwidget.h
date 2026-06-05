@@ -3,15 +3,12 @@
 #include "gui/customwidgets/floatingwidgetcontainer.h"
 #include <QVBoxLayout>
 #include "gui/viewers/imageviewerv2.h"
-#include "gui/viewers/videoplayerinitproxy.h"
-#include "gui/overlays/videocontrolsproxy.h"
 #include "gui/overlays/zoomindicatoroverlayproxy.h"
 #include "gui/overlays/clickzoneoverlay.h"
 #include "gui/contextmenu.h"
 
 enum CurrentWidget {
     IMAGEVIEWER,
-    VIDEOPLAYER,
     UNSET
 };
 
@@ -22,47 +19,50 @@ public:
     explicit ViewerWidget(QWidget *parent = nullptr);
     QRect imageRect();
     float currentScale();
+    QRect visibleImageRect() const;
+    QRect visibleOriginalImageRect() const;
+    QPixmap currentScaledPixmapCopy() const;
+    float getDpr() const;
     QSize sourceSize();
 
     void setInteractionEnabled(bool mode);
     bool interactionEnabled();
 
-    bool showImage(std::unique_ptr<QPixmap> pixmap);
+    bool showImage(std::unique_ptr<QPixmap> pixmap, QString filePath = "");
     bool showAnimation(std::shared_ptr<QMovie> movie);
     void onScalingFinished(std::unique_ptr<QPixmap> scaled);
+    void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
+    void hideUpscaledCrop();
+    bool panoramaMode() const { return imageViewer ? imageViewer->panoramaMode() : false; }
+    bool isBusyInteracting() const;
     bool isDisplaying();
     bool lockZoomEnabled();
     bool lockViewEnabled();
     ScalingFilter scalingFilter();
+    void setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+    void updateCasSettings();
 
 private:
     QVBoxLayout layout;
     std::unique_ptr<ImageViewerV2> imageViewer;
-    std::unique_ptr<VideoPlayerInitProxy> videoPlayer;
     std::unique_ptr<ContextMenu> contextMenu;
-    VideoControlsProxyWrapper *videoControls;
     ZoomIndicatorOverlayProxy *zoomIndicator;
     ClickZoneOverlay *clickZoneOverlay;
 
     void enableImageViewer();
-    void enableVideoPlayer();
 
     CurrentWidget currentWidget;
-    bool mInteractionEnabled, mWaylandCursorWorkaround;
+    bool mInteractionEnabled;
     QTimer cursorTimer;
     const int CURSOR_HIDE_TIMEOUT_MS = 1000;
     bool mIsFullscreen;
 
     void disableImageViewer();
-    void disableVideoPlayer();
-
-    QRect videoControlsArea();
 
     bool eventFilter(QObject *object, QEvent *event);
 
 private slots:
     void onScaleChanged(qreal);
-    void onVideoPlaybackFinished();
     void onAnimationPlaybackFinished();
 
 signals:
@@ -88,10 +88,10 @@ signals:
     void toggleLockZoom();
     void toggleLockView();
     void showScriptSettings();
+    void nextImageRequested();
+    void prevImageRequested();
 
 public slots:
-    bool showVideo(QString file);
-    void stopPlayback();
     void setFitMode(ImageFitMode mode);
     ImageFitMode fitMode();
     void closeImage();
@@ -99,25 +99,12 @@ public slots:
     void showCursor();
     void hideCursorTimed(bool restartTimer);
 
-    // video control
-    void pauseResumePlayback();
-    void seek(int pos);
-    void seekRelative(int pos);
-    void seekBackward();
-    void seekForward();
-    void frameStep();
-    void frameStepBack();
-    void toggleMute();
-    void volumeUp();
-    void volumeDown();
-
-    void startPlayback();
     void showContextMenu();
     void hideContextMenu();
     void showContextMenu(QPoint pos);
     void onFullscreenModeChanged(bool);
     void readSettings();
-    void setLoopPlayback(bool mode);
+    void togglePanorama();
 
 protected:
     void mouseMoveEvent(QMouseEvent *event);

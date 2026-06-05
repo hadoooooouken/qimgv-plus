@@ -18,7 +18,7 @@ public:
     QString oldFileName;
 
 public slots:
-    void dispatchNotify(PFILE_NOTIFY_INFORMATION notify);
+    void dispatchNotify(FILE_NOTIFY_INFORMATION* notify);
 
 private:
     Q_DECLARE_PUBLIC(WindowsWatcher)

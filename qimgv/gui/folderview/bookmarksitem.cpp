@@ -1,4 +1,8 @@
 #include "bookmarksitem.h"
+#include <QDrag>
+#include <QApplication>
+#include "bookmarkswidget.h"
+#include <QFileInfo>
 
 BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent)
     : QWidget(parent), dirName(_dirName), dirPath(_dirPath), mHighlighted(false)
@@ -53,7 +57,25 @@ void BookmarksItem::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void BookmarksItem::mousePressEvent(QMouseEvent *event) {
+    if(event->button() == Qt::LeftButton)
+        dragStartPosition = event->pos();
     event->accept();
+}
+
+void BookmarksItem::mouseMoveEvent(QMouseEvent *event) {
+    if (!(event->buttons() & Qt::LeftButton))
+        return;
+    if ((event->pos() - dragStartPosition).manhattanLength()
+         < QApplication::startDragDistance())
+        return;
+
+    QDrag *drag = new QDrag(this);
+    QMimeData *mimeData = new QMimeData;
+
+    mimeData->setData("application/x-qimgv-bookmark", dirPath.toUtf8());
+    drag->setMimeData(mimeData);
+
+    drag->exec(Qt::MoveAction);
 }
 
 void BookmarksItem::onRemoveClicked() {
@@ -69,16 +91,50 @@ void BookmarksItem::paintEvent(QPaintEvent *event) {
 }
 
 void BookmarksItem::dropEvent(QDropEvent *event) {
-    QList<QString> paths;
-    // TODO: QUrl gave me some issues previosly, test
-    for(auto url : event->mimeData()->urls())
-        paths << url.toLocalFile();
-    emit droppedIn(paths, dirPath);
+    QList<QString> files;
+    QList<QString> folders;
+    const auto urls = event->mimeData()->urls();
+    for(const auto &url : urls) {
+        QString localPath = url.toLocalFile();
+        if(!localPath.isEmpty()) {
+            QFileInfo fi(localPath);
+            bool isDir = fi.isDir();
+            if (!isDir && fi.isSymLink()) {
+                QFileInfo target(fi.symLinkTarget());
+                isDir = target.isDir();
+            }
+            if (isDir) {
+                folders << localPath;
+            } else if (fi.isFile()) {
+                files << localPath;
+            }
+        }
+    }
+
+    if(!folders.isEmpty()) {
+        auto parent = qobject_cast<BookmarksWidget*>(parentWidget());
+        if(parent) {
+            for(const auto &folder : folders) {
+                parent->addBookmark(folder);
+            }
+        }
+    }
+
+    if(!files.isEmpty()) {
+        emit droppedIn(files, dirPath);
+    }
+
+    setProperty("hover", false);
+    update();
+    event->acceptProposedAction();
 }
 
 void BookmarksItem::dragEnterEvent(QDragEnterEvent *event) {
     if(event->mimeData()->hasUrls()) {
         event->acceptProposedAction();
+    } else {
+        event->ignore();
+        return;
     }
     setProperty("hover", true);
     update();

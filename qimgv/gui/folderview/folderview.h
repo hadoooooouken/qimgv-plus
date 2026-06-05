@@ -13,7 +13,6 @@
 #include "gui/folderview/bookmarkswidget.h"
 #include "gui/customwidgets/actionbutton.h"
 #include "gui/customwidgets/styledcombobox.h"
-#include "gui/folderview/fvoptionspopup.h"
 
 namespace Ui {
     class FolderView;
@@ -41,9 +40,11 @@ public slots:
     virtual void removeItem(int index) override;
     virtual void reloadItem(int index) override;
     virtual void setDragHover(int) override;
+    virtual void setDirCount(int count) override;
     void addItem();
     void onFullscreenModeChanged(bool mode);
     void onSortingChanged(SortingMode mode);
+    void onFolderSortingChanged(SortingMode mode);
 
 
 protected:
@@ -51,6 +52,7 @@ protected:
     void focusInEvent(QFocusEvent *event) override;
     void paintEvent(QPaintEvent *) override;
     void resizeEvent(QResizeEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 protected slots:
     void onThumbnailSizeChanged(int newSize);
@@ -62,15 +64,20 @@ signals:
     void draggedOut() override;
     void draggedToBookmarks(QList<int>) override;
     void sortingSelected(SortingMode);
+    void folderSortingSelected(SortingMode);
     void directorySelected(QString path);
     void showFoldersChanged(bool mode);
     void copyUrlsRequested(QList<QString>, QString path);
     void moveUrlsRequested(QList<QString>, QString path);
     void droppedInto(const QMimeData*, QObject*, int) override;
     void draggedOver(int) override;
+    void backRequested() override;
+    void forwardRequested() override;
+    void batchRequested();
 
 private slots:
     void onSortingSelected(int);
+    void onFolderSortingSelected(int);
     void readSettings();
 
     void onTreeViewClicked(QModelIndex index);
@@ -83,18 +90,17 @@ private slots:
     void newBookmark();
     void fsTreeScrollToCurrent();
 
-    void onOptionsPopupButtonToggled(bool mode);
-    void onOptionsPopupDismissed();
-    void onViewModeSelected(FolderViewMode mode);
-
     void onSplitterMoved();
     void onHomeBtn();
     void onRootBtn();
     void onTreeViewTabOut();
+    void onSelectionChanged();
+    void onBatchClicked();
 
 private:
+    int lastThumbnailResolution = 256;
     Ui::FolderView *ui;
     FileSystemModelCustom *dirModel;
-    FVOptionsPopup *optionsPopup;
     QElapsedTimer popupTimerClutch;
+    int dirCount = 0;
 };

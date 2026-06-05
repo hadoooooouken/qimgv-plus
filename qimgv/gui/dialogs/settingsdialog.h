@@ -12,6 +12,11 @@
 #include <QApplication>
 #include <QDebug>
 #include <QMenu>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QGroupBox>
 #include "gui/customwidgets/colorselectorbutton.h"
 #include "gui/dialogs/shortcutcreatordialog.h"
 #include "gui/dialogs/scripteditordialog.h"
@@ -68,17 +73,39 @@ private slots:
     void editShortcut(int row);
     void removeShortcut();
     void resetShortcuts();
-    void selectMpvPath();
     void onBgOpacitySliderChanged(int value);
+    void onThumbOpacitySliderChanged(int value);
     void onThumbnailerThreadsSliderChanged(int value);
     void onExpandLimitSliderChanged(int value);
     void onZoomStepSliderChanged(int value);
     void onJPEGQualitySliderChanged(int value);
+    void onPNGQualitySliderChanged(int value);
+    void onModernQualitySliderChanged(int value);
     void resetToDesktopTheme();    
     void onAutoResizeLimitSliderChanged(int value);
     void onMouseScrollingSpeedSliderChanged(int value);
+    void onThumbnailResolutionSliderChanged(int value);
 
     void resetZoomLevels();
 signals:
     void settingsChanged();
+private:
+    QSlider *pngQualitySlider = nullptr;
+    QLabel *pngQualityLabel = nullptr;
+    QSlider *modernQualitySlider = nullptr;
+    QLabel *modernQualityLabel = nullptr;
+
+    QWidget *casContainerWidget = nullptr;
+    QSlider *casSharpeningSlider = nullptr;
+    QLabel *casSharpeningLabel = nullptr;
+    QSlider *casContrastSlider = nullptr;
+    QLabel *casContrastLabel = nullptr;
+
+    QCheckBox *colorManagementCheckBox = nullptr;
+    QComboBox *monitorProfileComboBox = nullptr;
+    QLineEdit *customProfilePathEdit = nullptr;
+    QPushButton *customProfileBrowseButton = nullptr;
+    QWidget *customProfileContainer = nullptr;
+    QGroupBox *colorManagementGroupBox = nullptr;
+    QCheckBox *useCustomAccentCheckBox = nullptr;
 };

@@ -7,7 +7,9 @@ struct FolderViewStateBuffer {
     QString directory;
     QList<int> selection;
     int itemCount = 0;
+    int dirCount = 0;
     SortingMode sortingMode;
+    SortingMode folderSortingMode = SortingMode::SORT_TIME_DESC;
     bool fullscreenMode;
 };
 
@@ -31,9 +33,11 @@ public slots:
     virtual void removeItem(int index) override;
     virtual void reloadItem(int index) override;
     virtual void setDragHover(int) override;
+    virtual void setDirCount(int count) override;
     void addItem();
     void onFullscreenModeChanged(bool mode);
     void onSortingChanged(SortingMode mode);
+    void onFolderSortingChanged(SortingMode mode);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -44,12 +48,16 @@ signals:
     void draggedOut() override;
     void draggedToBookmarks(QList<int>) override;
     void sortingSelected(SortingMode);
+    void folderSortingSelected(SortingMode);
     void showFoldersChanged(bool mode);
     void directorySelected(QString);
     void copyUrlsRequested(QList<QString>, QString path);
     void moveUrlsRequested(QList<QString>, QString path);
     void droppedInto(const QMimeData*, QObject*, int) override;
     void draggedOver(int) override;
+    void backRequested() override;
+    void forwardRequested() override;
+    void batchRequested();
 
 private:
     std::shared_ptr<FolderView> folderView;

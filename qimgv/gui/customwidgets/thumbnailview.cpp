@@ -133,7 +133,7 @@ void ThumbnailView::setDirectoryPath(QString path) {
 }
 
 void ThumbnailView::select(QList<int> indices) {
-    for(auto i : mSelection)
+    for(auto i : std::as_const(mSelection))
         thumbnails.at(i)->setHighlighted(false);
     QList<int>::iterator it = indices.begin();
     while(it != indices.end()) {
@@ -147,6 +147,7 @@ void ThumbnailView::select(QList<int> indices) {
     }
     mSelection = indices;
     updateScrollbarIndicator();
+    emit selectionChanged();
 }
 
 void ThumbnailView::select(int index) {
@@ -162,6 +163,7 @@ void ThumbnailView::deselect(int index) {
     if(mSelection.count() > 1) {
         mSelection.removeAll(index);
         thumbnails.at(index)->setHighlighted(false);
+        emit selectionChanged();
     }
 }
 
@@ -190,16 +192,17 @@ QList<int> ThumbnailView::selection() {
 }
 
 void ThumbnailView::clearSelection() {
-    for(auto i : mSelection)
+    for(auto i : std::as_const(mSelection))
         thumbnails.at(i)->setHighlighted(false);
     mSelection.clear();
+    emit selectionChanged();
 }
 
 int ThumbnailView::lastSelected() {
     if(!selection().count())
         return -1;
     else
-        return selection().last();
+        return selection().constLast();
 }
 
 int ThumbnailView::itemCount() {
@@ -420,6 +423,7 @@ void ThumbnailView::loadVisibleThumbnailsDelayed() {
 void ThumbnailView::resetViewport() {
     if(scrollTimeLine->state() == QTimeLine::Running)
         scrollTimeLine->stop();
+    blockThumbnailLoading = false;
     scrollBar->setValue(0);
 }
 
@@ -508,6 +512,23 @@ void ThumbnailView::wheelEvent(QWheelEvent *event) {
         else
             scrollPrecise(pixelDelta);
     }
+}
+
+void ThumbnailView::scrollToEdge(bool end) {
+    viewportCenter = mapToScene(viewport()->rect().center());
+    int start = (mOrientation == Qt::Horizontal) ? viewportCenter.x() : viewportCenter.y();
+    int target = end ? (mOrientation == Qt::Horizontal ? sceneRect().width() : sceneRect().height()) : 0;
+
+    if (start == target)
+        return;
+
+    int distance = std::abs(target - start);
+    int duration = qBound(300, (int)(250 + std::sqrt(distance) * 5), 1500);
+
+    scrollTimeLine->stop();
+    scrollTimeLine->setDuration(duration);
+    scrollTimeLine->setFrameRange(start, target);
+    scrollTimeLine->start();
 }
 
 void ThumbnailView::scrollPrecise(int delta) {
@@ -640,7 +661,13 @@ void ThumbnailView::scrollSmooth(int angleDelta) {
 
 void ThumbnailView::mousePressEvent(QMouseEvent *event) {
     mouseReleaseSelect = false;
-    dragStartPos = QPoint(0,0);
+    dragStartPos = event->pos();
+
+    if (event->button() == Qt::RightButton) {
+        mouseInteraction = THUMB_INTERACTION_NONE;
+        return;
+    }
+
     ThumbnailWidget *item = dynamic_cast<ThumbnailWidget*>(itemAt(event->pos()));
     if(item) {
         int index = thumbnails.indexOf(item);
@@ -662,17 +689,40 @@ void ThumbnailView::mousePressEvent(QMouseEvent *event) {
             } else {
                 mouseReleaseSelect = true;
             }
-            dragStartPos = event->pos();
-        } else if(event->button() == Qt::RightButton) { // todo: context menu maybe?
-            select(index);
-            return;
         }
+    }
+    if(event->button() == Qt::BackButton) {
+        emit backRequested();
+        return;
+    } else if(event->button() == Qt::ForwardButton) {
+        emit forwardRequested();
+        return;
     }
     QGraphicsView::mousePressEvent(event);
 }
 
 void ThumbnailView::mouseMoveEvent(QMouseEvent *event) {
     QGraphicsView::mouseMoveEvent(event);
+
+    if (event->buttons() & Qt::RightButton) {
+        if (mouseInteraction == THUMB_INTERACTION_NONE) {
+            int dx = event->pos().x() - dragStartPos.x();
+            int dy = event->pos().y() - dragStartPos.y();
+            if (mOrientation == Qt::Horizontal) {
+                if (std::abs(dx) > gestureThreshold) {
+                    mouseInteraction = THUMB_INTERACTION_GESTURE;
+                    scrollToEdge(dx < 0);
+                }
+            } else {
+                if (std::abs(dy) > gestureThreshold) {
+                    mouseInteraction = THUMB_INTERACTION_GESTURE;
+                    scrollToEdge(dy < 0);
+                }
+            }
+        }
+        return;
+    }
+
     if(event->buttons() != Qt::LeftButton || !selection().count())
         return;
     if(QLineF(dragStartPos, event->pos()).length() >= 40) {
@@ -684,6 +734,19 @@ void ThumbnailView::mouseMoveEvent(QMouseEvent *event) {
 
 void ThumbnailView::mouseReleaseEvent(QMouseEvent *event) {
     QGraphicsView::mouseReleaseEvent(event);
+    if (event->button() == Qt::RightButton) {
+        if (mouseInteraction == THUMB_INTERACTION_NONE) {
+            ThumbnailWidget *item = dynamic_cast<ThumbnailWidget*>(itemAt(event->pos()));
+            if (item) {
+                int clickedIndex = thumbnails.indexOf(item);
+                if (!selection().contains(clickedIndex)) {
+                    select(clickedIndex);
+                }
+            }
+        }
+        mouseInteraction = THUMB_INTERACTION_NONE;
+        return;
+    }
     if(mouseReleaseSelect && QLineF(dragStartPos, event->pos()).length() < 40) {
         ThumbnailWidget *item = dynamic_cast<ThumbnailWidget*>(itemAt(event->pos()));
         if(item) {

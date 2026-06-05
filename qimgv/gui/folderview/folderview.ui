@@ -166,6 +166,29 @@
        </spacer>
       </item>
       <item>
+       <widget class="QLabel" name="selectionCountLabel">
+        <property name="accessibleName">
+         <string notr="true">SelectionCountLabel</string>
+        </property>
+        <property name="text">
+         <string notr="true">15 images selected</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="batchButton">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="accessibleName">
+         <string notr="true">FolderViewBatchButton</string>
+        </property>
+        <property name="text">
+         <string>Batch convert  ⇄</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QSlider" name="zoomSlider">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -218,31 +241,7 @@
         </property>
        </spacer>
       </item>
-      <item>
-       <widget class="IconButton" name="optionsPopupButton" native="true">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>38</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>38</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="accessibleName">
-         <string>CheckableButton</string>
-        </property>
-       </widget>
-      </item>
+
       <item>
        <spacer name="horizontalSpacer_3">
         <property name="orientation">
@@ -254,6 +253,71 @@
         <property name="sizeHint" stdset="0">
          <size>
           <width>1</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="StyledComboBox" name="folderSortingComboBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="contextMenuPolicy">
+         <enum>Qt::NoContextMenu</enum>
+        </property>
+        <property name="accessibleName">
+         <string>PanelComboBox</string>
+        </property>
+        <property name="frame">
+         <bool>true</bool>
+        </property>
+        <item>
+         <property name="text">
+          <string>A - Z</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Z - A</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Size</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Size (desc)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Oldest</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Newest</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_folderSort">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>4</width>
           <height>20</height>
          </size>
         </property>

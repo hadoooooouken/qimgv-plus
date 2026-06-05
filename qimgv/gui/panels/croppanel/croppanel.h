@@ -51,10 +51,12 @@ private slots:
     void onSelectionChange();
     void onAspectRatioChange(); // via manual input
     void onAspectRatioSelected(); // via ComboBox
+    void onSwapARClicked();
     void setFocusCropBtn();
     void setFocusCropSaveBtn();
 
     void doCropDefaultAction();
+    void doReset();
 private:
     Ui::CropPanel *ui;
     QRect cropRect;

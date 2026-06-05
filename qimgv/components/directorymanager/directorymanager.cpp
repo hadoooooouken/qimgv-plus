@@ -104,7 +104,11 @@ void DirectoryManager::readSettings() {
 
 bool DirectoryManager::setDirectory(QString dirPath) {
     if(dirPath.isEmpty()) {
-        return false;
+        fileEntryVec.clear();
+        dirEntryVec.clear();
+        mDirectoryPath = "";
+        stopFileWatcher();
+        return true;
     }
     if(!std::filesystem::exists(toStdString(dirPath))) {
         qDebug() << "[DirectoryManager] Error - path does not exist.";
@@ -159,7 +163,11 @@ QString DirectoryManager::directoryPath() const {
 
 int DirectoryManager::indexOfFile(QString filePath) const {
     auto item = find_if(fileEntryVec.begin(), fileEntryVec.end(), [filePath](const FSEntry& e) {
+#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
+        return e.path.compare(filePath, Qt::CaseInsensitive) == 0;
+#else
         return e.path == filePath;
+#endif
     });
     if(item != fileEntryVec.end())
         return distance(fileEntryVec.begin(), item);
@@ -168,7 +176,11 @@ int DirectoryManager::indexOfFile(QString filePath) const {
 
 int DirectoryManager::indexOfDir(QString dirPath) const {
     auto item = find_if(dirEntryVec.begin(), dirEntryVec.end(), [dirPath](const FSEntry& e) {
+#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
+        return e.path.compare(dirPath, Qt::CaseInsensitive) == 0;
+#else
         return e.path == dirPath;
+#endif
     });
     if(item != dirEntryVec.end())
         return distance(dirEntryVec.begin(), item);
@@ -250,11 +262,11 @@ unsigned long DirectoryManager::totalCount() const {
 }
 
 unsigned long DirectoryManager::fileCount() const {
-    return fileEntryVec.size();
+    return (unsigned long)fileEntryVec.size();
 }
 
 unsigned long DirectoryManager::dirCount() const {
-    return dirEntryVec.size();
+    return (unsigned long)dirEntryVec.size();
 }
 
 const FSEntry &DirectoryManager::fileEntryAt(int index) const {
@@ -278,19 +290,15 @@ bool DirectoryManager::isSupportedFile(QString path) const {
 }
 
 bool DirectoryManager::isFile(QString path) const {
-    if(!std::filesystem::exists(toStdString(path)))
-        return false;
-    if(!std::filesystem::is_regular_file(toStdString(path)))
-        return false;
-    return true;
+    std::error_code ec;
+    auto stdPath = toStdString(path);
+    return fs::exists(stdPath, ec) && fs::is_regular_file(stdPath, ec);
 }
 
 bool DirectoryManager::isDir(QString path) const {
-    if(!std::filesystem::exists(toStdString(path)))
-        return false;
-    if(!std::filesystem::is_directory(toStdString(path)))
-        return false;
-    return true;
+    std::error_code ec;
+    auto stdPath = toStdString(path);
+    return fs::exists(stdPath, ec) && fs::is_directory(stdPath, ec);
 }
 
 bool DirectoryManager::isEmpty() const {
@@ -321,18 +329,25 @@ void DirectoryManager::loadEntryList(QString directoryPath, bool recursive) {
 // both directories & files
 void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, QString directoryPath) {
     QRegularExpressionMatch match;
-    for(const auto & entry : fs::directory_iterator(toStdString(directoryPath))) {
-        QString name = QString::fromStdString(entry.path().filename().generic_string());
+    std::error_code ec;
+    auto stdPath = toStdString(directoryPath);
+    if(!fs::exists(stdPath, ec) || !fs::is_directory(stdPath, ec)) {
+        return;
+    }
+
+    for(const auto & entry : fs::directory_iterator(stdPath, ec)) {
+        if(ec) break;
+        QString name = QString::fromStdWString(entry.path().filename().generic_wstring());
 #ifndef Q_OS_WIN32
         // ignore hidden files
         if(!settings->showHiddenFiles() && name.startsWith("."))
             continue;
 #else
-        DWORD attributes = GetFileAttributes(entry.path().generic_string().c_str());
+        DWORD attributes = GetFileAttributes(entry.path().c_str());
         if(!settings->showHiddenFiles() && attributes & FILE_ATTRIBUTE_HIDDEN)
             continue;
 #endif
-        QString path = QString::fromStdString(entry.path().generic_string());
+        QString path = QString::fromStdWString(entry.path().generic_wstring());
         match = regex.match(name);
         if(entry.is_directory()) { // this can still throw std::bad_alloc ..
             FSEntry newEntry;
@@ -366,9 +381,16 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
 
 void DirectoryManager::addEntriesFromDirectoryRecursive(std::vector<FSEntry> &entryVec, QString directoryPath) {
     QRegularExpressionMatch match;
-    for(const auto & entry : fs::recursive_directory_iterator(toStdString(directoryPath))) {
-        QString name = QString::fromStdString(entry.path().filename().generic_string());
-        QString path = QString::fromStdString(entry.path().generic_string());
+    std::error_code ec;
+    auto stdPath = toStdString(directoryPath);
+    if(!fs::exists(stdPath, ec) || !fs::is_directory(stdPath, ec)) {
+        return;
+    }
+
+    for(const auto & entry : fs::recursive_directory_iterator(stdPath, ec)) {
+        if(ec) break;
+        QString name = QString::fromStdWString(entry.path().filename().generic_wstring());
+        QString path = QString::fromStdWString(entry.path().generic_wstring());
         match = regex.match(name);
         if(!entry.is_directory() && match.hasMatch()) {
             FSEntry newEntry;
@@ -421,9 +443,11 @@ bool DirectoryManager::insertFileEntry(const QString &filePath) {
 bool DirectoryManager::forceInsertFileEntry(const QString &filePath) {
     if(!this->isFile(filePath) || containsFile(filePath))
         return false;
-    std::filesystem::directory_entry stdEntry(toStdString(filePath));
-    QString fileName = QString::fromStdString(stdEntry.path().filename().generic_string()); // isn't it beautiful
-    FSEntry FSEntry(filePath, fileName, stdEntry.file_size(), stdEntry.last_write_time(), stdEntry.is_directory());
+    std::error_code ec;
+    fs::path stdPath(toStdString(filePath));
+    QString fileName = QString::fromStdWString(stdPath.filename().wstring());
+    
+    FSEntry FSEntry(filePath, fileName, fs::file_size(stdPath, ec), fs::last_write_time(stdPath, ec), false);
     insert_sorted(fileEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
     if(!directoryPath().isEmpty()) {
         qDebug() << "fileIns" << filePath << directoryPath();
@@ -475,8 +499,9 @@ void DirectoryManager::renameFileEntry(const QString &oldFilePath, const QString
     int oldIndex = indexOfFile(oldFilePath);
     fileEntryVec.erase(fileEntryVec.begin() + oldIndex);
     // insert
-    std::filesystem::directory_entry stdEntry(toStdString(newFilePath));
-    FSEntry FSEntry(newFilePath, newFileName, stdEntry.file_size(), stdEntry.last_write_time(), stdEntry.is_directory());
+    std::error_code ec;
+    fs::path stdPath(toStdString(newFilePath));
+    FSEntry FSEntry(newFilePath, newFileName, fs::file_size(stdPath, ec), fs::last_write_time(stdPath, ec), false);
     insert_sorted(fileEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
     qDebug() << "fileRen" << oldFilePath << newFilePath;
     emit fileRenamed(oldFilePath, oldIndex, newFilePath, indexOfFile(newFilePath));
@@ -487,8 +512,7 @@ void DirectoryManager::renameFileEntry(const QString &oldFilePath, const QString
 bool DirectoryManager::insertDirEntry(const QString &dirPath) {
     if(containsDir(dirPath))
         return false;
-    std::filesystem::directory_entry stdEntry(toStdString(dirPath));
-    QString dirName = QString::fromStdString(stdEntry.path().filename().generic_string()); // isn't it beautiful
+    QString dirName = QFileInfo(dirPath).fileName();
     FSEntry FSEntry;
     FSEntry.name = dirName;
     FSEntry.path = dirPath;
@@ -517,7 +541,6 @@ void DirectoryManager::renameDirEntry(const QString &oldDirPath, const QString &
     int oldIndex = indexOfDir(oldDirPath);
     dirEntryVec.erase(dirEntryVec.begin() + oldIndex);
     // insert
-    std::filesystem::directory_entry stdEntry(toStdString(newDirPath));
     FSEntry FSEntry;
     FSEntry.name = newDirName;
     FSEntry.path = newDirPath;

@@ -121,7 +121,7 @@ void CopyOverlay::saveSettings() {
 
 void CopyOverlay::createDefaultPaths() {
     QString home = QDir::homePath();
-    if (paths.count() < 1 || paths.at(0).isEmpty() || paths.at(0)[0] == '@') {
+    if (paths.count() < 1 || paths.at(0).isEmpty() || paths.at(0).at(0) == '@') {
         paths.clear();
         paths << home;
     }
@@ -138,7 +138,7 @@ void CopyOverlay::createDefaultPaths() {
                 if(mfi.fileName() == "."  
                 || mfi.fileName() ==  ".."
                 // hide directory
-                || mfi.fileName()[0] ==  '.' 
+                || mfi.fileName().at(0) ==  '.' 
                 // windows system directory
                 || mfi.fileName() ==  "3D Objects"
                 || mfi.fileName() ==  "Contacts"

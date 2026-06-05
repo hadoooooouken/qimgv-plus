@@ -20,10 +20,10 @@ WindowsWatcherPrivate::WindowsWatcherPrivate(WindowsWatcher* qq)
     : DirectoryWatcherPrivate(qq, new WindowsWorker())
 {
     auto windowsWorker = static_cast<WindowsWorker*>(worker.data());
-    qRegisterMetaType<PFILE_NOTIFY_INFORMATION>("PFILE_NOTIFY_INFORMATION");
+    qRegisterMetaType<FILE_NOTIFY_INFORMATION*>("FILE_NOTIFY_INFORMATION*");
 
-    connect(windowsWorker, SIGNAL(notifyEvent(PFILE_NOTIFY_INFORMATION)),
-            this, SLOT(dispatchNotify(PFILE_NOTIFY_INFORMATION)));
+    connect(windowsWorker, &WindowsWorker::notifyEvent,
+            this, &WindowsWatcherPrivate::dispatchNotify);
 }
 
 HANDLE WindowsWatcherPrivate::requestDirectoryHandle(const QString& path)
@@ -57,7 +57,7 @@ HANDLE WindowsWatcherPrivate::requestDirectoryHandle(const QString& path)
     return hDirectory;
 }
 
-void WindowsWatcherPrivate::dispatchNotify(PFILE_NOTIFY_INFORMATION notify) {
+void WindowsWatcherPrivate::dispatchNotify(FILE_NOTIFY_INFORMATION* notify) {
     Q_Q(WindowsWatcher);
 
     int len = notify->FileNameLength / sizeof(WCHAR);

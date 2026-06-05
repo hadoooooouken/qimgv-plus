@@ -1,5 +1,10 @@
 #include "folderview.h"
 #include "ui_folderview.h"
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QMimeData>
+#include <QFileInfo>
 
 FolderView::FolderView(QWidget *parent) :
     FloatingWidgetContainer(parent),
@@ -12,8 +17,6 @@ FolderView::FolderView(QWidget *parent) :
     style = style.arg(QApplication::font().pointSize());
     ui->dirTreeView->setStyleSheet(style);
 
-    optionsPopup = new FVOptionsPopup();
-    popupTimerClutch.start();
 
     dirModel = new FileSystemModelCustom(this);
     dirModel->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
@@ -24,13 +27,7 @@ FolderView::FolderView(QWidget *parent) :
     header->hideSection(2); // type
     header->hideSection(3); // mod date
 
-#ifdef _WIN32
     dirModel->setRootPath("");
-#else
-    dirModel->setRootPath(QDir::homePath());
-    QModelIndex idx = dirModel->index(dirModel->rootPath());
-    ui->dirTreeView->setRootIndex(idx);
-#endif
     // -------------------------------
     ui->upButton->setAction("goUp");
     ui->upButton->setIconPath(":res/icons/common/buttons/panel/up16.png");
@@ -46,14 +43,18 @@ FolderView::FolderView(QWidget *parent) :
     ui->togglePlacesPanelButton->setIconPath(":res/icons/common/buttons/panel/toggle-panel20.png");
     ui->togglePlacesPanelButton->setIconOffset(1, 0);
 
-    ui->optionsPopupButton->setCheckable(true);
-    ui->optionsPopupButton->setIconPath(":res/icons/common/buttons/panel/folderview20.png");
 
     ui->sortingComboBox->setIconPath(":res/icons/common/other/sorting-mode16.png");
+    ui->folderSortingComboBox->setIconPath(":/res/icons/common/menuitem/document-view16.png");
 
     ui->newBookmarkButton->setIconPath(":res/icons/common/buttons/panel-small/add-new12.png");
     ui->homeButton->setIconPath(":res/icons/common/buttons/panel-small/home12.png");
     ui->rootButton->setIconPath(":res/icons/common/buttons/panel-small/root12.png");
+
+    ui->bookmarksLabel->setAcceptDrops(true);
+    ui->newBookmarkButton->setAcceptDrops(true);
+    ui->bookmarksLabel->installEventFilter(this);
+    ui->newBookmarkButton->installEventFilter(this);
 
     int min = ui->thumbnailGrid->THUMBNAIL_SIZE_MIN;
     int max = ui->thumbnailGrid->THUMBNAIL_SIZE_MAX;
@@ -72,6 +73,8 @@ FolderView::FolderView(QWidget *parent) :
     connect(ui->thumbnailGrid, &FolderGridView::draggedOut,      this, &FolderView::draggedOut);
     connect(ui->thumbnailGrid, &FolderGridView::draggedOver,     this, &FolderView::draggedOver);
     connect(ui->thumbnailGrid, &FolderGridView::droppedInto,     this, &FolderView::droppedInto);
+    connect(ui->thumbnailGrid, &FolderGridView::backRequested,    this, &FolderView::backRequested);
+    connect(ui->thumbnailGrid, &FolderGridView::forwardRequested, this, &FolderView::forwardRequested);
 
     connect(ui->bookmarksWidget, &BookmarksWidget::bookmarkClicked, this, &FolderView::onBookmarkClicked);
 
@@ -81,11 +84,9 @@ FolderView::FolderView(QWidget *parent) :
 
     connect(ui->zoomSlider, &QSlider::valueChanged, this, &FolderView::onZoomSliderValueChanged);
     connect(ui->sortingComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &FolderView::onSortingSelected);
+    connect(ui->folderSortingComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &FolderView::onFolderSortingSelected);
     connect(ui->togglePlacesPanelButton, &ActionButton::toggled, this, &FolderView::onPlacesPanelButtonChecked);
 
-    connect(ui->optionsPopupButton, &IconButton::toggled, this, &FolderView::onOptionsPopupButtonToggled);
-    connect(optionsPopup, &FVOptionsPopup::dismissed, this, &FolderView::onOptionsPopupDismissed);
-    connect(optionsPopup, &FVOptionsPopup::viewModeSelected, this, &FolderView::onViewModeSelected);
 
     connect(ui->dirTreeView, &TreeViewCustom::droppedIn, this, &FolderView::onDroppedInByIndex);
     connect(ui->dirTreeView, &TreeViewCustom::tabbedOut, this, &FolderView::onTreeViewTabOut);
@@ -93,6 +94,8 @@ FolderView::FolderView(QWidget *parent) :
 
     ui->sortingComboBox->setItemDelegate(new QStyledItemDelegate(ui->sortingComboBox));
     ui->sortingComboBox->view()->setTextElideMode(Qt::ElideNone);
+    ui->folderSortingComboBox->setItemDelegate(new QStyledItemDelegate(ui->folderSortingComboBox));
+    ui->folderSortingComboBox->view()->setTextElideMode(Qt::ElideNone);
 
     connect(ui->splitter, &QSplitter::splitterMoved, this, &FolderView::onSplitterMoved);
 
@@ -103,13 +106,28 @@ FolderView::FolderView(QWidget *parent) :
     setSizePolicy(sp_retain);
     connect(settings, &Settings::settingsChanged, this, &FolderView::readSettings);
 
+    ui->selectionCountLabel->hide();
+    ui->batchButton->hide();
+
+    connect(ui->thumbnailGrid, &FolderGridView::selectionChanged, this, &FolderView::onSelectionChanged);
+    connect(ui->batchButton, &QPushButton::clicked, this, &FolderView::onBatchClicked);
+
     hide();
 }
 
 void FolderView::readSettings() {
+    int currentRes = settings->thumbnailResolution();
+    if (currentRes != lastThumbnailResolution) {
+        ui->thumbnailGrid->unloadAllThumbnails();
+        lastThumbnailResolution = currentRes;
+    }
     ui->thumbnailGrid->setThumbnailSize(settings->folderViewIconSize());
-    ui->thumbnailGrid->setShowLabels((settings->folderViewMode() != FV_SIMPLE));
+    ui->thumbnailGrid->setShowLabels(true);
     ui->togglePlacesPanelButton->setChecked(settings->placesPanel());
+
+    ui->folderSortingComboBox->blockSignals(true);
+    ui->folderSortingComboBox->setCurrentIndex(static_cast<int>(settings->folderIconSortingMode()));
+    ui->folderSortingComboBox->blockSignals(false);
 
     setPlacesPanel(settings->placesPanel());
     ui->bookmarksWidget->setVisible(settings->placesPanelBookmarksExpanded());
@@ -160,31 +178,6 @@ void FolderView::onDroppedInByIndex(QList<QString> paths, QModelIndex index) {
     emit moveUrlsRequested(paths, dirModel->filePath(index));
 }
 
-void FolderView::onOptionsPopupButtonToggled(bool mode) {
-    if(mode) {
-        // Fixes popup being shown again right after dismissing it
-        // by clicking on this toggle button.
-        // This issue is only present on windows (different Qt::Popup behavior)
-        if(popupTimerClutch.elapsed() < 10) {
-            ui->optionsPopupButton->setChecked(false);
-            return;
-        }
-        QPoint pos = ui->optionsPopupButton->geometry().bottomRight() -
-                     QPoint(optionsPopup->width(), 0);
-        optionsPopup->showAt(mapToGlobal(pos));
-    }
-}
-
-void FolderView::onOptionsPopupDismissed() {
-    popupTimerClutch.start();
-    ui->optionsPopupButton->setChecked(false);
-}
-
-void FolderView::onViewModeSelected(FolderViewMode mode) {
-    settings->setFolderViewMode(mode);
-    ui->thumbnailGrid->setShowLabels((settings->folderViewMode() != FV_SIMPLE));
-    emit showFoldersChanged((mode == FV_EXT_FOLDERS));
-}
 
 void FolderView::onThumbnailSizeChanged(int newSize) {
     ui->zoomSlider->setValue(newSize / ui->thumbnailGrid->ZOOM_STEP);
@@ -206,7 +199,18 @@ void FolderView::onSortingChanged(SortingMode mode) {
     ui->sortingComboBox->blockSignals(false);
 }
 
+void FolderView::onFolderSortingSelected(int mode) {
+    emit folderSortingSelected(static_cast<SortingMode>(mode));
+}
+
+void FolderView::onFolderSortingChanged(SortingMode mode) {
+    ui->folderSortingComboBox->blockSignals(true);
+    ui->folderSortingComboBox->setCurrentIndex(static_cast<int>(mode));
+    ui->folderSortingComboBox->blockSignals(false);
+}
+
 FolderView::~FolderView() {
+    ui->dirTreeView->setModel(nullptr);
     delete ui;
 }
 
@@ -273,19 +277,6 @@ void FolderView::onRootBtn() {
 }
 
 void FolderView::setDirectoryPath(QString path) {
-#ifdef __linux
-    if(path.startsWith(QDir::homePath())) {
-        if(dirModel->rootPath() != QDir::homePath()) {
-            dirModel->setRootPath(QDir::homePath());
-            QModelIndex idx = dirModel->index(dirModel->rootPath());
-            ui->dirTreeView->setRootIndex(idx);
-        }
-    } else {
-        dirModel->setRootPath("/");
-        QModelIndex idx = dirModel->index(dirModel->rootPath());
-        ui->dirTreeView->setRootIndex(idx);
-    }
-#endif
     ui->pathLabel->setText(path);
 
     if(ui->dirTreeView->currentIndex().data() == path)
@@ -384,4 +375,71 @@ void FolderView::resizeEvent(QResizeEvent *event) {
         ui->pathbarSpacer->changeSize(12, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
         ui->topBar->layout()->invalidate();
     }
+}
+
+bool FolderView::eventFilter(QObject *watched, QEvent *event) {
+    if(watched == ui->bookmarksLabel || watched == ui->newBookmarkButton) {
+        if(event->type() == QEvent::DragEnter) {
+            auto *dragEnterEvent = static_cast<QDragEnterEvent*>(event);
+            if(dragEnterEvent->mimeData()->hasUrls()) {
+                dragEnterEvent->acceptProposedAction();
+                return true;
+            }
+        } else if(event->type() == QEvent::DragMove) {
+            auto *dragMoveEvent = static_cast<QDragMoveEvent*>(event);
+            if(dragMoveEvent->mimeData()->hasUrls()) {
+                dragMoveEvent->acceptProposedAction();
+                return true;
+            }
+        } else if(event->type() == QEvent::Drop) {
+            auto *dropEvent = static_cast<QDropEvent*>(event);
+            if(dropEvent->mimeData()->hasUrls()) {
+                const auto urls = dropEvent->mimeData()->urls();
+                bool accepted = false;
+                for(const auto &url : urls) {
+                    QString localPath = url.toLocalFile();
+                    if(!localPath.isEmpty() && QFileInfo(localPath).isDir()) {
+                        ui->bookmarksWidget->addBookmark(localPath);
+                        accepted = true;
+                    }
+                }
+                if(accepted) {
+                    dropEvent->acceptProposedAction();
+                    return true;
+                }
+            }
+        }
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
+void FolderView::onSelectionChanged() {
+    int imageCount = 0;
+    for(int index : selection()) {
+        if(index >= dirCount) {
+            imageCount++;
+        }
+    }
+
+    if(imageCount > 0) {
+        if(imageCount == 1) {
+            ui->selectionCountLabel->setText(tr("1 image selected"));
+        } else {
+            ui->selectionCountLabel->setText(tr("%1 images selected").arg(imageCount));
+        }
+        ui->selectionCountLabel->show();
+        ui->batchButton->show();
+    } else {
+        ui->selectionCountLabel->hide();
+        ui->batchButton->hide();
+    }
+}
+
+void FolderView::setDirCount(int count) {
+    dirCount = count;
+    onSelectionChanged();
+}
+
+void FolderView::onBatchClicked() {
+    emit batchRequested();
 }

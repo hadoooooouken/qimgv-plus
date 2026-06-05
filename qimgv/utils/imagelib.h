@@ -21,6 +21,7 @@ class ImageLib {
 
         static QImage *croppedRaw(const QImage *src, QRect newRect);
         static QImage *cropped(std::shared_ptr<const QImage> src, QRect newRect);
+        // Using global ScalingFilter from settings.h
 
         static QImage *flippedHRaw(const QImage *src);
         static QImage *flippedH(std::shared_ptr<const QImage> src);
@@ -36,8 +37,11 @@ class ImageLib {
 
 #ifdef USE_OPENCV
         static QImage *scaled_CV(std::shared_ptr<const QImage> source, QSize destSize, cv::InterpolationFlags filter, int sharpen);
+        static QImage *scaled_CV_Smart(std::shared_ptr<const QImage> source, QSize destSize);
 #endif
+
         static std::unique_ptr<const QImage> exifRotated(std::unique_ptr<const QImage> src, int orientation);
         static std::unique_ptr<QImage> exifRotated(std::unique_ptr<QImage> src, int orientation);
         static void recolor(QPixmap &pixmap, QColor color);
+        static QImage *applyColorAdjustments(std::shared_ptr<const QImage> source, float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
 };

@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Solution>
+	<Configurations>
+		<BuildType Name="Release"/>
+		<BuildType Name="Debug"/>
+		<BuildType Name="MinSizeRel"/>
+		<BuildType Name="RelWithDebInfo"/>
+		<Platform Name="x64"/>
+	</Configurations>
+	<Project Path="../out/build/qimgv-vs/ALL_BUILD.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="3cd61297-211e-3ee7-a9fe-48a205a24078" >
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ani.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_avif.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_dds.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_exr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ff.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_hdr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_heif.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_iff.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxl.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_kra.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ora.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pcx.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pfm.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pic.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_psd.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pxr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_qoi.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ras.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_raw.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_rgb.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_sct.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tga.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tim.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_xcf.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/qimgv-plus.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/INSTALL.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="3772d162-7e04-380a-b20a-be699f95050a">
+		<BuildDependency Project="../out/build/qimgv-vs/ALL_BUILD.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<Build Solution="Debug|*" Project="false"/>
+		<Build Solution="Release|*" Project="false"/>
+		<Build Solution="MinSizeRel|*" Project="false"/>
+		<Build Solution="RelWithDebInfo|*" Project="false"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/ZERO_CHECK.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="849a21f9-191b-3ee7-86ac-6ab1dfe8c2a4"/>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ani.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="db729a51-f21b-31a8-abe2-0c3b411fb70a">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ani_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ani_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ani_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="7fb3a40b-9635-3aff-9839-433612a26adb">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ani_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="7e6ec775-d36f-374e-92c2-59132fdd2ca9">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ani_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_avif.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="77f9dcac-9f65-3bc0-bdac-0810e3819555">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_avif_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_avif_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_avif_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f8c5879b-fba8-3c9a-aafb-9ddbf6daecd1">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_avif_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="0a7f211f-e1a2-3077-aafb-2fe554ee746b">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_avif_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_dds.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="b7824bf0-f616-3b90-a68f-f528ab16a383">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_dds_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_dds_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_dds_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="c2a878e2-d102-3011-b276-e02e60d6cddf">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_dds_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="9890f13d-6acb-373e-a528-53622d531d41">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_dds_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_exr.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="8a538672-0506-3970-abc1-1be17f0ad5c6">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_exr_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_exr_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_exr_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="86508021-4844-3134-89be-edeccc5b0197">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_exr_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="8cb08c6a-b2f3-3a74-a2dd-77c3829939be">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_exr_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ff.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="b4584a30-81bf-34bf-ad90-d76744918920">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ff_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ff_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ff_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="66ae784c-4aca-31e4-9ffb-179ff40be93f">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ff_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="17559e1a-9eb2-31b8-9085-8738d51abd92">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ff_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_hdr.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="5ebdf811-39d5-30a9-918f-8aa908083dc1">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_hdr_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_hdr_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_hdr_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="afa82af6-042c-3d3d-9f33-25f806b6a186">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_hdr_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="94cbd62c-0cc7-34ac-b73d-67c562403d67">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_hdr_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_heif.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="99F666AB-E429-3AB3-B0D8-E46E51076F9C">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_heif_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_heif_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_heif_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="94285E59-252E-324A-BD1D-2CFDC7A5C1A2">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_heif_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="775999ED-A061-36A0-8900-AEDE396181AD">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_heif_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_iff.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="3af9fdcf-3090-3910-aef7-664190fffa55">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_iff_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_iff_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_iff_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="368cc733-47f9-3d73-9dfc-ac2675415024">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_iff_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="4739b65b-eacd-3e17-8292-7b94cefcc209">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_iff_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxl.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="5d441ab5-4155-3d54-9a0d-6f2d12baab24">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxl_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxl_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxl_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="d8c0277f-e530-3eb2-870e-70e1e75d9bce">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxl_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f9299e58-2582-358f-8dd3-f467c81ea472">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxl_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxr.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="3a784dd1-3f99-3dd7-a181-de63f0c10e55">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxr_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxr_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxr_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="36c72bf0-9fab-35a7-a3b7-5aba3700c136">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxr_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="c8cf858a-d036-3ed5-803e-502c6398831c">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxr_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_kra.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="590eb608-a86b-3c8e-aac5-4bddc40fb380">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_kra_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_kra_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_kra_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="7855dfbf-cf58-3829-ae47-1262d6f8c2d3">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_kra_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="751604d9-f0f5-3399-9208-62b10ab2b4b7">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_kra_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ora.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="83284914-15a5-39ad-8e24-6a374aea8912">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ora_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ora_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ora_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="bb59ce00-2ec5-3dcf-9674-222ec8fa0297">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ora_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="a1b49d4c-4080-3ada-90c7-789c4f17a402">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ora_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pcx.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="7fe7ea60-1515-39d7-b4fa-08529bb9e2f7">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pcx_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pcx_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pcx_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="426a7c05-c9d9-37cc-bba2-a34be09186fa">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pcx_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f3fb8529-7554-324f-ac7d-63643ceda3ee">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pcx_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pfm.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="7ee7aa98-1b94-30b6-9d98-72db6d1d7580">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pfm_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pfm_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pfm_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="2141b06d-46d4-3a0d-a6af-68ca51ae4e07">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pfm_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="e139816c-6d33-3c23-924e-eef52ea63bb0">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pfm_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pic.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f4ad8cd9-d92d-33cc-8ef0-2a5f3d7630d0">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pic_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pic_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pic_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="bf36fa32-e15e-3266-ad95-8528b379cca1">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pic_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="bfacf42a-3067-3fba-8279-db1242a5a19a">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pic_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_psd.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="3676a864-4ab1-3d48-928c-f11373d27f58">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_psd_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_psd_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_psd_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="2ee53ff2-e8f0-3a40-970c-3019fff5dced">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_psd_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="5265632c-5b33-3f36-9f92-cacf55beeba8">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_psd_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pxr.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="aec4cf42-ecea-3173-9884-28635ca90e0a">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pxr_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pxr_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pxr_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="55e43e97-8677-3e28-81cc-89edf963b2c7">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pxr_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="0492c674-6e6b-3132-acb6-a7ab997e8b78">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pxr_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_qoi.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="feb54900-e572-37bf-8545-bbf0e39cc68e">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_qoi_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_qoi_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_qoi_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="9d1c32b8-7db1-3dce-85a0-90848544288c">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_qoi_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="61546628-c6fb-353f-ade1-ea9e42e835b2">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_qoi_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ras.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="d1840e2d-e2dd-3aeb-9d79-2c7d82909675">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ras_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ras_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ras_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="db6b3a41-25fc-369f-9219-9c2def609765">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ras_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="81a2479d-f512-36df-a1fb-091797f96aca">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ras_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_raw.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="5bb2f9d8-8e8c-3eda-96be-29327d7ff337">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_raw_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_raw_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_raw_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="797c7e27-fe19-32e8-ad5f-96db032c51d9">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_raw_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="d479adb6-7efb-3e15-8da9-14afa7b6e780">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_raw_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_rgb.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="9b6c428c-6511-31f1-b17c-9defa6349cec">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_rgb_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_rgb_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_rgb_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="8a5458ef-de2d-3ad8-b108-91795f8702a8">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_rgb_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f5dfe84f-3dcd-3b40-819f-994ea76acddc">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_rgb_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_sct.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="8f9bbf3b-b2ce-346c-a12e-8beb1beb63e1">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_sct_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_sct_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_sct_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="cabc58c3-7f4f-379b-878a-3db97a41edb0">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_sct_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="5ce39bc9-a88f-3ff7-a787-f64ab1c903fb">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_sct_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tga.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="70ce29e3-7f2f-38a9-84aa-49112773e52b">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tga_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tga_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tga_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="7c43a084-9c72-3fa8-b572-a7bb5ab5361c">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tga_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="a422a41e-e968-321d-81bb-b4570c285b91">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tga_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tim.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="b6d2752f-8ae9-385b-9d14-2b03c9fc863e">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tim_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tim_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tim_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="b16b29c5-4659-3674-86bc-a61a84f07934">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tim_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="edf30b8b-14ff-3e93-86e0-3de179f77786">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tim_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_xcf.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="cef1d69a-9319-3e67-8c57-9e41f0be0fe3">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_xcf_autogen.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_xcf_automoc_json_extraction.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_xcf_autogen.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="0133e0fb-0b35-3edb-9778-b48941f28546">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_xcf_automoc_json_extraction.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="715389e5-581d-31ae-a9bb-9575d0e73b0c">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_xcf_autogen.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/qimgv-plus.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="d87be6c2-b20e-33f7-bfc3-f62ccc4322e2" DefaultStartup="true">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ani.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_avif.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_dds.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_exr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ff.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_hdr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_heif.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_iff.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxl.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_kra.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ora.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pcx.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pfm.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pic.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_psd.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pxr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_qoi.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ras.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_raw.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_rgb.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_sct.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tga.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tim.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_xcf.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/qimgv-plus_lrelease.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/qimgv-plus_lrelease.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="e67cbb5f-4212-3169-9763-119b75fd70fc">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/qimgv-plus_lupdate.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="d3f0bc02-ae57-3ca3-8cef-ab3be5ccf14b">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<Build Solution="Debug|*" Project="false"/>
+		<Build Solution="Release|*" Project="false"/>
+		<Build Solution="MinSizeRel|*" Project="false"/>
+		<Build Solution="RelWithDebInfo|*" Project="false"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/qt_internal_plugins.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="28fd3c08-1a0a-38fb-985c-10cfbf046baa">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ani.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_avif.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_dds.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_exr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ff.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_hdr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_heif.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_iff.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxl.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_jxr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_kra.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ora.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pcx.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pfm.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pic.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_psd.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_pxr.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_qoi.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_ras.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_raw.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_rgb.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_sct.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tga.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_tim.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/3rdparty/kimageformats/kimg_xcf.vcxproj"/>
+		<Build Solution="Debug|*" Project="false"/>
+		<Build Solution="Release|*" Project="false"/>
+		<Build Solution="MinSizeRel|*" Project="false"/>
+		<Build Solution="RelWithDebInfo|*" Project="false"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/qimgv/release_translations.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="8db86e98-4f08-3cbc-9b08-845d05393416">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="../out/build/qimgv-vs/qimgv/qimgv-plus_lrelease.vcxproj"/>
+		<Build Solution="Debug|*" Project="false"/>
+		<Build Solution="Release|*" Project="false"/>
+		<Build Solution="MinSizeRel|*" Project="false"/>
+		<Build Solution="RelWithDebInfo|*" Project="false"/>
+	</Project>
+	<Project Path="../out/build/qimgv-vs/update_translations.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="959ec82b-685e-332e-852f-3aa2436dc17a">
+		<BuildDependency Project="../out/build/qimgv-vs/ZERO_CHECK.vcxproj"/>
+		<Build Solution="Debug|*" Project="false"/>
+		<Build Solution="Release|*" Project="false"/>
+		<Build Solution="MinSizeRel|*" Project="false"/>
+		<Build Solution="RelWithDebInfo|*" Project="false"/>
+	</Project>
+</Solution>
+
+
+

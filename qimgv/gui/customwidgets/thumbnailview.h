@@ -32,6 +32,11 @@ enum ScrollDirection {
     SCROLL_BACKWARDS
 };
 
+enum ThumbInteractionState {
+    THUMB_INTERACTION_NONE,
+    THUMB_INTERACTION_GESTURE
+};
+
 class ThumbnailView : public QGraphicsView, public IDirectoryView {
     Q_OBJECT
     Q_INTERFACES(IDirectoryView)
@@ -47,6 +52,7 @@ public:
     int lastSelected();
     void clearSelection();
     void deselect(int index);
+    void unloadAllThumbnails();
 
 public slots:
     void show();
@@ -73,6 +79,9 @@ signals:
     void draggedToBookmarks(QList<int>) override;
     void draggedOver(int) override;
     void droppedInto(const QMimeData*, QObject*, int) override;
+    void backRequested() override;
+    void forwardRequested() override;
+    void selectionChanged();
 
 private:
     QTimer loadTimer;
@@ -116,6 +125,8 @@ protected:
 
     const uint LOAD_DELAY = 150;
     ScrollDirection lastScrollDirection = SCROLL_FORWARDS;
+    ThumbInteractionState mouseInteraction = THUMB_INTERACTION_NONE;
+    const int gestureThreshold = 40;
 
     bool atSceneStart();
     bool atSceneEnd();
@@ -144,12 +155,12 @@ protected:
     bool eventFilter(QObject *o, QEvent *ev) override;
     void resizeEvent(QResizeEvent *event) override;
     void scrollToItem(int index);
+    void scrollToEdge(bool end);
     void scrollPrecise(int delta);
     void scrollByItem(int delta);
     void scrollSmooth(int delta);
     void scrollSmooth(int angleDelta, qreal multiplier, qreal acceleration);
     void scrollSmooth(int angleDelta, qreal multiplier, qreal acceleration, bool additive);
-    void unloadAllThumbnails();
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
 

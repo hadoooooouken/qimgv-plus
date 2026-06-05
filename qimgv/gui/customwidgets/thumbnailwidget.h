@@ -33,7 +33,8 @@ public:
 
     void setHighlighted(bool mode);
     bool isHighlighted();
-
+    void setUseThumbPanelColors(bool mode) { mUseThumbPanelColors = mode; }
+    bool isUseThumbPanelColors() const { return mUseThumbPanelColors; }
     void setDropHovered(bool mode);
     bool isDropHovered();
 
@@ -81,6 +82,7 @@ protected:
     QRectF bgRect, mBoundingRect;
     QFont font, fontInfo;
     QRect drawRectCentered, nameRect, infoRect;
+    bool mUseThumbPanelColors = false;
     qreal dpr = 1.0;
     void updateBoundingRect();
     ThumbnailStyle thumbStyle;

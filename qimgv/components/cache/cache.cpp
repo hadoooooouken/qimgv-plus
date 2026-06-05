@@ -29,8 +29,8 @@ void Cache::remove(QString path) {
 }
 
 void Cache::clear() {
-    for(auto path : items.keys()) {
-        items[path]->lock();
+    const auto keys = items.keys();
+    for(const auto &path : keys) {
         auto item = items.take(path);
         delete item;
     }
@@ -62,7 +62,8 @@ bool Cache::release(QString path) {
 
 // removes all items except the ones in list
 void Cache::trimTo(QStringList pathList) {
-    for(auto path : items.keys()) {
+    const auto keys = items.keys();
+    for(const auto &path : keys) {
         if(!pathList.contains(path)) {
             items[path]->lock();
             auto *item = items.take(path);

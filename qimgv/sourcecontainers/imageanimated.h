@@ -33,5 +33,4 @@ private:
     QSize mSize;
     int mFrameCount;
     std::shared_ptr<QMovie> movie;
-    void loadMovie();
 };

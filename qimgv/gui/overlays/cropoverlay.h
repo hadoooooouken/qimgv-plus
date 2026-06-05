@@ -82,4 +82,5 @@ public slots:
     void selectAll();
     void setAspectRatio(QPointF);
     void setLockAspectRatio(bool mode);
+    void fitSelectionToAspectRatio();
 };

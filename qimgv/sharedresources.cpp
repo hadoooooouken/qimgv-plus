@@ -9,7 +9,11 @@ SharedResources::SharedResources()
 }
 
 SharedResources::~SharedResources() {
-    delete shrRes;
+    delete mLoadingIcon72;
+    delete mLoadingErrorIcon72;
+    if (shrRes == this) {
+        shrRes = nullptr;
+    }
 }
 
 QPixmap *SharedResources::getPixmap(ShrIcon icon, qreal dpr) {

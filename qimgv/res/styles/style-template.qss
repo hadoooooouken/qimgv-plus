@@ -225,7 +225,7 @@ QComboBox QAbstractItemView {
 /* panel buttons holder widget */
 
 [accessibleName="panelButtonsWidget"] {
-    background-color: %folderview%;
+    background-color: %thumbpanel_rgba%;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -310,6 +310,11 @@ FullscreenInfoOverlay QLabel {
     color: %overlay_text%;
 }
 
+ColorAdjustmentsOverlay QLabel,
+CasSettingsOverlay QLabel {
+    color: %text_hc%;
+}
+
 /*----------------------------------------------------------------------------*/
 /* Notifications */
 /*----------------------------------------------------------------------------*/
@@ -374,6 +379,26 @@ SidePanel QDoubleSpinBox::down-button
     max-width: 0px;
     max-height: 0px;
     width:0px;
+}
+/*----------------------------------------------------------------------------*/
+SidePanel QPushButton[accessibleName="SwapButton"] {
+    color: %text_hc%;
+    background-color: transparent;
+    border: 2px solid transparent;
+    border-radius: 3px;
+    padding: 0 4px 0 4px;
+    min-width: 22px;
+    min-height: 20px;
+}
+
+SidePanel QPushButton[accessibleName="SwapButton"]:hover {
+    background-color: %button_hover%;
+    border-color: %button_hover%;
+}
+
+SidePanel QPushButton[accessibleName="SwapButton"]:pressed {
+    background-color: %button_pressed%;
+    border-color: %button_pressed%;
 }
 /*----------------------------------------------------------------------------*/
 SidePanel QLabel {
@@ -490,7 +515,7 @@ ThumbnailView {
 }
 /*----------------------------------------------------------------------------*/
 ThumbnailStrip {
-    background-color: %folderview%;
+    background-color: %thumbpanel_rgba%;
 }
 /*----------------------------------------------------------------------------*/
 PanelButtonsHolder {
@@ -524,6 +549,33 @@ FolderView {
 [accessibleName="PathBar"] QLabel {
     color: %text%;
     padding-right: 9px;
+}
+
+QLabel[accessibleName="SelectionCountLabel"] {
+    color: %text_hc%;
+    margin-right: 8px;
+}
+
+QPushButton[accessibleName="FolderViewBatchButton"] {
+    color: %text_hc%;
+    background-color: %panel_button%;
+    border: 2px solid %panel_button%;
+    border-radius: 3px;
+    padding: 4px 8px 4px 8px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    margin-left: 2px;
+    margin-right: 8px;
+}
+
+QPushButton[accessibleName="FolderViewBatchButton"]:hover {
+    background-color: %panel_button_hover%;
+    border-color: %panel_button_hover%;
+}
+
+QPushButton[accessibleName="FolderViewBatchButton"]:pressed {
+    background-color: %panel_button_pressed%;
+    border-color: %panel_button_pressed%;
 }
 
 [accessibleName="PathBarButton"] {
@@ -582,22 +634,11 @@ FolderView {
     border-color: %text%;
 }
 
-/* dropdown menus */
-FVOptionsPopup {
-    padding: 5px 0px;
-    background-color: %widget%;
-    border: 1px solid %accent%;
-}
-
-FVOptionsPopup QLabel {
-    color: %text_secondary_rgba%;
-}
-
 /*----------------------------------------------------------------------------*/
 
 ThumbnailStrip QScrollBar:horizontal {
     height: 13px;
-    background-color: %folderview%;
+    background-color: %thumbpanel_rgba%;
 }
 
 ThumbnailStrip QScrollBar::handle:horizontal {
@@ -612,7 +653,7 @@ ThumbnailStrip QScrollBar::handle:horizontal:hover {
 
 ThumbnailStrip QScrollBar:vertical {
     width: 13px;
-    background-color: %folderview%;
+    background-color: %thumbpanel_rgba%;
 }
 
 ThumbnailStrip QScrollBar::handle:vertical {
@@ -904,4 +945,31 @@ PrintDialog QCheckBox {
 PrintDialog QRadioButton:hover,
 PrintDialog QCheckBox:hover {
     /*  background-color: %sys_window_tinted%;  */
+}
+/*----------------------------------------------------------------------------*/
+/* Color Adjustments & CAS Overlay Sliders styling */
+ColorAdjustmentsOverlay QSlider,
+CasSettingsOverlay QSlider {
+    height: 18px;
+    background: transparent;
+}
+
+ColorAdjustmentsOverlay QSlider::groove:horizontal,
+CasSettingsOverlay QSlider::groove:horizontal {
+    height: 2px;
+    background: %sys_window_tinted_hc2%;
+    border-radius: 1px;
+}
+
+ColorAdjustmentsOverlay QSlider::handle:horizontal,
+CasSettingsOverlay QSlider::handle:horizontal {
+    background: %accent%;
+    width: 8px;
+    margin: -8px 0px;
+    border-radius: 1px;
+}
+
+ColorAdjustmentsOverlay QSlider::handle:horizontal:hover,
+CasSettingsOverlay QSlider::handle:horizontal:hover {
+    background: %accent_hover_rgba%;
 }

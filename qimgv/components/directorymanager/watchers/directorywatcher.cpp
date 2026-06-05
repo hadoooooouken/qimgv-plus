@@ -1,19 +1,6 @@
 #include "directorywatcher_p.h"
 
-#if defined(__linux__) || defined(__FreeBSD__)
-#include "linux/linuxwatcher.h"
-#elif _WIN32
 #include "windows/windowswatcher.h"
-#elif __unix__
-// TODO: implement this
-#include "dummywatcher.h"
-#elif __APPLE__
-// TODO: implement this
-#include "dummywatcher.h"
-#else
-// TODO: implement this
-#include "dummywatcher.h"
-#endif
 
 #define TAG         "[DirectoryWatcher]"
 
@@ -34,17 +21,7 @@ DirectoryWatcher *DirectoryWatcher::newInstance()
 {
     DirectoryWatcher* watcher;
 
-#if defined(__linux__) || defined(__FreeBSD__)
-        watcher = new LinuxWatcher();
-#elif _WIN32
-        watcher = new WindowsWatcher();
-#elif __unix__
-        watcher = new DummyWatcher();
-#elif __APPLE__
-        watcher = new DummyWatcher();
-#else
-        watcher = new DummyWatcher();
-#endif
+    watcher = new WindowsWatcher();
 
     return watcher;
 }

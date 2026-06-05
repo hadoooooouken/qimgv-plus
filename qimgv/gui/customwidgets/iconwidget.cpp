@@ -83,6 +83,7 @@ void IconWidget::setColor(QColor _color) {
     colorMode = ICON_COLOR_CUSTOM;
     color = _color;
     applyColor();
+    update();
 }
 
 void IconWidget::applyColor() {
@@ -101,14 +102,33 @@ void IconWidget::paintEvent(QPaintEvent *event) {
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
     if(pixmap) {
         p.setRenderHint(QPainter::SmoothPixmapTransform);
-        QPointF pos;
-        if(hiResPixmap) {
-            pos = QPointF(width()  / 2 - pixmap->width()  / (2 * pixmapDrawScale),
-                          height() / 2 - pixmap->height() / (2 * pixmapDrawScale));
-        } else {
-            pos = QPointF(width()  / 2 - pixmap->width()  / 2,
-                          height() / 2 - pixmap->height() / 2);
+        
+        double targetW = pixmap->width() / pixmapDrawScale;
+        double targetH = pixmap->height() / pixmapDrawScale;
+        
+        // If this is a menu item icon or overlay header icon, constrain it to 16x16. Otherwise, fit inside widget bounds.
+        bool isMenuItemIcon = (accessibleName() == "MenuItemIcon");
+        bool isHeaderIcon = (accessibleName() == "OverlayHeaderIcon");
+        double maxW = (isMenuItemIcon || isHeaderIcon) ? 16.0 : static_cast<double>(width());
+        double maxH = (isMenuItemIcon || isHeaderIcon) ? 16.0 : static_cast<double>(height());
+        
+        maxW = qMin(maxW, targetW);
+        maxH = qMin(maxH, targetH);
+        
+        if (targetW > maxW || targetH > maxH) {
+            double ratio = qMin(maxW / targetW, maxH / targetH);
+            targetW *= ratio;
+            targetH *= ratio;
         }
-        p.drawPixmap(pos + iconOffset, *pixmap);
+        
+        double offsetX = iconOffset.x();
+        if (isMenuItemIcon && (iconPath.contains("appearance32") || iconPath.contains("view32"))) {
+            offsetX -= 0.5;
+        }
+        
+        QRectF targetRect(width() / 2.0 - targetW / 2.0 + offsetX,
+                          height() / 2.0 - targetH / 2.0 + iconOffset.y(),
+                          targetW, targetH);
+        p.drawPixmap(targetRect, *pixmap, QRectF(pixmap->rect()));
     }
 }

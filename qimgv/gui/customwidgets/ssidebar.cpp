@@ -12,6 +12,9 @@ SSideBar::SSideBar(QWidget *parent) : QWidget{parent} {
     addEntry(":res/icons/common/settings/shortcuts32.png",  tr("Controls"));
     addEntry(":res/icons/common/settings/terminal32.png",   tr("Scripts"));
     addEntry(":res/icons/common/settings/advanced32.png",   tr("Advanced"));
+#ifdef USE_UPSCAYL
+    addEntry(":res/icons/common/settings/scale32.png", tr("AI Upscale"));
+#endif
     addEntry(":res/icons/common/settings/about32.png",      tr("About"));
 }
 
@@ -104,4 +107,15 @@ void SSideBarItem::paintEvent(QPaintEvent *event) {
     opt.initFrom(this);
     QPainter p(this);
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+}
+
+void SSideBarItem::changeEvent(QEvent *event) {
+    if (event->type() == QEvent::PaletteChange) {
+        QPalette p = palette();
+        if (p.base().color().valueF() <= 0.45f)
+            iconWidget.setColor(QColor(184,184,185));
+        else
+            iconWidget.setColor(QColor(70,70,70));
+    }
+    QWidget::changeEvent(event);
 }

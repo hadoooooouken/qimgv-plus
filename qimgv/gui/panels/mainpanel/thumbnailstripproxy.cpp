@@ -20,6 +20,8 @@ void ThumbnailStripProxy::init() {
 
     connect(thumbnailStrip.get(), &ThumbnailStrip::itemActivated, this, &ThumbnailStripProxy::itemActivated);
     connect(thumbnailStrip.get(), &ThumbnailStrip::thumbnailsRequested, this, &ThumbnailStripProxy::thumbnailsRequested);
+    connect(thumbnailStrip.get(), &ThumbnailStrip::backRequested, this, &ThumbnailStripProxy::backRequested);
+    connect(thumbnailStrip.get(), &ThumbnailStrip::forwardRequested, this, &ThumbnailStripProxy::forwardRequested);
 
     thumbnailStrip->show();
 

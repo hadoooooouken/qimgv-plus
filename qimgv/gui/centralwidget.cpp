@@ -13,7 +13,14 @@ CentralWidget::CentralWidget(std::shared_ptr<DocumentWidget> _docWidget, std::sh
     addWidget(documentView.get());
     if(folderView)
         addWidget(folderView.get());
-    showDocumentView();
+
+    if (settings->defaultViewMode() == MODE_FOLDERVIEW) {
+        mode = MODE_DOCUMENT;
+        showFolderView();
+    } else {
+        mode = MODE_FOLDERVIEW;
+        showDocumentView();
+    }
 }
 
 void CentralWidget::showDocumentView() {
@@ -22,7 +29,6 @@ void CentralWidget::showDocumentView() {
     mode = MODE_DOCUMENT;
     setCurrentIndex(0);
     widget(0)->setFocus();
-    documentView->viewWidget()->startPlayback();
 }
 
 void CentralWidget::showFolderView() {
@@ -33,7 +39,6 @@ void CentralWidget::showFolderView() {
     setCurrentIndex(1);
     widget(1)->show();
     widget(1)->setFocus();
-    documentView->viewWidget()->stopPlayback();
 }
 
 void CentralWidget::toggleViewMode() {

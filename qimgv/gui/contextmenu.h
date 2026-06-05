@@ -17,6 +17,7 @@ public:
     explicit ContextMenu(QWidget *parent = nullptr);
     ~ContextMenu();
     void setImageEntriesEnabled(bool mode);
+    void setCasSettingsVisible(bool visible);
 
 public slots:
     void showAt(QPoint pos);
@@ -35,6 +36,7 @@ protected:
     void mousePressEvent(QMouseEvent*);
     void paintEvent(QPaintEvent *);
     void keyPressEvent(QKeyEvent *event);
+    bool eventFilter(QObject *obj, QEvent *event) override;
 private slots:
     void switchToMainPage();
     void switchToScriptsPage();
