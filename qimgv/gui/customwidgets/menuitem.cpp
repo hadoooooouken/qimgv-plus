@@ -28,10 +28,6 @@ MenuItem::MenuItem(QWidget *parent)
     setLayout(&mLayout);
 }
 
-MenuItem::~MenuItem() {
-    delete spacer;
-}
-
 void MenuItem::setText(QString text) {
     this->mTextLabel.setText(text);
 }

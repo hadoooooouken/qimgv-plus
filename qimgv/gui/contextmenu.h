@@ -18,6 +18,7 @@ public:
     ~ContextMenu();
     void setImageEntriesEnabled(bool mode);
     void setCasSettingsVisible(bool visible);
+    QSize sizeHint() const override;
 
 public slots:
     void showAt(QPoint pos);

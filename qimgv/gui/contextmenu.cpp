@@ -129,6 +129,16 @@ ContextMenu::~ContextMenu() {
 }
 
 void ContextMenu::fillOpenWithMenu() {
+    // Clear existing items in scriptsLayout
+    QLayoutItem *child;
+    while ((child = ui->scriptsLayout->takeAt(0)) != nullptr) {
+        if (QWidget *w = child->widget()) {
+            w->setParent(nullptr);
+            w->deleteLater();
+        }
+        delete child;
+    }
+
     auto scripts = scriptManager->allScripts();
     QMap<QString, Script>::iterator i;
     for (i = scripts.begin(); i != scripts.end(); ++i) {
@@ -144,10 +154,21 @@ void ContextMenu::fillOpenWithMenu() {
 
 void ContextMenu::switchToMainPage() {
     ui->stackedWidget->setCurrentIndex(0);
+    adjustSize();
 }
 
 void ContextMenu::switchToScriptsPage() {
     ui->stackedWidget->setCurrentIndex(1);
+    adjustSize();
+}
+
+QSize ContextMenu::sizeHint() const {
+    if (!ui || !ui->stackedWidget || !ui->stackedWidget->currentWidget()) {
+        return QWidget::sizeHint();
+    }
+    QSize size = ui->stackedWidget->currentWidget()->sizeHint();
+    size.setHeight(size.height() + layout()->contentsMargins().top() + layout()->contentsMargins().bottom());
+    return size;
 }
 
 void ContextMenu::setImageEntriesEnabled(bool mode) {
@@ -173,6 +194,7 @@ void ContextMenu::setCasSettingsVisible(bool visible) {
 }
 
 void ContextMenu::showAt(QPoint pos) {
+    fillOpenWithMenu(); // Refresh the scripts list before displaying
     switchToMainPage();
     QRect geom = geometry();
     geom.moveTopLeft(pos);

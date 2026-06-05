@@ -9,6 +9,9 @@ ScriptEditorDialog::ScriptEditorDialog(QWidget *parent) :
     ui->setupUi(this);
     this->setWindowTitle(tr("New application/script"));
     ui->keywordsLabel->setText(tr("Keywords:") + " %file%");
+#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
+    ui->label_3->hide();
+#endif
     connect(ui->nameLineEdit, &QLineEdit::textChanged, this, &ScriptEditorDialog::onNameChanged);
     this->onNameChanged(ui->nameLineEdit->text());
 }
@@ -22,6 +25,9 @@ ScriptEditorDialog::ScriptEditorDialog(QString name, Script script, QWidget *par
     this->setWindowTitle(tr("Edit"));
     this->onNameChanged(ui->nameLineEdit->text());
     editTarget = name;
+#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
+    ui->label_3->hide();
+#endif
     connect(ui->nameLineEdit, &QLineEdit::textChanged, this, &ScriptEditorDialog::onNameChanged);
     ui->nameLineEdit->setText(name);
     ui->pathLineEdit->setText(script.command);

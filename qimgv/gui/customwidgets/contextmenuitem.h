@@ -8,8 +8,7 @@
 class ContextMenuItem : public MenuItem {
     Q_OBJECT
 public:
-    ContextMenuItem(QWidget *parent = nullptr);
-    ~ContextMenuItem();
+    ContextMenuItem(QWidget *parent = nullptr) : MenuItem(parent) {}
     void setAction(QString mAction);
 
 signals:
