@@ -432,21 +432,6 @@ void MW::setFilter(ScalingFilter filter) {
         case ScalingFilter::QI_FILTER_BILINEAR:
             filterName = "Bilinear";
             break;
-        case QI_FILTER_CV_BILINEAR_SHARPEN:
-            filterName = "Bilinear+sharpen (OpenCV)";
-            break;
-        case QI_FILTER_CV_CUBIC:
-            filterName = "Bicubic (OpenCV)";
-            break;
-        case QI_FILTER_CV_CUBIC_SHARPEN:
-            filterName = "Bicubic+sharpen (OpenCV)";
-            break;
-        case QI_FILTER_CV_LANCZOS:
-            filterName = "Lanczos (OpenCV)";
-            break;
-        case QI_FILTER_CV_AREA:
-            filterName = "Area (OpenCV)";
-            break;
         case QI_FILTER_CV_SMART:
             filterName = "Smart sharpen (OpenCV)";
             break;

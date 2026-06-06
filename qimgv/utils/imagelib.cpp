@@ -173,16 +173,6 @@ QImage *ImageLib::scaled(std::shared_ptr<const QImage> source, QSize destSize,
   case QI_FILTER_BILINEAR:
     return scaled_Qt(scaleTarget, destSize, true);
 #ifdef USE_OPENCV
-  case QI_FILTER_CV_BILINEAR_SHARPEN:
-    return scaled_CV(scaleTarget, destSize, cv::INTER_LINEAR, 0);
-  case QI_FILTER_CV_CUBIC:
-    return scaled_CV(scaleTarget, destSize, cv::INTER_CUBIC, 0);
-  case QI_FILTER_CV_CUBIC_SHARPEN:
-    return scaled_CV(scaleTarget, destSize, cv::INTER_CUBIC, 1);
-  case QI_FILTER_CV_LANCZOS:
-    return scaled_CV(scaleTarget, destSize, cv::INTER_LANCZOS4, 0);
-  case QI_FILTER_CV_AREA:
-    return scaled_CV(scaleTarget, destSize, cv::INTER_AREA, 0);
   case QI_FILTER_CV_SMART:
     return scaled_CV_Smart(scaleTarget, destSize);
 #endif

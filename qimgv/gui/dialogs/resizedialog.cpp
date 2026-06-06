@@ -118,12 +118,6 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
   ui->comboBox->addItem("Bilinear", QI_FILTER_BILINEAR);
 
 #ifdef USE_OPENCV
-  ui->comboBox->addItem("Bilinear+sharpen (OpenCV)",
-                        QI_FILTER_CV_BILINEAR_SHARPEN);
-  ui->comboBox->addItem("Bicubic (OpenCV)", QI_FILTER_CV_CUBIC);
-  ui->comboBox->addItem("Bicubic+sharpen (OpenCV)", QI_FILTER_CV_CUBIC_SHARPEN);
-  ui->comboBox->addItem("Lanczos (OpenCV)", QI_FILTER_CV_LANCZOS);
-  ui->comboBox->addItem("Area (OpenCV)", QI_FILTER_CV_AREA);
   ui->comboBox->addItem("Smart sharpen (OpenCV)", QI_FILTER_CV_SMART);
 #endif
 

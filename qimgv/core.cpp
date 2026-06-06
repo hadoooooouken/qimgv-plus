@@ -560,7 +560,7 @@ void Core::onUpdate() {
 
 #ifdef USE_OPENCV
   if (lastVer < QVersionNumber(0, 9, 0))
-    settings->setScalingFilter(QI_FILTER_CV_CUBIC);
+    settings->setScalingFilter(QI_FILTER_CV_SMART);
 #endif
 
   actionManager->adjustFromVersion(lastVer);

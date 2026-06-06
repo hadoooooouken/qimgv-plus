@@ -242,13 +242,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   ui->scalingQualityComboBox->addItem("Bilinear", QI_FILTER_BILINEAR);
 
 #ifdef USE_OPENCV
-  ui->scalingQualityComboBox->addItem("Bilinear+sharpen (OpenCV)",
-                                      QI_FILTER_CV_BILINEAR_SHARPEN);
-  ui->scalingQualityComboBox->addItem("Bicubic (OpenCV)", QI_FILTER_CV_CUBIC);
-  ui->scalingQualityComboBox->addItem("Bicubic+sharpen (OpenCV)",
-                                      QI_FILTER_CV_CUBIC_SHARPEN);
-  ui->scalingQualityComboBox->addItem("Lanczos (OpenCV)", QI_FILTER_CV_LANCZOS);
-  ui->scalingQualityComboBox->addItem("Area (OpenCV)", QI_FILTER_CV_AREA);
   ui->scalingQualityComboBox->addItem("Smart sharpen (OpenCV)",
                                       QI_FILTER_CV_SMART);
 #endif

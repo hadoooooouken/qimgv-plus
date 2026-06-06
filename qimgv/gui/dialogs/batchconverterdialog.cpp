@@ -292,11 +292,6 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     ui->filterComboBox->addItem("Nearest", QI_FILTER_NEAREST);
     ui->filterComboBox->addItem("Bilinear", QI_FILTER_BILINEAR);
 #ifdef USE_OPENCV
-    ui->filterComboBox->addItem("Bilinear+sharpen (OpenCV)", QI_FILTER_CV_BILINEAR_SHARPEN);
-    ui->filterComboBox->addItem("Bicubic (OpenCV)", QI_FILTER_CV_CUBIC);
-    ui->filterComboBox->addItem("Bicubic+sharpen (OpenCV)", QI_FILTER_CV_CUBIC_SHARPEN);
-    ui->filterComboBox->addItem("Lanczos (OpenCV)", QI_FILTER_CV_LANCZOS);
-    ui->filterComboBox->addItem("Area (OpenCV)", QI_FILTER_CV_AREA);
     ui->filterComboBox->addItem("Smart sharpen (OpenCV)", QI_FILTER_CV_SMART);
 #endif
 #ifdef USE_OPENCV
