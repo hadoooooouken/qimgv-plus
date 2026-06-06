@@ -8,7 +8,7 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 
 - **GPU-Accelerated Sharpening (FidelityFX CAS)**: High-quality image scaling and sharpening based on AMD's Contrast Adaptive Sharpening (CAS). Processed entirely on the GPU via OpenGL shaders with zero CPU overhead. Features an interactive overlay settings panel for real-time sharpening and contrast adjustments.
 
-- **Smart Sharpen Scaling (OpenCV)**: High-quality, fast scaling performed on the CPU using OpenCV. The "Smart sharpen" mode combines Bicubic upscaling with a custom cross-kernel sharpening pass, and Area downscaling with an anti-aliasing Gaussian unsharp mask, ensuring maximum texture detail without jagged edges.
+- **Smart Sharpen Scaling (CPU)**: High-quality, fast scaling performed on the CPU. The "Smart sharpen" mode combines custom Separable 1D Bicubic upscaling with a custom cross-kernel sharpening pass, and Bilinear downscaling with an anti-aliasing Gaussian unsharp mask, ensuring maximum texture detail without jagged edges.
 
 - **Real-Time AI Upscaling (Upscayl)**: Real-time AI image upscaling powered by **[upscayl-ncnn](https://github.com/upscayl/upscayl-ncnn) (NCNN/Vulkan & RealESRGAN)**. Upscales only the visible viewport crop to conserve VRAM, using background threads to keep the UI fully responsive. Includes an optional preloading mechanism to warm up Vulkan shader pipelines and eliminate startup latency.
 
@@ -144,8 +144,8 @@ qimgv-plus features advanced CPU and GPU scaling systems:
   - *Interactive CAS Panel*: A floating overlay for real-time adjustments of sharpening and contrast parameters. Open it via the context menu. Double-click sliders to quickly reset them to default values.
   - *Apply at 100% Scale*: Enable "Also use filter for 100% scale" under settings to apply the CAS filter even when viewing images at their native 1:1 resolution.
   - *Improved Downscaling*: Features automatic mipmap generation and trilinear filtering in OpenGL mode (active with CAS or color adjustments), which eliminates aliasing ("staircasing" artifacts) when zooming out.
-- **Smart sharpen (OpenCV)** (CPU): For upscaling, it combines Bicubic interpolation with a custom cross-kernel sharpening pass. For downscaling, it uses Area relation interpolation with an anti-aliasing Gaussian unsharp mask.
-- **Standard CPU Filters**: Includes Bicubic, Lanczos, Bilinear+sharpen, and Area scaling.
+- **Smart sharpen** (CPU): A high-performance scaling filter optimized with AVX2. For upscaling, it combines custom Separable 1D Bicubic interpolation with a custom cross-kernel sharpening pass. For downscaling, it combines Bilinear interpolation with an anti-aliasing Gaussian unsharp mask.
+- **Standard CPU Filters**: Includes Nearest and Bilinear scaling.
 
 ## Real-Time AI Upscaling
 
@@ -167,7 +167,7 @@ Multi-threaded background queue processor:
 - **Output Options**: Target path selection, filename pattern templates (e.g., `{name}`), optional timestamped subdirectories (`Batch_YYYY-MM-DD_HH-MM-SS`), and file overwrite settings.
 - **Formats**: Converts to **JPEG**, **PNG** (with 0-9 compression level slider), **WebP**, **JPEG-XL (JXL)**, **AVIF**, **BMP**, **TIFF**, and **QOI** with custom quality sliders.
 - **Resizing**: Scaling by percentage or custom resolution, presets, aspect ratio lock, and quick enforcers ("Fit Desktop" / "Fill Desktop").
-- **Scaling Filters**: Supports standard filters (Nearest, Bilinear, Bicubic, Lanczos, Area, OpenCV Smart Sharpen) and **Vulkan-accelerated AI Upscaling (Upscayl)** using customizable models (e.g. `4xLSDIRCompactC3`).
+- **Scaling Filters**: Supports standard filters (Nearest, Bilinear, Smart Sharpen) and **Vulkan-accelerated AI Upscaling (Upscayl)** using customizable models (e.g. `4xLSDIRCompactC3`).
 - **Color Correction**: Applies Exposure, Contrast, Brightness, Saturation, Hue, Temperature, and Tint adjustments. Includes a one-click reset button to clear all sliders.
 
 ## Display Color Management

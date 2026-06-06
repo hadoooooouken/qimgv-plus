@@ -291,15 +291,9 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
 
     ui->filterComboBox->addItem("Nearest", QI_FILTER_NEAREST);
     ui->filterComboBox->addItem("Bilinear", QI_FILTER_BILINEAR);
-#ifdef USE_OPENCV
-    ui->filterComboBox->addItem("Smart sharpen (OpenCV)", QI_FILTER_CV_SMART);
-#endif
-#ifdef USE_OPENCV
+    ui->filterComboBox->addItem("Smart sharpen", QI_FILTER_CV_SMART);
     int smartIndex = ui->filterComboBox->findData(QI_FILTER_CV_SMART);
     ui->filterComboBox->setCurrentIndex(smartIndex != -1 ? smartIndex : 1);
-#else
-    ui->filterComboBox->setCurrentIndex(1);
-#endif
 
     desktopSize = qApp->primaryScreen()->size();
     ui->resComboBox->addItem(tr("Original size"));

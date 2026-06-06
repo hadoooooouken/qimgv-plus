@@ -35,10 +35,7 @@ class ImageLib {
         static QImage *scaled_Qt(const QImage *source, QSize destSize, bool smooth);
         static QImage *scaled_Qt(std::shared_ptr<const QImage> source, QSize destSize, bool smooth);
 
-#ifdef USE_OPENCV
-        static QImage *scaled_CV(std::shared_ptr<const QImage> source, QSize destSize, cv::InterpolationFlags filter, int sharpen);
-        static QImage *scaled_CV_Smart(std::shared_ptr<const QImage> source, QSize destSize);
-#endif
+        static QImage *scaled_Smart(std::shared_ptr<const QImage> source, QSize destSize);
 
         static std::unique_ptr<const QImage> exifRotated(std::unique_ptr<const QImage> src, int orientation);
         static std::unique_ptr<QImage> exifRotated(std::unique_ptr<QImage> src, int orientation);

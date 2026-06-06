@@ -241,10 +241,8 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   ui->scalingQualityComboBox->addItem("Nearest", QI_FILTER_NEAREST);
   ui->scalingQualityComboBox->addItem("Bilinear", QI_FILTER_BILINEAR);
 
-#ifdef USE_OPENCV
-  ui->scalingQualityComboBox->addItem("Smart sharpen (OpenCV)",
+  ui->scalingQualityComboBox->addItem("Smart sharpen",
                                       QI_FILTER_CV_SMART);
-#endif
   ui->scalingQualityComboBox->addItem("FidelityFX-CAS (GPU)", QI_FILTER_CAS);
 
   casContainerWidget = new QWidget(this);

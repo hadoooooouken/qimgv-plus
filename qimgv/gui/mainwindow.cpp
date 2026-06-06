@@ -433,7 +433,7 @@ void MW::setFilter(ScalingFilter filter) {
             filterName = "Bilinear";
             break;
         case QI_FILTER_CV_SMART:
-            filterName = "Smart sharpen (OpenCV)";
+            filterName = "Smart sharpen";
             break;
         default:
             filterName = "Configured " + QString::number(static_cast<int>(filter));
