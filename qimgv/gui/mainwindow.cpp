@@ -432,7 +432,7 @@ void MW::setFilter(ScalingFilter filter) {
         case ScalingFilter::QI_FILTER_BILINEAR:
             filterName = "Bilinear";
             break;
-        case QI_FILTER_CV_SMART:
+        case QI_FILTER_SMART:
             filterName = "Smart sharpen";
             break;
         default:

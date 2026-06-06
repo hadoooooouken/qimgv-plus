@@ -10,15 +10,13 @@
       "installDir": "${sourceDir}/out/install/${presetName}",
       "cacheVariables": {
         "CMAKE_PREFIX_PATH": "E:/Qt/6.11.1/msvc2022_64;E:/Vulkan",
-        "OPENCV_SUPPORT": "ON",
-        "OpenCV_DIR": "E:/opencv/build",
         "EXIV2": "ON",
         "exiv2_DIR": "E:/qimgv/formats/exiv2/lib/cmake/exiv2",
         "USE_QT5": "OFF"
       },
       "environment": {
         "VULKAN_SDK": "E:/Vulkan",
-        "PATH": "E:/Qt/6.11.1/msvc2022_64/bin;E:/opencv/build/x64/vc16/bin;E:/exiv2/bin;E:/Vulkan/Bin;$penv{PATH}"
+        "PATH": "E:/Qt/6.11.1/msvc2022_64/bin;E:/exiv2/bin;E:/Vulkan/Bin;$penv{PATH}"
       }
     },
     {

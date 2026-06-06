@@ -242,7 +242,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   ui->scalingQualityComboBox->addItem("Bilinear", QI_FILTER_BILINEAR);
 
   ui->scalingQualityComboBox->addItem("Smart sharpen",
-                                      QI_FILTER_CV_SMART);
+                                      QI_FILTER_SMART);
   ui->scalingQualityComboBox->addItem("FidelityFX-CAS (GPU)", QI_FILTER_CAS);
 
   casContainerWidget = new QWidget(this);

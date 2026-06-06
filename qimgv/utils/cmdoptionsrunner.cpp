@@ -37,9 +37,6 @@ void CmdOptionsRunner::showBuildOptions() {
 #ifdef USE_EXIV2
     features << "USE_EXIV2";
 #endif
-#ifdef USE_OPENCV
-    features << "USE_OPENCV";
-#endif
     qDebug() << "\nEnabled build options:";
     if(!features.count())
         qDebug() << "   --";

@@ -291,8 +291,8 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
 
     ui->filterComboBox->addItem("Nearest", QI_FILTER_NEAREST);
     ui->filterComboBox->addItem("Bilinear", QI_FILTER_BILINEAR);
-    ui->filterComboBox->addItem("Smart sharpen", QI_FILTER_CV_SMART);
-    int smartIndex = ui->filterComboBox->findData(QI_FILTER_CV_SMART);
+    ui->filterComboBox->addItem("Smart sharpen", QI_FILTER_SMART);
+    int smartIndex = ui->filterComboBox->findData(QI_FILTER_SMART);
     ui->filterComboBox->setCurrentIndex(smartIndex != -1 ? smartIndex : 1);
 
     desktopSize = qApp->primaryScreen()->size();

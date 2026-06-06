@@ -26,7 +26,6 @@ endif()
 
 # USER OPTIONS
 option(EXIV2 "For reading/writing exif tags" ON)
-option(OPENCV_SUPPORT "Enable HQ scaling via OpenCV" ON)
 option(USE_QT5 "Build with Qt5 if available" ON)
 
 # FIND PACKAGES
@@ -50,12 +49,6 @@ if(EXIV2)
     find_package(exiv2 REQUIRED)
 endif()
 
-if(OPENCV_SUPPORT)
-    # Hint to find the local OpenCV build in formats/opencv-install
-    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/formats/opencv-install")
-    set(OpenCV_STATIC OFF)
-    find_package(OpenCV REQUIRED core imgproc)
-endif()
 
 ##############################################################
 

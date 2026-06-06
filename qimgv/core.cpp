@@ -558,11 +558,6 @@ void Core::onUpdate() {
     actionManager->resetDefaults("openSettings");
   }
 
-#ifdef USE_OPENCV
-  if (lastVer < QVersionNumber(0, 9, 0))
-    settings->setScalingFilter(QI_FILTER_CV_SMART);
-#endif
-
   actionManager->adjustFromVersion(lastVer);
 
   qDebug() << "Updated: " << settings->lastVersion().toString() << ">"

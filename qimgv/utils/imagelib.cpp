@@ -168,16 +168,12 @@ QImage *ImageLib::scaled(std::shared_ptr<const QImage> source, QSize destSize,
       newFmt = QImage::Format_ARGB32;
     scaleTarget.reset(new QImage(source->convertToFormat(newFmt)));
   }
-#ifdef USE_OPENCV
-  if (filter > 1 && filter != QI_FILTER_CV_SMART && !QtOcv::isSupported(scaleTarget->format()))
-    filter = QI_FILTER_BILINEAR;
-#endif
   switch (filter) {
   case QI_FILTER_NEAREST:
     return scaled_Qt(scaleTarget, destSize, false);
   case QI_FILTER_BILINEAR:
     return scaled_Qt(scaleTarget, destSize, true);
-  case QI_FILTER_CV_SMART:
+  case QI_FILTER_SMART:
     return scaled_Smart(scaleTarget, destSize);
   default:
     return scaled_Qt(scaleTarget, destSize, true);

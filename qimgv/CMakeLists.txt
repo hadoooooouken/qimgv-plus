@@ -51,9 +51,7 @@ add_subdirectory(components)
 add_subdirectory(sourcecontainers)
 add_subdirectory(gui)
 add_subdirectory(utils)
-if(OPENCV_SUPPORT)
-    add_subdirectory(3rdparty/QtOpenCV)
-endif()
+
 add_subdirectory(3rdparty/kimageformats)
 
 # C++ STANDARD
@@ -74,10 +72,7 @@ if(EXIV2)
     target_link_libraries(qimgv-plus PRIVATE Exiv2::exiv2lib)
     target_compile_definitions(qimgv-plus PRIVATE USE_EXIV2)
 endif()
-if(OPENCV_SUPPORT)
-    target_link_libraries(qimgv-plus PRIVATE ${OpenCV_LIBS})
-    target_compile_definitions(qimgv-plus PRIVATE USE_OPENCV)
-endif()
+
 
 if(UPSCAYL_SUPPORT)
     target_link_libraries(qimgv-plus PRIVATE upscayl-ncnn)
@@ -124,28 +119,6 @@ if(WIN32)
         )
     endif()
 
-    # 3. OpenCV
-    if(OPENCV_SUPPORT)
-        # Try to locate and copy split DLLs (core and imgproc) if available
-        if(TARGET opencv_core)
-            get_target_property(OPENCV_CORE_DLL opencv_core IMPORTED_LOCATION_RELEASE)
-            if(OPENCV_CORE_DLL AND OPENCV_CORE_DLL MATCHES "\\.dll$")
-                add_custom_command(TARGET qimgv-plus POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OPENCV_CORE_DLL}" "$<TARGET_FILE_DIR:qimgv-plus>/"
-                    COMMENT "Copying OpenCV core DLL..."
-                )
-            endif()
-        endif()
-        if(TARGET opencv_imgproc)
-            get_target_property(OPENCV_IMGPROC_DLL opencv_imgproc IMPORTED_LOCATION_RELEASE)
-            if(OPENCV_IMGPROC_DLL AND OPENCV_IMGPROC_DLL MATCHES "\\.dll$")
-                add_custom_command(TARGET qimgv-plus POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OPENCV_IMGPROC_DLL}" "$<TARGET_FILE_DIR:qimgv-plus>/"
-                    COMMENT "Copying OpenCV imgproc DLL..."
-                )
-            endif()
-        endif()
-    endif()
 
     # 5. kimageformats dependencies (safe check)
     set(_kimg_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw avif jxl kra ora jxr heif jp2 jph)

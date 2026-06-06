@@ -9,10 +9,6 @@
 #include "sourcecontainers/documentinfo.h"
 #include "settings.h"
 
-#ifdef USE_OPENCV
-#include "3rdparty/QtOpenCV/cvmatandqimage.h"
-#include <opencv2/imgproc.hpp>
-#endif
 
 class ImageLib {
     public:
