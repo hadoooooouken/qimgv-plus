@@ -362,9 +362,9 @@ QImage *ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
           for (int y = y_start; y < y_end; ++y) {
             uint32_t* dstRow = (uint32_t*)destImg->scanLine(y);
 
-            int idxT = (y - 1 - y_start + 3) % 3;
-            int idxC = (y - y_start + 3) % 3;
-            int idxB = (y + 1 - y_start + 3) % 3;
+            int idxT = (y - y_start) % 3;
+            int idxC = (y - y_start + 1) % 3;
+            int idxB = (y - y_start + 2) % 3;
 
             const uint32_t* rowT = rowBuffers[idxT].data();
             const uint32_t* rowC = rowBuffers[idxC].data();
