@@ -565,11 +565,8 @@ void SettingsDialog::readSettings() {
   ui->enableSmoothZoomCheckBox->setChecked(settings->enableSmoothZoom());
   ui->usePreloaderCheckBox->setChecked(settings->usePreloader());
   ui->useThumbnailCacheCheckBox->setChecked(settings->useThumbnailCache());
-  ui->smoothUpscalingCheckBox->setChecked(settings->smoothUpscaling());
   ui->expandImageCheckBox->setChecked(settings->expandImage());
   ui->expandImagesGroupContents->setEnabled(settings->expandImage());
-  ui->smoothAnimatedImagesCheckBox->setChecked(
-      settings->smoothAnimatedImages());
   ui->applyFilterAt100CheckBox->setChecked(settings->applyFilterAt100());
   ui->bgOpacitySlider->setValue(
       static_cast<int>(settings->backgroundOpacity() * 100));
@@ -807,10 +804,7 @@ void SettingsDialog::saveSettings() {
   settings->setEnableSmoothZoom(ui->enableSmoothZoomCheckBox->isChecked());
   settings->setUsePreloader(ui->usePreloaderCheckBox->isChecked());
   settings->setUseThumbnailCache(ui->useThumbnailCacheCheckBox->isChecked());
-  settings->setSmoothUpscaling(ui->smoothUpscalingCheckBox->isChecked());
   settings->setExpandImage(ui->expandImageCheckBox->isChecked());
-  settings->setSmoothAnimatedImages(
-      ui->smoothAnimatedImagesCheckBox->isChecked());
   settings->setApplyFilterAt100(ui->applyFilterAt100CheckBox->isChecked());
 
   settings->setBackgroundOpacity(

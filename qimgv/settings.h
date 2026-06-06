@@ -140,8 +140,7 @@ public:
   void setThumbnailResolution(int size);
   int thumbnailerThreadCount();
   void setThumbnailerThreadCount(int count);
-  bool smoothUpscaling();
-  void setSmoothUpscaling(bool mode);
+
   void setExpandImage(bool mode);
   bool expandImage();
   ScalingFilter scalingFilter();
@@ -150,8 +149,7 @@ public:
   void setCasSharpening(float value);
   float casContrast();
   void setCasContrast(float value);
-  bool smoothAnimatedImages();
-  void setSmoothAnimatedImages(bool mode);
+
   bool panelFullscreenOnly();
   void setPanelFullscreenOnly(bool mode);
   QVersionNumber lastVersion();

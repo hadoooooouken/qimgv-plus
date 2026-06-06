@@ -972,14 +972,7 @@ int Settings::thumbnailerThreadCount() {
 void Settings::setThumbnailerThreadCount(int count) {
   settings->settingsConf->setValue("thumbnailerThreads", count);
 }
-//------------------------------------------------------------------------------
-bool Settings::smoothUpscaling() {
-  return settings->settingsConf->value("smoothUpscaling", true).toBool();
-}
 
-void Settings::setSmoothUpscaling(bool mode) {
-  settings->settingsConf->setValue("smoothUpscaling", mode);
-}
 //------------------------------------------------------------------------------
 int Settings::folderViewIconSize() {
   return settings->settingsConf->value("folderViewIconSize", 256).toInt();
@@ -1061,14 +1054,7 @@ float Settings::casContrast() {
 void Settings::setCasContrast(float value) {
   settings->settingsConf->setValue("casContrast", value);
 }
-//------------------------------------------------------------------------------
-bool Settings::smoothAnimatedImages() {
-  return settings->settingsConf->value("smoothAnimatedImages", true).toBool();
-}
 
-void Settings::setSmoothAnimatedImages(bool mode) {
-  settings->settingsConf->setValue("smoothAnimatedImages", mode);
-}
 //------------------------------------------------------------------------------
 bool Settings::infoBarFullscreen() {
   return settings->settingsConf->value("infoBarFullscreen", true).toBool();

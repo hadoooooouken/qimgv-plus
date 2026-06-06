@@ -154,8 +154,7 @@ private:
     QTimer *animationTimer, *scaleTimer;
     QScrollBar *hs, *vs;
     QPoint mouseMoveStartPos, mousePressPos, drawPos;
-    bool transparencyGrid, expandImage,    smoothAnimatedImages,
-         smoothUpscaling,  forceFastScale, keepFitMode,
+    bool transparencyGrid, expandImage, keepFitMode,
          loopPlayback,     mIsFullscreen,  scrollBarWorkaround,
          useFixedZoomLevels, trackpadDetection;
     QList<float> zoomLevels;
@@ -165,8 +164,6 @@ private:
     const qreal TRACKPAD_SCROLL_MULTIPLIER = 0.7;
     const qreal WHEEL_SCROLL_MULTIPLIER = 2.0f;
     const int ANIMATION_SPEED = 150;
-    const float FAST_SCALE_THRESHOLD = 1.0f;
-    const int LARGE_VIEWPORT_SIZE = 2073600;
     // how many px you can move while holding RMB until it counts as a zoom attempt
     int zoomThreshold = 4;
     int dragThreshold = 10;

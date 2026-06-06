@@ -8,7 +8,6 @@
 ImageViewerV2::ImageViewerV2(QWidget *parent)
     : QGraphicsView(parent), pixmap(nullptr), pixmapScaled(nullptr),
       movie(nullptr), transparencyGrid(false), expandImage(false),
-      smoothAnimatedImages(true), smoothUpscaling(true), forceFastScale(false),
       keepFitMode(false), loopPlayback(true), mIsFullscreen(false),
       scrollBarWorkaround(true), useFixedZoomLevels(false),
       trackpadDetection(true),
@@ -162,8 +161,6 @@ void ImageViewerV2::onDPRChanged() {
 
 void ImageViewerV2::readSettings() {
   transparencyGrid = settings->transparencyGrid();
-  smoothAnimatedImages = settings->smoothAnimatedImages();
-  smoothUpscaling = settings->smoothUpscaling();
   expandImage = settings->expandImage();
   expandLimit = static_cast<float>(settings->expandLimit());
   if (expandLimit < 1.0f)
@@ -359,9 +356,7 @@ void ImageViewerV2::showAnimation(std::shared_ptr<QMovie> _movie) {
     reset();
     movie = _movie;
     movie->jumpToFrame(0);
-    Qt::TransformationMode mode = smoothAnimatedImages
-                                      ? Qt::SmoothTransformation
-                                      : Qt::FastTransformation;
+    Qt::TransformationMode mode = selectTransformationMode();
     pixmapItem.setTransformationMode(mode);
     std::unique_ptr<QPixmap> newFrame(new QPixmap());
     *newFrame = movie->currentPixmap();
@@ -576,22 +571,10 @@ void ImageViewerV2::setFilterBilinear() {
 
 // returns a mode based on current zoom level and a bunch of toggles
 Qt::TransformationMode ImageViewerV2::selectTransformationMode() {
-  Qt::TransformationMode mode = Qt::SmoothTransformation;
   if (mScalingFilter == QI_FILTER_NEAREST) {
-    mode = Qt::FastTransformation;
-  } else if (forceFastScale) {
-    // even in fast mode, use smooth transformation if it's not Nearest
-    // this avoids pixelation during interactive zoom
-    mode = Qt::SmoothTransformation;
-  } else if (movie) {
-    if (!smoothAnimatedImages ||
-        (pixmapItem.scale() > 1.0f && !smoothUpscaling))
-      mode = Qt::FastTransformation;
-  } else {
-    if (pixmapItem.scale() > 1.0f && !smoothUpscaling)
-      mode = Qt::FastTransformation;
+    return Qt::FastTransformation;
   }
-  return mode;
+  return Qt::SmoothTransformation;
 }
 
 void ImageViewerV2::setExpandImage(bool mode) {
@@ -615,8 +598,6 @@ void ImageViewerV2::hide() {
 void ImageViewerV2::requestScaling() {
   bool isAt100 = std::abs(pixmapItem.scale() - 1.0) < 0.001;
   if (mSvgMode || !pixmap || (isAt100 && !settings->applyFilterAt100()) ||
-      (mScalingFilter <= 1 && !smoothUpscaling &&
-       pixmapItem.scale() >= 0.999) ||
       (mScalingFilter == QI_FILTER_CAS && !(settings->useUpscayl() && pixmapItem.scale() > 1.0)) ||
       movie || (zoomTimeLine && zoomTimeLine->state() == QTimeLine::Running) ||
       mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
@@ -629,7 +610,7 @@ void ImageViewerV2::requestScaling() {
   // Default limits (same as ImageLib::scaled)
   int maxDim = 12288;
   qint64 maxPixels = 100000000; // 100 megapixels
-  float maxScale = 8.0f;
+  float maxScale = 4.0f;
 
 #ifdef USE_UPSCAYL
   if (settings->useUpscayl()) {
@@ -779,10 +760,6 @@ void ImageViewerV2::mouseMoveEvent(QMouseEvent *event) {
     }
 
     if (mouseInteraction == MouseInteractionState::MOUSE_ZOOM) {
-      // avoid visible lags by forcing fast scale for large viewport sizes
-      // this value possibly needs tweaking
-      if (viewport()->width() * viewport()->height() > LARGE_VIEWPORT_SIZE)
-        forceFastScale = true;
       mouseMoveZoom(event);
     }
     return;
@@ -793,10 +770,6 @@ void ImageViewerV2::mouseMoveEvent(QMouseEvent *event) {
 
 void ImageViewerV2::mouseReleaseEvent(QMouseEvent *event) {
   unsetCursor();
-  if (forceFastScale) {
-    forceFastScale = false;
-    pixmapItem.setTransformationMode(selectTransformationMode());
-  }
   bool needScale =
       (mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
        mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM ||

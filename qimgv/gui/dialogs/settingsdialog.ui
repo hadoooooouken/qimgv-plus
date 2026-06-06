@@ -2586,47 +2586,7 @@
                     </property>
                    </widget>
                   </item>
-                  <item>
-                   <widget class="QCheckBox" name="smoothUpscalingCheckBox">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="toolTip">
-                     <string>When unchecked, nearest neighbor algorithm will be used for upscaling.</string>
-                    </property>
-                    <property name="text">
-                     <string>Smooth upscaling</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="smoothAnimatedImagesCheckBox">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>Smooth animated images</string>
-                    </property>
-                   </widget>
-                  </item>
+
                    <item>
                     <widget class="QCheckBox" name="applyFilterAt100CheckBox">
                      <property name="sizePolicy">
