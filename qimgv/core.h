@@ -203,4 +203,7 @@ private:
 private:
     QStringList backHistory, forwardHistory;
     bool blockHistory = false;
+    bool lastCMEnabled = false;
+    QString lastCMType = "";
+    QString lastCMPath = "";
 };

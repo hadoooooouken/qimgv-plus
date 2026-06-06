@@ -220,6 +220,9 @@ Core::Core()
   connectComponents();
   initActions();
   readSettings();
+  lastCMEnabled = settings->colorManagementEnabled();
+  lastCMType = settings->monitorColorProfileType();
+  lastCMPath = settings->monitorColorProfilePath();
   slideshowTimer.setSingleShot(true);
   connect(settings, &Settings::settingsChanged, this, &Core::readSettings);
 
@@ -378,10 +381,24 @@ void Core::connectComponents() {
           &Core::onScalingFinished);
 
   connect(settings, &Settings::settingsChanged, this, [this]() {
-      ColorManager::invalidateCache();
-      if (state.hasActiveImage && state.currentImg) {
-          model->scaler->clear();
-          guiSetImage(state.currentImg);
+      bool cmEnabled = settings->colorManagementEnabled();
+      QString cmType = settings->monitorColorProfileType();
+      QString cmPath = settings->monitorColorProfilePath();
+
+      bool cmChanged = (cmEnabled != lastCMEnabled) ||
+                       (cmType != lastCMType) ||
+                       (cmPath != lastCMPath);
+
+      if (cmChanged) {
+          lastCMEnabled = cmEnabled;
+          lastCMType = cmType;
+          lastCMPath = cmPath;
+
+          ColorManager::invalidateCache();
+          if (state.hasActiveImage && state.currentImg) {
+              model->scaler->clear();
+              guiSetImage(state.currentImg);
+          }
       }
       thumbPanelPresenter.reloadModel();
       folderViewPresenter.reloadModel();
