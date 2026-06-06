@@ -35,9 +35,9 @@ endif()
 
 if(Qt6_FOUND AND NOT USE_QT5)
     set(QT_VERSION_MAJOR 6)
-    find_package(Qt6 REQUIRED COMPONENTS Core Widgets Svg SvgWidgets PrintSupport OpenGLWidgets Sql)
+    find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Svg SvgWidgets PrintSupport OpenGLWidgets Sql)
 else()
-    find_package(Qt5 REQUIRED COMPONENTS Core Widgets Svg PrintSupport Sql)
+    find_package(Qt5 REQUIRED COMPONENTS Core Widgets Network Svg PrintSupport Sql)
 
     set(QT_VERSION_MAJOR 5)
 endif()

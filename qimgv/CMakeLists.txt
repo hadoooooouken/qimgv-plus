@@ -62,7 +62,7 @@ set_target_properties(qimgv-plus PROPERTIES
 )
 
 # LINK STUFF
-target_link_libraries(qimgv-plus PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Svg Qt${QT_VERSION_MAJOR}::PrintSupport Qt${QT_VERSION_MAJOR}::Sql)
+target_link_libraries(qimgv-plus PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Svg Qt${QT_VERSION_MAJOR}::PrintSupport Qt${QT_VERSION_MAJOR}::Sql)
 if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     target_link_libraries(qimgv-plus PRIVATE Qt${QT_VERSION_MAJOR}::OpenGLWidgets Qt${QT_VERSION_MAJOR}::SvgWidgets)
 endif()
