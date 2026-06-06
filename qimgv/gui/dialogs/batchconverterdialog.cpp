@@ -289,9 +289,9 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     if (!filePaths.isEmpty())
         ui->outDirEdit->setText(QFileInfo(filePaths[0]).absolutePath());
 
-    ui->filterComboBox->addItem("Nearest", QI_FILTER_NEAREST);
-    ui->filterComboBox->addItem("Bilinear", QI_FILTER_BILINEAR);
-    ui->filterComboBox->addItem("Smart sharpen", QI_FILTER_SMART);
+    ui->filterComboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
+    ui->filterComboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
+    ui->filterComboBox->addItem(tr("Smart sharpen"), QI_FILTER_SMART);
     int smartIndex = ui->filterComboBox->findData(QI_FILTER_SMART);
     ui->filterComboBox->setCurrentIndex(smartIndex != -1 ? smartIndex : 1);
 

@@ -114,10 +114,10 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
   ui->label_4->setEnabled(true);
   ui->comboBox->setEnabled(true);
   ui->comboBox->clear();
-  ui->comboBox->addItem("Nearest", QI_FILTER_NEAREST);
-  ui->comboBox->addItem("Bilinear", QI_FILTER_BILINEAR);
+  ui->comboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
+  ui->comboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
 
-  ui->comboBox->addItem("Smart sharpen", QI_FILTER_SMART);
+  ui->comboBox->addItem(tr("Smart sharpen"), QI_FILTER_SMART);
 
   ScalingFilter currentFilter = settings->scalingFilter();
   int idx = ui->comboBox->findData(currentFilter);

@@ -182,7 +182,7 @@ void MW::fitWindow() {
     if(viewerWidget->interactionEnabled()) {
         viewerWidget->fitWindow();
     } else {
-        showMessage("Zoom temporary disabled");
+        showMessage(tr("Zoom temporary disabled"));
     }
 }
 
@@ -190,7 +190,7 @@ void MW::fitWidth() {
     if(viewerWidget->interactionEnabled()) {
         viewerWidget->fitWidth();
     } else {
-        showMessage("Zoom temporary disabled");
+        showMessage(tr("Zoom temporary disabled"));
     }
 }
 
@@ -198,7 +198,7 @@ void MW::fitOriginal() {
     if(viewerWidget->interactionEnabled()) {
         viewerWidget->fitOriginal();
     } else {
-        showMessage("Zoom temporary disabled");
+        showMessage(tr("Zoom temporary disabled"));
     }
 }
 
@@ -206,7 +206,7 @@ void MW::fitWindowStretch() {
     if(viewerWidget->interactionEnabled()) {
         viewerWidget->fitWindowStretch();
     } else {
-        showMessage("Zoom temporary disabled");
+        showMessage(tr("Zoom temporary disabled"));
     }
 }
 
@@ -275,12 +275,12 @@ void MW::onSortingChanged(SortingMode mode) {
     folderView.get()->onSortingChanged(mode);
     if(centralWidget.get()->currentViewMode() == ViewMode::MODE_DOCUMENT) {
         switch(mode) {
-            case SortingMode::SORT_NAME:      showMessage("Sorting: By Name");              break;
-            case SortingMode::SORT_NAME_DESC: showMessage("Sorting: By Name (desc.)");      break;
-            case SortingMode::SORT_TIME:      showMessage("Sorting: By Time");              break;
-            case SortingMode::SORT_TIME_DESC: showMessage("Sorting: By Time (desc.)");      break;
-            case SortingMode::SORT_SIZE:      showMessage("Sorting: By File Size");         break;
-            case SortingMode::SORT_SIZE_DESC: showMessage("Sorting: By File Size (desc.)"); break;
+            case SortingMode::SORT_NAME:      showMessage(tr("Sorting: By Name"));              break;
+            case SortingMode::SORT_NAME_DESC: showMessage(tr("Sorting: By Name (desc.)"));      break;
+            case SortingMode::SORT_TIME:      showMessage(tr("Sorting: By Time"));              break;
+            case SortingMode::SORT_TIME_DESC: showMessage(tr("Sorting: By Time (desc.)"));      break;
+            case SortingMode::SORT_SIZE:      showMessage(tr("Sorting: By File Size"));         break;
+            case SortingMode::SORT_SIZE_DESC: showMessage(tr("Sorting: By File Size (desc.)")); break;
         }
     }
 }
@@ -310,18 +310,18 @@ void MW::setDirectoryPath(QString path) {
 void MW::toggleLockZoom() {
     viewerWidget->toggleLockZoom();
     if(viewerWidget->lockZoomEnabled())
-        showMessage("Zoom lock: ON");
+        showMessage(tr("Zoom lock: ON"));
     else
-        showMessage("Zoom lock: OFF");
+        showMessage(tr("Zoom lock: OFF"));
     onInfoUpdated();
 }
 
 void MW::toggleLockView() {
     viewerWidget->toggleLockView();
     if(viewerWidget->lockViewEnabled())
-        showMessage("View lock: ON");
+        showMessage(tr("View lock: ON"));
     else
-        showMessage("View lock: OFF");
+        showMessage(tr("View lock: OFF"));
     onInfoUpdated();
 }
 
@@ -414,12 +414,12 @@ void MW::toggleScalingFilter() {
 }
 
 void MW::setFilterNearest() {
-    showMessage("Filter: Nearest", 600);
+    showMessage(tr("Filter: ") + tr("Nearest"), 600);
     viewerWidget->setFilterNearest();
 }
 
 void MW::setFilterBilinear() {
-    showMessage("Filter: Bilinear", 600);
+    showMessage(tr("Filter: ") + tr("Bilinear"), 600);
     viewerWidget->setFilterBilinear();
 }
 
@@ -427,19 +427,19 @@ void MW::setFilter(ScalingFilter filter) {
     QString filterName;
     switch (filter) {
         case QI_FILTER_NEAREST:
-            filterName = "Nearest";
+            filterName = tr("Nearest");
             break;
         case ScalingFilter::QI_FILTER_BILINEAR:
-            filterName = "Bilinear";
+            filterName = tr("Bilinear");
             break;
         case QI_FILTER_SMART:
-            filterName = "Smart sharpen";
+            filterName = tr("Smart sharpen");
             break;
         default:
-            filterName = "Configured " + QString::number(static_cast<int>(filter));
+            filterName = tr("Configured ") + QString::number(static_cast<int>(filter));
             break;
     }
-    showMessage("Filter: " + filterName, 600);
+    showMessage(tr("Filter: ") + filterName, 600);
     viewerWidget->setScalingFilter(filter);
 }
 
@@ -448,7 +448,7 @@ void MW::toggleUpscayl() {
     bool current = settings->useUpscayl();
     settings->setUseUpscayl(!current);
     settings->sendChangeNotification();
-    showMessage(settings->useUpscayl() ? "Use Upscayl: ON" : "Use Upscayl: OFF", 600);
+    showMessage(settings->useUpscayl() ? tr("Use Upscayl: ON") : tr("Use Upscayl: OFF"), 600);
     if (!settings->useUpscayl()) {
         hideUpscaledCrop();
     }

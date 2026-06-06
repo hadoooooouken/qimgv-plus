@@ -238,12 +238,12 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   ui->colorSelectorThumbpanel->setShowAlpha(true);
 
   ui->scalingQualityComboBox->clear();
-  ui->scalingQualityComboBox->addItem("Nearest", QI_FILTER_NEAREST);
-  ui->scalingQualityComboBox->addItem("Bilinear", QI_FILTER_BILINEAR);
+  ui->scalingQualityComboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
+  ui->scalingQualityComboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
 
-  ui->scalingQualityComboBox->addItem("Smart sharpen",
+  ui->scalingQualityComboBox->addItem(tr("Smart sharpen"),
                                       QI_FILTER_SMART);
-  ui->scalingQualityComboBox->addItem("FidelityFX-CAS (GPU)", QI_FILTER_CAS);
+  ui->scalingQualityComboBox->addItem(tr("FidelityFX-CAS (GPU)"), QI_FILTER_CAS);
 
   casContainerWidget = new QWidget(this);
   QGridLayout *casLayout = new QGridLayout(casContainerWidget);
