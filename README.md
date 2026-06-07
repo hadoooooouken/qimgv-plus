@@ -32,7 +32,7 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 
 - **Quick Copy / Move**: Easily categorize or organize your files into configurable folders.
 
-- **Script Integration**: Ability to run external shell scripts on the current image.
+- **Open with**: Launch the current image in an external application or custom command.
 
 - **Multilingual UI**: Interface available in 8 languages — English, German, French, Spanish, Ukrainian, Japanese, Turkish, and Simplified Chinese.
 
@@ -106,9 +106,9 @@ With panel visible, use 1 - 9 keys to copy/move current image to corresponding d
 
 When you are done press C or M again to hide the panel.
 
-## Running scripts
+## Open with
 
-You can run custom commands or scripts on the current image.
+You can open the current image in external applications or run custom commands on it.
 
 Open **Settings > Scripts**. Press Add. Here you can choose between a command and a script file. 
 
