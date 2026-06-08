@@ -1895,7 +1895,7 @@ Gesamtdateien: %3</translation>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="663"/>
         <source>Status bar</source>
-        <translation>Statusleiste</translation>
+        <translation type="vanished">Statusleiste</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="696"/>

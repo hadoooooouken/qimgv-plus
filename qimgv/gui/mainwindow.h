@@ -35,7 +35,6 @@
 #include "gui/overlays/renameoverlay.h"
 #include "gui/overlays/saveconfirmoverlay.h"
 #include "gui/panels/croppanel/croppanel.h"
-#include "gui/panels/infobar/infobarproxy.h"
 #include "gui/panels/mainpanel/thumbnailstrip.h"
 #include "gui/panels/sidepanel/sidepanel.h"
 #include "gui/viewers/documentwidget.h"
@@ -99,7 +98,7 @@ private:
   QTimer windowGeometryChangeTimer;
   int currentDisplay;
 
-  bool cropPanelActive, showInfoBarFullscreen, showInfoBarWindowed, maximized;
+  bool cropPanelActive, showInfoBarFullscreen, maximized;
   std::shared_ptr<DocumentWidget> docWidget;
   std::shared_ptr<FolderViewProxy> folderView;
   std::shared_ptr<CentralWidget> centralWidget;
@@ -120,7 +119,6 @@ private:
 
   ControlsOverlay *controlsOverlay;
   FullscreenInfoOverlayProxy *infoBarFullscreen;
-  std::shared_ptr<InfoBarProxy> infoBarWindowed;
   FloatingMessageProxy *floatingMessage;
 
   PanelPosition panelPosition;

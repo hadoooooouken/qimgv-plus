@@ -1890,7 +1890,7 @@ Total des fichiers : %3</translation>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="663"/>
         <source>Status bar</source>
-        <translation>Barre d&apos;état</translation>
+        <translation type="vanished">Barre d&apos;état</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="696"/>

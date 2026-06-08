@@ -263,7 +263,7 @@
           <enum>QFrame::Shape::NoFrame</enum>
          </property>
          <property name="currentIndex">
-          <number>7</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="General">
           <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -4264,8 +4264,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>609</width>
-                <height>699</height>
+                <width>446</width>
+                <height>650</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_31">
@@ -4836,8 +4836,8 @@ Example: D:\Downloads; E:\Pictures</string>
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>609</width>
-                <height>699</height>
+                <width>390</width>
+                <height>242</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_aiUpscaleContents">

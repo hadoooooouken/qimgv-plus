@@ -2020,7 +2020,7 @@ Total files: %3</source>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="663"/>
         <source>Status bar</source>
-        <translation>状态栏</translation>
+        <translation type="vanished">状态栏</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="720"/>

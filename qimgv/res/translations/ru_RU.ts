@@ -1885,7 +1885,7 @@ Total files: %3</source>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="663"/>
         <source>Status bar</source>
-        <translation>Строка состояния</translation>
+        <translation type="vanished">Строка состояния</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="696"/>

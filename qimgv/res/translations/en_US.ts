@@ -1721,7 +1721,7 @@ Total files: %3</source>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="663"/>
         <source>Status bar</source>
-        <translation type="unfinished"></translation>
+        <translation type="vanished"></translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="696"/>

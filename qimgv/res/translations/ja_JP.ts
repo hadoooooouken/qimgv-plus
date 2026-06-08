@@ -1890,7 +1890,7 @@ Total files: %3</source>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="663"/>
         <source>Status bar</source>
-        <translation>ステータスバー</translation>
+        <translation type="vanished">ステータスバー</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="696"/>

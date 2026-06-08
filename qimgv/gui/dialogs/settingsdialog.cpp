@@ -582,7 +582,6 @@ void SettingsDialog::readSettings() {
   else
     ui->zoomIndicatorOff->setChecked(true);
   ui->showInfoBarFullscreen->setChecked(settings->infoBarFullscreen());
-  ui->showInfoBarWindowed->setChecked(settings->infoBarWindowed());
   ui->showExtendedInfoTitle->setChecked(settings->windowTitleExtendedInfo());
   ui->cursorAutohideCheckBox->setChecked(settings->cursorAutohide());
   ui->keepFitModeCheckBox->setChecked(settings->keepFitMode());
@@ -820,7 +819,6 @@ void SettingsDialog::saveSettings() {
   else
     settings->setZoomIndicatorMode(INDICATOR_DISABLED);
   settings->setInfoBarFullscreen(ui->showInfoBarFullscreen->isChecked());
-  settings->setInfoBarWindowed(ui->showInfoBarWindowed->isChecked());
   settings->setWindowTitleExtendedInfo(ui->showExtendedInfoTitle->isChecked());
   settings->setCursorAutohide(ui->cursorAutohideCheckBox->isChecked());
   settings->setKeepFitMode(ui->keepFitModeCheckBox->isChecked());

@@ -63,8 +63,7 @@ MW::MW(QWidget *parent)
  */
 void MW::setupUi() {
     viewerWidget.reset(new ViewerWidget(this));
-    infoBarWindowed.reset(new InfoBarProxy(this));
-    docWidget.reset(new DocumentWidget(viewerWidget, infoBarWindowed));
+    docWidget.reset(new DocumentWidget(viewerWidget));
     folderView.reset(new FolderViewProxy(this));
     connect(folderView.get(), &FolderViewProxy::sortingSelected, this, &MW::sortingSelected);
     connect(folderView.get(), &FolderViewProxy::folderSortingSelected, this, &MW::folderSortingSelected);
@@ -102,7 +101,6 @@ void MW::setupFullUi() {
     setupCropPanel();
     docWidget->allowPanelInit();
     docWidget->setupMainPanel();
-    infoBarWindowed->init();
     infoBarFullscreen->init();
 }
 
@@ -333,13 +331,6 @@ void MW::toggleFullscreenInfoBar() {
             infoBarFullscreen->showWhenReady();
         else
             infoBarFullscreen->hide();
-    } else {
-        showInfoBarWindowed = !showInfoBarWindowed;
-        settings->setInfoBarWindowed(showInfoBarWindowed);
-        if(showInfoBarWindowed)
-            infoBarWindowed->show();
-        else
-            infoBarWindowed->hide();
     }
 }
 
@@ -964,17 +955,19 @@ void MW::onInfoUpdated() {
     if(centralWidget->currentViewMode() == MODE_FOLDERVIEW) {
         windowTitle = tr("Folder view");
         infoBarFullscreen->setInfo("", tr("No file opened."), "");
-        infoBarWindowed->setInfo("", tr("No file opened."), "");
     } else if(info.fileName.isEmpty()) {
         windowTitle = qApp->applicationName();
         infoBarFullscreen->setInfo("", tr("No file opened."), "");
-        infoBarWindowed->setInfo("", tr("No file opened."), "");
     } else {
         windowTitle = info.fileName;
         if(settings->windowTitleExtendedInfo()) {
             windowTitle.prepend(posString + "  ");
             if(!resString.isEmpty())
                 windowTitle.append("  -  " + resString);
+            if(!info.colorProfile.isEmpty())
+                windowTitle.append("  -  " + info.colorProfile);
+            if(!formatString.isEmpty())
+                windowTitle.append("  -  " + formatString);
             if(!sizeString.isEmpty())
                 windowTitle.append("  -  " + sizeString);
         }
@@ -990,7 +983,7 @@ void MW::onInfoUpdated() {
         if(viewerWidget->lockViewEnabled())
             states.append(" [view lock]");
 
-        if(!settings->infoBarWindowed() && !states.isEmpty())
+        if(!states.isEmpty())
             windowTitle.append(" -" + states);
         if(info.edited)
             windowTitle.prepend("* ");
@@ -1015,16 +1008,7 @@ void MW::onInfoUpdated() {
                 rightInfo = sizeString;
         }
 
-        QString rightInfoWindowed = rightInfo;
-        if(!states.isEmpty()) {
-            if(!rightInfoWindowed.isEmpty())
-                rightInfoWindowed += " " + states;
-            else
-                rightInfoWindowed = states;
-        }
-
         infoBarFullscreen->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), rightInfo);
-        infoBarWindowed->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), rightInfoWindowed);
     }
     setWindowTitle(windowTitle);
 }
@@ -1114,7 +1098,6 @@ bool MW::showConfirmation(QString title, QString msg) {
 void MW::readSettings() {
     panelPosition = settings->panelPosition();
     showInfoBarFullscreen = settings->infoBarFullscreen();
-    showInfoBarWindowed = settings->infoBarWindowed();
     adaptToWindowState();
 }
 
@@ -1122,8 +1105,6 @@ void MW::readSettings() {
 void MW::adaptToWindowState() {
     docWidget->hideFloatingPanel();
     if(isFullScreen()) { //-------------------------------------- fullscreen ---
-        infoBarWindowed->hide();
-
         if(showInfoBarFullscreen)
             infoBarFullscreen->showWhenReady();
         else
@@ -1136,12 +1117,6 @@ void MW::adaptToWindowState() {
             controlsOverlay->hide();
     } else { //------------------------------------------------------ window ---
         infoBarFullscreen->hide();
-
-        if(showInfoBarWindowed)
-            infoBarWindowed->show();
-        else
-            infoBarWindowed->hide();
-
         controlsOverlay->hide();
     }
     folderView->onFullscreenModeChanged(isFullScreen());

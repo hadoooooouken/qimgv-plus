@@ -1,7 +1,6 @@
 #include "documentwidget.h"
 
 DocumentWidget::DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget,
-                               std::shared_ptr<InfoBarProxy> infoBar,
                                QWidget *parent)
     : FloatingWidgetContainer(parent), mainPanel(nullptr), mPanelPinned(false),
       mPanelEnabled(false), mPanelFullscreenOnly(false), avoidPanelFlag(false),
@@ -11,14 +10,10 @@ DocumentWidget::DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget,
   connect(&hideTimer, &QTimer::timeout, this,
           &DocumentWidget::hideFloatingPanelDelayed);
 
-  layoutRoot = new QVBoxLayout();
-  layoutRoot->setContentsMargins(0, 0, 0, 0);
-  layoutRoot->setSpacing(0);
   layout = new QBoxLayout(QBoxLayout::LeftToRight);
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
-  layoutRoot->addLayout(layout);
-  setLayout(layoutRoot);
+  setLayout(layout);
   setAttribute(Qt::WA_TranslucentBackground, true);
   setAttribute(Qt::WA_NoSystemBackground, true);
   setMouseTracking(true);
@@ -26,9 +21,6 @@ DocumentWidget::DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget,
   mViewWidget->setParent(this);
   layout->addWidget(mViewWidget.get());
   mViewWidget.get()->show();
-  mInfoBar = infoBar;
-  mInfoBar->setParent(this);
-  layoutRoot->addWidget(mInfoBar.get());
   setFocusProxy(mViewWidget.get());
 
   setInteractionEnabled(true);

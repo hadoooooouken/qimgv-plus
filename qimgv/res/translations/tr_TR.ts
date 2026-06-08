@@ -1890,7 +1890,7 @@ Toplam dosya: %3</translation>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="663"/>
         <source>Status bar</source>
-        <translation>Durum çubuğunu göster</translation>
+        <translation type="vanished">Durum çubuğunu göster</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="696"/>

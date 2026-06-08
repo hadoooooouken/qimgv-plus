@@ -2069,7 +2069,7 @@ Total files: %3</source>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="663"/>
         <source>Status bar</source>
-        <translation>Рядок стану</translation>
+        <translation type="vanished">Рядок стану</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.ui" line="720"/>
