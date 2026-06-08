@@ -96,6 +96,7 @@ signals:
     void reloadImage();
     void copyFileClipboard();
     void copyPathClipboard();
+    void copyViewportClipboard();
     void renameFile();
     void contextMenu();
     void toggleTransparencyGrid();

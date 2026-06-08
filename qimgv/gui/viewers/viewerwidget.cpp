@@ -3,6 +3,10 @@
  */
 
 #include "viewerwidget.h"
+#include <QApplication>
+#include <QClipboard>
+#include <QMimeData>
+#include <QPainter>
 
 ViewerWidget::ViewerWidget(QWidget *parent)
     : FloatingWidgetContainer(parent),
@@ -85,6 +89,34 @@ QPixmap ViewerWidget::currentScaledPixmapCopy() const {
         return imageViewer->currentScaledPixmapCopy();
     }
     return QPixmap();
+}
+
+bool ViewerWidget::copyCurrentViewportToClipboard() const {
+    if (!imageViewer || currentWidget != IMAGEVIEWER || !imageViewer->isDisplaying())
+        return false;
+
+    QRect r = imageViewer->visibleImageViewportRect();
+    if (r.isEmpty())
+        return false;
+
+    float dpr = getDpr();
+    QSize imgSize(qMax(1, qRound(r.width() * dpr)), qMax(1, qRound(r.height() * dpr)));
+    QImage image(imgSize, QImage::Format_ARGB32_Premultiplied);
+    image.setDevicePixelRatio(dpr);
+    image.fill(Qt::transparent);
+
+    QPainter painter(&image);
+    painter.setRenderHint(QPainter::Antialiasing);
+    imageViewer->render(&painter, QRectF(QPointF(0, 0), r.size()), r);
+    painter.end();
+
+    if (image.isNull())
+        return false;
+
+    QMimeData *mimeData = new QMimeData();
+    mimeData->setImageData(image);
+    QApplication::clipboard()->setMimeData(mimeData);
+    return true;
 }
 
 float ViewerWidget::getDpr() const {

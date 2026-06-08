@@ -64,7 +64,9 @@ public:
 
     virtual QRect visibleImageRect() const;
     virtual QRect visibleOriginalImageRect() const;
+    QRect visibleImageViewportRect() const;
     virtual QPixmap currentScaledPixmapCopy() const;
+    QImage grabViewportImage() const;
     float getDpr() const;
 
     void pauseResume();

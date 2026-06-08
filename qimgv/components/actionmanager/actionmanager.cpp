@@ -74,6 +74,8 @@ void ActionManager::initDefaults() {
   actionManager->defaults.insert("F5", "reloadImage");
   actionManager->defaults.insert(InputMap::keyNameCtrl() + "+C",
                                  "copyFileClipboard");
+  actionManager->defaults.insert(InputMap::keyNameShift() + "+C",
+                                 "copyViewportClipboard");
   actionManager->defaults.insert(InputMap::keyNameCtrl() + "+" +
                                      InputMap::keyNameShift() + "+C",
                                  "copyPathClipboard");
@@ -238,6 +240,13 @@ void ActionManager::readShortcuts() {
   // we bind it to "N" by default.
   if (shortcuts.key("toggleScalingFilter", "").isEmpty() && !shortcuts.contains("N")) {
     shortcuts.insert("N", "toggleScalingFilter");
+  }
+
+  // If the user doesn't have a shortcut for copyViewportClipboard, and Shift+C is not bound to anything else,
+  // bind it to Shift+C by default.
+  QString shiftC = InputMap::keyNameShift() + "+C";
+  if (shortcuts.key("copyViewportClipboard", "").isEmpty() && !shortcuts.contains(shiftC)) {
+    shortcuts.insert(shiftC, "copyViewportClipboard");
   }
 
 #ifdef USE_UPSCAYL

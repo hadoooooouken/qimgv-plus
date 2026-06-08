@@ -4,6 +4,7 @@
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+#include <QPainter>
 
 ImageViewerV2::ImageViewerV2(QWidget *parent)
     : QGraphicsView(parent), pixmap(nullptr), pixmapScaled(nullptr),
@@ -1638,6 +1639,32 @@ QPixmap ImageViewerV2::currentScaledPixmapCopy() const {
     mode = Qt::FastTransformation;
   }
   return pixmap->scaled(tSize, Qt::KeepAspectRatio, mode);
+}
+
+QRect ImageViewerV2::visibleImageViewportRect() const {
+  if (!pixmap || pixmap->isNull())
+    return QRect();
+
+  QRectF imageSceneRect = pixmapItem.mapRectToScene(pixmapItem.boundingRect());
+  QPolygonF poly = mapFromScene(imageSceneRect);
+  QRect rect = poly.boundingRect().toAlignedRect();
+  return rect.intersected(viewport()->rect());
+}
+
+QImage ImageViewerV2::grabViewportImage() const {
+  QWidget *view = viewport();
+  if (!view || view->size().isEmpty())
+    return QImage();
+
+  QImage image(view->size() * devicePixelRatioF(), QImage::Format_ARGB32_Premultiplied);
+  image.setDevicePixelRatio(devicePixelRatioF());
+  image.fill(Qt::transparent);
+
+  QPainter painter(&image);
+  const_cast<ImageViewerV2 *>(this)->render(&painter);
+  painter.end();
+
+  return image;
 }
 
 float ImageViewerV2::getDpr() const { return dpr; }

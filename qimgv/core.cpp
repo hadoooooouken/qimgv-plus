@@ -477,6 +477,8 @@ void Core::initActions() {
           qOverload<>(&Core::reloadImage));
   connect(actionManager, &ActionManager::copyFileClipboard, this,
           &Core::copyFileClipboard);
+  connect(actionManager, &ActionManager::copyViewportClipboard, mw,
+          &MW::copyViewportToClipboard);
   connect(actionManager, &ActionManager::copyPathClipboard, this,
           &Core::copyPathClipboard);
   connect(actionManager, &ActionManager::renameFile, this,

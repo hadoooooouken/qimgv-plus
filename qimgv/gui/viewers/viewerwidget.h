@@ -22,6 +22,7 @@ public:
     QRect visibleImageRect() const;
     QRect visibleOriginalImageRect() const;
     QPixmap currentScaledPixmapCopy() const;
+    bool copyCurrentViewportToClipboard() const;
     float getDpr() const;
     QSize sourceSize();
 

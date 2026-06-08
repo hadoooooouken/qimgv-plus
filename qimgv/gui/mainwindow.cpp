@@ -1,4 +1,6 @@
 #include "mainwindow.h"
+#include <QClipboard>
+#include <QApplication>
 
 // TODO: nuke this and rewrite
 
@@ -879,6 +881,14 @@ void MW::triggerCopyOverlay() {
         copyOverlay->setDialogMode(OVERLAY_COPY);
         copyOverlay->show();
     }
+}
+
+void MW::copyViewportToClipboard() {
+    if (!viewerWidget->isDisplaying() || !viewerWidget->copyCurrentViewportToClipboard()) {
+        showWarning(tr("No viewport image available to copy."));
+        return;
+    }
+    showMessageSuccess(tr("Viewport image copied to clipboard"));
 }
 
 void MW::triggerMoveOverlay() {

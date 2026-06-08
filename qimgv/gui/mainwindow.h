@@ -225,6 +225,7 @@ public slots:
   void showFullScreen();
   void showWindowed();
   void triggerCopyOverlay();
+  void copyViewportToClipboard();
   void showMessage(QString text);
   void showMessage(QString text, int duration);
   void hideMessage();
