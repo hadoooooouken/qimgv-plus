@@ -214,6 +214,8 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   // Connect thumbnail opacity slider
   connect(ui->thumbOpacitySlider, &QSlider::valueChanged, this,
           &SettingsDialog::onThumbOpacitySliderChanged);
+  connect(ui->thumbOpacitySlider, &QSlider::sliderReleased, this,
+          &SettingsDialog::onThumbOpacitySliderReleased);
 
   connect(ui->useBlackBackgroundCheckBox, &QCheckBox::toggled,
           [this](bool checked) {
@@ -1195,7 +1197,15 @@ void SettingsDialog::onBgOpacitySliderChanged(int value) {
 //------------------------------------------------------------------------------
 void SettingsDialog::onThumbOpacitySliderChanged(int value) {
   ui->thumbOpacityPercentLabel->setText(QString::number(value) + "%");
-  settings->setThumbnailOpacity(value / 100.f);
+  if (!ui->thumbOpacitySlider->isSliderDown()) {
+    settings->setThumbnailOpacity(value / 100.f);
+    settings->loadTheme();
+    emit settingsChanged();
+  }
+}
+//------------------------------------------------------------------------------
+void SettingsDialog::onThumbOpacitySliderReleased() {
+  settings->setThumbnailOpacity(ui->thumbOpacitySlider->value() / 100.f);
   settings->loadTheme();
   emit settingsChanged();
 }
