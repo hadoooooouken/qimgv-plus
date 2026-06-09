@@ -2,9 +2,8 @@
 
 #include "gui/customwidgets/overlaywidget.h"
 
-namespace Ui {
-class ColorAdjustmentsOverlay;
-}
+class QSlider;
+class QLabel;
 
 class ColorAdjustmentsOverlay : public OverlayWidget {
     Q_OBJECT
@@ -24,8 +23,10 @@ public:
     void setCustomPosition(const QPoint &globalPos);
 
 signals:
-    void adjustmentsChanged(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
-    void applyRequested(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+    void adjustmentsChanged(float brightness, float contrast, float saturation,
+                            float hue, float exposure, float temperature, float tint);
+    void applyRequested(float brightness, float contrast, float saturation,
+                        float hue, float exposure, float temperature, float tint);
 
 public slots:
     void show();
@@ -43,7 +44,24 @@ private slots:
     void onSliderValueChanged();
 
 private:
-    Ui::ColorAdjustmentsOverlay *ui;
+    void setupUi();
+    void updateValueLabels();
+
+    QSlider *m_brightnessSlider = nullptr;
+    QLabel  *m_brightnessValLabel = nullptr;
+    QSlider *m_contrastSlider = nullptr;
+    QLabel  *m_contrastValLabel = nullptr;
+    QSlider *m_saturationSlider = nullptr;
+    QLabel  *m_saturationValLabel = nullptr;
+    QSlider *m_hueSlider = nullptr;
+    QLabel  *m_hueValLabel = nullptr;
+    QSlider *m_exposureSlider = nullptr;
+    QLabel  *m_exposureValLabel = nullptr;
+    QSlider *m_temperatureSlider = nullptr;
+    QLabel  *m_temperatureValLabel = nullptr;
+    QSlider *m_tintSlider = nullptr;
+    QLabel  *m_tintValLabel = nullptr;
+
     QPoint customGlobalPos;
     bool hasCustomPos = false;
     QPoint dragStartPosition;

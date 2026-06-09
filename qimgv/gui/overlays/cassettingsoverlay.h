@@ -33,11 +33,13 @@ private slots:
     void onResetClicked();
 
 private:
-    QWidget *contentWidget = nullptr;
-    QSlider *sharpenSlider = nullptr;
-    QLabel *sharpenValLabel = nullptr;
-    QSlider *contrastSlider = nullptr;
-    QLabel *contrastValLabel = nullptr;
+    void setupUi();
+    void updateValueLabels();
+
+    QSlider *m_sharpenSlider = nullptr;
+    QLabel  *m_sharpenValLabel = nullptr;
+    QSlider *m_contrastSlider = nullptr;
+    QLabel  *m_contrastValLabel = nullptr;
 
     QPoint customGlobalPos;
     bool hasCustomPos = false;

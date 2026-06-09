@@ -83,7 +83,6 @@ target_sources(qimgv-plus PRIVATE
 # UI Files
 
 target_sources(qimgv-plus PRIVATE
-    contextmenu.ui
 
     dialogs/filereplacedialog.ui
     dialogs/batchconverterdialog.ui
@@ -98,7 +97,6 @@ target_sources(qimgv-plus PRIVATE
     overlays/floatingmessage.ui
     overlays/fullscreeninfooverlay.ui
     overlays/imageinfooverlay.ui
-    overlays/coloradjustmentsoverlay.ui
     overlays/renameoverlay.ui
     overlays/saveconfirmoverlay.ui
 

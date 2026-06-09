@@ -1,233 +1,275 @@
 #include "coloradjustmentsoverlay.h"
-#include "ui_coloradjustmentsoverlay.h"
+#include "gui/customwidgets/iconbutton.h"
+#include "gui/customwidgets/iconwidget.h"
+#include <QFormLayout>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QMouseEvent>
+#include <QPushButton>
+#include <QSlider>
+#include <QVBoxLayout>
 
-ColorAdjustmentsOverlay::ColorAdjustmentsOverlay(FloatingWidgetContainer *parent) :
-    OverlayWidget(parent),
-    ui(new Ui::ColorAdjustmentsOverlay)
+ColorAdjustmentsOverlay::ColorAdjustmentsOverlay(FloatingWidgetContainer *parent)
+    : OverlayWidget(parent)
 {
-    ui->setupUi(this);
-    ui->closeButton->setIconPath(":res/icons/common/overlay/close-dim16.png");
-    ui->headerIcon->setIconPath(":/res/icons/common/settings/appearance32.png");
+    setupUi();
 
-    // Set icon paths for +/- step buttons
-    ui->brightnessMinus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-out18.png");
-    ui->brightnessPlus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-in18.png");
-    ui->contrastMinus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-out18.png");
-    ui->contrastPlus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-in18.png");
-    ui->saturationMinus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-out18.png");
-    ui->saturationPlus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-in18.png");
-    ui->hueMinus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-out18.png");
-    ui->huePlus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-in18.png");
-    ui->exposureMinus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-out18.png");
-    ui->exposurePlus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-in18.png");
-    ui->temperatureMinus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-out18.png");
-    ui->temperaturePlus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-in18.png");
-    ui->tintMinus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-out18.png");
-    ui->tintPlus->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-in18.png");
-
-    connect(ui->closeButton, &IconButton::clicked, this, &ColorAdjustmentsOverlay::hide);
-    connect(ui->resetButton, &QPushButton::clicked, this, &ColorAdjustmentsOverlay::resetAdjustments);
-    connect(ui->applyButton, &QPushButton::clicked, this, [this]() {
-        emit applyRequested(brightness(), contrast(), saturation(), hue(), exposure(), temperature(), tint());
-        resetAdjustments();
-    });
-
-    connect(ui->compareButton, &QPushButton::pressed, this, [this]() {
-        emit adjustmentsChanged(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-    });
-    connect(ui->compareButton, &QPushButton::released, this, [this]() {
-        emit adjustmentsChanged(brightness(), contrast(), saturation(), hue(), exposure(), temperature(), tint());
-    });
-
-    ui->brightnessSlider->installEventFilter(this);
-    ui->contrastSlider->installEventFilter(this);
-    ui->saturationSlider->installEventFilter(this);
-    ui->hueSlider->installEventFilter(this);
-    ui->exposureSlider->installEventFilter(this);
-    ui->temperatureSlider->installEventFilter(this);
-    ui->tintSlider->installEventFilter(this);
-
-    connect(ui->brightnessSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
-    connect(ui->contrastSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
-    connect(ui->saturationSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
-    connect(ui->hueSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
-    connect(ui->exposureSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
-    connect(ui->temperatureSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
-    connect(ui->tintSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
-
-    // Connect clicked signals for +/- step buttons
-    connect(ui->brightnessMinus, &IconButton::clicked, this, [this]() {
-        ui->brightnessSlider->setValue(ui->brightnessSlider->value() - 5);
-    });
-    connect(ui->brightnessPlus, &IconButton::clicked, this, [this]() {
-        ui->brightnessSlider->setValue(ui->brightnessSlider->value() + 5);
-    });
-    connect(ui->contrastMinus, &IconButton::clicked, this, [this]() {
-        ui->contrastSlider->setValue(ui->contrastSlider->value() - 5);
-    });
-    connect(ui->contrastPlus, &IconButton::clicked, this, [this]() {
-        ui->contrastSlider->setValue(ui->contrastSlider->value() + 5);
-    });
-    connect(ui->saturationMinus, &IconButton::clicked, this, [this]() {
-        ui->saturationSlider->setValue(ui->saturationSlider->value() - 5);
-    });
-    connect(ui->saturationPlus, &IconButton::clicked, this, [this]() {
-        ui->saturationSlider->setValue(ui->saturationSlider->value() + 5);
-    });
-    connect(ui->hueMinus, &IconButton::clicked, this, [this]() {
-        ui->hueSlider->setValue(ui->hueSlider->value() - 10);
-    });
-    connect(ui->huePlus, &IconButton::clicked, this, [this]() {
-        ui->hueSlider->setValue(ui->hueSlider->value() + 10);
-    });
-    connect(ui->exposureMinus, &IconButton::clicked, this, [this]() {
-        ui->exposureSlider->setValue(ui->exposureSlider->value() - 10);
-    });
-    connect(ui->exposurePlus, &IconButton::clicked, this, [this]() {
-        ui->exposureSlider->setValue(ui->exposureSlider->value() + 10);
-    });
-    connect(ui->temperatureMinus, &IconButton::clicked, this, [this]() {
-        ui->temperatureSlider->setValue(ui->temperatureSlider->value() - 5);
-    });
-    connect(ui->temperaturePlus, &IconButton::clicked, this, [this]() {
-        ui->temperatureSlider->setValue(ui->temperatureSlider->value() + 5);
-    });
-    connect(ui->tintMinus, &IconButton::clicked, this, [this]() {
-        ui->tintSlider->setValue(ui->tintSlider->value() - 5);
-    });
-    connect(ui->tintPlus, &IconButton::clicked, this, [this]() {
-        ui->tintSlider->setValue(ui->tintSlider->value() + 5);
-    });
+    connect(m_brightnessSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
+    connect(m_contrastSlider,   &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
+    connect(m_saturationSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
+    connect(m_hueSlider,        &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
+    connect(m_exposureSlider,   &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
+    connect(m_temperatureSlider,&QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
+    connect(m_tintSlider,       &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
 
     if (parent) {
         setContainerSize(parent->size());
     }
 }
 
-ColorAdjustmentsOverlay::~ColorAdjustmentsOverlay() {
-    delete ui;
+ColorAdjustmentsOverlay::~ColorAdjustmentsOverlay() = default;
+
+void ColorAdjustmentsOverlay::setupUi()
+{
+    setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+    setMinimumSize(420, 0);
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(12, 8, 12, 12);
+    mainLayout->setSpacing(8);
+
+    // Header (same as CasSettingsOverlay)
+    QHBoxLayout *headerLayout = new QHBoxLayout();
+    headerLayout->setContentsMargins(0, 0, 0, 0);
+
+    IconWidget *headerIcon = new IconWidget(this);
+    headerIcon->setFixedSize(16, 16);
+    headerIcon->setIconPath(":/res/icons/common/settings/appearance32.png");
+
+    QLabel *titleLabel = new QLabel(tr("Color adjustments"), this);
+    titleLabel->setStyleSheet("font-weight: bold;");
+
+    IconButton *closeButton = new IconButton(this);
+    closeButton->setFixedSize(16, 16);
+    closeButton->setIconPath(":res/icons/common/overlay/close-dim16.png");
+    connect(closeButton, &IconButton::clicked, this, &ColorAdjustmentsOverlay::hide);
+
+    headerLayout->addWidget(headerIcon);
+    headerLayout->addWidget(titleLabel);
+    headerLayout->addStretch(1);
+    headerLayout->addWidget(closeButton);
+    mainLayout->addLayout(headerLayout);
+
+    // Content: use QFormLayout for auto-aligned labels
+    QFormLayout *formLayout = new QFormLayout();
+    formLayout->setSpacing(10);
+    formLayout->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    formLayout->setFormAlignment(Qt::AlignLeft);
+    formLayout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+
+    auto addSliderRow = [&](const QString &labelText,
+                            QSlider *&slider,
+                            QLabel *&valLabel,
+                            int min, int max, int defaultValue) {
+        QHBoxLayout *rowLayout = new QHBoxLayout();
+        rowLayout->setSpacing(6);
+
+        IconButton *minusBtn = new IconButton(this);
+        minusBtn->setFixedSize(18, 18);
+        minusBtn->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-out18.png");
+        rowLayout->addWidget(minusBtn);
+
+        slider = new QSlider(Qt::Horizontal, this);
+        slider->setMinimum(min);
+        slider->setMaximum(max);
+        slider->setValue(defaultValue);
+        rowLayout->addWidget(slider);
+
+        IconButton *plusBtn = new IconButton(this);
+        plusBtn->setFixedSize(18, 18);
+        plusBtn->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-in18.png");
+        rowLayout->addWidget(plusBtn);
+
+        valLabel = new QLabel(this);
+        valLabel->setMinimumWidth(45);
+        valLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        rowLayout->addWidget(valLabel);
+
+        connect(minusBtn, &IconButton::clicked, this, [slider]() {
+            slider->setValue(slider->value() - 5);
+        });
+        connect(plusBtn, &IconButton::clicked, this, [slider]() {
+            slider->setValue(slider->value() + 5);
+        });
+
+        QLabel *label = new QLabel(labelText, this);
+        formLayout->addRow(label, rowLayout);
+    };
+
+    addSliderRow(tr("Brightness"),  m_brightnessSlider,  m_brightnessValLabel,  -100, 100, 0);
+    addSliderRow(tr("Contrast"),    m_contrastSlider,    m_contrastValLabel,       0, 300, 100);
+    addSliderRow(tr("Saturation"),  m_saturationSlider,  m_saturationValLabel,     0, 200, 100);
+    addSliderRow(tr("Hue"),         m_hueSlider,         m_hueValLabel,          -180, 180, 0);
+    addSliderRow(tr("Exposure"),    m_exposureSlider,    m_exposureValLabel,      -300, 300, 0);
+    addSliderRow(tr("Temperature"), m_temperatureSlider, m_temperatureValLabel,   -50,  50, 0);
+    addSliderRow(tr("Tint"),        m_tintSlider,        m_tintValLabel,          -50,  50, 0);
+
+    mainLayout->addLayout(formLayout);
+
+    // Button row
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    buttonLayout->setContentsMargins(0, 4, 0, 0);
+    buttonLayout->setSpacing(6);
+
+    QPushButton *compareButton = new QPushButton(tr("Compare"), this);
+    compareButton->setFocusPolicy(Qt::NoFocus);
+    compareButton->setAccessibleName("Button");
+
+    QPushButton *applyButton = new QPushButton(tr("Apply"), this);
+    applyButton->setFocusPolicy(Qt::NoFocus);
+    applyButton->setAccessibleName("Button");
+
+    QPushButton *resetButton = new QPushButton(tr("Reset"), this);
+    resetButton->setFocusPolicy(Qt::NoFocus);
+    resetButton->setAccessibleName("Button");
+
+    buttonLayout->addWidget(compareButton);
+    buttonLayout->addWidget(applyButton);
+    buttonLayout->addWidget(resetButton);
+    mainLayout->addLayout(buttonLayout);
+
+    // Connections
+    connect(resetButton, &QPushButton::clicked, this, &ColorAdjustmentsOverlay::resetAdjustments);
+    connect(applyButton, &QPushButton::clicked, this, [this]() {
+        emit applyRequested(brightness(), contrast(), saturation(),
+                            hue(), exposure(), temperature(), tint());
+        resetAdjustments();
+    });
+    connect(compareButton, &QPushButton::pressed, this, [this]() {
+        emit adjustmentsChanged(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    });
+    connect(compareButton, &QPushButton::released, this, [this]() {
+        emit adjustmentsChanged(brightness(), contrast(), saturation(),
+                                hue(), exposure(), temperature(), tint());
+    });
+
+    // Double-click reset
+    m_brightnessSlider->installEventFilter(this);
+    m_contrastSlider->installEventFilter(this);
+    m_saturationSlider->installEventFilter(this);
+    m_hueSlider->installEventFilter(this);
+    m_exposureSlider->installEventFilter(this);
+    m_temperatureSlider->installEventFilter(this);
+    m_tintSlider->installEventFilter(this);
+
+    updateValueLabels();
 }
 
-void ColorAdjustmentsOverlay::setCustomPosition(const QPoint &globalPos) {
+void ColorAdjustmentsOverlay::updateValueLabels()
+{
+    m_brightnessValLabel->setText(QString::number(m_brightnessSlider->value()) + "%");
+    m_contrastValLabel->setText(QString::number(m_contrastSlider->value()) + "%");
+    m_saturationValLabel->setText(QString::number(m_saturationSlider->value()) + "%");
+    m_hueValLabel->setText(QString::number(m_hueSlider->value()) + "°");
+
+    float expVal = m_exposureSlider->value() / 100.0f;
+    QString expStr = (expVal >= 0.0f ? "+" : "") + QString::number(expVal, 'f', 2);
+    m_exposureValLabel->setText(expStr);
+
+    m_temperatureValLabel->setText(QString::number(m_temperatureSlider->value()));
+    m_tintValLabel->setText(QString::number(m_tintSlider->value()));
+}
+
+float ColorAdjustmentsOverlay::brightness() const { return m_brightnessSlider->value() / 100.0f; }
+float ColorAdjustmentsOverlay::contrast()  const { return m_contrastSlider->value()   / 100.0f; }
+float ColorAdjustmentsOverlay::saturation()const { return m_saturationSlider->value() / 100.0f; }
+float ColorAdjustmentsOverlay::hue()       const { return m_hueSlider->value(); }
+float ColorAdjustmentsOverlay::exposure()  const { return m_exposureSlider->value()  / 100.0f; }
+float ColorAdjustmentsOverlay::temperature()const { return m_temperatureSlider->value() / 100.0f; }
+float ColorAdjustmentsOverlay::tint()      const { return m_tintSlider->value() / 100.0f; }
+
+void ColorAdjustmentsOverlay::show()
+{
+    OverlayWidget::show();
+    adjustSize();
+    recalculateGeometry();
+}
+
+void ColorAdjustmentsOverlay::hide()
+{
+    OverlayWidget::hide();
+}
+
+void ColorAdjustmentsOverlay::resetAdjustments()
+{
+    m_brightnessSlider->blockSignals(true);
+    m_contrastSlider->blockSignals(true);
+    m_saturationSlider->blockSignals(true);
+    m_hueSlider->blockSignals(true);
+    m_exposureSlider->blockSignals(true);
+    m_temperatureSlider->blockSignals(true);
+    m_tintSlider->blockSignals(true);
+
+    m_brightnessSlider->setValue(0);
+    m_contrastSlider->setValue(100);
+    m_saturationSlider->setValue(100);
+    m_hueSlider->setValue(0);
+    m_exposureSlider->setValue(0);
+    m_temperatureSlider->setValue(0);
+    m_tintSlider->setValue(0);
+
+    m_brightnessSlider->blockSignals(false);
+    m_contrastSlider->blockSignals(false);
+    m_saturationSlider->blockSignals(false);
+    m_hueSlider->blockSignals(false);
+    m_exposureSlider->blockSignals(false);
+    m_temperatureSlider->blockSignals(false);
+    m_tintSlider->blockSignals(false);
+
+    updateValueLabels();
+
+    emit adjustmentsChanged(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+void ColorAdjustmentsOverlay::onSliderValueChanged()
+{
+    updateValueLabels();
+    emit adjustmentsChanged(brightness(), contrast(), saturation(),
+                            hue(), exposure(), temperature(), tint());
+}
+
+void ColorAdjustmentsOverlay::setCustomPosition(const QPoint &globalPos)
+{
     customGlobalPos = globalPos;
     hasCustomPos = true;
     recalculateGeometry();
 }
 
-void ColorAdjustmentsOverlay::recalculateGeometry() {
+void ColorAdjustmentsOverlay::recalculateGeometry()
+{
     if (hasCustomPos) {
         QWidget *p = parentWidget();
         if (p) {
             QPoint localPos = p->mapFromGlobal(customGlobalPos);
             QRect parentRect = p->rect();
-            QSize size = minimumSize();
+            QSize sz = sizeHint();
 
-            // Adjust position so it fits fully within the parent bounds
-            int x = qBound(0, localPos.x(), parentRect.width() - size.width());
-            int y = qBound(0, localPos.y(), parentRect.height() - size.height());
+            int x = qBound(0, localPos.x(), parentRect.width() - sz.width());
+            int y = qBound(0, localPos.y(), parentRect.height() - sz.height());
 
-            setGeometry(x, y, size.width(), size.height());
+            setGeometry(x, y, sz.width(), sz.height());
             return;
         }
     }
     OverlayWidget::recalculateGeometry();
 }
 
-float ColorAdjustmentsOverlay::brightness() const {
-    return ui->brightnessSlider->value() / 100.0f;
-}
-
-float ColorAdjustmentsOverlay::contrast() const {
-    return ui->contrastSlider->value() / 100.0f;
-}
-
-float ColorAdjustmentsOverlay::saturation() const {
-    return ui->saturationSlider->value() / 100.0f;
-}
-
-float ColorAdjustmentsOverlay::hue() const {
-    return ui->hueSlider->value();
-}
-
-float ColorAdjustmentsOverlay::exposure() const {
-    return ui->exposureSlider->value() / 100.0f;
-}
-
-float ColorAdjustmentsOverlay::temperature() const {
-    return ui->temperatureSlider->value() / 100.0f;
-}
-
-float ColorAdjustmentsOverlay::tint() const {
-    return ui->tintSlider->value() / 100.0f;
-}
-
-void ColorAdjustmentsOverlay::show() {
-    OverlayWidget::show();
-    adjustSize();
-    recalculateGeometry();
-}
-
-void ColorAdjustmentsOverlay::hide() {
-    OverlayWidget::hide();
-}
-
-void ColorAdjustmentsOverlay::resetAdjustments() {
-    ui->brightnessSlider->blockSignals(true);
-    ui->contrastSlider->blockSignals(true);
-    ui->saturationSlider->blockSignals(true);
-    ui->hueSlider->blockSignals(true);
-    ui->exposureSlider->blockSignals(true);
-    ui->temperatureSlider->blockSignals(true);
-    ui->tintSlider->blockSignals(true);
-
-    ui->brightnessSlider->setValue(0);
-    ui->contrastSlider->setValue(100);
-    ui->saturationSlider->setValue(100);
-    ui->hueSlider->setValue(0);
-    ui->exposureSlider->setValue(0);
-    ui->temperatureSlider->setValue(0);
-    ui->tintSlider->setValue(0);
-
-    ui->brightnessSlider->blockSignals(false);
-    ui->contrastSlider->blockSignals(false);
-    ui->saturationSlider->blockSignals(false);
-    ui->hueSlider->blockSignals(false);
-    ui->exposureSlider->blockSignals(false);
-    ui->temperatureSlider->blockSignals(false);
-    ui->tintSlider->blockSignals(false);
-
-    ui->brightnessValLabel->setText("0%");
-    ui->contrastValLabel->setText("100%");
-    ui->saturationValLabel->setText("100%");
-    ui->hueValLabel->setText("0°");
-    ui->exposureValLabel->setText("+0.00");
-    ui->temperatureValLabel->setText("0");
-    ui->tintValLabel->setText("0");
-
-    emit adjustmentsChanged(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-}
-
-void ColorAdjustmentsOverlay::onSliderValueChanged() {
-    ui->brightnessValLabel->setText(QString::number(ui->brightnessSlider->value()) + "%");
-    ui->contrastValLabel->setText(QString::number(ui->contrastSlider->value()) + "%");
-    ui->saturationValLabel->setText(QString::number(ui->saturationSlider->value()) + "%");
-    ui->hueValLabel->setText(QString::number(ui->hueSlider->value()) + "°");
-
-    float expVal = ui->exposureSlider->value() / 100.0f;
-    QString expStr = (expVal >= 0.0f ? "+" : "") + QString::number(expVal, 'f', 2);
-    ui->exposureValLabel->setText(expStr);
-
-    ui->temperatureValLabel->setText(QString::number(ui->temperatureSlider->value()));
-    ui->tintValLabel->setText(QString::number(ui->tintSlider->value()));
-
-    emit adjustmentsChanged(brightness(), contrast(), saturation(), hue(), exposure(), temperature(), tint());
-}
-
-void ColorAdjustmentsOverlay::mousePressEvent(QMouseEvent *event) {
+void ColorAdjustmentsOverlay::mousePressEvent(QMouseEvent *event)
+{
     if (event->button() == Qt::LeftButton) {
         dragStartPosition = event->globalPosition().toPoint();
-        dragStartWidgetPosition = this->pos();
+        dragStartWidgetPosition = pos();
         isDragging = true;
         event->accept();
     } else {
@@ -235,7 +277,8 @@ void ColorAdjustmentsOverlay::mousePressEvent(QMouseEvent *event) {
     }
 }
 
-void ColorAdjustmentsOverlay::mouseMoveEvent(QMouseEvent *event) {
+void ColorAdjustmentsOverlay::mouseMoveEvent(QMouseEvent *event)
+{
     if (isDragging && (event->buttons() & Qt::LeftButton)) {
         QPoint delta = event->globalPosition().toPoint() - dragStartPosition;
         QPoint newPos = dragStartWidgetPosition + delta;
@@ -243,11 +286,10 @@ void ColorAdjustmentsOverlay::mouseMoveEvent(QMouseEvent *event) {
         QWidget *p = parentWidget();
         if (p) {
             QRect parentRect = p->rect();
-            QSize size = sizeHint();
+            QSize sz = sizeHint();
 
-            // Adjust position so it fits fully within the parent bounds
-            newPos.setX(qBound(0, newPos.x(), parentRect.width() - size.width()));
-            newPos.setY(qBound(0, newPos.y(), parentRect.height() - size.height()));
+            newPos.setX(qBound(0, newPos.x(), parentRect.width() - sz.width()));
+            newPos.setY(qBound(0, newPos.y(), parentRect.height() - sz.height()));
 
             move(newPos);
             customGlobalPos = p->mapToGlobal(newPos);
@@ -258,7 +300,8 @@ void ColorAdjustmentsOverlay::mouseMoveEvent(QMouseEvent *event) {
     }
 }
 
-void ColorAdjustmentsOverlay::mouseReleaseEvent(QMouseEvent *event) {
+void ColorAdjustmentsOverlay::mouseReleaseEvent(QMouseEvent *event)
+{
     if (event->button() == Qt::LeftButton) {
         isDragging = false;
         event->accept();
@@ -267,34 +310,18 @@ void ColorAdjustmentsOverlay::mouseReleaseEvent(QMouseEvent *event) {
     }
 }
 
-bool ColorAdjustmentsOverlay::eventFilter(QObject *watched, QEvent *event) {
+bool ColorAdjustmentsOverlay::eventFilter(QObject *watched, QEvent *event)
+{
     if (event->type() == QEvent::MouseButtonDblClick) {
-        if (watched == ui->brightnessSlider) {
-            ui->brightnessSlider->setValue(0);
-            return true;
-        } else if (watched == ui->contrastSlider) {
-            ui->contrastSlider->setValue(100);
-            return true;
-        } else if (watched == ui->saturationSlider) {
-            ui->saturationSlider->setValue(100);
-            return true;
-        } else if (watched == ui->hueSlider) {
-            ui->hueSlider->setValue(0);
-            return true;
-        } else if (watched == ui->exposureSlider) {
-            ui->exposureSlider->setValue(0);
-            return true;
-        } else if (watched == ui->temperatureSlider) {
-            ui->temperatureSlider->setValue(0);
-            return true;
-        } else if (watched == ui->tintSlider) {
-            ui->tintSlider->setValue(0);
-            return true;
-        }
+        if (watched == m_brightnessSlider)  m_brightnessSlider->setValue(0);
+        else if (watched == m_contrastSlider) m_contrastSlider->setValue(100);
+        else if (watched == m_saturationSlider) m_saturationSlider->setValue(100);
+        else if (watched == m_hueSlider)    m_hueSlider->setValue(0);
+        else if (watched == m_exposureSlider) m_exposureSlider->setValue(0);
+        else if (watched == m_temperatureSlider) m_temperatureSlider->setValue(0);
+        else if (watched == m_tintSlider)   m_tintSlider->setValue(0);
+        else return QWidget::eventFilter(watched, event);
+        return true;
     }
     return QWidget::eventFilter(watched, event);
 }
-
-// Force rebuild to trigger UIC for coloradjustmentsoverlay.ui
-
-
