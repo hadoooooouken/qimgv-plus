@@ -5,17 +5,24 @@
 #include "sourcecontainers/thumbnail.h"
 #include "utils/imagelib.h"
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDialog>
+#include <QDoubleSpinBox>
 #include <QLabel>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QMutex>
+#include <QProgressBar>
+#include <QPushButton>
+#include <QRadioButton>
 #include <QRunnable>
+#include <QScrollArea>
+#include <QSlider>
+#include <QSpinBox>
 #include <QStringList>
 #include <QThreadPool>
-
-namespace Ui {
-class BatchConverterDialog;
-}
+#include <QVBoxLayout>
+#include <QBoxLayout>
 
 #ifdef USE_UPSCAYL
 class RealESRGAN;
@@ -104,10 +111,62 @@ protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
-    Ui::BatchConverterDialog *ui;
+    void setupUi();
+    void setupLeftPanel(QBoxLayout *mainLayout);
+    void setupRightPanel(QBoxLayout *mainLayout);
+    void setupFormatSection(QVBoxLayout *scrollLayout);
+    void setupResizeSection(QVBoxLayout *scrollLayout);
+    void setupColorSection(QVBoxLayout *scrollLayout);
+    void setupRenameSection(QVBoxLayout *scrollLayout);
+    void setupBottomPanel(QVBoxLayout *mainLayout);
+
     QStringList inputPaths;
     QThreadPool threadPool;
     Thumbnailer *thumbnailer;
+
+    // UI Pointers
+    QPushButton *selectAllBtn;
+    QPushButton *deselectAllBtn;
+    QLabel *selectedCountLabel;
+    QListWidget *fileListWidget;
+    QScrollArea *scrollArea;
+
+    QComboBox *formatComboBox;
+    QSlider *qualitySlider;
+    QSpinBox *qualitySpinBox;
+
+    QWidget *resizeContainer;
+    QCheckBox *resizeEnableCheckBox;
+    QRadioButton *byPercentage;
+    QRadioButton *byAbsoluteSize;
+    QDoubleSpinBox *percent;
+    QSpinBox *width;
+    QSpinBox *height;
+    QCheckBox *keepAspectRatio;
+    QCheckBox *useUpscaylCheckBox;
+    QComboBox *filterComboBox;
+    QComboBox *upscaylModelComboBox;
+    QComboBox *resComboBox;
+    QPushButton *fitDesktopButton;
+    QPushButton *fillDesktopButton;
+    QPushButton *resetButton;
+
+    QWidget *colorContainer;
+    QCheckBox *colorEnableCheckBox;
+    QSlider *exposureSlider, *contrastSlider, *brightnessSlider, *saturationSlider, *hueSlider, *tempSlider, *tintSlider;
+    QDoubleSpinBox *exposureSpinBox, *contrastSpinBox, *brightnessSpinBox, *saturationSpinBox, *hueSpinBox, *tempSpinBox, *tintSpinBox;
+
+    QWidget *outputContainer;
+    QLineEdit *outDirEdit;
+    QPushButton *outDirBrowseBtn;
+    QCheckBox *subfolderCheckBox;
+    QLineEdit *patternEdit;
+    QCheckBox *overwriteCheckBox;
+
+    QProgressBar *progressBar;
+    QLabel *statusLabel;
+    QPushButton *convertButton;
+    QPushButton *cancelButton;
 
     int totalFiles = 0;
     int processedFiles = 0;

@@ -1,5 +1,4 @@
 #include "batchconverterdialog.h"
-#include "ui_batchconverterdialog.h"
 #include <QCoreApplication>
 #include <QDate>
 #include <QDateTime>
@@ -12,6 +11,8 @@
 #include <QMessageBox>
 #include <QScreen>
 #include <QVBoxLayout>
+#include <QGroupBox>
+#include <QSpacerItem>
 #include <cmath>
 
 #ifdef USE_UPSCAYL
@@ -121,96 +122,403 @@ void BatchItemWidget::setStatus(const QString &statusText, const QString &detail
     destInfoLabel->setText(details);
 }
 
+// ==================== BatchConverterDialog UI Setup ====================
+
+void BatchConverterDialog::setupUi() {
+    resize(1048, 972);
+    setWindowTitle(tr("Batch Converter"));
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(12, 12, 12, 12);
+    mainLayout->setSpacing(6);
+
+    QHBoxLayout *splitLayout = new QHBoxLayout();
+    splitLayout->setSpacing(6);
+    mainLayout->addLayout(splitLayout, 1);
+
+    setupLeftPanel(splitLayout);
+    setupRightPanel(splitLayout);
+
+    progressBar = new QProgressBar(this);
+    progressBar->setValue(0);
+    mainLayout->addWidget(progressBar);
+
+    setupBottomPanel(mainLayout);
+}
+
+void BatchConverterDialog::setupLeftPanel(QBoxLayout *mainLayout) {
+    QVBoxLayout *leftLayout = new QVBoxLayout();
+
+    QHBoxLayout *headerLayout = new QHBoxLayout();
+    selectAllBtn = new QPushButton(tr("Select all"), this);
+    deselectAllBtn = new QPushButton(tr("Deselect all"), this);
+    headerLayout->addWidget(selectAllBtn);
+    headerLayout->addWidget(deselectAllBtn);
+    headerLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
+    leftLayout->addLayout(headerLayout);
+
+    selectedCountLabel = new QLabel(tr("0 files selected (0.0 MB)"), this);
+    QFont f = selectedCountLabel->font();
+    f.setBold(true);
+    selectedCountLabel->setFont(f);
+    leftLayout->addWidget(selectedCountLabel);
+
+    fileListWidget = new QListWidget(this);
+    fileListWidget->setMinimumSize(400, 0);
+    fileListWidget->setSelectionMode(QAbstractItemView::NoSelection);
+    leftLayout->addWidget(fileListWidget);
+
+    mainLayout->addLayout(leftLayout, 1);
+}
+
+void BatchConverterDialog::setupRightPanel(QBoxLayout *mainLayout) {
+    scrollArea = new QScrollArea(this);
+    scrollArea->setMinimumSize(600, 0);
+    scrollArea->setMaximumSize(600, 16777215);
+    scrollArea->setWidgetResizable(true);
+
+    QWidget *scrollWidget = new QWidget();
+    QVBoxLayout *scrollLayout = new QVBoxLayout(scrollWidget);
+    scrollLayout->setContentsMargins(0, 0, 0, 0);
+
+    setupFormatSection(scrollLayout);
+    setupResizeSection(scrollLayout);
+    scrollLayout->addSpacerItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Fixed));
+    setupColorSection(scrollLayout);
+    scrollLayout->addSpacerItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Fixed));
+    setupRenameSection(scrollLayout);
+
+    scrollArea->setWidget(scrollWidget);
+    mainLayout->addWidget(scrollArea, 0);
+}
+
+void BatchConverterDialog::setupFormatSection(QVBoxLayout *scrollLayout) {
+    QHBoxLayout *fmtLayout = new QHBoxLayout();
+    QLabel *fmtLabel = new QLabel(tr("Save as type:"), this);
+    fmtLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    formatComboBox = new QComboBox(this);
+    fmtLayout->addWidget(fmtLabel);
+    fmtLayout->addWidget(formatComboBox);
+    scrollLayout->addLayout(fmtLayout);
+
+    QHBoxLayout *qLayout = new QHBoxLayout();
+    qualitySlider = new QSlider(Qt::Horizontal, this);
+    qualitySlider->setRange(1, 100);
+    qualitySlider->setValue(90);
+    qualitySpinBox = new QSpinBox(this);
+    qualitySpinBox->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    qualitySpinBox->setAlignment(Qt::AlignCenter);
+    qualitySpinBox->setRange(1, 100);
+    qualitySpinBox->setValue(90);
+    qLayout->addWidget(qualitySlider);
+    qLayout->addWidget(qualitySpinBox);
+    scrollLayout->addLayout(qLayout);
+}
+
+void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
+    resizeContainer = new QWidget(this);
+    QVBoxLayout *rcLayout = new QVBoxLayout(resizeContainer);
+    rcLayout->setContentsMargins(0, 0, 0, 0);
+
+    resizeEnableCheckBox = new QCheckBox(tr("Resize"), this);
+    rcLayout->addWidget(resizeEnableCheckBox);
+
+    QHBoxLayout *splitLayout = new QHBoxLayout();
+    splitLayout->setContentsMargins(0, 0, 0, 0);
+
+    // Left Column
+    QVBoxLayout *lCol = new QVBoxLayout();
+    byPercentage = new QRadioButton(tr("By Percent:"), this);
+    lCol->addWidget(byPercentage);
+
+    QHBoxLayout *percLayout = new QHBoxLayout();
+    percLayout->setContentsMargins(20, 0, 0, 0);
+    QLabel *lPerc = new QLabel(tr("Percent:"), this);
+    lPerc->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    percent = new QDoubleSpinBox(this);
+    percent->setMinimumSize(0, 30);
+    percent->setAlignment(Qt::AlignCenter);
+    percent->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    percent->setRange(1.0, 1600.0);
+    percent->setValue(100.0);
+    percent->setDecimals(1);
+    percent->setEnabled(false);
+    percLayout->addWidget(lPerc);
+    percLayout->addWidget(percent);
+    lCol->addLayout(percLayout);
+
+    byAbsoluteSize = new QRadioButton(tr("By Absolute Size:"), this);
+    byAbsoluteSize->setChecked(true);
+    lCol->addWidget(byAbsoluteSize);
+
+    QVBoxLayout *absLayout = new QVBoxLayout();
+    absLayout->setContentsMargins(20, 0, 0, 0);
+    QHBoxLayout *wLayout = new QHBoxLayout();
+    QLabel *lWidth = new QLabel(tr("Width:"), this);
+    lWidth->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    width = new QSpinBox(this);
+    width->setMinimumSize(0, 30);
+    width->setAlignment(Qt::AlignCenter);
+    width->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    width->setRange(1, 65535);
+    width->setEnabled(false);
+    wLayout->addWidget(lWidth);
+    wLayout->addWidget(width);
+    absLayout->addLayout(wLayout);
+
+    QHBoxLayout *hLayout = new QHBoxLayout();
+    QLabel *lHeight = new QLabel(tr("Height:"), this);
+    lHeight->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    height = new QSpinBox(this);
+    height->setMinimumSize(0, 30);
+    height->setAlignment(Qt::AlignCenter);
+    height->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    height->setRange(1, 65535);
+    height->setEnabled(false);
+    hLayout->addWidget(lHeight);
+    hLayout->addWidget(height);
+    absLayout->addLayout(hLayout);
+    lCol->addLayout(absLayout);
+
+    QHBoxLayout *chkLayout = new QHBoxLayout();
+    keepAspectRatio = new QCheckBox(tr("Keep aspect ratio"), this);
+    keepAspectRatio->setChecked(true);
+    keepAspectRatio->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+    useUpscaylCheckBox = new QCheckBox(tr("Use Upscayl"), this);
+    useUpscaylCheckBox->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+    chkLayout->addWidget(keepAspectRatio);
+    chkLayout->addWidget(useUpscaylCheckBox);
+    lCol->addLayout(chkLayout);
+
+    QHBoxLayout *cbLayout = new QHBoxLayout();
+    QVBoxLayout *fLayout = new QVBoxLayout();
+    fLayout->addWidget(new QLabel(tr("Filter:"), this));
+    filterComboBox = new QComboBox(this);
+    filterComboBox->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+    fLayout->addWidget(filterComboBox);
+    cbLayout->addLayout(fLayout);
+
+    QVBoxLayout *mLayout = new QVBoxLayout();
+    mLayout->addWidget(new QLabel(tr("Model:"), this));
+    upscaylModelComboBox = new QComboBox(this);
+    upscaylModelComboBox->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+    mLayout->addWidget(upscaylModelComboBox);
+    cbLayout->addLayout(mLayout);
+    lCol->addLayout(cbLayout);
+
+    splitLayout->addLayout(lCol);
+
+    // Right Column
+    QVBoxLayout *rCol = new QVBoxLayout();
+    rCol->setSpacing(6);
+    QLabel *lComSizes = new QLabel(tr("Common sizes:"), this);
+    lComSizes->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    rCol->addWidget(lComSizes);
+    
+    resComboBox = new QComboBox(this);
+    resComboBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    rCol->addWidget(resComboBox);
+    
+    fitDesktopButton = new QPushButton(tr("Fit to desktop"), this);
+    fitDesktopButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    fillDesktopButton = new QPushButton(tr("Fill desktop (expanding)"), this);
+    fillDesktopButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    resetButton = new QPushButton(tr("Reset"), this);
+    resetButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    
+    rCol->addWidget(fitDesktopButton);
+    rCol->addWidget(fillDesktopButton);
+    rCol->addWidget(resetButton);
+
+    splitLayout->addLayout(rCol);
+    rcLayout->addLayout(splitLayout);
+    scrollLayout->addWidget(resizeContainer);
+}
+
+void BatchConverterDialog::setupColorSection(QVBoxLayout *scrollLayout) {
+    colorContainer = new QWidget(this);
+    QVBoxLayout *ccLayout = new QVBoxLayout(colorContainer);
+    ccLayout->setContentsMargins(0, 0, 0, 0);
+
+    colorEnableCheckBox = new QCheckBox(tr("Color adjustments"), this);
+    ccLayout->addWidget(colorEnableCheckBox);
+
+    QVBoxLayout *vColorLayout = new QVBoxLayout();
+
+    auto addColorRow = [&](const QString &text, int minV, int maxV, int defV, QSlider*& s, QDoubleSpinBox*& sb, double sbMin, double sbMax, double sbStep) {
+        QHBoxLayout *row = new QHBoxLayout();
+        QLabel *l = new QLabel(text, this);
+        l->setMinimumWidth(80);
+        s = new QSlider(Qt::Horizontal, this);
+        s->setRange(minV, maxV);
+        s->setValue(defV);
+        sb = new QDoubleSpinBox(this);
+        sb->setFixedSize(80, 24); // approximated height
+        sb->setAlignment(Qt::AlignCenter);
+        sb->setButtonSymbols(QAbstractSpinBox::NoButtons);
+        sb->setRange(sbMin, sbMax);
+        sb->setSingleStep(sbStep);
+        row->addWidget(l);
+        row->addWidget(s);
+        row->addWidget(sb);
+        vColorLayout->addLayout(row);
+    };
+
+    addColorRow(tr("Exposure:"), -200, 200, 0, exposureSlider, exposureSpinBox, -2.0, 2.0, 0.1);
+    addColorRow(tr("Contrast:"), 0, 300, 100, contrastSlider, contrastSpinBox, 0.0, 3.0, 0.1);
+    contrastSpinBox->setValue(1.0);
+    addColorRow(tr("Brightness:"), -100, 100, 0, brightnessSlider, brightnessSpinBox, -1.0, 1.0, 0.1);
+    addColorRow(tr("Saturation:"), 0, 300, 100, saturationSlider, saturationSpinBox, 0.0, 3.0, 0.1);
+    saturationSpinBox->setValue(1.0);
+    addColorRow(tr("Hue:"), -180, 180, 0, hueSlider, hueSpinBox, -180.0, 180.0, 1.0);
+    addColorRow(tr("Temperature:"), -100, 100, 0, tempSlider, tempSpinBox, -1.0, 1.0, 0.05);
+    addColorRow(tr("Tint:"), -100, 100, 0, tintSlider, tintSpinBox, -1.0, 1.0, 0.05);
+
+    ccLayout->addLayout(vColorLayout);
+    // Note: The UI file has an empty verticalLayoutColor inside colorContainer, 
+    // the code creates resetColorButton dynamically and adds it to verticalLayoutColor.
+    // So we should expose this layout or recreate the button later.
+    // I will expose vColorLayout by re-parenting things properly later or just letting setupUi finish it.
+
+    scrollLayout->addWidget(colorContainer);
+}
+
+void BatchConverterDialog::setupRenameSection(QVBoxLayout *scrollLayout) {
+    outputContainer = new QWidget(this);
+    QVBoxLayout *ocLayout = new QVBoxLayout(outputContainer);
+    ocLayout->setContentsMargins(0, 0, 0, 0);
+
+    ocLayout->addWidget(new QLabel(tr("Output folder:"), this));
+    
+    QHBoxLayout *dirLayout = new QHBoxLayout();
+    outDirEdit = new QLineEdit(this);
+    outDirBrowseBtn = new QPushButton(tr("..."), this);
+    dirLayout->addWidget(outDirEdit);
+    dirLayout->addWidget(outDirBrowseBtn);
+    ocLayout->addLayout(dirLayout);
+
+    subfolderCheckBox = new QCheckBox(tr("Create subfolder for batch"), this);
+    ocLayout->addWidget(subfolderCheckBox);
+
+    ocLayout->addWidget(new QLabel(tr("Filename pattern:"), this));
+    patternEdit = new QLineEdit(tr("{name}_converted"), this);
+    ocLayout->addWidget(patternEdit);
+
+    QLabel *helpL = new QLabel(tr("Available: {name}, {ext}, {date}, {index}"), this);
+    QFont f = helpL->font(); f.setItalic(true); helpL->setFont(f);
+    ocLayout->addWidget(helpL);
+
+    overwriteCheckBox = new QCheckBox(tr("Overwrite existing files"), this);
+    ocLayout->addWidget(overwriteCheckBox);
+
+    scrollLayout->addWidget(outputContainer);
+}
+
+void BatchConverterDialog::setupBottomPanel(QVBoxLayout *mainLayout) {
+    QHBoxLayout *bLayout = new QHBoxLayout();
+    statusLabel = new QLabel(tr("Ready to convert."), this);
+    bLayout->addWidget(statusLabel);
+    bLayout->addSpacerItem(new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum));
+
+    convertButton = new QPushButton(tr("Convert"), this);
+    convertButton->setDefault(true);
+    cancelButton = new QPushButton(tr("Cancel"), this);
+
+    bLayout->addWidget(convertButton);
+    bLayout->addWidget(cancelButton);
+    mainLayout->addLayout(bLayout);
+}
+
 // ==================== BatchConverterDialog ====================
 
 BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWidget *parent)
-    : QDialog(parent), ui(new Ui::BatchConverterDialog), inputPaths(filePaths) {
-    ui->setupUi(this);
+    : QDialog(parent), inputPaths(filePaths) {
+    setupUi();
     setWindowModality(Qt::ApplicationModal);
 
     // Add Reset Color Adjustments button
     QPushButton *resetColorButton = new QPushButton(tr("Reset Color Adjustments"), this);
-    ui->verticalLayoutColor->addWidget(resetColorButton);
+    colorContainer->layout()->addWidget(resetColorButton);
     connect(resetColorButton, &QPushButton::clicked, this, [this]() {
-        ui->exposureSlider->setValue(0);
-        ui->contrastSlider->setValue(100);
-        ui->brightnessSlider->setValue(0);
-        ui->saturationSlider->setValue(100);
-        ui->hueSlider->setValue(0);
-        ui->tempSlider->setValue(0);
-        ui->tintSlider->setValue(0);
+        exposureSlider->setValue(0);
+        contrastSlider->setValue(100);
+        brightnessSlider->setValue(0);
+        saturationSlider->setValue(100);
+        hueSlider->setValue(0);
+        tempSlider->setValue(0);
+        tintSlider->setValue(0);
     });
 
-    ui->exposureSlider->installEventFilter(this);
-    ui->contrastSlider->installEventFilter(this);
-    ui->brightnessSlider->installEventFilter(this);
-    ui->saturationSlider->installEventFilter(this);
-    ui->hueSlider->installEventFilter(this);
-    ui->tempSlider->installEventFilter(this);
-    ui->tintSlider->installEventFilter(this);
+    exposureSlider->installEventFilter(this);
+    contrastSlider->installEventFilter(this);
+    brightnessSlider->installEventFilter(this);
+    saturationSlider->installEventFilter(this);
+    hueSlider->installEventFilter(this);
+    tempSlider->installEventFilter(this);
+    tintSlider->installEventFilter(this);
 
     collectResizeWidgets();
     collectColorWidgets();
 
-    setResizeWidgetsEnabled(ui->resizeEnableCheckBox->isChecked());
-    setColorWidgetsEnabled(ui->colorEnableCheckBox->isChecked());
+    setResizeWidgetsEnabled(resizeEnableCheckBox->isChecked());
+    setColorWidgetsEnabled(colorEnableCheckBox->isChecked());
 
-    connect(ui->resizeEnableCheckBox, &QCheckBox::toggled, this, &BatchConverterDialog::onResizeEnabledChanged);
-    connect(ui->colorEnableCheckBox, &QCheckBox::toggled, this, &BatchConverterDialog::onColorEnabledChanged);
+    connect(resizeEnableCheckBox, &QCheckBox::toggled, this, &BatchConverterDialog::onResizeEnabledChanged);
+    connect(colorEnableCheckBox, &QCheckBox::toggled, this, &BatchConverterDialog::onColorEnabledChanged);
 
     // ----- Configure spinboxes with proper units -----
-    ui->exposureSpinBox->setRange(-2.0, 2.0);
-    ui->exposureSpinBox->setSingleStep(0.1);
-    ui->exposureSpinBox->setSuffix("");
-    ui->exposureSpinBox->setDecimals(2);
-    ui->exposureSlider->setRange(-200, 200);
-    ui->exposureSlider->setValue(0);
+    exposureSpinBox->setRange(-2.0, 2.0);
+    exposureSpinBox->setSingleStep(0.1);
+    exposureSpinBox->setSuffix("");
+    exposureSpinBox->setDecimals(2);
+    exposureSlider->setRange(-200, 200);
+    exposureSlider->setValue(0);
 
-    ui->contrastSpinBox->setRange(0.0, 300.0);
-    ui->contrastSpinBox->setValue(100.0);
-    ui->contrastSpinBox->setSingleStep(1.0);
-    ui->contrastSpinBox->setSuffix("%");
-    ui->contrastSpinBox->setDecimals(0);
-    ui->contrastSlider->setRange(0, 300);
-    ui->contrastSlider->setValue(100);
+    contrastSpinBox->setRange(0.0, 300.0);
+    contrastSpinBox->setValue(100.0);
+    contrastSpinBox->setSingleStep(1.0);
+    contrastSpinBox->setSuffix("%");
+    contrastSpinBox->setDecimals(0);
+    contrastSlider->setRange(0, 300);
+    contrastSlider->setValue(100);
 
-    ui->brightnessSpinBox->setRange(-100.0, 100.0);
-    ui->brightnessSpinBox->setValue(0.0);
-    ui->brightnessSpinBox->setSingleStep(1.0);
-    ui->brightnessSpinBox->setSuffix("%");
-    ui->brightnessSlider->setRange(-100, 100);
-    ui->brightnessSlider->setValue(0);
+    brightnessSpinBox->setRange(-100.0, 100.0);
+    brightnessSpinBox->setValue(0.0);
+    brightnessSpinBox->setSingleStep(1.0);
+    brightnessSpinBox->setSuffix("%");
+    brightnessSlider->setRange(-100, 100);
+    brightnessSlider->setValue(0);
 
-    ui->saturationSpinBox->setRange(0.0, 200.0);
-    ui->saturationSpinBox->setValue(100.0);
-    ui->saturationSpinBox->setSingleStep(1.0);
-    ui->saturationSpinBox->setSuffix("%");
-    ui->saturationSlider->setRange(0, 200);
-    ui->saturationSlider->setValue(100);
+    saturationSpinBox->setRange(0.0, 200.0);
+    saturationSpinBox->setValue(100.0);
+    saturationSpinBox->setSingleStep(1.0);
+    saturationSpinBox->setSuffix("%");
+    saturationSlider->setRange(0, 200);
+    saturationSlider->setValue(100);
 
-    ui->hueSpinBox->setRange(-180.0, 180.0);
-    ui->hueSpinBox->setValue(0.0);
-    ui->hueSpinBox->setSingleStep(1.0);
-    ui->hueSpinBox->setSuffix("\xc2\xb0");
-    ui->hueSpinBox->setDecimals(0);
-    ui->hueSlider->setRange(-180, 180);
-    ui->hueSlider->setValue(0);
+    hueSpinBox->setRange(-180.0, 180.0);
+    hueSpinBox->setValue(0.0);
+    hueSpinBox->setSingleStep(1.0);
+    hueSpinBox->setSuffix("\xc2\xb0");
+    hueSpinBox->setDecimals(0);
+    hueSlider->setRange(-180, 180);
+    hueSlider->setValue(0);
 
-    ui->tempSpinBox->setRange(-50.0, 50.0);
-    ui->tempSpinBox->setValue(0.0);
-    ui->tempSpinBox->setSingleStep(1.0);
-    ui->tempSpinBox->setDecimals(0);
-    ui->tempSpinBox->setSuffix("");
-    ui->tempSlider->setRange(-50, 50);
-    ui->tempSlider->setValue(0);
+    tempSpinBox->setRange(-50.0, 50.0);
+    tempSpinBox->setValue(0.0);
+    tempSpinBox->setSingleStep(1.0);
+    tempSpinBox->setDecimals(0);
+    tempSpinBox->setSuffix("");
+    tempSlider->setRange(-50, 50);
+    tempSlider->setValue(0);
 
-    ui->tintSpinBox->setRange(-50.0, 50.0);
-    ui->tintSpinBox->setValue(0.0);
-    ui->tintSpinBox->setSingleStep(1.0);
-    ui->tintSpinBox->setDecimals(0);
-    ui->tintSpinBox->setSuffix("");
-    ui->tintSlider->setRange(-50, 50);
-    ui->tintSlider->setValue(0);
+    tintSpinBox->setRange(-50.0, 50.0);
+    tintSpinBox->setValue(0.0);
+    tintSpinBox->setSingleStep(1.0);
+    tintSpinBox->setDecimals(0);
+    tintSpinBox->setSuffix("");
+    tintSlider->setRange(-50, 50);
+    tintSlider->setValue(0);
 
     auto colors = settings->colorScheme();
     QString dialogStyle =
@@ -250,21 +558,21 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
 
     threadPool.setMaxThreadCount(QThread::idealThreadCount());
 
-    ui->formatComboBox->addItem("JPEG (*.jpg *.jpeg *.jpe *.jfif)", "jpg");
-    ui->formatComboBox->addItem("PNG (*.png)", "png");
-    ui->formatComboBox->addItem("WebP (*.webp)", "webp");
-    ui->formatComboBox->addItem("JPEG-XL (*.jxl)", "jxl");
-    ui->formatComboBox->addItem("AVIF (*.avif *.avifs)", "avif");
-    ui->formatComboBox->addItem("QOI (*.qoi)", "qoi");
-    ui->formatComboBox->addItem("BMP (*.bmp)", "bmp");
-    ui->formatComboBox->addItem("TIFF (*.tif *.tiff)", "tif");
+    formatComboBox->addItem("JPEG (*.jpg *.jpeg *.jpe *.jfif)", "jpg");
+    formatComboBox->addItem("PNG (*.png)", "png");
+    formatComboBox->addItem("WebP (*.webp)", "webp");
+    formatComboBox->addItem("JPEG-XL (*.jxl)", "jxl");
+    formatComboBox->addItem("AVIF (*.avif *.avifs)", "avif");
+    formatComboBox->addItem("QOI (*.qoi)", "qoi");
+    formatComboBox->addItem("BMP (*.bmp)", "bmp");
+    formatComboBox->addItem("TIFF (*.tif *.tiff)", "tif");
 
     thumbnailer = new Thumbnailer();
     connect(thumbnailer, &Thumbnailer::thumbnailReady, this,
             [this](std::shared_ptr<Thumbnail> thumb, QString filePath) {
-                for (int i = 0; i < ui->fileListWidget->count(); ++i) {
-                    QListWidgetItem *item = ui->fileListWidget->item(i);
-                    auto *w = qobject_cast<BatchItemWidget*>(ui->fileListWidget->itemWidget(item));
+                for (int i = 0; i < fileListWidget->count(); ++i) {
+                    QListWidgetItem *item = fileListWidget->item(i);
+                    auto *w = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
                     if (w && w->filePath() == filePath) {
                         w->setThumbnail(thumb);
                         break;
@@ -272,14 +580,14 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
                 }
             });
 
-    ui->fileListWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->fileListWidget->setResizeMode(QListView::Adjust);
+    fileListWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    fileListWidget->setResizeMode(QListView::Adjust);
     for (const QString &path : filePaths) {
-        QListWidgetItem *item = new QListWidgetItem(ui->fileListWidget);
+        QListWidgetItem *item = new QListWidgetItem(fileListWidget);
         BatchItemWidget *widget = new BatchItemWidget(path, this);
         item->setSizeHint(widget->sizeHint());
-        ui->fileListWidget->addItem(item);
-        ui->fileListWidget->setItemWidget(item, widget);
+        fileListWidget->addItem(item);
+        fileListWidget->setItemWidget(item, widget);
         connect(widget, &BatchItemWidget::checkedStateChanged, this, &BatchConverterDialog::onCheckedStateChanged);
         thumbnailer->getThumbnailAsync(path, 48, true, false);
     }
@@ -287,27 +595,27 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     updateSelectedCount();
 
     if (!filePaths.isEmpty())
-        ui->outDirEdit->setText(QFileInfo(filePaths[0]).absolutePath());
+        outDirEdit->setText(QFileInfo(filePaths[0]).absolutePath());
 
-    ui->filterComboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
-    ui->filterComboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
-    ui->filterComboBox->addItem(tr("Smart sharpen"), QI_FILTER_SMART);
-    int smartIndex = ui->filterComboBox->findData(QI_FILTER_SMART);
-    ui->filterComboBox->setCurrentIndex(smartIndex != -1 ? smartIndex : 1);
+    filterComboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
+    filterComboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
+    filterComboBox->addItem(tr("Smart sharpen"), QI_FILTER_SMART);
+    int smartIndex = filterComboBox->findData(QI_FILTER_SMART);
+    filterComboBox->setCurrentIndex(smartIndex != -1 ? smartIndex : 1);
 
     desktopSize = qApp->primaryScreen()->size();
-    ui->resComboBox->addItem(tr("Original size"));
-    ui->resComboBox->addItem("1366 x 768");
-    ui->resComboBox->addItem("1440 x 900");
-    ui->resComboBox->addItem("1440 x 1050");
-    ui->resComboBox->addItem("1600 x 1200");
-    ui->resComboBox->addItem("1920 x 1080");
-    ui->resComboBox->addItem("1920 x 1200");
-    ui->resComboBox->addItem("2560 x 1080");
-    ui->resComboBox->addItem("2560 x 1440");
-    ui->resComboBox->addItem("2560 x 1600");
-    ui->resComboBox->addItem("3840 x 1600");
-    ui->resComboBox->addItem("3840 x 2160");
+    resComboBox->addItem(tr("Original size"));
+    resComboBox->addItem("1366 x 768");
+    resComboBox->addItem("1440 x 900");
+    resComboBox->addItem("1440 x 1050");
+    resComboBox->addItem("1600 x 1200");
+    resComboBox->addItem("1920 x 1080");
+    resComboBox->addItem("1920 x 1200");
+    resComboBox->addItem("2560 x 1080");
+    resComboBox->addItem("2560 x 1440");
+    resComboBox->addItem("2560 x 1600");
+    resComboBox->addItem("3840 x 1600");
+    resComboBox->addItem("3840 x 2160");
 
     if (!filePaths.isEmpty()) {
         QImageReader r(filePaths[0]);
@@ -316,11 +624,11 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
         originalSize = QSize(2560, 1440);
     }
     targetSize = originalSize;
-    ui->width->setValue(originalSize.width());
-    ui->height->setValue(originalSize.height());
-    ui->resetButton->setText(tr("Reset: %1 x %2").arg(originalSize.width()).arg(originalSize.height()));
+    width->setValue(originalSize.width());
+    height->setValue(originalSize.height());
+    resetButton->setText(tr("Reset: %1 x %2").arg(originalSize.width()).arg(originalSize.height()));
 
-    ui->percent->setEnabled(false);
+    percent->setEnabled(false);
 
 #ifdef USE_UPSCAYL
     QDir modelsDir(QCoreApplication::applicationDirPath() + "/models");
@@ -333,70 +641,70 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
         if (modelsDir.exists(modelName + ".bin")) modelNames.append(modelName);
     }
     if (modelNames.isEmpty()) modelNames.append("4xLSDIRCompactC3");
-    ui->upscaylModelComboBox->addItems(modelNames);
+    upscaylModelComboBox->addItems(modelNames);
 
-    int modelIdx = ui->upscaylModelComboBox->findText(settings->upscaylModel());
-    ui->upscaylModelComboBox->setCurrentIndex(modelIdx != -1 ? modelIdx : 0);
-    ui->useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
-    bool resizeEnabled = ui->resizeEnableCheckBox->isChecked();
-    ui->useUpscaylCheckBox->setEnabled(resizeEnabled);
-    ui->upscaylModelComboBox->setEnabled(resizeEnabled && ui->useUpscaylCheckBox->isChecked());
+    int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
+    upscaylModelComboBox->setCurrentIndex(modelIdx != -1 ? modelIdx : 0);
+    useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
+    bool resizeEnabled = resizeEnableCheckBox->isChecked();
+    useUpscaylCheckBox->setEnabled(resizeEnabled);
+    upscaylModelComboBox->setEnabled(resizeEnabled && useUpscaylCheckBox->isChecked());
 #else
-    ui->useUpscaylCheckBox->setEnabled(false);
-    ui->useUpscaylCheckBox->setToolTip(tr("AI Upscaling is disabled in this build."));
-    ui->upscaylModelComboBox->setEnabled(false);
+    useUpscaylCheckBox->setEnabled(false);
+    useUpscaylCheckBox->setToolTip(tr("AI Upscaling is disabled in this build."));
+    upscaylModelComboBox->setEnabled(false);
 #endif
 
-    connect(ui->qualitySlider, &QSlider::valueChanged, this, &BatchConverterDialog::onQualitySliderChanged);
-    connect(ui->qualitySpinBox, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onQualitySpinBoxChanged);
+    connect(qualitySlider, &QSlider::valueChanged, this, &BatchConverterDialog::onQualitySliderChanged);
+    connect(qualitySpinBox, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onQualitySpinBoxChanged);
 
     // ----- Color adjustment connections -----
     // For exposureSpinBox (double -> double) as declared in header
-    connect(ui->exposureSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onExposureSliderChanged);
-    connect(ui->exposureSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &BatchConverterDialog::onExposureSpinBoxChanged);
+    connect(exposureSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onExposureSliderChanged);
+    connect(exposureSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &BatchConverterDialog::onExposureSpinBoxChanged);
 
     // For others, spinBox gives double, but slots expect int => use lambda
-    connect(ui->contrastSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onContrastSliderChanged);
-    connect(ui->contrastSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
+    connect(contrastSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onContrastSliderChanged);
+    connect(contrastSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
             [this](double val) { onContrastSpinBoxChanged(static_cast<int>(val)); });
 
-    connect(ui->brightnessSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onBrightnessSliderChanged);
-    connect(ui->brightnessSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
+    connect(brightnessSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onBrightnessSliderChanged);
+    connect(brightnessSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
             [this](double val) { onBrightnessSpinBoxChanged(static_cast<int>(val)); });
 
-    connect(ui->saturationSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onSaturationSliderChanged);
-    connect(ui->saturationSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
+    connect(saturationSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onSaturationSliderChanged);
+    connect(saturationSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
             [this](double val) { onSaturationSpinBoxChanged(static_cast<int>(val)); });
 
-    connect(ui->hueSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onHueSliderChanged);
-    connect(ui->hueSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
+    connect(hueSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onHueSliderChanged);
+    connect(hueSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
             [this](double val) { onHueSpinBoxChanged(static_cast<int>(val)); });
 
-    connect(ui->tempSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onTempSliderChanged);
-    connect(ui->tempSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
+    connect(tempSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onTempSliderChanged);
+    connect(tempSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
             [this](double val) { onTempSpinBoxChanged(static_cast<int>(val)); });
 
-    connect(ui->tintSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onTintSliderChanged);
-    connect(ui->tintSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
+    connect(tintSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onTintSliderChanged);
+    connect(tintSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
             [this](double val) { onTintSpinBoxChanged(static_cast<int>(val)); });
 
-    connect(ui->byPercentage, &QRadioButton::toggled, this, &BatchConverterDialog::onResizeRadioToggled);
-    connect(ui->byAbsoluteSize, &QRadioButton::toggled, this, &BatchConverterDialog::onResizeRadioToggled);
-    connect(ui->percent, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &BatchConverterDialog::onPercentChanged);
-    connect(ui->width, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onWidthChanged);
-    connect(ui->height, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onHeightChanged);
-    connect(ui->resComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &BatchConverterDialog::onCommonResolutionChanged);
-    connect(ui->fitDesktopButton, &QPushButton::clicked, this, &BatchConverterDialog::onFitDesktop);
-    connect(ui->fillDesktopButton, &QPushButton::clicked, this, &BatchConverterDialog::onFillDesktop);
-    connect(ui->resetButton, &QPushButton::clicked, this, &BatchConverterDialog::onResetSizes);
-    connect(ui->useUpscaylCheckBox, &QCheckBox::toggled, this, &BatchConverterDialog::onUseUpscaylToggled);
+    connect(byPercentage, &QRadioButton::toggled, this, &BatchConverterDialog::onResizeRadioToggled);
+    connect(byAbsoluteSize, &QRadioButton::toggled, this, &BatchConverterDialog::onResizeRadioToggled);
+    connect(percent, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &BatchConverterDialog::onPercentChanged);
+    connect(width, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onWidthChanged);
+    connect(height, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onHeightChanged);
+    connect(resComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &BatchConverterDialog::onCommonResolutionChanged);
+    connect(fitDesktopButton, &QPushButton::clicked, this, &BatchConverterDialog::onFitDesktop);
+    connect(fillDesktopButton, &QPushButton::clicked, this, &BatchConverterDialog::onFillDesktop);
+    connect(resetButton, &QPushButton::clicked, this, &BatchConverterDialog::onResetSizes);
+    connect(useUpscaylCheckBox, &QCheckBox::toggled, this, &BatchConverterDialog::onUseUpscaylToggled);
 
-    connect(ui->selectAllBtn, &QPushButton::clicked, this, &BatchConverterDialog::onSelectAll);
-    connect(ui->deselectAllBtn, &QPushButton::clicked, this, &BatchConverterDialog::onDeselectAll);
-    connect(ui->outDirBrowseBtn, &QPushButton::clicked, this, &BatchConverterDialog::onBrowseClicked);
-    connect(ui->formatComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &BatchConverterDialog::onFormatChanged);
-    connect(ui->convertButton, &QPushButton::clicked, this, &BatchConverterDialog::onConvertClicked);
-    connect(ui->cancelButton, &QPushButton::clicked, this, &BatchConverterDialog::onCancelClicked);
+    connect(selectAllBtn, &QPushButton::clicked, this, &BatchConverterDialog::onSelectAll);
+    connect(deselectAllBtn, &QPushButton::clicked, this, &BatchConverterDialog::onDeselectAll);
+    connect(outDirBrowseBtn, &QPushButton::clicked, this, &BatchConverterDialog::onBrowseClicked);
+    connect(formatComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &BatchConverterDialog::onFormatChanged);
+    connect(convertButton, &QPushButton::clicked, this, &BatchConverterDialog::onConvertClicked);
+    connect(cancelButton, &QPushButton::clicked, this, &BatchConverterDialog::onCancelClicked);
 
     onFormatChanged(0);
 }
@@ -409,115 +717,114 @@ BatchConverterDialog::~BatchConverterDialog() {
     thumbnailer->clearTasks();
     thumbnailer->waitForDone();
     delete thumbnailer;
-    delete ui;
 }
 
 void BatchConverterDialog::onQualitySliderChanged(int value) {
-    ui->qualitySpinBox->blockSignals(true);
-    ui->qualitySpinBox->setValue(value);
-    ui->qualitySpinBox->blockSignals(false);
+    qualitySpinBox->blockSignals(true);
+    qualitySpinBox->setValue(value);
+    qualitySpinBox->blockSignals(false);
 }
 
 void BatchConverterDialog::onQualitySpinBoxChanged(int value) {
-    ui->qualitySlider->blockSignals(true);
-    ui->qualitySlider->setValue(value);
-    ui->qualitySlider->blockSignals(false);
+    qualitySlider->blockSignals(true);
+    qualitySlider->setValue(value);
+    qualitySlider->blockSignals(false);
 }
 
 // ----- Color adjustment slots (matching header signatures) -----
 void BatchConverterDialog::onExposureSliderChanged(int value) {
     double val = value / 100.0;
-    ui->exposureSpinBox->blockSignals(true);
-    ui->exposureSpinBox->setValue(val);
-    ui->exposureSpinBox->blockSignals(false);
+    exposureSpinBox->blockSignals(true);
+    exposureSpinBox->setValue(val);
+    exposureSpinBox->blockSignals(false);
 }
 void BatchConverterDialog::onExposureSpinBoxChanged(double value) {
-    ui->exposureSlider->blockSignals(true);
-    ui->exposureSlider->setValue(static_cast<int>(value * 100));
-    ui->exposureSlider->blockSignals(false);
+    exposureSlider->blockSignals(true);
+    exposureSlider->setValue(static_cast<int>(value * 100));
+    exposureSlider->blockSignals(false);
 }
 
 void BatchConverterDialog::onContrastSliderChanged(int value) {
-    ui->contrastSpinBox->blockSignals(true);
-    ui->contrastSpinBox->setValue(static_cast<double>(value));
-    ui->contrastSpinBox->blockSignals(false);
+    contrastSpinBox->blockSignals(true);
+    contrastSpinBox->setValue(static_cast<double>(value));
+    contrastSpinBox->blockSignals(false);
 }
 void BatchConverterDialog::onContrastSpinBoxChanged(int value) {
-    ui->contrastSlider->blockSignals(true);
-    ui->contrastSlider->setValue(value);
-    ui->contrastSlider->blockSignals(false);
+    contrastSlider->blockSignals(true);
+    contrastSlider->setValue(value);
+    contrastSlider->blockSignals(false);
 }
 
 void BatchConverterDialog::onBrightnessSliderChanged(int value) {
-    ui->brightnessSpinBox->blockSignals(true);
-    ui->brightnessSpinBox->setValue(static_cast<double>(value));
-    ui->brightnessSpinBox->blockSignals(false);
+    brightnessSpinBox->blockSignals(true);
+    brightnessSpinBox->setValue(static_cast<double>(value));
+    brightnessSpinBox->blockSignals(false);
 }
 void BatchConverterDialog::onBrightnessSpinBoxChanged(int value) {
-    ui->brightnessSlider->blockSignals(true);
-    ui->brightnessSlider->setValue(value);
-    ui->brightnessSlider->blockSignals(false);
+    brightnessSlider->blockSignals(true);
+    brightnessSlider->setValue(value);
+    brightnessSlider->blockSignals(false);
 }
 
 void BatchConverterDialog::onSaturationSliderChanged(int value) {
-    ui->saturationSpinBox->blockSignals(true);
-    ui->saturationSpinBox->setValue(static_cast<double>(value));
-    ui->saturationSpinBox->blockSignals(false);
+    saturationSpinBox->blockSignals(true);
+    saturationSpinBox->setValue(static_cast<double>(value));
+    saturationSpinBox->blockSignals(false);
 }
 void BatchConverterDialog::onSaturationSpinBoxChanged(int value) {
-    ui->saturationSlider->blockSignals(true);
-    ui->saturationSlider->setValue(value);
-    ui->saturationSlider->blockSignals(false);
+    saturationSlider->blockSignals(true);
+    saturationSlider->setValue(value);
+    saturationSlider->blockSignals(false);
 }
 
 void BatchConverterDialog::onHueSliderChanged(int value) {
-    ui->hueSpinBox->blockSignals(true);
-    ui->hueSpinBox->setValue(static_cast<double>(value));
-    ui->hueSpinBox->blockSignals(false);
+    hueSpinBox->blockSignals(true);
+    hueSpinBox->setValue(static_cast<double>(value));
+    hueSpinBox->blockSignals(false);
 }
 void BatchConverterDialog::onHueSpinBoxChanged(int value) {
-    ui->hueSlider->blockSignals(true);
-    ui->hueSlider->setValue(value);
-    ui->hueSlider->blockSignals(false);
+    hueSlider->blockSignals(true);
+    hueSlider->setValue(value);
+    hueSlider->blockSignals(false);
 }
 
 void BatchConverterDialog::onTempSliderChanged(int value) {
-    ui->tempSpinBox->blockSignals(true);
-    ui->tempSpinBox->setValue(static_cast<double>(value));
-    ui->tempSpinBox->blockSignals(false);
+    tempSpinBox->blockSignals(true);
+    tempSpinBox->setValue(static_cast<double>(value));
+    tempSpinBox->blockSignals(false);
 }
 void BatchConverterDialog::onTempSpinBoxChanged(int value) {
-    ui->tempSlider->blockSignals(true);
-    ui->tempSlider->setValue(value);
-    ui->tempSlider->blockSignals(false);
+    tempSlider->blockSignals(true);
+    tempSlider->setValue(value);
+    tempSlider->blockSignals(false);
 }
 
 void BatchConverterDialog::onTintSliderChanged(int value) {
-    ui->tintSpinBox->blockSignals(true);
-    ui->tintSpinBox->setValue(static_cast<double>(value));
-    ui->tintSpinBox->blockSignals(false);
+    tintSpinBox->blockSignals(true);
+    tintSpinBox->setValue(static_cast<double>(value));
+    tintSpinBox->blockSignals(false);
 }
 void BatchConverterDialog::onTintSpinBoxChanged(int value) {
-    ui->tintSlider->blockSignals(true);
-    ui->tintSlider->setValue(value);
-    ui->tintSlider->blockSignals(false);
+    tintSlider->blockSignals(true);
+    tintSlider->setValue(value);
+    tintSlider->blockSignals(false);
 }
 
 // ----- Resize slots -----
 void BatchConverterDialog::onResizeRadioToggled() {
-    bool isPercent = ui->byPercentage->isChecked();
-    ui->percent->setEnabled(isPercent);
-    ui->width->setEnabled(!isPercent);
-    ui->height->setEnabled(!isPercent);
-    ui->keepAspectRatio->setEnabled(!isPercent);
+    bool isPercent = byPercentage->isChecked();
+    percent->setEnabled(isPercent);
+    width->setEnabled(!isPercent);
+    height->setEnabled(!isPercent);
+    keepAspectRatio->setEnabled(!isPercent);
 
     if (isPercent) {
-        ui->keepAspectRatio->blockSignals(true);
-        ui->keepAspectRatio->setChecked(true);
-        ui->keepAspectRatio->blockSignals(false);
-        onPercentChanged(ui->percent->value());
+        keepAspectRatio->blockSignals(true);
+        keepAspectRatio->setChecked(true);
+        keepAspectRatio->blockSignals(false);
+        onPercentChanged(percent->value());
     } else {
-        onWidthChanged(ui->width->value());
+        onWidthChanged(width->value());
     }
 }
 
@@ -532,7 +839,7 @@ void BatchConverterDialog::onWidthChanged(int val) {
     lastEdited = 0;
     float factor = static_cast<float>(val) / originalSize.width();
     targetSize.setWidth(val);
-    if (ui->keepAspectRatio->isChecked()) {
+    if (keepAspectRatio->isChecked()) {
         targetSize.setHeight(static_cast<int>(originalSize.height() * factor));
     }
     updateToTargetValues();
@@ -542,19 +849,19 @@ void BatchConverterDialog::onHeightChanged(int val) {
     lastEdited = 1;
     float factor = static_cast<float>(val) / originalSize.height();
     targetSize.setHeight(val);
-    if (ui->keepAspectRatio->isChecked()) {
+    if (keepAspectRatio->isChecked()) {
         targetSize.setWidth(static_cast<int>(originalSize.width() * factor));
     }
     updateToTargetValues();
 }
 
 void BatchConverterDialog::updateToTargetValues() {
-    ui->width->blockSignals(true);
-    ui->height->blockSignals(true);
-    ui->width->setValue(targetSize.width());
-    ui->height->setValue(targetSize.height());
-    ui->width->blockSignals(false);
-    ui->height->blockSignals(false);
+    width->blockSignals(true);
+    height->blockSignals(true);
+    width->setValue(targetSize.width());
+    height->setValue(targetSize.height());
+    width->blockSignals(false);
+    height->blockSignals(false);
 }
 
 void BatchConverterDialog::onCommonResolutionChanged(int index) {
@@ -573,7 +880,7 @@ void BatchConverterDialog::onCommonResolutionChanged(int index) {
     case 11: res = QSize(3840, 2160); break;
     default: res = originalSize; break;
     }
-    if (ui->keepAspectRatio->isChecked())
+    if (keepAspectRatio->isChecked())
         targetSize = originalSize.scaled(res, Qt::KeepAspectRatio);
     else
         targetSize = originalSize.scaled(res, Qt::IgnoreAspectRatio);
@@ -591,29 +898,29 @@ void BatchConverterDialog::onFillDesktop() {
 }
 
 void BatchConverterDialog::onResetSizes() {
-    ui->resComboBox->blockSignals(true);
-    ui->resComboBox->setCurrentIndex(0);
-    ui->resComboBox->blockSignals(false);
+    resComboBox->blockSignals(true);
+    resComboBox->setCurrentIndex(0);
+    resComboBox->blockSignals(false);
     targetSize = originalSize;
     updateToTargetValues();
 }
 
 void BatchConverterDialog::onUseUpscaylToggled(bool checked) {
-    ui->upscaylModelComboBox->setEnabled(checked);
+    upscaylModelComboBox->setEnabled(checked);
 }
 
 void BatchConverterDialog::onSelectAll() {
-    for (int i = 0; i < ui->fileListWidget->count(); ++i) {
-        QListWidgetItem *item = ui->fileListWidget->item(i);
-        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(ui->fileListWidget->itemWidget(item));
+    for (int i = 0; i < fileListWidget->count(); ++i) {
+        QListWidgetItem *item = fileListWidget->item(i);
+        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
         if (widget) widget->setChecked(true);
     }
 }
 
 void BatchConverterDialog::onDeselectAll() {
-    for (int i = 0; i < ui->fileListWidget->count(); ++i) {
-        QListWidgetItem *item = ui->fileListWidget->item(i);
-        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(ui->fileListWidget->itemWidget(item));
+    for (int i = 0; i < fileListWidget->count(); ++i) {
+        QListWidgetItem *item = fileListWidget->item(i);
+        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
         if (widget) widget->setChecked(false);
     }
 }
@@ -625,83 +932,83 @@ void BatchConverterDialog::onCheckedStateChanged() {
 void BatchConverterDialog::updateSelectedCount() {
     int checkedCount = 0;
     qint64 totalSizeBytes = 0;
-    for (int i = 0; i < ui->fileListWidget->count(); ++i) {
-        QListWidgetItem *item = ui->fileListWidget->item(i);
-        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(ui->fileListWidget->itemWidget(item));
+    for (int i = 0; i < fileListWidget->count(); ++i) {
+        QListWidgetItem *item = fileListWidget->item(i);
+        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
         if (widget && widget->isChecked()) {
             checkedCount++;
             totalSizeBytes += widget->fileSize();
         }
     }
     double totalSizeMB = totalSizeBytes / (1024.0 * 1024.0);
-    ui->selectedCountLabel->setText(tr("%1 files selected (%2 MB)").arg(checkedCount).arg(QString::number(totalSizeMB, 'f', 1)));
+    selectedCountLabel->setText(tr("%1 files selected (%2 MB)").arg(checkedCount).arg(QString::number(totalSizeMB, 'f', 1)));
 }
 
 void BatchConverterDialog::onBrowseClicked() {
-    QString dir = QFileDialog::getExistingDirectory(this, tr("Select Output Directory"), ui->outDirEdit->text());
-    if (!dir.isEmpty()) ui->outDirEdit->setText(dir);
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Select Output Directory"), outDirEdit->text());
+    if (!dir.isEmpty()) outDirEdit->setText(dir);
 }
 
 void BatchConverterDialog::onFormatChanged(int index) {
-    QString ext = ui->formatComboBox->itemData(index).toString();
+    QString ext = formatComboBox->itemData(index).toString();
     if (ext == "png") {
-        ui->qualitySlider->setEnabled(true);
-        ui->qualitySpinBox->setEnabled(true);
-        ui->qualitySlider->blockSignals(true);
-        ui->qualitySpinBox->blockSignals(true);
-        ui->qualitySlider->setRange(0, 9);
-        ui->qualitySpinBox->setRange(0, 9);
-        ui->qualitySlider->setValue(settings->pngSaveQuality());
-        ui->qualitySpinBox->setValue(settings->pngSaveQuality());
-        ui->qualitySlider->blockSignals(false);
-        ui->qualitySpinBox->blockSignals(false);
-        ui->qualitySlider->setToolTip(tr("PNG Compression level (0 - none, 9 - max)"));
-        ui->qualitySpinBox->setToolTip(tr("PNG Compression level (0 - none, 9 - max)"));
+        qualitySlider->setEnabled(true);
+        qualitySpinBox->setEnabled(true);
+        qualitySlider->blockSignals(true);
+        qualitySpinBox->blockSignals(true);
+        qualitySlider->setRange(0, 9);
+        qualitySpinBox->setRange(0, 9);
+        qualitySlider->setValue(settings->pngSaveQuality());
+        qualitySpinBox->setValue(settings->pngSaveQuality());
+        qualitySlider->blockSignals(false);
+        qualitySpinBox->blockSignals(false);
+        qualitySlider->setToolTip(tr("PNG Compression level (0 - none, 9 - max)"));
+        qualitySpinBox->setToolTip(tr("PNG Compression level (0 - none, 9 - max)"));
     } else if (ext == "jpg" || ext == "webp" || ext == "jxl" || ext == "avif") {
-        ui->qualitySlider->setEnabled(true);
-        ui->qualitySpinBox->setEnabled(true);
-        ui->qualitySlider->blockSignals(true);
-        ui->qualitySpinBox->blockSignals(true);
-        ui->qualitySlider->setRange(1, 100);
-        ui->qualitySpinBox->setRange(1, 100);
+        qualitySlider->setEnabled(true);
+        qualitySpinBox->setEnabled(true);
+        qualitySlider->blockSignals(true);
+        qualitySpinBox->blockSignals(true);
+        qualitySlider->setRange(1, 100);
+        qualitySpinBox->setRange(1, 100);
         int val = 90;
         if (ext == "jpg") val = settings->JPEGSaveQuality();
         else if (ext == "webp" || ext == "jxl" || ext == "avif") val = settings->modernSaveQuality();
-        ui->qualitySlider->setValue(val);
-        ui->qualitySpinBox->setValue(val);
-        ui->qualitySlider->blockSignals(false);
-        ui->qualitySpinBox->blockSignals(false);
-        ui->qualitySlider->setToolTip(tr("Quality (1 - lowest, 100 - highest)"));
-        ui->qualitySpinBox->setToolTip(tr("Quality (1 - lowest, 100 - highest)"));
+        qualitySlider->setValue(val);
+        qualitySpinBox->setValue(val);
+        qualitySlider->blockSignals(false);
+        qualitySpinBox->blockSignals(false);
+        qualitySlider->setToolTip(tr("Quality (1 - lowest, 100 - highest)"));
+        qualitySpinBox->setToolTip(tr("Quality (1 - lowest, 100 - highest)"));
     } else {
-        ui->qualitySlider->setEnabled(false);
-        ui->qualitySpinBox->setEnabled(false);
-        ui->qualitySlider->setToolTip("");
-        ui->qualitySpinBox->setToolTip("");
+        qualitySlider->setEnabled(false);
+        qualitySpinBox->setEnabled(false);
+        qualitySlider->setToolTip("");
+        qualitySpinBox->setToolTip("");
     }
 }
 
 void BatchConverterDialog::updateUiState() {
-    ui->scrollArea->setEnabled(!isConverting);
-    ui->convertButton->setEnabled(!isConverting);
-    ui->selectAllBtn->setEnabled(!isConverting);
-    ui->deselectAllBtn->setEnabled(!isConverting);
-    ui->cancelButton->setText(isConverting ? tr("Stop") : tr("Cancel"));
+    scrollArea->setEnabled(!isConverting);
+    convertButton->setEnabled(!isConverting);
+    selectAllBtn->setEnabled(!isConverting);
+    deselectAllBtn->setEnabled(!isConverting);
+    cancelButton->setText(isConverting ? tr("Stop") : tr("Cancel"));
 }
 
 void BatchConverterDialog::onConvertClicked() {
     if (isConverting) return;
 
-    QString outDir = ui->outDirEdit->text().trimmed();
+    QString outDir = outDirEdit->text().trimmed();
     if (outDir.isEmpty() || !QDir(outDir).exists()) {
         QMessageBox::warning(this, tr("Invalid Directory"), tr("Please select a valid output directory."));
         return;
     }
 
     int checkedCount = 0;
-    for (int i = 0; i < ui->fileListWidget->count(); ++i) {
-        QListWidgetItem *item = ui->fileListWidget->item(i);
-        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(ui->fileListWidget->itemWidget(item));
+    for (int i = 0; i < fileListWidget->count(); ++i) {
+        QListWidgetItem *item = fileListWidget->item(i);
+        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
         if (widget && widget->isChecked()) checkedCount++;
     }
 
@@ -716,51 +1023,51 @@ void BatchConverterDialog::onConvertClicked() {
     successCount = 0;
     failedCount = 0;
 
-    ui->progressBar->setMaximum(checkedCount);
-    ui->progressBar->setValue(0);
-    ui->statusLabel->setText(tr("Processing..."));
+    progressBar->setMaximum(checkedCount);
+    progressBar->setValue(0);
+    statusLabel->setText(tr("Processing..."));
     updateUiState();
     startConversion();
 }
 
 void BatchConverterDialog::startConversion() {
-    QString baseOutDir = ui->outDirEdit->text().trimmed();
+    QString baseOutDir = outDirEdit->text().trimmed();
     QString finalOutDir = baseOutDir;
 
-    if (ui->subfolderCheckBox->isChecked()) {
+    if (subfolderCheckBox->isChecked()) {
         QString subfolderName = "Batch_" + QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
         QDir baseDir(baseOutDir);
         if (baseDir.mkdir(subfolderName)) finalOutDir = baseOutDir + "/" + subfolderName;
     }
 
-    QString formatExt = ui->formatComboBox->currentData().toString();
-    int quality = ui->qualitySlider->value();
-    bool doResize = ui->resizeEnableCheckBox->isChecked();
+    QString formatExt = formatComboBox->currentData().toString();
+    int quality = qualitySlider->value();
+    bool doResize = resizeEnableCheckBox->isChecked();
     QSize resizeTarget = targetSize;
-    bool keepAspect = ui->keepAspectRatio->isChecked();
-    bool useUpscayl = doResize && ui->useUpscaylCheckBox->isChecked();
-    QString upscaylModel = ui->upscaylModelComboBox->currentText();
+    bool keepAspect = keepAspectRatio->isChecked();
+    bool useUpscayl = doResize && useUpscaylCheckBox->isChecked();
+    QString upscaylModel = upscaylModelComboBox->currentText();
 
 #ifdef USE_UPSCAYL
-    settings->setResizeUseUpscayl(ui->useUpscaylCheckBox->isChecked());
+    settings->setResizeUseUpscayl(useUpscaylCheckBox->isChecked());
     settings->setUpscaylModel(upscaylModel);
     settings->sync();
 #endif
 
-    int filter = ui->filterComboBox->currentData().toInt();
-    bool doColor = ui->colorEnableCheckBox->isChecked();
+    int filter = filterComboBox->currentData().toInt();
+    bool doColor = colorEnableCheckBox->isChecked();
 
     // Convert UI values to coefficients expected by ImageLib::applyColorAdjustments
-    float exposure = doColor ? static_cast<float>(ui->exposureSpinBox->value()) : 0.0f;
-    float contrast = doColor ? static_cast<float>(ui->contrastSpinBox->value() / 100.0) : 1.0f;
-    float brightness = doColor ? static_cast<float>(ui->brightnessSpinBox->value() / 100.0) : 0.0f;
-    float saturation = doColor ? static_cast<float>(ui->saturationSpinBox->value() / 100.0) : 1.0f;
-    float hue = doColor ? static_cast<float>(ui->hueSpinBox->value()) : 0.0f;
-    float temp = doColor ? static_cast<float>(ui->tempSpinBox->value() / 100.0) : 0.0f;
-    float tint = doColor ? static_cast<float>(ui->tintSpinBox->value() / 100.0) : 0.0f;
+    float exposure = doColor ? static_cast<float>(exposureSpinBox->value()) : 0.0f;
+    float contrast = doColor ? static_cast<float>(contrastSpinBox->value() / 100.0) : 1.0f;
+    float brightness = doColor ? static_cast<float>(brightnessSpinBox->value() / 100.0) : 0.0f;
+    float saturation = doColor ? static_cast<float>(saturationSpinBox->value() / 100.0) : 1.0f;
+    float hue = doColor ? static_cast<float>(hueSpinBox->value()) : 0.0f;
+    float temp = doColor ? static_cast<float>(tempSpinBox->value() / 100.0) : 0.0f;
+    float tint = doColor ? static_cast<float>(tintSpinBox->value() / 100.0) : 0.0f;
 
-    QString pattern = ui->patternEdit->text();
-    bool overwrite = ui->overwriteCheckBox->isChecked();
+    QString pattern = patternEdit->text();
+    bool overwrite = overwriteCheckBox->isChecked();
 
     if (useUpscayl && doResize) {
         threadPool.setMaxThreadCount(1);
@@ -770,7 +1077,7 @@ void BatchConverterDialog::startConversion() {
 
 #ifdef USE_UPSCAYL
     if (useUpscayl && doResize) {
-        ui->statusLabel->setText(tr("Loading AI Model..."));
+        statusLabel->setText(tr("Loading AI Model..."));
         qApp->processEvents();
 
         sharedResrgan = new RealESRGAN(-1, false);
@@ -786,7 +1093,7 @@ void BatchConverterDialog::startConversion() {
         if (loadRes != 0) {
             delete sharedResrgan;
             sharedResrgan = nullptr;
-            ui->statusLabel->setText(tr("Failed to load AI model."));
+            statusLabel->setText(tr("Failed to load AI model."));
             QMessageBox::warning(this, tr("AI Error"), tr("Failed to load AI upscaling model: %1").arg(upscaylModel));
             return;
         }
@@ -794,9 +1101,9 @@ void BatchConverterDialog::startConversion() {
 #endif
 
     int activeIndex = 0;
-    for (int i = 0; i < ui->fileListWidget->count(); ++i) {
-        QListWidgetItem *item = ui->fileListWidget->item(i);
-        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(ui->fileListWidget->itemWidget(item));
+    for (int i = 0; i < fileListWidget->count(); ++i) {
+        QListWidgetItem *item = fileListWidget->item(i);
+        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
         if (!widget || !widget->isChecked()) continue;
 
         widget->setStatus(tr("Pending"), "", true);
@@ -816,7 +1123,7 @@ void BatchConverterDialog::startConversion() {
         if (!overwrite && QFileInfo::exists(destPath)) {
             processedFiles++;
             successCount++;
-            ui->progressBar->setValue(processedFiles);
+            progressBar->setValue(processedFiles);
             widget->setStatus(tr("Done"), tr("Skipped (Exists)"), true);
             continue;
         }
@@ -830,29 +1137,29 @@ void BatchConverterDialog::startConversion() {
         activeIndex++;
     }
 
-    if (processedFiles >= ui->progressBar->maximum()) finalizeConversion();
+    if (processedFiles >= progressBar->maximum()) finalizeConversion();
 }
 
 void BatchConverterDialog::onProgressUpdated(int index, QString status, QString details, bool success) {
-    QListWidgetItem *item = ui->fileListWidget->item(index);
-    BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(ui->fileListWidget->itemWidget(item));
+    QListWidgetItem *item = fileListWidget->item(index);
+    BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
     if (widget) widget->setStatus(status, details, success);
 
     processedFiles++;
     if (success) successCount++;
     else failedCount++;
 
-    ui->progressBar->setValue(processedFiles);
-    ui->statusLabel->setText(tr("Processed %1 / %2 files.").arg(processedFiles).arg(ui->progressBar->maximum()));
+    progressBar->setValue(processedFiles);
+    statusLabel->setText(tr("Processed %1 / %2 files.").arg(processedFiles).arg(progressBar->maximum()));
 
-    if (processedFiles >= ui->progressBar->maximum() || isCancelled) finalizeConversion();
+    if (processedFiles >= progressBar->maximum() || isCancelled) finalizeConversion();
 }
 
 void BatchConverterDialog::finalizeConversion() {
     isConverting = false;
     cleanupSharedUpscayl();
     updateUiState();
-    ui->statusLabel->setText(tr("Finished. Success: %1, Failed: %2").arg(successCount).arg(failedCount));
+    statusLabel->setText(tr("Finished. Success: %1, Failed: %2").arg(successCount).arg(failedCount));
     QMessageBox::information(this, tr("Batch Conversion Complete"),
                              tr("Batch process complete.\n\nSuccessfully converted: %1\nFailed: %2\nTotal files: %3")
                              .arg(successCount).arg(failedCount).arg(processedFiles));
@@ -866,7 +1173,7 @@ void BatchConverterDialog::onCancelClicked() {
         cleanupSharedUpscayl();
         isConverting = false;
         updateUiState();
-        ui->statusLabel->setText(tr("Stopped by user."));
+        statusLabel->setText(tr("Stopped by user."));
     } else {
         reject();
     }
@@ -882,16 +1189,16 @@ void BatchConverterDialog::cleanupSharedUpscayl() {
 }
 
 void BatchConverterDialog::collectResizeWidgets() {
-    const QList<QWidget*> children = ui->resizeContainer->findChildren<QWidget*>();
+    const QList<QWidget*> children = resizeContainer->findChildren<QWidget*>();
     for (QWidget *w : children) {
-        if (w != ui->resizeEnableCheckBox) m_resizeWidgets.append(w);
+        if (w != resizeEnableCheckBox) m_resizeWidgets.append(w);
     }
 }
 
 void BatchConverterDialog::collectColorWidgets() {
-    const QList<QWidget*> children = ui->colorContainer->findChildren<QWidget*>();
+    const QList<QWidget*> children = colorContainer->findChildren<QWidget*>();
     for (QWidget *w : children) {
-        if (w != ui->colorEnableCheckBox) m_colorWidgets.append(w);
+        if (w != colorEnableCheckBox) m_colorWidgets.append(w);
     }
 }
 
@@ -907,7 +1214,7 @@ void BatchConverterDialog::onResizeEnabledChanged(bool enabled) {
     setResizeWidgetsEnabled(enabled);
     if (enabled) {
         onResizeRadioToggled();
-        ui->upscaylModelComboBox->setEnabled(ui->useUpscaylCheckBox->isChecked());
+        upscaylModelComboBox->setEnabled(useUpscaylCheckBox->isChecked());
     }
 }
 
@@ -1006,26 +1313,26 @@ void BatchWorkerTask::run() {
 
 bool BatchConverterDialog::eventFilter(QObject *watched, QEvent *event) {
     if (event->type() == QEvent::MouseButtonDblClick) {
-        if (watched == ui->exposureSlider) {
-            ui->exposureSlider->setValue(0);
+        if (watched == exposureSlider) {
+            exposureSlider->setValue(0);
             return true;
-        } else if (watched == ui->contrastSlider) {
-            ui->contrastSlider->setValue(100);
+        } else if (watched == contrastSlider) {
+            contrastSlider->setValue(100);
             return true;
-        } else if (watched == ui->brightnessSlider) {
-            ui->brightnessSlider->setValue(0);
+        } else if (watched == brightnessSlider) {
+            brightnessSlider->setValue(0);
             return true;
-        } else if (watched == ui->saturationSlider) {
-            ui->saturationSlider->setValue(100);
+        } else if (watched == saturationSlider) {
+            saturationSlider->setValue(100);
             return true;
-        } else if (watched == ui->hueSlider) {
-            ui->hueSlider->setValue(0);
+        } else if (watched == hueSlider) {
+            hueSlider->setValue(0);
             return true;
-        } else if (watched == ui->tempSlider) {
-            ui->tempSlider->setValue(0);
+        } else if (watched == tempSlider) {
+            tempSlider->setValue(0);
             return true;
-        } else if (watched == ui->tintSlider) {
-            ui->tintSlider->setValue(0);
+        } else if (watched == tintSlider) {
+            tintSlider->setValue(0);
             return true;
         }
     }
