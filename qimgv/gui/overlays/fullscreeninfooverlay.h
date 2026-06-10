@@ -3,9 +3,7 @@
 #include <QWidget>
 #include "gui/customwidgets/overlaywidget.h"
 
-namespace Ui {
-class FullscreenInfoOverlay;
-}
+class QLabel;
 
 class FullscreenInfoOverlay : public OverlayWidget {
     Q_OBJECT
@@ -16,5 +14,9 @@ public:
     void setInfo(QString pos, QString fileName, QString info);
 
 private:
-    Ui::FullscreenInfoOverlay *ui;
+    QLabel *posLabel = nullptr;
+    QLabel *nameLabel = nullptr;
+    QLabel *infoLabel = nullptr;
+
+    void setupUi();
 };
