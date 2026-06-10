@@ -2,7 +2,6 @@
 #include <QClipboard>
 #include <QApplication>
 
-// TODO: nuke this and rewrite
 
 MW::MW(QWidget *parent)
     : FloatingWidgetContainer(parent),
@@ -19,7 +18,8 @@ MW::MW(QWidget *parent)
       floatingMessage(nullptr),
       cropPanel(nullptr),
       cropOverlay(nullptr),
-      panelPosition(PANEL_TOP)
+      panelPosition(PANEL_TOP),
+      m_pseudoFullscreen(false)
 {
     setAttribute(Qt::WA_TranslucentBackground, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
@@ -502,6 +502,10 @@ float MW::currentScale() const {
     return 1.0f;
 }
 
+bool MW::isFullScreen() const {
+    return m_pseudoFullscreen;
+}
+
 bool MW::panoramaMode() const {
     if (viewerWidget) {
         return viewerWidget->panoramaMode();
@@ -769,30 +773,35 @@ void MW::showFullScreen() {
     if(!isHidden())
         saveWindowGeometry();
     auto screens = qApp->screens();
-    // todo: why check the screen again?
+    // When the app is launched directly in fullscreen mode on a multi-monitor setup,
+    // it lacks initial geometry. This check ensures the window is moved to the
+    // user's saved display (currentDisplay) before going fullscreen.
 #if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
     int _currentDisplay = desktopWidget.screenNumber(this);
 #else
     int _currentDisplay = screens.indexOf(this->window()->screen());
 #endif
-    //move to target screen
+    // move to target screen
     if(screens.count() > currentDisplay && currentDisplay != _currentDisplay) {
         this->move(screens.at(currentDisplay)->geometry().x(),
                    screens.at(currentDisplay)->geometry().y());
     }
-    QWidget::showFullScreen();
-    // try to repaint sooner
-    qApp->processEvents();
+    // Pseudo-fullscreen: borderless window spanning the screen
+    this->setWindowFlags(this->windowFlags() | Qt::FramelessWindowHint);
+    this->setGeometry(screens.at(currentDisplay)->geometry());
+    
+    m_pseudoFullscreen = true;
+    this->show();
+
     emit fullscreenStateChanged(true);
 }
 
 void MW::showWindowed() {
-    if(isFullScreen())
-        QWidget::showNormal();
+    this->setWindowFlags(this->windowFlags() & ~Qt::FramelessWindowHint);
+
     restoreWindowGeometry();
-    QWidget::show();
-    // try to repaint sooner
-    qApp->processEvents();
+    m_pseudoFullscreen = false;
+    this->show();
     emit fullscreenStateChanged(false);
 }
 

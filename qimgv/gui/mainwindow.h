@@ -62,6 +62,7 @@ class MW : public FloatingWidgetContainer {
   Q_OBJECT
 public:
   explicit MW(QWidget *parent = nullptr);
+  bool isFullScreen() const;
   bool isCropPanelActive();
   void onScalingFinished(std::unique_ptr<QPixmap> scaled);
   void onUpscaleFinished(const QImage &cropImg, QRect origCrop);
@@ -97,6 +98,7 @@ private:
   QTimer windowGeometryChangeTimer;
   int currentDisplay;
 
+  bool m_pseudoFullscreen;
   bool cropPanelActive, showInfoBarFullscreen, maximized;
   std::shared_ptr<DocumentWidget> docWidget;
   std::shared_ptr<FolderViewProxy> folderView;
