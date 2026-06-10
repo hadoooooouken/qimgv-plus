@@ -23,7 +23,6 @@
 #include "gui/dialogs/batchconverterdialog.h"
 #include "gui/dialogs/settingsdialog.h"
 #include "gui/folderview/folderviewproxy.h"
-#include "gui/overlays/changelogwindow.h"
 #include "gui/overlays/cassettingsoverlay.h"
 #include "gui/overlays/coloradjustmentsoverlayproxy.h"
 #include "gui/overlays/controlsoverlay.h"
@@ -107,7 +106,6 @@ private:
   CropPanel *cropPanel;
   CropOverlay *cropOverlay;
   SaveConfirmOverlay *saveOverlay;
-  ChangelogWindow *changelogWindow;
 
   CopyOverlay *copyOverlay;
 
@@ -241,8 +239,6 @@ public slots:
   void updateCropPanelData();
   void showSaveOverlay();
   void hideSaveOverlay();
-  void showChangelogWindow();
-  void showChangelogWindow(QString text);
   void fitWindow();
   void fitWidth();
   void fitOriginal();

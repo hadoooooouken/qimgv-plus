@@ -819,15 +819,6 @@ void MW::hideSaveOverlay() {
     saveOverlay->hide();
 }
 
-void MW::showChangelogWindow() {
-    changelogWindow->show();
-}
-
-void MW::showChangelogWindow(QString text) {
-    changelogWindow->setText(text);
-    changelogWindow->show();
-}
-
 void MW::triggerCropPanel() {
     if(activeSidePanel != SIDEPANEL_CROP) {
         showCropPanel();

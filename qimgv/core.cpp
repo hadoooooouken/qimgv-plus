@@ -564,9 +564,6 @@ void Core::onUpdate() {
 
   qDebug() << "Updated: " << settings->lastVersion().toString() << ">"
            << appVersion.toString();
-  // TODO: finish changelogs
-  // if(settings->showChangelogs())
-  //    mw->showChangelogWindow();
   mw->showMessage(tr("Updated: ") + settings->lastVersion().toString() + " > " +
                       appVersion.toString(),
                   4000);

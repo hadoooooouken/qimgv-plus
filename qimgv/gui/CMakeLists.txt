@@ -37,7 +37,6 @@ target_sources(qimgv-plus PRIVATE
     dialogs/shortcutcreatordialog.cpp
     dialogs/printdialog.cpp
 
-    overlays/changelogwindow.cpp
     overlays/clickzoneoverlay.cpp
     overlays/controlsoverlay.cpp
     overlays/copyoverlay.cpp
@@ -86,8 +85,6 @@ target_sources(qimgv-plus PRIVATE
 
     dialogs/batchconverterdialog.ui
     dialogs/settingsdialog.ui
-
-    overlays/changelogwindow.ui
     overlays/copyoverlay.ui
     overlays/floatingmessage.ui
     overlays/fullscreeninfooverlay.ui

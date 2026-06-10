@@ -496,14 +496,6 @@ void Settings::setLastVersion(QVersionNumber &ver) {
   settings->settingsConf->setValue("lastVerMicro", ver.microVersion());
 }
 //------------------------------------------------------------------------------
-void Settings::setShowChangelogs(bool mode) {
-  settings->settingsConf->setValue("showChangelogs", mode);
-}
-
-bool Settings::showChangelogs() {
-  return settings->settingsConf->value("showChangelogs", true).toBool();
-}
-//------------------------------------------------------------------------------
 qreal Settings::backgroundOpacity() {
   bool ok = false;
   qreal value =
