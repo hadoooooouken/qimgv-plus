@@ -11,9 +11,11 @@
 #include "components/thumbnailer/thumbnailer.h"
 #include "settings.h"
 
-namespace Ui {
-class PrintDialog;
-}
+class QLabel;
+class QComboBox;
+class QRadioButton;
+class QCheckBox;
+class QPushButton;
 
 class PrintDialog : public QDialog {
     Q_OBJECT
@@ -34,8 +36,21 @@ private slots:
     QString pdfPathDialog();
 
 private:
+    void setupUi();
     void saveSettings();
-    Ui::PrintDialog *ui;
+
+    QLabel *previewLabel = nullptr;
+    QLabel *printerListPlaceholder = nullptr;
+    QComboBox *printerListComboBox = nullptr;
+    QRadioButton *portrait = nullptr;
+    QRadioButton *landscape = nullptr;
+    QRadioButton *grayscale = nullptr;
+    QRadioButton *color = nullptr;
+    QCheckBox *fitToPageCheckBox = nullptr;
+    QPushButton *exportPdfButton = nullptr;
+    QPushButton *printButton = nullptr;
+    QPushButton *cancelButton = nullptr;
+
     std::shared_ptr<const QImage> img = nullptr;
     QPrinter pdfPrinter, *printer = nullptr;
     bool printPdfDefault = false;
