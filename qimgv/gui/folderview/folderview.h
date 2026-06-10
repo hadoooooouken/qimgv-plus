@@ -14,9 +14,14 @@
 #include "gui/customwidgets/actionbutton.h"
 #include "gui/customwidgets/styledcombobox.h"
 
-namespace Ui {
-    class FolderView;
-}
+class ClickableLabel;
+class QSplitter;
+class QLabel;
+class QSlider;
+class QPushButton;
+class TreeViewCustom;
+class IconButton;
+class QSpacerItem;
 
 class FolderView : public FloatingWidgetContainer, public IDirectoryView {
     Q_OBJECT
@@ -98,9 +103,48 @@ private slots:
     void onBatchClicked();
 
 private:
+    void setupUi();
+
     int lastThumbnailResolution = 256;
-    Ui::FolderView *ui;
+    int dirCount = 0;
     FileSystemModelCustom *dirModel;
     QElapsedTimer popupTimerClutch;
-    int dirCount = 0;
+
+    // Top Bar
+    QWidget *topBar;
+    ActionButton *togglePlacesPanelButton;
+    QWidget *pathBar;
+    ActionButton *upButton;
+    QLabel *pathLabel;
+    QSpacerItem *pathbarSpacer;
+    QLabel *selectionCountLabel;
+    QPushButton *batchButton;
+    QSlider *zoomSlider;
+    QSpacerItem *zoomSliderSpacer;
+    StyledComboBox *folderSortingComboBox;
+    QSpacerItem *horizontalSpacer_folderSort;
+    StyledComboBox *sortingComboBox;
+    ActionButton *docViewButton;
+    ActionButton *settingsButton;
+    QSpacerItem *panelRightEdgeSpacer;
+    ActionButton *exitButton;
+
+    // Contents
+    QWidget *contentsWidget;
+    QSplitter *splitter;
+    
+    // Places Panel
+    QWidget *placesPanel;
+    ClickableLabel *bookmarksLabel;
+    IconButton *newBookmarkButton;
+    BookmarksWidget *bookmarksWidget;
+    QSpacerItem *placesPanelSpacer;
+    ClickableLabel *directoriesLabel;
+    IconButton *rootButton;
+    IconButton *homeButton;
+    TreeViewCustom *dirTreeView;
+
+    // Grid
+    QWidget *thumbnailGridHolder;
+    FolderGridView *thumbnailGrid;
 };

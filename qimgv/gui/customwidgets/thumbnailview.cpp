@@ -407,7 +407,7 @@ void ThumbnailView::loadVisibleThumbnails() {
         if(loadList.count())
             emit thumbnailsRequested(loadList, static_cast<int>(qApp->devicePixelRatio() * mThumbnailSize), mCropThumbnails, false);
         // unload offscreen
-        if(settings->unloadThumbs()) {
+        if(settings->unloadThumbs() && thumbnails.count() > 1000) {
             for(int i = 0; i < thumbnails.count(); i++)
                 if(!visibleItems.contains(thumbnails.at(i)))
                     thumbnails.at(i)->unsetThumbnail();
