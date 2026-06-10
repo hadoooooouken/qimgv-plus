@@ -167,6 +167,7 @@ void ViewerWidget::disableImageViewer() {
 }
 
 void ViewerWidget::onScaleChanged(qreal scale) {
+    emit scaleChanged(scale);
     if(!this->isVisible())
         return;
     if(imageViewer && imageViewer->panoramaMode()) {
@@ -176,9 +177,8 @@ void ViewerWidget::onScaleChanged(qreal scale) {
     zoomIndicator->setScale(scale);
     if(settings->zoomIndicatorMode() == ZoomIndicatorMode::INDICATOR_ENABLED) {
         zoomIndicator->show();
-    } else if(scale != 1.0f) {
-        if(settings->zoomIndicatorMode() == ZoomIndicatorMode::INDICATOR_AUTO)
-            zoomIndicator->show(1500);
+    } else if(settings->zoomIndicatorMode() == ZoomIndicatorMode::INDICATOR_AUTO) {
+        zoomIndicator->show(2000);
     } else {
         zoomIndicator->hide();
     }

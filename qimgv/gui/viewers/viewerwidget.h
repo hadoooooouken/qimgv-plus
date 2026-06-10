@@ -75,6 +75,7 @@ private slots:
     void onAnimationPlaybackFinished();
 
 signals:
+    void scaleChanged(qreal scale);
     void scalingRequested(QSize, ScalingFilter);
     void zoomIn();
     void zoomOut();

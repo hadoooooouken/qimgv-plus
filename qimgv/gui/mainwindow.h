@@ -123,6 +123,7 @@ private:
 
   PanelPosition panelPosition;
   CurrentInfo info;
+  int lastScalePercent = -1;
 #if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
   QDesktopWidget desktopWidget;
 #endif
@@ -147,6 +148,7 @@ private slots:
   void adaptToWindowState();
   void onWindowGeometryChanged();
   void onInfoUpdated();
+  void onScaleChanged(qreal scale);
   void showScriptSettings();
 
 protected:

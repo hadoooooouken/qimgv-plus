@@ -88,6 +88,7 @@ void MW::setupUi() {
     connect(viewerWidget.get(), &ViewerWidget::nextImageRequested, this, &MW::nextImageRequested);
     connect(viewerWidget.get(), &ViewerWidget::prevImageRequested, this, &MW::prevImageRequested);
     connect(viewerWidget.get(), &ViewerWidget::showScriptSettings, this, &MW::showScriptSettings);
+    connect(viewerWidget.get(), &ViewerWidget::scaleChanged, this, &MW::onScaleChanged);
     connect(this, &MW::zoomIn,        viewerWidget.get(), &ViewerWidget::zoomIn);
     connect(this, &MW::zoomOut,       viewerWidget.get(), &ViewerWidget::zoomOut);
     connect(this, &MW::zoomInCursor,  viewerWidget.get(), &ViewerWidget::zoomInCursor);
@@ -970,16 +971,20 @@ void MW::onInfoUpdated() {
         infoBarFullscreen->setInfo("", tr("No file opened."), "");
     } else {
         windowTitle = info.fileName;
+        int scalePercent = qRound(viewerWidget->currentScale() * 100.0f);
+        windowTitle.append(QString(" [%1%]").arg(scalePercent));
+        lastScalePercent = scalePercent;
+
         if(settings->windowTitleExtendedInfo()) {
             windowTitle.prepend(posString + "  ");
             if(!resString.isEmpty())
-                windowTitle.append("  -  " + resString);
+                windowTitle.append(" - " + resString);
             if(!info.colorProfile.isEmpty())
-                windowTitle.append("  -  " + info.colorProfile);
+                windowTitle.append(" - " + info.colorProfile);
             if(!formatString.isEmpty())
-                windowTitle.append("  -  " + formatString);
+                windowTitle.append(" - " + formatString);
             if(!sizeString.isEmpty())
-                windowTitle.append("  -  " + sizeString);
+                windowTitle.append(" - " + sizeString);
         }
 
         // toggleable states
@@ -1020,7 +1025,16 @@ void MW::onInfoUpdated() {
 
         infoBarFullscreen->setInfo(posString, info.fileName + (info.edited ? "  *" : ""), rightInfo);
     }
-    setWindowTitle(windowTitle);
+    if(this->windowTitle() != windowTitle)
+        setWindowTitle(windowTitle);
+}
+
+void MW::onScaleChanged(qreal scale) {
+    int percent = qRound(scale * 100.0f);
+    if(percent != lastScalePercent) {
+        lastScalePercent = percent;
+        onInfoUpdated();
+    }
 }
 
 // TODO!!! buffer this in mw
