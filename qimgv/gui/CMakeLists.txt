@@ -78,10 +78,3 @@ target_sources(qimgv-plus PRIVATE
     folderview/bookmarkswidget.cpp
     folderview/bookmarksitem.cpp
 )
-
-# UI Files
-
-target_sources(qimgv-plus PRIVATE
-
-    dialogs/settingsdialog.ui
-)
