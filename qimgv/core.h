@@ -139,7 +139,7 @@ private slots:
     void crop(QRect rect);
     void cropAndSave(QRect rect);
     void discardEdits();
-    void applyColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+    void applyColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
     void toggleCropPanel();
     void toggleFullscreenInfoBar();
     void requestSavePath();

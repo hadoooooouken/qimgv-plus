@@ -148,15 +148,15 @@ public:
                     const QString &format, int quality, bool doResize,
                     QSize targetSize, bool keepAspectRatio, bool useUpscayl,
                     QString upscaylModel, int scalingFilter,
-                    float brightness, float contrast, float saturation,
-                    float temp, float tint, float exposure, float hue)
+                    float exposure, float contrast, float brightness,
+                    float temp, float tint, float saturation, float hue)
         : dialog(dialog), index(index), srcPath(srcPath), destPath(destPath),
           format(format), quality(quality), doResize(doResize),
           targetSize(targetSize), keepAspectRatio(keepAspectRatio),
           useUpscayl(useUpscayl), upscaylModel(upscaylModel),
-          scalingFilter(scalingFilter), brightness(brightness),
-          contrast(contrast), saturation(saturation), temp(temp), tint(tint),
-          exposure(exposure), hue(hue) {}
+          scalingFilter(scalingFilter), exposure(exposure), contrast(contrast),
+          brightness(brightness), temp(temp), tint(tint),
+          saturation(saturation), hue(hue) {}
 
     void run() override;
 
@@ -173,11 +173,11 @@ private:
     bool useUpscayl;
     QString upscaylModel;
     int scalingFilter;
-    float brightness;
+    float exposure;
     float contrast;
-    float saturation;
+    float brightness;
     float temp;
     float tint;
-    float exposure;
+    float saturation;
     float hue;
 };

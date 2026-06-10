@@ -581,7 +581,7 @@ QImage *ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
   }
 }
 
-QImage *ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint) {
+QImage *ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
   if (!source)
     return new QImage();
 

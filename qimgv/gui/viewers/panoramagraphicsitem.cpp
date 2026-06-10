@@ -39,15 +39,15 @@ void PanoramaGraphicsItem::setViewParameters(float yaw, float pitch, float fov)
     update();
 }
 
-void PanoramaGraphicsItem::setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint)
+void PanoramaGraphicsItem::setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue)
 {
-    mBrightness = brightness;
-    mContrast = contrast;
-    mSaturation = saturation;
-    mHue = hue;
     mExposure = exposure;
+    mContrast = contrast;
+    mBrightness = brightness;
     mTemperature = temperature;
     mTint = tint;
+    mSaturation = saturation;
+    mHue = hue;
     update();
 }
 

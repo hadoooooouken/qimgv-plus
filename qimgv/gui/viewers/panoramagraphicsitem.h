@@ -18,7 +18,7 @@ public:
     void setPixmap(std::shared_ptr<QPixmap> pixmap);
     
     void setViewParameters(float yaw, float pitch, float fov);
-    void setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+    void setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
     
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -35,11 +35,11 @@ private:
     float mPitch = 0.0f;
     float mFov = 90.0f;
 
-    float mBrightness = 0.0f;
-    float mContrast = 1.0f;
-    float mSaturation = 1.0f;
-    float mHue = 0.0f;
     float mExposure = 0.0f;
+    float mContrast = 1.0f;
+    float mBrightness = 0.0f;
     float mTemperature = 0.0f;
     float mTint = 0.0f;
+    float mSaturation = 1.0f;
+    float mHue = 0.0f;
 };

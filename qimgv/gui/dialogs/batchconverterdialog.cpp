@@ -824,8 +824,8 @@ void BatchConverterDialog::startConversion() {
         widget->setStatus(tr("Processing..."), "", true);
         BatchWorkerTask *task = new BatchWorkerTask(
             this, i, srcPath, destPath, formatExt, quality, doResize, resizeTarget,
-            keepAspect, useUpscayl, upscaylModel, filter, brightness, contrast,
-            saturation, temp, tint, exposure, hue);
+            keepAspect, useUpscayl, upscaylModel, filter, exposure, contrast,
+            brightness, temp, tint, saturation, hue);
         threadPool.start(task);
         activeIndex++;
     }
@@ -938,7 +938,7 @@ void BatchWorkerTask::run() {
         if (dialog->isCancelled) return;
         std::shared_ptr<const QImage> srcPtr = std::make_shared<const QImage>(processedImg);
         QImage *adj = ImageLib::applyColorAdjustments(
-            srcPtr, brightness, contrast, saturation, hue, exposure, temp, tint);
+            srcPtr, exposure, contrast, brightness, temp, tint, saturation, hue);
         if (adj) {
             processedImg = *adj;
             delete adj;

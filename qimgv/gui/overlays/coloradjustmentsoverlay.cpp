@@ -107,13 +107,13 @@ void ColorAdjustmentsOverlay::setupUi()
         formLayout->addRow(label, rowLayout);
     };
 
-    addSliderRow(tr("Brightness"),  m_brightnessSlider,  m_brightnessValLabel,  -100, 100, 0);
-    addSliderRow(tr("Contrast"),    m_contrastSlider,    m_contrastValLabel,       0, 300, 100);
-    addSliderRow(tr("Saturation"),  m_saturationSlider,  m_saturationValLabel,     0, 200, 100);
-    addSliderRow(tr("Hue"),         m_hueSlider,         m_hueValLabel,          -180, 180, 0);
     addSliderRow(tr("Exposure"),    m_exposureSlider,    m_exposureValLabel,      -300, 300, 0);
+    addSliderRow(tr("Contrast"),    m_contrastSlider,    m_contrastValLabel,       0, 300, 100);
+    addSliderRow(tr("Brightness"),  m_brightnessSlider,  m_brightnessValLabel,  -100, 100, 0);
     addSliderRow(tr("Temperature"), m_temperatureSlider, m_temperatureValLabel,   -50,  50, 0);
     addSliderRow(tr("Tint"),        m_tintSlider,        m_tintValLabel,          -50,  50, 0);
+    addSliderRow(tr("Saturation"),  m_saturationSlider,  m_saturationValLabel,     0, 200, 100);
+    addSliderRow(tr("Hue"),         m_hueSlider,         m_hueValLabel,          -180, 180, 0);
 
     mainLayout->addLayout(formLayout);
 
@@ -142,16 +142,16 @@ void ColorAdjustmentsOverlay::setupUi()
     // Connections
     connect(resetButton, &QPushButton::clicked, this, &ColorAdjustmentsOverlay::resetAdjustments);
     connect(applyButton, &QPushButton::clicked, this, [this]() {
-        emit applyRequested(brightness(), contrast(), saturation(),
-                            hue(), exposure(), temperature(), tint());
+        emit applyRequested(exposure(), contrast(), brightness(),
+                            temperature(), tint(), saturation(), hue());
         resetAdjustments();
     });
     connect(compareButton, &QPushButton::pressed, this, [this]() {
-        emit adjustmentsChanged(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        emit adjustmentsChanged(0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
     });
     connect(compareButton, &QPushButton::released, this, [this]() {
-        emit adjustmentsChanged(brightness(), contrast(), saturation(),
-                                hue(), exposure(), temperature(), tint());
+        emit adjustmentsChanged(exposure(), contrast(), brightness(),
+                                temperature(), tint(), saturation(), hue());
     });
 
     // Double-click reset
@@ -229,14 +229,14 @@ void ColorAdjustmentsOverlay::resetAdjustments()
 
     updateValueLabels();
 
-    emit adjustmentsChanged(0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    emit adjustmentsChanged(0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 }
 
 void ColorAdjustmentsOverlay::onSliderValueChanged()
 {
     updateValueLabels();
-    emit adjustmentsChanged(brightness(), contrast(), saturation(),
-                            hue(), exposure(), temperature(), tint());
+    emit adjustmentsChanged(exposure(), contrast(), brightness(),
+                            temperature(), tint(), saturation(), hue());
 }
 
 void ColorAdjustmentsOverlay::setCustomPosition(const QPoint &globalPos)

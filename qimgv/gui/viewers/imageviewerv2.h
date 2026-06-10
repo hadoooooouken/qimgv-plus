@@ -51,7 +51,7 @@ public:
     virtual bool isDisplaying() const;
     bool panoramaMode() const { return mPanoramaMode; }
     bool isBusyInteracting() const;
-    void setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+    void setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
     void updateCasSettings();
 
     virtual bool imageFits() const;

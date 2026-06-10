@@ -40,7 +40,7 @@ public:
     bool lockZoomEnabled();
     bool lockViewEnabled();
     ScalingFilter scalingFilter();
-    void setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint);
+    void setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
     void updateCasSettings();
 
 private:
@@ -57,6 +57,14 @@ private:
     QTimer cursorTimer;
     const int CURSOR_HIDE_TIMEOUT_MS = 1000;
     bool mIsFullscreen;
+
+    float mExposure = 0.0f;
+    float mContrast = 1.0f;
+    float mBrightness = 0.0f;
+    float mTemperature = 0.0f;
+    float mTint = 0.0f;
+    float mSaturation = 1.0f;
+    float mHue = 0.0f;
 
     void disableImageViewer();
 

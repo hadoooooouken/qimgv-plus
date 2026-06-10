@@ -1409,7 +1409,7 @@ void Core::cropAndSave(QRect rect) {
   updateInfoString();
 }
 
-void Core::applyColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint) {
+void Core::applyColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
   if (model->isEmpty())
     return;
 
@@ -1418,7 +1418,7 @@ void Core::applyColorAdjustments(float brightness, float contrast, float saturat
   if (!img)
     return;
 
-  QImage *adjusted = ImageLib::applyColorAdjustments(img->getImage(), brightness, contrast, saturation, hue, exposure, temperature, tint);
+  QImage *adjusted = ImageLib::applyColorAdjustments(img->getImage(), exposure, contrast, brightness, temperature, tint, saturation, hue);
   if (!adjusted)
     return;
 

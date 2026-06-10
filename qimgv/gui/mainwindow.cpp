@@ -363,8 +363,8 @@ void MW::toggleColorAdjustments() {
     if(!colorAdjustmentsOverlay) {
         colorAdjustmentsOverlay = new ColorAdjustmentsOverlayProxy(viewerWidget.get());
         connect(colorAdjustmentsOverlay, &ColorAdjustmentsOverlayProxy::adjustmentsChanged,
-                this, [this](float b, float c, float s, float h, float exp, float temp, float tint) {
-            viewerWidget->setColorAdjustments(b, c, s, h, exp, temp, tint);
+                this, [this](float exp, float c, float b, float temp, float tint, float s, float h) {
+            viewerWidget->setColorAdjustments(exp, c, b, temp, tint, s, h);
         });
         connect(colorAdjustmentsOverlay, &ColorAdjustmentsOverlayProxy::applyRequested,
                 this, &MW::colorAdjustmentsApplyRequested);

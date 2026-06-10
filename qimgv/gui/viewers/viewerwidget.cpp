@@ -7,6 +7,7 @@
 #include <QClipboard>
 #include <QMimeData>
 #include <QPainter>
+#include "utils/imagelib.h"
 
 ViewerWidget::ViewerWidget(QWidget *parent)
     : FloatingWidgetContainer(parent),
@@ -14,7 +15,14 @@ ViewerWidget::ViewerWidget(QWidget *parent)
       contextMenu(nullptr),
       currentWidget(UNSET),
       mInteractionEnabled(false),
-      mIsFullscreen(false)
+      mIsFullscreen(false),
+      mExposure(0.0f),
+      mContrast(1.0f),
+      mBrightness(0.0f),
+      mTemperature(0.0f),
+      mTint(0.0f),
+      mSaturation(1.0f),
+      mHue(0.0f)
 {
     setAttribute(Qt::WA_TranslucentBackground, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
@@ -112,6 +120,21 @@ bool ViewerWidget::copyCurrentViewportToClipboard() const {
 
     if (image.isNull())
         return false;
+
+    // Apply color adjustments on CPU
+    bool hasAdjustments = (qAbs(mBrightness) > 0.001f || qAbs(mContrast - 1.0f) > 0.001f || qAbs(mSaturation - 1.0f) > 0.001f ||
+                           qAbs(mHue) > 0.001f || qAbs(mExposure) > 0.001f || qAbs(mTemperature) > 0.001f || qAbs(mTint) > 0.001f);
+    if (hasAdjustments) {
+        QImage *adjusted = ImageLib::applyColorAdjustments(
+            std::make_shared<const QImage>(image),
+            mExposure, mContrast, mBrightness, mTemperature, mTint, mSaturation, mHue
+        );
+        if (adjusted) {
+            image = *adjusted;
+            image.setDevicePixelRatio(dpr);
+            delete adjusted;
+        }
+    }
 
     QMimeData *mimeData = new QMimeData();
     mimeData->setImageData(image);
@@ -486,9 +509,16 @@ void ViewerWidget::togglePanorama() {
     }
 }
 
-void ViewerWidget::setColorAdjustments(float brightness, float contrast, float saturation, float hue, float exposure, float temperature, float tint) {
+void ViewerWidget::setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
+    mExposure = exposure;
+    mContrast = contrast;
+    mBrightness = brightness;
+    mTemperature = temperature;
+    mTint = tint;
+    mSaturation = saturation;
+    mHue = hue;
     if(imageViewer)
-        imageViewer->setColorAdjustments(brightness, contrast, saturation, hue, exposure, temperature, tint);
+        imageViewer->setColorAdjustments(exposure, contrast, brightness, temperature, tint, saturation, hue);
 }
 
 void ViewerWidget::updateCasSettings() {
