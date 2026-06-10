@@ -14,9 +14,12 @@
 #include <QTimer>
 #include <QDebug>
 
-namespace Ui {
-class CropPanel;
-}
+class QGroupBox;
+class QLabel;
+class QDoubleSpinBox;
+class QPushButton;
+class StyledComboBox;
+class PushButtonFocusInd;
 
 class CropPanel : public SidePanelWidget
 {
@@ -57,8 +60,27 @@ private slots:
 
     void doCropDefaultAction();
     void doReset();
+
 private:
-    Ui::CropPanel *ui;
+    void setupUi();
+
+    IconWidget *headerIcon = nullptr;
+    
+    SpinBoxInputFix *width = nullptr;
+    SpinBoxInputFix *height = nullptr;
+    SpinBoxInputFix *posX = nullptr;
+    SpinBoxInputFix *posY = nullptr;
+
+    StyledComboBox *ARcomboBox = nullptr;
+    QDoubleSpinBox *ARX = nullptr;
+    QDoubleSpinBox *ARY = nullptr;
+    QPushButton *swapARButton = nullptr;
+
+    PushButtonFocusInd *cropButton = nullptr;
+    PushButtonFocusInd *cropSaveButton = nullptr;
+    QPushButton *resetButton = nullptr;
+    QPushButton *cancelButton = nullptr;
+
     QRect cropRect;
     CropOverlay *overlay;
     QSize realSize;
