@@ -25,9 +25,9 @@ enum FileReplaceMode {
     DIR_TO_FILE
 };
 
-namespace Ui {
-class FileReplaceDialog;
-}
+class QLabel;
+class QCheckBox;
+class QPushButton;
 
 class FileReplaceDialog : public QDialog {
     Q_OBJECT
@@ -48,7 +48,16 @@ private slots:
     void onCancelClicked();
 
 private:
-    Ui::FileReplaceDialog *ui;
+    void setupUi();
+
+    QLabel *titleLabel = nullptr;
+    QLabel *srcLabel = nullptr;
+    QLabel *dstLabel = nullptr;
+    QCheckBox *applyAllCheckBox = nullptr;
+    QPushButton *yesButton = nullptr;
+    QPushButton *noButton = nullptr;
+    QPushButton *cancelButton = nullptr;
+
     bool multi;
     DialogResult result;
 };

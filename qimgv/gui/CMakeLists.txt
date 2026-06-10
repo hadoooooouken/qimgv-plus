@@ -84,7 +84,6 @@ target_sources(qimgv-plus PRIVATE
 
 target_sources(qimgv-plus PRIVATE
 
-    dialogs/filereplacedialog.ui
     dialogs/batchconverterdialog.ui
     dialogs/resizedialog.ui
     dialogs/scripteditordialog.ui

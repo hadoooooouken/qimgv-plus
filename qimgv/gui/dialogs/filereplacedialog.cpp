@@ -1,45 +1,106 @@
 #include "filereplacedialog.h"
-#include "ui_filereplacedialog.h"
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QCheckBox>
+#include <QPushButton>
 
-FileReplaceDialog::FileReplaceDialog(QWidget *parent) : QDialog(parent), ui(new Ui::FileReplaceDialog) {
-    ui->setupUi(this);
+FileReplaceDialog::FileReplaceDialog(QWidget *parent)
+    : QDialog(parent)
+{
+    setupUi();
     multi = false;
-    connect(ui->yesButton, &QPushButton::clicked, this, &FileReplaceDialog::onYesClicked);
-    connect(ui->noButton, &QPushButton::clicked, this, &FileReplaceDialog::onNoClicked);
-    connect(ui->cancelButton, &QPushButton::clicked, this, &FileReplaceDialog::onCancelClicked);
+    connect(yesButton, &QPushButton::clicked, this, &FileReplaceDialog::onYesClicked);
+    connect(noButton, &QPushButton::clicked, this, &FileReplaceDialog::onNoClicked);
+    connect(cancelButton, &QPushButton::clicked, this, &FileReplaceDialog::onCancelClicked);
 }
 
-FileReplaceDialog::~FileReplaceDialog() {
-    delete ui;
+FileReplaceDialog::~FileReplaceDialog() = default;
+
+void FileReplaceDialog::setupUi()
+{
+    setWindowTitle(tr("Dialog"));
+    resize(380, 169);
+    setMinimumWidth(380);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(12, 12, 12, 12);
+    mainLayout->setSpacing(8);
+
+    titleLabel = new QLabel(tr("title"), this);
+    mainLayout->addWidget(titleLabel);
+
+    QLabel *srcTitleLabel = new QLabel(tr("Source:"), this);
+    QFont boldFont;
+    boldFont.setBold(true);
+    srcTitleLabel->setFont(boldFont);
+    mainLayout->addWidget(srcTitleLabel);
+
+    srcLabel = new QLabel(tr("src"), this);
+    srcLabel->setWordWrap(false);
+    mainLayout->addWidget(srcLabel);
+
+    QLabel *arrowLabel = new QLabel(tr(">>>"), this);
+    mainLayout->addWidget(arrowLabel);
+
+    QLabel *dstTitleLabel = new QLabel(tr("Destination:"), this);
+    dstTitleLabel->setFont(boldFont);
+    mainLayout->addWidget(dstTitleLabel);
+
+    dstLabel = new QLabel(tr("dst"), this);
+    dstLabel->setWordWrap(true);
+    mainLayout->addWidget(dstLabel);
+
+    mainLayout->addStretch(1);
+
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    buttonLayout->setContentsMargins(0, 0, 0, 0);
+    buttonLayout->setSpacing(6);
+
+    buttonLayout->addStretch(1);
+
+    applyAllCheckBox = new QCheckBox(tr("Apply to all"), this);
+    buttonLayout->addWidget(applyAllCheckBox);
+
+    yesButton = new QPushButton(tr("Yes"), this);
+    buttonLayout->addWidget(yesButton);
+
+    noButton = new QPushButton(tr("No"), this);
+    buttonLayout->addWidget(noButton);
+
+    cancelButton = new QPushButton(tr("Cancel"), this);
+    buttonLayout->addWidget(cancelButton);
+
+    mainLayout->addLayout(buttonLayout);
 }
 
 void FileReplaceDialog::setSource(QString src) {
-    ui->srcLabel->setText(src);
+    srcLabel->setText(src);
 }
 
 void FileReplaceDialog::setDestination(QString dst) {
-    ui->dstLabel->setText(dst);
+    dstLabel->setText(dst);
 }
 
 void FileReplaceDialog::setMode(FileReplaceMode mode) {
-    if(mode == FILE_TO_FILE) {
-        setWindowTitle("File already exists");
-        ui->titleLabel->setText("Replace destination file?");
-    } else if(mode == DIR_TO_DIR) {
-        setWindowTitle("Directory already exists");
-        ui->titleLabel->setText("Merge directories?");
-    } else if(mode == DIR_TO_FILE) {
-        setWindowTitle("Destination already exists");
-        ui->titleLabel->setText("There is a file with that name. Replace?");
+    if (mode == FILE_TO_FILE) {
+        setWindowTitle(tr("File already exists"));
+        titleLabel->setText(tr("Replace destination file?"));
+    } else if (mode == DIR_TO_DIR) {
+        setWindowTitle(tr("Directory already exists"));
+        titleLabel->setText(tr("Merge directories?"));
+    } else if (mode == DIR_TO_FILE) {
+        setWindowTitle(tr("Destination already exists"));
+        titleLabel->setText(tr("There is a file with that name. Replace?"));
     } else { // FILE_TO_DIR
-        setWindowTitle("Destination already exists");
-        ui->titleLabel->setText("There is a folder with that name. Replace?");
+        setWindowTitle(tr("Destination already exists"));
+        titleLabel->setText(tr("There is a folder with that name. Replace?"));
     }
 }
 
 void FileReplaceDialog::setMulti(bool _multi) {
     multi = _multi;
-    ui->applyAllCheckBox->setVisible(multi);
+    applyAllCheckBox->setVisible(multi);
 }
 
 DialogResult FileReplaceDialog::getResult() {
@@ -48,14 +109,14 @@ DialogResult FileReplaceDialog::getResult() {
 
 void FileReplaceDialog::onYesClicked() {
     result.yes = true;
-    result.all = ui->applyAllCheckBox->isChecked();
+    result.all = applyAllCheckBox->isChecked();
     result.cancel = false;
     this->close();
 }
 
 void FileReplaceDialog::onNoClicked() {
     result.yes = false;
-    result.all = ui->applyAllCheckBox->isChecked();
+    result.all = applyAllCheckBox->isChecked();
     result.cancel = false;
     this->close();
 }
