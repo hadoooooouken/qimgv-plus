@@ -10,9 +10,11 @@
 // TODO: separate gui from components
 // OR move script & action stuff to project root?
 
-namespace Ui {
-class ShortcutCreatorDialog;
-}
+class QRadioButton;
+class QComboBox;
+class QLabel;
+class KeySequenceEdit;
+class QDialogButtonBox;
 
 class ShortcutCreatorDialog : public QDialog
 {
@@ -30,6 +32,15 @@ private slots:
     void onShortcutEdited();
 
 private:
-    Ui::ShortcutCreatorDialog *ui;
+    void setupUi();
+
+    QRadioButton *actionsRadioButton = nullptr;
+    QComboBox *actionsComboBox = nullptr;
+    QRadioButton *scriptsRadioButton = nullptr;
+    QComboBox *scriptsComboBox = nullptr;
+    KeySequenceEdit *sequenceEdit = nullptr;
+    QLabel *warningLabel = nullptr;
+    QDialogButtonBox *buttonBox = nullptr;
+
     QList<QString> actionList, scriptList;
 };
