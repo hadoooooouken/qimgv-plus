@@ -4,9 +4,9 @@
 #include "gui/customwidgets/entryinfoitem.h"
 #include <QWheelEvent>
 
-namespace Ui {
-class ImageInfoOverlay;
-}
+class IconWidget;
+class IconButton;
+class QVBoxLayout;
 
 class ImageInfoOverlay : public OverlayWidget
 {
@@ -22,8 +22,14 @@ public slots:
 
 protected:
     void wheelEvent(QWheelEvent *event);
+
 private:
-    Ui::ImageInfoOverlay *ui;
+    IconWidget *headerIcon = nullptr;
+    IconButton *closeButton = nullptr;
+    QVBoxLayout *entryLayout = nullptr;
+
     QList<EntryInfoItem*> entries;
     QLabel entryStub;
+
+    void setupUi();
 };

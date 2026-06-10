@@ -86,7 +86,6 @@ target_sources(qimgv-plus PRIVATE
     dialogs/batchconverterdialog.ui
     dialogs/settingsdialog.ui
     overlays/copyoverlay.ui
-    overlays/imageinfooverlay.ui
     overlays/renameoverlay.ui
     overlays/saveconfirmoverlay.ui
 
