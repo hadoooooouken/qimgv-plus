@@ -7,10 +7,6 @@
 #include <QVBoxLayout>
 #include "gui/customwidgets/sidepanelwidget.h"
 
-namespace Ui {
-class SidePanel;
-}
-
 class SidePanel : public QWidget
 {
     Q_OBJECT
@@ -29,6 +25,8 @@ public slots:
 protected:
     void paintEvent(QPaintEvent *);
 private:
-    Ui::SidePanel *ui;
+    void setupUi();
+
+    QVBoxLayout *layout = nullptr;
     SidePanelWidget *mWidget;
 };

@@ -1,27 +1,36 @@
 #include "sidepanel.h"
-#include "ui_sidepanel.h"
 
 SidePanel::SidePanel(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::SidePanel),
     mWidget(nullptr)
 {
-    ui->setupUi(this);
+    setupUi();
     this->setObjectName("SidePanel");
     this->hide();
 }
 
-SidePanel::~SidePanel() {
-    delete ui;
+SidePanel::~SidePanel() = default;
+
+void SidePanel::setupUi() {
+    this->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+
+    QVBoxLayout *verticalLayout_2 = new QVBoxLayout(this);
+    verticalLayout_2->setSpacing(0);
+    verticalLayout_2->setContentsMargins(0, 0, 0, 0);
+    verticalLayout_2->setSizeConstraint(QLayout::SetMinAndMaxSize);
+
+    layout = new QVBoxLayout();
+    layout->setContentsMargins(0, 0, 0, 0);
+    verticalLayout_2->addLayout(layout);
 }
 
 void SidePanel::setWidget(SidePanelWidget* w) {
     if(mWidget) {
         mWidget->hide();
-        ui->layout->removeWidget(mWidget);
+        layout->removeWidget(mWidget);
     }
     mWidget = w;
-    ui->layout->addWidget(w);
+    layout->addWidget(w);
     w->show();
 }
 

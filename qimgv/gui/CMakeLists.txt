@@ -86,8 +86,6 @@ target_sources(qimgv-plus PRIVATE
     dialogs/batchconverterdialog.ui
     dialogs/settingsdialog.ui
 
-    panels/sidepanel/sidepanel.ui
-
     panels/infobar/infobar.ui
 
     folderview/folderview.ui
