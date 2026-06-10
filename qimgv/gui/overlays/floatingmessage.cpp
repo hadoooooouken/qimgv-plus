@@ -1,12 +1,12 @@
 #include "floatingmessage.h"
-#include "ui_floatingmessage.h"
+#include "gui/customwidgets/iconwidget.h"
+#include <QHBoxLayout>
 
 FloatingMessage::FloatingMessage(FloatingWidgetContainer *parent) :
     OverlayWidget(parent),
-    preferredPosition(FloatingWidgetPosition::BOTTOM),
-    ui(new Ui::FloatingMessage)
+    preferredPosition(FloatingWidgetPosition::BOTTOM)
 {
-    ui->setupUi(this);
+    setupUi();
     hideDelay = 700;
 
     visibilityTimer.setSingleShot(true);
@@ -28,8 +28,23 @@ FloatingMessage::FloatingMessage(FloatingWidgetContainer *parent) :
         setContainerSize(parent->size());
 }
 
-FloatingMessage::~FloatingMessage() {
-    delete ui;
+FloatingMessage::~FloatingMessage() = default;
+
+void FloatingMessage::setupUi() {
+    QHBoxLayout *horizontalLayout = new QHBoxLayout(this);
+    horizontalLayout->setSpacing(8);
+    horizontalLayout->setContentsMargins(12, 11, 12, 11);
+    horizontalLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
+
+    iconLabel = new IconWidget(this);
+    iconLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    iconLabel->setMinimumSize(QSize(16, 16));
+    iconLabel->setMaximumSize(QSize(24, 24));
+    horizontalLayout->addWidget(iconLabel);
+
+    textLabel = new QLabel(this);
+    textLabel->setMaximumSize(QSize(16777215, 24));
+    horizontalLayout->addWidget(textLabel);
 }
 
 void FloatingMessage::readSettings() {
@@ -61,8 +76,8 @@ void FloatingMessage::doShowMessage(QString text, FloatingMessageIcon icon, int 
 }
 
 void FloatingMessage::setText(QString text) {
-    ui->textLabel->setText(text);
-    text.isEmpty()?ui->textLabel->hide():ui->textLabel->show();
+    textLabel->setText(text);
+    text.isEmpty()?textLabel->hide():textLabel->show();
     recalculateGeometry();
     update();
 }
@@ -72,24 +87,24 @@ void FloatingMessage::setIcon(FloatingMessageIcon icon) {
         case FloatingMessageIcon::NO_ICON:
         case FloatingMessageIcon::ICON_WARNING:
         case FloatingMessageIcon::ICON_ERROR:
-            //ui->iconLabel->setIconPath(":/res/icons/common/notifications/error16.png");
-            ui->iconLabel->hide();
+            //iconLabel->setIconPath(":/res/icons/common/notifications/error16.png");
+            iconLabel->hide();
             break;
         case FloatingMessageIcon::ICON_DIRECTORY:
-            ui->iconLabel->show();
-            ui->iconLabel->setIconPath(":/res/icons/common/buttons/panel/folder16.png");
+            iconLabel->show();
+            iconLabel->setIconPath(":/res/icons/common/buttons/panel/folder16.png");
             break;
         case FloatingMessageIcon::ICON_LEFT_EDGE:
-            ui->iconLabel->show();
-            ui->iconLabel->setIconPath(":/res/icons/common/notifications/dir_start20.png");
+            iconLabel->show();
+            iconLabel->setIconPath(":/res/icons/common/notifications/dir_start20.png");
             break;
         case FloatingMessageIcon::ICON_RIGHT_EDGE:
-            ui->iconLabel->show();
-            ui->iconLabel->setIconPath(":/res/icons/common/notifications/dir_end20.png");
+            iconLabel->show();
+            iconLabel->setIconPath(":/res/icons/common/notifications/dir_end20.png");
             break;
         case FloatingMessageIcon::ICON_SUCCESS:
-            ui->iconLabel->show();
-            ui->iconLabel->setIconPath(":/res/icons/common/notifications/success16.png");
+            iconLabel->show();
+            iconLabel->setIconPath(":/res/icons/common/notifications/success16.png");
             break;
     }
 }

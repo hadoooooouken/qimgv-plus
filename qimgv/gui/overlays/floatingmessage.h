@@ -5,9 +5,7 @@
 #include "gui/customwidgets/overlaywidget.h"
 #include "settings.h"
 
-namespace Ui {
-class FloatingMessage;
-}
+class IconWidget;
 
 enum FloatingMessageIcon {
     NO_ICON,
@@ -35,7 +33,11 @@ private:
     QTimer visibilityTimer;
     int hideDelay;
     FloatingWidgetPosition preferredPosition;
-    Ui::FloatingMessage *ui;
+
+    IconWidget *iconLabel = nullptr;
+    QLabel *textLabel = nullptr;
+
+    void setupUi();
     void doShowMessage(QString text, FloatingMessageIcon icon, int duration);
     void setIcon(FloatingMessageIcon icon);
 
