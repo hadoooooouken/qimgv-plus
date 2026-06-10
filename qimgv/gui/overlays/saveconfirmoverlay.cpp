@@ -1,17 +1,26 @@
 #include "saveconfirmoverlay.h"
-#include "ui_saveconfirmoverlay.h"
+#include "gui/customwidgets/iconwidget.h"
+#include "gui/customwidgets/iconbutton.h"
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QSpacerItem>
 
 SaveConfirmOverlay::SaveConfirmOverlay(FloatingWidgetContainer *parent) :
-    OverlayWidget(parent),
-    ui(new Ui::SaveConfirmOverlay)
+    OverlayWidget(parent)
 {
-    ui->setupUi(this);
-    connect(ui->saveButton,    &QPushButton::clicked, this, &SaveConfirmOverlay::saveClicked);
-    connect(ui->saveAsButton,  &QPushButton::clicked, this, &SaveConfirmOverlay::saveAsClicked);
-    connect(ui->discardButton, &QPushButton::clicked, this, &SaveConfirmOverlay::discardClicked);
+    setupUi();
+
+    auto *saveButton    = findChild<QPushButton*>("saveButton");
+    auto *saveAsButton  = findChild<QPushButton*>("saveAsButton");
+    auto *discardButton = findChild<QPushButton*>("discardButton");
+
+    connect(saveButton,    &QPushButton::clicked, this, &SaveConfirmOverlay::saveClicked);
+    connect(saveAsButton,  &QPushButton::clicked, this, &SaveConfirmOverlay::saveAsClicked);
+    connect(discardButton, &QPushButton::clicked, this, &SaveConfirmOverlay::discardClicked);
     this->setFocusPolicy(Qt::NoFocus);
-    ui->closeButton->setIconPath(":res/icons/common/overlay/close-dim16.png");
-    ui->headerIcon->setIconPath(":res/icons/common/overlay/edit16.png");
+    closeButton->setIconPath(":res/icons/common/overlay/close-dim16.png");
+    headerIcon->setIconPath(":res/icons/common/overlay/edit16.png");
     readSettings();
     connect(settings, &Settings::settingsChanged, this, &SaveConfirmOverlay::readSettings);
 
@@ -19,6 +28,69 @@ SaveConfirmOverlay::SaveConfirmOverlay(FloatingWidgetContainer *parent) :
         setContainerSize(parent->size());
 
     this->hide();
+}
+
+void SaveConfirmOverlay::setupUi() {
+    QVBoxLayout *verticalLayout = new QVBoxLayout(this);
+    verticalLayout->setSpacing(10);
+    verticalLayout->setContentsMargins(0, 0, 0, 0);
+    verticalLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
+
+    // --- header ---
+    QWidget *header = new QWidget(this);
+    header->setAccessibleName("OverlayHeaderWidget");
+
+    QHBoxLayout *headerLayout = new QHBoxLayout(header);
+    headerLayout->setSpacing(0);
+    headerLayout->setContentsMargins(0, 0, 0, 0);
+    headerLayout->setSizeConstraint(QLayout::SetMinimumSize);
+
+    headerIcon = new IconWidget(header);
+    headerIcon->setAccessibleName("OverlayHeaderIcon");
+    headerLayout->addWidget(headerIcon);
+
+    QLabel *label = new QLabel(tr("Unsaved edits"), header);
+    QSizePolicy labelPolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+    labelPolicy.setHorizontalStretch(1);
+    label->setSizePolicy(labelPolicy);
+    label->setAccessibleName("OverlayHeaderLabel");
+    label->setTextInteractionFlags(Qt::NoTextInteraction);
+    headerLayout->addWidget(label);
+
+    closeButton = new IconButton(header);
+    closeButton->setAccessibleName("OverlayHeaderButton");
+    headerLayout->addWidget(closeButton);
+    connect(closeButton, &IconButton::clicked, this, &SaveConfirmOverlay::hide);
+
+    verticalLayout->addWidget(header);
+
+    // --- buttons row ---
+    QHBoxLayout *buttonsLayout = new QHBoxLayout();
+    buttonsLayout->setSpacing(0);
+    buttonsLayout->setContentsMargins(9, 0, 9, 9);
+    buttonsLayout->setSizeConstraint(QLayout::SetMinimumSize);
+
+    QPushButton *saveButton = new QPushButton(tr("Save"), this);
+    saveButton->setObjectName("saveButton");
+    saveButton->setFocusPolicy(Qt::NoFocus);
+    saveButton->setAccessibleName("ButtonSetLeft");
+    buttonsLayout->addWidget(saveButton);
+
+    QPushButton *saveAsButton = new QPushButton(tr("Save as"), this);
+    saveAsButton->setObjectName("saveAsButton");
+    saveAsButton->setFocusPolicy(Qt::NoFocus);
+    saveAsButton->setAccessibleName("ButtonSetRight");
+    buttonsLayout->addWidget(saveAsButton);
+
+    buttonsLayout->addSpacerItem(new QSpacerItem(8, 10, QSizePolicy::Fixed, QSizePolicy::Minimum));
+
+    QPushButton *discardButton = new QPushButton(tr("Discard"), this);
+    discardButton->setObjectName("discardButton");
+    discardButton->setFocusPolicy(Qt::NoFocus);
+    discardButton->setAccessibleName("Button");
+    buttonsLayout->addWidget(discardButton);
+
+    verticalLayout->addLayout(buttonsLayout);
 }
 
 void SaveConfirmOverlay::readSettings() {
@@ -31,7 +103,4 @@ void SaveConfirmOverlay::readSettings() {
     update();
 }
 
-SaveConfirmOverlay::~SaveConfirmOverlay()
-{
-    delete ui;
-}
+SaveConfirmOverlay::~SaveConfirmOverlay() = default;

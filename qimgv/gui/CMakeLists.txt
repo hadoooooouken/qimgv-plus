@@ -87,7 +87,6 @@ target_sources(qimgv-plus PRIVATE
     dialogs/settingsdialog.ui
     overlays/copyoverlay.ui
     overlays/renameoverlay.ui
-    overlays/saveconfirmoverlay.ui
 
     panels/croppanel/croppanel.ui
     panels/sidepanel/sidepanel.ui

@@ -4,9 +4,8 @@
 #include "settings.h"
 #include <QPushButton>
 
-namespace Ui {
-class SaveConfirmOverlay;
-}
+class IconWidget;
+class IconButton;
 
 class SaveConfirmOverlay : public OverlayWidget
 {
@@ -22,6 +21,10 @@ signals:
 
 private slots:
     void readSettings();
+
 private:
-    Ui::SaveConfirmOverlay *ui;
+    IconWidget *headerIcon = nullptr;
+    IconButton *closeButton = nullptr;
+
+    void setupUi();
 };
