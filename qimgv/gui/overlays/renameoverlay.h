@@ -9,9 +9,9 @@
 #include "components/actionmanager/actionmanager.h"
 #include "settings.h"
 
-namespace Ui {
-class RenameOverlay;
-}
+class IconWidget;
+class IconButton;
+class PushButtonFocusInd;
 
 class RenameOverlay : public OverlayWidget
 {
@@ -39,7 +39,13 @@ private slots:
     void onCancel();
 
 private:
-    Ui::RenameOverlay *ui;
+    void setupUi();
+
+    IconWidget *headerIcon = nullptr;
+    IconButton *closeButton = nullptr;
+    QLineEdit *fileName = nullptr;
+    PushButtonFocusInd *okButton = nullptr;
+
     bool backdrop = false;
     QString origName;
     QList<QString> keyFilter;
