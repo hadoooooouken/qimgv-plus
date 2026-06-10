@@ -7,9 +7,7 @@
 #include <QPainter>
 #include <QStyleOption>
 
-namespace Ui {
-class InfoBar;
-}
+class QLabel;
 
 class InfoBar : public QWidget
 {
@@ -25,5 +23,9 @@ protected:
     void paintEvent(QPaintEvent *event);
     void wheelEvent(QWheelEvent *event);
 private:
-    Ui::InfoBar *ui;
+    void setupUi();
+
+    QLabel *index = nullptr;
+    QLabel *path = nullptr;
+    QLabel *info = nullptr;
 };

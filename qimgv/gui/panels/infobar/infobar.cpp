@@ -1,22 +1,42 @@
 #include "infobar.h"
-#include "ui_infobar.h"
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QSpacerItem>
 
 InfoBar::InfoBar(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::InfoBar)
+    QWidget(parent)
 {
-    ui->setupUi(this);
-    ui->path->setText("No file opened.");
+    setupUi();
+    path->setText("No file opened.");
 }
 
-InfoBar::~InfoBar() {
-    delete ui;
+InfoBar::~InfoBar() = default;
+
+void InfoBar::setupUi() {
+    this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    this->setAccessibleName("InfoBar");
+
+    QHBoxLayout *horizontalLayout = new QHBoxLayout(this);
+    horizontalLayout->setSpacing(11);
+    horizontalLayout->setContentsMargins(10, 0, 10, 1);
+
+    index = new QLabel(this);
+    horizontalLayout->addWidget(index);
+
+    path = new QLabel(this);
+    horizontalLayout->addWidget(path);
+
+    horizontalLayout->addSpacerItem(new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum));
+
+    info = new QLabel(this);
+    info->setAlignment(Qt::AlignRight | Qt::AlignTrailing | Qt::AlignVCenter);
+    horizontalLayout->addWidget(info);
 }
 
-void InfoBar::setInfo(QString position, QString fileName, QString info) {
-    ui->index->setText(position);
-    ui->path->setText(fileName);
-    ui->info->setText(info);
+void InfoBar::setInfo(QString position, QString fileName, QString fileInfo) {
+    index->setText(position);
+    path->setText(fileName);
+    info->setText(fileInfo);
 }
 
 void InfoBar::wheelEvent(QWheelEvent *event) {
