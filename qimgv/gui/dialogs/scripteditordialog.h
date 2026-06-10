@@ -8,9 +8,10 @@
 #include "components/scriptmanager/scriptmanager.h"
 #include "utils/script.h"
 
-namespace Ui {
-class ScriptEditorDialog;
-}
+class QLineEdit;
+class QCheckBox;
+class QLabel;
+class QPushButton;
 
 class ScriptEditorDialog : public QDialog
 {
@@ -25,10 +26,21 @@ public:
 
 private slots:
     void onNameChanged(QString name);
-
     void selectScriptPath();
+
 private:
-    Ui::ScriptEditorDialog *ui;
+    void setupUi();
+
+    QLineEdit *nameLineEdit = nullptr;
+    QLineEdit *pathLineEdit = nullptr;
+    QLabel *label_3 = nullptr;
+    QLabel *keywordsLabel = nullptr;
+    QCheckBox *blockingCheckBox = nullptr;
+    QLabel *messageLabel = nullptr;
+    QPushButton *acceptButton = nullptr;
+    QPushButton *cancelButton = nullptr;
+    QPushButton *fileSelectButton = nullptr;
+
     bool editMode;
     QString editTarget;
 };
