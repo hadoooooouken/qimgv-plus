@@ -9,14 +9,14 @@
 #include "settings.h"
 #include "components/actionmanager/actionmanager.h"
 
+class IconWidget;
+class IconButton;
+class QVBoxLayout;
+
 enum CopyOverlayMode {
     OVERLAY_COPY,
     OVERLAY_MOVE
 };
-
-namespace Ui {
-    class CopyOverlay;
-}
 
 class CopyOverlay : public OverlayWidget {
     Q_OBJECT
@@ -44,10 +44,16 @@ private slots:
     void readSettings();
 
 private:
+    void setupUi();
     void createDefaultPaths();
     void createPathWidgets();
     void createShortcuts();
-    Ui::CopyOverlay *ui;
+
+    IconWidget *headerIcon = nullptr;
+    QLabel *headerLabel = nullptr;
+    IconButton *closeButton = nullptr;
+    QVBoxLayout *pathSelectorsLayout = nullptr;
+
     QList<PathSelectorMenuItem*> pathWidgets;
     const int maxPathCount = 9;
     QStringList paths;

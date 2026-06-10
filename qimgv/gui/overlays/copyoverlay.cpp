@@ -1,17 +1,20 @@
 #include "copyoverlay.h"
-#include "ui_copyoverlay.h"
+#include "gui/customwidgets/iconwidget.h"
+#include "gui/customwidgets/iconbutton.h"
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
 
 CopyOverlay::CopyOverlay(FloatingWidgetContainer *parent) :
-    OverlayWidget(parent),
-    ui(new Ui::CopyOverlay)
+    OverlayWidget(parent)
 {
-    ui->setupUi(this);
+    setupUi();
     hide();
     setFadeEnabled(true);
 
-    ui->closeButton->setIconPath(":/res/icons/common/overlay/close-dim16.png");
-    ui->headerIcon->setIconPath(":/res/icons/common/overlay/copy16.png");
-    ui->headerLabel->setText(tr("Copy to..."));
+    closeButton->setIconPath(":/res/icons/common/overlay/close-dim16.png");
+    headerIcon->setIconPath(":/res/icons/common/overlay/copy16.png");
+    headerLabel->setText(tr("Copy to..."));
     mode = OVERLAY_COPY;
 
     createShortcuts();
@@ -30,8 +33,50 @@ CopyOverlay::CopyOverlay(FloatingWidgetContainer *parent) :
     connect(settings, &Settings::settingsChanged, this, &CopyOverlay::readSettings);
 }
 
-CopyOverlay::~CopyOverlay() {
-    delete ui;
+CopyOverlay::~CopyOverlay() = default;
+
+void CopyOverlay::setupUi() {
+    this->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Minimum);
+    this->setMinimumSize(200, 0);
+    this->setMaximumSize(240, 16777215);
+    this->setFocusPolicy(Qt::StrongFocus);
+
+    QVBoxLayout *verticalLayout = new QVBoxLayout(this);
+    verticalLayout->setSpacing(8);
+    verticalLayout->setContentsMargins(0, 0, 0, 4);
+
+    // --- header ---
+    QWidget *headerWidget = new QWidget(this);
+    headerWidget->setAccessibleName("OverlayHeaderWidget");
+
+    QHBoxLayout *headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setSpacing(0);
+    headerLayout->setContentsMargins(0, 0, 0, 0);
+
+    headerIcon = new IconWidget(headerWidget);
+    headerIcon->setAccessibleName("OverlayHeaderIcon");
+    headerLayout->addWidget(headerIcon);
+
+    headerLabel = new QLabel(headerWidget);
+    QSizePolicy labelPolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+    labelPolicy.setHorizontalStretch(1);
+    headerLabel->setSizePolicy(labelPolicy);
+    headerLabel->setAccessibleName("OverlayHeaderLabel");
+    headerLabel->setContentsMargins(0, 0, 0, 0);
+    headerLayout->addWidget(headerLabel);
+
+    closeButton = new IconButton(headerWidget);
+    closeButton->setAccessibleName("OverlayHeaderButton");
+    headerLayout->addWidget(closeButton);
+    connect(closeButton, &IconButton::clicked, this, &CopyOverlay::hide);
+
+    verticalLayout->addWidget(headerWidget);
+
+    // --- path selectors layout ---
+    pathSelectorsLayout = new QVBoxLayout();
+    pathSelectorsLayout->setSpacing(0);
+    pathSelectorsLayout->setContentsMargins(0, 0, 0, 0);
+    verticalLayout->addLayout(pathSelectorsLayout);
 }
 
 void CopyOverlay::show() {
@@ -46,11 +91,11 @@ void CopyOverlay::hide() {
 void CopyOverlay::setDialogMode(CopyOverlayMode _mode) {
     mode = _mode;
     if(mode == OVERLAY_COPY) {
-        ui->headerIcon->setIconPath(":/res/icons/common/overlay/copy16.png");
-        ui->headerLabel->setText(tr("Copy to..."));
+        headerIcon->setIconPath(":/res/icons/common/overlay/copy16.png");
+        headerLabel->setText(tr("Copy to..."));
     } else {
-        ui->headerIcon->setIconPath(":/res/icons/common/overlay/move16.png");
-        ui->headerLabel->setText(tr("Move to..."));
+        headerIcon->setIconPath(":/res/icons/common/overlay/move16.png");
+        headerLabel->setText(tr("Move to..."));
     }
 }
 
@@ -61,7 +106,7 @@ CopyOverlayMode CopyOverlay::operationMode() {
 void CopyOverlay::removePathWidgets() {
     for(int i = 0; i < pathWidgets.count(); i++) {
         QWidget *tmp = pathWidgets.at(i);
-        ui->pathSelectorsLayout->removeWidget(tmp);
+        pathSelectorsLayout->removeWidget(tmp);
         delete tmp;
     }
     pathWidgets.clear();
@@ -76,7 +121,7 @@ void CopyOverlay::createPathWidgets() {
         item->setShortcutText(shortcuts.key(i));
         connect(item, &PathSelectorMenuItem::directorySelected, this, &CopyOverlay::requestFileOperation);
         pathWidgets.append(item);
-        ui->pathSelectorsLayout->addWidget(item);
+        pathSelectorsLayout->addWidget(item);
     }
 }
 
