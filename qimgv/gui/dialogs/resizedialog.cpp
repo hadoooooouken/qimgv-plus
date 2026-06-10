@@ -1,11 +1,10 @@
 #include "resizedialog.h"
-#include "ui_resizedialog.h"
 #include <QDir>
 #include <QFileInfo>
 
 ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
-    : QDialog(parent), ui(new Ui::ResizeDialog), lastEdited(0) {
-  ui->setupUi(this);
+    : QDialog(parent), lastEdited(0) {
+  setupUi();
   setWindowModality(Qt::ApplicationModal);
 
   // Style dialog with active theme colors
@@ -75,112 +74,236 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
 
   setStyleSheet(dialogStyle);
 
-  ui->percent->setFocus();
+  percent->setFocus();
 
   this->originalSize = originalSize;
   targetSize = originalSize;
 
-  ui->width->setValue(originalSize.width());
-  ui->height->setValue(originalSize.height());
+  width->setValue(originalSize.width());
+  height->setValue(originalSize.height());
 
-  ui->resetButton->setText(tr("Reset:") + " " +
-                           QString::number(originalSize.width()) + " x " +
-                           QString::number(originalSize.height()));
+  resetButton->setText(tr("Reset:") + " " +
+                       QString::number(originalSize.width()) + " x " +
+                       QString::number(originalSize.height()));
 
   desktopSize = qApp->primaryScreen()->size();
-  connect(ui->byPercentage, &QRadioButton::toggled, this,
+  connect(byPercentage, &QRadioButton::toggled, this,
           &ResizeDialog::onPercentageRadioButton);
-  connect(ui->byAbsoluteSize, &QRadioButton::toggled, this,
+  connect(byAbsoluteSize, &QRadioButton::toggled, this,
           &ResizeDialog::onAbsoluteSizeRadioButton);
-  connect(ui->percent, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
+  connect(percent, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
           &ResizeDialog::percentChanged);
-  connect(ui->width, qOverload<int>(&QSpinBox::valueChanged), this,
+  connect(width, qOverload<int>(&QSpinBox::valueChanged), this,
           &ResizeDialog::widthChanged);
-  connect(ui->height, qOverload<int>(&QSpinBox::valueChanged), this,
+  connect(height, qOverload<int>(&QSpinBox::valueChanged), this,
           &ResizeDialog::heightChanged);
-  connect(ui->keepAspectRatio, &QCheckBox::toggled, this,
+  connect(keepAspectRatio, &QCheckBox::toggled, this,
           &ResizeDialog::onAspectRatioCheckbox);
-  connect(ui->resComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
+  connect(resComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
           this, &ResizeDialog::setCommonResolution);
-  connect(ui->fitDesktopButton, &QPushButton::pressed, this,
+  connect(fitDesktopButton, &QPushButton::pressed, this,
           &ResizeDialog::fitDesktop);
-  connect(ui->fillDesktopButton, &QPushButton::pressed, this,
+  connect(fillDesktopButton, &QPushButton::pressed, this,
           &ResizeDialog::fillDesktop);
-  connect(ui->resetButton, &QPushButton::pressed, this, &ResizeDialog::reset);
-  connect(ui->cancelButton, &QPushButton::pressed, this, &ResizeDialog::reject);
-  connect(ui->okButton, &QPushButton::pressed, this, &ResizeDialog::sizeSelect);
+  connect(resetButton, &QPushButton::pressed, this, &ResizeDialog::reset);
+  connect(cancelButton, &QPushButton::pressed, this, &ResizeDialog::reject);
+  connect(okButton, &QPushButton::pressed, this, &ResizeDialog::sizeSelect);
 
   // Enable and populate the filter dropdown
-  ui->label_4->setEnabled(true);
-  ui->comboBox->setEnabled(true);
-  ui->comboBox->clear();
-  ui->comboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
-  ui->comboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
-
-  ui->comboBox->addItem(tr("Smart sharpen"), QI_FILTER_SMART);
+  label_4->setEnabled(true);
+  comboBox->setEnabled(true);
+  comboBox->clear();
+  comboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
+  comboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
+  comboBox->addItem(tr("Smart sharpen"), QI_FILTER_SMART);
 
   ScalingFilter currentFilter = settings->scalingFilter();
-  int idx = ui->comboBox->findData(currentFilter);
+  int idx = comboBox->findData(currentFilter);
   if (idx != -1) {
-    ui->comboBox->setCurrentIndex(idx);
+    comboBox->setCurrentIndex(idx);
   } else {
-    ui->comboBox->setCurrentIndex(1); // default to Bilinear
+    comboBox->setCurrentIndex(1); // default to Bilinear
   }
 
 #ifdef USE_UPSCAYL
-  // Initialize Upscayl controls mapped to UI elements
-  useUpscaylCheckBox = ui->useUpscaylCheckBox;
-  upscaylModelComboBox = ui->upscaylModelComboBox;
-  upscaylModelLabel = ui->labelModel;
-
-  // Auto-scan models directory for compatible models
-  QDir modelsDir(qApp->applicationDirPath() + "/models");
-  QStringList filters;
-  filters << "*.param";
-  QStringList files = modelsDir.entryList(filters, QDir::Files);
-  QStringList modelNames;
-  for (const QString &file : files) {
-    QFileInfo fi(file);
-    QString modelName = fi.baseName();
-    if (modelsDir.exists(modelName + ".bin")) {
-      modelNames.append(modelName);
+  if (useUpscaylCheckBox) {
+    // Auto-scan models directory for compatible models
+    QDir modelsDir(qApp->applicationDirPath() + "/models");
+    QStringList filters;
+    filters << "*.param";
+    QStringList files = modelsDir.entryList(filters, QDir::Files);
+    QStringList modelNames;
+    for (const QString &file : files) {
+      QFileInfo fi(file);
+      QString modelName = fi.baseName();
+      if (modelsDir.exists(modelName + ".bin")) {
+        modelNames.append(modelName);
+      }
     }
-  }
-  if (modelNames.isEmpty()) {
-    modelNames.append("4xLSDIRCompactC3");
-  }
-  upscaylModelComboBox->addItems(modelNames);
+    if (modelNames.isEmpty()) {
+      modelNames.append("4xLSDIRCompactC3");
+    }
+    upscaylModelComboBox->addItems(modelNames);
 
-  // Pre-select the model from settings
-  int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
-  if (modelIdx != -1) {
-    upscaylModelComboBox->setCurrentIndex(modelIdx);
-  } else {
-    upscaylModelComboBox->setCurrentIndex(0);
+    // Pre-select the model from settings
+    int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
+    if (modelIdx != -1) {
+      upscaylModelComboBox->setCurrentIndex(modelIdx);
+    } else {
+      upscaylModelComboBox->setCurrentIndex(0);
+    }
+
+    connect(useUpscaylCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
+      upscaylModelLabel->setEnabled(checked);
+      upscaylModelComboBox->setEnabled(checked);
+    });
+
+    useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
+    upscaylModelLabel->setEnabled(useUpscaylCheckBox->isChecked());
+    upscaylModelComboBox->setEnabled(useUpscaylCheckBox->isChecked());
   }
-
-  connect(useUpscaylCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
-    upscaylModelLabel->setEnabled(checked);
-    upscaylModelComboBox->setEnabled(checked);
-  });
-
-  useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
-  upscaylModelLabel->setEnabled(useUpscaylCheckBox->isChecked());
-  upscaylModelComboBox->setEnabled(useUpscaylCheckBox->isChecked());
-#else
-  // Hide Upscayl elements if not compiled with Upscayl support
-  ui->useUpscaylCheckBox->hide();
-  ui->labelModel->hide();
-  ui->upscaylModelComboBox->hide();
 #endif
 }
 
-ResizeDialog::~ResizeDialog() { delete ui; }
+ResizeDialog::~ResizeDialog() = default;
+
+void ResizeDialog::setupUi() {
+  setWindowTitle(tr("Resize"));
+  setFixedSize(540, 420);
+
+  QVBoxLayout *verticalLayout = new QVBoxLayout(this);
+  verticalLayout->setSpacing(6);
+
+  QHBoxLayout *mainHorizontalLayout = new QHBoxLayout();
+  mainHorizontalLayout->setSpacing(6);
+
+  QVBoxLayout *leftColumn = new QVBoxLayout();
+
+  byPercentage = new QRadioButton(tr("By Percent:"), this);
+  byPercentage->setChecked(true);
+  leftColumn->addWidget(byPercentage);
+
+  QGridLayout *percentGrid = new QGridLayout();
+  QLabel *label_3 = new QLabel(tr("Percent:"), this);
+  label_3->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+  percentGrid->addWidget(label_3, 0, 0);
+
+  percent = new QDoubleSpinBox(this);
+  percent->setAlignment(Qt::AlignCenter);
+  percent->setButtonSymbols(QAbstractSpinBox::NoButtons);
+  percent->setMinimum(1.0);
+  percent->setMaximum(1600.0);
+  percent->setValue(100.0);
+  percentGrid->addWidget(percent, 0, 1);
+  leftColumn->addLayout(percentGrid);
+
+  byAbsoluteSize = new QRadioButton(tr("By Absolute Size:"), this);
+  leftColumn->addWidget(byAbsoluteSize);
+
+  QGridLayout *sizeGrid = new QGridLayout();
+  QLabel *label = new QLabel(tr("Width:"), this);
+  label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+  sizeGrid->addWidget(label, 0, 0);
+
+  width = new QSpinBox(this);
+  width->setAlignment(Qt::AlignCenter);
+  width->setButtonSymbols(QAbstractSpinBox::NoButtons);
+  width->setMinimum(1);
+  width->setMaximum(65535);
+  sizeGrid->addWidget(width, 0, 1);
+
+  QLabel *label_2 = new QLabel(tr("Height:"), this);
+  label_2->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+  sizeGrid->addWidget(label_2, 1, 0);
+
+  height = new QSpinBox(this);
+  height->setAlignment(Qt::AlignCenter);
+  height->setButtonSymbols(QAbstractSpinBox::NoButtons);
+  height->setMinimum(1);
+  height->setMaximum(65535);
+  sizeGrid->addWidget(height, 1, 1);
+  leftColumn->addLayout(sizeGrid);
+
+  keepAspectRatio = new QCheckBox(tr("Keep aspect ratio"), this);
+  keepAspectRatio->setChecked(true);
+  leftColumn->addWidget(keepAspectRatio);
+
+  QGridLayout *filterGrid = new QGridLayout();
+  label_4 = new QLabel(tr("Filter:"), this);
+  label_4->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+  filterGrid->addWidget(label_4, 0, 0);
+
+  comboBox = new QComboBox(this);
+  filterGrid->addWidget(comboBox, 0, 1);
+  leftColumn->addLayout(filterGrid);
+
+#ifdef USE_UPSCAYL
+  useUpscaylCheckBox = new QCheckBox(tr("Use Upscayl"), this);
+  leftColumn->addWidget(useUpscaylCheckBox);
+
+  QGridLayout *modelGrid = new QGridLayout();
+  upscaylModelLabel = new QLabel(tr("Model:"), this);
+  upscaylModelLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+  modelGrid->addWidget(upscaylModelLabel, 0, 0);
+
+  upscaylModelComboBox = new QComboBox(this);
+  modelGrid->addWidget(upscaylModelComboBox, 0, 1);
+  leftColumn->addLayout(modelGrid);
+#endif
+
+  mainHorizontalLayout->addLayout(leftColumn);
+
+  QVBoxLayout *rightColumn = new QVBoxLayout();
+  rightColumn->setContentsMargins(0, 0, 0, 0);
+
+  QLabel *commonSizesLabel = new QLabel(tr("Common sizes:"), this);
+  rightColumn->addWidget(commonSizesLabel);
+
+  resComboBox = new QComboBox(this);
+  resComboBox->addItem(tr("Select:"));
+  resComboBox->addItem("1366 x 768");
+  resComboBox->addItem("1440 x 900");
+  resComboBox->addItem("1440 x 1050");
+  resComboBox->addItem("1600 x 1200");
+  resComboBox->addItem("1920 x 1080 (FullHD)");
+  resComboBox->addItem("1920 x 1200 (FullHD)");
+  resComboBox->addItem("2560 x 1080");
+  resComboBox->addItem("2560 x 1440");
+  resComboBox->addItem("2560 x 1600");
+  resComboBox->addItem("3840 x 1600 (UW 4K)");
+  resComboBox->addItem("3840 x 2160 (UHD-1)");
+  rightColumn->addWidget(resComboBox);
+
+  fitDesktopButton = new QPushButton(tr("Fit to desktop"), this);
+  rightColumn->addWidget(fitDesktopButton);
+
+  fillDesktopButton = new QPushButton(tr("Fill desktop (expanding)"), this);
+  rightColumn->addWidget(fillDesktopButton);
+
+  resetButton = new QPushButton(tr("Reset"), this);
+  rightColumn->addWidget(resetButton);
+
+  rightColumn->addStretch(1);
+
+  mainHorizontalLayout->addLayout(rightColumn);
+  verticalLayout->addLayout(mainHorizontalLayout);
+
+  QHBoxLayout *buttonsLayout = new QHBoxLayout();
+  buttonsLayout->addStretch(1);
+
+  okButton = new QPushButton(tr("OK"), this);
+  buttonsLayout->addWidget(okButton);
+
+  cancelButton = new QPushButton(tr("Cancel"), this);
+  buttonsLayout->addWidget(cancelButton);
+
+  verticalLayout->addLayout(buttonsLayout);
+}
 
 void ResizeDialog::sizeSelect() {
   if (targetSize != originalSize) {
     ScalingFilter selectedFilter =
-        static_cast<ScalingFilter>(ui->comboBox->currentData().toInt());
+        static_cast<ScalingFilter>(comboBox->currentData().toInt());
     bool useUpscayl = false;
     QString upscaylModel = "";
 #ifdef USE_UPSCAYL
@@ -237,7 +360,7 @@ void ResizeDialog::setCommonResolution(int index) {
     res = originalSize;
     break;
   }
-  if (ui->keepAspectRatio->isChecked())
+  if (keepAspectRatio->isChecked())
     targetSize = originalSize.scaled(res, Qt::KeepAspectRatio);
   else
     targetSize = originalSize.scaled(res, Qt::IgnoreAspectRatio);
@@ -250,7 +373,7 @@ void ResizeDialog::widthChanged(int newWidth) {
   lastEdited = 0;
   float factor = static_cast<float>(newWidth) / originalSize.width();
   targetSize.setWidth(newWidth);
-  if (ui->keepAspectRatio->isChecked()) {
+  if (keepAspectRatio->isChecked()) {
     targetSize.setHeight(static_cast<int>(originalSize.height() * factor));
   }
   updateToTargetValues();
@@ -260,19 +383,19 @@ void ResizeDialog::heightChanged(int newHeight) {
   lastEdited = 1;
   float factor = static_cast<float>(newHeight) / originalSize.height();
   targetSize.setHeight(newHeight);
-  if (ui->keepAspectRatio->isChecked()) {
+  if (keepAspectRatio->isChecked()) {
     targetSize.setWidth(static_cast<int>(originalSize.width() * factor));
   }
   updateToTargetValues();
 }
 
 void ResizeDialog::updateToTargetValues() {
-  ui->width->blockSignals(true);
-  ui->height->blockSignals(true);
-  ui->width->setValue(targetSize.width());
-  ui->height->setValue(targetSize.height());
-  ui->width->blockSignals(false);
-  ui->height->blockSignals(false);
+  width->blockSignals(true);
+  height->blockSignals(true);
+  width->setValue(targetSize.width());
+  height->setValue(targetSize.height());
+  width->blockSignals(false);
+  height->blockSignals(false);
 }
 
 void ResizeDialog::fitDesktop() {
@@ -287,50 +410,50 @@ void ResizeDialog::fillDesktop() {
 
 void ResizeDialog::onAspectRatioCheckbox() {
   resetResCheckBox();
-  (lastEdited) ? heightChanged(ui->height->value())
-               : widthChanged(ui->width->value());
+  (lastEdited) ? heightChanged(height->value())
+               : widthChanged(width->value());
 }
 
 void ResizeDialog::onAbsoluteSizeRadioButton() {
-  ui->width->blockSignals(true);
-  ui->height->blockSignals(true);
-  ui->percent->blockSignals(true);
-  ui->keepAspectRatio->blockSignals(true);
+  width->blockSignals(true);
+  height->blockSignals(true);
+  percent->blockSignals(true);
+  keepAspectRatio->blockSignals(true);
 
-  ui->width->setEnabled(true);
-  ui->height->setEnabled(true);
-  ui->percent->setEnabled(false);
-  ui->keepAspectRatio->setEnabled(true);
+  width->setEnabled(true);
+  height->setEnabled(true);
+  percent->setEnabled(false);
+  keepAspectRatio->setEnabled(true);
 
-  ui->width->blockSignals(false);
-  ui->height->blockSignals(false);
-  ui->percent->blockSignals(false);
-  ui->keepAspectRatio->blockSignals(false);
+  width->blockSignals(false);
+  height->blockSignals(false);
+  percent->blockSignals(false);
+  keepAspectRatio->blockSignals(false);
 }
 
 void ResizeDialog::onPercentageRadioButton() {
-  ui->width->blockSignals(true);
-  ui->height->blockSignals(true);
-  ui->percent->blockSignals(true);
-  ui->keepAspectRatio->blockSignals(true);
+  width->blockSignals(true);
+  height->blockSignals(true);
+  percent->blockSignals(true);
+  keepAspectRatio->blockSignals(true);
 
-  ui->width->setEnabled(false);
-  ui->height->setEnabled(false);
-  ui->percent->setEnabled(true);
-  ui->keepAspectRatio->setChecked(true);
-  ui->keepAspectRatio->setEnabled(false);
-  percentChanged(ui->percent->value());
+  width->setEnabled(false);
+  height->setEnabled(false);
+  percent->setEnabled(true);
+  keepAspectRatio->setChecked(true);
+  keepAspectRatio->setEnabled(false);
+  percentChanged(percent->value());
 
-  ui->width->blockSignals(false);
-  ui->height->blockSignals(false);
-  ui->percent->blockSignals(false);
-  ui->keepAspectRatio->blockSignals(false);
+  width->blockSignals(false);
+  height->blockSignals(false);
+  percent->blockSignals(false);
+  keepAspectRatio->blockSignals(false);
 }
 
 void ResizeDialog::resetResCheckBox() {
-  ui->resComboBox->blockSignals(true);
-  ui->resComboBox->setCurrentIndex(0);
-  ui->resComboBox->blockSignals(false);
+  resComboBox->blockSignals(true);
+  resComboBox->setCurrentIndex(0);
+  resComboBox->blockSignals(false);
 }
 
 void ResizeDialog::percentChanged(double newPercent) {

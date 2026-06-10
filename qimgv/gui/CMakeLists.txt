@@ -85,7 +85,6 @@ target_sources(qimgv-plus PRIVATE
 target_sources(qimgv-plus PRIVATE
 
     dialogs/batchconverterdialog.ui
-    dialogs/resizedialog.ui
     dialogs/scripteditordialog.ui
     dialogs/settingsdialog.ui
     dialogs/shortcutcreatordialog.ui

@@ -16,9 +16,13 @@
 
 #include "settings.h"
 
-namespace Ui {
-    class ResizeDialog;
-}
+class QRadioButton;
+class QDoubleSpinBox;
+class QSpinBox;
+class QCheckBox;
+class QComboBox;
+class QLabel;
+class QPushButton;
 
 class ResizeDialog : public QDialog
 {
@@ -35,16 +39,32 @@ protected:
     void keyPressEvent(QKeyEvent *event);
 
 private:
-    Ui::ResizeDialog *ui;
+    void setupUi();
+
+    QRadioButton *byPercentage = nullptr;
+    QDoubleSpinBox *percent = nullptr;
+    QRadioButton *byAbsoluteSize = nullptr;
+    QSpinBox *width = nullptr;
+    QSpinBox *height = nullptr;
+    QCheckBox *keepAspectRatio = nullptr;
+    QComboBox *comboBox = nullptr;
+    QLabel *label_4 = nullptr;
+
+    QCheckBox *useUpscaylCheckBox = nullptr;
+    QComboBox *upscaylModelComboBox = nullptr;
+    QLabel *upscaylModelLabel = nullptr;
+
+    QComboBox *resComboBox = nullptr;
+    QPushButton *fitDesktopButton = nullptr;
+    QPushButton *fillDesktopButton = nullptr;
+    QPushButton *resetButton = nullptr;
+    QPushButton *okButton = nullptr;
+    QPushButton *cancelButton = nullptr;
+
     QSize originalSize, targetSize, desktopSize;
     void updateToTargetValues();
     int lastEdited; // 0 - width, 1 - height
     void resetResCheckBox();
-#ifdef USE_UPSCAYL
-    QCheckBox *useUpscaylCheckBox = nullptr;
-    QComboBox *upscaylModelComboBox = nullptr;
-    QLabel *upscaylModelLabel = nullptr;
-#endif
 
 private slots:
     void widthChanged(int);
