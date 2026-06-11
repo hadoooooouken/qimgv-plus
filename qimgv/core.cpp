@@ -7,6 +7,8 @@
 
 #include "core.h"
 #include <QRegularExpression>
+#include <QTemporaryFile>
+#include <QCoreApplication>
 
 #ifdef USE_UPSCAYL
 #include "realesrgan.h"
@@ -245,6 +247,9 @@ Core::~Core() {
   UpscaylScaler::getInstance()->destroy();
 #endif
   delete translator;
+
+  QString instanceTempDir = settings->tmpDir() + "temp_" + QString::number(QCoreApplication::applicationPid()) + "/";
+  QDir(instanceTempDir).removeRecursively();
 }
 
 void Core::readSettings() {
@@ -969,7 +974,20 @@ void Core::onDraggedOut(QList<QString> paths) {
   mDrag->setMimeData(mimeData);
   // mDrag->setPixmap(*thumb->pixmap().get());
   mDrag->exec(Qt::CopyAction | Qt::MoveAction | Qt::LinkAction, Qt::CopyAction);
+  mDrag->deleteLater();
+  mDrag = nullptr;
 }
+
+class TempFileCleaner : public QObject {
+public:
+  TempFileCleaner(const QString &filePath, QObject *parent = nullptr)
+      : QObject(parent), m_filePath(filePath) {}
+  ~TempFileCleaner() {
+    QFile::remove(m_filePath);
+  }
+private:
+  QString m_filePath;
+};
 
 QMimeData *Core::getMimeDataForImage(std::shared_ptr<Image> img,
                                      MimeDataTarget target) {
@@ -979,17 +997,22 @@ QMimeData *Core::getMimeDataForImage(std::shared_ptr<Image> img,
   QString path = img->filePath();
   if (img->type() == STATIC) {
     if (img->isEdited()) {
-      // TODO: cleanup temp files
-      // meanwhile use generic name
-      // path = settings->cacheDir() + img->baseName() + ".png";
-      path = settings->tmpDir() + "image.png";
+      QString instanceTempDir = settings->tmpDir() + "temp_" + QString::number(QCoreApplication::applicationPid()) + "/";
+      QDir().mkpath(instanceTempDir);
+      path = instanceTempDir + img->baseName() + ".png";
+
       // use faster compression for drag'n'drop
       int pngQuality = (target == TARGET_DROP) ? 80 : 30;
-      img->getImage()->save(path, nullptr, pngQuality);
+      if (img->getImage()->save(path, "PNG", pngQuality)) {
+        new TempFileCleaner(path, mimeData);
+      } else {
+        // Fallback in case temporary directory creation or save fails
+        path = settings->tmpDir() + "image.png";
+        img->getImage()->save(path, nullptr, pngQuality);
+      }
     }
   }
-  // !!! using setImageData() while doing drag'n'drop hangs Xorg !!!
-  // clipboard only!
+  
   if (target == TARGET_CLIPBOARD)
     mimeData->setImageData(*img->getImage().get());
   mimeData->setUrls({QUrl::fromLocalFile(path)});
