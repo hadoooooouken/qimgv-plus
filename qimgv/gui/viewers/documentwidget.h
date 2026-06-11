@@ -5,7 +5,6 @@
 #include "gui/customwidgets/floatingwidgetcontainer.h"
 #include "gui/viewers/viewerwidget.h"
 #include "gui/panels/mainpanel/mainpanel.h"
-// TODO: use a template here?
 
 class DocumentWidget : public FloatingWidgetContainer {
 public:

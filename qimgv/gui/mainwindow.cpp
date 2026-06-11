@@ -1051,19 +1051,16 @@ std::shared_ptr<ThumbnailStripProxy> MW::getThumbnailPanel() {
     return docWidget->thumbPanel();
 }
 
-// todo: this is crap
 void MW::showMessageDirectory(QString dirName) {
     floatingMessage->showMessage(dirName, FloatingMessageIcon::ICON_DIRECTORY, 1700);
 }
 
 void MW::showMessageDirectoryEnd() {
-    // TODO replace with something nicer (integrate with click overlay?)
-    //floatingMessage->showMessage("", FloatingWidgetPosition::RIGHT, FloatingMessageIcon::ICON_RIGHT_EDGE, 400);
+    floatingMessage->showMessage(tr("End of directory"), FloatingMessageIcon::NO_ICON, 600);
 }
 
 void MW::showMessageDirectoryStart() {
-    // TODO replace with something nicer (integrate with click overlay?)
-    //floatingMessage->showMessage("", FloatingWidgetPosition::LEFT, FloatingMessageIcon::ICON_LEFT_EDGE, 400);
+    floatingMessage->showMessage(tr("Start of directory"), FloatingMessageIcon::NO_ICON, 600);
 }
 
 void MW::showMessageFitWindow() {

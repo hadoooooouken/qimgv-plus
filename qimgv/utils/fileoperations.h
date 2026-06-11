@@ -22,7 +22,7 @@ enum FileOpResult {
     SOURCE_DOES_NOT_EXIST,
     DESTINATION_DOES_NOT_EXIST,
     DIRECTORY_NOT_EMPTY,
-    NOTHING_TO_DO, // todo: maybe just return SUCCESS?
+    NOTHING_TO_DO,
     OTHER_ERROR
 };
 

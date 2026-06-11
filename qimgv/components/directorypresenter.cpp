@@ -90,7 +90,6 @@ void DirectoryPresenter::populateView() {
 }
 
 void DirectoryPresenter::disconnectView() {
-  // todo
 }
 
 //------------------------------------------------------------------------------

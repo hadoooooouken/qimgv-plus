@@ -1520,7 +1520,6 @@ void Core::discardEdits() {
   mw->hideSaveOverlay();
 }
 
-// todo: remove?
 QString Core::selectedPath() {
   if (!model)
     return "";

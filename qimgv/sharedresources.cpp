@@ -1,6 +1,6 @@
 #include "sharedresources.h"
 
-// TODO: is there a point in doing this? qt does implicit sharing for pixmaps? test
+
 
 SharedResources *shrRes = nullptr;
 

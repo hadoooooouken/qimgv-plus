@@ -192,7 +192,6 @@ void Settings::loadStylesheet() {
     // --- widget sizes ---------------------------------------------
     auto fnt = QGuiApplication::font();
     QFontMetrics fm(fnt);
-    // todo: use precise values for ~9-11 point sizes
     int font_small = qMax((int)(fnt.pointSize() * 0.9f), 8);
     int font_large = (int)(fnt.pointSize() * 1.8f);
     int text_height = fm.height();
@@ -214,7 +213,6 @@ void Settings::loadStylesheet() {
     // 32px base size
     int overlay_header_size = qMax(text_height + text_padding * 2, 30);
 
-    // todo
     int button_height = text_height + text_padding_large * 2;
 
     // pseudo-dpi to scale some widget widths
