@@ -917,7 +917,6 @@ void MW::closeFullScreenOrExit() {
     }
 }
 
-// todo: this is crap, use shared state object
 void MW::setCurrentInfo(int _index, int _fileCount, QString _filePath, QString _fileName, QSize _imageSize, qint64 _fileSize, QString _format, QString _colorProfile, bool slideshow, bool shuffle, bool edited) {
     info.index = _index;
     info.fileCount = _fileCount;
@@ -933,7 +932,6 @@ void MW::setCurrentInfo(int _index, int _fileCount, QString _filePath, QString _
     onInfoUpdated();
 }
 
-// todo: nuke and rewrite
 void MW::onInfoUpdated() {
     QString posString;
     if(info.fileCount)
