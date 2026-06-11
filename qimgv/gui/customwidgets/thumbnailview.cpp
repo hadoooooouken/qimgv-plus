@@ -1,4 +1,5 @@
 #include "thumbnailview.h"
+#include "settings.h"
 
 ThumbnailView::ThumbnailView(Qt::Orientation _orientation, QWidget *parent)
     : QGraphicsView(parent),
@@ -83,6 +84,17 @@ ThumbnailView::ThumbnailView(Qt::Orientation _orientation, QWidget *parent)
         }
         std::sort(newSelection.begin(), newSelection.end());
         select(newSelection);
+    });
+
+    connect(settings, &Settings::settingsChanged, this, [this]() {
+        for (auto *widget : thumbnails) {
+            if (widget) {
+                widget->update();
+            }
+        }
+        if (viewport()) {
+            viewport()->update();
+        }
     });
 }
 

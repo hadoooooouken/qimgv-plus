@@ -225,6 +225,14 @@ Core::Core()
   lastCMEnabled = settings->colorManagementEnabled();
   lastCMType = settings->monitorColorProfileType();
   lastCMPath = settings->monitorColorProfilePath();
+  lastThumbnailResolution = settings->thumbnailResolution();
+  lastShowSubfoldersInPanel = settings->showSubfoldersInPanel();
+  lastSquareThumbnails = settings->squareThumbnails();
+  lastShowHiddenFiles = settings->showHiddenFiles();
+  lastPanelPreviewsSize = settings->panelPreviewsSize();
+  lastSortFolders = settings->sortFolders();
+  lastFolderIconSortingMode = settings->folderIconSortingMode();
+  lastThumbPanelStyle = settings->thumbPanelStyle();
   slideshowTimer.setSingleShot(true);
   connect(settings, &Settings::settingsChanged, this, &Core::readSettings);
 
@@ -274,8 +282,6 @@ void Core::readSettings() {
 
   if (shuffle)
     syncRandomizer();
-
-  mw->onFolderSortingChanged(settings->folderIconSortingMode());
 }
 
 void Core::showGui() {
@@ -407,8 +413,44 @@ void Core::connectComponents() {
               guiSetImage(state.currentImg);
           }
       }
-      thumbPanelPresenter.reloadModel();
-      folderViewPresenter.reloadModel();
+
+      int newThumbnailResolution = settings->thumbnailResolution();
+      bool newShowSubfoldersInPanel = settings->showSubfoldersInPanel();
+      bool newSquareThumbnails = settings->squareThumbnails();
+      bool newShowHiddenFiles = settings->showHiddenFiles();
+      int newPanelPreviewsSize = settings->panelPreviewsSize();
+      bool newSortFolders = settings->sortFolders();
+      SortingMode newFolderIconSortingMode = settings->folderIconSortingMode();
+      ThumbPanelStyle newThumbPanelStyle = settings->thumbPanelStyle();
+
+      bool layoutChanged = (newThumbnailResolution != lastThumbnailResolution) ||
+                           (newShowSubfoldersInPanel != lastShowSubfoldersInPanel) ||
+                           (newSquareThumbnails != lastSquareThumbnails) ||
+                           (newShowHiddenFiles != lastShowHiddenFiles) ||
+                           (newPanelPreviewsSize != lastPanelPreviewsSize) ||
+                           (newSortFolders != lastSortFolders) ||
+                           (newFolderIconSortingMode != lastFolderIconSortingMode) ||
+                           (newThumbPanelStyle != lastThumbPanelStyle);
+
+      if (layoutChanged) {
+          bool folderSortingChanged = (newFolderIconSortingMode != lastFolderIconSortingMode);
+
+          lastThumbnailResolution = newThumbnailResolution;
+          lastShowSubfoldersInPanel = newShowSubfoldersInPanel;
+          lastSquareThumbnails = newSquareThumbnails;
+          lastShowHiddenFiles = newShowHiddenFiles;
+          lastPanelPreviewsSize = newPanelPreviewsSize;
+          lastSortFolders = newSortFolders;
+          lastFolderIconSortingMode = newFolderIconSortingMode;
+          lastThumbPanelStyle = newThumbPanelStyle;
+
+          if (folderSortingChanged) {
+              mw->onFolderSortingChanged(newFolderIconSortingMode);
+          }
+
+          thumbPanelPresenter.reloadModel();
+          folderViewPresenter.reloadModel();
+      }
   });
 
   connect(model.get(), &DirectoryModel::fileAdded, this, &Core::onFileAdded);

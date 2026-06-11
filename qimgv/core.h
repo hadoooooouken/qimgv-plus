@@ -208,4 +208,12 @@ private:
     bool lastCMEnabled = false;
     QString lastCMType = "";
     QString lastCMPath = "";
+    int lastThumbnailResolution = 0;
+    bool lastShowSubfoldersInPanel = false;
+    bool lastSquareThumbnails = false;
+    bool lastShowHiddenFiles = false;
+    int lastPanelPreviewsSize = 0;
+    bool lastSortFolders = false;
+    SortingMode lastFolderIconSortingMode = SORT_NAME;
+    ThumbPanelStyle lastThumbPanelStyle = TH_PANEL_SIMPLE;
 };

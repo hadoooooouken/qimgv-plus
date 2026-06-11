@@ -99,9 +99,15 @@ QString Settings::tmpDir() { return mTmpDir->path() + "/"; }
 // this here is temporarily, will be moved to some sort of theme manager class
 void Settings::loadStylesheet() {
   // stylesheet template file
-  QFile file(":/res/styles/style-template.qss");
-  if (file.open(QFile::ReadOnly)) {
-    QString styleSheet = QLatin1String(file.readAll());
+  static QString styleSheetTemplate;
+  if (styleSheetTemplate.isEmpty()) {
+    QFile file(":/res/styles/style-template.qss");
+    if (file.open(QFile::ReadOnly)) {
+      styleSheetTemplate = QLatin1String(file.readAll());
+    }
+  }
+  if (!styleSheetTemplate.isEmpty()) {
+    QString styleSheet = styleSheetTemplate;
 
     // --- color scheme ---------------------------------------------
     auto colors = settings->colorScheme();
