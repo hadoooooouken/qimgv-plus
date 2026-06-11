@@ -16,6 +16,7 @@ MW::MW(QWidget *parent)
       infoBarFullscreen(nullptr),
       imageInfoOverlay(nullptr),
       floatingMessage(nullptr),
+      floatingMessageFolderView(nullptr),
       cropPanel(nullptr),
       cropOverlay(nullptr),
       panelPosition(PANEL_TOP),
@@ -55,6 +56,15 @@ MW::MW(QWidget *parent)
     restoreWindowGeometry();
 }
 
+MW::~MW() {
+    if (floatingMessage) {
+        delete floatingMessage;
+    }
+    if (floatingMessageFolderView) {
+        delete floatingMessageFolderView;
+    }
+}
+
 /*                                                             |--[ImageViewer]
  *                        |--[DocumentWidget]--[ViewerWidget]--|
  * [MW]--[CentralWidget]--|
@@ -82,7 +92,7 @@ void MW::setupUi() {
     sidePanel = new SidePanel(this);
     layout.addWidget(sidePanel);
     imageInfoOverlay = new ImageInfoOverlayProxy(viewerWidget.get());
-    floatingMessage = new FloatingMessageProxy(viewerWidget.get()); // todo: use additional one for folderview?
+    floatingMessage = new FloatingMessageProxy(viewerWidget.get());
     connect(viewerWidget.get(), &ViewerWidget::scalingRequested, this, &MW::scalingRequested);
     connect(viewerWidget.get(), &ViewerWidget::draggedOut,       this, &MW::draggedOut);
     connect(viewerWidget.get(), &ViewerWidget::nextImageRequested, this, &MW::nextImageRequested);
@@ -1046,54 +1056,72 @@ std::shared_ptr<ThumbnailStripProxy> MW::getThumbnailPanel() {
     return docWidget->thumbPanel();
 }
 
+FloatingMessageProxy *MW::activeFloatingMessage() {
+    if (currentViewMode() == MODE_FOLDERVIEW) {
+        if (!floatingMessageFolderView) {
+            auto *container = folderView->getWidgetContainer();
+            if (container) {
+                floatingMessageFolderView = new FloatingMessageProxy(container);
+            }
+        }
+        if (floatingMessageFolderView) {
+            return floatingMessageFolderView;
+        }
+    }
+    return floatingMessage;
+}
+
 void MW::showMessageDirectory(QString dirName) {
-    floatingMessage->showMessage(dirName, FloatingMessageIcon::ICON_DIRECTORY, 1700);
+    activeFloatingMessage()->showMessage(dirName, FloatingMessageIcon::ICON_DIRECTORY, 1700);
 }
 
 void MW::showMessageDirectoryEnd() {
-    floatingMessage->showMessage(tr("End of directory"), FloatingMessageIcon::NO_ICON, 600);
+    activeFloatingMessage()->showMessage(tr("End of directory"), FloatingMessageIcon::NO_ICON, 600);
 }
 
 void MW::showMessageDirectoryStart() {
-    floatingMessage->showMessage(tr("Start of directory"), FloatingMessageIcon::NO_ICON, 600);
+    activeFloatingMessage()->showMessage(tr("Start of directory"), FloatingMessageIcon::NO_ICON, 600);
 }
 
 void MW::showMessageFitWindow() {
-    floatingMessage->showMessage(tr("Fit Window"), FloatingMessageIcon::NO_ICON, 350);
+    activeFloatingMessage()->showMessage(tr("Fit Window"), FloatingMessageIcon::NO_ICON, 350);
 }
 
 void MW::showMessageFitWidth() {
-    floatingMessage->showMessage(tr("Fit Width"), FloatingMessageIcon::NO_ICON, 350);
+    activeFloatingMessage()->showMessage(tr("Fit Width"), FloatingMessageIcon::NO_ICON, 350);
 }
 
 void MW::showMessageFitOriginal() {
-    floatingMessage->showMessage(tr("Fit 1:1"), FloatingMessageIcon::NO_ICON, 350);
+    activeFloatingMessage()->showMessage(tr("Fit 1:1"), FloatingMessageIcon::NO_ICON, 350);
 }
 
 void MW::showMessage(QString text) {
-    floatingMessage->showMessage(text,  FloatingMessageIcon::NO_ICON, 1500);
+    activeFloatingMessage()->showMessage(text,  FloatingMessageIcon::NO_ICON, 1500);
 }
 
 void MW::showMessage(QString text, int duration) {
-    floatingMessage->showMessage(text, FloatingMessageIcon::NO_ICON, duration);
+    activeFloatingMessage()->showMessage(text, FloatingMessageIcon::NO_ICON, duration);
 }
 
 void MW::hideMessage() {
     if(floatingMessage) {
         floatingMessage->hide();
     }
+    if(floatingMessageFolderView) {
+        floatingMessageFolderView->hide();
+    }
 }
 
 void MW::showMessageSuccess(QString text) {
-    floatingMessage->showMessage(text,  FloatingMessageIcon::ICON_SUCCESS, 1500);
+    activeFloatingMessage()->showMessage(text,  FloatingMessageIcon::ICON_SUCCESS, 1500);
 }
 
 void MW::showWarning(QString text) {
-    floatingMessage->showMessage(text,  FloatingMessageIcon::ICON_WARNING, 1500);
+    activeFloatingMessage()->showMessage(text,  FloatingMessageIcon::ICON_WARNING, 1500);
 }
 
 void MW::showError(QString text) {
-    floatingMessage->showMessage(text,  FloatingMessageIcon::ICON_ERROR, 2800);
+    activeFloatingMessage()->showMessage(text,  FloatingMessageIcon::ICON_ERROR, 2800);
 }
 
 bool MW::showConfirmation(QString title, QString msg) {

@@ -38,6 +38,7 @@ public slots:
     void onFullscreenModeChanged(bool mode);
     void onSortingChanged(SortingMode mode);
     void onFolderSortingChanged(SortingMode mode);
+    FloatingWidgetContainer *getWidgetContainer();
 
 protected:
     void showEvent(QShowEvent *event) override;

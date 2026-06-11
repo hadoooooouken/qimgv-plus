@@ -62,6 +62,7 @@ class MW : public FloatingWidgetContainer {
   Q_OBJECT
 public:
   explicit MW(QWidget *parent = nullptr);
+  ~MW();
   bool isFullScreen() const;
   bool isCropPanelActive();
   void onScalingFinished(std::unique_ptr<QPixmap> scaled);
@@ -120,6 +121,7 @@ private:
   ControlsOverlay *controlsOverlay;
   FullscreenInfoOverlayProxy *infoBarFullscreen;
   FloatingMessageProxy *floatingMessage;
+  FloatingMessageProxy *floatingMessageFolderView;
 
   PanelPosition panelPosition;
   CurrentInfo info;
@@ -132,6 +134,7 @@ private:
   void restoreWindowGeometry();
   void saveCurrentDisplay();
   void setupUi();
+  FloatingMessageProxy *activeFloatingMessage();
 
   void mouseDoubleClickEvent(QMouseEvent *event);
 

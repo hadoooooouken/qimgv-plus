@@ -187,6 +187,10 @@ void FolderViewProxy::onFolderSortingChanged(SortingMode mode) {
     }
 }
 
+FloatingWidgetContainer *FolderViewProxy::getWidgetContainer() {
+    return folderView.get();
+}
+
 void FolderViewProxy::showEvent(QShowEvent *event) {
     init();
     QWidget::showEvent(event);
