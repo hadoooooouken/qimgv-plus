@@ -43,6 +43,7 @@ public:
     // ignored if the same dir is already opened
     bool setDirectory(QString);
     bool setDirectoryRecursive(QString);
+    bool setFileList(const QStringList &filePaths);
     QString directoryPath() const;
     int indexOfFile(QString filePath) const;
     int indexOfDir(QString dirPath) const;

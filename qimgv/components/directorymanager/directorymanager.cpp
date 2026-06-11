@@ -154,6 +154,30 @@ bool DirectoryManager::setDirectoryRecursive(QString dirPath) {
     return true;
 }
 
+bool DirectoryManager::setFileList(const QStringList &filePaths) {
+    if(filePaths.isEmpty()) {
+        return false;
+    }
+    stopFileWatcher();
+    fileEntryVec.clear();
+    dirEntryVec.clear();
+    mListSource = SOURCE_LIST;
+    mDirectoryPath = "";
+    
+    std::error_code ec;
+    for(const QString& path : filePaths) {
+        if(isFile(path)) {
+            fs::path stdPath(toStdString(path));
+            QString fileName = QString::fromStdWString(stdPath.filename().wstring());
+            FSEntry entry(path, fileName, fs::file_size(stdPath, ec), fs::last_write_time(stdPath, ec), false);
+            fileEntryVec.emplace_back(entry);
+        }
+    }
+    sortEntryLists();
+    emit loaded("");
+    return true;
+}
+
 QString DirectoryManager::directoryPath() const {
     if(mListSource == SOURCE_DIRECTORY || mListSource == SOURCE_DIRECTORY_RECURSIVE)
         return mDirectoryPath;

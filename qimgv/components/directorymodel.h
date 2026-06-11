@@ -39,6 +39,7 @@ public:
     void removeDir(const QString &dirPath, bool trash, bool recursive, FileOpResult &result);
 
     bool setDirectory(QString);
+    bool setFileList(const QStringList &filePaths);
 
     void unload(int index);
 

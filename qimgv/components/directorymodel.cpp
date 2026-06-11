@@ -172,10 +172,14 @@ void DirectoryModel::moveFileTo(const QString &srcFile, const QString &destDirPa
             dirManager.removeFileEntry(srcFile);
     }
 }
-// -----------------------------------------------------------------------------
 bool DirectoryModel::setDirectory(QString path) {
     cache.clear();
     return dirManager.setDirectory(path);
+}
+
+bool DirectoryModel::setFileList(const QStringList &filePaths) {
+    cache.clear();
+    return dirManager.setFileList(filePaths);
 }
 
 void DirectoryModel::unload(int index) {

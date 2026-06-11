@@ -327,6 +327,8 @@ void Core::connectComponents() {
   thumbPanelPresenter.setView(mw->getThumbnailPanel());
   connect(&thumbPanelPresenter, &DirectoryPresenter::fileActivated, this,
           &Core::onDirectoryViewFileActivated);
+  connect(&thumbPanelPresenter, &DirectoryPresenter::filesActivated, this,
+          &Core::onDirectoryViewFilesActivated);
   connect(&thumbPanelPresenter, &DirectoryPresenter::dirActivated, this,
           &Core::loadPath);
   connect(&thumbPanelPresenter, &DirectoryPresenter::backRequested, this,
@@ -337,6 +339,8 @@ void Core::connectComponents() {
   folderViewPresenter.setView(mw->getFolderView());
   connect(&folderViewPresenter, &DirectoryPresenter::fileActivated, this,
           &Core::onDirectoryViewFileActivated);
+  connect(&folderViewPresenter, &DirectoryPresenter::filesActivated, this,
+          &Core::onDirectoryViewFilesActivated);
   connect(&folderViewPresenter, &DirectoryPresenter::dirActivated, this,
           &Core::loadPath);
   connect(&folderViewPresenter, &DirectoryPresenter::backRequested, this,
@@ -650,6 +654,36 @@ void Core::onDirectoryViewFileActivated(QString filePath) {
   loadPath(filePath);
 }
 
+void Core::onDirectoryViewFilesActivated(QList<QString> filePaths, QString activePath) {
+  mw->enableDocumentView();
+  loadFileList(filePaths, activePath);
+}
+
+bool Core::loadFileList(const QList<QString> &filePaths, QString activePath) {
+  if (filePaths.isEmpty())
+      return false;
+
+  stopSlideshow();
+  
+  if (!blockHistory && !model->directoryPath().isEmpty()) {
+      backHistory.append(model->directoryPath());
+      if (backHistory.count() > 100)
+          backHistory.removeFirst();
+      forwardHistory.clear();
+  }
+  
+  if (!model->setFileList(filePaths))
+      return false;
+      
+  state.hasActiveImage = false;
+  QString toLoad = activePath;
+  if (toLoad.isEmpty() || !model->containsFile(toLoad)) {
+      toLoad = filePaths.first();
+  }
+  
+  return loadPath(toLoad);
+}
+
 void Core::rotateLeft() { rotateByDegrees(-90); }
 
 void Core::rotateRight() { rotateByDegrees(90); }
@@ -740,6 +774,22 @@ void Core::enableFolderView() {
   if (mw->currentViewMode() == MODE_FOLDERVIEW)
     return;
   stopSlideshow();
+  
+  if (model && model->source() == SOURCE_LIST) {
+      QString dirToLoad;
+      if (!backHistory.isEmpty()) {
+          dirToLoad = backHistory.takeLast();
+      } else if (model->fileCount() > 0) {
+          dirToLoad = QFileInfo(model->filePathAt(0)).absolutePath();
+      }
+
+      if (!dirToLoad.isEmpty()) {
+          blockHistory = true;
+          setDirectory(dirToLoad);
+          blockHistory = false;
+      }
+  }
+  
   mw->enableFolderView();
 }
 
@@ -1859,14 +1909,19 @@ bool Core::loadPath(QString path) {
     state.directoryPath = QDir(path).absolutePath();
   } else if (fileInfo.isFile()) {
     state.directoryPath = fileInfo.absolutePath();
-    if (model->directoryPath() != state.directoryPath)
+    if (model->source() == SOURCE_LIST && model->containsFile(path)) {
+      // already in the list, keep SOURCE_LIST
+    } else if (model->directoryPath() != state.directoryPath) {
       state.delayModel = true;
+    }
   } else {
     mw->showError(tr("Could not open path: ") + path);
     qDebug() << "Could not open path: " << path;
     return false;
   }
-  if (!state.delayModel && !setDirectory(state.directoryPath))
+  
+  bool skipSetDir = (model->source() == SOURCE_LIST && model->containsFile(path));
+  if (!skipSetDir && !state.delayModel && !setDirectory(state.directoryPath))
     return false;
 
   // load file / folderview
@@ -1947,9 +2002,19 @@ bool Core::loadFileIndex(int index, bool async, bool preload) {
 }
 
 void Core::loadParentDir() {
-  if (model->directoryPath().isEmpty() ||
-      mw->currentViewMode() != MODE_FOLDERVIEW)
+  if (mw->currentViewMode() != MODE_FOLDERVIEW)
     return;
+  if (model->directoryPath().isEmpty()) {
+      if (model->source() == SOURCE_LIST) {
+          if (!backHistory.isEmpty()) {
+              historyBack();
+          } else if (model->fileCount() > 0) {
+              QString path = model->filePathAt(0);
+              loadPath(QFileInfo(path).absolutePath());
+          }
+      }
+      return;
+  }
   stopSlideshow();
   QFileInfo currentDir(model->directoryPath());
   QFileInfo parentDir(currentDir.absolutePath());

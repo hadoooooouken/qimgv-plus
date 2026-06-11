@@ -304,6 +304,27 @@ void DirectoryPresenter::onThumbnailReady(std::shared_ptr<Thumbnail> thumb,
 void DirectoryPresenter::onItemActivated(int absoluteIndex) {
   if (!model)
     return;
+
+  auto selection = view->selection();
+  if (selection.count() > 1 && selection.contains(absoluteIndex)) {
+      QString activePath;
+      if (mShowDirs && absoluteIndex < model->dirCount())
+          activePath = model->dirPathAt(absoluteIndex);
+      else
+          activePath = model->filePathAt(mShowDirs ? absoluteIndex - model->dirCount() : absoluteIndex);
+      
+      QList<QString> filePaths;
+      for (const QString& path : selectedPaths()) {
+          if (model->containsFile(path))
+              filePaths << path;
+      }
+      
+      if (filePaths.count() > 1) {
+          emit filesActivated(filePaths, filePaths.first());
+          return;
+      }
+  }
+
   if (!mShowDirs) {
     emit fileActivated(model->filePathAt(absoluteIndex));
     return;

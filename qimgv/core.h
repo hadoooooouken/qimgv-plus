@@ -169,6 +169,8 @@ private slots:
     void showOpenDialog();
     void showInDirectory();
     void onDirectoryViewFileActivated(QString filePath);
+    void onDirectoryViewFilesActivated(QList<QString> filePaths, QString activePath);
+    bool loadFileList(const QList<QString> &filePaths, QString activePath = "");
     bool loadFileIndex(int index, bool async, bool preload);
     void enableDocumentView();
     void enableFolderView();
