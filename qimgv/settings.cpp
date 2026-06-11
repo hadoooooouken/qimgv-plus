@@ -127,7 +127,7 @@ void Settings::loadStylesheet() {
       QPalette darkPalette;
       darkPalette.setColor(QPalette::Window, QColor(37, 37, 37));
       darkPalette.setColor(QPalette::WindowText, QColor(220, 220, 220));
-      darkPalette.setColor(QPalette::Base, QColor(30, 30, 30));
+      darkPalette.setColor(QPalette::Base, QColor(55, 55, 55));
       darkPalette.setColor(QPalette::AlternateBase, QColor(45, 45, 45));
       darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
       darkPalette.setColor(QPalette::ToolTipText, Qt::white);
@@ -139,6 +139,7 @@ void Settings::loadStylesheet() {
       darkPalette.setColor(QPalette::Link, colors.accent);
       darkPalette.setColor(QPalette::Highlight, colors.accent);
       darkPalette.setColor(QPalette::HighlightedText, Qt::white);
+      darkPalette.setColor(QPalette::Mid, QColor(110, 110, 110));
       qApp->setPalette(darkPalette);
     } else {
       sys_window = QColor(245, 245, 245);

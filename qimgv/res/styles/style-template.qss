@@ -208,7 +208,7 @@ QComboBox QAbstractItemView {
 [accessibleName="PanelComboBox"] QAbstractItemView {
     padding: 5px 5px 5px 5px;
     background-color: %widget%;
-    border: 1px solid %accent%;
+    border: 1px solid %widget_border%;
 }
 
 [accessibleName="PanelComboBox"] QAbstractItemView::item {
@@ -427,7 +427,7 @@ SidePanel QComboBox::drop-down {
 SidePanel QComboBox QAbstractItemView {
     padding: 5px 0px;
     background-color: %widget%;
-    border: 1px solid %accent%;
+    border: 1px solid %widget_border%;
 }
 
 SidePanel QComboBox QAbstractItemView::item {
