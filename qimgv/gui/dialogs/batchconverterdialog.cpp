@@ -534,15 +534,12 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
                 "QLineEdit:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled, QComboBox:disabled { background-color: %1; color: %2; border-color: %4; }"
                 "QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover, QComboBox:hover,"
                 "QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus { border-color: %6; }"
-                "QPushButton { background-color: %5; color: %3; border: 1px solid %4; border-radius: 3px; padding: 5px 10px; }"
-                "QPushButton:hover { background-color: %7; color: %8; }"
-                "QPushButton:pressed { background-color: %9; }"
-                "QListWidget { background-color: %10; border: 1px solid %4; color: %3; }"
+                "QListWidget { background-color: %8; border: 1px solid %4; color: %3; }"
                 "QScrollBar:vertical { width: 13px; background-color: transparent; }"
-                "QScrollBar::handle:vertical { background-color: %11; min-height: 30px; border-radius: 2px; }"
-                "QScrollBar::handle:vertical:hover { background-color: %12; }"
+                "QScrollBar::handle:vertical { background-color: %9; min-height: 30px; border-radius: 2px; }"
+                "QScrollBar::handle:vertical:hover { background-color: %10; }"
                 "QScrollBar::sub-page, QScrollBar::add-page { background: none; }"
-                "QProgressBar { border: 1px solid %4; border-radius: 3px; text-align: center; color: %8; background-color: %10; }"
+                "QProgressBar { border: 1px solid %4; border-radius: 3px; text-align: center; color: %7; background-color: %8; }"
                 "QProgressBar::chunk { background-color: %6; }"
                 "QSlider { height: 18px; background: transparent; }"
                 "QSlider::groove:horizontal { height: 4px; background: %5; border-radius: 2px; }"
@@ -552,8 +549,8 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
                 "QSlider::handle:horizontal:disabled { background: %2; }")
         .arg(colors.widget.name(), colors.text.name(), colors.text_hc.name(),
              colors.widget_border.name(), colors.button.name(), colors.accent.name(),
-             colors.button_hover.name(), colors.text_hc2.name(), colors.button_pressed.name(),
-             colors.folderview.name(), colors.scrollbar.name(), colors.scrollbar_hover.name());
+             colors.text_hc2.name(), colors.folderview.name(), colors.scrollbar.name(),
+             colors.scrollbar_hover.name());
     setStyleSheet(dialogStyle);
 
     threadPool.setMaxThreadCount(QThread::idealThreadCount());

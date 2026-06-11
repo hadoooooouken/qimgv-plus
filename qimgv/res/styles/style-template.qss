@@ -57,7 +57,7 @@ SSideBarItem[checked="true"] {
 /*----------------------------------------------------------------------------*/
 /* Buttons */
 
-[accessibleName="Button"], [accessibleName="ButtonSetLeft"], [accessibleName="ButtonSetRight"]
+QPushButton, [accessibleName="Button"], [accessibleName="ButtonSetLeft"], [accessibleName="ButtonSetRight"]
 {
     color: %text_hc%;
     background-color: %button%;
@@ -65,13 +65,14 @@ SSideBarItem[checked="true"] {
     padding: 7px 12px 7px 12px;
 }
 
-[accessibleName="Button"]:hover, [accessibleName="ButtonSetLeft"]:hover, [accessibleName="ButtonSetRight"]:hover
+QPushButton:hover, [accessibleName="Button"]:hover, [accessibleName="ButtonSetLeft"]:hover, [accessibleName="ButtonSetRight"]:hover
 {
     background-color: %button_hover%;
     color: %text_hc2%;
 }
 
 /* TODO: fix me */
+QPushButton:pressed,
 [accessibleName="Button"]:pressed,
 [accessibleName="Button"][pressed="true"],
 [accessibleName="ButtonSetLeft"]:pressed,  [accessibleName="ButtonSetLeft"][pressed="true"],

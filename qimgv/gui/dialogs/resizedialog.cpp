@@ -47,20 +47,6 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
               "QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, "
               "QComboBox:focus {"
               "  border-color: %6;"
-              "}"
-              "QPushButton {"
-              "  background-color: %5;"
-              "  color: %3;"
-              "  border: 1px solid %4;"
-              "  border-radius: 3px;"
-              "  padding: 5px 10px;"
-              "}"
-              "QPushButton:hover {"
-              "  background-color: %7;"
-              "  color: %8;"
-              "}"
-              "QPushButton:pressed {"
-              "  background-color: %9;"
               "}")
           .arg(colors.widget.name())          // %1
           .arg(colors.text.name())            // %2
