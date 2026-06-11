@@ -28,7 +28,7 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 
 - **Basic Image Editing**: Quick crop, rotate, and resize operations.
 
-- **Folder View Mode**: Seamless grid browsing.
+- **Folder View Mode**: Seamless grid browsing with support for left mouse button rectangular selection and options to open only selected files.
 
 - **Quick Copy / Move**: Easily categorize or organize your files into configurable folders.
 
@@ -72,6 +72,7 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 | Save As  | Ctrl+Shift+S |
 | Discard edits | Ctrl+Z |
 | Copy image to clipboard | Ctrl+C |
+| Copy viewport to clipboard | Shift+C |
 | Copy path to clipboard | Ctrl+Shift+C |
 | Rename file | F2 |
 | Reload image | F5 |
