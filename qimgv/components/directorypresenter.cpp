@@ -207,7 +207,9 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
                                             bool crop, bool force) {
   if (!view || !model)
     return;
-  thumbnailer.clearTasks();
+  if (!mShowDirs) {
+    thumbnailer.clearTasks();
+  }
   if (!mShowDirs) {
     for (int i : indexes)
       thumbnailer.getThumbnailAsync(model->filePathAt(i), size, crop, force);
@@ -293,7 +295,7 @@ void DirectoryPresenter::onThumbnailReady(std::shared_ptr<Thumbnail> thumb,
         view->setThumbnail(i, folderThumb);
       }
     }
-    dirThumbnailTasks.remove(filePath);
+    dirThumbnailTasks.remove(normalizedPath);
   }
 
   int index = model->indexOfFile(filePath);
