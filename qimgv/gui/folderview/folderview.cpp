@@ -12,9 +12,49 @@
 #include <QSlider>
 #include <QSplitter>
 #include <QHeaderView>
+#include <QPainter>
 #include "gui/customwidgets/clickablelabel.h"
 #include "gui/folderview/treeviewcustom.h"
 #include "gui/customwidgets/iconbutton.h"
+#include "utils/imagelib.h"
+
+class BatchConvertButton : public QPushButton {
+public:
+    QPixmap iconPixmap;
+    qreal dpr;
+    BatchConvertButton(const QString& text, QWidget* parent = nullptr) : QPushButton(text, parent) {
+        dpr = this->devicePixelRatioF();
+        QString path = ":/res/icons/common/buttons/panel/settings16.png";
+        if (dpr >= 1.001) {
+            path.replace(".", "@2x.");
+            iconPixmap.load(path);
+            iconPixmap.setDevicePixelRatio(dpr >= 1.999 ? dpr : 2.0);
+        } else {
+            iconPixmap.load(path);
+            iconPixmap.setDevicePixelRatio(dpr);
+        }
+        ImageLib::recolor(iconPixmap, settings->colorScheme().icons);
+        setStyleSheet("text-align: left; padding-left: 8px; padding-right: 38px;");
+        
+        connect(settings, &Settings::settingsChanged, this, [this]() {
+            QString path = ":/res/icons/common/buttons/panel/settings16.png";
+            if (this->dpr >= 1.001) path.replace(".", "@2x.");
+            this->iconPixmap.load(path);
+            if (this->dpr >= 1.001) this->iconPixmap.setDevicePixelRatio(this->dpr >= 1.999 ? this->dpr : 2.0);
+            else this->iconPixmap.setDevicePixelRatio(this->dpr);
+            ImageLib::recolor(this->iconPixmap, settings->colorScheme().icons);
+            this->update();
+        });
+    }
+
+    void paintEvent(QPaintEvent* e) override {
+        QPushButton::paintEvent(e);
+        QPainter p(this);
+        int y = (height() - iconPixmap.height() / iconPixmap.devicePixelRatio()) / 2;
+        int x = width() - iconPixmap.width() / iconPixmap.devicePixelRatio() - 14;
+        p.drawPixmap(x, y, iconPixmap);
+    }
+};
 
 FolderView::FolderView(QWidget *parent) :
     FloatingWidgetContainer(parent)
@@ -84,6 +124,8 @@ FolderView::FolderView(QWidget *parent) :
     connect(thumbnailGrid, &FolderGridView::droppedInto,     this, &FolderView::droppedInto);
     connect(thumbnailGrid, &FolderGridView::backRequested,    this, &FolderView::backRequested);
     connect(thumbnailGrid, &FolderGridView::forwardRequested, this, &FolderView::forwardRequested);
+    connect(thumbnailGrid, &FolderGridView::batchRequested,   this, &FolderView::batchRequested);
+    connect(thumbnailGrid, &FolderGridView::openSelectedRequested, this, &FolderView::openSelectedRequested);
 
     connect(bookmarksWidget, &BookmarksWidget::bookmarkClicked, this, &FolderView::onBookmarkClicked);
 
@@ -175,7 +217,7 @@ void FolderView::setupUi() {
     selectionCountLabel->setAccessibleName("SelectionCountLabel");
     horizontalLayout_5->addWidget(selectionCountLabel);
     
-    batchButton = new QPushButton(tr("Batch convert  ⇄"), topBar);
+    batchButton = new BatchConvertButton(tr("Batch convert"), topBar);
     batchButton->setFocusPolicy(Qt::NoFocus);
     batchButton->setAccessibleName("FolderViewBatchButton");
     horizontalLayout_5->addWidget(batchButton);

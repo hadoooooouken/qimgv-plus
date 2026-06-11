@@ -2,6 +2,7 @@
 #include "utils/imagelib.h"
 #include <QMenu>
 #include <QAction>
+#include <QTimer>
 #include <QIcon>
 #include <QCursor>
 
@@ -458,14 +459,35 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
                 scheme.background.name());
             menu.setStyleSheet(stylesheet);
 
-            QPixmap pixmap(":/res/icons/common/menuitem/trash16.png");
-            ImageLib::recolor(pixmap, scheme.icons);
-            QIcon icon(pixmap);
+            QPixmap openPixmap(":/res/icons/common/menuitem/document-view16.png");
+            ImageLib::recolor(openPixmap, scheme.icons);
+            QAction *actionOpen = menu.addAction(QIcon(openPixmap), tr("Open only selected"));
 
-            QAction *action = menu.addAction(icon, tr("Move to trash"));
+            QPixmap batchPixmap(":/res/icons/common/menuitem/settings16.png");
+            ImageLib::recolor(batchPixmap, scheme.icons);
+            QAction *actionBatch = menu.addAction(QIcon(batchPixmap), tr("Batch convert"));
+
+            QPixmap trashPixmap(":/res/icons/common/menuitem/trash16.png");
+            ImageLib::recolor(trashPixmap, scheme.icons);
+            QIcon trashIcon(trashPixmap);
+
+            QAction *actionTrash = menu.addAction(trashIcon, tr("Move to trash"));
+
+            QPixmap deletePixmap(":/res/icons/common/buttons/panel/close16.png");
+            ImageLib::recolor(deletePixmap, scheme.icons);
+            QAction *actionDelete = menu.addAction(QIcon(deletePixmap), tr("Delete permanently"));
+
             QAction *selectedAction = menu.exec(event->globalPos());
-            if (selectedAction == action) {
-                actionManager->invokeAction("moveToTrash");
+            if (selectedAction) {
+                if (selectedAction == actionOpen) {
+                    QTimer::singleShot(0, this, [this]() { emit openSelectedRequested(); });
+                } else if (selectedAction == actionBatch) {
+                    emit batchRequested();
+                } else if (selectedAction == actionTrash) {
+                    actionManager->invokeAction("moveToTrash");
+                } else if (selectedAction == actionDelete) {
+                    actionManager->invokeAction("removeFile");
+                }
             }
         }
     }

@@ -60,6 +60,7 @@ private slots:
     void onThumbnailReady(std::shared_ptr<Thumbnail> thumb, QString filePath);
     void populateView();
     void onItemActivated(int absoluteIndex);
+    void onOpenSelectedRequested();
     void onDraggedOut();
     void onDraggedOver(int index);
 

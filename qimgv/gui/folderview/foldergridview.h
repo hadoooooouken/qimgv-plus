@@ -72,4 +72,6 @@ protected:
 
 signals:
   void thumbnailSizeChanged(int);
+  void batchRequested();
+  void openSelectedRequested();
 };

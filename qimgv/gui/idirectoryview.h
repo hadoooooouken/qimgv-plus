@@ -35,6 +35,7 @@ public:
     virtual void droppedInto(const QMimeData*, QObject*, int) = 0;
     virtual void backRequested() = 0;
     virtual void forwardRequested() = 0;
+    virtual void openSelectedRequested() {}
 };
 
 Q_DECLARE_INTERFACE(IDirectoryView, "IDirectoryView")

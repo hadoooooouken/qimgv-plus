@@ -42,6 +42,8 @@ void DirectoryPresenter::setView(std::shared_ptr<IDirectoryView> _view) {
           SLOT(onDraggedOut()));
   connect(dynamic_cast<QObject *>(view.get()), SIGNAL(draggedOver(int)), this,
           SLOT(onDraggedOver(int)));
+  connect(dynamic_cast<QObject *>(view.get()), SIGNAL(openSelectedRequested()), this,
+          SLOT(onOpenSelectedRequested()));
   connect(dynamic_cast<QObject *>(view.get()),
           SIGNAL(droppedInto(const QMimeData *, QObject *, int)), this,
           SLOT(onDroppedInto(const QMimeData *, QObject *, int)));
@@ -333,6 +335,21 @@ void DirectoryPresenter::onItemActivated(int absoluteIndex) {
     emit dirActivated(model->dirPathAt(absoluteIndex));
   else
     emit fileActivated(model->filePathAt(absoluteIndex - model->dirCount()));
+}
+
+void DirectoryPresenter::onOpenSelectedRequested() {
+  if (!model)
+    return;
+
+  QList<QString> filePaths;
+  for (const QString& path : selectedPaths()) {
+      if (model->containsFile(path))
+          filePaths << path;
+  }
+
+  if (!filePaths.isEmpty()) {
+      emit filesActivated(filePaths, filePaths.first());
+  }
 }
 
 void DirectoryPresenter::onDraggedOut() { emit draggedOut(selectedPaths()); }

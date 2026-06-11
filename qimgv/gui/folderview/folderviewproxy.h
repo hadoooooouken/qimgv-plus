@@ -58,6 +58,7 @@ signals:
     void backRequested() override;
     void forwardRequested() override;
     void batchRequested();
+    void openSelectedRequested();
 
 private:
     std::shared_ptr<FolderView> folderView;

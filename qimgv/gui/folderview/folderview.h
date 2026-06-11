@@ -79,6 +79,7 @@ signals:
     void backRequested() override;
     void forwardRequested() override;
     void batchRequested();
+    void openSelectedRequested();
 
 private slots:
     void onSortingSelected(int);
