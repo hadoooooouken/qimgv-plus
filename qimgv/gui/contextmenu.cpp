@@ -194,9 +194,9 @@ void ContextMenu::setupUi()
         actionsLayout->addWidget(item);
     };
 
-    addItem(m_colorAdjustments, "colorAdjustments", tr("Color adjustments"), ":/res/icons/common/settings/appearance32.png");
-    addItem(m_panoramaMode,     "togglePanorama",     tr("Panorama mode"),      ":/res/icons/common/settings/view32.png");
-    addItem(m_casSettings,      "casSettings",        tr("CAS Settings"),       ":/res/icons/common/settings/appearance32.png");
+    addItem(m_colorAdjustments, "colorAdjustments", tr("Color adjustments"), ":/res/icons/common/menuitem/appearance16.png");
+    addItem(m_panoramaMode,     "togglePanorama",     tr("Panorama mode"),      ":/res/icons/common/menuitem/view16.png");
+    addItem(m_casSettings,      "casSettings",        tr("CAS Settings"),       ":/res/icons/common/menuitem/appearance16.png");
     m_casSettings->hide();
 
     // Spacer (6px) between groups

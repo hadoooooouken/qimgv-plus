@@ -44,6 +44,8 @@
         <file>res/icons/common/buttons/videocontrols/skip-backwards24@2x.png</file>
         <file>res/icons/common/buttons/videocontrols/skip-forward24.png</file>
         <file>res/icons/common/buttons/videocontrols/skip-forward24@2x.png</file>
+        <file>res/icons/common/menuitem/appearance16.png</file>
+        <file>res/icons/common/menuitem/appearance16@2x.png</file>
         <file>res/icons/common/menuitem/copy16.png</file>
         <file>res/icons/common/menuitem/copy16@2x.png</file>
         <file>res/icons/common/menuitem/document-view16.png</file>
@@ -126,6 +128,8 @@
         <file>res/icons/common/menuitem/run16@2x.png</file>
         <file>res/icons/common/menuitem/trash16.png</file>
         <file>res/icons/common/menuitem/trash16@2x.png</file>
+        <file>res/icons/common/menuitem/view16.png</file>
+        <file>res/icons/common/menuitem/view16@2x.png</file>
         <file>res/icons/common/buttons/panel/document-view20.png</file>
         <file>res/icons/common/buttons/panel/document-view20@2x.png</file>
         <file>res/icons/common/buttons/panel/pin-panel20.png</file>

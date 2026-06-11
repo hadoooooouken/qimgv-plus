@@ -26,12 +26,12 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.text = QColor(0xffb6b6b6);
     base.icons = QColor(0xffa4a4a4);
     base.widget = QColor(0xff181818);
-    base.widget_border = QColor(0xff2c2c2c);
+    base.widget_border = QColor(0xff2b2b2b);
     base.accent = p.highlight().color();
     base.folderview = QColor(0xff1f1f1f);
     base.folderview_topbar = QColor(0xff181818);
     base.thumbpanel = QColor(0xff1f1f1f);
-    base.scrollbar = QColor(0xff5a5a5a);
+    base.scrollbar = QColor(0xff4d4d4d);
     base.overlay_text = QColor(0xffd2d2d2);
     base.overlay = QColor(0xff1a1a1a);
     base.tid = static_cast<int>(name);
