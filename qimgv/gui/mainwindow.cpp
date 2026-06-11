@@ -687,7 +687,6 @@ QString MW::getSaveFileName(QString filePath) {
     docWidget->hideFloatingPanel();
     QStringList filters;
     // generate filter for writable images
-    // todo: some may need to be blacklisted
     auto writerFormats = QImageWriter::supportedImageFormats();
     if(writerFormats.contains("jpg"))  filters.append("JPEG (*.jpg *.jpeg *jpe *jfif)");
     if(writerFormats.contains("png"))  filters.append("PNG (*.png)");

@@ -206,7 +206,6 @@ bool DocumentInfo::detectAnimatedWebP() {
     return result;
 }
 
-// TODO avoid creating multiple QImageReader instances
 bool DocumentInfo::detectAnimatedJxl() {
     QImageReader r(fileInfo.filePath(), "jxl");
     return r.supportsAnimation();

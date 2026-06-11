@@ -370,7 +370,6 @@ void DirectoryPresenter::onDroppedInto(const QMimeData *data, QObject *source,
   if (source && (view->selection().contains(targetIndex) || targetIndex == -1))
     return;
   // ignore drops into a file
-  // todo: drop into a current dir when target is a file
   if (showDirs() && targetIndex >= model->dirCount())
     return;
 

@@ -817,7 +817,6 @@ void Core::toggleFolderView() {
     enableFolderView();
 }
 
-// TODO: also copy selection from folder view?
 void Core::copyFileClipboard() {
   if (model->isEmpty())
     return;
@@ -1132,7 +1131,6 @@ void Core::interactiveCopy(QList<QString> paths, QString destDirectory) {
   }
 }
 
-// todo: replacing DIR with a FILE?
 void Core::doInteractiveCopy(QString path, QString destDirectory,
                              DialogResult &overwriteFiles) {
   QFileInfo srcFi(path);
@@ -1210,7 +1208,6 @@ void Core::interactiveMove(QList<QString> paths, QString destDirectory) {
   }
 }
 
-// todo: replacing DIR with a FILE?
 void Core::doInteractiveMove(QString path, QString destDirectory,
                              DialogResult &overwriteFiles) {
   QFileInfo srcFi(path);

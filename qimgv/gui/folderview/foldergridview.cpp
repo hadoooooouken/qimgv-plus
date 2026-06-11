@@ -6,8 +6,6 @@
 #include <QIcon>
 #include <QCursor>
 
-// TODO: create a base class for this and the one on panel
-
 FolderGridView::FolderGridView(QWidget *parent)
     : ThumbnailView(Qt::Vertical, parent),
       shiftedCol(-1)
@@ -290,7 +288,7 @@ ThumbnailWidget* FolderGridView::createThumbnailWidget() {
     widget->setPadding(8);
     ThumbnailStyle style = THUMB_NORMAL;
     widget->setThumbStyle(style);
-    widget->setThumbnailSize(this->mThumbnailSize); // TODO: constructor
+    widget->setThumbnailSize(this->mThumbnailSize);
     return widget;
 }
 

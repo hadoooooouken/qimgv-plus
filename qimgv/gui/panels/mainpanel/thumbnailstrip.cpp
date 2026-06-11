@@ -1,7 +1,5 @@
 #include "thumbnailstrip.h"
 
-// TODO: move item highlight logic to base class
-
 ThumbnailStrip::ThumbnailStrip(QWidget *parent) : ThumbnailView(Qt::Horizontal, parent) {
     this->setAttribute(Qt::WA_NoMousePropagation, true);
     this->setFocusPolicy(Qt::NoFocus);

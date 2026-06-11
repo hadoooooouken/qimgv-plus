@@ -456,7 +456,6 @@ void FolderView::toggleFilesystemView() {
 
 void FolderView::onTreeViewTabOut() {
     thumbnailGrid->setFocus();
-    // TODO: maybe add a focus change indication? a border blink or something
 }
 
 void FolderView::onDroppedInByIndex(QList<QString> paths, QModelIndex index) {

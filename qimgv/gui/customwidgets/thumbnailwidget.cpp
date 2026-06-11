@@ -190,7 +190,6 @@ void ThumbnailWidget::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
         drawHighlight(painter);
 
     if(!thumbnail) { // not loaded
-        // todo: recolor once in shrRes
         QPixmap loadingIcon(*shrRes->getPixmap(ShrIcon::SHR_ICON_LOADING, dpr));
         if(isHighlighted())
             ImageLib::recolor(loadingIcon, settings->colorScheme().accent);

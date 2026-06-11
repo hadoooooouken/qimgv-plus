@@ -16,7 +16,6 @@ bool Cache::insert(std::shared_ptr<Image> img) {
             return true;
         }
     }
-    // TODO: what state returns here ??
     return true;
 }
 

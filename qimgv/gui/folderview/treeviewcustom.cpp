@@ -22,7 +22,6 @@ void TreeViewCustom::dropEvent(QDropEvent *event) {
     QModelIndex dropIndex = indexAt(event->position().toPoint());
     if(dropIndex.isValid()) {
         QList<QString> paths;
-        // TODO: QUrl gave me some issues previosly, test
         const auto urls = event->mimeData()->urls();
         for(const auto &url : urls)
             paths << url.toLocalFile();
