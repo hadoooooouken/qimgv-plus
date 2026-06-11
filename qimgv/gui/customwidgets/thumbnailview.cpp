@@ -51,6 +51,39 @@ ThumbnailView::ThumbnailView(Qt::Orientation _orientation, QWidget *parent)
     });
     if(qApp->platformName() == "wayland")
         wayland = true;
+
+    connect(this, &QGraphicsView::rubberBandChanged, this, [this](QRect viewportRect, QPointF fromScenePoint, QPointF toScenePoint) {
+        if(viewportRect.isNull()) {
+            return;
+        }
+        QPainterPath path;
+        path.addRect(QRectF(fromScenePoint, toScenePoint).normalized());
+        QList<QGraphicsItem *> items = scene.items(path, Qt::IntersectsItemBoundingRect);
+
+        QList<int> newSelection = rubberBandStartSelection;
+        bool ctrl = qApp->keyboardModifiers() & Qt::ControlModifier;
+        bool shift = qApp->keyboardModifiers() & Qt::ShiftModifier;
+
+        for(auto *item : items) {
+            ThumbnailWidget* widget = qgraphicsitem_cast<ThumbnailWidget*>(item);
+            if(widget) {
+                int idx = thumbnails.indexOf(widget);
+                if (ctrl) {
+                    if (rubberBandStartSelection.contains(idx)) {
+                        newSelection.removeAll(idx);
+                    } else {
+                        if (!newSelection.contains(idx)) newSelection << idx;
+                    }
+                } else if (shift) {
+                    if (!newSelection.contains(idx)) newSelection << idx;
+                } else {
+                    if (!newSelection.contains(idx)) newSelection << idx;
+                }
+            }
+        }
+        std::sort(newSelection.begin(), newSelection.end());
+        select(newSelection);
+    });
 }
 
 Qt::Orientation ThumbnailView::orientation() {
@@ -670,6 +703,7 @@ void ThumbnailView::mousePressEvent(QMouseEvent *event) {
 
     ThumbnailWidget *item = dynamic_cast<ThumbnailWidget*>(itemAt(event->pos()));
     if(item) {
+        setDragMode(QGraphicsView::NoDrag);
         int index = thumbnails.indexOf(item);
         if(event->button() == Qt::LeftButton) {
             if(event->modifiers() & Qt::ControlModifier) {
@@ -689,6 +723,14 @@ void ThumbnailView::mousePressEvent(QMouseEvent *event) {
             } else {
                 mouseReleaseSelect = true;
             }
+        }
+    } else {
+        if(event->button() == Qt::LeftButton) {
+            setDragMode(QGraphicsView::RubberBandDrag);
+            if (!(event->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier))) {
+                clearSelection();
+            }
+            rubberBandStartSelection = mSelection;
         }
     }
     if(event->button() == Qt::BackButton) {

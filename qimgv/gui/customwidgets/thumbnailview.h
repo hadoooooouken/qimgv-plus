@@ -111,6 +111,7 @@ protected:
     int offscreenPreloadArea = 3000;
 
     QList<int> rangeSelectionSnapshot;
+    QList<int> rubberBandStartSelection;
     bool rangeSelection; // true if shift is pressed
     bool wayland = false;
 
