@@ -465,6 +465,10 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
             ImageLib::recolor(batchPixmap, scheme.icons);
             QAction *actionBatch = menu.addAction(QIcon(batchPixmap), tr("Batch convert"));
 
+            QPixmap renamePixmap(":/res/icons/common/overlay/edit16.png");
+            ImageLib::recolor(renamePixmap, scheme.icons);
+            QAction *actionRename = menu.addAction(QIcon(renamePixmap), tr("Rename"));
+
             QPixmap trashPixmap(":/res/icons/common/menuitem/trash16.png");
             ImageLib::recolor(trashPixmap, scheme.icons);
             QIcon trashIcon(trashPixmap);
@@ -481,6 +485,8 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
                     QTimer::singleShot(0, this, [this]() { emit openSelectedRequested(); });
                 } else if (selectedAction == actionBatch) {
                     emit batchRequested();
+                } else if (selectedAction == actionRename) {
+                    actionManager->invokeAction("renameFile");
                 } else if (selectedAction == actionTrash) {
                     actionManager->invokeAction("moveToTrash");
                 } else if (selectedAction == actionDelete) {

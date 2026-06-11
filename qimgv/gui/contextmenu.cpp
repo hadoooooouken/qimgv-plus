@@ -214,6 +214,7 @@ void ContextMenu::setupUi()
     QSpacerItem *spacer3 = new QSpacerItem(20, 6, QSizePolicy::Minimum, QSizePolicy::Fixed);
     actionsLayout->addSpacerItem(spacer3);
 
+    addItem(m_rename,           "renameFile",         tr("Rename"),             ":/res/icons/common/overlay/edit16.png");
     addItem(m_trash,            "moveToTrash",        tr("Move to trash"),      ":/res/icons/common/menuitem/trash16.png");
 
     QSpacerItem *spacer4 = new QSpacerItem(20, 6, QSizePolicy::Minimum, QSizePolicy::Fixed);
@@ -336,6 +337,7 @@ void ContextMenu::setImageEntriesEnabled(bool mode)
     m_resize->setEnabled(mode);
     m_copy->setEnabled(mode);
     m_move->setEnabled(mode);
+    m_rename->setEnabled(mode);
     m_trash->setEnabled(mode);
     m_colorAdjustments->setEnabled(mode);
     m_panoramaMode->setEnabled(mode);

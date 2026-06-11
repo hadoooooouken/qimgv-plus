@@ -468,6 +468,10 @@ Total files: %3</source>
 <context>
     <name>ContextMenu</name>
     <message>
+        <source>Rename</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../../gui/contextmenu.ui" line="236"/>
         <source>Edit</source>
         <translation type="unfinished"></translation>
@@ -950,6 +954,10 @@ Total files: %3</source>
 </context>
 <context>
     <name>FolderGridView</name>
+    <message>
+        <source>Rename</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <location filename="../../gui/folderview/foldergridview.cpp" line="465"/>
         <source>Move to trash</source>

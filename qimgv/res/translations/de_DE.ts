@@ -499,6 +499,10 @@ Gesamtdateien: %3</translation>
 <context>
     <name>ContextMenu</name>
     <message>
+        <source>Rename</source>
+        <translation>Umbenennen</translation>
+    </message>
+    <message>
         <location filename="../../gui/contextmenu.cpp" line="109" />
         <source>Edit</source>
         <translation>Bearbeiten</translation>
@@ -1049,6 +1053,10 @@ Gesamtdateien: %3</translation>
 </context>
 <context>
     <name>FolderGridView</name>
+    <message>
+        <source>Rename</source>
+        <translation>Umbenennen</translation>
+    </message>
     <message>
         <location filename="../../gui/folderview/foldergridview.cpp" line="462" />
         <source>Open only selected</source>

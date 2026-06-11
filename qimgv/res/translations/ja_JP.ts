@@ -499,6 +499,10 @@ Total files: %3</source>
 <context>
     <name>ContextMenu</name>
     <message>
+        <source>Rename</source>
+        <translation>名前の変更</translation>
+    </message>
+    <message>
         <location filename="../../gui/contextmenu.cpp" line="109" />
         <source>Edit</source>
         <translation>編集</translation>
@@ -1047,6 +1051,10 @@ Total files: %3</source>
 </context>
 <context>
     <name>FolderGridView</name>
+    <message>
+        <source>Rename</source>
+        <translation>名前の変更</translation>
+    </message>
     <message>
         <location filename="../../gui/folderview/foldergridview.cpp" line="462" />
         <source>Open only selected</source>

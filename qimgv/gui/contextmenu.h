@@ -64,6 +64,7 @@ private:
     ContextMenuItem *m_print;
     ContextMenuItem *m_copy;
     ContextMenuItem *m_move;
+    ContextMenuItem *m_rename;
     ContextMenuItem *m_trash;
     ContextMenuItem *m_open;
     ContextMenuItem *m_folderView;
