@@ -533,7 +533,6 @@ void CropOverlay::mousePressEvent(QMouseEvent *event) {
 }
 
 //------------------------------------------------------------------------------
-// TODO: uneven movement with fractional scaling
 void CropOverlay::mouseMoveEvent(QMouseEvent *event) {
     if(event->buttons() & Qt::LeftButton /*&& hasSelection()*/) {
         if(cursorAction == SELECTION_START) {
@@ -652,7 +651,6 @@ void CropOverlay::updateHandlePositions() {
 }
 
 //------------------------------------------------------------------------------
-// TODO: use aspect ratio
 void CropOverlay::onSelectionOutsideChange(QRect selection) {
     if(selection.width() > 0 && selection.height() > 0) {
         QRect boundedSelection = placeInside(selection, imageRect);

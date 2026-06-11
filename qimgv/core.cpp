@@ -276,8 +276,6 @@ void Core::readSettings() {
 void Core::showGui() {
   if (mw && !mw->isVisible())
     mw->showDefault();
-  // TODO: this is unreliable.
-  // how to make it wait until a window is shown?
   qApp->processEvents();
   QTimer::singleShot(50, mw, SLOT(setupFullUi()));
 }
@@ -839,7 +837,6 @@ void Core::copyPathClipboard() {
 }
 
 // open from clipboard
-// todo: actual file paste into folderview (like filemanager)
 void Core::openFromClipboard() {
   auto cb = QApplication::clipboard();
   auto mimeData = cb->mimeData();
@@ -1169,7 +1166,6 @@ void Core::doInteractiveCopy(QString path, QString destDirectory,
     return;
   }
   // copy all contents
-  // TODO: skip symlinks? test
   QStringList entryList =
       srcDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot |
                        QDir::Hidden | QDir::System);
@@ -1248,7 +1244,6 @@ void Core::doInteractiveMove(QString path, QString destDirectory,
     return;
   }
   // move all contents
-  // TODO: skip symlinks? test
   QStringList entryList =
       srcDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot |
                        QDir::Hidden | QDir::System);

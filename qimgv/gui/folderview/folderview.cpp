@@ -459,7 +459,6 @@ void FolderView::onTreeViewTabOut() {
     // TODO: maybe add a focus change indication? a border blink or something
 }
 
-// TODO: ask what to do
 void FolderView::onDroppedInByIndex(QList<QString> paths, QModelIndex index) {
     emit moveUrlsRequested(paths, dirModel->filePath(index));
 }

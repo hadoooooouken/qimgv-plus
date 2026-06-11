@@ -69,7 +69,6 @@ void ScriptManager::runCommandDetached(QString cmd) {
     QProcess::startDetached(cmdSplit.takeAt(0), cmdSplit);
 }
 
-// TODO: what if filename contains one of the tags?
 void ScriptManager::processArguments(QStringList &cmd, std::shared_ptr<Image> img) {
     for (auto& i : cmd) {
         if(i.contains("%file%"))

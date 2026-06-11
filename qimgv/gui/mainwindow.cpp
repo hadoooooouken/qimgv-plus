@@ -226,8 +226,6 @@ void MW::closeImage() {
     viewerWidget->closeImage();
 }
 
-// todo: fix flicker somehow
-// ideally it should change img & resize in one go
 void MW::preShowResize(QSize sz) {
     auto screens = qApp->screens();
     if(this->windowState() != Qt::WindowNoState || !screens.count() || screens.count() <= currentDisplay)
@@ -1035,7 +1033,6 @@ void MW::onScaleChanged(qreal scale) {
     }
 }
 
-// TODO!!! buffer this in mw
 void MW::setExifInfo(QMap<QString, QString> info) {
     if(imageInfoOverlay)
         imageInfoOverlay->setExifInfo(info);
