@@ -106,6 +106,8 @@ bool DirectoryManager::setDirectory(QString dirPath) {
     if(dirPath.isEmpty()) {
         fileEntryVec.clear();
         dirEntryVec.clear();
+        fileLookupMap.clear();
+        dirLookupMap.clear();
         mDirectoryPath = "";
         stopFileWatcher();
         return true;
@@ -186,28 +188,16 @@ QString DirectoryManager::directoryPath() const {
 }
 
 int DirectoryManager::indexOfFile(QString filePath) const {
-    auto item = find_if(fileEntryVec.begin(), fileEntryVec.end(), [filePath](const FSEntry& e) {
-#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
-        return e.path.compare(filePath, Qt::CaseInsensitive) == 0;
-#else
-        return e.path == filePath;
-#endif
-    });
-    if(item != fileEntryVec.end())
-        return distance(fileEntryVec.begin(), item);
+    auto it = fileLookupMap.find(lookupKey(filePath));
+    if(it != fileLookupMap.end())
+        return it.value();
     return -1;
 }
 
 int DirectoryManager::indexOfDir(QString dirPath) const {
-    auto item = find_if(dirEntryVec.begin(), dirEntryVec.end(), [dirPath](const FSEntry& e) {
-#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
-        return e.path.compare(dirPath, Qt::CaseInsensitive) == 0;
-#else
-        return e.path == dirPath;
-#endif
-    });
-    if(item != dirEntryVec.end())
-        return distance(dirEntryVec.begin(), item);
+    auto it = dirLookupMap.find(lookupKey(dirPath));
+    if(it != dirLookupMap.end())
+        return it.value();
     return -1;
 }
 
@@ -329,11 +319,11 @@ bool DirectoryManager::isEmpty() const {
 }
 
 bool DirectoryManager::containsFile(QString filePath) const {
-    return (std::find(fileEntryVec.begin(), fileEntryVec.end(), filePath) != fileEntryVec.end());
+    return fileLookupMap.contains(lookupKey(filePath));
 }
 
 bool DirectoryManager::containsDir(QString dirPath) const {
-    return (std::find(dirEntryVec.begin(), dirEntryVec.end(), dirPath) != dirEntryVec.end());
+    return dirLookupMap.contains(lookupKey(dirPath));
 }
 
 // ##############################################################
@@ -438,6 +428,8 @@ void DirectoryManager::sortEntryLists() {
     else
         std::sort(dirEntryVec.begin(), dirEntryVec.end(), std::bind(&DirectoryManager::path_entry_compare, this, std::placeholders::_1, std::placeholders::_2));
     std::sort(fileEntryVec.begin(), fileEntryVec.end(), std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    rebuildFileLookupMap();
+    rebuildDirLookupMap();
 }
 
 void DirectoryManager::setSortingMode(SortingMode mode) {
@@ -472,6 +464,7 @@ bool DirectoryManager::forceInsertFileEntry(const QString &filePath) {
     
     FSEntry FSEntry(filePath, fileName, fs::file_size(stdPath, ec), fs::last_write_time(stdPath, ec), false);
     insert_sorted(fileEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    rebuildFileLookupMap();
     if(!directoryPath().isEmpty()) {
         qDebug() << "fileIns" << filePath << directoryPath();
         emit fileAdded(filePath);
@@ -484,6 +477,7 @@ void DirectoryManager::removeFileEntry(const QString &filePath) {
         return;
     int index = indexOfFile(filePath);
     fileEntryVec.erase(fileEntryVec.begin() + index);
+    rebuildFileLookupMap();
     qDebug() << "fileRem" << filePath;
     emit fileRemoved(filePath, index);
 }
@@ -516,16 +510,19 @@ void DirectoryManager::renameFileEntry(const QString &oldFilePath, const QString
     if(containsFile(newFilePath)) {
         int replaceIndex = indexOfFile(newFilePath);
         fileEntryVec.erase(fileEntryVec.begin() + replaceIndex);
+        rebuildFileLookupMap();
         emit fileRemoved(newFilePath, replaceIndex);
     }
     // remove the old one
     int oldIndex = indexOfFile(oldFilePath);
     fileEntryVec.erase(fileEntryVec.begin() + oldIndex);
+    rebuildFileLookupMap();
     // insert
     std::error_code ec;
     fs::path stdPath(toStdString(newFilePath));
     FSEntry FSEntry(newFilePath, newFileName, fs::file_size(stdPath, ec), fs::last_write_time(stdPath, ec), false);
     insert_sorted(fileEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    rebuildFileLookupMap();
     qDebug() << "fileRen" << oldFilePath << newFilePath;
     emit fileRenamed(oldFilePath, oldIndex, newFilePath, indexOfFile(newFilePath));
 }
@@ -541,6 +538,7 @@ bool DirectoryManager::insertDirEntry(const QString &dirPath) {
     FSEntry.path = dirPath;
     FSEntry.isDirectory = true;
     insert_sorted(dirEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    rebuildDirLookupMap();
     qDebug() << "dirIns" << dirPath;
     emit dirAdded(dirPath);
     return true;
@@ -551,6 +549,7 @@ void DirectoryManager::removeDirEntry(const QString &dirPath) {
         return;
     int index = indexOfDir(dirPath);
     dirEntryVec.erase(dirEntryVec.begin() + index);
+    rebuildDirLookupMap();
     qDebug() << "dirRem" << dirPath;
     emit dirRemoved(dirPath, index);
 }
@@ -563,12 +562,14 @@ void DirectoryManager::renameDirEntry(const QString &oldDirPath, const QString &
     // remove the old one
     int oldIndex = indexOfDir(oldDirPath);
     dirEntryVec.erase(dirEntryVec.begin() + oldIndex);
+    rebuildDirLookupMap();
     // insert
     FSEntry FSEntry;
     FSEntry.name = newDirName;
     FSEntry.path = newDirPath;
     FSEntry.isDirectory = true;
     insert_sorted(dirEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    rebuildDirLookupMap();
     qDebug() << "dirRen" << oldDirPath << newDirPath;
     emit dirRenamed(oldDirPath, oldIndex, newDirPath, indexOfDir(newDirPath));
 }
@@ -619,4 +620,20 @@ void DirectoryManager::onFileRenamedExternal(QString oldName, QString newName) {
 
 void DirectoryManager::onFileModifiedExternal(QString fileName) {
     updateFileEntry(watcher->watchPath() + "/" + fileName);
+}
+
+void DirectoryManager::rebuildFileLookupMap() {
+    fileLookupMap.clear();
+    fileLookupMap.reserve(fileEntryVec.size());
+    for(int i = 0; i < (int)fileEntryVec.size(); ++i) {
+        fileLookupMap.insert(lookupKey(fileEntryVec[i].path), i);
+    }
+}
+
+void DirectoryManager::rebuildDirLookupMap() {
+    dirLookupMap.clear();
+    dirLookupMap.reserve(dirEntryVec.size());
+    for(int i = 0; i < (int)dirEntryVec.size(); ++i) {
+        dirLookupMap.insert(lookupKey(dirEntryVec[i].path), i);
+    }
 }

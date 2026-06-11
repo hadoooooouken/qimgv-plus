@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QHash>
 #include <QCollator>
 #include <QElapsedTimer>
 #include <QString>
@@ -97,6 +98,18 @@ private:
     std::vector<FSEntry> fileEntryVec, dirEntryVec;
     const FSEntry defaultEntry;
     QString mDirectoryPath;
+
+    QHash<QString, int> fileLookupMap;
+    QHash<QString, int> dirLookupMap;
+    void rebuildFileLookupMap();
+    void rebuildDirLookupMap();
+    inline QString lookupKey(const QString &path) const {
+#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
+        return path.toLower();
+#else
+        return path;
+#endif
+    }
 
     DirectoryWatcher* watcher;
     void readSettings();
