@@ -139,6 +139,10 @@ FolderView::FolderView(QWidget *parent) :
     connect(togglePlacesPanelButton, &ActionButton::toggled, this, &FolderView::onPlacesPanelButtonChecked);
 
 
+    connect(dirTreeView, &TreeViewCustom::clicked, this, &FolderView::onTreeViewClicked);
+    connect(bookmarksLabel, &ClickableLabel::clicked, this, &FolderView::toggleBookmarks);
+    connect(directoriesLabel, &ClickableLabel::clicked, this, &FolderView::toggleFilesystemView);
+
     connect(dirTreeView, &TreeViewCustom::droppedIn, this, &FolderView::onDroppedInByIndex);
     connect(dirTreeView, &TreeViewCustom::tabbedOut, this, &FolderView::onTreeViewTabOut);
     connect(bookmarksWidget, &BookmarksWidget::droppedIn, this, &FolderView::moveUrlsRequested); // ask what to do via popup? copy or move
