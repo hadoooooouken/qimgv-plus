@@ -4,22 +4,6 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
   BaseColorScheme base = {-1};
   QPalette p;
   switch (name) {
-  case COLORS_SYSTEM:
-  case COLORS_CUSTOMIZED:
-    base.folderview_topbar = p.window().color();
-    base.widget = p.window().color();
-    base.widget_border = p.window().color();
-    base.folderview = p.base().color();
-    base.thumbpanel = p.base().color();
-    base.text = p.text().color();
-    base.icons = p.text().color();
-    base.accent = p.highlight().color();
-    base.scrollbar.setHsv(
-        p.highlight().color().hue(),
-        qBound(0, p.highlight().color().saturation() - 20, 240),
-        qBound(0, p.highlight().color().value() - 35, 240));
-    base.tid = static_cast<int>(name);
-    break;
   case COLORS_LIGHT: // v2, works with w10 titlebars
     base.accent = p.highlight().color();
     base.background = QColor(0xff1a1a1a);
@@ -36,49 +20,17 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.widget_border = QColor(0xffc3c3c3);
     base.tid = static_cast<int>(name);
     break;
-  case COLORS_DARKBLUE:
-    base.background = QColor(0xff18191a);
-    base.background_fullscreen = QColor(0xff18191a);
-    base.text = QColor(0xffcdd2d7);
-    base.icons = QColor(0xffbabec3);
-    base.widget = QColor(0xff232629);
-    base.widget_border = QColor(0xff26292d);
-    base.accent = p.highlight().color();
-    base.folderview = QColor(0xff232629);
-    base.folderview_topbar = QColor(0xff31363b);
-    base.thumbpanel = QColor(0xff232629);
-    base.scrollbar = QColor(0xff4f565c);
-    base.overlay_text = QColor(0xffd2d2d2);
-    base.overlay = QColor(0xff1a1a1a);
-    base.tid = static_cast<int>(name);
-    break;
-  case COLORS_BLACK:
-    base.background = QColor(0xff000000);
-    base.background_fullscreen = QColor(0xff000000);
-    base.text = QColor(0xffffffff);
-    base.icons = QColor(0xffacacac);
-    base.widget = QColor(0xff111111);
-    base.widget_border = QColor(0xff222222);
-    base.accent = p.highlight().color();
-    base.folderview = QColor(0xff111111);
-    base.folderview_topbar = QColor(0xff111111);
-    base.thumbpanel = QColor(0x80000000);
-    base.scrollbar = QColor(0xff343434);
-    base.overlay_text = QColor(0xff999999);
-    base.overlay = QColor(0xff000000);
-    base.tid = static_cast<int>(name);
-    break;
   case COLORS_DARK:
-    base.background = QColor(0xff1a1a1a);
+    base.background = QColor(0xff1f1f1f);
     base.background_fullscreen = QColor(0xff1a1a1a);
     base.text = QColor(0xffb6b6b6);
     base.icons = QColor(0xffa4a4a4);
-    base.widget = QColor(0xff252525);
+    base.widget = QColor(0xff181818);
     base.widget_border = QColor(0xff2c2c2c);
     base.accent = p.highlight().color();
-    base.folderview = QColor(0xff242424);
-    base.folderview_topbar = QColor(0xff383838);
-    base.thumbpanel = QColor(0xff242424);
+    base.folderview = QColor(0xff1f1f1f);
+    base.folderview_topbar = QColor(0xff181818);
+    base.thumbpanel = QColor(0xff1f1f1f);
     base.scrollbar = QColor(0xff5a5a5a);
     base.overlay_text = QColor(0xffd2d2d2);
     base.overlay = QColor(0xff1a1a1a);

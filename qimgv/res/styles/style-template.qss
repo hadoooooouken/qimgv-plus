@@ -348,7 +348,7 @@ SidePanel QDoubleSpinBox
     background-color: %button%;
     border: 2px solid %button%;
     border-radius: 3px;
-    padding: 2 0 2 0;
+    padding: 2px 0px 2px 0px;
     min-height: 20px;
 }
 
@@ -697,7 +697,7 @@ ContextMenu QLabel {
 }
 
 [accessibleName="MenuItem"] QLabel {
-    padding: 6 0 7 0;
+    padding: 6px 0px 7px 0px;
 }
 
 [accessibleName="MenuItem"] QLabel:disabled {

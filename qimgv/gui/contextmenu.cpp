@@ -353,10 +353,11 @@ void ContextMenu::showAt(QPoint pos)
 {
     fillOpenWithMenu();
     switchToMainPage();
+    show();
+    adjustSize();
     QRect geom = geometry();
     geom.moveTopLeft(pos);
     setGeometry(geom);
-    show();
     raise();
 }
 
