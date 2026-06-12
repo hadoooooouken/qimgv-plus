@@ -176,6 +176,5 @@ QSize ThumbnailStrip::itemSize() {
 void ThumbnailStrip::resizeEvent(QResizeEvent *event) {
     ThumbnailView::resizeEvent(event);
     fitSceneToContents();
-    if(event->oldSize().width() < width())
-        loadVisibleThumbnailsDelayed();
+    loadVisibleThumbnailsDelayed();
 }

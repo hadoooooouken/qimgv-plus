@@ -22,6 +22,7 @@ void Thumbnailer::waitForDone() {
 
 void Thumbnailer::clearTasks() {
     pool->clear();
+    queuedTasks.clear();
 }
 
 std::shared_ptr<Thumbnail> Thumbnailer::getThumbnail(QString filePath, int size) {
@@ -29,11 +30,12 @@ std::shared_ptr<Thumbnail> Thumbnailer::getThumbnail(QString filePath, int size)
 }
 
 void Thumbnailer::getThumbnailAsync(QString path, int size, bool crop, bool force) {
-    if(!runningTasks.contains(path, size))
+    if(!runningTasks.contains(path, size) && !queuedTasks.contains(path, size))
         startThumbnailerThread(path, size, crop, force);
 }
 
 void Thumbnailer::startThumbnailerThread(QString filePath, int size, bool crop, bool force) {
+    queuedTasks.insert(filePath, size);
     auto runnable = new ThumbnailerRunnable(settings->useThumbnailCache() ? cache : nullptr, filePath, size, crop, force);
     connect(runnable, &ThumbnailerRunnable::taskStart, this, &Thumbnailer::onTaskStart);
     connect(runnable, &ThumbnailerRunnable::taskEnd, this, &Thumbnailer::onTaskEnd);
@@ -43,6 +45,7 @@ void Thumbnailer::startThumbnailerThread(QString filePath, int size, bool crop, 
 
 void Thumbnailer::onTaskStart(QString filePath, int size) {
     runningTasks.insert(filePath, size);
+    queuedTasks.remove(filePath, size);
 }
 
 void Thumbnailer::onTaskEnd(std::shared_ptr<Thumbnail> thumbnail, QString filePath) {

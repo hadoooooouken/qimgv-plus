@@ -24,6 +24,7 @@ void DirectoryPresenter::unsetModel() {
              &DirectoryPresenter::onDirRenamed);
   model = nullptr;
   dirThumbnailTasks.clear();
+  thumbnailer.clearTasks();
   // also empty view?
 }
 
@@ -84,6 +85,7 @@ void DirectoryPresenter::populateView() {
   if (!model || !view)
     return;
   dirThumbnailTasks.clear();
+  thumbnailer.clearTasks();
   view->populate(mShowDirs ? model->totalCount() : model->fileCount());
   view->setDirCount(mShowDirs ? model->dirCount() : 0);
   selectAndFocus(0);
@@ -207,9 +209,6 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
                                             bool crop, bool force) {
   if (!view || !model)
     return;
-  if (!mShowDirs) {
-    thumbnailer.clearTasks();
-  }
   if (!mShowDirs) {
     for (int i : indexes)
       thumbnailer.getThumbnailAsync(model->filePathAt(i), size, crop, force);

@@ -23,6 +23,7 @@ private:
     QThreadPool *pool;
     void startThumbnailerThread(QString filePath, int size, bool crop, bool force);
     QMultiMap<QString, int> runningTasks;
+    QMultiMap<QString, int> queuedTasks;
 
 private slots:
     void onTaskStart(QString filePath, int size);
