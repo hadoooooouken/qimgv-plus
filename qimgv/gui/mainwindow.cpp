@@ -415,6 +415,16 @@ void MW::toggleScalingFilter() {
     }
 }
 
+void MW::cycleScalingFilter() {
+    ScalingFilter currentFilter = viewerWidget->scalingFilter();
+    int nextFilterInt = static_cast<int>(currentFilter) + 1;
+    if (nextFilterInt > static_cast<int>(QI_FILTER_SMART_GPU)) {
+        nextFilterInt = 0;
+    }
+    ScalingFilter nextFilter = static_cast<ScalingFilter>(nextFilterInt);
+    setFilter(nextFilter);
+}
+
 void MW::setFilterNearest() {
     showMessage(tr("Filter: ") + tr("Nearest"), 600);
     viewerWidget->setFilterNearest();
@@ -448,6 +458,7 @@ void MW::setFilter(ScalingFilter filter) {
             break;
     }
     showMessage(tr("Filter: ") + filterName, 600);
+    settings->setScalingFilter(filter);
     viewerWidget->setScalingFilter(filter);
 }
 

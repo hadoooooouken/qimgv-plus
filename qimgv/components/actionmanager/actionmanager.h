@@ -106,6 +106,7 @@ signals:
     void toggleImageInfo();
     void toggleShuffle();
     void toggleScalingFilter();
+    void cycleScalingFilter();
     void showInDirectory();
     void toggleSlideshow();
     void discardEdits();

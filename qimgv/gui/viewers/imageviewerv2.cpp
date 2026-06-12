@@ -544,6 +544,7 @@ void ImageViewerV2::setScalingFilter(ScalingFilter filter) {
 
   if (mScalingFilter == QI_FILTER_NEAREST || mScalingFilter == QI_FILTER_CAS || mScalingFilter == QI_FILTER_SMART_GPU)
     swapToOriginalPixmap();
+  updateCasSettings();
   requestScaling();
 }
 
@@ -554,20 +555,11 @@ void ImageViewerV2::setLoopPlayback(bool mode) {
 }
 
 void ImageViewerV2::setFilterNearest() {
-  if (mScalingFilter != QI_FILTER_NEAREST) {
-    mScalingFilter = QI_FILTER_NEAREST;
-    pixmapItem.setTransformationMode(selectTransformationMode());
-    swapToOriginalPixmap();
-    requestScaling();
-  }
+  setScalingFilter(QI_FILTER_NEAREST);
 }
 
 void ImageViewerV2::setFilterBilinear() {
-  if (mScalingFilter != QI_FILTER_BILINEAR) {
-    mScalingFilter = QI_FILTER_BILINEAR;
-    pixmapItem.setTransformationMode(selectTransformationMode());
-    requestScaling();
-  }
+  setScalingFilter(QI_FILTER_BILINEAR);
 }
 
 // returns a mode based on current zoom level and a bunch of toggles
@@ -1317,6 +1309,9 @@ void ImageViewerV2::updateCasSettings() {
     pixmapItem.setCasSettings(0.0f, 0.0f);
     pixmapItemScaled.setCasSettings(0.0f, 0.0f);
     pixmapItemCrop.setCasSettings(0.0f, 0.0f);
+  }
+  if (viewport()) {
+    viewport()->update();
   }
 }
 

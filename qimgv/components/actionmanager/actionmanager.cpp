@@ -99,6 +99,7 @@ void ActionManager::initDefaults() {
   actionManager->defaults.insert(InputMap::keyNameCtrl() + "+V", "pasteFile");
   actionManager->defaults.insert("P", "openSettings");
   actionManager->defaults.insert("N", "toggleScalingFilter");
+  actionManager->defaults.insert(InputMap::keyNameShift() + "+N", "cycleScalingFilter");
   actionManager->defaults.insert(InputMap::keyNameShift() + "+P",
                                  "togglePanorama");
 #ifdef USE_UPSCAYL
@@ -240,6 +241,13 @@ void ActionManager::readShortcuts() {
   // we bind it to "N" by default.
   if (shortcuts.key("toggleScalingFilter", "").isEmpty() && !shortcuts.contains("N")) {
     shortcuts.insert("N", "toggleScalingFilter");
+  }
+
+  // If the user doesn't have a shortcut for cycleScalingFilter, and "Shift+N" is not bound to anything else,
+  // we bind it to "Shift+N" by default.
+  QString shiftN = InputMap::keyNameShift() + "+N";
+  if (shortcuts.key("cycleScalingFilter", "").isEmpty() && !shortcuts.contains(shiftN)) {
+    shortcuts.insert(shiftN, "cycleScalingFilter");
   }
 
   // If the user doesn't have a shortcut for copyViewportClipboard, and Shift+C is not bound to anything else,

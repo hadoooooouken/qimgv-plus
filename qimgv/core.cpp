@@ -544,6 +544,8 @@ void Core::initActions() {
           &Core::toggleShuffle);
   connect(actionManager, &ActionManager::toggleScalingFilter, mw,
           &MW::toggleScalingFilter);
+  connect(actionManager, &ActionManager::cycleScalingFilter, mw,
+          &MW::cycleScalingFilter);
 #ifdef USE_UPSCAYL
   connect(actionManager, &ActionManager::toggleUpscayl, mw,
           &MW::toggleUpscayl);
