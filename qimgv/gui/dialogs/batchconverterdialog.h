@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include "components/thumbnailer/thumbnailer.h"
 #include "settings.h"
 #include "sourcecontainers/thumbnail.h"
@@ -172,8 +173,8 @@ private:
     int processedFiles = 0;
     int successCount = 0;
     int failedCount = 0;
-    bool isConverting = false;
-    bool isCancelled = false;
+    std::atomic<bool> isConverting{false};
+    std::atomic<bool> isCancelled{false};
 
     QSize originalSize, targetSize, desktopSize;
     int lastEdited = 0;

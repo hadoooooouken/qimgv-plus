@@ -1271,8 +1271,20 @@ void BatchWorkerTask::run() {
         if (dialog->sharedResrgan) {
             QImage imgRgba = processedImg.convertToFormat(QImage::Format_ARGB32);
             int inW = imgRgba.width(), inH = imgRgba.height();
-            int outW = inW * 4, outH = inH * 4;
+            int scale = dialog->sharedResrgan->scale;
+            if (scale <= 0) scale = 4;
+            int outW = inW * scale;
+            int outH = inH * scale;
             QImage outImg(outW, outH, QImage::Format_ARGB32);
+            if (outImg.isNull()) {
+                if (dialog->isCancelled) return;
+                QMetaObject::invokeMethod(
+                    dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
+                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
+                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Out of memory")),
+                    Q_ARG(bool, false));
+                return;
+            }
             if (dialog->sharedResrgan->processPixels(
                     imgRgba.constBits(), inW, inH, outImg.bits(), outW, outH) == 0) {
                 processedImg = outImg;
