@@ -148,9 +148,11 @@ void FilterPixmapItem::initShader() {
 
 void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     QTransform transform = painter->combinedTransform();
-    double scaleX = transform.m11();
-    double scaleY = transform.m22();
-    bool isOneToOne = (qAbs(scaleX - 1.0) < 0.001 && qAbs(scaleY - 1.0) < 0.001);
+    double transScaleX = std::sqrt(transform.m11() * transform.m11() + transform.m12() * transform.m12());
+    double transScaleY = std::sqrt(transform.m21() * transform.m21() + transform.m22() * transform.m22());
+    if (transScaleX < 0.001) transScaleX = 1.0;
+    if (transScaleY < 0.001) transScaleY = 1.0;
+    bool isOneToOne = (qAbs(transScaleX - 1.0) < 0.001 && qAbs(transScaleY - 1.0) < 0.001);
     float activeCasSharpening = (isOneToOne && !settings->applyFilterAt100()) ? 0.0f : mCasSharpening;
 
     // 1. Fallback to default QGraphicsPixmapItem paint if there are no adjustments
@@ -191,7 +193,7 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     // Use trilinear filtering (MipMapLinear) for downscaling
     QOpenGLTexture::Filter minFilter = filter;
-    if (filter == QOpenGLTexture::Linear && (scaleX < 0.999 || scaleY < 0.999)) {
+    if (filter == QOpenGLTexture::Linear && (transScaleX < 0.999 || transScaleY < 0.999)) {
         minFilter = QOpenGLTexture::LinearMipMapLinear;
     }
     mTexture->setMinificationFilter(minFilter);
@@ -217,7 +219,7 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     mProgram->setUniformValue("exposure", mExposure);
     mProgram->setUniformValue("temperature", mTemperature);
     mProgram->setUniformValue("tint", mTint);
-    mProgram->setUniformValue("pixelSize", QVector2D(1.0f / currentPixmap.width(), 1.0f / currentPixmap.height()));
+    mProgram->setUniformValue("pixelSize", QVector2D(1.0f / (currentPixmap.width() * transScaleX), 1.0f / (currentPixmap.height() * transScaleY)));
     mProgram->setUniformValue("casContrast", mCasContrast);
     mProgram->setUniformValue("casSharpening", activeCasSharpening);
     
