@@ -581,77 +581,186 @@ QImage *ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
   }
 }
 
+ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
+  // Helper to multiply A and B (3x3 matrices), storing result in C
+  auto multiply = [](const float A[3][3], const float B[3][3], float C[3][3]) {
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        C[i][j] = A[i][0] * B[0][j] + A[i][1] * B[1][j] + A[i][2] * B[2][j];
+      }
+    }
+  };
+
+  // 1 & 2. White balance (Temperature & Tint) & Exposure
+  float factor = std::pow(2.0f, exposure);
+  float w_r = (1.0f + temperature + tint * 0.5f) * factor;
+  float w_g = (1.0f - tint) * factor;
+  float w_b = (1.0f - temperature + tint * 0.5f) * factor;
+
+  float M_current[3][3] = {
+    {w_r,  0.0f, 0.0f},
+    {0.0f, w_g,  0.0f},
+    {0.0f, 0.0f, w_b }
+  };
+
+  // 3. Hue rotate
+  if (std::abs(hue) > 0.001f) {
+    float hueRad = hue * 3.14159265358979323846f / 180.0f;
+    float cosAngle = std::cos(hueRad);
+    float sinAngle = std::sin(hueRad);
+    float k = 0.57735f;
+    float cosInv = 1.0f - cosAngle;
+
+    float M_hue[3][3] = {
+      { cosAngle + k * k * cosInv,      -k * sinAngle + k * k * cosInv,  k * sinAngle + k * k * cosInv },
+      { k * sinAngle + k * k * cosInv,  cosAngle + k * k * cosInv,       -k * sinAngle + k * k * cosInv },
+      { -k * sinAngle + k * k * cosInv, k * sinAngle + k * k * cosInv,   cosAngle + k * k * cosInv }
+    };
+
+    float M_temp[3][3];
+    multiply(M_hue, M_current, M_temp);
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) M_current[i][j] = M_temp[i][j];
+    }
+  }
+
+  // 4. Saturation
+  if (std::abs(saturation - 1.0f) > 0.001f) {
+    float rWeight = 0.2126f * (1.0f - saturation);
+    float gWeight = 0.7152f * (1.0f - saturation);
+    float bWeight = 0.0722f * (1.0f - saturation);
+
+    float M_sat[3][3] = {
+      { saturation + rWeight, gWeight,                bWeight },
+      { rWeight,              saturation + gWeight,   bWeight },
+      { rWeight,              gWeight,                saturation + bWeight }
+    };
+
+    float M_temp[3][3];
+    multiply(M_sat, M_current, M_temp);
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) M_current[i][j] = M_temp[i][j];
+    }
+  }
+
+  // 5 & 6. Contrast & Brightness
+  ColorMatrix result;
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      result.m[i][j] = M_current[i][j] * contrast;
+    }
+  }
+  result.offset = brightness * contrast + 0.5f * (1.0f - contrast);
+
+  return result;
+}
+
 QImage *ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
   if (!source)
     return new QImage();
 
   QImage *dst = new QImage(source->convertToFormat(QImage::Format_ARGB32));
-  float hueRad = hue * 3.14159265358979323846f / 180.0f;
-  float cosAngle = std::cos(hueRad);
-  float sinAngle = std::sin(hueRad);
-  float k = 0.57735f;
+  ColorMatrix cm = getColorAdjustmentMatrix(exposure, contrast, brightness, temperature, tint, saturation, hue);
 
-  for (int y = 0; y < dst->height(); ++y) {
+  int height = dst->height();
+  int width = dst->width();
+
+  // Set up AVX2 constants
+  __m256i mask_b_i = _mm256_set1_epi32(0x000000FF);
+  __m256i mask_g_i = _mm256_set1_epi32(0x0000FF00);
+  __m256i mask_r_i = _mm256_set1_epi32(0x00FF0000);
+  __m256i mask_a_i = _mm256_set1_epi32(0xFF000000);
+
+  __m256 inv255 = _mm256_set1_ps(1.0f / 255.0f);
+  __m256 scale255 = _mm256_set1_ps(255.0f);
+  __m256 round05 = _mm256_set1_ps(0.5f);
+  __m256 v_zero = _mm256_setzero_ps();
+  __m256 v_255 = _mm256_set1_ps(255.0f);
+
+  __m256 v_m00 = _mm256_set1_ps(cm.m[0][0]);
+  __m256 v_m01 = _mm256_set1_ps(cm.m[0][1]);
+  __m256 v_m02 = _mm256_set1_ps(cm.m[0][2]);
+
+  __m256 v_m10 = _mm256_set1_ps(cm.m[1][0]);
+  __m256 v_m11 = _mm256_set1_ps(cm.m[1][1]);
+  __m256 v_m12 = _mm256_set1_ps(cm.m[1][2]);
+
+  __m256 v_m20 = _mm256_set1_ps(cm.m[2][0]);
+  __m256 v_m21 = _mm256_set1_ps(cm.m[2][1]);
+  __m256 v_m22 = _mm256_set1_ps(cm.m[2][2]);
+
+  __m256 v_offset = _mm256_set1_ps(cm.offset);
+
+  for (int y = 0; y < height; ++y) {
     QRgb *line = reinterpret_cast<QRgb*>(dst->scanLine(y));
-    for (int x = 0; x < dst->width(); ++x) {
+    int x = 0;
+    int avx_end = width - 8;
+
+    for (; x <= avx_end; x += 8) {
+      __m256i pix = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&line[x]));
+
+      // Extract channels as 32-bit integers
+      __m256i b_i = _mm256_and_si256(pix, mask_b_i);
+      __m256i g_i = _mm256_srli_epi32(_mm256_and_si256(pix, mask_g_i), 8);
+      __m256i r_i = _mm256_srli_epi32(_mm256_and_si256(pix, mask_r_i), 16);
+      __m256i a_i = _mm256_and_si256(pix, mask_a_i);
+
+      // Convert to float
+      __m256 b_f = _mm256_cvtepi32_ps(b_i);
+      __m256 g_f = _mm256_cvtepi32_ps(g_i);
+      __m256 r_f = _mm256_cvtepi32_ps(r_i);
+
+      // Normalize to [0.0, 1.0]
+      b_f = _mm256_mul_ps(b_f, inv255);
+      g_f = _mm256_mul_ps(g_f, inv255);
+      r_f = _mm256_mul_ps(r_f, inv255);
+
+      // Apply matrix: out = M * in + offset
+      __m256 out_r = _mm256_fmadd_ps(v_m00, r_f, _mm256_fmadd_ps(v_m01, g_f, _mm256_fmadd_ps(v_m02, b_f, v_offset)));
+      __m256 out_g = _mm256_fmadd_ps(v_m10, r_f, _mm256_fmadd_ps(v_m11, g_f, _mm256_fmadd_ps(v_m12, b_f, v_offset)));
+      __m256 out_b = _mm256_fmadd_ps(v_m20, r_f, _mm256_fmadd_ps(v_m21, g_f, _mm256_fmadd_ps(v_m22, b_f, v_offset)));
+
+      // Scale to [0.0, 255.0] and add 0.5 for rounding
+      out_r = _mm256_fmadd_ps(out_r, scale255, round05);
+      out_g = _mm256_fmadd_ps(out_g, scale255, round05);
+      out_b = _mm256_fmadd_ps(out_b, scale255, round05);
+
+      // Clamp to [0, 255]
+      out_r = _mm256_min_ps(_mm256_max_ps(out_r, v_zero), v_255);
+      out_g = _mm256_min_ps(_mm256_max_ps(out_g, v_zero), v_255);
+      out_b = _mm256_min_ps(_mm256_max_ps(out_b, v_zero), v_255);
+
+      // Convert back to integers
+      __m256i out_r_i = _mm256_cvtps_epi32(out_r);
+      __m256i out_g_i = _mm256_cvtps_epi32(out_g);
+      __m256i out_b_i = _mm256_cvtps_epi32(out_b);
+
+      // Repack channels into ARGB format
+      __m256i out_r_shifted = _mm256_slli_epi32(out_r_i, 16);
+      __m256i out_g_shifted = _mm256_slli_epi32(out_g_i, 8);
+
+      __m256i out_pix = _mm256_or_si256(a_i, _mm256_or_si256(out_r_shifted, _mm256_or_si256(out_g_shifted, out_b_i)));
+
+      _mm256_storeu_si256(reinterpret_cast<__m256i*>(&line[x]), out_pix);
+    }
+
+    // Scalar fallback loop for remaining pixels
+    for (; x < width; ++x) {
       QRgb pixel = line[x];
-      int a = qAlpha(pixel);
-      float r = qRed(pixel) / 255.0f;
-      float g = qGreen(pixel) / 255.0f;
-      float b = qBlue(pixel) / 255.0f;
+      unsigned int a = pixel & 0xFF000000;
+      float r = ((pixel >> 16) & 0xFF) / 255.0f;
+      float g = ((pixel >> 8) & 0xFF) / 255.0f;
+      float b = (pixel & 0xFF) / 255.0f;
 
-      // 1. White balance (Temperature & Tint)
-      if (std::abs(temperature) > 0.001f || std::abs(tint) > 0.001f) {
-        r *= (1.0f + temperature + tint * 0.5f);
-        g *= (1.0f - tint);
-        b *= (1.0f - temperature + tint * 0.5f);
-      }
+      float out_r = cm.m[0][0] * r + cm.m[0][1] * g + cm.m[0][2] * b + cm.offset;
+      float out_g = cm.m[1][0] * r + cm.m[1][1] * g + cm.m[1][2] * b + cm.offset;
+      float out_b = cm.m[2][0] * r + cm.m[2][1] * g + cm.m[2][2] * b + cm.offset;
 
-      // 2. Exposure
-      if (std::abs(exposure) > 0.001f) {
-        float factor = std::pow(2.0f, exposure);
-        r *= factor;
-        g *= factor;
-        b *= factor;
-      }
+      int nr = std::clamp(static_cast<int>(out_r * 255.0f + 0.5f), 0, 255);
+      int ng = std::clamp(static_cast<int>(out_g * 255.0f + 0.5f), 0, 255);
+      int nb = std::clamp(static_cast<int>(out_b * 255.0f + 0.5f), 0, 255);
 
-      // 3. Hue rotate
-      if (std::abs(hue) > 0.001f) {
-        float cx = k * b - k * g;
-        float cy = k * r - k * b;
-        float cz = k * g - k * r;
-        float dot = k * r + k * g + k * b;
-
-        float nr = r * cosAngle + cx * sinAngle + k * dot * (1.0f - cosAngle);
-        float ng = g * cosAngle + cy * sinAngle + k * dot * (1.0f - cosAngle);
-        float nb = b * cosAngle + cz * sinAngle + k * dot * (1.0f - cosAngle);
-        r = nr; g = ng; b = nb;
-      }
-
-      // 4. Saturation
-      if (std::abs(saturation - 1.0f) > 0.001f) {
-        float gray = 0.2126f * r + 0.7152f * g + 0.0722f * b;
-        r = gray + (r - gray) * saturation;
-        g = gray + (g - gray) * saturation;
-        b = gray + (b - gray) * saturation;
-      }
-
-      // 5. Brightness
-      r += brightness;
-      g += brightness;
-      b += brightness;
-
-      // 6. Contrast
-      r = (r - 0.5f) * contrast + 0.5f;
-      g = (g - 0.5f) * contrast + 0.5f;
-      b = (b - 0.5f) * contrast + 0.5f;
-
-      // Clamp and convert back
-      int nr = qBound(0, static_cast<int>(r * 255.0f + 0.5f), 255);
-      int ng = qBound(0, static_cast<int>(g * 255.0f + 0.5f), 255);
-      int nb = qBound(0, static_cast<int>(b * 255.0f + 0.5f), 255);
-
-      line[x] = qRgba(nr, ng, nb, a);
+      line[x] = a | (nr << 16) | (ng << 8) | nb;
     }
   }
 

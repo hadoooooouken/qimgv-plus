@@ -1,8 +1,10 @@
 #include "filterpixmapitem.h"
 #include "settings.h"
+#include "utils/imagelib.h"
 #include <QPainter>
 #include <QOpenGLWidget>
 #include <QMatrix4x4>
+#include <QMatrix3x3>
 #include <QOpenGLContext>
 #include <cmath>
 
@@ -64,25 +66,14 @@ void FilterPixmapItem::initShader() {
     const char *fsrc =
         "varying highp vec2 texCoord;\n"
         "uniform sampler2D tex;\n"
-        "uniform highp float brightness;\n"
-        "uniform highp float contrast;\n"
-        "uniform highp float saturation;\n"
-        "uniform highp float hue;\n"
-        "uniform highp float exposure;\n"
-        "uniform highp float temperature;\n"
-        "uniform highp float tint;\n"
+        "uniform highp mat3 colorMatrix;\n"
+        "uniform highp float colorOffset;\n"
         "\n"
         "uniform highp vec2 pixelSize;\n"
         "uniform highp float casContrast;\n"
         "uniform highp float casSharpening;\n"
         "uniform int sharpenMode;\n"
         "uniform int isDownscaling;\n"
-        "\n"
-        "vec3 hueRotate(vec3 color, float angle) {\n"
-        "    vec3 k = vec3(0.57735, 0.57735, 0.57735);\n"
-        "    float cosAngle = cos(angle);\n"
-        "    return color * cosAngle + cross(k, color) * sin(angle) + k * dot(k, color) * (1.0 - cosAngle);\n"
-        "}\n"
         "\n"
         "vec3 applyCAS(vec2 uv) {\n"
         "    vec2 offX = vec2(pixelSize.x, 0.0);\n"
@@ -159,24 +150,8 @@ void FilterPixmapItem::initShader() {
         "    } else if (sharpenMode == 4) {\n"
         "        rgb = applySmartSharpenGPU(texCoord);\n"
         "    }\n"
-        "    if (abs(temperature) > 0.001 || abs(tint) > 0.001) {\n"
-        "        rgb.r *= (1.0 + temperature + tint * 0.5);\n"
-        "        rgb.g *= (1.0 - tint);\n"
-        "        rgb.b *= (1.0 - temperature + tint * 0.5);\n"
-        "    }\n"
-        "    if (abs(exposure) > 0.001) {\n"
-        "        rgb *= pow(2.0, exposure);\n"
-        "    }\n"
-        "    if (abs(hue) > 0.001) {\n"
-        "        rgb = hueRotate(rgb, hue);\n"
-        "    }\n"
-        "    if (abs(saturation - 1.0) > 0.001) {\n"
-        "        highp float gray = dot(rgb, vec3(0.2126, 0.7152, 0.0722));\n"
-        "        rgb = mix(vec3(gray), rgb, saturation);\n"
-        "    }\n"
-        "    rgb += vec3(brightness);\n"
-        "    rgb = (rgb - vec3(0.5)) * contrast + vec3(0.5);\n"
-        "    gl_FragColor = vec4(clamp(rgb, 0.0, 1.0), color.a);\n"
+        "    rgb = clamp(colorMatrix * rgb + vec3(colorOffset), 0.0, 1.0);\n"
+        "    gl_FragColor = vec4(rgb, color.a);\n"
         "}\n";
 
     mProgram->addShaderFromSourceCode(QOpenGLShader::Fragment, fsrc);
@@ -260,21 +235,21 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     mProgram->setUniformValue("matrix", matrix);
     mProgram->setUniformValue("tex", 0);
-    mProgram->setUniformValue("brightness", mBrightness);
-    mProgram->setUniformValue("contrast", mContrast);
-    mProgram->setUniformValue("saturation", mSaturation);
-    mProgram->setUniformValue("exposure", mExposure);
-    mProgram->setUniformValue("temperature", mTemperature);
-    mProgram->setUniformValue("tint", mTint);
+    ColorMatrix cm = ImageLib::getColorAdjustmentMatrix(mExposure, mContrast, mBrightness, mTemperature, mTint, mSaturation, mHue);
+    float cmData[9] = {
+        cm.m[0][0], cm.m[0][1], cm.m[0][2],
+        cm.m[1][0], cm.m[1][1], cm.m[1][2],
+        cm.m[2][0], cm.m[2][1], cm.m[2][2]
+    };
+    QMatrix3x3 colorMatrix(cmData);
+
+    mProgram->setUniformValue("colorMatrix", colorMatrix);
+    mProgram->setUniformValue("colorOffset", cm.offset);
     mProgram->setUniformValue("pixelSize", QVector2D(1.0f / (currentPixmap.width() * transScaleX), 1.0f / (currentPixmap.height() * transScaleY)));
     mProgram->setUniformValue("casContrast", mCasContrast);
     mProgram->setUniformValue("casSharpening", activeCasSharpening);
     mProgram->setUniformValue("sharpenMode", activeSmartGpu ? (int)QI_FILTER_SMART_GPU : (int)mScalingFilter);
     mProgram->setUniformValue("isDownscaling", (transScaleX < 0.999) ? 1 : 0);
-    
-    // Convert hue degrees to radians
-    float hueRad = (float)(mHue * M_PI / 180.0);
-    mProgram->setUniformValue("hue", hueRad);
 
     float x1 = offset().x();
     float y1 = offset().y();

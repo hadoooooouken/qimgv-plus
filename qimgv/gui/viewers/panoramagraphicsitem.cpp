@@ -1,7 +1,9 @@
 #include "panoramagraphicsitem.h"
+#include "utils/imagelib.h"
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 #include <QOpenGLWidget>
+#include <QMatrix3x3>
 #include <cmath>
 
 #ifndef M_PI
@@ -124,16 +126,16 @@ void PanoramaGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsIt
     mProgram->setUniformValue("fov", fovRad);
     mProgram->setUniformValue("aspect", aspect);
 
-    mProgram->setUniformValue("brightness", mBrightness);
-    mProgram->setUniformValue("contrast", mContrast);
-    mProgram->setUniformValue("saturation", mSaturation);
-    mProgram->setUniformValue("exposure", mExposure);
-    mProgram->setUniformValue("temperature", mTemperature);
-    mProgram->setUniformValue("tint", mTint);
-    
-    // Convert hue degrees to radians
-    float hueRad = (float)(mHue * M_PI / 180.0);
-    mProgram->setUniformValue("hue", hueRad);
+    ColorMatrix cm = ImageLib::getColorAdjustmentMatrix(mExposure, mContrast, mBrightness, mTemperature, mTint, mSaturation, mHue);
+    float cmData[9] = {
+        cm.m[0][0], cm.m[0][1], cm.m[0][2],
+        cm.m[1][0], cm.m[1][1], cm.m[1][2],
+        cm.m[2][0], cm.m[2][1], cm.m[2][2]
+    };
+    QMatrix3x3 colorMatrix(cmData);
+
+    mProgram->setUniformValue("colorMatrix", colorMatrix);
+    mProgram->setUniformValue("colorOffset", cm.offset);
 
     // Use NDC coordinates directly to fill the viewport
     GLfloat vertices[] = {

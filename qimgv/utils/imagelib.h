@@ -10,6 +10,12 @@
 #include "settings.h"
 
 
+struct ColorMatrix {
+    float m[3][3];
+    float offset;
+};
+
+
 class ImageLib {
     public:
         static QImage *rotatedRaw(const QImage *src, int grad);
@@ -36,5 +42,7 @@ class ImageLib {
         static std::unique_ptr<const QImage> exifRotated(std::unique_ptr<const QImage> src, int orientation);
         static std::unique_ptr<QImage> exifRotated(std::unique_ptr<QImage> src, int orientation);
         static void recolor(QPixmap &pixmap, QColor color);
+        static ColorMatrix getColorAdjustmentMatrix(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
         static QImage *applyColorAdjustments(std::shared_ptr<const QImage> source, float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
 };
+
