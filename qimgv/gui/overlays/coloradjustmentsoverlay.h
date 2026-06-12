@@ -1,11 +1,11 @@
 #pragma once
 
-#include "gui/customwidgets/overlaywidget.h"
+#include "draggableslideroverlay.h"
 
 class QSlider;
 class QLabel;
 
-class ColorAdjustmentsOverlay : public OverlayWidget {
+class ColorAdjustmentsOverlay : public DraggableSliderOverlay {
     Q_OBJECT
 
 public:
@@ -20,8 +20,6 @@ public:
     float temperature() const;
     float tint() const;
 
-    void setCustomPosition(const QPoint &globalPos);
-
 signals:
     void adjustmentsChanged(float exposure, float contrast, float brightness,
                             float temperature, float tint, float saturation, float hue);
@@ -34,10 +32,6 @@ public slots:
     void resetAdjustments();
 
 protected:
-    void recalculateGeometry() override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 private slots:
@@ -61,10 +55,4 @@ private:
     QLabel  *m_temperatureValLabel = nullptr;
     QSlider *m_tintSlider = nullptr;
     QLabel  *m_tintValLabel = nullptr;
-
-    QPoint customGlobalPos;
-    bool hasCustomPos = false;
-    QPoint dragStartPosition;
-    QPoint dragStartWidgetPosition;
-    bool isDragging = false;
 };
