@@ -592,7 +592,7 @@ void ImageViewerV2::requestScaling() {
   bool isAt100 = std::abs(pixmapItem.scale() - 1.0) < 0.001;
   if (mSvgMode || !pixmap || (isAt100 && !settings->applyFilterAt100()) ||
       (mScalingFilter == QI_FILTER_CAS && !(settings->useUpscayl() && pixmapItem.scale() > 1.0)) ||
-      (mScalingFilter == QI_FILTER_SMART_GPU) ||
+      (mScalingFilter == QI_FILTER_SMART_GPU && !(settings->useUpscayl() && pixmapItem.scale() > 1.0)) ||
       movie || (zoomTimeLine && zoomTimeLine->state() == QTimeLine::Running) ||
       mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
       mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM) {
