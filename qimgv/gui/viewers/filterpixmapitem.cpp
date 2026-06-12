@@ -39,6 +39,11 @@ void FilterPixmapItem::setCasSettings(float sharpening, float contrast) {
     update();
 }
 
+void FilterPixmapItem::setScalingFilter(ScalingFilter filter) {
+    mScalingFilter = filter;
+    update();
+}
+
 void FilterPixmapItem::initShader() {
     if (mInitialized) return;
     initializeOpenGLFunctions();
@@ -70,6 +75,8 @@ void FilterPixmapItem::initShader() {
         "uniform highp vec2 pixelSize;\n"
         "uniform highp float casContrast;\n"
         "uniform highp float casSharpening;\n"
+        "uniform int sharpenMode;\n"
+        "uniform int isDownscaling;\n"
         "\n"
         "vec3 hueRotate(vec3 color, float angle) {\n"
         "    vec3 k = vec3(0.57735, 0.57735, 0.57735);\n"
@@ -114,9 +121,44 @@ void FilterPixmapItem::initShader() {
         "    return mix(e, outColor, casSharpening);\n"
         "}\n"
         "\n"
+        "vec3 applySmartSharpenGPU(vec2 uv) {\n"
+        "    if (isDownscaling == 1) {\n"
+        "        vec2 offX = vec2(pixelSize.x, 0.0);\n"
+        "        vec2 offY = vec2(0.0, pixelSize.y);\n"
+        "        float bias = -0.7;\n"
+        "        vec3 center = texture2D(tex, uv, bias).rgb;\n"
+        "        vec3 t1 = texture2D(tex, uv - 1.2 * offY, bias).rgb;\n"
+        "        vec3 b1 = texture2D(tex, uv + 1.2 * offY, bias).rgb;\n"
+        "        vec3 l1 = texture2D(tex, uv - 1.2 * offX, bias).rgb;\n"
+        "        vec3 r1 = texture2D(tex, uv + 1.2 * offX, bias).rgb;\n"
+        "        vec3 t2 = texture2D(tex, uv - 2.8 * offY, bias).rgb;\n"
+        "        vec3 b2 = texture2D(tex, uv + 2.8 * offY, bias).rgb;\n"
+        "        vec3 l2 = texture2D(tex, uv - 2.8 * offX, bias).rgb;\n"
+        "        vec3 r2 = texture2D(tex, uv + 2.8 * offX, bias).rgb;\n"
+        "        vec3 blurred = center * 0.17 + (t1 + b1 + l1 + r1) * 0.14 + (t2 + b2 + l2 + r2) * 0.0675;\n"
+        "        vec3 sharpened = center + 0.18 * (center - blurred);\n"
+        "        return clamp(sharpened, 0.0, 1.0);\n"
+        "    } else {\n"
+        "        vec2 offX = vec2(pixelSize.x, 0.0);\n"
+        "        vec2 offY = vec2(0.0, pixelSize.y);\n"
+        "        vec3 c = texture2D(tex, uv).rgb;\n"
+        "        vec3 t = texture2D(tex, uv - offY).rgb;\n"
+        "        vec3 b = texture2D(tex, uv + offY).rgb;\n"
+        "        vec3 l = texture2D(tex, uv - offX).rgb;\n"
+        "        vec3 r = texture2D(tex, uv + offX).rgb;\n"
+        "        vec3 sharpened = c + (4.0 * c - t - b - l - r) * 0.0625;\n"
+        "        return clamp(sharpened, 0.0, 1.0);\n"
+        "    }\n"
+        "}\n"
+        "\n"
         "void main() {\n"
         "    highp vec4 color = texture2D(tex, texCoord);\n"
-        "    highp vec3 rgb = (casSharpening > 0.001) ? applyCAS(texCoord) : color.rgb;\n"
+        "    highp vec3 rgb = color.rgb;\n"
+        "    if (sharpenMode == 3 && casSharpening > 0.001) {\n"
+        "        rgb = applyCAS(texCoord);\n"
+        "    } else if (sharpenMode == 4) {\n"
+        "        rgb = applySmartSharpenGPU(texCoord);\n"
+        "    }\n"
         "    if (abs(temperature) > 0.001 || abs(tint) > 0.001) {\n"
         "        rgb.r *= (1.0 + temperature + tint * 0.5);\n"
         "        rgb.g *= (1.0 - tint);\n"
@@ -154,10 +196,15 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     if (transScaleY < 0.001) transScaleY = 1.0;
     bool isOneToOne = (qAbs(transScaleX - 1.0) < 0.001 && qAbs(transScaleY - 1.0) < 0.001);
     float activeCasSharpening = (isOneToOne && !settings->applyFilterAt100()) ? 0.0f : mCasSharpening;
+    bool activeSmartGpu = (mScalingFilter == QI_FILTER_SMART_GPU);
+    if (isOneToOne && !settings->applyFilterAt100()) {
+        activeSmartGpu = false;
+    }
 
     // 1. Fallback to default QGraphicsPixmapItem paint if there are no adjustments
     if (qAbs(mBrightness) < 0.001f && qAbs(mContrast - 1.0f) < 0.001f && qAbs(mSaturation - 1.0f) < 0.001f && qAbs(mHue) < 0.001f &&
-        qAbs(mExposure) < 0.001f && qAbs(mTemperature) < 0.001f && qAbs(mTint) < 0.001f && activeCasSharpening < 0.001f) {
+        qAbs(mExposure) < 0.001f && qAbs(mTemperature) < 0.001f && qAbs(mTint) < 0.001f &&
+        activeCasSharpening < 0.001f && !activeSmartGpu) {
         QGraphicsPixmapItem::paint(painter, option, widget);
         return;
     }
@@ -191,9 +238,9 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
                                     : QOpenGLTexture::Nearest;
     mTexture->setMagnificationFilter(filter);
 
-    // Use trilinear filtering (MipMapLinear) for downscaling
+    // Use trilinear filtering (MipMapLinear) for downscaling or active GPU Smart Sharpen
     QOpenGLTexture::Filter minFilter = filter;
-    if (filter == QOpenGLTexture::Linear && (transScaleX < 0.999 || transScaleY < 0.999)) {
+    if (filter == QOpenGLTexture::Linear && (transScaleX < 0.999 || transScaleY < 0.999 || activeSmartGpu)) {
         minFilter = QOpenGLTexture::LinearMipMapLinear;
     }
     mTexture->setMinificationFilter(minFilter);
@@ -222,6 +269,8 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     mProgram->setUniformValue("pixelSize", QVector2D(1.0f / (currentPixmap.width() * transScaleX), 1.0f / (currentPixmap.height() * transScaleY)));
     mProgram->setUniformValue("casContrast", mCasContrast);
     mProgram->setUniformValue("casSharpening", activeCasSharpening);
+    mProgram->setUniformValue("sharpenMode", activeSmartGpu ? (int)QI_FILTER_SMART_GPU : (int)mScalingFilter);
+    mProgram->setUniformValue("isDownscaling", (transScaleX < 0.999) ? 1 : 0);
     
     // Convert hue degrees to radians
     float hueRad = (float)(mHue * M_PI / 180.0);

@@ -246,6 +246,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   scalingQualityComboBox->addItem(tr("Smart sharpen"),
                                       QI_FILTER_SMART);
   scalingQualityComboBox->addItem(tr("FidelityFX-CAS (GPU)"), QI_FILTER_CAS);
+  scalingQualityComboBox->addItem(tr("Smart sharpen (GPU)"), QI_FILTER_SMART_GPU);
 
   casContainerWidget = new QWidget(this);
   QGridLayout *casLayout = new QGridLayout(casContainerWidget);

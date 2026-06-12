@@ -42,7 +42,8 @@ enum ScalingFilter {
   QI_FILTER_NEAREST,
   QI_FILTER_BILINEAR,
   QI_FILTER_SMART,
-  QI_FILTER_CAS
+  QI_FILTER_CAS,
+  QI_FILTER_SMART_GPU
 };
 
 enum ZoomIndicatorMode {

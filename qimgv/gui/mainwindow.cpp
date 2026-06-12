@@ -440,6 +440,9 @@ void MW::setFilter(ScalingFilter filter) {
         case QI_FILTER_CAS:
             filterName = "FidelityFX-CAS (GPU)";
             break;
+        case QI_FILTER_SMART_GPU:
+            filterName = tr("Smart sharpen (GPU)");
+            break;
         default:
             filterName = tr("Configured ") + QString::number(static_cast<int>(filter));
             break;

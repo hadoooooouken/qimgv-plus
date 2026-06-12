@@ -542,7 +542,7 @@ void ImageViewerV2::setScalingFilter(ScalingFilter filter) {
   }
   pixmapItem.setTransformationMode(selectTransformationMode());
 
-  if (mScalingFilter == QI_FILTER_NEAREST || mScalingFilter == QI_FILTER_CAS)
+  if (mScalingFilter == QI_FILTER_NEAREST || mScalingFilter == QI_FILTER_CAS || mScalingFilter == QI_FILTER_SMART_GPU)
     swapToOriginalPixmap();
   requestScaling();
 }
@@ -600,6 +600,7 @@ void ImageViewerV2::requestScaling() {
   bool isAt100 = std::abs(pixmapItem.scale() - 1.0) < 0.001;
   if (mSvgMode || !pixmap || (isAt100 && !settings->applyFilterAt100()) ||
       (mScalingFilter == QI_FILTER_CAS && !(settings->useUpscayl() && pixmapItem.scale() > 1.0)) ||
+      (mScalingFilter == QI_FILTER_SMART_GPU) ||
       movie || (zoomTimeLine && zoomTimeLine->state() == QTimeLine::Running) ||
       mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
       mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM) {
@@ -1302,6 +1303,10 @@ void ImageViewerV2::swapToOriginalPixmap() {
 }
 
 void ImageViewerV2::updateCasSettings() {
+  pixmapItem.setScalingFilter(mScalingFilter);
+  pixmapItemScaled.setScalingFilter(mScalingFilter);
+  pixmapItemCrop.setScalingFilter(mScalingFilter);
+
   if (mScalingFilter == QI_FILTER_CAS) {
     float sharpening = settings->casSharpening();
     float contrast = settings->casContrast();
