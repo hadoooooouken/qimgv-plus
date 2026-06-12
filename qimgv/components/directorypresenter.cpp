@@ -1,10 +1,13 @@
 #include "directorypresenter.h"
 #include <QPainter>
+#include "settings.h"
 
 DirectoryPresenter::DirectoryPresenter(QObject *parent)
     : QObject(parent), mShowDirs(false) {
   connect(&thumbnailer, &Thumbnailer::thumbnailReady, this,
           &DirectoryPresenter::onThumbnailReady);
+  connect(settings, &Settings::settingsChanged, this,
+          &DirectoryPresenter::onSettingsChanged);
 }
 
 void DirectoryPresenter::unsetModel() {
@@ -466,4 +469,14 @@ DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
 
   return std::shared_ptr<Thumbnail>(
       new Thumbnail(dirName, tr("Folder"), size, std::shared_ptr<QPixmap>(pixmap)));
+}
+
+void DirectoryPresenter::onSettingsChanged() {
+  if (!view || !model || !mShowDirs)
+    return;
+  QList<int> folderIndexes;
+  for (int i = 0; i < model->dirCount(); ++i) {
+    folderIndexes.append(i);
+  }
+  generateThumbnails(folderIndexes, settings->folderViewIconSize(), false, true);
 }
