@@ -1,4 +1,5 @@
 #include "thumbnailwidget.h"
+#include <QPainterPath>
 
 ThumbnailWidget::ThumbnailWidget(QGraphicsItem *parent) :
     QGraphicsWidget(parent),
@@ -222,12 +223,14 @@ void ThumbnailWidget::drawHighlight(QPainter *painter) {
         auto op = painter->opacity();
         painter->setRenderHint(QPainter::Antialiasing);
         painter->setOpacity(0.40f * op);
-        painter->fillRect(bgRect, settings->colorScheme().accent);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(settings->colorScheme().accent);
+        painter->drawRoundedRect(bgRect, 8.0, 8.0);
+        painter->setBrush(Qt::NoBrush);
         painter->setOpacity(0.70f * op);
         QPen pen(settings->colorScheme().accent, 2);
         painter->setPen(pen);
-        painter->drawRect(bgRect.adjusted(1,1,-1,-1)); // 2px pen
-        //painter->drawRect(highlightRect.adjusted(0.5,0.5,-0.5,-0.5)); // 1px pen
+        painter->drawRoundedRect(bgRect.adjusted(1,1,-1,-1), 7.0, 7.0); // 2px pen
         painter->setOpacity(op);
         painter->setRenderHints(hints);
     }
@@ -235,9 +238,15 @@ void ThumbnailWidget::drawHighlight(QPainter *painter) {
 
 void ThumbnailWidget::drawHoverBg(QPainter *painter) {
     auto op = painter->opacity();
+    auto hints = painter->renderHints();
+    painter->setRenderHint(QPainter::Antialiasing);
     QColor hoverBg = mUseThumbPanelColors ? settings->colorScheme().thumbpanel_hc : settings->colorScheme().folderview_hc;
-    painter->fillRect(bgRect, hoverBg);
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(hoverBg);
+    painter->drawRoundedRect(bgRect, 8.0, 8.0);
+    painter->setBrush(Qt::NoBrush);
     painter->setOpacity(op);
+    painter->setRenderHints(hints);
 }
 
 void ThumbnailWidget::drawHoverHighlight(QPainter *painter) {
@@ -245,7 +254,12 @@ void ThumbnailWidget::drawHoverHighlight(QPainter *painter) {
     auto mode = painter->compositionMode();
     painter->setCompositionMode(QPainter::CompositionMode_Plus);
     painter->setOpacity(0.2f);
+    painter->save();
+    QPainterPath path;
+    path.addRoundedRect(drawRectCentered, 4.0, 4.0);
+    painter->setClipPath(path, Qt::IntersectClip);
     painter->drawPixmap(drawRectCentered, *thumbnail->pixmap());
+    painter->restore();
     painter->setOpacity(op);
     painter->setCompositionMode(mode);
 }
@@ -314,16 +328,24 @@ void ThumbnailWidget::drawDropHover(QPainter *painter) {
     painter->setRenderHint(QPainter::Antialiasing);
     QColor clr(190,60,25);
     painter->setOpacity(0.1f * op);
-    painter->fillRect(bgRect, clr);
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(clr);
+    painter->drawRoundedRect(bgRect, 8.0, 8.0);
+    painter->setBrush(Qt::NoBrush);
     painter->setOpacity(op);
     QPen pen(clr, 2);
     painter->setPen(pen);
-    painter->drawRect(bgRect.adjusted(1,1,-1,-1));
+    painter->drawRoundedRect(bgRect.adjusted(1,1,-1,-1), 7.0, 7.0);
     painter->setRenderHints(hints);
 }
 
 void ThumbnailWidget::drawThumbnail(QPainter* painter, const QPixmap *pixmap) {
+    painter->save();
+    QPainterPath path;
+    path.addRoundedRect(drawRectCentered, 4.0, 4.0);
+    painter->setClipPath(path, Qt::IntersectClip);
     painter->drawPixmap(drawRectCentered, *pixmap);
+    painter->restore();
 }
 
 void ThumbnailWidget::drawIcon(QPainter* painter, const QPixmap *pixmap) {

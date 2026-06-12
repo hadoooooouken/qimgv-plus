@@ -1,5 +1,7 @@
 #include "batchconverterdialog.h"
 #include <QCoreApplication>
+#include <QPainter>
+#include <QPainterPath>
 #include <QDate>
 #include <QDateTime>
 #include <QDir>
@@ -40,7 +42,7 @@ BatchItemWidget::BatchItemWidget(const QString &filePath, QWidget *parent)
     thumbLabel->setFixedSize(48, 48);
     thumbLabel->setAlignment(Qt::AlignCenter);
     thumbLabel->setStyleSheet(
-        QString("border: 1px solid %1; background-color: %2;")
+        QString("border: 1px solid %1; background-color: %2; border-radius: 4px;")
             .arg(colors.widget_border.name())
             .arg(colors.widget.name()));
     mainLayout->addWidget(thumbLabel);
@@ -103,8 +105,22 @@ BatchItemWidget::BatchItemWidget(const QString &filePath, QWidget *parent)
 
 void BatchItemWidget::setThumbnail(std::shared_ptr<Thumbnail> thumb) {
     if (thumb && thumb->pixmap() && !thumb->pixmap()->isNull()) {
-        thumbLabel->setPixmap(thumb->pixmap()->scaled(
-            thumbLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        QPixmap scaledThumb = thumb->pixmap()->scaled(
+            thumbLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+        // Clip the thumbnail with a rounded rectangle (4px)
+        QPixmap roundedThumb(scaledThumb.size());
+        roundedThumb.fill(Qt::transparent);
+        QPainter painter(&roundedThumb);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setRenderHint(QPainter::SmoothPixmapTransform);
+        QPainterPath path;
+        path.addRoundedRect(QRectF(scaledThumb.rect()), 4.0, 4.0);
+        painter.setClipPath(path);
+        painter.drawPixmap(0, 0, scaledThumb);
+        painter.end();
+
+        thumbLabel->setPixmap(roundedThumb);
     }
 }
 
