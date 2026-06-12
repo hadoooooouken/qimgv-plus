@@ -1,5 +1,6 @@
 #include "directorypresenter.h"
 #include <QPainter>
+#include <QPainterPath>
 #include "settings.h"
 
 DirectoryPresenter::DirectoryPresenter(QObject *parent)
@@ -463,6 +464,10 @@ DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
 
   QRectF targetRect(0, 0, scaledSize.width(), scaledSize.height());
   targetRect.moveCenter(windowRect.center());
+
+  QPainterPath path;
+  path.addRoundedRect(targetRect, 4.0, 4.0);
+  painter.setClipPath(path);
 
   painter.drawPixmap(targetRect, innerThumb, innerThumb.rect());
   painter.end();
