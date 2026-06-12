@@ -1,7 +1,9 @@
 #include "foldergridview.h"
 #include "utils/imagelib.h"
+#include "gui/customwidgets/contextmenuitem.h"
 #include <QMenu>
 #include <QAction>
+#include <QWidgetAction>
 #include <QTimer>
 #include <QIcon>
 #include <QCursor>
@@ -430,69 +432,79 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
     if (isRightClick && !wasGesture) {
         if (!selection().isEmpty()) {
             QMenu menu(this);
+            menu.setAttribute(Qt::WA_TranslucentBackground);
+            menu.setWindowFlags(menu.windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+
             // styling:
             QString stylesheet = 
                 "QMenu {"
                 " background-color: %1;"
                 " border: 1px solid %2;"
+                " border-radius: 8px;"
                 " padding: 4px 0px;"
                 "}"
-                "QMenu::item {"
-                " color: %3;"
-                " padding: 6px 24px 6px 36px;"
-                "}"
-                "QMenu::icon {"
-                " margin-left: 10px;"
-                "}"
-                "QMenu::item:selected {"
-                " background-color: %4;"
-                " color: %5;"
+                "QMenu::separator {"
+                " height: 1px;"
+                " background-color: %2;"
+                " margin: 4px 11px;"
                 "}";
             auto scheme = settings->colorScheme();
             stylesheet = stylesheet.arg(
                 scheme.widget.name(),
-                scheme.widget_border.name(),
-                scheme.text.name(),
-                scheme.accent.name(),
-                scheme.background.name());
+                scheme.widget_border.name());
             menu.setStyleSheet(stylesheet);
 
-            QPixmap openPixmap(":/res/icons/common/menuitem/document-view16.png");
-            ImageLib::recolor(openPixmap, scheme.icons);
-            QAction *actionOpen = menu.addAction(QIcon(openPixmap), tr("Open only selected"));
-
-            QPixmap batchPixmap(":/res/icons/common/menuitem/settings16.png");
-            ImageLib::recolor(batchPixmap, scheme.icons);
-            QAction *actionBatch = menu.addAction(QIcon(batchPixmap), tr("Batch convert"));
-
-            QPixmap renamePixmap(":/res/icons/common/overlay/edit16.png");
-            ImageLib::recolor(renamePixmap, scheme.icons);
-            QAction *actionRename = menu.addAction(QIcon(renamePixmap), tr("Rename"));
-
-            QPixmap trashPixmap(":/res/icons/common/menuitem/trash16.png");
-            ImageLib::recolor(trashPixmap, scheme.icons);
-            QIcon trashIcon(trashPixmap);
-
-            QAction *actionTrash = menu.addAction(trashIcon, tr("Move to trash"));
-
-            QPixmap deletePixmap(":/res/icons/common/buttons/panel/close16.png");
-            ImageLib::recolor(deletePixmap, scheme.icons);
-            QAction *actionDelete = menu.addAction(QIcon(deletePixmap), tr("Delete permanently"));
-
-            QAction *selectedAction = menu.exec(event->globalPos());
-            if (selectedAction) {
-                if (selectedAction == actionOpen) {
-                    QTimer::singleShot(0, this, [this]() { emit openSelectedRequested(); });
-                } else if (selectedAction == actionBatch) {
-                    emit batchRequested();
-                } else if (selectedAction == actionRename) {
-                    actionManager->invokeAction("renameFile");
-                } else if (selectedAction == actionTrash) {
-                    actionManager->invokeAction("moveToTrash");
-                } else if (selectedAction == actionDelete) {
-                    actionManager->invokeAction("removeFile");
+            auto addCustomAction = [&](const QString &text, const QString &iconPath, const QString &shortcut = "") {
+                QWidgetAction *wa = new QWidgetAction(&menu);
+                ContextMenuItem *item = new ContextMenuItem(this);
+                item->setText(text);
+                item->setIconPath(iconPath);
+                item->setMinimumWidth(212);
+                if (!shortcut.isEmpty()) {
+                    item->setShortcutText(shortcut);
                 }
-            }
+                wa->setDefaultWidget(item);
+                menu.addAction(wa);
+                return item;
+            };
+
+            ContextMenuItem *itemOpen = addCustomAction(tr("Open only selected"), ":/res/icons/common/menuitem/document-view16.png");
+            connect(itemOpen, &ContextMenuItem::pressed, this, [this, &menu]() {
+                menu.close();
+                QTimer::singleShot(0, this, [this]() { emit openSelectedRequested(); });
+            });
+
+            ContextMenuItem *itemBatch = addCustomAction(tr("Batch convert"), ":/res/icons/common/menuitem/settings16.png");
+            connect(itemBatch, &ContextMenuItem::pressed, this, [this, &menu]() {
+                menu.close();
+                emit batchRequested();
+            });
+
+            ContextMenuItem *itemRename = addCustomAction(tr("Rename"), ":/res/icons/common/overlay/edit16.png");
+            connect(itemRename, &ContextMenuItem::pressed, this, [this, &menu]() {
+                menu.close();
+                actionManager->invokeAction("renameFile");
+            });
+
+            menu.addSeparator();
+
+            ContextMenuItem *itemTrash = addCustomAction(tr("Move to trash"), ":/res/icons/common/menuitem/trash16.png");
+            itemTrash->setTextColor(QColor("#ff5c5c"));
+            itemTrash->setIconColor(QColor("#ff5c5c"));
+            connect(itemTrash, &ContextMenuItem::pressed, this, [this, &menu]() {
+                menu.close();
+                actionManager->invokeAction("moveToTrash");
+            });
+
+            ContextMenuItem *itemDelete = addCustomAction(tr("Delete permanently"), ":/res/icons/common/buttons/panel/close16.png");
+            itemDelete->setTextColor(QColor("#ff5c5c"));
+            itemDelete->setIconColor(QColor("#ff5c5c"));
+            connect(itemDelete, &ContextMenuItem::pressed, this, [this, &menu]() {
+                menu.close();
+                actionManager->invokeAction("removeFile");
+            });
+
+            menu.exec(event->globalPos());
         }
     }
 }

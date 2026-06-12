@@ -66,6 +66,7 @@ private:
     ContextMenuItem *m_move;
     ContextMenuItem *m_rename;
     ContextMenuItem *m_trash;
+    ContextMenuItem *m_deletePermanently;
     ContextMenuItem *m_open;
     ContextMenuItem *m_folderView;
     ContextMenuItem *m_settings;

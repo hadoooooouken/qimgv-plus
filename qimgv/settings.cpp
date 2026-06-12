@@ -248,12 +248,7 @@ void Settings::loadStylesheet() {
                        QString::number(rename_overlay_width) + "px");
 
     styleSheet.replace("%icontheme%", "light");
-    // Qt::Popup can't do transparency under windows, use square window
-#ifdef _WIN32
-    styleSheet.replace("%contextmenu_border_radius%", "0px");
-#else
-    styleSheet.replace("%contextmenu_border_radius%", "3px");
-#endif
+    styleSheet.replace("%contextmenu_border_radius%", "8px");
     styleSheet.replace("%sys_window%", sys_window.name());
     styleSheet.replace("%sys_window_tinted%", sys_window_tinted.name());
     styleSheet.replace("%sys_window_tinted_lc%", sys_window_tinted_lc.name());

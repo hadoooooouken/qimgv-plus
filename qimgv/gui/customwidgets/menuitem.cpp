@@ -80,3 +80,11 @@ void MenuItem::mouseReleaseEvent(QMouseEvent *event) {
     if(!passthroughClicks)
         event->accept();
 }
+
+void MenuItem::setTextColor(QColor color) {
+    mTextLabel.setStyleSheet(QString("color: %1;").arg(color.name()));
+}
+
+void MenuItem::setIconColor(QColor color) {
+    mIconWidget.setColor(color);
+}

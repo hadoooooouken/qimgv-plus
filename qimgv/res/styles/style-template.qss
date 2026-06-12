@@ -61,7 +61,7 @@ QPushButton, [accessibleName="Button"], [accessibleName="ButtonSetLeft"], [acces
 {
     color: %text_hc%;
     background-color: %button%;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 7px 12px 7px 12px;
 }
 
@@ -99,7 +99,7 @@ QPushButton:pressed,
 
 /*----------------------------------------------------------------------------*/
 [accessibleName="CheckableButton"] {
-    border-radius: 3px;
+    border-radius: 4px;
     margin-top:    4px;
     margin-bottom: 4px;
     margin-left:   2px;
@@ -108,7 +108,7 @@ QPushButton:pressed,
 
 /* extra 2px left margin for fitt's law */
 [accessibleName="CheckableButtonLE"] {
-    border-radius: 3px;
+    border-radius: 4px;
     margin-top:    4px;
     margin-bottom: 4px;
     margin-left:   4px;
@@ -133,7 +133,7 @@ QPushButton:pressed,
 
 /*----------------------------------------------------------------------------*/
 [accessibleName="PanelButton"] {
-    border-radius: 3px;
+    border-radius: 4px;
     margin-top:    4px;
     margin-bottom: 4px;
     margin-left:   2px;
@@ -141,7 +141,7 @@ QPushButton:pressed,
 }
 
 [accessibleName="PanelButtonRE"] {
-    border-radius: 3px;
+    border-radius: 4px;
     margin-top:    4px;
     margin-bottom: 4px;
     margin-left:   2px;
@@ -188,7 +188,7 @@ QComboBox QAbstractItemView {
     background-color: %panel_button%;
     color: %text_hc%;
     border: 2px solid %panel_button%;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 2px 8px 2px 5px;
     margin-top: 4px;
     margin-bottom: 4px;
@@ -236,12 +236,12 @@ QComboBox QAbstractItemView {
 FloatingWidget {
     background-color: %widget%;
     border: 1px solid %widget_border%;
-    border-radius: 3px;
+    border-radius: 8px;
 }
 /*----------------------------------------------------------------------------*/
 [accessibleName="OverlayHeaderWidget"] {
-    border-top-left-radius: 1px;
-    border-top-right-radius: 1px;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
 }
 /*----------------------------------------------------------------------------*/
 [accessibleName="OverlayHeaderButton"],
@@ -253,7 +253,7 @@ FloatingWidget {
 [accessibleName="OverlayHeaderButton"] {
     background-color: transparent;
     margin: 3px;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
 [accessibleName="OverlayHeaderButton"]:hover {
@@ -273,7 +273,7 @@ FloatingWidget QLineEdit {
     background-color: %button%;
     color: %text_hc%;
     border: 2px solid %button%;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 4px 6px 4px 6px;
     margin-top: 5px;
     margin-bottom: 5px;
@@ -292,7 +292,7 @@ RenameOverlay {
 [accessibleName = "RenameOverlayWidget"] {
     background-color: %widget%;
     border: 1px solid %widget_border%;
-    border-radius: 3px;
+    border-radius: 8px;
     min-width: %rename_overlay_width%;
 }
 
@@ -304,7 +304,7 @@ FullscreenInfoOverlay {
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
     border-bottom-left-radius: 0px;
-    border-bottom-right-radius: 3px;
+    border-bottom-right-radius: 8px;
 }
 
 FullscreenInfoOverlay QLabel {
@@ -337,7 +337,7 @@ SidePanel {
 SidePanel QGroupBox {
     background-color: %widget%;
     border: 1px solid %button%;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 6px 10px 8px 10px;
 }
 /*----------------------------------------------------------------------------*/
@@ -347,7 +347,7 @@ SidePanel QDoubleSpinBox
     color: %text%;
     background-color: %button%;
     border: 2px solid %button%;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 2px 0px 2px 0px;
     min-height: 20px;
 }
@@ -386,7 +386,7 @@ SidePanel QPushButton[accessibleName="SwapButton"] {
     color: %text_hc%;
     background-color: transparent;
     border: 2px solid transparent;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 0 4px 0 4px;
     min-width: 22px;
     min-height: 20px;
@@ -410,7 +410,7 @@ SidePanel QComboBox {
     color: %text%;
     background-color: %button%;
     border: 1px solid %button%;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 4px 8px 4px 8px;
 }
 
@@ -462,7 +462,7 @@ VideoControls QSlider {
 VideoControls QSlider::groove:horizontal,
 VideoControls QSlider::add-page:horizontal {
     background: %button_pressed%;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
 VideoControls QSlider::handle:horizontal {
@@ -473,8 +473,8 @@ VideoControls QSlider::handle:horizontal {
 
 VideoControls QSlider::sub-page:horizontal {
     background: %text_hc%;
-    border-top-left-radius: 3px;
-    border-bottom-left-radius: 3px;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -534,7 +534,7 @@ FolderView {
 
 [accessibleName="PathBar"] {
     background-color: %panel_button%;
-    border-radius: 3px;
+    border-radius: 4px;
     margin: 4px 2px;
 }
 
@@ -552,7 +552,7 @@ QPushButton[accessibleName="FolderViewBatchButton"] {
     color: %text_hc%;
     background-color: %panel_button%;
     border: 2px solid %panel_button%;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 4px 8px 4px 8px;
     margin-top: 4px;
     margin-bottom: 4px;
@@ -572,8 +572,8 @@ QPushButton[accessibleName="FolderViewBatchButton"]:pressed {
 
 [accessibleName="PathBarButton"] {
     border: 1px solid transparent;
-    border-top-left-radius: 3px;
-    border-bottom-left-radius: 3px;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
     margin: 4px 2px;
 }
 
@@ -714,6 +714,7 @@ ContextMenu QLabel {
 
 [accessibleName="ContextMenuButton"] {
     min-height: %context_menu_button_height%;
+    border-radius: 4px;
 }
 
 [accessibleName="ContextMenuButton"]:hover {
@@ -894,7 +895,7 @@ BookmarksItem[highlighted="true"] {
 /*----------------------------------------------------------------------------*/
 
 [accessibleName="PlacesPanelButton"] {
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
 [accessibleName="PlacesPanelButton"]:hover {

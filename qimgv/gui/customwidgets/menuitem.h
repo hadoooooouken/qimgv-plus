@@ -7,6 +7,7 @@
 #include <QStyleOption>
 #include <QHBoxLayout>
 #include <QSpacerItem>
+#include <QColor>
 #include "gui/customwidgets/iconbutton.h"
 #include "components/actionmanager/actionmanager.h"
 
@@ -20,6 +21,8 @@ public:
     QString shortcut();
     void setIconPath(QString path);
     void setPassthroughClicks(bool mode);
+    void setTextColor(QColor color);
+    void setIconColor(QColor color);
 
 protected:
     IconButton mIconWidget;

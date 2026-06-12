@@ -92,35 +92,15 @@ void ContextMenu::setupUi()
 
     mainPageLayout->addLayout(zoomLayout);
 
-    // --- Edit section header (with lines) ---
-    QHBoxLayout *editHeaderLayout = new QHBoxLayout();
-    editHeaderLayout->setSpacing(14);
-    editHeaderLayout->setContentsMargins(11, 0, 11, 0);
-
-    QVBoxLayout *lineLeftLayout = new QVBoxLayout();
-    lineLeftLayout->setContentsMargins(0, 0, 0, 5);
-    QWidget *lineLeft = new QWidget();
-    lineLeft->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-    lineLeft->setAccessibleName("HLineSeparator");
-    lineLeftLayout->addWidget(lineLeft);
-
-    QVBoxLayout *headerTextLayout = new QVBoxLayout();
-    headerTextLayout->setContentsMargins(0, 0, 0, 2);
-    QLabel *editLabel = new QLabel(tr("Edit"));
-    editLabel->setAlignment(Qt::AlignCenter);
-    headerTextLayout->addWidget(editLabel);
-
-    QVBoxLayout *lineRightLayout = new QVBoxLayout();
-    lineRightLayout->setContentsMargins(0, 0, 0, 5);
-    QWidget *lineRight = new QWidget();
-    lineRight->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-    lineRight->setAccessibleName("HLineSeparator");
-    lineRightLayout->addWidget(lineRight);
-
-    editHeaderLayout->addLayout(lineLeftLayout);
-    editHeaderLayout->addLayout(headerTextLayout);
-    editHeaderLayout->addLayout(lineRightLayout);
-    mainPageLayout->addLayout(editHeaderLayout);
+    // --- Separator line between zoom and transform buttons ---
+    QWidget *editLine = new QWidget();
+    editLine->setFixedHeight(1);
+    editLine->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+    editLine->setAccessibleName("HLineSeparator");
+    QVBoxLayout *lineEditLayout = new QVBoxLayout();
+    lineEditLayout->setContentsMargins(11, 0, 11, 0);
+    lineEditLayout->addWidget(editLine);
+    mainPageLayout->addLayout(lineEditLayout);
 
     // --- Transform buttons row ---
     QHBoxLayout *transformLayout = new QHBoxLayout();
@@ -177,7 +157,7 @@ void ContextMenu::setupUi()
     bottomLine->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
     bottomLine->setAccessibleName("HLineSeparator");
     QVBoxLayout *lineBottomLayout = new QVBoxLayout();
-    lineBottomLayout->setContentsMargins(11, 5, 11, 0);
+    lineBottomLayout->setContentsMargins(11, 0, 11, 0);
     lineBottomLayout->addWidget(bottomLine);
     mainPageLayout->addLayout(lineBottomLayout);
 
@@ -194,38 +174,30 @@ void ContextMenu::setupUi()
         actionsLayout->addWidget(item);
     };
 
+    auto addSeparator = [](QVBoxLayout *layout, int topMargin = 4, int bottomMargin = 4) {
+        QWidget *line = new QWidget();
+        line->setFixedHeight(1);
+        line->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+        line->setAccessibleName("HLineSeparator");
+        QVBoxLayout *lineLayout = new QVBoxLayout();
+        lineLayout->setContentsMargins(11, topMargin, 11, bottomMargin);
+        lineLayout->addWidget(line);
+        layout->addLayout(lineLayout);
+    };
+
     addItem(m_colorAdjustments, "colorAdjustments", tr("Color adjustments"), ":/res/icons/common/menuitem/appearance16.png");
     addItem(m_panoramaMode,     "togglePanorama",     tr("Panorama mode"),      ":/res/icons/common/menuitem/view16.png");
     addItem(m_casSettings,      "casSettings",        tr("CAS Settings"),       ":/res/icons/common/menuitem/appearance16.png");
     m_casSettings->hide();
 
-    // Spacer (6px) between groups
-    QSpacerItem *spacer1 = new QSpacerItem(20, 6, QSizePolicy::Minimum, QSizePolicy::Fixed);
-    actionsLayout->addSpacerItem(spacer1);
+    addSeparator(actionsLayout, 4, 4);
 
     addItem(m_print,            "print",              tr("Print"),              ":/res/icons/common/menuitem/print16.png");
-
-    QSpacerItem *spacer2 = new QSpacerItem(20, 6, QSizePolicy::Minimum, QSizePolicy::Fixed);
-    actionsLayout->addSpacerItem(spacer2);
-
     addItem(m_copy,             "copyFile",           tr("Quick copy"),         ":/res/icons/common/menuitem/copy16.png");
     addItem(m_move,             "moveFile",           tr("Quick move"),         ":/res/icons/common/menuitem/move16.png");
-
-    QSpacerItem *spacer3 = new QSpacerItem(20, 6, QSizePolicy::Minimum, QSizePolicy::Fixed);
-    actionsLayout->addSpacerItem(spacer3);
-
     addItem(m_rename,           "renameFile",         tr("Rename"),             ":/res/icons/common/overlay/edit16.png");
-    addItem(m_trash,            "moveToTrash",        tr("Move to trash"),      ":/res/icons/common/menuitem/trash16.png");
-
-    QSpacerItem *spacer4 = new QSpacerItem(20, 6, QSizePolicy::Minimum, QSizePolicy::Fixed);
-    actionsLayout->addSpacerItem(spacer4);
-
     addItem(m_open,             "open",               tr("Open"),               ":/res/icons/common/menuitem/open16.png");
     addItem(m_folderView,       "folderView",         tr("Folder View"),        ":/res/icons/common/menuitem/folderview16.png");
-    addItem(m_settings,         "openSettings",       tr("Settings"),           ":/res/icons/common/menuitem/settings16.png");
-
-    QSpacerItem *spacer5 = new QSpacerItem(20, 6, QSizePolicy::Minimum, QSizePolicy::Fixed);
-    actionsLayout->addSpacerItem(spacer5);
 
     // OpenWith is special – we will create it separately
     m_openWith = new ContextMenuItem();
@@ -235,10 +207,18 @@ void ContextMenu::setupUi()
     connect(m_openWith, &ContextMenuItem::pressed, this, &ContextMenu::switchToScriptsPage);
     actionsLayout->addWidget(m_openWith);
 
-    QSpacerItem *spacer6 = new QSpacerItem(20, 6, QSizePolicy::Minimum, QSizePolicy::Fixed);
-    actionsLayout->addSpacerItem(spacer6);
-
     addItem(m_showLocation,     "showInDirectory",    tr("Show in folder"),     ":/res/icons/common/menuitem/folder16.png");
+    addItem(m_settings,         "openSettings",       tr("Settings"),           ":/res/icons/common/menuitem/settings16.png");
+
+    addSeparator(actionsLayout, 4, 4);
+
+    addItem(m_trash,            "moveToTrash",        tr("Move to trash"),      ":/res/icons/common/menuitem/trash16.png");
+    m_trash->setTextColor(QColor("#ff5c5c"));
+    m_trash->setIconColor(QColor("#ff5c5c"));
+
+    addItem(m_deletePermanently, "removeFile",        tr("Delete permanently"), ":/res/icons/common/buttons/panel/close16.png");
+    m_deletePermanently->setTextColor(QColor("#ff5c5c"));
+    m_deletePermanently->setIconColor(QColor("#ff5c5c"));
 
     mainPageLayout->addLayout(actionsLayout);
     m_stackedWidget->addWidget(mainPage);
@@ -339,6 +319,7 @@ void ContextMenu::setImageEntriesEnabled(bool mode)
     m_move->setEnabled(mode);
     m_rename->setEnabled(mode);
     m_trash->setEnabled(mode);
+    m_deletePermanently->setEnabled(mode);
     m_colorAdjustments->setEnabled(mode);
     m_panoramaMode->setEnabled(mode);
     m_openWith->setEnabled(mode);
