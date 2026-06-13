@@ -4,6 +4,7 @@
 
 class QSlider;
 class QLabel;
+class QTimer;
 
 class ColorAdjustmentsOverlay : public DraggableSliderOverlay {
     Q_OBJECT
@@ -36,10 +37,15 @@ protected:
 
 private slots:
     void onSliderValueChanged();
+    void onTimerTimeout();
+    void onSliderReleased();
 
 private:
     void setupUi();
     void updateValueLabels();
+
+    QTimer  *m_updateTimer = nullptr;
+    bool     m_pendingUpdate = false;
 
     QSlider *m_brightnessSlider = nullptr;
     QLabel  *m_brightnessValLabel = nullptr;

@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSlider>
+#include <QTimer>
 #include <QVBoxLayout>
 
 CasSettingsOverlay::CasSettingsOverlay(FloatingWidgetContainer *parent)
@@ -12,8 +13,16 @@ CasSettingsOverlay::CasSettingsOverlay(FloatingWidgetContainer *parent)
 {
     setupUi();
 
+    m_updateTimer = new QTimer(this);
+    m_updateTimer->setSingleShot(true);
+    m_updateTimer->setInterval(30);
+    connect(m_updateTimer, &QTimer::timeout, this, &CasSettingsOverlay::onTimerTimeout);
+
     connect(m_sharpenSlider, &QSlider::valueChanged, this, &CasSettingsOverlay::onSliderValueChanged);
     connect(m_contrastSlider, &QSlider::valueChanged, this, &CasSettingsOverlay::onSliderValueChanged);
+
+    connect(m_sharpenSlider, &QSlider::sliderReleased, this, &CasSettingsOverlay::onSliderReleased);
+    connect(m_contrastSlider, &QSlider::sliderReleased, this, &CasSettingsOverlay::onSliderReleased);
 
     if (parent) {
         setContainerSize(parent->size());
@@ -101,13 +110,55 @@ void CasSettingsOverlay::onSliderValueChanged()
 {
     updateValueLabels();
 
-    float sharpening = m_sharpenSlider->value() / 100.0f;
-    float contrast = m_contrastSlider->value() / 100.0f;
+    bool dragging = m_sharpenSlider->isSliderDown() ||
+                    m_contrastSlider->isSliderDown();
 
-    settings->setCasSharpening(sharpening);
-    settings->setCasContrast(contrast);
+    if (!dragging) {
+        float sharpening = m_sharpenSlider->value() / 100.0f;
+        float contrast = m_contrastSlider->value() / 100.0f;
+        settings->setCasSharpening(sharpening);
+        settings->setCasContrast(contrast);
+        emit casSettingsChanged(sharpening, contrast);
+        m_pendingUpdate = false;
+        m_updateTimer->stop();
+    } else {
+        if (!m_updateTimer->isActive()) {
+            float sharpening = m_sharpenSlider->value() / 100.0f;
+            float contrast = m_contrastSlider->value() / 100.0f;
+            settings->setCasSharpening(sharpening);
+            settings->setCasContrast(contrast);
+            emit casSettingsChanged(sharpening, contrast);
+            m_updateTimer->start();
+            m_pendingUpdate = false;
+        } else {
+            m_pendingUpdate = true;
+        }
+    }
+}
 
-    emit casSettingsChanged(sharpening, contrast);
+void CasSettingsOverlay::onTimerTimeout()
+{
+    if (m_pendingUpdate) {
+        float sharpening = m_sharpenSlider->value() / 100.0f;
+        float contrast = m_contrastSlider->value() / 100.0f;
+        settings->setCasSharpening(sharpening);
+        settings->setCasContrast(contrast);
+        emit casSettingsChanged(sharpening, contrast);
+        m_pendingUpdate = false;
+    }
+}
+
+void CasSettingsOverlay::onSliderReleased()
+{
+    if (m_pendingUpdate) {
+        float sharpening = m_sharpenSlider->value() / 100.0f;
+        float contrast = m_contrastSlider->value() / 100.0f;
+        settings->setCasSharpening(sharpening);
+        settings->setCasContrast(contrast);
+        emit casSettingsChanged(sharpening, contrast);
+        m_pendingUpdate = false;
+    }
+    m_updateTimer->stop();
 }
 
 void CasSettingsOverlay::onResetClicked()

@@ -5,12 +5,18 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSlider>
+#include <QTimer>
 #include <QVBoxLayout>
 
 ColorAdjustmentsOverlay::ColorAdjustmentsOverlay(FloatingWidgetContainer *parent)
     : DraggableSliderOverlay(parent)
 {
     setupUi();
+
+    m_updateTimer = new QTimer(this);
+    m_updateTimer->setSingleShot(true);
+    m_updateTimer->setInterval(30);
+    connect(m_updateTimer, &QTimer::timeout, this, &ColorAdjustmentsOverlay::onTimerTimeout);
 
     connect(m_brightnessSlider, &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
     connect(m_contrastSlider,   &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
@@ -19,6 +25,14 @@ ColorAdjustmentsOverlay::ColorAdjustmentsOverlay(FloatingWidgetContainer *parent
     connect(m_exposureSlider,   &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
     connect(m_temperatureSlider,&QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
     connect(m_tintSlider,       &QSlider::valueChanged, this, &ColorAdjustmentsOverlay::onSliderValueChanged);
+
+    connect(m_brightnessSlider, &QSlider::sliderReleased, this, &ColorAdjustmentsOverlay::onSliderReleased);
+    connect(m_contrastSlider,   &QSlider::sliderReleased, this, &ColorAdjustmentsOverlay::onSliderReleased);
+    connect(m_saturationSlider, &QSlider::sliderReleased, this, &ColorAdjustmentsOverlay::onSliderReleased);
+    connect(m_hueSlider,        &QSlider::sliderReleased, this, &ColorAdjustmentsOverlay::onSliderReleased);
+    connect(m_exposureSlider,   &QSlider::sliderReleased, this, &ColorAdjustmentsOverlay::onSliderReleased);
+    connect(m_temperatureSlider,&QSlider::sliderReleased, this, &ColorAdjustmentsOverlay::onSliderReleased);
+    connect(m_tintSlider,       &QSlider::sliderReleased, this, &ColorAdjustmentsOverlay::onSliderReleased);
 
     if (parent) {
         setContainerSize(parent->size());
@@ -175,8 +189,49 @@ void ColorAdjustmentsOverlay::resetAdjustments()
 void ColorAdjustmentsOverlay::onSliderValueChanged()
 {
     updateValueLabels();
-    emit adjustmentsChanged(exposure(), contrast(), brightness(),
-                            temperature(), tint(), saturation(), hue());
+
+    bool dragging = m_brightnessSlider->isSliderDown() ||
+                    m_contrastSlider->isSliderDown() ||
+                    m_saturationSlider->isSliderDown() ||
+                    m_hueSlider->isSliderDown() ||
+                    m_exposureSlider->isSliderDown() ||
+                    m_temperatureSlider->isSliderDown() ||
+                    m_tintSlider->isSliderDown();
+
+    if (!dragging) {
+        emit adjustmentsChanged(exposure(), contrast(), brightness(),
+                                temperature(), tint(), saturation(), hue());
+        m_pendingUpdate = false;
+        m_updateTimer->stop();
+    } else {
+        if (!m_updateTimer->isActive()) {
+            emit adjustmentsChanged(exposure(), contrast(), brightness(),
+                                    temperature(), tint(), saturation(), hue());
+            m_updateTimer->start();
+            m_pendingUpdate = false;
+        } else {
+            m_pendingUpdate = true;
+        }
+    }
+}
+
+void ColorAdjustmentsOverlay::onTimerTimeout()
+{
+    if (m_pendingUpdate) {
+        emit adjustmentsChanged(exposure(), contrast(), brightness(),
+                                temperature(), tint(), saturation(), hue());
+        m_pendingUpdate = false;
+    }
+}
+
+void ColorAdjustmentsOverlay::onSliderReleased()
+{
+    if (m_pendingUpdate) {
+        emit adjustmentsChanged(exposure(), contrast(), brightness(),
+                                temperature(), tint(), saturation(), hue());
+        m_pendingUpdate = false;
+    }
+    m_updateTimer->stop();
 }
 
 bool ColorAdjustmentsOverlay::eventFilter(QObject *watched, QEvent *event)

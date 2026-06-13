@@ -4,6 +4,7 @@
 
 class QSlider;
 class QLabel;
+class QTimer;
 
 class CasSettingsOverlay : public DraggableSliderOverlay {
     Q_OBJECT
@@ -25,10 +26,15 @@ protected:
 private slots:
     void onSliderValueChanged();
     void onResetClicked();
+    void onTimerTimeout();
+    void onSliderReleased();
 
 private:
     void setupUi();
     void updateValueLabels();
+
+    QTimer  *m_updateTimer = nullptr;
+    bool     m_pendingUpdate = false;
 
     QSlider *m_sharpenSlider = nullptr;
     QLabel  *m_sharpenValLabel = nullptr;
