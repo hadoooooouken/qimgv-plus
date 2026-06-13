@@ -8,6 +8,7 @@ OverlayWidget::OverlayWidget(FloatingWidgetContainer *parent)
 {
     opacityEffect = new QGraphicsOpacityEffect(this);
     opacityEffect->setOpacity(1.0);
+    opacityEffect->setEnabled(false);
     this->setGraphicsEffect(opacityEffect);
     fadeAnimation = new QPropertyAnimation(this, "opacity");
     fadeAnimation->setDuration(120);
@@ -29,6 +30,11 @@ qreal OverlayWidget::opacity() const {
 }
 
 void OverlayWidget::setOpacity(qreal opacity) {
+    if (opacity >= 0.999) {
+        opacityEffect->setEnabled(false);
+    } else {
+        opacityEffect->setEnabled(true);
+    }
     opacityEffect->setOpacity(opacity);
     update();
 }
@@ -66,7 +72,7 @@ void OverlayWidget::setFadeEnabled(bool mode) {
 
 void OverlayWidget::show() {
     fadeAnimation->stop();
-    opacityEffect->setOpacity(1.0);
+    setOpacity(1.0);
     FloatingWidget::show();
 }
 
