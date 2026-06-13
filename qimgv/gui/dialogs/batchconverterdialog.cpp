@@ -621,18 +621,19 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     filterComboBox->setCurrentIndex(smartIndex != -1 ? smartIndex : 1);
 
     desktopSize = qApp->primaryScreen()->size();
-    resComboBox->addItem(tr("Original size"));
-    resComboBox->addItem("1366 x 768");
-    resComboBox->addItem("1440 x 900");
-    resComboBox->addItem("1440 x 1050");
-    resComboBox->addItem("1600 x 1200");
-    resComboBox->addItem("1920 x 1080");
-    resComboBox->addItem("1920 x 1200");
-    resComboBox->addItem("2560 x 1080");
-    resComboBox->addItem("2560 x 1440");
-    resComboBox->addItem("2560 x 1600");
-    resComboBox->addItem("3840 x 1600");
-    resComboBox->addItem("3840 x 2160");
+    resComboBox->addItem(tr("Original size"), QVariant());
+    resComboBox->addItem("1280 x 720", QSize(1280, 720));
+    resComboBox->addItem("1366 x 768", QSize(1366, 768));
+    resComboBox->addItem("1440 x 900", QSize(1440, 900));
+    resComboBox->addItem("1440 x 1050", QSize(1440, 1050));
+    resComboBox->addItem("1600 x 1200", QSize(1600, 1200));
+    resComboBox->addItem("1920 x 1080", QSize(1920, 1080));
+    resComboBox->addItem("1920 x 1200", QSize(1920, 1200));
+    resComboBox->addItem("2560 x 1080", QSize(2560, 1080));
+    resComboBox->addItem("2560 x 1440", QSize(2560, 1440));
+    resComboBox->addItem("2560 x 1600", QSize(2560, 1600));
+    resComboBox->addItem("3840 x 1600", QSize(3840, 1600));
+    resComboBox->addItem("3840 x 2160", QSize(3840, 2160));
 
     if (!filePaths.isEmpty()) {
         QImageReader r(filePaths[0]);
@@ -773,21 +774,11 @@ void BatchConverterDialog::updateToTargetValues() {
 }
 
 void BatchConverterDialog::onCommonResolutionChanged(int index) {
-    QSize res;
-    switch (index) {
-    case 1: res = QSize(1366, 768); break;
-    case 2: res = QSize(1440, 900); break;
-    case 3: res = QSize(1440, 1050); break;
-    case 4: res = QSize(1600, 1200); break;
-    case 5: res = QSize(1920, 1080); break;
-    case 6: res = QSize(1920, 1200); break;
-    case 7: res = QSize(2560, 1080); break;
-    case 8: res = QSize(2560, 1440); break;
-    case 9: res = QSize(2560, 1600); break;
-    case 10: res = QSize(3840, 1600); break;
-    case 11: res = QSize(3840, 2160); break;
-    default: res = originalSize; break;
+    if (index > 0) {
+        byAbsoluteSize->setChecked(true);
     }
+    QVariant data = resComboBox->itemData(index);
+    QSize res = data.isValid() ? data.toSize() : originalSize;
     if (keepAspectRatio->isChecked())
         targetSize = originalSize.scaled(res, Qt::KeepAspectRatio);
     else
@@ -796,11 +787,13 @@ void BatchConverterDialog::onCommonResolutionChanged(int index) {
 }
 
 void BatchConverterDialog::onFitDesktop() {
+    byAbsoluteSize->setChecked(true);
     targetSize = originalSize.scaled(desktopSize, Qt::KeepAspectRatio);
     updateToTargetValues();
 }
 
 void BatchConverterDialog::onFillDesktop() {
+    byAbsoluteSize->setChecked(true);
     targetSize = originalSize.scaled(desktopSize, Qt::KeepAspectRatioByExpanding);
     updateToTargetValues();
 }

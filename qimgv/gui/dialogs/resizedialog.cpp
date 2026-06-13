@@ -246,18 +246,19 @@ void ResizeDialog::setupUi() {
   rightColumn->addWidget(commonSizesLabel);
 
   resComboBox = new QComboBox(this);
-  resComboBox->addItem(tr("Select:"));
-  resComboBox->addItem("1366 x 768");
-  resComboBox->addItem("1440 x 900");
-  resComboBox->addItem("1440 x 1050");
-  resComboBox->addItem("1600 x 1200");
-  resComboBox->addItem("1920 x 1080 (FullHD)");
-  resComboBox->addItem("1920 x 1200 (FullHD)");
-  resComboBox->addItem("2560 x 1080");
-  resComboBox->addItem("2560 x 1440");
-  resComboBox->addItem("2560 x 1600");
-  resComboBox->addItem("3840 x 1600 (UW 4K)");
-  resComboBox->addItem("3840 x 2160 (UHD-1)");
+  resComboBox->addItem(tr("Select:"), QVariant());
+  resComboBox->addItem("1280 x 720", QSize(1280, 720));
+  resComboBox->addItem("1366 x 768", QSize(1366, 768));
+  resComboBox->addItem("1440 x 900", QSize(1440, 900));
+  resComboBox->addItem("1440 x 1050", QSize(1440, 1050));
+  resComboBox->addItem("1600 x 1200", QSize(1600, 1200));
+  resComboBox->addItem("1920 x 1080 (FullHD)", QSize(1920, 1080));
+  resComboBox->addItem("1920 x 1200 (FullHD)", QSize(1920, 1200));
+  resComboBox->addItem("2560 x 1080", QSize(2560, 1080));
+  resComboBox->addItem("2560 x 1440", QSize(2560, 1440));
+  resComboBox->addItem("2560 x 1600", QSize(2560, 1600));
+  resComboBox->addItem("3840 x 1600 (UW 4K)", QSize(3840, 1600));
+  resComboBox->addItem("3840 x 2160 (UHD-1)", QSize(3840, 2160));
   rightColumn->addWidget(resComboBox);
 
   fitDesktopButton = new QPushButton(tr("Fit to desktop"), this);
@@ -307,45 +308,11 @@ void ResizeDialog::sizeSelect() {
 }
 
 void ResizeDialog::setCommonResolution(int index) {
-  QSize res;
-  switch (index) {
-  case 1:
-    res = QSize(1366, 768);
-    break;
-  case 2:
-    res = QSize(1440, 900);
-    break;
-  case 3:
-    res = QSize(1440, 1050);
-    break;
-  case 4:
-    res = QSize(1600, 1200);
-    break;
-  case 5:
-    res = QSize(1920, 1080);
-    break;
-  case 6:
-    res = QSize(1920, 1200);
-    break;
-  case 7:
-    res = QSize(2560, 1080);
-    break;
-  case 8:
-    res = QSize(2560, 1440);
-    break;
-  case 9:
-    res = QSize(2560, 1600);
-    break;
-  case 10:
-    res = QSize(3840, 1600);
-    break;
-  case 11:
-    res = QSize(3840, 2160);
-    break;
-  default:
-    res = originalSize;
-    break;
+  if (index > 0) {
+    byAbsoluteSize->setChecked(true);
   }
+  QVariant data = resComboBox->itemData(index);
+  QSize res = data.isValid() ? data.toSize() : originalSize;
   if (keepAspectRatio->isChecked())
     targetSize = originalSize.scaled(res, Qt::KeepAspectRatio);
   else
@@ -385,11 +352,13 @@ void ResizeDialog::updateToTargetValues() {
 }
 
 void ResizeDialog::fitDesktop() {
+  byAbsoluteSize->setChecked(true);
   targetSize = originalSize.scaled(desktopSize, Qt::KeepAspectRatio);
   updateToTargetValues();
 }
 
 void ResizeDialog::fillDesktop() {
+  byAbsoluteSize->setChecked(true);
   targetSize = originalSize.scaled(desktopSize, Qt::KeepAspectRatioByExpanding);
   updateToTargetValues();
 }
