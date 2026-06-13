@@ -31,7 +31,7 @@ public:
 
     bool showImage(std::unique_ptr<QPixmap> pixmap, QString filePath = "");
     bool showAnimation(std::shared_ptr<QMovie> movie);
-    void onScalingFinished(std::unique_ptr<QPixmap> scaled);
+    void onScalingFinished(QPixmap scaled);
     void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
     void hideUpscaledCrop();
     bool panoramaMode() const { return imageViewer ? imageViewer->panoramaMode() : false; }

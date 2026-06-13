@@ -1730,10 +1730,10 @@ void Core::scalingRequest(QSize size, ScalingFilter filter) {
   }
 }
 
-void Core::onScalingFinished(QPixmap *scaled, ScalerRequest req) {
+void Core::onScalingFinished(QPixmap scaled, ScalerRequest req) {
   if (state.hasActiveImage /* TODO: a better fix > */ &&
       req.path == state.currentFilePath) {
-    mw->onScalingFinished(std::unique_ptr<QPixmap>(scaled));
+    mw->onScalingFinished(scaled);
 #ifdef USE_UPSCAYL
     if (mw->panoramaMode()) {
       mw->hideUpscaledCrop();
@@ -1776,8 +1776,6 @@ void Core::onScalingFinished(QPixmap *scaled, ScalerRequest req) {
       // qDebug() << "[Upscayl] disabled in settings";
     }
 #endif
-  } else {
-    delete scaled;
   }
 }
 

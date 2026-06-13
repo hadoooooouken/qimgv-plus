@@ -17,7 +17,7 @@ public:
     ~Scaler();
 
 signals:
-    void scalingFinished(QPixmap* result, ScalerRequest request);
+    void scalingFinished(QPixmap result, ScalerRequest request);
     void acceptScalingResult(QImage image, ScalerRequest req);
     void startBufferedRequest();
 

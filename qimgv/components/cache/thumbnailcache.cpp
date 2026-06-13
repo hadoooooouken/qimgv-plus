@@ -50,7 +50,7 @@ bool ThumbnailCache::exists(QString id) {
     return false;
 }
 
-void ThumbnailCache::saveThumbnail(QImage *image, QString id) {
+void ThumbnailCache::saveThumbnail(const QImage *image, QString id) {
     if (!image) return;
     
     QSqlDatabase db = getDatabaseConnection();
@@ -76,7 +76,7 @@ void ThumbnailCache::saveThumbnail(QImage *image, QString id) {
     }
 }
 
-QImage *ThumbnailCache::readThumbnail(QString id) {
+std::unique_ptr<QImage> ThumbnailCache::readThumbnail(QString id) {
     QSqlDatabase db = getDatabaseConnection();
     if (!db.isOpen()) return nullptr;
     
@@ -91,15 +91,13 @@ QImage *ThumbnailCache::readThumbnail(QString id) {
         QString label = query.value(3).toString();
         QByteArray ba = query.value(4).toByteArray();
         
-        QImage *thumb = new QImage();
+        auto thumb = std::make_unique<QImage>();
         if (thumb->loadFromData(ba)) {
             thumb->setText("lastModified", lastModified);
             thumb->setText("originalWidth", QString::number(originalWidth));
             thumb->setText("originalHeight", QString::number(originalHeight));
             thumb->setText("label", label);
             return thumb;
-        } else {
-            delete thumb;
         }
     }
     return nullptr;

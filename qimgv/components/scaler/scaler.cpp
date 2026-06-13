@@ -162,8 +162,7 @@ void Scaler::slotStartBufferedRequest() {
 }
 
 void Scaler::slotForwardScaledResult(QImage image, ScalerRequest req) {
-    QPixmap *pixmap = new QPixmap();
-    *pixmap = QPixmap::fromImage(ColorManager::applyColorManagement(image));
+    QPixmap pixmap = QPixmap::fromImage(ColorManager::applyColorManagement(image));
     emit scalingFinished(pixmap, req);
 }
 

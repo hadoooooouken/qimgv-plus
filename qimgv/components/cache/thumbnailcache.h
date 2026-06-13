@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <memory>
 #include <QDir>
 #include <QDebug>
 #include <QSqlDatabase>
@@ -15,8 +16,8 @@ class ThumbnailCache : public QObject
 public:
     explicit ThumbnailCache();
 
-    void saveThumbnail(QImage *image, QString id);
-    QImage* readThumbnail(QString id);
+    void saveThumbnail(const QImage *image, QString id);
+    std::unique_ptr<QImage> readThumbnail(QString id);
     QString thumbnailPath(QString id);
     bool exists(QString id);
     void clear();

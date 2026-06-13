@@ -45,7 +45,7 @@ public:
     virtual QSize sourceSize() const;
     virtual void showImage(std::unique_ptr<QPixmap> _pixmap, QString filePath = "");
     virtual void showAnimation(std::shared_ptr<QMovie> _animation);
-    virtual void setScaledPixmap(std::unique_ptr<QPixmap> newFrame);
+    virtual void setScaledPixmap(QPixmap newFrame);
     void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
     void hideUpscaledCrop();
     virtual bool isDisplaying() const;
@@ -151,7 +151,7 @@ private slots:
 private:
     QGraphicsScene *scene;
     std::shared_ptr<QPixmap> pixmap;
-    std::unique_ptr<QPixmap> pixmapScaled;
+    QPixmap pixmapScaled;
     std::shared_ptr<QMovie> movie;
     FilterPixmapItem pixmapItem, pixmapItemScaled, pixmapItemCrop;
     QTimer *animationTimer, *scaleTimer;

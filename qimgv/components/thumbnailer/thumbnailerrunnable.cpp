@@ -1,6 +1,7 @@
 #include "thumbnailerrunnable.h"
 #include "utils/colormanager.h"
 #include <QPainter>
+#include <memory>
 
 ThumbnailerRunnable::ThumbnailerRunnable(ThumbnailCache *_cache, QString _path,
                                          int _size, bool _crop, bool _force)
@@ -40,22 +41,20 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
   }
 
   if (!force && activeCache) {
-    image.reset(activeCache->readThumbnail(thumbnailId));
+    image = activeCache->readThumbnail(thumbnailId);
     if (image && image->text("lastModified") != time)
       image.reset(nullptr);
   }
 
   if (!image) {
     if (imgInfo.type() == DocumentType::NONE) {
-      std::shared_ptr<Thumbnail> thumbnail(
-          new Thumbnail(imgInfo.fileName(), "", size, nullptr));
-      return thumbnail;
+      return std::make_shared<Thumbnail>(imgInfo.fileName(), "", size, nullptr);
     }
     std::pair<QImage, QSize> pair;
     pair = createThumbnail(imgInfo.filePath(),
                            imgInfo.format().toStdString().c_str(), 
                            settings->thumbnailResolution(), false);
-    image.reset(new QImage(pair.first));
+    image = std::make_unique<QImage>(pair.first);
     QSize originalSize = pair.second;
 
     if (image && imgInfo.format() == "pdf") {
@@ -88,9 +87,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
   }
 
   if (!image) {
-    std::shared_ptr<Thumbnail> thumbnail(
-        new Thumbnail(imgInfo.fileName(), "error", size, nullptr));
-    return thumbnail;
+    return std::make_shared<Thumbnail>(imgInfo.fileName(), "error", size, nullptr);
   }
 
   // scale and crop to the requested grid size
@@ -132,22 +129,19 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
     painter.end();
     *image = opaqueImg;
   }
-  auto &&tmpPixmap = new QPixmap(image->size());
-  *tmpPixmap = QPixmap::fromImage(ColorManager::applyColorManagement(*image));
-  tmpPixmap->setDevicePixelRatio(qApp->devicePixelRatio());
+  auto pixmapPtr = std::make_shared<QPixmap>(image->size());
+  *pixmapPtr = QPixmap::fromImage(ColorManager::applyColorManagement(*image));
+  pixmapPtr->setDevicePixelRatio(qApp->devicePixelRatio());
 
   QString label;
-  if (tmpPixmap->width() == 0) {
+  if (pixmapPtr->width() == 0) {
     label = "error";
   } else {
     // put info into Thumbnail object
     label = image->text("originalWidth") + "x" + image->text("originalHeight") +
             image->text("label");
   }
-  std::shared_ptr<QPixmap> pixmapPtr(tmpPixmap);
-  std::shared_ptr<Thumbnail> thumbnail(
-      new Thumbnail(imgInfo.fileName(), label, size, pixmapPtr));
-  return thumbnail;
+  return std::make_shared<Thumbnail>(imgInfo.fileName(), label, size, pixmapPtr);
 }
 
 ThumbnailerRunnable::~ThumbnailerRunnable() {}
@@ -155,7 +149,7 @@ ThumbnailerRunnable::~ThumbnailerRunnable() {}
 std::pair<QImage, QSize>
 ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
                                      bool squared) {
-  QImageReader *reader = new QImageReader(path, format);
+  auto reader = std::make_unique<QImageReader>(path, format);
   reader->setAllocationLimit(settings->memoryAllocationLimit());
 
   // Select the optimal frame for multi-image formats like ICO
@@ -203,8 +197,7 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
       // Force reset reader because it is really finicky
       // and can fail on the second read attempt (yeah wtf)
       reader->setFileName("");
-      delete reader;
-      reader = new QImageReader(path, format);
+      reader = std::make_unique<QImageReader>(path, format);
       reader->setAllocationLimit(settings->memoryAllocationLimit());
       if (imageCount > 1) {
         reader->jumpToImage(bestIndex);
@@ -237,6 +230,5 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
   }
   // force reader to close file so it can be deleted later
   reader->setFileName("");
-  delete reader;
   return std::make_pair(result, originalSize);
 }

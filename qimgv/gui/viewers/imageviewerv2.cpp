@@ -7,7 +7,7 @@
 #include <QPainter>
 
 ImageViewerV2::ImageViewerV2(QWidget *parent)
-    : QGraphicsView(parent), pixmap(nullptr), pixmapScaled(nullptr),
+    : QGraphicsView(parent), pixmap(nullptr),
       movie(nullptr), transparencyGrid(false), expandImage(false),
       keepFitMode(false), loopPlayback(true), mIsFullscreen(false),
       scrollBarWorkaround(true), useFixedZoomLevels(false),
@@ -487,7 +487,7 @@ void ImageViewerV2::reset() {
   stopPosAnimation();
   pixmapItemScaled.setPixmap(QPixmap());
   pixmapItemCrop.setPixmap(QPixmap());
-  pixmapScaled.reset(nullptr);
+  pixmapScaled = QPixmap();
   pixmapItem.setPixmap(QPixmap());
   pixmapItem.setScale(1.0f);
   pixmapItem.setOffset(10000, 10000);
@@ -513,12 +513,12 @@ void ImageViewerV2::reset() {
 
 void ImageViewerV2::closeImage() { reset(); }
 
-void ImageViewerV2::setScaledPixmap(std::unique_ptr<QPixmap> newFrame) {
-  if (!movie && newFrame->size() != scaledSizeR() * dpr)
+void ImageViewerV2::setScaledPixmap(QPixmap newFrame) {
+  if (!movie && newFrame.size() != scaledSizeR() * dpr)
     return;
-  pixmapScaled = std::move(newFrame);
-  pixmapScaled->setDevicePixelRatio(dpr);
-  pixmapItemScaled.setPixmap(*pixmapScaled);
+  pixmapScaled = newFrame;
+  pixmapScaled.setDevicePixelRatio(dpr);
+  pixmapItemScaled.setPixmap(pixmapScaled);
   pixmapItem.hide();
   pixmapItemScaled.show();
 }
@@ -1307,7 +1307,7 @@ void ImageViewerV2::swapToOriginalPixmap() {
     return;
   pixmapItemScaled.hide();
   pixmapItemScaled.setPixmap(QPixmap());
-  pixmapScaled.reset(nullptr);
+  pixmapScaled = QPixmap();
   if (!mSvgMode) {
     pixmapItem.show();
   }
@@ -1643,8 +1643,8 @@ QPixmap ImageViewerV2::currentScaledPixmapCopy() const {
   if (!pixmap || pixmap->isNull())
     return QPixmap();
 
-  if (pixmapScaled && !pixmapScaled->isNull()) {
-    return *pixmapScaled;
+  if (!pixmapScaled.isNull()) {
+    return pixmapScaled;
   }
 
   QSize tSize = scaledSizeR() * dpr;

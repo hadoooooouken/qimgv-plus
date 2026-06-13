@@ -478,8 +478,8 @@ bool MW::isCropPanelActive() {
     return (activeSidePanel == SIDEPANEL_CROP);
 }
 
-void MW::onScalingFinished(std::unique_ptr<QPixmap> scaled) {
-    viewerWidget->onScalingFinished(std::move(scaled));
+void MW::onScalingFinished(QPixmap scaled) {
+    viewerWidget->onScalingFinished(scaled);
 }
 
 void MW::onUpscaleFinished(const QImage &cropImg, QRect origCrop) {

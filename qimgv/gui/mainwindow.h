@@ -63,7 +63,7 @@ public:
   ~MW();
   bool isFullScreen() const;
   bool isCropPanelActive();
-  void onScalingFinished(std::unique_ptr<QPixmap> scaled);
+  void onScalingFinished(QPixmap scaled);
   void onUpscaleFinished(const QImage &cropImg, QRect origCrop);
   void hideUpscaledCrop();
   void showImage(std::unique_ptr<QPixmap> pixmap, QString filePath = "");
