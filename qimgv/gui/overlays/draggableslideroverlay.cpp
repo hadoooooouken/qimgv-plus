@@ -28,7 +28,7 @@ QHBoxLayout *DraggableSliderOverlay::createHeader(const QString &title)
 
     IconButton *closeButton = new IconButton(this);
     closeButton->setFixedSize(16, 16);
-    closeButton->setIconPath(":res/icons/common/overlay/close-dim16.png");
+    closeButton->setIconPath(":/res/icons/common/overlay/close-dim16.png");
     connect(closeButton, &IconButton::clicked, this, &DraggableSliderOverlay::hide);
 
     headerLayout->addWidget(headerIcon);

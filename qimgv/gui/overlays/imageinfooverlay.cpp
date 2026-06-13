@@ -9,8 +9,8 @@ ImageInfoOverlay::ImageInfoOverlay(FloatingWidgetContainer *parent) :
     OverlayWidget(parent)
 {
     setupUi();
-    closeButton->setIconPath(":res/icons/common/overlay/close-dim16.png");
-    headerIcon->setIconPath(":res/icons/common/overlay/info16.png");
+    closeButton->setIconPath(":/res/icons/common/overlay/close-dim16.png");
+    headerIcon->setIconPath(":/res/icons/common/overlay/info16.png");
     entryStub.setFixedSize(280, 48);
     entryStub.setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     connect(closeButton,  &IconButton::clicked, this, &ImageInfoOverlay::hide);

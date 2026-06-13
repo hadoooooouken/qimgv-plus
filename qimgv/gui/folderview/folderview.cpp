@@ -79,26 +79,26 @@ FolderView::FolderView(QWidget *parent) :
     dirModel->setRootPath("");
     // -------------------------------
     upButton->setAction("goUp");
-    upButton->setIconPath(":res/icons/common/buttons/panel/up16.png");
+    upButton->setIconPath(":/res/icons/common/buttons/panel/up16.png");
     upButton->setTriggerMode(TriggerMode::ClickTrigger);
     settingsButton->setAction("openSettings");
-    settingsButton->setIconPath(":res/icons/common/buttons/panel/settings16.png");
+    settingsButton->setIconPath(":/res/icons/common/buttons/panel/settings16.png");
     exitButton->setAction("exit");
-    exitButton->setIconPath(":res/icons/common/buttons/panel/close16.png");
+    exitButton->setIconPath(":/res/icons/common/buttons/panel/close16.png");
     exitButton->setIconOffset(-1, 0);
     docViewButton->setAction("documentView");
-    docViewButton->setIconPath(":res/icons/common/buttons/panel/document-view20.png");
+    docViewButton->setIconPath(":/res/icons/common/buttons/panel/document-view20.png");
     togglePlacesPanelButton->setCheckable(true);
-    togglePlacesPanelButton->setIconPath(":res/icons/common/buttons/panel/toggle-panel20.png");
+    togglePlacesPanelButton->setIconPath(":/res/icons/common/buttons/panel/toggle-panel20.png");
     togglePlacesPanelButton->setIconOffset(1, 0);
 
 
-    sortingComboBox->setIconPath(":res/icons/common/other/sorting-mode16.png");
+    sortingComboBox->setIconPath(":/res/icons/common/other/sorting-mode16.png");
     folderSortingComboBox->setIconPath(":/res/icons/common/menuitem/document-view16.png");
 
-    newBookmarkButton->setIconPath(":res/icons/common/buttons/panel-small/add-new12.png");
-    homeButton->setIconPath(":res/icons/common/buttons/panel-small/home12.png");
-    rootButton->setIconPath(":res/icons/common/buttons/panel-small/root12.png");
+    newBookmarkButton->setIconPath(":/res/icons/common/buttons/panel-small/add-new12.png");
+    homeButton->setIconPath(":/res/icons/common/buttons/panel-small/home12.png");
+    rootButton->setIconPath(":/res/icons/common/buttons/panel-small/root12.png");
 
     bookmarksLabel->setAcceptDrops(true);
     newBookmarkButton->setAcceptDrops(true);

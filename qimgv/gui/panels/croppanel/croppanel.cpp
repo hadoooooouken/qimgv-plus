@@ -21,7 +21,7 @@ CropPanel::CropPanel(CropOverlay *_overlay, QWidget *parent) :
 
     headerIcon->setIconPath(":/res/icons/common/other/image-crop48.png");
 
-    ARcomboBox->setIconPath(":res/icons/common/other/dropDownArrow.png");
+    ARcomboBox->setIconPath(":/res/icons/common/other/dropDownArrow.png");
 
     hide();
 

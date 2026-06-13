@@ -58,7 +58,7 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   scaleTimer->setSingleShot(true);
   scaleTimer->setInterval(80);
 
-  checkboard = new QPixmap(":res/icons/common/other/checkerboard.png");
+  checkboard = new QPixmap(":/res/icons/common/other/checkerboard.png");
 
   lastTouchpadScroll.start();
   zoomThreshold = static_cast<int>(dpr * 4.);
