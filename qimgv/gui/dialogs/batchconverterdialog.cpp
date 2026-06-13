@@ -138,6 +138,85 @@ void BatchItemWidget::setStatus(const QString &statusText, const QString &detail
     destInfoLabel->setText(details);
 }
 
+// ==================== LinkedSliderSpin ====================
+
+LinkedSliderSpin::LinkedSliderSpin(const QString &labelText, double minVal, double maxVal, double defaultVal,
+                                   double factor, int decimals, const QString &suffix, QWidget *parent)
+    : QWidget(parent), m_factor(factor), m_defaultValue(defaultVal) {
+    QHBoxLayout *layout = new QHBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+
+    label = new QLabel(labelText, this);
+    label->setMinimumWidth(80);
+    layout->addWidget(label);
+
+    slider = new QSlider(Qt::Horizontal, this);
+    slider->setRange(static_cast<int>(std::round(minVal / factor)), static_cast<int>(std::round(maxVal / factor)));
+    layout->addWidget(slider);
+
+    spinBox = new QDoubleSpinBox(this);
+    spinBox->setFixedSize(80, 24);
+    spinBox->setAlignment(Qt::AlignCenter);
+    spinBox->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    spinBox->setRange(minVal, maxVal);
+    spinBox->setSingleStep(decimals > 0 ? 0.1 : 1.0);
+    spinBox->setDecimals(decimals);
+    spinBox->setSuffix(suffix);
+    layout->addWidget(spinBox);
+
+    setValue(defaultVal);
+
+    slider->installEventFilter(this);
+
+    connect(slider, &QSlider::valueChanged, this, &LinkedSliderSpin::updateSpinBox);
+    connect(spinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &LinkedSliderSpin::updateSlider);
+}
+
+double LinkedSliderSpin::value() const {
+    return spinBox->value();
+}
+
+void LinkedSliderSpin::setValue(double val) {
+    int sliderVal = static_cast<int>(std::round(val / m_factor));
+    slider->blockSignals(true);
+    slider->setValue(sliderVal);
+    slider->blockSignals(false);
+
+    spinBox->blockSignals(true);
+    spinBox->setValue(val);
+    spinBox->blockSignals(false);
+
+    emit valueChanged(val);
+}
+
+void LinkedSliderSpin::updateSpinBox(int val) {
+    double realVal = val * m_factor;
+    if (std::abs(spinBox->value() - realVal) > 1e-7) {
+        spinBox->blockSignals(true);
+        spinBox->setValue(realVal);
+        spinBox->blockSignals(false);
+        emit valueChanged(realVal);
+    }
+}
+
+void LinkedSliderSpin::updateSlider(double val) {
+    int sliderVal = static_cast<int>(std::round(val / m_factor));
+    if (slider->value() != sliderVal) {
+        slider->blockSignals(true);
+        slider->setValue(sliderVal);
+        slider->blockSignals(false);
+        emit valueChanged(val);
+    }
+}
+
+bool LinkedSliderSpin::eventFilter(QObject *watched, QEvent *event) {
+    if (watched == slider && event->type() == QEvent::MouseButtonDblClick) {
+        setValue(m_defaultValue);
+        return true;
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
 // ==================== BatchConverterDialog UI Setup ====================
 
 void BatchConverterDialog::setupUi() {
@@ -361,41 +440,28 @@ void BatchConverterDialog::setupColorSection(QVBoxLayout *scrollLayout) {
 
     QVBoxLayout *vColorLayout = new QVBoxLayout();
 
-    auto addColorRow = [&](const QString &text, int minV, int maxV, int defV, QSlider*& s, QDoubleSpinBox*& sb, double sbMin, double sbMax, double sbStep) {
-        QHBoxLayout *row = new QHBoxLayout();
-        QLabel *l = new QLabel(text, this);
-        l->setMinimumWidth(80);
-        s = new QSlider(Qt::Horizontal, this);
-        s->setRange(minV, maxV);
-        s->setValue(defV);
-        sb = new QDoubleSpinBox(this);
-        sb->setFixedSize(80, 24); // approximated height
-        sb->setAlignment(Qt::AlignCenter);
-        sb->setButtonSymbols(QAbstractSpinBox::NoButtons);
-        sb->setRange(sbMin, sbMax);
-        sb->setSingleStep(sbStep);
-        row->addWidget(l);
-        row->addWidget(s);
-        row->addWidget(sb);
-        vColorLayout->addLayout(row);
-    };
+    exposureWidget = new LinkedSliderSpin(tr("Exposure:"), -2.0, 2.0, 0.0, 0.01, 2, "", this);
+    vColorLayout->addWidget(exposureWidget);
 
-    addColorRow(tr("Exposure:"), -200, 200, 0, exposureSlider, exposureSpinBox, -2.0, 2.0, 0.1);
-    addColorRow(tr("Contrast:"), 0, 300, 100, contrastSlider, contrastSpinBox, 0.0, 3.0, 0.1);
-    contrastSpinBox->setValue(1.0);
-    addColorRow(tr("Brightness:"), -100, 100, 0, brightnessSlider, brightnessSpinBox, -1.0, 1.0, 0.1);
-    addColorRow(tr("Saturation:"), 0, 300, 100, saturationSlider, saturationSpinBox, 0.0, 3.0, 0.1);
-    saturationSpinBox->setValue(1.0);
-    addColorRow(tr("Hue:"), -180, 180, 0, hueSlider, hueSpinBox, -180.0, 180.0, 1.0);
-    addColorRow(tr("Temperature:"), -100, 100, 0, tempSlider, tempSpinBox, -1.0, 1.0, 0.05);
-    addColorRow(tr("Tint:"), -100, 100, 0, tintSlider, tintSpinBox, -1.0, 1.0, 0.05);
+    contrastWidget = new LinkedSliderSpin(tr("Contrast:"), 0.0, 300.0, 100.0, 1.0, 0, "%", this);
+    vColorLayout->addWidget(contrastWidget);
+
+    brightnessWidget = new LinkedSliderSpin(tr("Brightness:"), -100.0, 100.0, 0.0, 1.0, 0, "%", this);
+    vColorLayout->addWidget(brightnessWidget);
+
+    saturationWidget = new LinkedSliderSpin(tr("Saturation:"), 0.0, 200.0, 100.0, 1.0, 0, "%", this);
+    vColorLayout->addWidget(saturationWidget);
+
+    hueWidget = new LinkedSliderSpin(tr("Hue:"), -180.0, 180.0, 0.0, 1.0, 0, QString::fromUtf8("\xc2\xb0"), this);
+    vColorLayout->addWidget(hueWidget);
+
+    tempWidget = new LinkedSliderSpin(tr("Temperature:"), -50.0, 50.0, 0.0, 1.0, 0, "", this);
+    vColorLayout->addWidget(tempWidget);
+
+    tintWidget = new LinkedSliderSpin(tr("Tint:"), -50.0, 50.0, 0.0, 1.0, 0, "", this);
+    vColorLayout->addWidget(tintWidget);
 
     ccLayout->addLayout(vColorLayout);
-    // Note: The UI file has an empty verticalLayoutColor inside colorContainer, 
-    // the code creates resetColorButton dynamically and adds it to verticalLayoutColor.
-    // So we should expose this layout or recreate the button later.
-    // I will expose vColorLayout by re-parenting things properly later or just letting setupUi finish it.
-
     scrollLayout->addWidget(colorContainer);
 }
 
@@ -456,22 +522,14 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     QPushButton *resetColorButton = new QPushButton(tr("Reset Color Adjustments"), this);
     colorContainer->layout()->addWidget(resetColorButton);
     connect(resetColorButton, &QPushButton::clicked, this, [this]() {
-        exposureSlider->setValue(0);
-        contrastSlider->setValue(100);
-        brightnessSlider->setValue(0);
-        saturationSlider->setValue(100);
-        hueSlider->setValue(0);
-        tempSlider->setValue(0);
-        tintSlider->setValue(0);
+        exposureWidget->setValue(0.0);
+        contrastWidget->setValue(100.0);
+        brightnessWidget->setValue(0.0);
+        saturationWidget->setValue(100.0);
+        hueWidget->setValue(0.0);
+        tempWidget->setValue(0.0);
+        tintWidget->setValue(0.0);
     });
-
-    exposureSlider->installEventFilter(this);
-    contrastSlider->installEventFilter(this);
-    brightnessSlider->installEventFilter(this);
-    saturationSlider->installEventFilter(this);
-    hueSlider->installEventFilter(this);
-    tempSlider->installEventFilter(this);
-    tintSlider->installEventFilter(this);
 
     collectResizeWidgets();
     collectColorWidgets();
@@ -481,60 +539,6 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
 
     connect(resizeEnableCheckBox, &QCheckBox::toggled, this, &BatchConverterDialog::onResizeEnabledChanged);
     connect(colorEnableCheckBox, &QCheckBox::toggled, this, &BatchConverterDialog::onColorEnabledChanged);
-
-    // ----- Configure spinboxes with proper units -----
-    exposureSpinBox->setRange(-2.0, 2.0);
-    exposureSpinBox->setSingleStep(0.1);
-    exposureSpinBox->setSuffix("");
-    exposureSpinBox->setDecimals(2);
-    exposureSlider->setRange(-200, 200);
-    exposureSlider->setValue(0);
-
-    contrastSpinBox->setRange(0.0, 300.0);
-    contrastSpinBox->setValue(100.0);
-    contrastSpinBox->setSingleStep(1.0);
-    contrastSpinBox->setSuffix("%");
-    contrastSpinBox->setDecimals(0);
-    contrastSlider->setRange(0, 300);
-    contrastSlider->setValue(100);
-
-    brightnessSpinBox->setRange(-100.0, 100.0);
-    brightnessSpinBox->setValue(0.0);
-    brightnessSpinBox->setSingleStep(1.0);
-    brightnessSpinBox->setSuffix("%");
-    brightnessSlider->setRange(-100, 100);
-    brightnessSlider->setValue(0);
-
-    saturationSpinBox->setRange(0.0, 200.0);
-    saturationSpinBox->setValue(100.0);
-    saturationSpinBox->setSingleStep(1.0);
-    saturationSpinBox->setSuffix("%");
-    saturationSlider->setRange(0, 200);
-    saturationSlider->setValue(100);
-
-    hueSpinBox->setRange(-180.0, 180.0);
-    hueSpinBox->setValue(0.0);
-    hueSpinBox->setSingleStep(1.0);
-    hueSpinBox->setSuffix("\xc2\xb0");
-    hueSpinBox->setDecimals(0);
-    hueSlider->setRange(-180, 180);
-    hueSlider->setValue(0);
-
-    tempSpinBox->setRange(-50.0, 50.0);
-    tempSpinBox->setValue(0.0);
-    tempSpinBox->setSingleStep(1.0);
-    tempSpinBox->setDecimals(0);
-    tempSpinBox->setSuffix("");
-    tempSlider->setRange(-50, 50);
-    tempSlider->setValue(0);
-
-    tintSpinBox->setRange(-50.0, 50.0);
-    tintSpinBox->setValue(0.0);
-    tintSpinBox->setSingleStep(1.0);
-    tintSpinBox->setDecimals(0);
-    tintSpinBox->setSuffix("");
-    tintSlider->setRange(-50, 50);
-    tintSlider->setValue(0);
 
     auto colors = settings->colorScheme();
     QString dialogStyle =
@@ -671,36 +675,6 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     connect(qualitySlider, &QSlider::valueChanged, this, &BatchConverterDialog::onQualitySliderChanged);
     connect(qualitySpinBox, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onQualitySpinBoxChanged);
 
-    // ----- Color adjustment connections -----
-    // For exposureSpinBox (double -> double) as declared in header
-    connect(exposureSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onExposureSliderChanged);
-    connect(exposureSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &BatchConverterDialog::onExposureSpinBoxChanged);
-
-    // For others, spinBox gives double, but slots expect int => use lambda
-    connect(contrastSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onContrastSliderChanged);
-    connect(contrastSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
-            [this](double val) { onContrastSpinBoxChanged(static_cast<int>(val)); });
-
-    connect(brightnessSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onBrightnessSliderChanged);
-    connect(brightnessSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
-            [this](double val) { onBrightnessSpinBoxChanged(static_cast<int>(val)); });
-
-    connect(saturationSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onSaturationSliderChanged);
-    connect(saturationSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
-            [this](double val) { onSaturationSpinBoxChanged(static_cast<int>(val)); });
-
-    connect(hueSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onHueSliderChanged);
-    connect(hueSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
-            [this](double val) { onHueSpinBoxChanged(static_cast<int>(val)); });
-
-    connect(tempSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onTempSliderChanged);
-    connect(tempSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
-            [this](double val) { onTempSpinBoxChanged(static_cast<int>(val)); });
-
-    connect(tintSlider, &QSlider::valueChanged, this, &BatchConverterDialog::onTintSliderChanged);
-    connect(tintSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
-            [this](double val) { onTintSpinBoxChanged(static_cast<int>(val)); });
-
     connect(byPercentage, &QRadioButton::toggled, this, &BatchConverterDialog::onResizeRadioToggled);
     connect(byAbsoluteSize, &QRadioButton::toggled, this, &BatchConverterDialog::onResizeRadioToggled);
     connect(percent, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &BatchConverterDialog::onPercentChanged);
@@ -742,85 +716,6 @@ void BatchConverterDialog::onQualitySpinBoxChanged(int value) {
     qualitySlider->blockSignals(true);
     qualitySlider->setValue(value);
     qualitySlider->blockSignals(false);
-}
-
-// ----- Color adjustment slots (matching header signatures) -----
-void BatchConverterDialog::onExposureSliderChanged(int value) {
-    double val = value / 100.0;
-    exposureSpinBox->blockSignals(true);
-    exposureSpinBox->setValue(val);
-    exposureSpinBox->blockSignals(false);
-}
-void BatchConverterDialog::onExposureSpinBoxChanged(double value) {
-    exposureSlider->blockSignals(true);
-    exposureSlider->setValue(static_cast<int>(value * 100));
-    exposureSlider->blockSignals(false);
-}
-
-void BatchConverterDialog::onContrastSliderChanged(int value) {
-    contrastSpinBox->blockSignals(true);
-    contrastSpinBox->setValue(static_cast<double>(value));
-    contrastSpinBox->blockSignals(false);
-}
-void BatchConverterDialog::onContrastSpinBoxChanged(int value) {
-    contrastSlider->blockSignals(true);
-    contrastSlider->setValue(value);
-    contrastSlider->blockSignals(false);
-}
-
-void BatchConverterDialog::onBrightnessSliderChanged(int value) {
-    brightnessSpinBox->blockSignals(true);
-    brightnessSpinBox->setValue(static_cast<double>(value));
-    brightnessSpinBox->blockSignals(false);
-}
-void BatchConverterDialog::onBrightnessSpinBoxChanged(int value) {
-    brightnessSlider->blockSignals(true);
-    brightnessSlider->setValue(value);
-    brightnessSlider->blockSignals(false);
-}
-
-void BatchConverterDialog::onSaturationSliderChanged(int value) {
-    saturationSpinBox->blockSignals(true);
-    saturationSpinBox->setValue(static_cast<double>(value));
-    saturationSpinBox->blockSignals(false);
-}
-void BatchConverterDialog::onSaturationSpinBoxChanged(int value) {
-    saturationSlider->blockSignals(true);
-    saturationSlider->setValue(value);
-    saturationSlider->blockSignals(false);
-}
-
-void BatchConverterDialog::onHueSliderChanged(int value) {
-    hueSpinBox->blockSignals(true);
-    hueSpinBox->setValue(static_cast<double>(value));
-    hueSpinBox->blockSignals(false);
-}
-void BatchConverterDialog::onHueSpinBoxChanged(int value) {
-    hueSlider->blockSignals(true);
-    hueSlider->setValue(value);
-    hueSlider->blockSignals(false);
-}
-
-void BatchConverterDialog::onTempSliderChanged(int value) {
-    tempSpinBox->blockSignals(true);
-    tempSpinBox->setValue(static_cast<double>(value));
-    tempSpinBox->blockSignals(false);
-}
-void BatchConverterDialog::onTempSpinBoxChanged(int value) {
-    tempSlider->blockSignals(true);
-    tempSlider->setValue(value);
-    tempSlider->blockSignals(false);
-}
-
-void BatchConverterDialog::onTintSliderChanged(int value) {
-    tintSpinBox->blockSignals(true);
-    tintSpinBox->setValue(static_cast<double>(value));
-    tintSpinBox->blockSignals(false);
-}
-void BatchConverterDialog::onTintSpinBoxChanged(int value) {
-    tintSlider->blockSignals(true);
-    tintSlider->setValue(value);
-    tintSlider->blockSignals(false);
 }
 
 // ----- Resize slots -----
@@ -1071,13 +966,13 @@ void BatchConverterDialog::startConversion() {
     bool doColor = colorEnableCheckBox->isChecked();
 
     // Convert UI values to coefficients expected by ImageLib::applyColorAdjustments
-    float exposure = doColor ? static_cast<float>(exposureSpinBox->value()) : 0.0f;
-    float contrast = doColor ? static_cast<float>(contrastSpinBox->value() / 100.0) : 1.0f;
-    float brightness = doColor ? static_cast<float>(brightnessSpinBox->value() / 100.0) : 0.0f;
-    float saturation = doColor ? static_cast<float>(saturationSpinBox->value() / 100.0) : 1.0f;
-    float hue = doColor ? static_cast<float>(hueSpinBox->value()) : 0.0f;
-    float temp = doColor ? static_cast<float>(tempSpinBox->value() / 100.0) : 0.0f;
-    float tint = doColor ? static_cast<float>(tintSpinBox->value() / 100.0) : 0.0f;
+    float exposure = doColor ? static_cast<float>(exposureWidget->value()) : 0.0f;
+    float contrast = doColor ? static_cast<float>(contrastWidget->value() / 100.0) : 1.0f;
+    float brightness = doColor ? static_cast<float>(brightnessWidget->value() / 100.0) : 0.0f;
+    float saturation = doColor ? static_cast<float>(saturationWidget->value() / 100.0) : 1.0f;
+    float hue = doColor ? static_cast<float>(hueWidget->value()) : 0.0f;
+    float temp = doColor ? static_cast<float>(tempWidget->value() / 100.0) : 0.0f;
+    float tint = doColor ? static_cast<float>(tintWidget->value() / 100.0) : 0.0f;
 
     QString pattern = patternEdit->text();
     bool overwrite = overwriteCheckBox->isChecked();
@@ -1331,32 +1226,4 @@ void BatchWorkerTask::run() {
             Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Save Error")),
             Q_ARG(bool, false));
     }
-}
-
-bool BatchConverterDialog::eventFilter(QObject *watched, QEvent *event) {
-    if (event->type() == QEvent::MouseButtonDblClick) {
-        if (watched == exposureSlider) {
-            exposureSlider->setValue(0);
-            return true;
-        } else if (watched == contrastSlider) {
-            contrastSlider->setValue(100);
-            return true;
-        } else if (watched == brightnessSlider) {
-            brightnessSlider->setValue(0);
-            return true;
-        } else if (watched == saturationSlider) {
-            saturationSlider->setValue(100);
-            return true;
-        } else if (watched == hueSlider) {
-            hueSlider->setValue(0);
-            return true;
-        } else if (watched == tempSlider) {
-            tempSlider->setValue(0);
-            return true;
-        } else if (watched == tintSlider) {
-            tintSlider->setValue(0);
-            return true;
-        }
-    }
-    return QDialog::eventFilter(watched, event);
 }

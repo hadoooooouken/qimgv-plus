@@ -58,6 +58,34 @@ private:
     QLabel *destInfoLabel;
 };
 
+class LinkedSliderSpin : public QWidget {
+    Q_OBJECT
+public:
+    LinkedSliderSpin(const QString &labelText, double minVal, double maxVal, double defaultVal,
+                     double factor = 1.0, int decimals = 0, const QString &suffix = "",
+                     QWidget *parent = nullptr);
+
+    double value() const;
+    void setValue(double val);
+
+signals:
+    void valueChanged(double val);
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
+private slots:
+    void updateSpinBox(int val);
+    void updateSlider(double val);
+
+private:
+    QLabel *label;
+    QSlider *slider;
+    QDoubleSpinBox *spinBox;
+    double m_factor;
+    double m_defaultValue;
+};
+
 class BatchConverterDialog : public QDialog {
     Q_OBJECT
 
@@ -71,21 +99,6 @@ public slots:
 private slots:
     void onQualitySliderChanged(int value);
     void onQualitySpinBoxChanged(int value);
-
-    void onExposureSliderChanged(int value);
-    void onExposureSpinBoxChanged(double value);
-    void onContrastSliderChanged(int value);
-    void onContrastSpinBoxChanged(int value);
-    void onSaturationSliderChanged(int value);
-    void onSaturationSpinBoxChanged(int value);
-    void onTempSliderChanged(int value);
-    void onTempSpinBoxChanged(int value);
-    void onTintSliderChanged(int value);
-    void onTintSpinBoxChanged(int value);
-    void onBrightnessSliderChanged(int value);
-    void onBrightnessSpinBoxChanged(int value);
-    void onHueSliderChanged(int value);
-    void onHueSpinBoxChanged(int value);
 
     void onPercentChanged(double val);
     void onWidthChanged(int val);
@@ -107,9 +120,6 @@ private slots:
 
     void onResizeEnabledChanged(bool enabled);
     void onColorEnabledChanged(bool enabled);
-
-protected:
-    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
     void setupUi();
@@ -154,8 +164,13 @@ private:
 
     QWidget *colorContainer;
     QCheckBox *colorEnableCheckBox;
-    QSlider *exposureSlider, *contrastSlider, *brightnessSlider, *saturationSlider, *hueSlider, *tempSlider, *tintSlider;
-    QDoubleSpinBox *exposureSpinBox, *contrastSpinBox, *brightnessSpinBox, *saturationSpinBox, *hueSpinBox, *tempSpinBox, *tintSpinBox;
+    LinkedSliderSpin *exposureWidget;
+    LinkedSliderSpin *contrastWidget;
+    LinkedSliderSpin *brightnessWidget;
+    LinkedSliderSpin *saturationWidget;
+    LinkedSliderSpin *hueWidget;
+    LinkedSliderSpin *tempWidget;
+    LinkedSliderSpin *tintWidget;
 
     QWidget *outputContainer;
     QLineEdit *outDirEdit;
