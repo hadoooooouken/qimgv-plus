@@ -33,29 +33,29 @@ CropPanel::CropPanel(CropOverlay *_overlay, QWidget *parent) :
     connect(cropButton, &PushButtonFocusInd::rightPressed, this, &CropPanel::setFocusCropBtn);
     connect(cropSaveButton, &PushButtonFocusInd::rightPressed, this, &CropPanel::setFocusCropSaveBtn);
 
-    connect(cancelButton, SIGNAL(clicked()), this, SIGNAL(cancel()));
-    connect(cropButton, SIGNAL(clicked()), this, SLOT(doCrop()));
-    connect(cropSaveButton, SIGNAL(clicked()), this, SLOT(doCropSave()));
-    connect(width, SIGNAL(valueChanged(int)), this, SLOT(onSelectionChange()));
-    connect(height, SIGNAL(valueChanged(int)), this, SLOT(onSelectionChange()));
-    connect(posX, SIGNAL(valueChanged(int)), this, SLOT(onSelectionChange()));
-    connect(posY, SIGNAL(valueChanged(int)), this, SLOT(onSelectionChange()));
-    connect(ARX, SIGNAL(valueChanged(double)), this, SLOT(onAspectRatioChange()));
-    connect(ARY, SIGNAL(valueChanged(double)), this, SLOT(onAspectRatioChange()));
-    connect(ARcomboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onAspectRatioSelected()));
+    connect(cancelButton, &QPushButton::clicked, this, &CropPanel::cancel);
+    connect(cropButton, &QPushButton::clicked, this, &CropPanel::doCrop);
+    connect(cropSaveButton, &QPushButton::clicked, this, &CropPanel::doCropSave);
+    connect(width, qOverload<int>(&SpinBoxInputFix::valueChanged), this, &CropPanel::onSelectionChange);
+    connect(height, qOverload<int>(&SpinBoxInputFix::valueChanged), this, &CropPanel::onSelectionChange);
+    connect(posX, qOverload<int>(&SpinBoxInputFix::valueChanged), this, &CropPanel::onSelectionChange);
+    connect(posY, qOverload<int>(&SpinBoxInputFix::valueChanged), this, &CropPanel::onSelectionChange);
+    connect(ARX, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CropPanel::onAspectRatioChange);
+    connect(ARY, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CropPanel::onAspectRatioChange);
+    connect(ARcomboBox, qOverload<int>(&StyledComboBox::currentIndexChanged), this, &CropPanel::onAspectRatioSelected);
     connect(swapARButton, &QPushButton::clicked, this, &CropPanel::onSwapARClicked);
 
-    connect(overlay, SIGNAL(selectionChanged(QRect)),
-            this, SLOT(onSelectionOutsideChange(QRect)));
-    connect(this, SIGNAL(selectionChanged(QRect)),
-            overlay, SLOT(onSelectionOutsideChange(QRect)));
-    connect(this, SIGNAL(aspectRatioChanged(QPointF)),
-            overlay, SLOT(setAspectRatio(QPointF)));
-    connect(overlay, SIGNAL(escPressed()), this, SIGNAL(cancel()));
-    connect(overlay, SIGNAL(cropDefault()), this, SLOT(doCropDefaultAction()));
-    connect(overlay, SIGNAL(cropSave()), this, SLOT(doCropSave()));
-    connect(this, SIGNAL(selectAll()), overlay, SLOT(selectAll()));
-    connect(resetButton, SIGNAL(clicked()), this, SLOT(doReset()));
+    connect(overlay, &CropOverlay::selectionChanged,
+            this, &CropPanel::onSelectionOutsideChange);
+    connect(this, &CropPanel::selectionChanged,
+            overlay, &CropOverlay::onSelectionOutsideChange);
+    connect(this, &CropPanel::aspectRatioChanged,
+            overlay, &CropOverlay::setAspectRatio);
+    connect(overlay, &CropOverlay::escPressed, this, &CropPanel::cancel);
+    connect(overlay, &CropOverlay::cropDefault, this, &CropPanel::doCropDefaultAction);
+    connect(overlay, &CropOverlay::cropSave, this, &CropPanel::doCropSave);
+    connect(this, &CropPanel::selectAll, overlay, &CropOverlay::selectAll);
+    connect(resetButton, &QPushButton::clicked, this, &CropPanel::doReset);
 }
 
 CropPanel::~CropPanel() = default;
