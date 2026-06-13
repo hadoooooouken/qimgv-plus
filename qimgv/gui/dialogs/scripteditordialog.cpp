@@ -14,7 +14,6 @@ ScriptEditorDialog::ScriptEditorDialog(QWidget *parent) :
 {
     setupUi();
     this->setWindowTitle(tr("New application/script"));
-    keywordsLabel->setText(tr("Keywords:") + " %file%");
 #if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
     label_3->hide();
 #endif
@@ -81,6 +80,7 @@ void ScriptEditorDialog::setupUi()
     keywordsLabel->setFont(smallFont);
     keywordsLabel->setMargin(4);
     keywordsLabel->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByMouse);
+    keywordsLabel->setText(tr("Keywords:") + " %file%");
     gridLayout->addWidget(keywordsLabel, 2, 0, 1, 3);
 
     label_3 = new QLabel(tr("NOTE: make sure your .sh script has execute flag."), this);
