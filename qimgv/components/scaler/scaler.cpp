@@ -1,5 +1,15 @@
 #include "scaler.h"
 #include "utils/colormanager.h"
+#include <QDebug>
+
+#define SCALER_DEBUG 0
+
+#define SCALER_TRACE(msg) \
+    do { \
+        if (SCALER_DEBUG) { \
+            qDebug() << "[Scaler]" << msg; \
+        } \
+    } while (0)
 
 /* What this should do in theory:
  * 1 request comes
@@ -38,68 +48,76 @@ Scaler::~Scaler() {
     delete runnable;
 }
 
+/*
+ * State transition matrix for requestScaled and updateReservations:
+ *
+ * | running | buffered | same-image relationship                    | Action / Reconciled Cache State
+ * |---------|----------|---------------------------------------------|---------------------------------
+ * | false   | false    | N/A                                         | Reserve new req, start task.
+ * | false   | true     | new req == buffered req                     | Keep buffered req, do nothing.
+ * | false   | true     | new req != buffered req                     | Release old buffered, reserve new buffered.
+ * | true    | false    | new req == running req                      | Keep running req (shared ref), do nothing.
+ * | true    | false    | new req != running req                      | Reserve new buffered req.
+ * | true    | true     | new req == buffered req                     | Keep buffered req, do nothing.
+ * | true    | true     | new req != buffered req (new == running)    | Release old buffered req, keep running req.
+ * | true    | true     | new req != buffered req (new != running)    | Release old buffered req, reserve new buffered req.
+ *
+ * The updateReservations() function automatically reconciles all of these states by checking
+ * the union of the running and buffered request image paths and adjusting cache locks.
+ */
+
+void Scaler::updateReservations() {
+    QSet<QString> desired;
+    if (running && startedRequest.image) {
+        desired.insert(startedRequest.image->filePath());
+    }
+    if (buffered && bufferedRequest.image) {
+        desired.insert(bufferedRequest.image->filePath());
+    }
+
+    // Release paths that are no longer needed
+    for (auto it = reservedPaths.begin(); it != reservedPaths.end(); ) {
+        if (!desired.contains(*it)) {
+            SCALER_TRACE("Releasing cache reservation for:" << *it);
+            cache->release(*it);
+            it = reservedPaths.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    // Reserve paths that are now needed
+    for (const QString &path : desired) {
+        if (!reservedPaths.contains(path)) {
+            SCALER_TRACE("Reserving cache for:" << path);
+            cache->reserve(path);
+            reservedPaths.insert(path);
+        }
+    }
+}
+
 void Scaler::requestScaled(ScalerRequest req) {
     sem->acquire(1);
+    SCALER_TRACE("requestScaled for image:" << (req.image ? req.image->fileName() : "null"));
     if(!running) {
-//////////////////////////////////
-        if(!buffered) {
-            bufferedRequest = req;
-            buffered = true;
-          //qDebug() << "1 requestScaled() - locking..  " <<  req.image->name();
-            cache->reserve(req.image->fileName());
-          //qDebug() << "1 requestScaled() - LOCKED!  " <<  req.image->name();
-            startRequest(req);
-        } else if(bufferedRequest.image != req.image) {
-          //qDebug() << "2 requestScaled() - locking...  " <<  req.image->name();
-            cache->reserve(req.image->fileName());
-          //qDebug() << "2 requestScaled() - LOCKED!  " <<  req.image->name();
-            auto tmp = bufferedRequest;
-            bufferedRequest = req;
-            buffered = true;
-            if(startedRequest.image != tmp.image) {
-                cache->release(tmp.image->fileName());
-              //qDebug() << "2 requestScaled() - RELEASED!  " <<  tmp.image->name();
-            }
-        } else {
-            bufferedRequest = req;
-            buffered = true;
-        }
-//////////////////////////////
+        bufferedRequest = req;
+        buffered = true;
+        updateReservations();
+        startRequest(req);
     } else {
-        if(!buffered) {
-            if(req.image != startedRequest.image)
-                cache->reserve(req.image->fileName());
-            bufferedRequest = req;
-            buffered = true;
-        } else {
-            if(req.image == bufferedRequest.image) {
-                bufferedRequest = req;
-                buffered = true;
-            } else {
-                if(bufferedRequest.image != startedRequest.image) {
-                    //qDebug() << "4 RELEASING " << bufferedRequest.image->name();
-                    cache->release(bufferedRequest.image->fileName());
-                }
-                if(req.image != startedRequest.image)
-                    cache->reserve(req.image->fileName());
-                bufferedRequest = req;
-                buffered = true;
-            }
-        }
+        bufferedRequest = req;
+        buffered = true;
+        updateReservations();
     }
     sem->release(1);
 }
 
 void Scaler::clear() {
     sem->acquire(1);
-    if(buffered) {
-        if(!running || bufferedRequest.image != startedRequest.image) {
-            cache->release(bufferedRequest.image->fileName());
-        }
-        buffered = false;
-        bufferedRequest = ScalerRequest();
-    }
+    buffered = false;
+    bufferedRequest = ScalerRequest();
     mCleared = true;
+    updateReservations();
     sem->release(1);
 }
 
@@ -108,42 +126,36 @@ void Scaler::onTaskStart(ScalerRequest req) {
     sem->acquire(1);
     running = true;
     mCleared = false;
-    // clear buffered flag if there were no requests after us
     if(buffered && bufferedRequest == req) {
         buffered = false;
     }
     startedRequest = req;
-  //qDebug() << "onTaskStart(): " << req.image->name();
+    SCALER_TRACE("onTaskStart for image:" << (req.image ? req.image->fileName() : "null"));
+    updateReservations();
     sem->release(1);
 }
 
 void Scaler::onTaskFinish(QImage scaled, ScalerRequest req) {
     sem->acquire(1);
     running = false;
+    SCALER_TRACE("onTaskFinish for image:" << (req.image ? req.image->fileName() : "null"));
     if(mCleared) {
-        QString name = req.image->fileName();
-        cache->release(req.image->fileName());
         mCleared = false;
+        updateReservations();
         sem->release(1);
         return;
     }
-    if(buffered && bufferedRequest.image == req.image) {
-    } else {
-      //qDebug() << "onTaskFinish() - 2 releasing..  " <<  req.image->name();
-        QString name = req.image->fileName();
-        cache->release(req.image->fileName());
-      //qDebug() << "onTaskFinish() - 2 RELEASED!  " <<  name;
-    }
     if(buffered) {
-      //qDebug() << "onTaskFinish - startingBuffered: " << bufferedRequest.string;
-        //startRequest(bufferedRequest);
         emit startBufferedRequest();
+        updateReservations();
         sem->release(1);
     } else {
+        updateReservations();
         sem->release(1);
         emit acceptScalingResult(scaled, req);
     }
 }
+
 
 void Scaler::slotStartBufferedRequest() {
     startRequest(bufferedRequest);

@@ -4,6 +4,8 @@
 #include <QThreadPool>
 #include <QThread>
 #include <QMutex>
+#include <QSet>
+#include <QString>
 #include "components/cache/cache.h"
 #include "scalerrequest.h"
 #include "scalerrunnable.h"
@@ -38,8 +40,11 @@ private:
     bool mCleared = false;
 
     Cache *cache;
+    QSet<QString> reservedPaths;
 
     void startRequest(ScalerRequest req);
+    void updateReservations();
 
     QSemaphore *sem;
 };
+
