@@ -120,17 +120,12 @@ static const ExtensionInfo g_extensionTable[] = {
   { L".psd",  "psd",  false, L"qimgvplus.AssocFile.psd" },
   { L".psb",  "psd",  false, L"qimgvplus.AssocFile.psb" },
 
-  // Adobe Illustrator / PDF
+  // Adobe Illustrator
   { L".ai",   "pdf",  false, L"qimgvplus.AssocFile.ai" },
-  { L".pdf",  "pdf",  false, L"qimgvplus.AssocFile.pdf" },
 
   // TIFF
   { L".tif",  "tiff", false, L"qimgvplus.AssocFile.tif" },
   { L".tiff", "tiff", false, L"qimgvplus.AssocFile.tiff" },
-
-  // Scalable Vector Graphics
-  { L".svg",  "svg",  false, nullptr },
-  { L".svgz", "svg",  false, nullptr },
 
   // JPEG 2000
   { L".jp2",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
@@ -826,25 +821,25 @@ STDAPI DllRegisterServer() {
   swprintf_s(clsidKey, MAX_PATH, L"Software\\Classes\\CLSID\\%s",
              CLSID_QImgvThumbnailProvider_Str);
 
-  HRESULT hr = CreateRegistryKeyAndValue(HKEY_LOCAL_MACHINE, clsidKey, nullptr,
+  HRESULT hr = CreateRegistryKeyAndValue(HKEY_CURRENT_USER, clsidKey, nullptr,
                                          L"qimgv-plus Thumbnail Provider");
   if (FAILED(hr))
     return hr;
 
   // Prefer surrogate/process isolation (DisableProcessIsolation = 0)
-  hr = CreateRegistryKeyAndDwordValue(HKEY_LOCAL_MACHINE, clsidKey,
+  hr = CreateRegistryKeyAndDwordValue(HKEY_CURRENT_USER, clsidKey,
                                       L"DisableProcessIsolation", 0);
   if (FAILED(hr))
     return hr;
 
   wchar_t inprocKey[MAX_PATH];
   swprintf_s(inprocKey, MAX_PATH, L"%s\\InprocServer32", clsidKey);
-  hr = CreateRegistryKeyAndValue(HKEY_LOCAL_MACHINE, inprocKey, nullptr,
+  hr = CreateRegistryKeyAndValue(HKEY_CURRENT_USER, inprocKey, nullptr,
                                  dllPath);
   if (FAILED(hr))
     return hr;
 
-  hr = CreateRegistryKeyAndValue(HKEY_LOCAL_MACHINE, inprocKey,
+  hr = CreateRegistryKeyAndValue(HKEY_CURRENT_USER, inprocKey,
                                  L"ThreadingModel", L"Apartment");
   if (FAILED(hr))
     return hr;
@@ -856,7 +851,7 @@ STDAPI DllRegisterServer() {
                L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
                L"234630154E96}",
                info.dotExt);
-    CreateRegistryKeyAndValue(HKEY_LOCAL_MACHINE, extKey, nullptr,
+    CreateRegistryKeyAndValue(HKEY_CURRENT_USER, extKey, nullptr,
                               CLSID_QImgvThumbnailProvider_Str);
   }
 
@@ -877,7 +872,7 @@ STDAPI DllRegisterServer() {
                    L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
                    L"234630154E96}",
                    info.progId);
-        CreateRegistryKeyAndValue(HKEY_LOCAL_MACHINE, progIdKey, nullptr,
+        CreateRegistryKeyAndValue(HKEY_CURRENT_USER, progIdKey, nullptr,
                                   CLSID_QImgvThumbnailProvider_Str);
       }
     }
@@ -892,7 +887,7 @@ STDAPI DllUnregisterServer() {
   wchar_t clsidKey[MAX_PATH];
   swprintf_s(clsidKey, MAX_PATH, L"Software\\Classes\\CLSID\\%s",
              CLSID_QImgvThumbnailProvider_Str);
-  DeleteRegistryKey(HKEY_LOCAL_MACHINE, clsidKey);
+  DeleteRegistryKey(HKEY_CURRENT_USER, clsidKey);
 
   // Unregister for direct Extensions
   for (const auto &info : g_extensionTable) {
@@ -901,7 +896,7 @@ STDAPI DllUnregisterServer() {
                L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
                L"234630154E96}",
                info.dotExt);
-    DeleteRegistryKey(HKEY_LOCAL_MACHINE, extKey);
+    DeleteRegistryKey(HKEY_CURRENT_USER, extKey);
   }
 
   // Unregister for ProgIDs
@@ -921,7 +916,7 @@ STDAPI DllUnregisterServer() {
                    L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
                    L"234630154E96}",
                    info.progId);
-        DeleteRegistryKey(HKEY_LOCAL_MACHINE, progIdKey);
+        DeleteRegistryKey(HKEY_CURRENT_USER, progIdKey);
       }
     }
   }
