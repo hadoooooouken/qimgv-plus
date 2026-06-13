@@ -371,10 +371,8 @@ public:
 
       wchar_t corePath[MAX_PATH];
       wchar_t guiPath[MAX_PATH];
-      swprintf_s(corePath, MAX_PATH, L"%s\\Qt%dCore.dll", dllDir,
-                 QT_VERSION_MAJOR);
-      swprintf_s(guiPath, MAX_PATH, L"%s\\Qt%dGui.dll", dllDir,
-                 QT_VERSION_MAJOR);
+      swprintf_s(corePath, MAX_PATH, L"%s\\Qt6Core.dll", dllDir);
+      swprintf_s(guiPath, MAX_PATH, L"%s\\Qt6Gui.dll", dllDir);
 
       m_hCore = LoadLibraryW(corePath);
       m_hGui = LoadLibraryW(guiPath);

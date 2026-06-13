@@ -60,18 +60,11 @@ int main(int argc, char *argv[]) {
   // do we still need this?
   qputenv("QT_AUTO_SCREEN_SCALE_FACTOR", "0");
 
-#if (QT_VERSION_MAJOR == 5)
-  QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-  QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-#endif
-
   // Qt6 hidpi rendering on windows still has artifacts
   // This disables it for scale factors < 1.75
   // In this case only fonts are scaled
-#if (QT_VERSION_MAJOR == 6)
   QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
       Qt::HighDpiScaleFactorRoundingPolicy::RoundPreferFloor);
-#endif
 
   QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 
@@ -98,9 +91,7 @@ int main(int argc, char *argv[]) {
 #endif
   qRegisterMetaType<std::shared_ptr<Image>>("std::shared_ptr<Image>");
   qRegisterMetaType<std::shared_ptr<Thumbnail>>("std::shared_ptr<Thumbnail>");
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-  qRegisterMetaTypeStreamOperators<Script>("Script");
-#endif
+
 
   // parse args
   // ------------------------------------------------------------------

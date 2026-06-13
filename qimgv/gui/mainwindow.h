@@ -11,9 +11,7 @@
 #include <QWindow>
 
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-#include <QDesktopWidget>
-#endif
+
 
 #include "components/actionmanager/actionmanager.h"
 #include "gui/centralwidget.h"
@@ -126,9 +124,7 @@ private:
   PanelPosition panelPosition;
   CurrentInfo info;
   int lastScalePercent = -1;
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-  QDesktopWidget desktopWidget;
-#endif
+
 
   void saveWindowGeometry();
   void restoreWindowGeometry();

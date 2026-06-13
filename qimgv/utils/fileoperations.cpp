@@ -274,29 +274,6 @@ void FileOperations::moveToTrash(const QString &filePath, FileOpResult &result) 
     return;
 }
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
 bool FileOperations::moveToTrashImpl(const QString &filePath) {
     return QFile::moveToTrash(filePath);
 }
-#else
-bool FileOperations::moveToTrashImpl(const QString &file) {
-    QFileInfo fileinfo( file );
-    if( !fileinfo.exists() )
-        return false;
-    WCHAR* from = (WCHAR*) calloc((size_t)fileinfo.absoluteFilePath().length() + 2, sizeof(WCHAR));
-    fileinfo.absoluteFilePath().toWCharArray(from);    
-    SHFILEOPSTRUCTW fileop;
-    memset( &fileop, 0, sizeof( fileop ) );
-    fileop.wFunc = FO_DELETE;
-    fileop.pFrom = from;
-    fileop.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
-    int rv = SHFileOperationW( &fileop );
-    free(from);
-    if( 0 != rv ){
-        qWarning() << rv << QString::number( rv ).toInt( nullptr, 8 );
-        qWarning() << "move to trash failed";
-        return false;
-    }
-    return true;
-}
-#endif

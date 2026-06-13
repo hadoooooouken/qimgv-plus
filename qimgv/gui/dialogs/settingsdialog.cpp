@@ -302,10 +302,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     casContrastLabel->setText(QString::number(val / 100.f, 'f', 2));
   });
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-  memoryLimitSpinBox->setEnabled(false);
-  memoryLimitLabel->setEnabled(false);
-#endif
+
 
   if (!settings->supportedFormats().contains("jxl"))
     animatedJxlCheckBox->hide();

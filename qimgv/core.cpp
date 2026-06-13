@@ -226,9 +226,7 @@ public:
 };
 #endif
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 #include <QColorSpace>
-#endif
 
 #ifdef __WIN32
 #include <tchar.h>
@@ -2374,7 +2372,6 @@ void Core::updateInfoString() {
       fileSize = img->fileSize();
       edited = img->isEdited();
       format = img->format();
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
       auto qimg = img->getImage();
       if (qimg) {
         QColorSpace cs = qimg->colorSpace();
@@ -2402,7 +2399,6 @@ void Core::updateInfoString() {
           colorProfile = desc;
         }
       }
-#endif
     }
   }
   int index = model->indexOfFile(state.currentFilePath);

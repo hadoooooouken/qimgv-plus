@@ -35,9 +35,7 @@ void ImageStatic::loadGeneric() {
    * tldr: qimage bad
    */
   QImageReader r(mPath, mDocInfo->format().toStdString().c_str());
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
   r.setAllocationLimit(settings->memoryAllocationLimit());
-#endif
   QSize sz = r.size();
   if (sz.isValid() && sz.width() > 0 && sz.height() > 0) {
     if (mDocInfo->format() == "pdf") {

@@ -36,21 +36,10 @@ endif()
 
 # USER OPTIONS
 option(EXIV2 "For reading/writing exif tags" ON)
-option(USE_QT5 "Build with Qt5 if available" ON)
 
 # FIND PACKAGES
-if(NOT USE_QT5)
-    find_package(Qt6 COMPONENTS Widgets QUIET)
-endif()
-
-if(Qt6_FOUND AND NOT USE_QT5)
-    set(QT_VERSION_MAJOR 6)
-    find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Svg SvgWidgets PrintSupport OpenGLWidgets Sql)
-else()
-    find_package(Qt5 REQUIRED COMPONENTS Core Widgets Network Svg PrintSupport Sql)
-
-    set(QT_VERSION_MAJOR 5)
-endif()
+set(QT_VERSION_MAJOR 6)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Svg SvgWidgets PrintSupport OpenGLWidgets Sql)
 
 
 if(EXIV2)
@@ -66,9 +55,22 @@ endif()
 option(UPSCAYL_SUPPORT "Enable Upscayl NCNN integration" ON)
 
 if(UPSCAYL_SUPPORT)
-    message(STATUS "Configuring Upscayl NCNN library support using Vulkan SDK at E:/VULKAN")
-    set(ENV{VULKAN_SDK} "E:/VULKAN")
-    list(APPEND CMAKE_PREFIX_PATH "E:/VULKAN")
+    # Default to VULKAN_SDK environment variable if defined, otherwise fallback to E:/VULKAN
+    if(DEFINED ENV{VULKAN_SDK})
+        set(VULKAN_SDK_DEFAULT "$ENV{VULKAN_SDK}")
+    else()
+        set(VULKAN_SDK_DEFAULT "E:/VULKAN")
+    endif()
+
+    set(VULKAN_SDK_PATH "${VULKAN_SDK_DEFAULT}" CACHE PATH "Path to Vulkan SDK")
+
+    message(STATUS "Configuring Upscayl NCNN library support using Vulkan SDK at ${VULKAN_SDK_PATH}")
+    list(APPEND CMAKE_PREFIX_PATH "${VULKAN_SDK_PATH}")
+
+    # Set ENV{VULKAN_SDK} locally if not already set, so subdirectories can locate the SDK
+    if(NOT DEFINED ENV{VULKAN_SDK})
+        set(ENV{VULKAN_SDK} "${VULKAN_SDK_PATH}")
+    endif()
     
     # Configure NCNN options for Vulkan support
     set(NCNN_VULKAN ON CACHE BOOL "Build NCNN with Vulkan support" FORCE)

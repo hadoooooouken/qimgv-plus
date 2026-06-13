@@ -3,7 +3,7 @@ include(GNUInstallDirs)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # TRANSLATIONS
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS LinguistTools)
+find_package(Qt6 COMPONENTS LinguistTools REQUIRED)
 set(TS_FILES
     "zh_CN.ts"
     "uk_UA.ts"
@@ -17,13 +17,7 @@ set(TS_FILES
 list(TRANSFORM TS_FILES PREPEND ${CMAKE_CURRENT_SOURCE_DIR}/res/translations/)
 set_source_files_properties(${TS_FILES} PROPERTIES OUTPUT_LOCATION ${PROJECT_BINARY_DIR}/qimgv/translations)
 
-# 1. Create 'qimgv_lupdate' target to update .ts files (needs to be called manually)
-# 2. Compile .ts > .qm
-if(${QT_VERSION_MAJOR} EQUAL 5)
-    add_custom_target(qimgv_lupdate COMMAND ${Qt5_LUPDATE_EXECUTABLE} -recursive
-        ${CMAKE_CURRENT_SOURCE_DIR} -ts ${TS_FILES})
-    qt5_add_translation(QM_FILES ${TS_FILES})
-endif()
+
 
 # ADD EXECUTABLE
 add_executable(qimgv-plus
@@ -40,11 +34,9 @@ add_executable(qimgv-plus
     ${QM_FILES}
 )
 
-# update .ts, compile .qm (qt6 case)
-if(${QT_VERSION_MAJOR} EQUAL 6)
-    qt_add_lupdate(qimgv-plus TS_FILES ${TS_FILES})
-    qt_add_lrelease(qimgv-plus TS_FILES ${TS_FILES})
-endif()
+# update .ts, compile .qm
+qt_add_lupdate(qimgv-plus TS_FILES ${TS_FILES})
+qt_add_lrelease(qimgv-plus TS_FILES ${TS_FILES})
 
 # ADD SOURCES
 add_subdirectory(components)
@@ -62,10 +54,16 @@ set_target_properties(qimgv-plus PROPERTIES
 )
 
 # LINK STUFF
-target_link_libraries(qimgv-plus PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Svg Qt${QT_VERSION_MAJOR}::PrintSupport Qt${QT_VERSION_MAJOR}::Sql)
-if(QT_VERSION_MAJOR GREATER_EQUAL 6)
-    target_link_libraries(qimgv-plus PRIVATE Qt${QT_VERSION_MAJOR}::OpenGLWidgets Qt${QT_VERSION_MAJOR}::SvgWidgets)
-endif()
+target_link_libraries(qimgv-plus PRIVATE 
+    Qt6::Core 
+    Qt6::Widgets 
+    Qt6::Network 
+    Qt6::Svg 
+    Qt6::PrintSupport 
+    Qt6::Sql 
+    Qt6::OpenGLWidgets 
+    Qt6::SvgWidgets
+)
 
 # OPTION DEFINITIONS, LINKING
 if(EXIV2)
@@ -102,7 +100,7 @@ install(DIRECTORY "${PROJECT_BINARY_DIR}/qimgv/translations" DESTINATION "${CMAK
 # Automate deployment of ALL dependencies on Windows
 if(WIN32)
     # 1. Qt dependencies
-    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6Core_DIR}/../../../bin" "${Qt5Core_DIR}/../../../bin")
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6Core_DIR}/../../../bin")
     if(WINDEPLOYQT_EXECUTABLE)
         add_custom_command(TARGET qimgv-plus POST_BUILD
             COMMAND ${WINDEPLOYQT_EXECUTABLE} --no-translations --no-compiler-runtime --no-opengl-sw "$<TARGET_FILE:qimgv-plus>"

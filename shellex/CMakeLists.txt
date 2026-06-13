@@ -6,7 +6,7 @@ project(qimgvshellex LANGUAGES CXX)
 set(CMAKE_AUTOMOC ON)
 
 # Find Qt
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui)
 
 add_library(qimgvshellex SHARED
     qimgvshellex.h
@@ -32,8 +32,8 @@ target_include_directories(qimgvshellex PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/../formats/LibRaw"
 )
 target_link_libraries(qimgvshellex PRIVATE
-    Qt${QT_VERSION_MAJOR}::Core
-    Qt${QT_VERSION_MAJOR}::Gui
+    Qt6::Core
+    Qt6::Gui
     shlwapi
     "${CMAKE_CURRENT_SOURCE_DIR}/../formats/LibRaw/buildfiles/release-x86_64/libraw_static.lib"
 )
@@ -43,8 +43,8 @@ target_compile_definitions(qimgvshellex PRIVATE LIBRAW_NODLL)
 if(MSVC)
     target_link_options(qimgvshellex PRIVATE 
         "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/qimgvshellex.def"
-        "/DELAYLOAD:Qt${QT_VERSION_MAJOR}Core.dll"
-        "/DELAYLOAD:Qt${QT_VERSION_MAJOR}Gui.dll"
+        "/DELAYLOAD:Qt6Core.dll"
+        "/DELAYLOAD:Qt6Gui.dll"
     )
     target_link_libraries(qimgvshellex PRIVATE delayimp)
 endif()

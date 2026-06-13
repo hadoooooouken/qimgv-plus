@@ -10,14 +10,10 @@ function(kimageformats_add_plugin plugin)
     set(multiValueArgs SOURCES)
     cmake_parse_arguments(KIF_ADD_PLUGIN "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    if(QT_VERSION_MAJOR EQUAL 6)
-        qt_add_plugin(${plugin} PLUGIN_TYPE imageformats)
-    else()
-        qt5_add_plugin(${plugin})
-    endif()
+    qt_add_plugin(${plugin} PLUGIN_TYPE imageformats)
 
     target_sources(${plugin} PRIVATE ${KIF_ADD_PLUGIN_SOURCES})
-    target_link_libraries(${plugin} PRIVATE Qt${QT_VERSION_MAJOR}::Gui)
+    target_link_libraries(${plugin} PRIVATE Qt6::Gui)
 
     # Output to imageformats/ folder next to the executable
     set_target_properties(${plugin} PROPERTIES 
