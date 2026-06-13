@@ -446,38 +446,6 @@ SidePanel QComboBox QAbstractItemView::item:selected {
 }
 
 /*----------------------------------------------------------------------------*/
-/* Video controls */
-/*----------------------------------------------------------------------------*/
-
-VideoControls QLabel {
-    color: %text_hc2%;
-    font: bold;
-}
-/*----------------------------------------------------------------------------*/
-VideoControls QSlider {
-    border: 2px solid %widget%;
-    margin: 1px;
-}
-
-VideoControls QSlider::groove:horizontal,
-VideoControls QSlider::add-page:horizontal {
-    background: %button_pressed%;
-    border-radius: 4px;
-}
-
-VideoControls QSlider::handle:horizontal {
-    height: 0px;
-    width:  0px;
-    background: %text_hc%;
-}
-
-VideoControls QSlider::sub-page:horizontal {
-    background: %text_hc%;
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-}
-
-/*----------------------------------------------------------------------------*/
 /* File copy - move window */
 /*----------------------------------------------------------------------------*/
 
@@ -489,14 +457,6 @@ PathSelectorMenuItem [accessibleName="MenuItemIcon"]:hover {
     background-color: %accent_hover_rgba%;
 }
 
-
-/*----------------------------------------------------------------------------*/
-/* Video background. Pretty sure this doesn't work.. */
-/*----------------------------------------------------------------------------*/
-
-[accessibleName="mpvContainer"] {
-    background-color: black;
-}
 
 /*----------------------------------------------------------------------------*/
 /* Thumbnails views and scrollbars */
