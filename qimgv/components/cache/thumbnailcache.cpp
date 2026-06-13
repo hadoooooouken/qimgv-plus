@@ -72,7 +72,7 @@ void ThumbnailCache::saveThumbnail(QImage *image, QString id) {
     query.bindValue(":data", ba);
     
     if (!query.exec()) {
-        qDebug() << "Failed to save thumbnail to DB:" << query.lastError().text();
+        qWarning() << "Failed to save thumbnail to DB:" << query.lastError().text();
     }
 }
 

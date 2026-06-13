@@ -285,8 +285,8 @@ bool FileOperations::moveToTrashImpl(const QString &file) {
     int rv = SHFileOperationW( &fileop );
     free(from);
     if( 0 != rv ){
-        qDebug() << rv << QString::number( rv ).toInt( nullptr, 8 );
-        qDebug() << "move to trash failed";
+        qWarning() << rv << QString::number( rv ).toInt( nullptr, 8 );
+        qWarning() << "move to trash failed";
         return false;
     }
     return true;

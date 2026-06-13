@@ -4,7 +4,7 @@ std::shared_ptr<Image> ImageFactory::createImage(QString path) {
     std::unique_ptr<DocumentInfo> docInfo(new DocumentInfo(path));
     std::shared_ptr<Image> img = nullptr;
     if(docInfo->type() == NONE) {
-        qDebug() << "ImageFactory: cannot load " << docInfo->filePath();
+        qWarning() << "ImageFactory: cannot load " << docInfo->filePath();
     } else if(docInfo->type() == ANIMATED) {
         img.reset(new ImageAnimated(std::move(docInfo)));
     } else {

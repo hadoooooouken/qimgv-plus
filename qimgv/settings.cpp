@@ -728,7 +728,7 @@ void Settings::setPanelPinned(bool mode) {
 ImageFitMode Settings::imageFitMode() {
   int mode = settings->settingsConf->value("defaultFitMode", 0).toInt();
   if (mode < 0 || mode > 3) {
-    qDebug() << "Settings: Invalid fit mode ( " + QString::number(mode) +
+    qWarning() << "Settings: Invalid fit mode ( " + QString::number(mode) +
                     " ). Resetting to default.";
     mode = 0;
   }
@@ -738,7 +738,7 @@ ImageFitMode Settings::imageFitMode() {
 void Settings::setImageFitMode(ImageFitMode mode) {
   int modeInt = static_cast<ImageFitMode>(mode);
   if (modeInt < 0 || modeInt > 3) {
-    qDebug() << "Settings: Invalid fit mode ( " + QString::number(modeInt) +
+    qWarning() << "Settings: Invalid fit mode ( " + QString::number(modeInt) +
                     " ). Resetting to default.";
     modeInt = 0;
   }

@@ -8,7 +8,7 @@ DocumentInfo::DocumentInfo(QString path)
 {
     fileInfo.setFile(path);
     if(!fileInfo.isFile()) {
-        qDebug() << "FileInfo: cannot open: " << path;
+        qWarning() << "FileInfo: cannot open: " << path;
         return;
     }
     detectFormat();
@@ -107,7 +107,7 @@ void DocumentInfo::detectFormat() {
         mDocumentType = detectAnimatedJxl() ? DocumentType::ANIMATED : DocumentType::STATIC;
         if(mDocumentType == DocumentType::ANIMATED && !settings->jxlAnimation()) {
             mDocumentType = DocumentType::NONE;
-            qDebug() << "animated jxl is off; skipping file";
+            qInfo() << "animated jxl is off; skipping file";
         }
     } else if(mimeName == "image/avif") {
         mFormat = "avif";
@@ -317,19 +317,19 @@ void DocumentInfo::loadExifTags() {
 #if not EXIV2_TEST_VERSION(0, 28, 0)
 #ifdef __WIN32
     catch (Exiv2::BasicError<wchar_t>& e) {
-        qDebug() << "Caught Exiv2::BasicError exception:\n" << e.what() << "\n";
+        qWarning() << "Caught Exiv2::BasicError exception:\n" << e.what() << "\n";
         return;
     }
 #else
     catch (Exiv2::BasicError<char>& e) {
-        qDebug() << "Caught Exiv2::BasicError exception:\n" << e.what() << "\n";
+        qWarning() << "Caught Exiv2::BasicError exception:\n" << e.what() << "\n";
         return;
     }
 #endif
 #endif
 
     catch (Exiv2::Error& e) {
-        qDebug() << "Caught Exiv2 exception:\n" << e.what() << "\n";
+        qWarning() << "Caught Exiv2 exception:\n" << e.what() << "\n";
         return;
     }
 #endif

@@ -36,7 +36,7 @@ void ScriptManager::runScript(const QString &scriptName, std::shared_ptr<Image> 
         if(script.blocking) {
             exec.start(program, arguments);
             if(!exec.waitForStarted()) {
-                qDebug() << "Unable not run application/script." << program << " Make sure it is an executable.";
+                qWarning() << "Unable not run application/script." << program << " Make sure it is an executable.";
             }
             exec.waitForFinished(10000);
         } else {
@@ -52,7 +52,7 @@ void ScriptManager::runScript(const QString &scriptName, std::shared_ptr<Image> 
             }
         }
     } else {
-        qDebug() << "[ScriptManager] File " << scriptName << " does not exist.";
+        qWarning() << "[ScriptManager] File " << scriptName << " does not exist.";
     }
 }
 

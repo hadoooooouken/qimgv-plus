@@ -267,7 +267,7 @@ void ImageViewerV2::onAnimationTimer() {
     }
   } else {
     if (!movie->jumpToNextFrame()) {
-      qDebug() << "[Error] QMovie:" << movie->lastErrorString();
+      qWarning() << "[Error] QMovie:" << movie->lastErrorString();
       this->stopAnimation();
       return;
     }
@@ -312,7 +312,7 @@ bool ImageViewerV2::showAnimationFrame(int frame) {
     movie->jumpToFrame(0);
   while (frame != movie->currentFrameNumber()) {
     if (!movie->jumpToNextFrame()) {
-      qDebug() << "[Error] QMovie:" << movie->lastErrorString();
+      qWarning() << "[Error] QMovie:" << movie->lastErrorString();
       break;
     }
   }

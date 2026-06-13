@@ -46,7 +46,7 @@ void ImageStatic::loadGeneric() {
   }
   QImage *tmp = new QImage();
   if (!r.read(tmp)) {
-    qDebug() << "ImageStatic: failed to load" << mPath
+    qWarning() << "ImageStatic: failed to load" << mPath
              << "Error:" << r.errorString();
     delete tmp;
     return;
@@ -131,7 +131,7 @@ bool ImageStatic::save(QString destPath) {
   if (originalExists) {
     QFile::remove(tmpPath);
     if (!QFile::copy(destPath, tmpPath)) {
-      qDebug() << "ImageStatic::save() - Could not create file backup.";
+      qWarning() << "ImageStatic::save() - Could not create file backup.";
       return false;
     }
     backupExists = true;

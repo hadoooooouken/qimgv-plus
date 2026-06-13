@@ -7,7 +7,7 @@ CentralWidget::CentralWidget(std::shared_ptr<DocumentWidget> _docWidget, std::sh
 {
     setMouseTracking(true);
     if(!documentView || !folderView)
-        qDebug() << "[CentralWidget] Error: child widget is null. We will crash now.  Bye.";
+        qWarning() << "[CentralWidget] Error: child widget is null. We will crash now.  Bye.";
 
     // docWidget - 0, folderView - 1
     addWidget(documentView.get());

@@ -33,7 +33,7 @@ void WindowsWorker::run() {
     ovl.hEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
     if(!ovl.hEvent) {
-        qDebug() << "[WindowsWorker] CreateEvent failed?";
+        qWarning() << "[WindowsWorker] CreateEvent failed?";
     }
 
     ::ResetEvent(ovl.hEvent); // is this needed?
@@ -52,7 +52,7 @@ void WindowsWorker::run() {
         if(!bPending) {
             error = GetLastError();
             if(error == ERROR_IO_INCOMPLETE) {
-                qDebug() << "ERROR_IO_INCOMPLETE";
+                qWarning() << "ERROR_IO_INCOMPLETE";
                 continue;
             }
         }

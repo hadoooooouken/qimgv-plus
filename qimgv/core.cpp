@@ -65,7 +65,7 @@ public:
     int res =
         realesrgan->load(paramQStr.toStdWString(), binQStr.toStdWString());
     if (res != 0) {
-      qDebug() << "[Upscayl] Failed to load model, error code:" << res;
+      qWarning() << "[Upscayl] Failed to load model, error code:" << res;
       delete realesrgan;
       realesrgan = nullptr;
       loadedModel = "";
@@ -79,7 +79,7 @@ public:
   QImage upscale(const QImage &inputImage) {
     QMutexLocker locker(&mutex);
     if (!realesrgan) {
-      qDebug() << "[Upscayl] upscale() called but realesrgan is null";
+      qWarning() << "[Upscayl] upscale() called but realesrgan is null";
       return QImage();
     }
 
@@ -93,7 +93,7 @@ public:
                                         outImg.bits(), outW, outH);
 
     if (ret != 0) {
-      qDebug() << "[Upscayl] processPixels failed, code:" << ret;
+      qWarning() << "[Upscayl] processPixels failed, code:" << ret;
       return QImage();
     }
 
@@ -140,7 +140,7 @@ public:
     // Initialize scaler on the background thread if not already done
     QString appDir = QCoreApplication::applicationDirPath();
     if (!UpscaylScaler::getInstance()->init(appDir)) {
-      qDebug() << "[Upscayl] background init() failed";
+      qWarning() << "[Upscayl] background init() failed";
       QMetaObject::invokeMethod(core, "onUpscaleAborted", Qt::QueuedConnection);
       return;
     }
@@ -188,7 +188,7 @@ public:
       if (!warmed.isNull()) {
         // qDebug() << "[Upscayl] Vulkan full tile warm-up completed successfully!";
       } else {
-        qDebug() << "[Upscayl] Vulkan full tile warm-up failed!";
+        qWarning() << "[Upscayl] Vulkan full tile warm-up failed!";
       }
     }
   }
@@ -594,9 +594,9 @@ void Core::loadTranslation() {
   QString trFile = trPath + "/" + localeName;
   QString trFileFallback = trPathFallback + "/" + localeName;
   if (!translator->load(trFile)) {
-    qDebug() << "Could not load translation file: " << trFile;
+    qWarning() << "Could not load translation file: " << trFile;
     if (!translator->load(trFileFallback)) {
-      qDebug() << "Could not load translation file: " << trFileFallback;
+      qWarning() << "Could not load translation file: " << trFileFallback;
       return;
     }
   }

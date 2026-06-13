@@ -44,12 +44,12 @@ HANDLE WindowsWatcherPrivate::requestDirectoryHandle(const QString& path)
         {
             if (GetLastError() == ERROR_SHARING_VIOLATION)
             {
-                qDebug() << "ERROR_SHARING_VIOLATION waiting for 1 sec";
+                qWarning() << "ERROR_SHARING_VIOLATION waiting for 1 sec";
                 QThread::sleep(1);
             }
             else
             {
-                qDebug() << lastError();
+                qWarning() << lastError();
                 return INVALID_HANDLE_VALUE;
             }
         }
@@ -95,7 +95,7 @@ void WindowsWatcherPrivate::dispatchNotify(FILE_NOTIFY_INFORMATION* notify) {
             break;
 
         default:
-            qDebug() << "Some error, notify->Action" << notify->Action;
+            qWarning() << "Some error, notify->Action" << notify->Action;
     }
 }
 
@@ -127,7 +127,7 @@ void WindowsWatcher::setWatchPath(const QString &path) {
     HANDLE hDirectory = d->requestDirectoryHandle(path);
     if (hDirectory == INVALID_HANDLE_VALUE)
     {
-        qDebug() << "requestDirectoryHandle: INVALID_HANDLE_VALUE";
+        qWarning() << "requestDirectoryHandle: INVALID_HANDLE_VALUE";
         return;
     }
 

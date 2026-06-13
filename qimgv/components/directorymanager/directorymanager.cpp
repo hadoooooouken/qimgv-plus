@@ -113,16 +113,16 @@ bool DirectoryManager::setDirectory(QString dirPath) {
         return true;
     }
     if(!std::filesystem::exists(toStdString(dirPath))) {
-        qDebug() << "[DirectoryManager] Error - path does not exist.";
+        qWarning() << "[DirectoryManager] Error - path does not exist.";
         return false;
     }
     if(!std::filesystem::is_directory(toStdString(dirPath))) {
-        qDebug() << "[DirectoryManager] Error - path is not a directory.";
+        qWarning() << "[DirectoryManager] Error - path is not a directory.";
         return false;
     }
     QDir dir(dirPath);
     if(!dir.isReadable()) {
-        qDebug() << "[DirectoryManager] Error - cannot read directory.";
+        qWarning() << "[DirectoryManager] Error - cannot read directory.";
         return false;
     }
     mListSource = SOURCE_DIRECTORY;
@@ -140,11 +140,11 @@ bool DirectoryManager::setDirectoryRecursive(QString dirPath) {
         return false;
     }
     if(!std::filesystem::exists(toStdString(dirPath))) {
-        qDebug() << "[DirectoryManager] Error - path does not exist.";
+        qWarning() << "[DirectoryManager] Error - path does not exist.";
         return false;
     }
     if(!std::filesystem::is_directory(toStdString(dirPath))) {
-        qDebug() << "[DirectoryManager] Error - path is not a directory.";
+        qWarning() << "[DirectoryManager] Error - path is not a directory.";
         return false;
     }
     stopFileWatcher();
@@ -371,7 +371,7 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
                 //newEntry.size = entry.file_size();
                 //newEntry.modifyTime = entry.last_write_time();
             } catch (const std::filesystem::filesystem_error &err) {
-                qDebug() << "[DirectoryManager]" << err.what();
+                qWarning() << "[DirectoryManager]" << err.what();
                 continue;
             }
             dirEntryVec.emplace_back(newEntry);
@@ -384,7 +384,7 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
                 newEntry.size = entry.file_size();
                 newEntry.modifyTime = entry.last_write_time();
             } catch (const std::filesystem::filesystem_error &err) {
-                qDebug() << "[DirectoryManager]" << err.what();
+                qWarning() << "[DirectoryManager]" << err.what();
                 continue;
             }
             entryVec.emplace_back(newEntry);
@@ -414,7 +414,7 @@ void DirectoryManager::addEntriesFromDirectoryRecursive(std::vector<FSEntry> &en
                 newEntry.size = entry.file_size();
                 newEntry.modifyTime = entry.last_write_time();
             } catch (const std::filesystem::filesystem_error &err) {
-                qDebug() << "[DirectoryManager]" << err.what();
+                qWarning() << "[DirectoryManager]" << err.what();
                 continue;
             }
             entryVec.emplace_back(newEntry);
