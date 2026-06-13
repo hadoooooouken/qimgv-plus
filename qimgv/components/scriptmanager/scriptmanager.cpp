@@ -93,7 +93,7 @@ QStringList ScriptManager::splitCommandLine(const QString &cmdLine) {
     QString arg;
     bool escape = false;
     enum { Idle, Arg, QuotedArg } state = Idle;
-    foreach (QChar const c, cmdLine) {
+    for (QChar const c : cmdLine) {
         //if(!escape && c == '\\') {
         //    escape = true;
         //    continue;

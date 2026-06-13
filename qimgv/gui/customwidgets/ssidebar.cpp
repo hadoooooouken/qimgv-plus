@@ -1,4 +1,5 @@
 #include "ssidebar.h"
+#include <utility>
 
 SSideBar::SSideBar(QWidget *parent) : QWidget{parent} {
     layout = new QBoxLayout(QBoxLayout::TopToBottom);
@@ -28,7 +29,7 @@ void SSideBar::addEntry(QString icon, QString name) {
 
 void SSideBar::selectEntry(int idx) {
     if(idx >= 0 && idx < entries.count()) {
-        foreach(auto entry, entries)
+        for(SSideBarItem *entry : std::as_const(entries))
             entry->setHighlighted(false);
         entries[idx]->setHighlighted(true);
         emit entrySelected(idx);

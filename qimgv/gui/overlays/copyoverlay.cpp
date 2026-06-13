@@ -172,7 +172,7 @@ void CopyOverlay::createDefaultPaths() {
     }
     if (paths.count() == 1 && paths.at(0) == home) {
         QDir dir(home);
-        foreach(QFileInfo mfi, dir.entryInfoList()) {
+        for (const QFileInfo &mfi : dir.entryInfoList()) {
             if (paths.count() >= maxPathCount) {
                 break;
             }
