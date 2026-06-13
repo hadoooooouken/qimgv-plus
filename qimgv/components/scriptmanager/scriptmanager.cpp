@@ -37,8 +37,11 @@ void ScriptManager::runScript(const QString &scriptName, std::shared_ptr<Image> 
             exec.start(program, arguments);
             if(!exec.waitForStarted()) {
                 qWarning() << "Unable not run application/script." << program << " Make sure it is an executable.";
+            } else if(!exec.waitForFinished(10000)) {
+                qWarning() << "Script execution timed out. Killing process.";
+                exec.kill();
+                exec.waitForFinished();
             }
-            exec.waitForFinished(10000);
         } else {
             if(!exec.startDetached(program, arguments)) {
                 QFileInfo fi(program);
@@ -60,7 +63,10 @@ QString ScriptManager::runCommand(QString cmd) {
     QProcess exec;
     QStringList cmdSplit = ScriptManager::splitCommandLine(cmd);
     exec.start(cmdSplit.takeAt(0), cmdSplit);
-    exec.waitForFinished(2000);
+    if(!exec.waitForFinished(2000)) {
+        exec.kill();
+        exec.waitForFinished();
+    }
     return exec.readAllStandardOutput();
 }
 
