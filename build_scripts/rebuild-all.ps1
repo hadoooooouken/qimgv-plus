@@ -83,7 +83,7 @@ function Build-Library {
 
     Write-Info "Configuring..."
     $hardeningArgs = @(
-        "-DCMAKE_CXX_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf",
+        "-DCMAKE_CXX_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /EHsc",
         "-DCMAKE_C_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf",
         "-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=/guard:cf /DYNAMICBASE /HIGHENTROPYVA",
         "-DCMAKE_EXE_LINKER_FLAGS_RELEASE=/guard:cf /DYNAMICBASE /HIGHENTROPYVA"

@@ -923,6 +923,12 @@ void BatchConverterDialog::onConvertClicked() {
         return;
     }
 
+    QString pattern = patternEdit->text().trimmed();
+    if (pattern.contains("..") || pattern.startsWith('/') || pattern.startsWith('\\') || (pattern.size() >= 2 && pattern[1] == ':')) {
+        QMessageBox::warning(this, tr("Invalid Pattern"), tr("Filename pattern cannot contain path traversal sequences (..) or absolute paths."));
+        return;
+    }
+
     int checkedCount = 0;
     for (int i = 0; i < fileListWidget->count(); ++i) {
         QListWidgetItem *item = fileListWidget->item(i);
@@ -1031,6 +1037,14 @@ void BatchConverterDialog::startConversion() {
 
         QString destPath = buildDestPath(srcFi, pattern, activeIndex + 1, formatExt, finalOutDir);
 
+        if (destPath.isEmpty()) {
+            processedFiles++;
+            failedCount++;
+            progressBar->setValue(processedFiles);
+            widget->setStatus(tr("Failed"), tr("Invalid destination path"), false);
+            continue;
+        }
+
         if (!overwrite && QFileInfo::exists(destPath)) {
             processedFiles++;
             successCount++;
@@ -1091,8 +1105,12 @@ void BatchConverterDialog::onCancelClicked() {
 }
 
 QString BatchConverterDialog::buildDestPath(const QFileInfo &srcFi, const QString &pattern, int index, const QString &formatExt, const QString &finalOutDir) const {
+    QString safeBaseName = srcFi.baseName();
+    safeBaseName.replace("/", "_");
+    safeBaseName.replace("\\", "_");
+
     QString targetName = pattern;
-    targetName.replace("{name}", srcFi.baseName());
+    targetName.replace("{name}", safeBaseName);
     targetName.replace("{ext}", formatExt);
     targetName.replace("{date}", QDate::currentDate().toString("yyyy-MM-dd"));
     targetName.replace("{index}", QString::number(index));
@@ -1101,7 +1119,16 @@ QString BatchConverterDialog::buildDestPath(const QFileInfo &srcFi, const QStrin
         targetName += "." + formatExt;
     }
 
-    return finalOutDir + "/" + targetName;
+    QString canonicalOut = QDir(finalOutDir).canonicalPath();
+    if (canonicalOut.isEmpty()) {
+        canonicalOut = QDir(finalOutDir).absolutePath();
+    }
+    QString full = QDir::cleanPath(canonicalOut + "/" + targetName);
+    if (!full.startsWith(canonicalOut + "/")) {
+        return QString();
+    }
+
+    return full;
 }
 
 bool BatchConverterDialog::loadUpscaylModel(const QString &upscaylModel) {

@@ -15,8 +15,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # OPTIMIZATIONS & HARDENING
 if(MSVC)
-    # Compiler options: AVX2, Buffer Security Check (/GS), Control Flow Guard (/guard:cf)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2 /GS /guard:cf")
+    # Compiler options: AVX2, Buffer Security Check (/GS), Control Flow Guard (/guard:cf), C++ Exception Unwind (/EHsc)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2 /GS /guard:cf /EHsc")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /GS /guard:cf")
 
     # Linker options: Control Flow Guard (/guard:cf), ASLR (/DYNAMICBASE), 64-bit ASLR (/HIGHENTROPYVA)
