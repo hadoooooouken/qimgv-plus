@@ -16,6 +16,9 @@
 #include <QTemporaryFile>
 #include <libraw/libraw.h>
 
+const qint64 MAX_THUMBNAIL_FILE_SIZE = 256 * 1024 * 1024; // 256 MB
+const int MAX_THUMBNAIL_DIMENSION = 16384; // 16384 pixels
+
 class QStreamDevice : public QIODevice {
 public:
   QStreamDevice(IStream *stream, QObject *parent = nullptr)
@@ -157,6 +160,10 @@ createQImageFromLibRawImage(const libraw_processed_image_t *processedImage) {
       processedImage->data_size == 0)
     return QImage();
 
+  if (processedImage->width > MAX_THUMBNAIL_DIMENSION ||
+      processedImage->height > MAX_THUMBNAIL_DIMENSION)
+    return QImage();
+
   if (processedImage->type == LIBRAW_IMAGE_JPEG) {
     return QImage::fromData(
         reinterpret_cast<const uchar *>(processedImage->data),
@@ -261,6 +268,21 @@ HRESULT CreateRegistryKeyAndValue(HKEY hKeyParent, LPCWSTR pszSubKey,
         RegSetValueExW(hKey, pszValueName, 0, REG_SZ, (const BYTE *)pszValue,
                        (DWORD)(wcslen(pszValue) + 1) * sizeof(wchar_t));
   }
+  RegCloseKey(hKey);
+  return HRESULT_FROM_WIN32(status);
+}
+
+HRESULT CreateRegistryKeyAndDwordValue(HKEY hKeyParent, LPCWSTR pszSubKey,
+                                       LPCWSTR pszValueName, DWORD dwValue) {
+  HKEY hKey = nullptr;
+  LSTATUS status = RegCreateKeyExW(hKeyParent, pszSubKey, 0, nullptr,
+                                   REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr,
+                                   &hKey, nullptr);
+  if (status != ERROR_SUCCESS)
+    return HRESULT_FROM_WIN32(status);
+
+  status = RegSetValueExW(hKey, pszValueName, 0, REG_DWORD,
+                          (const BYTE *)&dwValue, sizeof(dwValue));
   RegCloseKey(hKey);
   return HRESULT_FROM_WIN32(status);
 }
@@ -386,47 +408,58 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
     return E_FAIL;
   }
 
-  // Retrieve absolute DLL directory path and set up DLL search environment
-  HMODULE hModule = nullptr;
-  wchar_t dllDir[MAX_PATH] = L"";
-  if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                             GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                         (LPCWSTR)&DllGetClassObject, &hModule)) {
-    GetModuleFileNameW(hModule, dllDir, MAX_PATH);
-    PathRemoveFileSpecW(dllDir);
-  }
-  DllEnvironmentManager envManager(dllDir);
-
-  // Initialize headless QCoreApplication inside DLL if not already running
-  if (!QCoreApplication::instance()) {
-    int argc = 1;
-    static char *argv[] = {(char *)"qimgvshellex.dll"};
-    new QCoreApplication(argc, argv);
-  }
-
-  // Initialize library search paths for Qt plugins (imageformats) relative to
-  // the DLL
-  static bool libPathInitialized = false;
-  if (!libPathInitialized) {
-    if (dllDir[0] != L'\0') {
-      QString qPath = QString::fromWCharArray(dllDir);
-      QCoreApplication::addLibraryPath(qPath);
+  try {
+    // Retrieve absolute DLL directory path and set up DLL search environment
+    HMODULE hModule = nullptr;
+    wchar_t dllDir[MAX_PATH] = L"";
+    if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                               GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           (LPCWSTR)&DllGetClassObject, &hModule)) {
+      GetModuleFileNameW(hModule, dllDir, MAX_PATH);
+      PathRemoveFileSpecW(dllDir);
     }
-    libPathInitialized = true;
-  }
+    DllEnvironmentManager envManager(dllDir);
 
-  QString ext;
-  if (m_pStream) {
-    STATSTG statstg;
-    if (SUCCEEDED(m_pStream->Stat(&statstg, STATFLAG_DEFAULT))) {
-      if (statstg.pwcsName) {
-        ext = QFileInfo(QString::fromWCharArray(statstg.pwcsName)).suffix().toLower();
-        CoTaskMemFree(statstg.pwcsName);
+    // Initialize headless QCoreApplication inside DLL if not already running
+    if (!QCoreApplication::instance()) {
+      int argc = 1;
+      static char *argv[] = {(char *)"qimgvshellex.dll"};
+      new QCoreApplication(argc, argv);
+    }
+
+    // Initialize library search paths for Qt plugins (imageformats) relative to
+    // the DLL
+    static bool libPathInitialized = false;
+    if (!libPathInitialized) {
+      if (dllDir[0] != L'\0') {
+        QString qPath = QString::fromWCharArray(dllDir);
+        QCoreApplication::addLibraryPath(qPath);
       }
+      libPathInitialized = true;
     }
-  } else {
-    ext = QFileInfo(QString::fromWCharArray(m_szFilePath)).suffix().toLower();
-  }
+
+    QString ext;
+    if (m_pStream) {
+      STATSTG statstg;
+      if (SUCCEEDED(m_pStream->Stat(&statstg, STATFLAG_DEFAULT))) {
+        if ((qint64)statstg.cbSize.QuadPart > MAX_THUMBNAIL_FILE_SIZE) {
+          if (statstg.pwcsName) {
+            CoTaskMemFree(statstg.pwcsName);
+          }
+          return E_FAIL;
+        }
+        if (statstg.pwcsName) {
+          ext = QFileInfo(QString::fromWCharArray(statstg.pwcsName)).suffix().toLower();
+          CoTaskMemFree(statstg.pwcsName);
+        }
+      }
+    } else {
+      QFileInfo fileInfo(QString::fromWCharArray(m_szFilePath));
+      if (fileInfo.size() > MAX_THUMBNAIL_FILE_SIZE) {
+        return E_FAIL;
+      }
+      ext = fileInfo.suffix().toLower();
+    }
 
   bool isRaw = isRawExtension(ext);
   QByteArray rawBuffer;
@@ -570,6 +603,9 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
   // Scale size during read if supported by reader for major performance gains
   QSize size = reader.size();
   if (size.isValid()) {
+    if (size.width() > MAX_THUMBNAIL_DIMENSION || size.height() > MAX_THUMBNAIL_DIMENSION) {
+      return E_FAIL;
+    }
     size.scale(cx, cx, Qt::KeepAspectRatio);
     reader.setScaledSize(size);
   }
@@ -596,6 +632,9 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
           memReader.setAutoTransform(true);
           QSize sz = memReader.size();
           if (sz.isValid()) {
+            if (sz.width() > MAX_THUMBNAIL_DIMENSION || sz.height() > MAX_THUMBNAIL_DIMENSION) {
+              return E_FAIL;
+            }
             sz.scale(cx, cx, Qt::KeepAspectRatio);
             memReader.setScaledSize(sz);
           }
@@ -624,6 +663,9 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
           fileReader.setAutoTransform(true);
           QSize sz = fileReader.size();
           if (sz.isValid()) {
+            if (sz.width() > MAX_THUMBNAIL_DIMENSION || sz.height() > MAX_THUMBNAIL_DIMENSION) {
+              return E_FAIL;
+            }
             sz.scale(cx, cx, Qt::KeepAspectRatio);
             fileReader.setScaledSize(sz);
           }
@@ -638,6 +680,10 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
     if (img.isNull()) {
       return E_FAIL;
     }
+  }
+
+  if (img.width() > MAX_THUMBNAIL_DIMENSION || img.height() > MAX_THUMBNAIL_DIMENSION) {
+    return E_FAIL;
   }
 
   // Downscale manually if the reader didn't scale it
@@ -674,10 +720,15 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
     return E_FAIL;
   }
 
-  memcpy(pBits, img.constBits(), img.sizeInBytes());
-  *phbmp = hbmp;
-  *pdwAlpha = WTSAT_ARGB; // Enable alpha transparency channel
-  return S_OK;
+    memcpy(pBits, img.constBits(), img.sizeInBytes());
+    *phbmp = hbmp;
+    *pdwAlpha = WTSAT_ARGB; // Enable alpha transparency channel
+    return S_OK;
+  } catch (...) {
+    if (phbmp) *phbmp = nullptr;
+    if (pdwAlpha) *pdwAlpha = WTSAT_UNKNOWN;
+    return E_FAIL;
+  }
 }
 
 // QImgvThumbnailProviderClassFactory Implementation
@@ -777,6 +828,12 @@ STDAPI DllRegisterServer() {
 
   HRESULT hr = CreateRegistryKeyAndValue(HKEY_LOCAL_MACHINE, clsidKey, nullptr,
                                          L"qimgv-plus Thumbnail Provider");
+  if (FAILED(hr))
+    return hr;
+
+  // Prefer surrogate/process isolation (DisableProcessIsolation = 0)
+  hr = CreateRegistryKeyAndDwordValue(HKEY_LOCAL_MACHINE, clsidKey,
+                                      L"DisableProcessIsolation", 0);
   if (FAILED(hr))
     return hr;
 
