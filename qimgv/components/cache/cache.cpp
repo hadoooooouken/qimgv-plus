@@ -12,7 +12,7 @@ bool Cache::insert(std::shared_ptr<Image> img) {
         if(items.contains(img->filePath())) {
             return false;
         } else {
-            items.insert(img->filePath(), new CacheItem(img));
+            items.insert(img->filePath(), std::make_shared<CacheItem>(img));
             return true;
         }
     }
@@ -22,22 +22,17 @@ bool Cache::insert(std::shared_ptr<Image> img) {
 void Cache::remove(QString path) {
     if(items.contains(path)) {
         items[path]->lock();
-        auto *item = items.take(path);
-        delete item;
+        items.remove(path);
     }
 }
 
 void Cache::clear() {
-    const auto keys = items.keys();
-    for(const auto &path : keys) {
-        auto item = items.take(path);
-        delete item;
-    }
+    items.clear();
 }
 
 std::shared_ptr<Image> Cache::get(QString path) {
     if(items.contains(path)) {
-        CacheItem *item = items.value(path);
+        auto item = items.value(path);
         return item->getContents();
     }
     return nullptr;
@@ -65,8 +60,7 @@ void Cache::trimTo(QStringList pathList) {
     for(const auto &path : keys) {
         if(!pathList.contains(path)) {
             items[path]->lock();
-            auto *item = items.take(path);
-            delete item;
+            items.remove(path);
         }
     }
 }

@@ -4,6 +4,7 @@
 #include <QMap>
 #include <QSemaphore>
 #include <QMutexLocker>
+#include <memory>
 #include "sourcecontainers/image.h"
 #include "components/cache/cacheitem.h"
 #include "utils/imagefactory.h"
@@ -24,5 +25,5 @@ public:
     const QList<QString> keys() const;
 
 private:
-    QMap<QString, CacheItem*> items;
+    QMap<QString, std::shared_ptr<CacheItem>> items;
 };

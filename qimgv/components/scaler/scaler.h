@@ -6,6 +6,7 @@
 #include <QMutex>
 #include <QSet>
 #include <QString>
+#include <memory>
 #include "components/cache/cache.h"
 #include "scalerrequest.h"
 #include "scalerrunnable.h"
@@ -33,7 +34,7 @@ private slots:
 
 private:
     QThreadPool *pool;
-    ScalerRunnable *runnable;
+    std::unique_ptr<ScalerRunnable> runnable;
     bool buffered, running;
     clock_t currentRequestTimestamp;
     ScalerRequest bufferedRequest, startedRequest;
@@ -45,6 +46,6 @@ private:
     void startRequest(ScalerRequest req);
     void updateReservations();
 
-    QSemaphore *sem;
+    QSemaphore sem{1};
 };
 

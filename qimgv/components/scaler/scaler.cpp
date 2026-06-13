@@ -26,14 +26,13 @@ Scaler::Scaler(Cache *_cache, QObject *parent)
       currentRequestTimestamp(0),
       cache(_cache)
 {
-    sem = new QSemaphore(1);
     pool = new QThreadPool(this);
     pool->setMaxThreadCount(1);
-    runnable = new ScalerRunnable();
+    runnable = std::make_unique<ScalerRunnable>();
     runnable->setAutoDelete(false);
     connect(this, &Scaler::startBufferedRequest, this, &Scaler::slotStartBufferedRequest, Qt::DirectConnection);
-    connect(runnable, &ScalerRunnable::started, this, &Scaler::onTaskStart, Qt::DirectConnection);
-    connect(runnable, &ScalerRunnable::finished, this, &Scaler::onTaskFinish, Qt::DirectConnection);
+    connect(runnable.get(), &ScalerRunnable::started, this, &Scaler::onTaskStart, Qt::DirectConnection);
+    connect(runnable.get(), &ScalerRunnable::finished, this, &Scaler::onTaskFinish, Qt::DirectConnection);
     connect(this, &Scaler::acceptScalingResult, this, &Scaler::slotForwardScaledResult, Qt::QueuedConnection);
 }
 
@@ -42,10 +41,8 @@ Scaler::~Scaler() {
     if(pool) {
         pool->waitForDone();
     }
-    disconnect(runnable, nullptr, this, nullptr);
+    disconnect(runnable.get(), nullptr, this, nullptr);
     disconnect(this, nullptr, nullptr, nullptr);
-    delete sem;
-    delete runnable;
 }
 
 /*
@@ -97,7 +94,7 @@ void Scaler::updateReservations() {
 }
 
 void Scaler::requestScaled(ScalerRequest req) {
-    sem->acquire(1);
+    sem.acquire(1);
     SCALER_TRACE("requestScaled for image:" << (req.image ? req.image->fileName() : "null"));
     if(!running) {
         bufferedRequest = req;
@@ -109,21 +106,21 @@ void Scaler::requestScaled(ScalerRequest req) {
         buffered = true;
         updateReservations();
     }
-    sem->release(1);
+    sem.release(1);
 }
 
 void Scaler::clear() {
-    sem->acquire(1);
+    sem.acquire(1);
     buffered = false;
     bufferedRequest = ScalerRequest();
     mCleared = true;
     updateReservations();
-    sem->release(1);
+    sem.release(1);
 }
 
 
 void Scaler::onTaskStart(ScalerRequest req) {
-    sem->acquire(1);
+    sem.acquire(1);
     running = true;
     mCleared = false;
     if(buffered && bufferedRequest == req) {
@@ -132,26 +129,26 @@ void Scaler::onTaskStart(ScalerRequest req) {
     startedRequest = req;
     SCALER_TRACE("onTaskStart for image:" << (req.image ? req.image->fileName() : "null"));
     updateReservations();
-    sem->release(1);
+    sem.release(1);
 }
 
 void Scaler::onTaskFinish(QImage scaled, ScalerRequest req) {
-    sem->acquire(1);
+    sem.acquire(1);
     running = false;
     SCALER_TRACE("onTaskFinish for image:" << (req.image ? req.image->fileName() : "null"));
     if(mCleared) {
         mCleared = false;
         updateReservations();
-        sem->release(1);
+        sem.release(1);
         return;
     }
     if(buffered) {
         emit startBufferedRequest();
         updateReservations();
-        sem->release(1);
+        sem.release(1);
     } else {
         updateReservations();
-        sem->release(1);
+        sem.release(1);
         emit acceptScalingResult(scaled, req);
     }
 }
@@ -168,5 +165,5 @@ void Scaler::slotForwardScaledResult(QImage image, ScalerRequest req) {
 
 void Scaler::startRequest(ScalerRequest req) {
     runnable->setRequest(req);
-    pool->start(runnable);
+    pool->start(runnable.get());
 }

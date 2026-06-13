@@ -13,12 +13,17 @@ class SharedResources
 public:
     SharedResources();
     static SharedResources* getInstance();
+
+    // Disable copy
+    SharedResources(const SharedResources&) = delete;
+    SharedResources& operator=(const SharedResources&) = delete;
+
     ~SharedResources();
 
-    QPixmap *getPixmap(ShrIcon icon, qreal dpr);
+    QPixmap getPixmap(ShrIcon icon, qreal dpr);
 private:
-    QPixmap *mLoadingIcon72 = nullptr;
-    QPixmap *mLoadingErrorIcon72 = nullptr;
+    QPixmap mLoadingIcon72;
+    QPixmap mLoadingErrorIcon72;
 };
 
 extern SharedResources *shrRes;

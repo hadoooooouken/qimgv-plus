@@ -4,7 +4,7 @@ DirectoryModel::DirectoryModel(QObject *parent) :
     QObject(parent),
     fileListSource(SOURCE_DIRECTORY)
 {
-    scaler = new Scaler(&cache);
+    scaler = std::make_unique<Scaler>(&cache);
 
     connect(&dirManager, &DirectoryManager::fileRemoved,  this, &DirectoryModel::onFileRemoved);
     connect(&dirManager, &DirectoryManager::fileAdded,    this, &DirectoryModel::onFileAdded);
@@ -22,7 +22,6 @@ DirectoryModel::DirectoryModel(QObject *parent) :
 
 DirectoryModel::~DirectoryModel() {
     loader.clearTasks();
-    delete scaler;
 }
 
 int DirectoryModel::totalCount() const {

@@ -26,26 +26,20 @@ Settings::Settings(QObject *parent) : QObject(parent) {
         QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
   }
 
-  mConfDir = new QDir(confPath);
+  mConfDir = std::make_unique<QDir>(confPath);
   mConfDir->mkpath(mConfDir->absolutePath());
 
-  settingsConf = new QSettings(mConfDir->absolutePath() + "/" +
-                                   qApp->applicationName() + ".ini",
+  settingsConf = std::make_unique<QSettings>(mConfDir->absolutePath() + "/" +
+                                    qApp->applicationName() + ".ini",
                                QSettings::IniFormat);
-  stateConf = new QSettings(mConfDir->absolutePath() + "/savedState.ini",
+  stateConf = std::make_unique<QSettings>(mConfDir->absolutePath() + "/savedState.ini",
                             QSettings::IniFormat);
-  themeConf = new QSettings(mConfDir->absolutePath() + "/theme.ini",
+  themeConf = std::make_unique<QSettings>(mConfDir->absolutePath() + "/theme.ini",
                             QSettings::IniFormat);
 }
 //------------------------------------------------------------------------------
 Settings::~Settings() {
   saveTheme();
-  delete mConfDir;
-  delete mThumbCacheDir;
-  delete mTmpDir;
-  delete settingsConf;
-  delete stateConf;
-  delete themeConf;
 }
 //------------------------------------------------------------------------------
 Settings *Settings::getInstance() {
@@ -71,9 +65,9 @@ void Settings::setupCache() {
     thumbPath = mConfDir->absolutePath() + "/thumbnails";
   }
 
-  mTmpDir = new QDir(cachePath);
+  mTmpDir = std::make_unique<QDir>(cachePath);
   mTmpDir->mkpath(mTmpDir->absolutePath());
-  mThumbCacheDir = new QDir(thumbPath);
+  mThumbCacheDir = std::make_unique<QDir>(thumbPath);
   mThumbCacheDir->mkpath(mThumbCacheDir->absolutePath());
 }
 //------------------------------------------------------------------------------

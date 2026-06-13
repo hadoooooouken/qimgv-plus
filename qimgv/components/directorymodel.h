@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <QObject>
 #include "cache/cache.h"
 #include "directorymanager/directorymanager.h"
@@ -13,7 +14,7 @@ public:
     explicit DirectoryModel(QObject *parent = nullptr);
     ~DirectoryModel();
 
-    Scaler *scaler;
+    std::unique_ptr<Scaler> scaler;
 
     void load(QString filePath, bool asyncHint);
     void preload(QString filePath);

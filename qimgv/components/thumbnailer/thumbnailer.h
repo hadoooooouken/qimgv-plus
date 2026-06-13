@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <QThreadPool>
 #include "components/thumbnailer/thumbnailerrunnable.h"
 #include "components/cache/thumbnailcache.h"
@@ -19,7 +20,7 @@ public slots:
     void getThumbnailAsync(QString path, int size, bool crop, bool force);
 
 private:
-    ThumbnailCache *cache;
+    std::unique_ptr<ThumbnailCache> cache;
     QThreadPool *pool;
     void startThumbnailerThread(QString filePath, int size, bool crop, bool force);
     QMultiMap<QString, int> runningTasks;

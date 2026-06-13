@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include "themestore.h"
 #include "utils/script.h"
 #include <QApplication>
@@ -336,8 +337,8 @@ public:
 
 private:
   explicit Settings(QObject *parent = nullptr);
-  QSettings *settingsConf, *stateConf, *themeConf;
-  QDir *mTmpDir, *mThumbCacheDir, *mConfDir;
+  std::unique_ptr<QSettings> settingsConf, stateConf, themeConf;
+  std::unique_ptr<QDir> mTmpDir, mThumbCacheDir, mConfDir;
   ColorScheme mColorScheme;
   bool mHasCustomAccent = false;
   void createColorVariants();

@@ -412,7 +412,7 @@ void Core::connectComponents() {
   connect(mw, &MW::prevImageRequested, this, &Core::prevImage);
 
   connect(mw, &MW::scalingRequested, this, &Core::scalingRequest);
-  connect(model->scaler, &Scaler::scalingFinished, this,
+  connect(model->scaler.get(), &Scaler::scalingFinished, this,
           &Core::onScalingFinished);
 
   connect(settings, &Settings::settingsChanged, this, [this]() {
