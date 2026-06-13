@@ -79,7 +79,7 @@ vec3 applySmartSharpenGPU(vec2 uv) {
 void main() {
     highp vec4 color = texture2D(tex, texCoord);
     highp vec3 rgb = color.rgb;
-    if (sharpenMode == 3 && casSharpening > 0.001) {
+    if (sharpenMode == 3 && casSharpening > kAdjustEpsilon) {
         rgb = applyCAS(texCoord);
     } else if (sharpenMode == 4) {
         rgb = applySmartSharpenGPU(texCoord);

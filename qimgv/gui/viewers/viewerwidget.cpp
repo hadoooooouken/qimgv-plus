@@ -122,8 +122,8 @@ bool ViewerWidget::copyCurrentViewportToClipboard() const {
         return false;
 
     // Apply color adjustments on CPU
-    bool hasAdjustments = (qAbs(mBrightness) > 0.001f || qAbs(mContrast - 1.0f) > 0.001f || qAbs(mSaturation - 1.0f) > 0.001f ||
-                           qAbs(mHue) > 0.001f || qAbs(mExposure) > 0.001f || qAbs(mTemperature) > 0.001f || qAbs(mTint) > 0.001f);
+    bool hasAdjustments = (qAbs(mBrightness) > ImageLib::kAdjustEpsilon || qAbs(mContrast - 1.0f) > ImageLib::kAdjustEpsilon || qAbs(mSaturation - 1.0f) > ImageLib::kAdjustEpsilon ||
+                           qAbs(mHue) > ImageLib::kAdjustEpsilon || qAbs(mExposure) > ImageLib::kAdjustEpsilon || qAbs(mTemperature) > ImageLib::kAdjustEpsilon || qAbs(mTint) > ImageLib::kAdjustEpsilon);
     if (hasAdjustments) {
         QImage adjusted = ImageLib::applyColorAdjustments(
             std::make_shared<const QImage>(image),

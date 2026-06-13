@@ -1170,9 +1170,13 @@ void BatchWorkerTask::run() {
 
     QImage processedImg = srcImg;
 
-    bool colorModified = (brightness != 0.0f || std::abs(contrast - 1.0f) > 0.001f ||
-                          std::abs(saturation - 1.0f) > 0.001f || temp != 0.0f ||
-                          tint != 0.0f || exposure != 0.0f || hue != 0.0f);
+    bool colorModified = (std::abs(brightness) > ImageLib::kAdjustEpsilon ||
+                          std::abs(contrast - 1.0f) > ImageLib::kAdjustEpsilon ||
+                          std::abs(saturation - 1.0f) > ImageLib::kAdjustEpsilon ||
+                          std::abs(temp) > ImageLib::kAdjustEpsilon ||
+                          std::abs(tint) > ImageLib::kAdjustEpsilon ||
+                          std::abs(exposure) > ImageLib::kAdjustEpsilon ||
+                          std::abs(hue) > ImageLib::kAdjustEpsilon);
     if (colorModified) {
         if (dialog->isCancelled) return;
         std::shared_ptr<const QImage> srcPtr = std::make_shared<const QImage>(processedImg);

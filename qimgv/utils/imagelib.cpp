@@ -602,7 +602,7 @@ ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, f
   };
 
   // 3. Hue rotate
-  if (std::abs(hue) > 0.001f) {
+  if (std::abs(hue) > kAdjustEpsilon) {
     float hueRad = hue * 3.14159265358979323846f / 180.0f;
     float cosAngle = std::cos(hueRad);
     float sinAngle = std::sin(hueRad);
@@ -623,7 +623,7 @@ ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, f
   }
 
   // 4. Saturation
-  if (std::abs(saturation - 1.0f) > 0.001f) {
+  if (std::abs(saturation - 1.0f) > kAdjustEpsilon) {
     float rWeight = 0.2126f * (1.0f - saturation);
     float gWeight = 0.7152f * (1.0f - saturation);
     float bWeight = 0.0722f * (1.0f - saturation);

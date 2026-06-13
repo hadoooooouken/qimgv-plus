@@ -18,6 +18,8 @@ struct ColorMatrix {
 
 class ImageLib {
     public:
+        static constexpr float kAdjustEpsilon = 0.001f;
+
         static QImage rotatedRaw(const QImage *src, int grad);
         static QImage rotated(std::shared_ptr<const QImage> src, int grad);
 

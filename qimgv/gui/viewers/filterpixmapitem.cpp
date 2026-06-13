@@ -6,6 +6,8 @@
 #include <QMatrix4x4>
 #include <QMatrix3x3>
 #include <QOpenGLContext>
+#include <QFile>
+#include <QTextStream>
 #include <cmath>
 
 #ifndef M_PI
@@ -60,9 +62,23 @@ void FilterPixmapItem::initShader() {
         ok = false;
     }
 
-    if (!mProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/res/shaders/filter.frag")) {
-        qWarning() << "FilterPixmapItem fragment shader error:" << mProgram->log();
+    QFile fragFile(":/res/shaders/filter.frag");
+    QString fragSource;
+    if (fragFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fragSource = fragFile.readAll();
+        fragFile.close();
+    } else {
+        qWarning() << "FilterPixmapItem fragment shader load error: could not open resource file";
         ok = false;
+    }
+
+    if (ok) {
+        QString prefix = QString("#define kAdjustEpsilon %1\n").arg(ImageLib::kAdjustEpsilon);
+        fragSource.prepend(prefix);
+        if (!mProgram->addShaderFromSourceCode(QOpenGLShader::Fragment, fragSource)) {
+            qWarning() << "FilterPixmapItem fragment shader error:" << mProgram->log();
+            ok = false;
+        }
     }
 
     if (!mProgram->link()) {
@@ -88,9 +104,9 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     }
 
     // 1. Fallback to default QGraphicsPixmapItem paint if there are no adjustments
-    if (qAbs(mBrightness) < 0.001f && qAbs(mContrast - 1.0f) < 0.001f && qAbs(mSaturation - 1.0f) < 0.001f && qAbs(mHue) < 0.001f &&
-        qAbs(mExposure) < 0.001f && qAbs(mTemperature) < 0.001f && qAbs(mTint) < 0.001f &&
-        activeCasSharpening < 0.001f && !activeSmartGpu) {
+    if (qAbs(mBrightness) < ImageLib::kAdjustEpsilon && qAbs(mContrast - 1.0f) < ImageLib::kAdjustEpsilon && qAbs(mSaturation - 1.0f) < ImageLib::kAdjustEpsilon && qAbs(mHue) < ImageLib::kAdjustEpsilon &&
+        qAbs(mExposure) < ImageLib::kAdjustEpsilon && qAbs(mTemperature) < ImageLib::kAdjustEpsilon && qAbs(mTint) < ImageLib::kAdjustEpsilon &&
+        activeCasSharpening < ImageLib::kAdjustEpsilon && !activeSmartGpu) {
         QGraphicsPixmapItem::paint(painter, option, widget);
         return;
     }

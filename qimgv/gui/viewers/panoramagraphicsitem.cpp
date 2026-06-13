@@ -5,6 +5,8 @@
 #include <QOpenGLWidget>
 #include <QOpenGLContext>
 #include <QMatrix3x3>
+#include <QFile>
+#include <QTextStream>
 #include <cmath>
 
 #ifndef M_PI
@@ -83,9 +85,23 @@ void PanoramaGraphicsItem::initShader()
         qWarning() << "Panorama shader vertex error:" << mProgram->log();
         ok = false;
     }
-    if (!mProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/res/shaders/panorama.frag")) {
-        qWarning() << "Panorama shader fragment error:" << mProgram->log();
+    QFile fragFile(":/res/shaders/panorama.frag");
+    QString fragSource;
+    if (fragFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fragSource = fragFile.readAll();
+        fragFile.close();
+    } else {
+        qWarning() << "Panorama fragment shader load error: could not open resource file";
         ok = false;
+    }
+
+    if (ok) {
+        QString prefix = QString("#define kAdjustEpsilon %1\n").arg(ImageLib::kAdjustEpsilon);
+        fragSource.prepend(prefix);
+        if (!mProgram->addShaderFromSourceCode(QOpenGLShader::Fragment, fragSource)) {
+            qWarning() << "Panorama shader fragment error:" << mProgram->log();
+            ok = false;
+        }
     }
     if (!mProgram->link()) {
         qWarning() << "Panorama shader link error:" << mProgram->log();
