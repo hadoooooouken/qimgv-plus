@@ -150,7 +150,7 @@ QImage ImageLib::scaled(std::shared_ptr<const QImage> source, QSize destSize,
   int maxDim = 12288;
   qint64 maxPixels = 100000000;
 #ifdef USE_UPSCAYL
-  if (settings->useUpscayl()) {
+  if (settings->useUpscayl() || settings->resizeUseUpscayl()) {
     maxDim = 16384;         // Cap to GPU max texture size / GDI memory safety limit (16384)
     maxPixels = 268435456;  // Cap to 256 Megapixels (~1.07 GB RAM) to prevent drawing allocations crashes
   }

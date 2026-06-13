@@ -84,13 +84,37 @@ public:
     }
 
     QImage imgRgba = inputImage.convertToFormat(QImage::Format_ARGB32);
-    int inW = imgRgba.width(), inH = imgRgba.height();
-    int outW = inW * 4, outH = inH * 4;
+    qint64 inW = imgRgba.width();
+    qint64 inH = imgRgba.height();
 
-    QImage outImg(outW, outH, QImage::Format_ARGB32);
+    constexpr qint64 kMaxUpscalePixels = 64LL * 1024 * 1024;
+    if (inW <= 0 || inH <= 0 || (inW * inH) > kMaxUpscalePixels) {
+      qWarning() << "[Upscayl] upscale() image too large or invalid size:" << inW << "x" << inH;
+      return QImage();
+    }
 
-    int ret = realesrgan->processPixels(imgRgba.constBits(), inW, inH,
-                                        outImg.bits(), outW, outH);
+    int scale = realesrgan->scale;
+    if (scale <= 0) {
+      scale = 4;
+    }
+
+    qint64 outW = inW * scale;
+    qint64 outH = inH * scale;
+
+    constexpr qint64 kMaxIntVal = 2147483647; // std::numeric_limits<int>::max()
+    if (outW > kMaxIntVal || outH > kMaxIntVal) {
+      qWarning() << "[Upscayl] upscale() output size exceeds max integer:" << outW << "x" << outH;
+      return QImage();
+    }
+
+    QImage outImg(static_cast<int>(outW), static_cast<int>(outH), QImage::Format_ARGB32);
+    if (outImg.isNull()) {
+      qWarning() << "[Upscayl] upscale() failed to allocate output QImage of size:" << outW << "x" << outH;
+      return QImage();
+    }
+
+    int ret = realesrgan->processPixels(imgRgba.constBits(), static_cast<int>(inW), static_cast<int>(inH),
+                                        outImg.bits(), static_cast<int>(outW), static_cast<int>(outH));
 
     if (ret != 0) {
       qWarning() << "[Upscayl] processPixels failed, code:" << ret;
@@ -1409,7 +1433,11 @@ void Core::showBatchConverter() {
     }
   }
   if (!filePaths.isEmpty()) {
+    QString currentDirPath = model->directoryPath();
     mw->showBatchConverter(filePaths);
+    if (!currentDirPath.isEmpty()) {
+      model->setDirectory(currentDirPath);
+    }
   }
 }
 

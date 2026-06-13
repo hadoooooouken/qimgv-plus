@@ -935,6 +935,29 @@ void BatchConverterDialog::onConvertClicked() {
         return;
     }
 
+    if (resizeEnableCheckBox->isChecked()) {
+        int maxDim = 12288;
+        qint64 maxPixels = 100000000;
+#ifdef USE_UPSCAYL
+        if (settings->useUpscayl() || useUpscaylCheckBox->isChecked()) {
+            maxDim = 16384;
+            maxPixels = 268435456;
+        }
+#endif
+        if (targetSize.width() > maxDim || targetSize.height() > maxDim ||
+            (qint64)targetSize.width() * targetSize.height() > maxPixels) {
+            double mpLimit = maxPixels / 1000000.0;
+            QMessageBox::warning(this, tr("Resolution Limit Exceeded"),
+                                 tr("Target resolution (%1x%2) exceeds safety limits.\n\n"
+                                    "Maximum allowed dimension: %3 px\n"
+                                    "Maximum allowed pixel count: %4 MP\n\n"
+                                    "Please reduce the percentage or absolute size.")
+                                 .arg(targetSize.width()).arg(targetSize.height())
+                                 .arg(maxDim).arg(mpLimit, 0, 'f', 0));
+            return;
+        }
+    }
+
     isConverting = true;
     isCancelled = false;
     processedFiles = 0;
@@ -1210,12 +1233,38 @@ void BatchWorkerTask::run() {
 #ifdef USE_UPSCAYL
         if (dialog->sharedResrgan) {
             QImage imgRgba = processedImg.convertToFormat(QImage::Format_ARGB32);
-            int inW = imgRgba.width(), inH = imgRgba.height();
+            qint64 inW = imgRgba.width();
+            qint64 inH = imgRgba.height();
+
+            constexpr qint64 kMaxUpscalePixels = 64LL * 1024 * 1024;
+            if (inW <= 0 || inH <= 0 || (inW * inH) > kMaxUpscalePixels) {
+                if (dialog->isCancelled) return;
+                QMetaObject::invokeMethod(
+                    dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
+                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
+                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Invalid size")),
+                    Q_ARG(bool, false));
+                return;
+            }
+
             int scale = dialog->sharedResrgan->scale;
             if (scale <= 0) scale = 4;
-            int outW = inW * scale;
-            int outH = inH * scale;
-            QImage outImg(outW, outH, QImage::Format_ARGB32);
+
+            qint64 outW = inW * scale;
+            qint64 outH = inH * scale;
+
+            constexpr qint64 kMaxIntVal = 2147483647; // std::numeric_limits<int>::max()
+            if (outW > kMaxIntVal || outH > kMaxIntVal) {
+                if (dialog->isCancelled) return;
+                QMetaObject::invokeMethod(
+                    dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
+                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
+                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Output size too large")),
+                    Q_ARG(bool, false));
+                return;
+            }
+
+            QImage outImg(static_cast<int>(outW), static_cast<int>(outH), QImage::Format_ARGB32);
             if (outImg.isNull()) {
                 if (dialog->isCancelled) return;
                 QMetaObject::invokeMethod(
@@ -1226,7 +1275,8 @@ void BatchWorkerTask::run() {
                 return;
             }
             if (dialog->sharedResrgan->processPixels(
-                    imgRgba.constBits(), inW, inH, outImg.bits(), outW, outH) == 0) {
+                    imgRgba.constBits(), static_cast<int>(inW), static_cast<int>(inH),
+                    outImg.bits(), static_cast<int>(outW), static_cast<int>(outH)) == 0) {
                 processedImg = outImg;
             }
         }

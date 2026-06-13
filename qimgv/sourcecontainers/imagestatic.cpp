@@ -38,11 +38,19 @@ void ImageStatic::loadGeneric() {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
   r.setAllocationLimit(settings->memoryAllocationLimit());
 #endif
-  // Improve PDF quality by scaling it up
-  if (mDocInfo->format() == "pdf") {
-    QSize sz = r.size();
-    if (sz.isValid() && sz.width() > 0 && sz.height() > 0)
+  QSize sz = r.size();
+  if (sz.isValid() && sz.width() > 0 && sz.height() > 0) {
+    if (mDocInfo->format() == "pdf") {
       r.setScaledSize(sz * 5);
+    } else {
+      constexpr int kMaxDimension = 16384;
+      if (sz.width() > kMaxDimension || sz.height() > kMaxDimension) {
+        QSize scaledSize = sz;
+        scaledSize.scale(kMaxDimension, kMaxDimension, Qt::KeepAspectRatio);
+        r.setScaledSize(scaledSize);
+        qWarning() << "ImageStatic: Image size" << sz << "exceeds limit. Downscaling to" << scaledSize << "for display.";
+      }
+    }
   }
   QImage *tmp = new QImage();
   if (!r.read(tmp)) {
