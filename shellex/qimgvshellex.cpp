@@ -177,7 +177,12 @@ createQImageFromLibRawImage(const libraw_processed_image_t *processedImage) {
     return QImage();
   }
 
-  const int bytesPerLine = processedImage->width * processedImage->colors;
+  qint64 need = qint64(processedImage->width) * processedImage->colors;
+  if (processedImage->width <= 0 || processedImage->height <= 0 ||
+      need <= 0 || need * processedImage->height > qint64(processedImage->data_size))
+    return QImage();
+
+  const int bytesPerLine = int(need);
   QImage img(reinterpret_cast<const uchar *>(processedImage->data),
              processedImage->width, processedImage->height, bytesPerLine,
              format);
