@@ -30,6 +30,7 @@ private:
     QOpenGLShaderProgram *mProgram = nullptr;
     QOpenGLTexture *mTexture = nullptr;
     bool mInitialized = false;
+    bool mShaderFailed = false;
     
     float mYaw = 0.0f;
     float mPitch = 0.0f;

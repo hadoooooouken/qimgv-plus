@@ -31,6 +31,7 @@ private:
     ScalingFilter mScalingFilter = QI_FILTER_BILINEAR;
 
     bool mInitialized = false;
+    bool mShaderFailed = false;
     QOpenGLShaderProgram *mProgram = nullptr;
     QOpenGLTexture *mTexture = nullptr;
     QPixmap mLastPixmap;

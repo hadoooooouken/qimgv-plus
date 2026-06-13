@@ -51,18 +51,23 @@ void FilterPixmapItem::initShader() {
     initializeOpenGLFunctions();
 
     mProgram = new QOpenGLShaderProgram();
+    bool ok = true;
     if (!mProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/res/shaders/filter.vert")) {
-        qDebug() << "FilterPixmapItem vertex shader error:" << mProgram->log();
+        qWarning() << "FilterPixmapItem vertex shader error:" << mProgram->log();
+        ok = false;
     }
 
     if (!mProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/res/shaders/filter.frag")) {
-        qDebug() << "FilterPixmapItem fragment shader error:" << mProgram->log();
+        qWarning() << "FilterPixmapItem fragment shader error:" << mProgram->log();
+        ok = false;
     }
 
     if (!mProgram->link()) {
-        qDebug() << "FilterPixmapItem shader link error:" << mProgram->log();
+        qWarning() << "FilterPixmapItem shader link error:" << mProgram->log();
+        ok = false;
     }
 
+    mShaderFailed = !ok;
     mInitialized = true;
 }
 
@@ -98,6 +103,10 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     }
 
     initShader();
+    if (mShaderFailed) {
+        QGraphicsPixmapItem::paint(painter, option, widget);
+        return;
+    }
 
     if (!mTexture || mLastPixmap.cacheKey() != currentPixmap.cacheKey()) {
         if (mTexture) {

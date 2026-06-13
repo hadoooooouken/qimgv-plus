@@ -75,14 +75,21 @@ void PanoramaGraphicsItem::initShader()
         "   texCoord = texCoordAttr;\n"
         "}\n";
         
-    mProgram->addShaderFromSourceCode(QOpenGLShader::Vertex, vsrc);
+    bool ok = true;
+    if (!mProgram->addShaderFromSourceCode(QOpenGLShader::Vertex, vsrc)) {
+        qWarning() << "Panorama shader vertex error:" << mProgram->log();
+        ok = false;
+    }
     if (!mProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/res/shaders/panorama.frag")) {
-        qDebug() << "Panorama shader fragment error:" << mProgram->log();
+        qWarning() << "Panorama shader fragment error:" << mProgram->log();
+        ok = false;
     }
     if (!mProgram->link()) {
-        qDebug() << "Panorama shader link error:" << mProgram->log();
+        qWarning() << "Panorama shader link error:" << mProgram->log();
+        ok = false;
     }
     
+    mShaderFailed = !ok;
     mInitialized = true;
 }
 
@@ -98,6 +105,11 @@ void PanoramaGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsIt
     }
 
     initShader();
+    if (mShaderFailed) {
+        // Fallback (not really a panorama, just a flat image)
+        painter->drawPixmap(0, 0, *mPixmap);
+        return;
+    }
     
     if (!mTexture) {
         mTexture = new QOpenGLTexture(mPixmap->toImage());
