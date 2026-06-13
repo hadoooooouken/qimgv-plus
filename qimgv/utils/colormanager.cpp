@@ -66,7 +66,8 @@ public:
                 qWarning() << "ColorManager: GetDC(NULL) failed.";
             }
             if (!success) {
-                qWarning() << "ColorManager: Falling back to default invalid QColorSpace for System profile.";
+                targetSpace = QColorSpace(QColorSpace::SRgb);
+                qWarning() << "ColorManager: Falling back to sRGB for System profile.";
             }
 #else
             targetSpace = QColorSpace(QColorSpace::SRgb);
