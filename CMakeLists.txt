@@ -13,15 +13,25 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# OPTIMIZATIONS
+# OPTIMIZATIONS & HARDENING
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
+    # Compiler options: AVX2, Buffer Security Check (/GS), Control Flow Guard (/guard:cf)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2 /GS /guard:cf")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /GS /guard:cf")
+
+    # Linker options: Control Flow Guard (/guard:cf), ASLR (/DYNAMICBASE), 64-bit ASLR (/HIGHENTROPYVA)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /guard:cf /DYNAMICBASE /HIGHENTROPYVA")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /guard:cf /DYNAMICBASE /HIGHENTROPYVA")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /guard:cf /DYNAMICBASE /HIGHENTROPYVA")
+
     # Clean Release flags to perfectly map to Visual Studio UI properties
     set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob2 /Oi /Ot /DNDEBUG")
+    set(CMAKE_C_FLAGS_RELEASE "/MD /O2 /Ob2 /Oi /Ot /DNDEBUG")
+
     # Enable Whole Program Optimization (/GL) and Link Time Code Generation (/LTCG) natively in MSBuild/VS
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    message(STATUS "AVX2, full optimizations (/O2 /Ob2 /Oi /Ot), CRT warnings suppression and LTCG/GL enabled for Release")
+    message(STATUS "AVX2, full optimizations (/O2 /Ob2 /Oi /Ot), security hardening (/GS /guard:cf /DYNAMICBASE /HIGHENTROPYVA), CRT warnings suppression and LTCG/GL enabled for Release")
 endif()
 
 # USER OPTIONS

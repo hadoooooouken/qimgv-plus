@@ -416,10 +416,12 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
     DllEnvironmentManager envManager(dllDir);
 
     // Initialize headless QCoreApplication inside DLL if not already running
-    if (!QCoreApplication::instance()) {
+    static bool qAppInitialized = false;
+    if (!qAppInitialized) {
       int argc = 1;
       static char *argv[] = {(char *)"qimgvshellex.dll"};
       new QCoreApplication(argc, argv);
+      qAppInitialized = true;
     }
 
     // Initialize library search paths for Qt plugins (imageformats) relative to
