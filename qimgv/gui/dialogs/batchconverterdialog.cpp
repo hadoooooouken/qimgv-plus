@@ -438,7 +438,7 @@ void BatchConverterDialog::setupColorSection(QVBoxLayout *scrollLayout) {
     colorEnableCheckBox = new QCheckBox(tr("Color adjustments"), this);
     ccLayout->addWidget(colorEnableCheckBox);
 
-    QVBoxLayout *vColorLayout = new QVBoxLayout();
+    vColorLayout = new QVBoxLayout();
 
     exposureWidget = new LinkedSliderSpin(tr("Exposure:"), -2.0, 2.0, 0.0, 0.01, 2, "", this);
     vColorLayout->addWidget(exposureWidget);
@@ -462,6 +462,20 @@ void BatchConverterDialog::setupColorSection(QVBoxLayout *scrollLayout) {
     vColorLayout->addWidget(tintWidget);
 
     ccLayout->addLayout(vColorLayout);
+
+    // Add Reset Color Adjustments button
+    QPushButton *resetColorButton = new QPushButton(tr("Reset Color Adjustments"), this);
+    ccLayout->addWidget(resetColorButton);
+    connect(resetColorButton, &QPushButton::clicked, this, [this]() {
+        exposureWidget->setValue(0.0);
+        contrastWidget->setValue(100.0);
+        brightnessWidget->setValue(0.0);
+        saturationWidget->setValue(100.0);
+        hueWidget->setValue(0.0);
+        tempWidget->setValue(0.0);
+        tintWidget->setValue(0.0);
+    });
+
     scrollLayout->addWidget(colorContainer);
 }
 
@@ -517,19 +531,6 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     : QDialog(parent), inputPaths(filePaths) {
     setupUi();
     setWindowModality(Qt::ApplicationModal);
-
-    // Add Reset Color Adjustments button
-    QPushButton *resetColorButton = new QPushButton(tr("Reset Color Adjustments"), this);
-    colorContainer->layout()->addWidget(resetColorButton);
-    connect(resetColorButton, &QPushButton::clicked, this, [this]() {
-        exposureWidget->setValue(0.0);
-        contrastWidget->setValue(100.0);
-        brightnessWidget->setValue(0.0);
-        saturationWidget->setValue(100.0);
-        hueWidget->setValue(0.0);
-        tempWidget->setValue(0.0);
-        tintWidget->setValue(0.0);
-    });
 
     collectResizeWidgets();
     collectColorWidgets();

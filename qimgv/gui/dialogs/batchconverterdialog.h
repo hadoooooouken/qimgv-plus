@@ -166,6 +166,7 @@ private:
 
     QWidget *colorContainer;
     QCheckBox *colorEnableCheckBox;
+    QVBoxLayout *vColorLayout = nullptr;
     LinkedSliderSpin *exposureWidget;
     LinkedSliderSpin *contrastWidget;
     LinkedSliderSpin *brightnessWidget;
