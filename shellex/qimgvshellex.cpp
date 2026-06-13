@@ -645,6 +645,10 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
           }
         }
       } else {
+        if (seekable && streamSize > MAX_THUMBNAIL_FILE_SIZE) {
+          return E_FAIL;
+        }
+
         QTemporaryFile tempFile;
         tempFile.setFileTemplate(QDir::tempPath() + "/qimgv_XXXXXX");
         if (tempFile.open()) {
@@ -653,10 +657,28 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
           m_pStream->Seek(zero, STREAM_SEEK_SET, nullptr);
           char chunk[65536];
           ULONG read;
+          qint64 totalCopied = 0;
+          bool writeFailed = false;
+
           while (SUCCEEDED(m_pStream->Read(chunk, sizeof(chunk), &read)) &&
                  read > 0) {
-            tempFile.write(chunk, read);
+            totalCopied += read;
+            if (totalCopied > MAX_THUMBNAIL_FILE_SIZE) {
+              writeFailed = true;
+              break;
+            }
+            if (tempFile.write(chunk, read) != (qint64)read) {
+              writeFailed = true;
+              break;
+            }
           }
+
+          if (writeFailed) {
+            tempFile.close();
+            tempFile.remove();
+            return E_FAIL;
+          }
+
           tempFile.flush();
 
           QImageReader fileReader(tempFile.fileName());
