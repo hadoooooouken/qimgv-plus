@@ -18,9 +18,12 @@ FilterPixmapItem::FilterPixmapItem(QGraphicsItem *parent)
 }
 
 FilterPixmapItem::~FilterPixmapItem() {
-    if (QOpenGLContext::currentContext()) {
-        if (mProgram) delete mProgram;
-        if (mTexture) delete mTexture;
+    // QOpenGLTexture and QOpenGLShaderProgram need a current context to release GPU resources.
+    // If no context is current, we release them to avoid calling their destructors (which would make glDelete* calls),
+    // preventing potential driver hangs/crashes at the cost of a CPU memory leak.
+    if (!QOpenGLContext::currentContext()) {
+        mTexture.release();
+        mProgram.release();
     }
 }
 
@@ -50,7 +53,7 @@ void FilterPixmapItem::initShader() {
     if (mInitialized) return;
     initializeOpenGLFunctions();
 
-    mProgram = new QOpenGLShaderProgram();
+    mProgram = std::make_unique<QOpenGLShaderProgram>();
     bool ok = true;
     if (!mProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/res/shaders/filter.vert")) {
         qWarning() << "FilterPixmapItem vertex shader error:" << mProgram->log();
@@ -109,12 +112,9 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     }
 
     if (!mTexture || mLastPixmap.cacheKey() != currentPixmap.cacheKey()) {
-        if (mTexture) {
-            delete mTexture;
-            mTexture = nullptr;
-        }
+        mTexture.reset();
         // Generate mipmaps for smooth downscaling
-        mTexture = new QOpenGLTexture(currentPixmap.toImage(), QOpenGLTexture::GenerateMipMaps);
+        mTexture = std::make_unique<QOpenGLTexture>(currentPixmap.toImage(), QOpenGLTexture::GenerateMipMaps);
         mTexture->setWrapMode(QOpenGLTexture::ClampToEdge);
         mLastPixmap = currentPixmap;
     }

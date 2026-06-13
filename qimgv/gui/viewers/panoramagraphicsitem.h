@@ -27,8 +27,8 @@ private:
     void initShader();
     
     std::shared_ptr<QPixmap> mPixmap;
-    QOpenGLShaderProgram *mProgram = nullptr;
-    QOpenGLTexture *mTexture = nullptr;
+    std::unique_ptr<QOpenGLShaderProgram> mProgram;
+    std::unique_ptr<QOpenGLTexture> mTexture;
     bool mInitialized = false;
     bool mShaderFailed = false;
     

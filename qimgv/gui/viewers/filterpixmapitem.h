@@ -4,6 +4,7 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
+#include <memory>
 #include "settings.h"
 
 class FilterPixmapItem : public QGraphicsPixmapItem, protected QOpenGLFunctions {
@@ -32,8 +33,8 @@ private:
 
     bool mInitialized = false;
     bool mShaderFailed = false;
-    QOpenGLShaderProgram *mProgram = nullptr;
-    QOpenGLTexture *mTexture = nullptr;
+    std::unique_ptr<QOpenGLShaderProgram> mProgram;
+    std::unique_ptr<QOpenGLTexture> mTexture;
     QPixmap mLastPixmap;
 
     void initShader();

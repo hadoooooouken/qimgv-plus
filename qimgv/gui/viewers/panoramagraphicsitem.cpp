@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 #include <QOpenGLWidget>
+#include <QOpenGLContext>
 #include <QMatrix3x3>
 #include <cmath>
 
@@ -18,17 +19,19 @@ PanoramaGraphicsItem::PanoramaGraphicsItem(QGraphicsItem *parent)
 
 PanoramaGraphicsItem::~PanoramaGraphicsItem()
 {
-    if (mProgram) delete mProgram;
-    if (mTexture) delete mTexture;
+    // QOpenGLTexture and QOpenGLShaderProgram need a current context to release GPU resources.
+    // If no context is current, we release them to avoid calling their destructors (which would make glDelete* calls),
+    // preventing potential driver hangs/crashes at the cost of a CPU memory leak.
+    if (!QOpenGLContext::currentContext()) {
+        mTexture.release();
+        mProgram.release();
+    }
 }
 
 void PanoramaGraphicsItem::setPixmap(std::shared_ptr<QPixmap> pixmap)
 {
     mPixmap = pixmap;
-    if (mTexture) {
-        delete mTexture;
-        mTexture = nullptr;
-    }
+    mTexture.reset();
     prepareGeometryChange();
     update();
 }
@@ -64,7 +67,7 @@ void PanoramaGraphicsItem::initShader()
     if (mInitialized) return;
     initializeOpenGLFunctions();
     
-    mProgram = new QOpenGLShaderProgram();
+    mProgram = std::make_unique<QOpenGLShaderProgram>();
     const char *vsrc = 
         "attribute highp vec4 vertex;\n"
         "attribute highp vec2 texCoordAttr;\n"
@@ -112,7 +115,7 @@ void PanoramaGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsIt
     }
     
     if (!mTexture) {
-        mTexture = new QOpenGLTexture(mPixmap->toImage());
+        mTexture = std::make_unique<QOpenGLTexture>(mPixmap->toImage());
         mTexture->setMagnificationFilter(QOpenGLTexture::Linear);
         mTexture->setMinificationFilter(QOpenGLTexture::Linear);
         mTexture->setWrapMode(QOpenGLTexture::Repeat); // Important for panoramas

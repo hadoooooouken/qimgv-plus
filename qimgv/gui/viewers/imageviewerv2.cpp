@@ -126,7 +126,14 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
           &ImageViewerV2::readSettings);
 }
 
-ImageViewerV2::~ImageViewerV2() = default;
+ImageViewerV2::~ImageViewerV2() {
+  // Ensure the OpenGL context is current when destroying items so they can release GL resources
+  if (auto *glWidget = qobject_cast<QOpenGLWidget*>(viewport())) {
+    glWidget->makeCurrent();
+  }
+  // Delete panoramaItem explicitly while context is current
+  delete panoramaItem;
+}
 
 // devicePixelRatioF() does not provide correct value on wayland until the first
 // paint event occurs catch change event & do the needful
