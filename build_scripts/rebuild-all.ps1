@@ -83,10 +83,10 @@ function Build-Library {
 
     Write-Info "Configuring..."
     $hardeningArgs = @(
-        "-DCMAKE_CXX_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /EHsc",
-        "-DCMAKE_C_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf",
-        "-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=/guard:cf /DYNAMICBASE /HIGHENTROPYVA",
-        "-DCMAKE_EXE_LINKER_FLAGS_RELEASE=/guard:cf /DYNAMICBASE /HIGHENTROPYVA"
+        "-DCMAKE_CXX_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /EHsc /Qspectre",
+        "-DCMAKE_C_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /Qspectre",
+        "-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=/guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT",
+        "-DCMAKE_EXE_LINKER_FLAGS_RELEASE=/guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT"
     )
     $args = @("-S", $SrcDir, "-B", $BuildDir, "-A", "x64") + $hardeningArgs + $ConfigArgs
     Invoke-CMake $args
@@ -200,7 +200,7 @@ $ALL_LIBS = [ordered]@{
         }
 
         Write-Info "Building LibRaw with AVX2, LTCG, OpenMP and hardening flags"
-        cmd.exe /c "call `"$vcvars`" x64 && cd /d `"$librawDir`" && nmake /f Makefile.msvc COPT_OPT=`"/O2 /Ob2 /Oi /Ot /MD /DNDEBUG /arch:AVX2 /GL /openmp /GS /guard:cf`" CFLAGS=`"-DUSE_OPENMP`" LDFLAGS=`"/LTCG /guard:cf`""
+        cmd.exe /c "call `"$vcvars`" x64 && cd /d `"$librawDir`" && nmake /f Makefile.msvc COPT_OPT=`"/O2 /Ob2 /Oi /Ot /MD /DNDEBUG /arch:AVX2 /GL /openmp /GS /guard:cf /Qspectre`" CFLAGS=`"-DUSE_OPENMP`" LDFLAGS=`"/LTCG /guard:cf /NXCOMPAT /CETCOMPAT`""
         if ($LASTEXITCODE -ne 0) {
             throw "LibRaw build failed (exit code $LASTEXITCODE)"
         }
