@@ -18,6 +18,10 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.scrollbar = QColor(0xffaaaaaa);
     base.widget = QColor(0xffffffff);
     base.widget_border = QColor(0xffc3c3c3);
+    base.status_pending = QColor(0xffcc7a00); // Amber/orange suitable for light theme
+    base.status_error = QColor(0xffd32f2f);   // Red suitable for light theme
+    base.status_processing = QColor(0xff0066cc); // Blue suitable for light theme
+    base.status_success = QColor(0xff2e7d32);    // Green suitable for light theme
     base.tid = static_cast<int>(name);
     break;
   case COLORS_DARK:
@@ -34,6 +38,10 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.scrollbar = QColor(0xff4d4d4d);
     base.overlay_text = QColor(0xffd2d2d2);
     base.overlay = QColor(0xff1a1a1a);
+    base.status_pending = QColor(0xffffaa00);
+    base.status_error = QColor(0xffff3333);
+    base.status_processing = QColor(0xff33aaff);
+    base.status_success = QColor(0xff33cc33);
     base.tid = static_cast<int>(name);
     break;
   }
@@ -60,6 +68,10 @@ void ColorScheme::setBaseColors(BaseColorScheme base) {
   overlay = base.overlay;
   overlay_text = base.overlay_text;
   scrollbar = base.scrollbar;
+  status_pending = base.status_pending;
+  status_error = base.status_error;
+  status_processing = base.status_processing;
+  status_success = base.status_success;
   tid = base.tid;
   createColorVariants();
 }

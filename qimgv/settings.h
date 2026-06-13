@@ -101,6 +101,7 @@ public:
   void setUpscaylLimitValue(int value);
   bool resizeUseUpscayl();
   void setResizeUseUpscayl(bool enabled);
+  bool hasUpscaylModels();
 #endif
   bool fullscreenMode();
   void setFullscreenMode(bool mode);

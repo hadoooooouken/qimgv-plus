@@ -51,22 +51,21 @@ SettingsDialog::SettingsDialog(QWidget *parent)
           });
 
   // Auto-scan models directory for compatible models
-  QDir modelsDir(qApp->applicationDirPath() + "/models");
-  QStringList filters;
-  filters << "*.param";
-  QStringList files = modelsDir.entryList(filters, QDir::Files);
-  QStringList modelNames;
-  for (const QString &file : files) {
-    QFileInfo fi(file);
-    QString modelName = fi.baseName();
-    if (modelsDir.exists(modelName + ".bin")) {
-      modelNames.append(modelName);
+  if (settings->hasUpscaylModels()) {
+    QDir modelsDir(qApp->applicationDirPath() + "/models");
+    QStringList filters;
+    filters << "*.param";
+    QStringList files = modelsDir.entryList(filters, QDir::Files);
+    QStringList modelNames;
+    for (const QString &file : files) {
+      QFileInfo fi(file);
+      QString modelName = fi.baseName();
+      if (modelsDir.exists(modelName + ".bin")) {
+        modelNames.append(modelName);
+      }
     }
+    upscaylModelComboBox->addItems(modelNames);
   }
-  if (modelNames.isEmpty()) {
-    modelNames.append("4xLSDIRCompactC3");
-  }
-  upscaylModelComboBox->addItems(modelNames);
 #endif
   panelSizeSlider->setMinimum(13);
   panelSizeSlider->setMaximum(32);
@@ -170,6 +169,10 @@ SettingsDialog::SettingsDialog(QWidget *parent)
               base.scrollbar = scheme.scrollbar;
               base.overlay = scheme.overlay;
               base.overlay_text = scheme.overlay_text;
+              base.status_pending = scheme.status_pending;
+              base.status_error = scheme.status_error;
+              base.status_processing = scheme.status_processing;
+              base.status_success = scheme.status_success;
               base.tid = scheme.tid;
 
               settings->setColorScheme(ColorScheme(base));
@@ -199,6 +202,10 @@ SettingsDialog::SettingsDialog(QWidget *parent)
             base.scrollbar = scheme.scrollbar;
             base.overlay = scheme.overlay;
             base.overlay_text = scheme.overlay_text;
+            base.status_pending = scheme.status_pending;
+            base.status_error = scheme.status_error;
+            base.status_processing = scheme.status_processing;
+            base.status_success = scheme.status_success;
             base.tid = scheme.tid;
 
             settings->setHasCustomAccent(true);
@@ -603,34 +610,49 @@ void SettingsDialog::readSettings() {
   animatedJxlCheckBox->setChecked(settings->jxlAnimation());
   multiInstanceCheckBox->setChecked(settings->multiInstance());
 #ifdef USE_UPSCAYL
-  useUpscaylCheckBox->setChecked(settings->useUpscayl());
-  preloadUpscaylCheckBox->setChecked(settings->preloadUpscayl());
-  preloadUpscaylCheckBox->setEnabled(settings->useUpscayl());
-  upscaylModelComboBox->setEnabled(settings->useUpscayl());
-  label_upscaylModel->setEnabled(settings->useUpscayl());
-  label_upscaylGetModels->setEnabled(settings->useUpscayl());
+  if (settings->hasUpscaylModels()) {
+    useUpscaylCheckBox->setChecked(settings->useUpscayl());
+    preloadUpscaylCheckBox->setChecked(settings->preloadUpscayl());
+    preloadUpscaylCheckBox->setEnabled(settings->useUpscayl());
+    upscaylModelComboBox->setEnabled(settings->useUpscayl());
+    label_upscaylModel->setEnabled(settings->useUpscayl());
+    label_upscaylGetModels->setEnabled(settings->useUpscayl());
 
-  int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
-  if (modelIdx != -1) {
-    upscaylModelComboBox->setCurrentIndex(modelIdx);
-  } else {
-    int defaultIdx = upscaylModelComboBox->findText("4xLSDIRCompactC3");
-    if (defaultIdx != -1) {
-      upscaylModelComboBox->setCurrentIndex(defaultIdx);
-    } else if (upscaylModelComboBox->count() > 0) {
-      upscaylModelComboBox->setCurrentIndex(0);
+    int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
+    if (modelIdx != -1) {
+      upscaylModelComboBox->setCurrentIndex(modelIdx);
+    } else {
+      int defaultIdx = upscaylModelComboBox->findText("4xLSDIRCompactC3");
+      if (defaultIdx != -1) {
+        upscaylModelComboBox->setCurrentIndex(defaultIdx);
+      } else if (upscaylModelComboBox->count() > 0) {
+        upscaylModelComboBox->setCurrentIndex(0);
+      }
     }
+
+    upscaylLimitCheckBox->setChecked(settings->upscaylLimitEnabled());
+    upscaylLimitSlider->setValue(settings->upscaylLimitValue());
+    upscaylLimitValueLabel->setText(
+        QString::number(settings->upscaylLimitValue()) + "%");
+
+    upscaylLimitCheckBox->setEnabled(settings->useUpscayl());
+    bool limitEnabled = settings->useUpscayl() && settings->upscaylLimitEnabled();
+    upscaylLimitSlider->setEnabled(limitEnabled);
+    upscaylLimitValueLabel->setEnabled(limitEnabled);
+  } else {
+    useUpscaylCheckBox->setChecked(false);
+    useUpscaylCheckBox->setEnabled(false);
+    useUpscaylCheckBox->setToolTip(tr("No AI models found in models/ directory."));
+    preloadUpscaylCheckBox->setChecked(false);
+    preloadUpscaylCheckBox->setEnabled(false);
+    upscaylModelComboBox->setEnabled(false);
+    label_upscaylModel->setEnabled(false);
+    label_upscaylGetModels->setEnabled(false);
+    upscaylLimitCheckBox->setChecked(false);
+    upscaylLimitCheckBox->setEnabled(false);
+    upscaylLimitSlider->setEnabled(false);
+    upscaylLimitValueLabel->setEnabled(false);
   }
-
-  upscaylLimitCheckBox->setChecked(settings->upscaylLimitEnabled());
-  upscaylLimitSlider->setValue(settings->upscaylLimitValue());
-  upscaylLimitValueLabel->setText(
-      QString::number(settings->upscaylLimitValue()) + "%");
-
-  upscaylLimitCheckBox->setEnabled(settings->useUpscayl());
-  bool limitEnabled = settings->useUpscayl() && settings->upscaylLimitEnabled();
-  upscaylLimitSlider->setEnabled(limitEnabled);
-  upscaylLimitValueLabel->setEnabled(limitEnabled);
 #endif
 
   autoResizeWindowCheckBox->setChecked(settings->autoResizeWindow());
@@ -954,6 +976,10 @@ void SettingsDialog::saveColorScheme() {
   base.scrollbar = scheme.scrollbar;
   base.overlay = scheme.overlay;
   base.overlay_text = scheme.overlay_text;
+  base.status_pending = scheme.status_pending;
+  base.status_error = scheme.status_error;
+  base.status_processing = scheme.status_processing;
+  base.status_success = scheme.status_success;
   base.tid = scheme.tid;
 
   if (customAccent) {

@@ -73,7 +73,9 @@ BatchItemWidget::BatchItemWidget(const QString &filePath, QWidget *parent)
     statusLabel->setMinimumWidth(80);
     statusLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
     statusLabel->setAlignment(Qt::AlignRight);
-    statusLabel->setStyleSheet("font-weight: bold; color: #ffaa00; font-size: 12px;");
+    statusLabel->setStyleSheet(
+        QString("font-weight: bold; color: %1; font-size: 12px;")
+            .arg(colors.status_pending.name()));
     rightInfo->addWidget(statusLabel);
 
     destInfoLabel = new QLabel(this);
@@ -126,14 +128,23 @@ void BatchItemWidget::setThumbnail(std::shared_ptr<Thumbnail> thumb) {
 
 void BatchItemWidget::setStatus(const QString &statusText, const QString &details, bool success) {
     statusLabel->setText(statusText);
+    auto colors = settings->colorScheme();
     if (!success) {
-        statusLabel->setStyleSheet("font-weight: bold; color: #ff3333; font-size: 12px;");
+        statusLabel->setStyleSheet(
+            QString("font-weight: bold; color: %1; font-size: 12px;")
+                .arg(colors.status_error.name()));
     } else if (statusText == tr("Processing...")) {
-        statusLabel->setStyleSheet("font-weight: bold; color: #33aaff; font-size: 12px;");
+        statusLabel->setStyleSheet(
+            QString("font-weight: bold; color: %1; font-size: 12px;")
+                .arg(colors.status_processing.name()));
     } else if (statusText == tr("Done")) {
-        statusLabel->setStyleSheet("font-weight: bold; color: #33cc33; font-size: 12px;");
+        statusLabel->setStyleSheet(
+            QString("font-weight: bold; color: %1; font-size: 12px;")
+                .arg(colors.status_success.name()));
     } else {
-        statusLabel->setStyleSheet("font-weight: bold; color: #ffaa00; font-size: 12px;");
+        statusLabel->setStyleSheet(
+            QString("font-weight: bold; color: %1; font-size: 12px;")
+                .arg(colors.status_pending.name()));
     }
     destInfoLabel->setText(details);
 }
@@ -650,24 +661,29 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     percent->setEnabled(false);
 
 #ifdef USE_UPSCAYL
-    QDir modelsDir(QCoreApplication::applicationDirPath() + "/models");
-    QStringList filters; filters << "*.param";
-    QStringList files = modelsDir.entryList(filters, QDir::Files);
-    QStringList modelNames;
-    for (const QString &file : files) {
-        QFileInfo fi(file);
-        QString modelName = fi.baseName();
-        if (modelsDir.exists(modelName + ".bin")) modelNames.append(modelName);
+    if (settings->hasUpscaylModels()) {
+        QDir modelsDir(QCoreApplication::applicationDirPath() + "/models");
+        QStringList filters; filters << "*.param";
+        QStringList files = modelsDir.entryList(filters, QDir::Files);
+        QStringList modelNames;
+        for (const QString &file : files) {
+            QFileInfo fi(file);
+            QString modelName = fi.baseName();
+            if (modelsDir.exists(modelName + ".bin")) modelNames.append(modelName);
+        }
+        upscaylModelComboBox->addItems(modelNames);
+        int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
+        upscaylModelComboBox->setCurrentIndex(modelIdx != -1 ? modelIdx : 0);
+        useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
+        bool resizeEnabled = resizeEnableCheckBox->isChecked();
+        useUpscaylCheckBox->setEnabled(resizeEnabled);
+        upscaylModelComboBox->setEnabled(resizeEnabled && useUpscaylCheckBox->isChecked());
+    } else {
+        useUpscaylCheckBox->setChecked(false);
+        useUpscaylCheckBox->setEnabled(false);
+        useUpscaylCheckBox->setToolTip(tr("No AI models found in models/ directory."));
+        upscaylModelComboBox->setEnabled(false);
     }
-    if (modelNames.isEmpty()) modelNames.append("4xLSDIRCompactC3");
-    upscaylModelComboBox->addItems(modelNames);
-
-    int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
-    upscaylModelComboBox->setCurrentIndex(modelIdx != -1 ? modelIdx : 0);
-    useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
-    bool resizeEnabled = resizeEnableCheckBox->isChecked();
-    useUpscaylCheckBox->setEnabled(resizeEnabled);
-    upscaylModelComboBox->setEnabled(resizeEnabled && useUpscaylCheckBox->isChecked());
 #else
     useUpscaylCheckBox->setEnabled(false);
     useUpscaylCheckBox->setToolTip(tr("AI Upscaling is disabled in this build."));
@@ -808,7 +824,7 @@ void BatchConverterDialog::onResetSizes() {
 }
 
 void BatchConverterDialog::onUseUpscaylToggled(bool checked) {
-    upscaylModelComboBox->setEnabled(checked);
+    upscaylModelComboBox->setEnabled(settings->hasUpscaylModels() && checked);
 }
 
 void BatchConverterDialog::onSelectAll() {
@@ -1118,7 +1134,15 @@ void BatchConverterDialog::collectColorWidgets() {
 }
 
 void BatchConverterDialog::setResizeWidgetsEnabled(bool enabled) {
-    for (QWidget *w : m_resizeWidgets) if (w) w->setEnabled(enabled);
+    for (QWidget *w : m_resizeWidgets) {
+        if (w) {
+            if (w == useUpscaylCheckBox && !settings->hasUpscaylModels()) {
+                w->setEnabled(false);
+            } else {
+                w->setEnabled(enabled);
+            }
+        }
+    }
 }
 
 void BatchConverterDialog::setColorWidgetsEnabled(bool enabled) {
@@ -1129,7 +1153,7 @@ void BatchConverterDialog::onResizeEnabledChanged(bool enabled) {
     setResizeWidgetsEnabled(enabled);
     if (enabled) {
         onResizeRadioToggled();
-        upscaylModelComboBox->setEnabled(useUpscaylCheckBox->isChecked());
+        upscaylModelComboBox->setEnabled(settings->hasUpscaylModels() && useUpscaylCheckBox->isChecked());
     }
 }
 

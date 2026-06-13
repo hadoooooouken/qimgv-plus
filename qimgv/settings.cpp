@@ -368,6 +368,10 @@ void Settings::loadTheme() {
   base.scrollbar = baseScheme.scrollbar;
   base.overlay = baseScheme.overlay;
   base.overlay_text = baseScheme.overlay_text;
+  base.status_pending = baseScheme.status_pending;
+  base.status_error = baseScheme.status_error;
+  base.status_processing = baseScheme.status_processing;
+  base.status_success = baseScheme.status_success;
   base.tid = baseScheme.tid;
 
   setColorScheme(ColorScheme(base));
@@ -627,6 +631,27 @@ bool Settings::resizeUseUpscayl() {
 
 void Settings::setResizeUseUpscayl(bool enabled) {
   settings->settingsConf->setValue("resizeUseUpscayl", enabled);
+}
+
+bool Settings::hasUpscaylModels() {
+  static bool checked = false;
+  static bool exists = false;
+  if (!checked) {
+    QDir modelsDir(QApplication::applicationDirPath() + "/models");
+    QStringList filters;
+    filters << "*.param";
+    QStringList files = modelsDir.entryList(filters, QDir::Files);
+    for (const QString &file : files) {
+      QFileInfo fi(file);
+      QString modelName = fi.baseName();
+      if (modelsDir.exists(modelName + ".bin")) {
+        exists = true;
+        break;
+      }
+    }
+    checked = true;
+  }
+  return exists;
 }
 //------------------------------------------------------------------------------
 #endif

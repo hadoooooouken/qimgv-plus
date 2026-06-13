@@ -113,40 +113,45 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
 
 #ifdef USE_UPSCAYL
   if (useUpscaylCheckBox) {
-    // Auto-scan models directory for compatible models
-    QDir modelsDir(qApp->applicationDirPath() + "/models");
-    QStringList filters;
-    filters << "*.param";
-    QStringList files = modelsDir.entryList(filters, QDir::Files);
-    QStringList modelNames;
-    for (const QString &file : files) {
-      QFileInfo fi(file);
-      QString modelName = fi.baseName();
-      if (modelsDir.exists(modelName + ".bin")) {
-        modelNames.append(modelName);
+    if (settings->hasUpscaylModels()) {
+      // Auto-scan models directory for compatible models
+      QDir modelsDir(qApp->applicationDirPath() + "/models");
+      QStringList filters;
+      filters << "*.param";
+      QStringList files = modelsDir.entryList(filters, QDir::Files);
+      QStringList modelNames;
+      for (const QString &file : files) {
+        QFileInfo fi(file);
+        QString modelName = fi.baseName();
+        if (modelsDir.exists(modelName + ".bin")) {
+          modelNames.append(modelName);
+        }
       }
-    }
-    if (modelNames.isEmpty()) {
-      modelNames.append("4xLSDIRCompactC3");
-    }
-    upscaylModelComboBox->addItems(modelNames);
+      upscaylModelComboBox->addItems(modelNames);
 
-    // Pre-select the model from settings
-    int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
-    if (modelIdx != -1) {
-      upscaylModelComboBox->setCurrentIndex(modelIdx);
+      // Pre-select the model from settings
+      int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
+      if (modelIdx != -1) {
+        upscaylModelComboBox->setCurrentIndex(modelIdx);
+      } else {
+        upscaylModelComboBox->setCurrentIndex(0);
+      }
+
+      connect(useUpscaylCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
+        upscaylModelLabel->setEnabled(checked);
+        upscaylModelComboBox->setEnabled(checked);
+      });
+
+      useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
+      upscaylModelLabel->setEnabled(useUpscaylCheckBox->isChecked());
+      upscaylModelComboBox->setEnabled(useUpscaylCheckBox->isChecked());
     } else {
-      upscaylModelComboBox->setCurrentIndex(0);
+      useUpscaylCheckBox->setChecked(false);
+      useUpscaylCheckBox->setEnabled(false);
+      useUpscaylCheckBox->setToolTip(tr("No AI models found in models/ directory."));
+      upscaylModelLabel->setEnabled(false);
+      upscaylModelComboBox->setEnabled(false);
     }
-
-    connect(useUpscaylCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
-      upscaylModelLabel->setEnabled(checked);
-      upscaylModelComboBox->setEnabled(checked);
-    });
-
-    useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
-    upscaylModelLabel->setEnabled(useUpscaylCheckBox->isChecked());
-    upscaylModelComboBox->setEnabled(useUpscaylCheckBox->isChecked());
   }
 #endif
 }

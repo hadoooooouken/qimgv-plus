@@ -24,6 +24,10 @@ struct BaseColorScheme {
     QColor scrollbar;
     QColor overlay_text;
     QColor overlay;
+    QColor status_pending;
+    QColor status_error;
+    QColor status_processing;
+    QColor status_success;
 };
 
 class ColorScheme {
@@ -48,6 +52,10 @@ public:
     QColor scrollbar_hover;
     QColor overlay_text;
     QColor overlay;
+    QColor status_pending;
+    QColor status_error;
+    QColor status_processing;
+    QColor status_success;
     // extended
     QColor text_hc2;
     QColor text_hc;
