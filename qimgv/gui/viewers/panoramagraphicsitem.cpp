@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <cmath>
+#include <QGraphicsScene>
 
 PanoramaGraphicsItem::PanoramaGraphicsItem(QGraphicsItem *parent)
     : QGraphicsObject(parent)
@@ -56,7 +57,15 @@ void PanoramaGraphicsItem::setColorAdjustments(float exposure, float contrast, f
 
 QRectF PanoramaGraphicsItem::boundingRect() const
 {
-    // Return a huge bounding rect to ensure it's always visible in the scene
+    // The panorama item renders in normalized device coordinates (NDC) directly
+    // to the full viewport of the QOpenGLWidget during paint(). Since it bypasses
+    // the QGraphicsView's transformations, we must ensure that the QGraphicsScene's
+    // visibility optimization doesn't cull the item when the view is panned or zoomed.
+    // Returning the scene's bounding rect ensures it is always considered visible.
+    if (scene()) {
+        return scene()->sceneRect();
+    }
+    // Fallback if not added to a scene yet
     return QRectF(0, 0, 200000, 200000);
 }
 

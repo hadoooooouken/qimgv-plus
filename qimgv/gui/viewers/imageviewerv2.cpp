@@ -786,6 +786,18 @@ void ImageViewerV2::mouseReleaseEvent(QMouseEvent *event) {
   }
 }
 
+void ImageViewerV2::mouseDoubleClickEvent(QMouseEvent *event) {
+  if (mPanoramaMode && (event->button() == Qt::LeftButton)) {
+    mPanoramaYaw = 0.0f;
+    mPanoramaPitch = 0.0f;
+    mPanoramaFov = 90.0f;
+    panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
+    event->accept();
+    return;
+  }
+  QGraphicsView::mouseDoubleClickEvent(event);
+}
+
 // warning for future me:
 // for some reason in qgraphicsview wheelEvent is followed by moveEvent (wtf?)
 void ImageViewerV2::wheelEvent(QWheelEvent *event) {
