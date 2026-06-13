@@ -1673,7 +1673,7 @@ void Core::setWallpaper() {
   HKEY hKey;
   status = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0,
                         KEY_WRITE, &hKey);
-  if ((status == ERROR_SUCCESS) && (hKey != NULL)) {
+  if ((status == ERROR_SUCCESS) && (hKey != nullptr)) {
     LPCTSTR value = TEXT("WallpaperStyle");
     LPCTSTR data = TEXT("10");
     status =

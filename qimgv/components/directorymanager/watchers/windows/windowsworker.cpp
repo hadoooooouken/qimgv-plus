@@ -16,7 +16,7 @@ void WindowsWorker::setDirectoryHandle(HANDLE hDir) {
 
 void WindowsWorker::freeHandle() {
     if (this->hDir != INVALID_HANDLE_VALUE) {
-        CancelIoEx(this->hDir, NULL);
+        CancelIoEx(this->hDir, nullptr);
         CloseHandle(this->hDir);
         this->hDir = INVALID_HANDLE_VALUE;
     }

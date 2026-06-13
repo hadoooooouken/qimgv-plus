@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <atomic>
 
 class WatcherWorker : public QObject
 {
@@ -18,5 +19,5 @@ Q_SIGNALS:
     void finished();
 
 protected:
-    QAtomicInt isRunning;
+    std::atomic<bool> isRunning;
 };

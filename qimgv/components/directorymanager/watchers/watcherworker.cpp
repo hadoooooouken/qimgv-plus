@@ -6,5 +6,5 @@ WatcherWorker::WatcherWorker()
 }
 
 void WatcherWorker::setRunning(bool running) {
-    isRunning.fetchAndStoreRelaxed(running);
+    isRunning.store(running, std::memory_order_relaxed);
 }

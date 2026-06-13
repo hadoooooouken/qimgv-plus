@@ -36,7 +36,6 @@ private:
     QThreadPool *pool;
     std::unique_ptr<ScalerRunnable> runnable;
     bool buffered, running;
-    clock_t currentRequestTimestamp;
     ScalerRequest bufferedRequest, startedRequest;
     bool mCleared = false;
 

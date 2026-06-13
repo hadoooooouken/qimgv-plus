@@ -40,7 +40,7 @@ public:
 
         if (profileType == "System") {
 #ifdef _WIN32
-            HDC hdc = GetDC(NULL);
+            HDC hdc = GetDC(nullptr);
             bool success = false;
             if (hdc) {
                 WCHAR profilePath[MAX_PATH];
@@ -61,9 +61,9 @@ public:
                 } else {
                     qWarning() << "ColorManager: GetICMProfileW failed with error code" << GetLastError();
                 }
-                ReleaseDC(NULL, hdc);
+                ReleaseDC(nullptr, hdc);
             } else {
-                qWarning() << "ColorManager: GetDC(NULL) failed.";
+                qWarning() << "ColorManager: GetDC(nullptr) failed.";
             }
             if (!success) {
                 targetSpace = QColorSpace(QColorSpace::SRgb);

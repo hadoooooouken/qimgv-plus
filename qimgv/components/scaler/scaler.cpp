@@ -23,7 +23,6 @@ Scaler::Scaler(Cache *_cache, QObject *parent)
     : QObject(parent),
       buffered(false),
       running(false),
-      currentRequestTimestamp(0),
       cache(_cache)
 {
     pool = new QThreadPool(this);
