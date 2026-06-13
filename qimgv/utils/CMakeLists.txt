@@ -10,6 +10,7 @@ target_sources(qimgv-plus PRIVATE
     script.cpp
     stuff.cpp
     fileoperations.cpp
+    colormanager.cpp
 )
 
 target_sources(qimgv-plus PRIVATE
