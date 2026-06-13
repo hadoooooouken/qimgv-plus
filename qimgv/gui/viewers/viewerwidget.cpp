@@ -125,14 +125,13 @@ bool ViewerWidget::copyCurrentViewportToClipboard() const {
     bool hasAdjustments = (qAbs(mBrightness) > 0.001f || qAbs(mContrast - 1.0f) > 0.001f || qAbs(mSaturation - 1.0f) > 0.001f ||
                            qAbs(mHue) > 0.001f || qAbs(mExposure) > 0.001f || qAbs(mTemperature) > 0.001f || qAbs(mTint) > 0.001f);
     if (hasAdjustments) {
-        QImage *adjusted = ImageLib::applyColorAdjustments(
+        QImage adjusted = ImageLib::applyColorAdjustments(
             std::make_shared<const QImage>(image),
             mExposure, mContrast, mBrightness, mTemperature, mTint, mSaturation, mHue
         );
-        if (adjusted) {
-            image = *adjusted;
+        if (!adjusted.isNull()) {
+            image = adjusted;
             image.setDevicePixelRatio(dpr);
-            delete adjusted;
         }
     }
 

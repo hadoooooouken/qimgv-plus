@@ -1257,11 +1257,10 @@ void BatchWorkerTask::run() {
     if (colorModified) {
         if (dialog->isCancelled) return;
         std::shared_ptr<const QImage> srcPtr = std::make_shared<const QImage>(processedImg);
-        QImage *adj = ImageLib::applyColorAdjustments(
+        QImage adj = ImageLib::applyColorAdjustments(
             srcPtr, exposure, contrast, brightness, temp, tint, saturation, hue);
-        if (adj) {
-            processedImg = *adj;
-            delete adj;
+        if (!adj.isNull()) {
+            processedImg = adj;
         }
     }
 
@@ -1296,10 +1295,9 @@ void BatchWorkerTask::run() {
             QSize finalSize = targetSize;
             if (keepAspectRatio) finalSize = processedImg.size().scaled(targetSize, Qt::KeepAspectRatio);
             std::shared_ptr<const QImage> upscaledPtr = std::make_shared<const QImage>(processedImg);
-            QImage *finalImg = ImageLib::scaled(upscaledPtr, finalSize, static_cast<ScalingFilter>(scalingFilter));
-            if (finalImg) {
-                processedImg = *finalImg;
-                delete finalImg;
+            QImage finalImg = ImageLib::scaled(upscaledPtr, finalSize, static_cast<ScalingFilter>(scalingFilter));
+            if (!finalImg.isNull()) {
+                processedImg = finalImg;
             }
         }
     } else if (doResize) {
@@ -1307,10 +1305,9 @@ void BatchWorkerTask::run() {
         QSize finalSize = targetSize;
         if (keepAspectRatio) finalSize = processedImg.size().scaled(targetSize, Qt::KeepAspectRatio);
         std::shared_ptr<const QImage> imgPtr = std::make_shared<const QImage>(processedImg);
-        QImage *scaledImg = ImageLib::scaled(imgPtr, finalSize, static_cast<ScalingFilter>(scalingFilter));
-        if (scaledImg) {
-            processedImg = *scaledImg;
-            delete scaledImg;
+        QImage scaledImg = ImageLib::scaled(imgPtr, finalSize, static_cast<ScalingFilter>(scalingFilter));
+        if (!scaledImg.isNull()) {
+            processedImg = scaledImg;
         }
     }
 

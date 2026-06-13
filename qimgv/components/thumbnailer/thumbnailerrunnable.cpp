@@ -51,11 +51,11 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
           new Thumbnail(imgInfo.fileName(), "", size, nullptr));
       return thumbnail;
     }
-    std::pair<QImage *, QSize> pair;
+    std::pair<QImage, QSize> pair;
     pair = createThumbnail(imgInfo.filePath(),
                            imgInfo.format().toStdString().c_str(), 
                            settings->thumbnailResolution(), false);
-    image.reset(pair.first);
+    image.reset(new QImage(pair.first));
     QSize originalSize = pair.second;
 
     if (image && imgInfo.format() == "pdf") {
@@ -109,17 +109,18 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
       QRect scaledRect(QPoint(0, 0), scaled.size());
       clip.moveCenter(scaledRect.center());
       
-      std::unique_ptr<QImage> cropped(ImageLib::croppedRaw(&scaled, clip));
-      if (cropped) {
+      QImage croppedVal = ImageLib::croppedRaw(&scaled, clip);
+      if (!croppedVal.isNull()) {
+        std::unique_ptr<QImage> cropped = std::make_unique<QImage>(croppedVal);
         for (const QString &key : image->textKeys()) {
           cropped->setText(key, image->text(key));
         }
         image = std::move(cropped);
       } else {
-        image.reset(new QImage(scaled));
+        image = std::make_unique<QImage>(scaled);
       }
     } else {
-      image.reset(new QImage(scaled));
+      image = std::make_unique<QImage>(scaled);
     }
   }
 
@@ -151,7 +152,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
 
 ThumbnailerRunnable::~ThumbnailerRunnable() {}
 
-std::pair<QImage *, QSize>
+std::pair<QImage, QSize>
 ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
                                      bool squared) {
   QImageReader *reader = new QImageReader(path, format);
@@ -179,7 +180,7 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
 
   Qt::AspectRatioMode ARMode =
       squared ? (Qt::KeepAspectRatioByExpanding) : (Qt::KeepAspectRatio);
-  QImage *result = nullptr;
+  QImage result;
   QSize originalSize;
   bool indexed = (reader->imageFormat() == QImage::Format_Indexed8);
   bool manualResize = indexed || !reader->supportsOption(QImageIOHandler::Size);
@@ -193,14 +194,12 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
       reader->setScaledClipRect(clip);
     }
     originalSize = reader->size();
-    result = new QImage();
-    if (!reader->read(result)) {
+    if (!reader->read(&result)) {
       // If read() returns false there's no guarantee that size conversion
       // worked properly. So we fallback to manual. Se far I've seen this happen
       // only on some weird (corrupted?) jpeg saved from camera
       manualResize = true;
-      delete result;
-      result = nullptr;
+      result = QImage();
       // Force reset reader because it is really finicky
       // and can fail on the second read attempt (yeah wtf)
       reader->setFileName("");
@@ -213,30 +212,28 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
     }
   }
   if (manualResize) { // manual resize & crop. slower but should just work
-    QImage *fullSize = new QImage();
-    reader->read(fullSize);
+    QImage fullSize;
+    reader->read(&fullSize);
     if (indexed) {
       auto newFmt = QImage::Format_RGB32;
-      if (fullSize->hasAlphaChannel())
+      if (fullSize.hasAlphaChannel())
         newFmt = QImage::Format_ARGB32;
-      auto tmp = new QImage(fullSize->convertToFormat(newFmt));
-      delete fullSize;
+      QImage tmp = fullSize.convertToFormat(newFmt);
       fullSize = tmp;
     }
-    originalSize = fullSize->size();
-    QSize scaledSize = fullSize->size().scaled(size, size, ARMode);
+    originalSize = fullSize.size();
+    QSize scaledSize = fullSize.size().scaled(size, size, ARMode);
     if (squared) {
       QRect clip(0, 0, size, size);
       QRect scaledRect(QPoint(0, 0), scaledSize);
       clip.moveCenter(scaledRect.center());
-      QImage scaled = QImage(fullSize->scaled(scaledSize, Qt::IgnoreAspectRatio,
+      QImage scaled = QImage(fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
                                               Qt::SmoothTransformation));
       result = ImageLib::croppedRaw(&scaled, clip);
     } else {
-      result = new QImage(fullSize->scaled(scaledSize, Qt::IgnoreAspectRatio,
-                                           Qt::SmoothTransformation));
+      result = fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                               Qt::SmoothTransformation);
     }
-    delete fullSize;
   }
   // force reader to close file so it can be deleted later
   reader->setFileName("");

@@ -13,11 +13,11 @@ void ScalerRunnable::run() {
     emit started(req);
     //QElapsedTimer t;
     //t.start();
-    QImage *scaled = nullptr;
+    QImage scaled;
 #ifdef USE_UPSCAYL
     if (settings->useUpscayl() && req.size.width() > req.image->width()) {
         // Skip CPU scaling when AI upscaling is active and we are zooming in
-        scaled = new QImage();
+        scaled = QImage();
     } else
 #endif
     {

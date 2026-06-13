@@ -1423,7 +1423,7 @@ std::shared_ptr<ImageStatic> Core::getEditableImage(const QString &filePath) {
 template <typename... Args>
 void Core::edit_template(
     bool save, QString action,
-    const std::function<QImage *(std::shared_ptr<const QImage>, Args...)>
+    const std::function<QImage(std::shared_ptr<const QImage>, Args...)>
         &editFunc,
     Args &&...as) {
   if (model->isEmpty())
@@ -1437,7 +1437,7 @@ void Core::edit_template(
     auto img = getEditableImage(path);
     if (!img)
       continue;
-    img->setEditedImage(std::unique_ptr<const QImage>(
+    img->setEditedImage(std::make_unique<const QImage>(
         editFunc(img->getImage(), std::forward<Args>(as)...)));
     model->updateImage(path, std::static_pointer_cast<Image>(img));
     if (save) {
@@ -1468,8 +1468,8 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
 #ifdef USE_UPSCAYL
   if (useUpscayl) {
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    std::function<QImage *(std::shared_ptr<const QImage>)> editFunc = [size, filter, upscaylModel](std::shared_ptr<const QImage> source) -> QImage * {
-      if (!source) return nullptr;
+    std::function<QImage(std::shared_ptr<const QImage>)> editFunc = [size, filter, upscaylModel](std::shared_ptr<const QImage> source) -> QImage {
+      if (!source) return QImage();
       QString appDir = QCoreApplication::applicationDirPath();
       QString oldModel = settings->upscaylModel();
       settings->setUpscaylModel(upscaylModel);
@@ -1479,15 +1479,15 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
       }
       settings->setUpscaylModel(oldModel);
       if (upscaled.isNull()) {
-          return new QImage(*source);
+          return *source;
       }
       // If the target size is not equal to the 4x upscaled size, scale it to the requested size
       if (upscaled.size() != size) {
           std::shared_ptr<const QImage> upscaledPtr = std::make_shared<const QImage>(upscaled);
-          QImage *finalImg = ImageLib::scaled(upscaledPtr, size, filter);
+          QImage finalImg = ImageLib::scaled(upscaledPtr, size, filter);
           return finalImg;
       }
-      return new QImage(upscaled);
+      return upscaled;
     };
     edit_template(false, tr("Resize (AI)"), {editFunc});
     QApplication::restoreOverrideCursor();
@@ -1524,11 +1524,11 @@ void Core::applyColorAdjustments(float exposure, float contrast, float brightnes
   if (!img)
     return;
 
-  QImage *adjusted = ImageLib::applyColorAdjustments(img->getImage(), exposure, contrast, brightness, temperature, tint, saturation, hue);
-  if (!adjusted)
+  QImage adjusted = ImageLib::applyColorAdjustments(img->getImage(), exposure, contrast, brightness, temperature, tint, saturation, hue);
+  if (adjusted.isNull())
     return;
 
-  img->setEditedImage(std::unique_ptr<const QImage>(adjusted));
+  img->setEditedImage(std::make_unique<const QImage>(adjusted));
   model->updateImage(path, std::static_pointer_cast<Image>(img));
   updateInfoString();
 }

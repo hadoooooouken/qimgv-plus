@@ -13,53 +13,51 @@ void ImageLib::recolor(QPixmap &pixmap, QColor color) {
   p.drawRect(pixmap.rect());
 }
 
-QImage *ImageLib::rotatedRaw(const QImage *src, int grad) {
+QImage ImageLib::rotatedRaw(const QImage *src, int grad) {
   if (!src)
-    return new QImage();
-  QImage *img = new QImage();
+    return QImage();
+  QImage img;
   QTransform transform;
   transform.rotate(grad);
-  *img = src->transformed(transform, Qt::SmoothTransformation);
+  img = src->transformed(transform, Qt::SmoothTransformation);
   return img;
 }
 //------------------------------------------------------------------------------
-QImage *ImageLib::rotated(std::shared_ptr<const QImage> src, int grad) {
+QImage ImageLib::rotated(std::shared_ptr<const QImage> src, int grad) {
   return rotatedRaw(src.get(), grad);
 }
 //------------------------------------------------------------------------------
-QImage *ImageLib::croppedRaw(const QImage *src, QRect newRect) {
+QImage ImageLib::croppedRaw(const QImage *src, QRect newRect) {
   if (src && src->rect().contains(newRect, false)) {
-    QImage *img = new QImage(newRect.size(), src->format());
-    *img = src->copy(newRect);
-    return img;
+    return src->copy(newRect);
   } else {
-    return new QImage();
+    return QImage();
   }
 }
 //------------------------------------------------------------------------------
-QImage *ImageLib::cropped(std::shared_ptr<const QImage> src, QRect newRect) {
+QImage ImageLib::cropped(std::shared_ptr<const QImage> src, QRect newRect) {
   return croppedRaw(src.get(), newRect);
 }
 //------------------------------------------------------------------------------
-QImage *ImageLib::flippedHRaw(const QImage *src) {
+QImage ImageLib::flippedHRaw(const QImage *src) {
   if (!src)
-    return new QImage();
+    return QImage();
   else
-    return new QImage(src->mirrored(true, false));
+    return src->mirrored(true, false);
 }
 //------------------------------------------------------------------------------
-QImage *ImageLib::flippedH(std::shared_ptr<const QImage> src) {
+QImage ImageLib::flippedH(std::shared_ptr<const QImage> src) {
   return flippedHRaw(src.get());
 }
 //------------------------------------------------------------------------------
-QImage *ImageLib::flippedVRaw(const QImage *src) {
+QImage ImageLib::flippedVRaw(const QImage *src) {
   if (!src)
-    return new QImage();
+    return QImage();
   else
-    return new QImage(src->mirrored(false, true));
+    return src->mirrored(false, true);
 }
 //------------------------------------------------------------------------------
-QImage *ImageLib::flippedV(std::shared_ptr<const QImage> src) {
+QImage ImageLib::flippedV(std::shared_ptr<const QImage> src) {
   return flippedVRaw(src.get());
 }
 //------------------------------------------------------------------------------
@@ -67,28 +65,28 @@ std::unique_ptr<const QImage>
 ImageLib::exifRotated(std::unique_ptr<const QImage> src, int orientation) {
   switch (orientation) {
   case 1: {
-    src.reset(ImageLib::flippedHRaw(src.get()));
+    src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
   } break;
   case 2: {
-    src.reset(ImageLib::flippedVRaw(src.get()));
+    src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
   } break;
   case 3: {
-    src.reset(ImageLib::flippedHRaw(src.get()));
-    src.reset(ImageLib::flippedVRaw(src.get()));
+    src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
+    src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
   } break;
   case 4: {
-    src.reset(ImageLib::rotatedRaw(src.get(), 90));
+    src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
   } break;
   case 5: {
-    src.reset(ImageLib::flippedHRaw(src.get()));
-    src.reset(ImageLib::rotatedRaw(src.get(), 90));
+    src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
+    src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
   } break;
   case 6: {
-    src.reset(ImageLib::flippedVRaw(src.get()));
-    src.reset(ImageLib::rotatedRaw(src.get(), 90));
+    src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
+    src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
   } break;
   case 7: {
-    src.reset(ImageLib::rotatedRaw(src.get(), -90));
+    src.reset(new QImage(ImageLib::rotatedRaw(src.get(), -90)));
   } break;
   default: {
   } break;
@@ -100,28 +98,28 @@ std::unique_ptr<QImage> ImageLib::exifRotated(std::unique_ptr<QImage> src,
                                               int orientation) {
   switch (orientation) {
   case 1: {
-    src.reset(ImageLib::flippedHRaw(src.get()));
+    src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
   } break;
   case 2: {
-    src.reset(ImageLib::flippedVRaw(src.get()));
+    src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
   } break;
   case 3: {
-    src.reset(ImageLib::flippedHRaw(src.get()));
-    src.reset(ImageLib::flippedVRaw(src.get()));
+    src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
+    src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
   } break;
   case 4: {
-    src.reset(ImageLib::rotatedRaw(src.get(), 90));
+    src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
   } break;
   case 5: {
-    src.reset(ImageLib::flippedHRaw(src.get()));
-    src.reset(ImageLib::rotatedRaw(src.get(), 90));
+    src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
+    src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
   } break;
   case 6: {
-    src.reset(ImageLib::flippedVRaw(src.get()));
-    src.reset(ImageLib::rotatedRaw(src.get(), 90));
+    src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
+    src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
   } break;
   case 7: {
-    src.reset(ImageLib::rotatedRaw(src.get(), -90));
+    src.reset(new QImage(ImageLib::rotatedRaw(src.get(), -90)));
   } break;
   default: {
   } break;
@@ -147,8 +145,8 @@ Qt::SmoothTransformation); QRect target(QPoint(0, 0), targetRes.size());
 }
 */
 
-QImage *ImageLib::scaled(std::shared_ptr<const QImage> source, QSize destSize,
-                         ScalingFilter filter) {
+QImage ImageLib::scaled(std::shared_ptr<const QImage> source, QSize destSize,
+                        ScalingFilter filter) {
   int maxDim = 12288;
   qint64 maxPixels = 100000000;
 #ifdef USE_UPSCAYL
@@ -160,7 +158,7 @@ QImage *ImageLib::scaled(std::shared_ptr<const QImage> source, QSize destSize,
 
   if (!source || destSize.width() > maxDim || destSize.height() > maxDim ||
       (qint64)destSize.width() * destSize.height() > maxPixels)
-    return new QImage();
+    return QImage();
   auto scaleTarget = source;
   if (source->format() == QImage::Format_Indexed8) {
     auto newFmt = QImage::Format_RGB32;
@@ -180,24 +178,24 @@ QImage *ImageLib::scaled(std::shared_ptr<const QImage> source, QSize destSize,
   }
 }
 
-QImage *ImageLib::scaled_Qt(std::shared_ptr<const QImage> source,
-                            QSize destSize, bool smooth) {
+QImage ImageLib::scaled_Qt(std::shared_ptr<const QImage> source,
+                           QSize destSize, bool smooth) {
   if (!source)
-    return new QImage();
-  QImage *dest = new QImage();
+    return QImage();
+  QImage dest;
   Qt::TransformationMode mode =
       smooth ? Qt::SmoothTransformation : Qt::FastTransformation;
-  *dest = source->scaled(destSize.width(), destSize.height(),
-                         Qt::IgnoreAspectRatio, mode);
+  dest = source->scaled(destSize.width(), destSize.height(),
+                        Qt::IgnoreAspectRatio, mode);
   return dest;
 }
 
 
 
-QImage *ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
+QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
                                QSize destSize) {
   if (!source || source->isNull())
-    return new QImage();
+    return QImage();
 
   int W_src = source->width();
   int H_src = source->height();
@@ -205,7 +203,7 @@ QImage *ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
   int H_dst = destSize.height();
 
   if (W_dst <= 0 || H_dst <= 0)
-    return new QImage();
+    return QImage();
 
   // Convert source to Format_ARGB32 or Format_RGB32 if it's not already 32-bit
   QImage srcImg = *source.get();
@@ -309,7 +307,7 @@ QImage *ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
     }
 
     // Vertical pass + Cross-kernel Sharpening combined in one step
-    QImage *destImg = new QImage(W_dst, H_dst, srcImg.format());
+    QImage destImg(W_dst, H_dst, srcImg.format());
 
     {
       std::vector<std::thread> threads;
@@ -321,7 +319,7 @@ QImage *ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
         int y_end = (i == numThreads - 1) ? H_dst : (i + 1) * rowsPerThread;
         if (y_start >= H_dst) break;
 
-        threads.emplace_back([&interImg, destImg, &vWeights, W_dst, H_dst, y_start, y_end]() {
+        threads.emplace_back([&interImg, &destImg, &vWeights, W_dst, H_dst, y_start, y_end]() {
           // Thread-local sliding window buffer
           std::vector<std::vector<uint32_t>> rowBuffers(3, std::vector<uint32_t>(W_dst));
 
@@ -360,7 +358,7 @@ QImage *ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
           fillRowBuffer(y_start + 1, 2);
 
           for (int y = y_start; y < y_end; ++y) {
-            uint32_t* dstRow = (uint32_t*)destImg->scanLine(y);
+            uint32_t* dstRow = (uint32_t*)destImg.scanLine(y);
 
             int idxT = (y - y_start) % 3;
             int idxC = (y - y_start + 1) % 3;
@@ -481,7 +479,7 @@ QImage *ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
       0.02763f, 0.06628f, 0.12384f, 0.18017f, 0.20416f, 0.18017f, 0.12384f, 0.06628f, 0.02763f
     };
 
-    QImage *destImg = new QImage(W_dst, H_dst, srcImg.format());
+    QImage destImg(W_dst, H_dst, srcImg.format());
 
     // Determine thread count
     unsigned int numThreads = std::thread::hardware_concurrency();
@@ -497,7 +495,7 @@ QImage *ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
         int y_end = (i == numThreads - 1) ? H_dst : (i + 1) * rowsPerThread;
         if (y_start >= H_dst) break;
 
-        threads.emplace_back([&scaledImg, destImg, W_dst, H_dst, y_start, y_end]() {
+        threads.emplace_back([&scaledImg, &destImg, W_dst, H_dst, y_start, y_end]() {
           // Thread-local sliding window buffer: stores 9 rows of horizontally blurred floats
           std::vector<std::vector<float>> rowBuffers(9, std::vector<float>(W_dst * 4));
 
@@ -528,7 +526,7 @@ QImage *ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
           }
 
           for (int y = y_start; y < y_end; ++y) {
-            uint32_t* dstRow = (uint32_t*)destImg->scanLine(y);
+            uint32_t* dstRow = (uint32_t*)destImg.scanLine(y);
             const uint32_t* origRow = (const uint32_t*)scaledImg.constScanLine(y);
 
             // Compute vertical Gaussian blur + Unsharp Mask blending on the fly
@@ -655,15 +653,15 @@ ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, f
   return result;
 }
 
-QImage *ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
+QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
   if (!source)
-    return new QImage();
+    return QImage();
 
-  QImage *dst = new QImage(source->convertToFormat(QImage::Format_ARGB32));
+  QImage dst = source->convertToFormat(QImage::Format_ARGB32);
   ColorMatrix cm = getColorAdjustmentMatrix(exposure, contrast, brightness, temperature, tint, saturation, hue);
 
-  int height = dst->height();
-  int width = dst->width();
+  int height = dst.height();
+  int width = dst.width();
 
   // Set up AVX2 constants
   __m256i mask_b_i = _mm256_set1_epi32(0x000000FF);
@@ -692,7 +690,7 @@ QImage *ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, fl
   __m256 v_offset = _mm256_set1_ps(cm.offset);
 
   for (int y = 0; y < height; ++y) {
-    QRgb *line = reinterpret_cast<QRgb*>(dst->scanLine(y));
+    QRgb *line = reinterpret_cast<QRgb*>(dst.scanLine(y));
     int x = 0;
     int avx_end = width - 8;
 

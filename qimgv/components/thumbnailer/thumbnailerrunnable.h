@@ -22,7 +22,7 @@ public:
     static std::shared_ptr<Thumbnail> generate(ThumbnailCache *cache, QString path, int size, bool crop, bool force);
 private:
     static QString generateIdString(QString path, int size, bool crop);
-    static std::pair<QImage*, QSize> createThumbnail(QString path, const char* format, int size, bool crop);
+    static std::pair<QImage, QSize> createThumbnail(QString path, const char* format, int size, bool crop);
     QString path;
     int size;
     bool crop, force;

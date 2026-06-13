@@ -18,7 +18,7 @@ public:
     void run();
 signals:
     void started(ScalerRequest);
-    void finished(QImage*, ScalerRequest);
+    void finished(QImage, ScalerRequest);
 
 private:
     ScalerRequest req;

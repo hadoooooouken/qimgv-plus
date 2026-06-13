@@ -117,11 +117,10 @@ void Scaler::onTaskStart(ScalerRequest req) {
     sem->release(1);
 }
 
-void Scaler::onTaskFinish(QImage *scaled, ScalerRequest req) {
+void Scaler::onTaskFinish(QImage scaled, ScalerRequest req) {
     sem->acquire(1);
     running = false;
     if(mCleared) {
-        if(scaled) delete scaled;
         QString name = req.image->fileName();
         cache->release(req.image->fileName());
         mCleared = false;
@@ -137,7 +136,6 @@ void Scaler::onTaskFinish(QImage *scaled, ScalerRequest req) {
     }
     if(buffered) {
       //qDebug() << "onTaskFinish - startingBuffered: " << bufferedRequest.string;
-        if(scaled) delete scaled;
         //startRequest(bufferedRequest);
         emit startBufferedRequest();
         sem->release(1);
@@ -151,10 +149,9 @@ void Scaler::slotStartBufferedRequest() {
     startRequest(bufferedRequest);
 }
 
-void Scaler::slotForwardScaledResult(QImage *image, ScalerRequest req) {
+void Scaler::slotForwardScaledResult(QImage image, ScalerRequest req) {
     QPixmap *pixmap = new QPixmap();
-    *pixmap = QPixmap::fromImage(ColorManager::applyColorManagement(*image));
-    delete image;
+    *pixmap = QPixmap::fromImage(ColorManager::applyColorManagement(image));
     emit scalingFinished(pixmap, req);
 }
 
