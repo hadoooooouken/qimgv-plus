@@ -68,12 +68,87 @@ private:
   IStream *m_stream;
 };
 
+struct ExtensionInfo {
+  const wchar_t *dotExt;
+  const char *qtFormat;
+  bool isRaw;
+  const wchar_t *progId;
+};
+
+static const ExtensionInfo g_extensionTable[] = {
+  // RAW formats
+  { L".arw",  "raw",  true,  L"qimgvplus.AssocFile.raw" },
+  { L".cr2",  "raw",  true,  L"qimgvplus.AssocFile.raw" },
+  { L".cr3",  "raw",  true,  L"qimgvplus.AssocFile.raw" },
+  { L".nef",  "raw",  true,  L"qimgvplus.AssocFile.raw" },
+  { L".dng",  "raw",  true,  L"qimgvplus.AssocFile.raw" },
+  { L".rw2",  "raw",  true,  L"qimgvplus.AssocFile.raw" },
+  { L".pef",  "raw",  true,  L"qimgvplus.AssocFile.raw" },
+  { L".raf",  "raw",  true,  L"qimgvplus.AssocFile.raw" },
+  { L".orf",  "raw",  true,  L"qimgvplus.AssocFile.raw" },
+  { L".raw",  "raw",  true,  L"qimgvplus.AssocFile.raw" },
+
+  // Krita / OpenRaster
+  { L".kra",  "kra",  false, L"qimgvplus.AssocFile.kra" },
+  { L".ora",  "ora",  false, L"qimgvplus.AssocFile.ora" },
+
+  // Modern web/mobile formats
+  { L".webp", nullptr, false, L"qimgvplus.AssocFile.webp" },
+  { L".jxl",  nullptr, false, L"qimgvplus.AssocFile.jxl" },
+  { L".avif", nullptr, false, L"qimgvplus.AssocFile.avif" },
+  { L".heic", "heif",  false, L"qimgvplus.AssocFile.heic" },
+  { L".heif", "heif",  false, L"qimgvplus.AssocFile.heif" },
+
+  // High dynamic range
+  { L".exr",  nullptr, false, L"qimgvplus.AssocFile.exr" },
+  { L".hdr",  nullptr, false, L"qimgvplus.AssocFile.hdr" },
+
+  // Other image formats
+  { L".tga",  nullptr, false, L"qimgvplus.AssocFile.tga" },
+  { L".jxr",  nullptr, false, L"qimgvplus.AssocFile.jxr" },
+  { L".hdp",  nullptr, false, L"qimgvplus.AssocFile.jxr" },
+  { L".wdp",  nullptr, false, L"qimgvplus.AssocFile.jxr" },
+
+  // QOI and DDS
+  { L".qoi",  nullptr, false, L"qimgvplus.AssocFile.qoi" },
+  { L".dds",  nullptr, false, L"qimgvplus.AssocFile.dds" },
+
+  // Photoshop
+  { L".psd",  "psd",  false, L"qimgvplus.AssocFile.psd" },
+  { L".psb",  "psd",  false, L"qimgvplus.AssocFile.psb" },
+
+  // Adobe Illustrator / PDF
+  { L".ai",   "pdf",  false, L"qimgvplus.AssocFile.ai" },
+  { L".pdf",  "pdf",  false, L"qimgvplus.AssocFile.pdf" },
+
+  // TIFF
+  { L".tif",  "tiff", false, L"qimgvplus.AssocFile.tif" },
+  { L".tiff", "tiff", false, L"qimgvplus.AssocFile.tiff" },
+
+  // Scalable Vector Graphics
+  { L".svg",  "svg",  false, nullptr },
+  { L".svgz", "svg",  false, nullptr },
+
+  // JPEG 2000
+  { L".jp2",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
+  { L".j2k",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
+  { L".jpf",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
+  { L".jpx",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
+  { L".jpc",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
+
+  // HTJ2K / JPH
+  { L".jph",  nullptr, false, L"qimgvplus.AssocFile.jph" }
+};
+
 static bool isRawExtension(const QString &ext) {
-  return ext == QLatin1String("arw") || ext == QLatin1String("cr2") ||
-         ext == QLatin1String("cr3") || ext == QLatin1String("nef") ||
-         ext == QLatin1String("dng") || ext == QLatin1String("rw2") ||
-         ext == QLatin1String("pef") || ext == QLatin1String("raf") ||
-         ext == QLatin1String("orf") || ext == QLatin1String("raw");
+  for (const auto &info : g_extensionTable) {
+    if (info.isRaw) {
+      if (ext == QString::fromWCharArray(info.dotExt + 1)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 static QImage
@@ -155,34 +230,7 @@ static bool tryLibRawThumbnail(const QByteArray &rawBuffer, UINT cx,
   return false;
 }
 
-static bool tryLibRawThumbnailFromStream(IStream *stream, UINT cx,
-                                         QImage &outImg) {
-  if (!stream)
-    return false;
 
-  QStreamDevice device(stream);
-  if (!device.seek(0))
-    return false;
-
-  QByteArray rawBuffer = device.readAll();
-  if (rawBuffer.isEmpty())
-    return false;
-
-  return tryLibRawThumbnail(rawBuffer, cx, outImg);
-}
-
-static bool tryLibRawThumbnailFromFile(const QString &filePath, UINT cx,
-                                       QImage &outImg) {
-  QFile file(filePath);
-  if (!file.open(QIODevice::ReadOnly))
-    return false;
-
-  QByteArray rawBuffer = file.readAll();
-  if (rawBuffer.isEmpty())
-    return false;
-
-  return tryLibRawThumbnail(rawBuffer, cx, outImg);
-}
 
 // {978A692C-CD23-4A59-8664-98F1E1B9200B}
 const CLSID CLSID_QImgvThumbnailProvider = {
@@ -195,37 +243,7 @@ const wchar_t *CLSID_QImgvThumbnailProvider_Str =
 
 long g_cDllRef = 0;
 
-// Supported extensions that we want to register directly
-const wchar_t *g_extensions[] = {
-    L".arw", L".cr2", L".cr3", L".nef", L".dng", L".rw2", L".pef", L".raf",
-    L".orf", L".raw",                                // RAW formats
-    L".kra", L".ora",                                // Krita / OpenRaster
-    L".webp", L".jxl", L".avif", L".heic", L".heif", // Modern web/mobile
-                                                     // formats
-    L".exr", L".hdr",                                // High dynamic range
-    L".tga", L".jxr", L".hdp", L".wdp",              // Other image formats
-    L".qoi", L".dds",                                // QOI and DDS
-    L".psd", L".psb",                                // Photoshop
-    L".ai", L".pdf",                                 // Adobe Illustrator / PDF
-    L".tif", L".tiff",                               // TIFF
-    L".svg", L".svgz",                               // Scalable Vector Graphics
-    L".jp2", L".j2k", L".jpf", L".jpx", L".jpc",     // JPEG 2000
-    L".jph"                                          // HTJ2K / JPH
-};
 
-// ProgIDs to hook into
-const wchar_t *g_progIds[] = {
-    L"qimgvplus.AssocFile.raw",  L"qimgvplus.AssocFile.kra",
-    L"qimgvplus.AssocFile.webp", L"qimgvplus.AssocFile.jxl",
-    L"qimgvplus.AssocFile.avif", L"qimgvplus.AssocFile.heic",
-    L"qimgvplus.AssocFile.heif", L"qimgvplus.AssocFile.exr",
-    L"qimgvplus.AssocFile.hdr",  L"qimgvplus.AssocFile.tga",
-    L"qimgvplus.AssocFile.ora",  L"qimgvplus.AssocFile.jxr",
-    L"qimgvplus.AssocFile.psd",  L"qimgvplus.AssocFile.psb",
-    L"qimgvplus.AssocFile.ai",   L"qimgvplus.AssocFile.pdf",
-    L"qimgvplus.AssocFile.tif",  L"qimgvplus.AssocFile.tiff",
-    L"qimgvplus.AssocFile.qoi",  L"qimgvplus.AssocFile.dds",
-    L"qimgvplus.AssocFile.jp2",  L"qimgvplus.AssocFile.jph"};
 
 
 // Helper functions for registry manipulation
@@ -397,49 +415,111 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
     libPathInitialized = true;
   }
 
-  std::unique_ptr<QStreamDevice> streamDevice;
-  QImageReader reader;
-  QByteArray format;
-
-  // Determine stream size and seek capability
-  qint64 streamSize = 0;
-  bool seekable = false;
-  LARGE_INTEGER savedPos = {0};
+  QString ext;
   if (m_pStream) {
     STATSTG statstg;
     if (SUCCEEDED(m_pStream->Stat(&statstg, STATFLAG_DEFAULT))) {
       if (statstg.pwcsName) {
-        QString path = QString::fromWCharArray(statstg.pwcsName);
-        QFileInfo fi(path);
-        QString ext = fi.suffix().toLower();
-
-        // Map extension to Qt image format name
-        if (ext == "arw" || ext == "cr2" || ext == "cr3" || ext == "nef" ||
-            ext == "dng" || ext == "rw2" || ext == "pef" || ext == "raf" ||
-            ext == "orf" || ext == "raw") {
-          format = "raw";
-        } else if (ext == "kra") {
-          format = "kra";
-        } else if (ext == "ora") {
-          format = "ora";
-        } else if (ext == "psd" || ext == "psb") {
-          format = "psd";
-        } else if (ext == "svg" || ext == "svgz") {
-          format = "svg";
-        } else if (ext == "heic" || ext == "heif") {
-          format = "heif";
-        } else if (ext == "ai" || ext == "pdf") {
-          format = "pdf";
-        } else if (ext == "tif" || ext == "tiff") {
-          format = "tiff";
-        } else {
-          format = ext.toUtf8();
-        }
-
+        ext = QFileInfo(QString::fromWCharArray(statstg.pwcsName)).suffix().toLower();
         CoTaskMemFree(statstg.pwcsName);
       }
     }
+  } else {
+    ext = QFileInfo(QString::fromWCharArray(m_szFilePath)).suffix().toLower();
+  }
 
+  bool isRaw = isRawExtension(ext);
+  QByteArray rawBuffer;
+
+  if (isRaw) {
+    if (m_pStream) {
+      QStreamDevice device(m_pStream);
+      if (device.seek(0)) {
+        rawBuffer = device.readAll();
+      }
+    } else {
+      QFile file(QString::fromWCharArray(m_szFilePath));
+      if (file.open(QIODevice::ReadOnly)) {
+        rawBuffer = file.readAll();
+      }
+    }
+
+    if (!rawBuffer.isEmpty()) {
+      QImage rawImg;
+      if (tryLibRawThumbnail(rawBuffer, cx, rawImg)) {
+        if (!rawImg.isNull()) {
+          if (rawImg.width() > (int)cx || rawImg.height() > (int)cx) {
+            rawImg = rawImg.scaled(cx, cx, Qt::KeepAspectRatio,
+                                   Qt::SmoothTransformation);
+          }
+          if (rawImg.format() != QImage::Format_ARGB32_Premultiplied) {
+            rawImg = rawImg.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+          }
+
+          BITMAPV5HEADER bi;
+          ZeroMemory(&bi, sizeof(bi));
+          bi.bV5Size = sizeof(bi);
+          bi.bV5Width = rawImg.width();
+          bi.bV5Height = -rawImg.height(); // Top-down
+          bi.bV5Planes = 1;
+          bi.bV5BitCount = 32;
+          bi.bV5Compression = BI_BITFIELDS;
+          bi.bV5RedMask = 0x00FF0000;
+          bi.bV5GreenMask = 0x0000FF00;
+          bi.bV5BlueMask = 0x000000FF;
+          bi.bV5AlphaMask = 0xFF000000;
+
+          void *pBits = nullptr;
+          HDC hdc = GetDC(nullptr);
+          HBITMAP hbmp = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
+                                          &pBits, nullptr, 0);
+          ReleaseDC(nullptr, hdc);
+          if (hbmp && pBits) {
+            memcpy(pBits, rawImg.constBits(), rawImg.sizeInBytes());
+            *phbmp = hbmp;
+            *pdwAlpha = WTSAT_ARGB;
+            return S_OK;
+          }
+        }
+      }
+    }
+  }
+
+  // Fallback / standard path: set up QImageReader
+  std::unique_ptr<QStreamDevice> streamDevice;
+  std::unique_ptr<QBuffer> memoryDevice;
+  QImageReader reader;
+  QByteArray format;
+
+  if (!ext.isEmpty()) {
+    const ExtensionInfo *found = nullptr;
+    for (const auto &info : g_extensionTable) {
+      if (ext == QString::fromWCharArray(info.dotExt + 1)) {
+        found = &info;
+        break;
+      }
+    }
+
+    if (found) {
+      if (found->qtFormat) {
+        format = found->qtFormat;
+      } else {
+        format = ext.toUtf8();
+      }
+    } else {
+      format = ext.toUtf8();
+    }
+  }
+
+  qint64 streamSize = 0;
+  bool seekable = false;
+  LARGE_INTEGER savedPos = {0};
+
+  if (isRaw && !rawBuffer.isEmpty()) {
+    memoryDevice = std::make_unique<QBuffer>(&rawBuffer);
+    memoryDevice->open(QIODevice::ReadOnly);
+    reader.setDevice(memoryDevice.get());
+  } else if (m_pStream) {
     // Determine stream size using end seek
     LARGE_INTEGER zero = {0};
     if (SUCCEEDED(m_pStream->Seek(zero, STREAM_SEEK_CUR,
@@ -462,67 +542,6 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
 
   if (!format.isEmpty()) {
     reader.setFormat(format);
-  }
-
-  QString rawExt;
-  if (m_pStream) {
-    STATSTG statstg;
-    if (SUCCEEDED(m_pStream->Stat(&statstg, STATFLAG_DEFAULT)) &&
-        statstg.pwcsName) {
-      rawExt = QFileInfo(QString::fromWCharArray(statstg.pwcsName))
-                   .suffix()
-                   .toLower();
-      CoTaskMemFree(statstg.pwcsName);
-    }
-  } else {
-    rawExt =
-        QFileInfo(QString::fromWCharArray(m_szFilePath)).suffix().toLower();
-  }
-
-  if (isRawExtension(rawExt)) {
-    QImage rawImg;
-    bool rawOk = false;
-    if (m_pStream) {
-      rawOk = tryLibRawThumbnailFromStream(m_pStream, cx, rawImg);
-    } else {
-      rawOk = tryLibRawThumbnailFromFile(QString::fromWCharArray(m_szFilePath),
-                                         cx, rawImg);
-    }
-
-    if (rawOk && !rawImg.isNull()) {
-      if (rawImg.width() > (int)cx || rawImg.height() > (int)cx) {
-        rawImg = rawImg.scaled(cx, cx, Qt::KeepAspectRatio,
-                               Qt::SmoothTransformation);
-      }
-      if (rawImg.format() != QImage::Format_ARGB32_Premultiplied) {
-        rawImg = rawImg.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-      }
-
-      BITMAPV5HEADER bi;
-      ZeroMemory(&bi, sizeof(bi));
-      bi.bV5Size = sizeof(bi);
-      bi.bV5Width = rawImg.width();
-      bi.bV5Height = -rawImg.height(); // Top-down
-      bi.bV5Planes = 1;
-      bi.bV5BitCount = 32;
-      bi.bV5Compression = BI_BITFIELDS;
-      bi.bV5RedMask = 0x00FF0000;
-      bi.bV5GreenMask = 0x0000FF00;
-      bi.bV5BlueMask = 0x000000FF;
-      bi.bV5AlphaMask = 0xFF000000;
-
-      void *pBits = nullptr;
-      HDC hdc = GetDC(nullptr);
-      HBITMAP hbmp = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
-                                      &pBits, nullptr, 0);
-      ReleaseDC(nullptr, hdc);
-      if (hbmp && pBits) {
-        memcpy(pBits, rawImg.constBits(), rawImg.sizeInBytes());
-        *phbmp = hbmp;
-        *pdwAlpha = WTSAT_ARGB;
-        return S_OK;
-      }
-    }
   }
 
   reader.setAutoTransform(true); // Rotate according to Exif orientation tags
@@ -557,9 +576,8 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
 
   QImage img;
   if (!reader.read(&img)) {
-    if (m_pStream) {
-      // Fallback for stream: try memory buffer if small, otherwise temporary
-      // file
+    if (m_pStream && !isRaw) {
+      // Fallback for stream: try memory buffer if small, otherwise temporary file
       if (seekable && streamSize > 0 &&
           streamSize <= 1024 * 1024) { // up to 1 MB in memory
         QByteArray buffer;
@@ -775,25 +793,37 @@ STDAPI DllRegisterServer() {
     return hr;
 
   // Register for direct Extensions
-  for (const auto &ext : g_extensions) {
+  for (const auto &info : g_extensionTable) {
     wchar_t extKey[MAX_PATH];
     swprintf_s(extKey, MAX_PATH,
                L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
                L"234630154E96}",
-               ext);
+               info.dotExt);
     CreateRegistryKeyAndValue(HKEY_LOCAL_MACHINE, extKey, nullptr,
                               CLSID_QImgvThumbnailProvider_Str);
   }
 
   // Register for ProgIDs
-  for (const auto &progId : g_progIds) {
-    wchar_t progIdKey[MAX_PATH];
-    swprintf_s(progIdKey, MAX_PATH,
-               L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
-               L"234630154E96}",
-               progId);
-    CreateRegistryKeyAndValue(HKEY_LOCAL_MACHINE, progIdKey, nullptr,
-                              CLSID_QImgvThumbnailProvider_Str);
+  for (size_t i = 0; i < sizeof(g_extensionTable) / sizeof(g_extensionTable[0]); ++i) {
+    const auto &info = g_extensionTable[i];
+    if (info.progId) {
+      bool duplicate = false;
+      for (size_t j = 0; j < i; ++j) {
+        if (g_extensionTable[j].progId && wcscmp(g_extensionTable[j].progId, info.progId) == 0) {
+          duplicate = true;
+          break;
+        }
+      }
+      if (!duplicate) {
+        wchar_t progIdKey[MAX_PATH];
+        swprintf_s(progIdKey, MAX_PATH,
+                   L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
+                   L"234630154E96}",
+                   info.progId);
+        CreateRegistryKeyAndValue(HKEY_LOCAL_MACHINE, progIdKey, nullptr,
+                                  CLSID_QImgvThumbnailProvider_Str);
+      }
+    }
   }
 
   // Notify shell about changes
@@ -808,23 +838,35 @@ STDAPI DllUnregisterServer() {
   DeleteRegistryKey(HKEY_LOCAL_MACHINE, clsidKey);
 
   // Unregister for direct Extensions
-  for (const auto &ext : g_extensions) {
+  for (const auto &info : g_extensionTable) {
     wchar_t extKey[MAX_PATH];
     swprintf_s(extKey, MAX_PATH,
                L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
                L"234630154E96}",
-               ext);
+               info.dotExt);
     DeleteRegistryKey(HKEY_LOCAL_MACHINE, extKey);
   }
 
   // Unregister for ProgIDs
-  for (const auto &progId : g_progIds) {
-    wchar_t progIdKey[MAX_PATH];
-    swprintf_s(progIdKey, MAX_PATH,
-               L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
-               L"234630154E96}",
-               progId);
-    DeleteRegistryKey(HKEY_LOCAL_MACHINE, progIdKey);
+  for (size_t i = 0; i < sizeof(g_extensionTable) / sizeof(g_extensionTable[0]); ++i) {
+    const auto &info = g_extensionTable[i];
+    if (info.progId) {
+      bool duplicate = false;
+      for (size_t j = 0; j < i; ++j) {
+        if (g_extensionTable[j].progId && wcscmp(g_extensionTable[j].progId, info.progId) == 0) {
+          duplicate = true;
+          break;
+        }
+      }
+      if (!duplicate) {
+        wchar_t progIdKey[MAX_PATH];
+        swprintf_s(progIdKey, MAX_PATH,
+                   L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
+                   L"234630154E96}",
+                   info.progId);
+        DeleteRegistryKey(HKEY_LOCAL_MACHINE, progIdKey);
+      }
+    }
   }
 
   // Notify shell about changes
