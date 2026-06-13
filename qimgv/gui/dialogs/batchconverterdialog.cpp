@@ -977,36 +977,14 @@ void BatchConverterDialog::startConversion() {
     QString pattern = patternEdit->text();
     bool overwrite = overwriteCheckBox->isChecked();
 
-    if (useUpscayl && doResize) {
+    if (useUpscayl) {
         threadPool.setMaxThreadCount(1);
+        if (!loadUpscaylModel(upscaylModel)) {
+            return;
+        }
     } else {
         threadPool.setMaxThreadCount(QThread::idealThreadCount());
     }
-
-#ifdef USE_UPSCAYL
-    if (useUpscayl && doResize) {
-        statusLabel->setText(tr("Loading AI Model..."));
-        qApp->processEvents();
-
-        sharedResrgan = new RealESRGAN(-1, false);
-        sharedResrgan->scale = 4;
-        sharedResrgan->prepadding = 10;
-        sharedResrgan->tilesize = sharedResrgan->autoTilesize();
-
-        QString appDir = QCoreApplication::applicationDirPath();
-        QString paramQStr = appDir + "/models/" + upscaylModel + ".param";
-        QString binQStr = appDir + "/models/" + upscaylModel + ".bin";
-
-        int loadRes = sharedResrgan->load(paramQStr.toStdWString(), binQStr.toStdWString());
-        if (loadRes != 0) {
-            delete sharedResrgan;
-            sharedResrgan = nullptr;
-            statusLabel->setText(tr("Failed to load AI model."));
-            QMessageBox::warning(this, tr("AI Error"), tr("Failed to load AI upscaling model: %1").arg(upscaylModel));
-            return;
-        }
-    }
-#endif
 
     int activeIndex = 0;
     for (int i = 0; i < fileListWidget->count(); ++i) {
@@ -1018,15 +996,7 @@ void BatchConverterDialog::startConversion() {
         QString srcPath = widget->filePath();
         QFileInfo srcFi(srcPath);
 
-        QString targetName = pattern;
-        targetName.replace("{name}", srcFi.baseName());
-        targetName.replace("{ext}", formatExt);
-        targetName.replace("{date}", QDate::currentDate().toString("yyyy-MM-dd"));
-        targetName.replace("{index}", QString::number(activeIndex + 1));
-
-        if (!targetName.contains(".")) targetName += "." + formatExt;
-
-        QString destPath = finalOutDir + "/" + targetName;
+        QString destPath = buildDestPath(srcFi, pattern, activeIndex + 1, formatExt, finalOutDir);
 
         if (!overwrite && QFileInfo::exists(destPath)) {
             processedFiles++;
@@ -1087,13 +1057,56 @@ void BatchConverterDialog::onCancelClicked() {
     }
 }
 
-void BatchConverterDialog::cleanupSharedUpscayl() {
+QString BatchConverterDialog::buildDestPath(const QFileInfo &srcFi, const QString &pattern, int index, const QString &formatExt, const QString &finalOutDir) const {
+    QString targetName = pattern;
+    targetName.replace("{name}", srcFi.baseName());
+    targetName.replace("{ext}", formatExt);
+    targetName.replace("{date}", QDate::currentDate().toString("yyyy-MM-dd"));
+    targetName.replace("{index}", QString::number(index));
+
+    if (!targetName.contains(".")) {
+        targetName += "." + formatExt;
+    }
+
+    return finalOutDir + "/" + targetName;
+}
+
+bool BatchConverterDialog::loadUpscaylModel(const QString &upscaylModel) {
 #ifdef USE_UPSCAYL
+    statusLabel->setText(tr("Loading AI Model..."));
+    qApp->processEvents();
+
+    sharedResrgan = new RealESRGAN(-1, false);
+    sharedResrgan->scale = 4;
+    sharedResrgan->prepadding = 10;
+    sharedResrgan->tilesize = sharedResrgan->autoTilesize();
+
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString paramQStr = appDir + "/models/" + upscaylModel + ".param";
+    QString binQStr = appDir + "/models/" + upscaylModel + ".bin";
+
+    int loadRes = sharedResrgan->load(paramQStr.toStdWString(), binQStr.toStdWString());
+    if (loadRes != 0) {
+        delete sharedResrgan;
+        sharedResrgan = nullptr;
+        statusLabel->setText(tr("Failed to load AI model."));
+        QMessageBox::warning(this, tr("AI Error"), tr("Failed to load AI upscaling model: %1").arg(upscaylModel));
+        return false;
+    }
+    return true;
+#else
+    Q_UNUSED(upscaylModel);
+    return false;
+#endif
+}
+
+void BatchConverterDialog::cleanupSharedUpscayl() {
+    #ifdef USE_UPSCAYL
     if (sharedResrgan) {
         delete sharedResrgan;
         sharedResrgan = nullptr;
     }
-#endif
+    #endif
 }
 
 void BatchConverterDialog::collectResizeWidgets() {
@@ -1131,6 +1144,17 @@ void BatchConverterDialog::onColorEnabledChanged(bool enabled) {
 }
 
 // ==================== BatchWorkerTask ====================
+QImage BatchWorkerTask::applyResize(const QImage &img, const QSize &targetSize, bool keepAspect, int filter) {
+    if (img.isNull()) return img;
+    QSize finalSize = targetSize;
+    if (keepAspect) {
+        finalSize = img.size().scaled(targetSize, Qt::KeepAspectRatio);
+    }
+    std::shared_ptr<const QImage> imgPtr = std::make_shared<const QImage>(img);
+    QImage scaledImg = ImageLib::scaled(imgPtr, finalSize, static_cast<ScalingFilter>(filter));
+    return scaledImg.isNull() ? img : scaledImg;
+}
+
 void BatchWorkerTask::run() {
     if (dialog->isCancelled) return;
     QImage srcImg(srcPath);
@@ -1187,23 +1211,11 @@ void BatchWorkerTask::run() {
 #endif
         if (doResize && processedImg.size() != targetSize) {
             if (dialog->isCancelled) return;
-            QSize finalSize = targetSize;
-            if (keepAspectRatio) finalSize = processedImg.size().scaled(targetSize, Qt::KeepAspectRatio);
-            std::shared_ptr<const QImage> upscaledPtr = std::make_shared<const QImage>(processedImg);
-            QImage finalImg = ImageLib::scaled(upscaledPtr, finalSize, static_cast<ScalingFilter>(scalingFilter));
-            if (!finalImg.isNull()) {
-                processedImg = finalImg;
-            }
+            processedImg = applyResize(processedImg, targetSize, keepAspectRatio, scalingFilter);
         }
     } else if (doResize) {
         if (dialog->isCancelled) return;
-        QSize finalSize = targetSize;
-        if (keepAspectRatio) finalSize = processedImg.size().scaled(targetSize, Qt::KeepAspectRatio);
-        std::shared_ptr<const QImage> imgPtr = std::make_shared<const QImage>(processedImg);
-        QImage scaledImg = ImageLib::scaled(imgPtr, finalSize, static_cast<ScalingFilter>(scalingFilter));
-        if (!scaledImg.isNull()) {
-            processedImg = scaledImg;
-        }
+        processedImg = applyResize(processedImg, targetSize, keepAspectRatio, scalingFilter);
     }
 
     if (dialog->isCancelled) return;

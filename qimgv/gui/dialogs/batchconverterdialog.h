@@ -29,6 +29,8 @@
 class RealESRGAN;
 #endif
 
+class QFileInfo;
+
 class BatchItemWidget : public QWidget {
     Q_OBJECT
 public:
@@ -203,6 +205,8 @@ private:
     void updateSelectedCount();
     void updateToTargetValues();
     void cleanupSharedUpscayl();
+    QString buildDestPath(const QFileInfo &srcFi, const QString &pattern, int index, const QString &formatExt, const QString &finalOutDir) const;
+    bool loadUpscaylModel(const QString &upscaylModel);
 
     void collectResizeWidgets();
     void collectColorWidgets();
@@ -236,6 +240,8 @@ public:
     void run() override;
 
 private:
+    QImage applyResize(const QImage &img, const QSize &targetSize, bool keepAspect, int filter);
+
     BatchConverterDialog *dialog;
     int index;
     QString srcPath;
