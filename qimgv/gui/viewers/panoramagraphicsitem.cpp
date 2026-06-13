@@ -9,10 +9,6 @@
 #include <QTextStream>
 #include <cmath>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 PanoramaGraphicsItem::PanoramaGraphicsItem(QGraphicsItem *parent)
     : QGraphicsObject(parent)
 {
@@ -147,9 +143,9 @@ void PanoramaGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsIt
     mProgram->setUniformValue("matrix", matrix);
     mProgram->setUniformValue("tex", 0);
     
-    float yawRad = (float)(mYaw * M_PI / 180.0);
-    float pitchRad = (float)(mPitch * M_PI / 180.0);
-    float fovRad = (float)(mFov * M_PI / 180.0);
+    float yawRad = (float)(mYaw * ImageLib::kPi / 180.0);
+    float pitchRad = (float)(mPitch * ImageLib::kPi / 180.0);
+    float fovRad = (float)(mFov * ImageLib::kPi / 180.0);
     float aspect = (float)widget->width() / (float)widget->height();
 
     mProgram->setUniformValue("yaw", yawRad);
