@@ -222,8 +222,16 @@ void FileOperations::rename(const QString &srcFilePath, const QString &newName, 
         result = FileOpResult::NOTHING_TO_DO;
         return;
     }
+    if (newName.contains('/') || newName.contains('\\') || newName == "." || newName == "..") {
+        result = FileOpResult::OTHER_ERROR;
+        return;
+    }
     QString newFilePath = srcFile.absolutePath() + "/" + newName;
     QFileInfo destFile(newFilePath);
+    if (destFile.absolutePath() != srcFile.absolutePath()) {
+        result = FileOpResult::OTHER_ERROR;
+        return;
+    }
     if(destFile.exists()) {
         if(!destFile.isWritable())
             result = FileOpResult::DESTINATION_NOT_WRITABLE;
