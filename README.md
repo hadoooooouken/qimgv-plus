@@ -81,7 +81,6 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 | Next directory | Shift+Right |
 | Previous directory | Shift+Left |
 | Folder view | Backspace / Esc / MiddleClick |
-| Open | Ctrl+O |
 | Print / Export PDF | Ctrl+P |
 | Toggle scaling filter (nearest / configured) | N |
 | Toggle Use Upscayl | Alt+I |

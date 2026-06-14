@@ -507,10 +507,6 @@ Total files: %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="84"/>
-        <source>Open</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="89"/>
         <source>Folder View</source>

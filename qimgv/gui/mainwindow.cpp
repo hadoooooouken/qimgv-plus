@@ -720,20 +720,6 @@ QString MW::getSaveFileName(QString filePath) {
     return newFilePath;
 }
 
-void MW::showOpenDialog(QString path) {
-    docWidget->hideFloatingPanel();
-
-    QFileDialog dialog(this);
-    QStringList imageFilter;
-    imageFilter.append(settings->supportedFormatsFilter());
-    imageFilter.append("All Files (*)");
-    dialog.setDirectory(path);
-    dialog.setNameFilters(imageFilter);
-    dialog.setWindowTitle("Open image");
-    dialog.setWindowModality(Qt::ApplicationModal);
-    connect(&dialog, &QFileDialog::fileSelected, this, &MW::opened);
-    dialog.exec();
-}
 
 void MW::showResizeDialog(QSize initialSize) {
     ResizeDialog dialog(initialSize, this);

@@ -196,7 +196,6 @@ void ContextMenu::setupUi()
     addItem(m_copy,             "copyFile",           tr("Quick copy"),         ":/res/icons/common/menuitem/copy16.png");
     addItem(m_move,             "moveFile",           tr("Quick move"),         ":/res/icons/common/menuitem/move16.png");
     addItem(m_rename,           "renameFile",         tr("Rename"),             ":/res/icons/common/overlay/edit16.png");
-    addItem(m_open,             "open",               tr("Open"),               ":/res/icons/common/menuitem/open16.png");
     addItem(m_folderView,       "folderView",         tr("Folder View"),        ":/res/icons/common/menuitem/folderview16.png");
 
     // OpenWith is special – we will create it separately

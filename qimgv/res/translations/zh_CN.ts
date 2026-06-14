@@ -538,11 +538,6 @@ Total files: %3</source>
         <translation>CAS 设置</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="222" />
-        <source>Open</source>
-        <translation>打开</translation>
-    </message>
-    <message>
         <location filename="../../gui/contextmenu.cpp" line="223" />
         <source>Folder View</source>
         <translation>文件夹视图</translation>

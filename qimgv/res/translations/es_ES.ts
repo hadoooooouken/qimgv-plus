@@ -543,11 +543,6 @@ Archivos totales: %3</translation>
         <translation>Ajustes de CAS</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="222" />
-        <source>Open</source>
-        <translation>Abrir</translation>
-    </message>
-    <message>
         <location filename="../../gui/contextmenu.cpp" line="223" />
         <source>Folder View</source>
         <translation>Vista de Carpetas</translation>

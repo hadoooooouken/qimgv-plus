@@ -543,11 +543,6 @@ Toplam dosya: %3</translation>
         <translation>CAS Ayarları</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="222" />
-        <source>Open</source>
-        <translation>Aç</translation>
-    </message>
-    <message>
         <location filename="../../gui/contextmenu.cpp" line="223" />
         <source>Folder View</source>
         <translation>Klasör görünümü</translation>

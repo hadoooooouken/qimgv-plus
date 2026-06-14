@@ -543,11 +543,6 @@ Total des fichiers : %3</translation>
         <translation>Paramètres CAS</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="222" />
-        <source>Open</source>
-        <translation>Ouvrir</translation>
-    </message>
-    <message>
         <location filename="../../gui/contextmenu.cpp" line="223" />
         <source>Folder View</source>
         <translation>Vue dossier</translation>

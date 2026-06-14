@@ -524,7 +524,6 @@ void Core::initActions() {
   connect(actionManager, &ActionManager::crop, this, &Core::toggleCropPanel);
   connect(actionManager, &ActionManager::setWallpaper, this,
           &Core::setWallpaper);
-  connect(actionManager, &ActionManager::open, this, &Core::showOpenDialog);
   connect(actionManager, &ActionManager::save, this, &Core::saveCurrentFile);
   connect(actionManager, &ActionManager::saveAs, this, &Core::requestSavePath);
   connect(actionManager, &ActionManager::exit, this, &Core::close);
@@ -1173,8 +1172,6 @@ void Core::outputError(const FileOpResult &error) const {
   mw->showError(FileOperations::decodeResult(error));
   qDebug() << FileOperations::decodeResult(error);
 }
-
-void Core::showOpenDialog() { mw->showOpenDialog(model->directoryPath()); }
 
 void Core::showInDirectory() {
   if (!model)

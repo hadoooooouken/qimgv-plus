@@ -166,7 +166,6 @@ private slots:
     void toggleShuffle();
     void onModelLoaded();
     void outputError(const FileOpResult &error) const;
-    void showOpenDialog();
     void showInDirectory();
     void onDirectoryViewFileActivated(QString filePath);
     void onDirectoryViewFilesActivated(QList<QString> filePaths, QString activePath);

@@ -543,11 +543,6 @@ Gesamtdateien: %3</translation>
         <translation>CAS-Einstellungen</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="222" />
-        <source>Open</source>
-        <translation>Öffnen</translation>
-    </message>
-    <message>
         <location filename="../../gui/contextmenu.cpp" line="223" />
         <source>Folder View</source>
         <translation>Ordneransicht</translation>

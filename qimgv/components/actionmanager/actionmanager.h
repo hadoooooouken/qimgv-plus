@@ -54,7 +54,6 @@ private:
     ActionType validateAction(const QString &actionName);
 
 signals:
-    void open();
     void save();
     void saveAs();
     void openSettings();

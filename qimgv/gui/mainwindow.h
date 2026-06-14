@@ -211,7 +211,6 @@ public slots:
   void toggleFolderView();
   void enableFolderView();
   void enableDocumentView();
-  void showOpenDialog(QString path);
   void showSaveDialog(QString filePath);
   QString getSaveFileName(QString fileName);
   void showResizeDialog(QSize initialSize);

@@ -543,11 +543,6 @@ Total files: %3</source>
         <translation>Налаштування CAS</translation>
     </message>
     <message>
-        <location filename="../../gui/contextmenu.cpp" line="222" />
-        <source>Open</source>
-        <translation>Відкрити</translation>
-    </message>
-    <message>
         <location filename="../../gui/contextmenu.cpp" line="223" />
         <source>Folder View</source>
         <translation>Перегляд теки</translation>
