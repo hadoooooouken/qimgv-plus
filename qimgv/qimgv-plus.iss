@@ -92,6 +92,16 @@ japanese.ThumbnailsTaskDesc=Windowsエクスプローラーでサムネイルを
 turkish.ThumbnailsTaskDesc=Windows Gezgini'nde küçük resimler oluştur
 russian.ThumbnailsTaskDesc=Создавать эскизы в Проводнике Windows
 
+; AVX2 error messages
+english.AVX2ErrorMsg=Installation impossible: your processor does not support AVX2.%n%nThis version requires AVX2 to work on Windows 10/11.
+ukrainian.AVX2ErrorMsg=Встановлення неможливе: ваш процесор не підтримує AVX2.%n%nЦя версія потребує AVX2 для роботи на Windows 10/11.
+german.AVX2ErrorMsg=Installation unmöglich: Ihr Prozessor unterstützt kein AVX2.%n%nDiese Version benötigt AVX2 für Windows 10/11.
+spanish.AVX2ErrorMsg=Instalación imposible: su procesador no soporta AVX2.%n%nEsta versión requiere AVX2 para funcionar en Windows 10/11.
+french.AVX2ErrorMsg=Installation impossible : votre processeur ne supporte pas AVX2.%n%nCette version nécessite AVX2 pour fonctionner sous Windows 10/11.
+japanese.AVX2ErrorMsg=インストールできません: お使いのプロセッサはAVX2をサポートしていません。%n%nこのバージョンはWindows 10/11でAVX2を必要とします。
+turkish.AVX2ErrorMsg=Kurulum imkansız: işlemciniz AVX2'yi desteklemiyor.%n%nBu sürüm Windows 10/11 üzerinde çalışmak için AVX2 gerektirir.
+russian.AVX2ErrorMsg=Установка невозможна: ваш процессор не поддерживает AVX2.%n%nЭта версия требует AVX2 для работы на Windows 10/11.
+
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "associate"; Description: "Associate {#MyAppName} with common image file formats"; GroupDescription: "{cm:GroupFileAssociations}"
@@ -486,3 +496,17 @@ Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpf\ShellEx\{{E357F
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpx\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpc\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jph\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+
+[Code]
+const
+  PF_AVX2_INSTRUCTIONS_AVAILABLE = 40;
+
+function IsProcessorFeaturePresent(Feature: Integer): Boolean;
+  external 'IsProcessorFeaturePresent@kernel32.dll stdcall';
+
+function InitializeSetup(): Boolean;
+begin
+  Result := IsProcessorFeaturePresent(PF_AVX2_INSTRUCTIONS_AVAILABLE);
+  if not Result then
+    MsgBox(CustomMessage('AVX2ErrorMsg'), mbError, MB_OK);
+end;
