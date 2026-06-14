@@ -788,11 +788,6 @@ void SettingsDialog::readSettings() {
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::saveSettings() {
-  // wait for all background stuff to finish
-  if (QThreadPool::globalInstance()->activeThreadCount()) {
-    QThreadPool::globalInstance()->waitForDone();
-  }
-
   settings->setLoopSlideshow(loopSlideshowCheckBox->isChecked());
   settings->setFullscreenMode(fullscreenCheckBox->isChecked());
   if (fitModeWindow->isChecked())
