@@ -190,6 +190,8 @@ void ImageViewerV2::readSettings() {
   onFullscreenModeChanged(mIsFullscreen);
   updateMinScale();
   setScalingFilter(settings->scalingFilter());
+  mApplyFilterAt100 = settings->applyFilterAt100();
+  mUseUpscayl = settings->useUpscayl();
   updateCasSettings();
   if (isDisplaying()) {
     if (imageFitMode == FIT_FREE) {
@@ -597,9 +599,9 @@ void ImageViewerV2::hide() {
 
 void ImageViewerV2::requestScaling() {
   bool isAt100 = std::abs(pixmapItem.scale() - 1.0) < 0.001;
-  if (mSvgMode || !pixmap || (isAt100 && !settings->applyFilterAt100()) ||
-      (mScalingFilter == QI_FILTER_CAS && !(settings->useUpscayl() && pixmapItem.scale() > 1.0)) ||
-      (mScalingFilter == QI_FILTER_SMART_GPU && !(settings->useUpscayl() && pixmapItem.scale() > 1.0)) ||
+  if (mSvgMode || !pixmap || (isAt100 && !mApplyFilterAt100) ||
+      (mScalingFilter == QI_FILTER_CAS && !(mUseUpscayl && pixmapItem.scale() > 1.0)) ||
+      (mScalingFilter == QI_FILTER_SMART_GPU && !(mUseUpscayl && pixmapItem.scale() > 1.0)) ||
       movie || (zoomTimeLine && zoomTimeLine->state() == QTimeLine::Running) ||
       mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
       mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM) {
@@ -614,7 +616,7 @@ void ImageViewerV2::requestScaling() {
   float maxScale = 4.0f;
 
 #ifdef USE_UPSCAYL
-  if (settings->useUpscayl()) {
+  if (mUseUpscayl) {
     maxScale = 40.0f; // allow extreme zoom with Upscayl (up to 4000%)
     if (currentScale() > maxScale) {
       return;
@@ -1314,6 +1316,9 @@ void ImageViewerV2::swapToOriginalPixmap() {
 }
 
 void ImageViewerV2::updateCasSettings() {
+  pixmapItem.setApplyFilterAt100(mApplyFilterAt100);
+  pixmapItemScaled.setApplyFilterAt100(mApplyFilterAt100);
+  pixmapItemCrop.setApplyFilterAt100(mApplyFilterAt100);
   pixmapItem.setScalingFilter(mScalingFilter);
   pixmapItemScaled.setScalingFilter(mScalingFilter);
   pixmapItemCrop.setScalingFilter(mScalingFilter);
