@@ -361,7 +361,7 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     QVBoxLayout *absLayout = new QVBoxLayout();
     absLayout->setContentsMargins(20, 0, 0, 0);
     QHBoxLayout *wLayout = new QHBoxLayout();
-    QLabel *lWidth = new QLabel(tr("Width:"), this);
+    QLabel *lWidth = new QLabel(tr("Max Width:"), this);
     lWidth->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     width = new QSpinBox(this);
     width->setMinimumSize(0, 30);
@@ -374,7 +374,7 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     absLayout->addLayout(wLayout);
 
     QHBoxLayout *hLayout = new QHBoxLayout();
-    QLabel *lHeight = new QLabel(tr("Height:"), this);
+    QLabel *lHeight = new QLabel(tr("Max Height:"), this);
     lHeight->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     height = new QSpinBox(this);
     height->setMinimumSize(0, 30);
@@ -425,16 +425,9 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     resComboBox = new QComboBox(this);
     resComboBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     rCol->addWidget(resComboBox);
-    
-    fitDesktopButton = new QPushButton(tr("Fit to desktop"), this);
-    fitDesktopButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    fillDesktopButton = new QPushButton(tr("Fill desktop (expanding)"), this);
-    fillDesktopButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
     resetButton = new QPushButton(tr("Reset"), this);
     resetButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    
-    rCol->addWidget(fitDesktopButton);
-    rCol->addWidget(fillDesktopButton);
     rCol->addWidget(resetButton);
 
     splitLayout->addLayout(rCol);
@@ -635,7 +628,6 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     int smartIndex = filterComboBox->findData(QI_FILTER_SMART);
     filterComboBox->setCurrentIndex(smartIndex != -1 ? smartIndex : 1);
 
-    desktopSize = qApp->primaryScreen()->size();
     resComboBox->addItem(tr("Original size"), QVariant());
     resComboBox->addItem("1280 x 720", QSize(1280, 720));
     resComboBox->addItem("1366 x 768", QSize(1366, 768));
@@ -702,8 +694,6 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     connect(width, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onWidthChanged);
     connect(height, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onHeightChanged);
     connect(resComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &BatchConverterDialog::onCommonResolutionChanged);
-    connect(fitDesktopButton, &QPushButton::clicked, this, &BatchConverterDialog::onFitDesktop);
-    connect(fillDesktopButton, &QPushButton::clicked, this, &BatchConverterDialog::onFillDesktop);
     connect(resetButton, &QPushButton::clicked, this, &BatchConverterDialog::onResetSizes);
     connect(useUpscaylCheckBox, &QCheckBox::toggled, this, &BatchConverterDialog::onUseUpscaylToggled);
 
@@ -795,23 +785,8 @@ void BatchConverterDialog::onCommonResolutionChanged(int index) {
         byAbsoluteSize->setChecked(true);
     }
     QVariant data = resComboBox->itemData(index);
-    QSize res = data.isValid() ? data.toSize() : originalSize;
-    if (keepAspectRatio->isChecked())
-        targetSize = originalSize.scaled(res, Qt::KeepAspectRatio);
-    else
-        targetSize = originalSize.scaled(res, Qt::IgnoreAspectRatio);
-    updateToTargetValues();
-}
-
-void BatchConverterDialog::onFitDesktop() {
-    byAbsoluteSize->setChecked(true);
-    targetSize = originalSize.scaled(desktopSize, Qt::KeepAspectRatio);
-    updateToTargetValues();
-}
-
-void BatchConverterDialog::onFillDesktop() {
-    byAbsoluteSize->setChecked(true);
-    targetSize = originalSize.scaled(desktopSize, Qt::KeepAspectRatioByExpanding);
+    // Set the bounding box directly; keepAspectRatio is applied per-file during conversion
+    targetSize = data.isValid() ? data.toSize() : originalSize;
     updateToTargetValues();
 }
 

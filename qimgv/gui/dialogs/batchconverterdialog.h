@@ -102,8 +102,6 @@ private slots:
     void onWidthChanged(int val);
     void onHeightChanged(int val);
     void onCommonResolutionChanged(int index);
-    void onFitDesktop();
-    void onFillDesktop();
     void onResetSizes();
     void onResizeRadioToggled();
 
@@ -156,8 +154,6 @@ private:
     QComboBox *filterComboBox;
     QComboBox *upscaylModelComboBox;
     QComboBox *resComboBox;
-    QPushButton *fitDesktopButton;
-    QPushButton *fillDesktopButton;
     QPushButton *resetButton;
 
     QWidget *colorContainer;
@@ -187,7 +183,7 @@ private:
     int processedFiles = 0;
     bool isConverting = false;
 
-    QSize originalSize, targetSize, desktopSize;
+    QSize originalSize, targetSize;
     int lastEdited = 0;
 
     QList<QWidget*> m_resizeWidgets;
