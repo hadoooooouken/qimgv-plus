@@ -28,7 +28,15 @@ target_sources(qimgv-plus PRIVATE
 
 )
 
+if(UPSCAYL_SUPPORT)
+    target_sources(qimgv-plus PRIVATE
+        upscaler/upscaler.cpp
+        upscaler/upscalerrunnable.cpp
+    )
+endif()
+
 if(APPLE)
+
     #target_sources(qimgv-plus PRIVATE
     #    directorymanager/watchers/linux/linuxfsevent.cpp
     #    directorymanager/watchers/linux/linuxwatcher.cpp

@@ -28,4 +28,5 @@ INSTALL/
 upscayl-ncnn/
 DEVELOPMENT.md
 *.cpp_temp
+.antigravity
 

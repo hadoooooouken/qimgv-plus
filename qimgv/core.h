@@ -36,7 +36,6 @@ enum MimeDataTarget {
 
 class Core : public QObject {
     Q_OBJECT
-    friend class UpscaylTask;
 public:
     Core();
     ~Core();
@@ -189,17 +188,8 @@ private slots:
 private slots:
     void onUpscaleFinished(QImage cropImg, QRect origCrop, QString path, QSize targetSize);
     void onUpscaleAborted();
-    void onUpscaylTimerTimeout();
 private:
-    void triggerUpscaylProcessing(std::shared_ptr<Image> image, QSize targetSize, QString path);
-    QSize latestUpscaylSize;
-    std::shared_ptr<Image> pendingUpscaylImage;
-    QSize pendingUpscaylSize;
-    QString pendingUpscaylPath;
-    QTimer upscaylTimer;
-    bool upscaylActive = false;
-    bool upscaylPendingRun = false;
-    bool wasUpscaylEnabled = false;
+    std::unique_ptr<class Upscaler> upscaler;
 #endif
 private:
     QStringList backHistory, forwardHistory;
