@@ -10,7 +10,6 @@
 #include <cmath>
 #include "sourcecontainers/thumbnail.h"
 #include "utils/imagelib.h"
-#include "settings.h"
 #include "sharedresources.h"
 
 enum ThumbnailStyle {

@@ -1,4 +1,5 @@
 #include "documentwidget.h"
+#include "settings.h"
 
 DocumentWidget::DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget,
                                QWidget *parent)

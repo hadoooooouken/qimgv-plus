@@ -1,4 +1,5 @@
 #include "filesystemmodelcustom.h"
+#include "settings.h"
 
 FileSystemModelCustom::FileSystemModelCustom(QObject *parent) : QFileSystemModel(parent) {
     qreal dpr = qApp->devicePixelRatio();

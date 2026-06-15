@@ -20,7 +20,7 @@
 #include "gui/customwidgets/colorselectorbutton.h"
 #include "gui/dialogs/shortcutcreatordialog.h"
 #include "gui/dialogs/scripteditordialog.h"
-#include "settings.h"
+#include "themestore.h"
 #include "components/actionmanager/actionmanager.h"
 #include "gui/customwidgets/ssidebar.h"
 #include <QScrollArea>

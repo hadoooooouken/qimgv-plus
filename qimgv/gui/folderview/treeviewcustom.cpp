@@ -1,4 +1,5 @@
 #include "treeviewcustom.h"
+#include "settings.h"
 
 TreeViewCustom::TreeViewCustom(QWidget *parent) : QTreeView(parent) {
     setAcceptDrops(true);

@@ -1,4 +1,5 @@
 #include "batchconverterdialog.h"
+#include "settings.h"
 #include <QCoreApplication>
 #include <QPainter>
 #include <QPainterPath>

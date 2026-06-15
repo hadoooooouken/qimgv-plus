@@ -6,8 +6,6 @@
 #include <QMimeData>
 #include <QScrollBar>
 #include <QDebug>
-#include "settings.h"
-
 class TreeViewCustom : public QTreeView
 {
     Q_OBJECT

@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include "components/thumbnailer/thumbnailer.h"
-#include "settings.h"
 #include "sourcecontainers/thumbnail.h"
 #include "utils/imagelib.h"
 #include <QCheckBox>

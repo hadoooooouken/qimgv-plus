@@ -3,8 +3,6 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
-#include "settings.h"
-
 class PushButtonFocusInd : public QPushButton {
     Q_OBJECT
 public:

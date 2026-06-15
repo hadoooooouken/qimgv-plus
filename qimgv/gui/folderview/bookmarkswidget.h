@@ -6,8 +6,6 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QMimeData>
-#include "settings.h"
-
 class BookmarksWidget : public QWidget {
     Q_OBJECT
 

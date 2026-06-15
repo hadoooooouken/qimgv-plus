@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "settings.h"
 #include <QClipboard>
 #include <QApplication>
 

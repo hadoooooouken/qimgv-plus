@@ -3,8 +3,6 @@
 #include <QTimer>
 #include <QLabel>
 #include "gui/customwidgets/overlaywidget.h"
-#include "settings.h"
-
 class IconWidget;
 
 enum FloatingMessageIcon {

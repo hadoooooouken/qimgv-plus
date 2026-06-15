@@ -1,4 +1,5 @@
 #include "thumbnailcache.h"
+#include "settings.h"
 #include <QBuffer>
 #include <QThread>
 

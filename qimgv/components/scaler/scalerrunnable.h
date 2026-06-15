@@ -7,8 +7,6 @@
 #include "components/cache/cache.h"
 #include "scalerrequest.h"
 #include "utils/imagelib.h"
-#include "settings.h"
-
 class ScalerRunnable : public QObject, public QRunnable
 {
     Q_OBJECT

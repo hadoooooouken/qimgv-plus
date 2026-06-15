@@ -1,4 +1,5 @@
 #include "foldergridview.h"
+#include "settings.h"
 #include "utils/imagelib.h"
 #include "gui/customwidgets/contextmenuitem.h"
 #include <QMenu>

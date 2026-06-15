@@ -1,4 +1,5 @@
 #include "ssidebar.h"
+#include "settings.h"
 #include <utility>
 
 SSideBar::SSideBar(QWidget *parent) : QWidget{parent} {

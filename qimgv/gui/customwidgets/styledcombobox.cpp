@@ -1,4 +1,5 @@
 #include "styledcombobox.h"
+#include "settings.h"
 
 StyledComboBox::StyledComboBox(QWidget *parent) : QComboBox(parent), hiResPixmap(false)
 {

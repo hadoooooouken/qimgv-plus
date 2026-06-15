@@ -1,4 +1,5 @@
 #include "pushbuttonfocusind.h"
+#include "settings.h"
 
 PushButtonFocusInd::PushButtonFocusInd(QWidget *parent) : QPushButton(parent) {
     mIsHighlighted = false;

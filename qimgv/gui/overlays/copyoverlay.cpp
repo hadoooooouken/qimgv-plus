@@ -1,4 +1,5 @@
 #include "copyoverlay.h"
+#include "settings.h"
 #include "gui/customwidgets/iconwidget.h"
 #include "gui/customwidgets/iconbutton.h"
 #include <QVBoxLayout>

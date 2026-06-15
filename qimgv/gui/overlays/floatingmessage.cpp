@@ -1,4 +1,5 @@
 #include "floatingmessage.h"
+#include "settings.h"
 #include "gui/customwidgets/iconwidget.h"
 #include <QHBoxLayout>
 

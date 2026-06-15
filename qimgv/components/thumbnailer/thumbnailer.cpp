@@ -1,4 +1,5 @@
 #include "thumbnailer.h"
+#include "settings.h"
 
 Thumbnailer::Thumbnailer() {
     cache = std::make_unique<ThumbnailCache>();

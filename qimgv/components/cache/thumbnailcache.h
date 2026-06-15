@@ -7,7 +7,6 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
-#include "settings.h"
 #include "sourcecontainers/thumbnail.h"
 
 class ThumbnailCache : public QObject

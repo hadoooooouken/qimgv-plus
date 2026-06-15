@@ -1,4 +1,5 @@
 #include "imagestatic.h"
+#include "settings.h"
 #include "utils/colormanager.h"
 #include <QPainter>
 #include <time.h>

@@ -9,7 +9,7 @@
 #include <QDesktopServices>
 #include <QTranslator>
 #include "appversion.h"
-#include "settings.h"
+#include "settings_types.h"
 #include "components/directorymodel.h"
 #include "components/directorypresenter.h"
 #include "components/scriptmanager/scriptmanager.h"

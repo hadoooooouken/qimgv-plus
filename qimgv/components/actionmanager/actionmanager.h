@@ -10,8 +10,6 @@
 #include "utils/actions.h"
 #include "shortcutbuilder.h"
 #include "components/scriptmanager/scriptmanager.h"
-#include "settings.h"
-
 enum ActionType {
     ACTION_INVALID,
     ACTION_NORMAL,

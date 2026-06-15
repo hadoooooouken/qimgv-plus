@@ -3,6 +3,7 @@
  */
 
 #include "viewerwidget.h"
+#include "settings.h"
 #include <QApplication>
 #include <QClipboard>
 #include <QMimeData>

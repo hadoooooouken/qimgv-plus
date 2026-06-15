@@ -1,4 +1,5 @@
 #include "iconwidget.h"
+#include "settings.h"
 
 IconWidget::IconWidget(QWidget *parent)
     : QWidget(parent),

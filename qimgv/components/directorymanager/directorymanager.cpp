@@ -1,4 +1,5 @@
 #include "directorymanager.h"
+#include "settings.h"
 
 namespace fs = std::filesystem;
 

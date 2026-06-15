@@ -1,4 +1,5 @@
 #include "clickzoneoverlay.h"
+#include "settings.h"
 
 ClickZoneOverlay::ClickZoneOverlay(FloatingWidgetContainer *parent)
     : FloatingWidget(parent) {

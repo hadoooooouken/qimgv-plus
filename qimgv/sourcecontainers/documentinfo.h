@@ -10,8 +10,6 @@
 #include <cmath>
 #include <cstring>
 #include "utils/stuff.h"
-#include "settings.h"
-
 #ifdef USE_EXIV2
 
 #include <exiv2/exiv2.hpp>

@@ -1,4 +1,5 @@
 #include "thumbnailstrip.h"
+#include "settings.h"
 
 ThumbnailStrip::ThumbnailStrip(QWidget *parent) : ThumbnailView(Qt::Horizontal, parent) {
     this->setAttribute(Qt::WA_NoMousePropagation, true);

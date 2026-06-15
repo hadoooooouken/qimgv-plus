@@ -1,4 +1,5 @@
 #include "contextmenu.h"
+#include "settings.h"
 #include "gui/customwidgets/actionbutton.h"
 #include "gui/customwidgets/contextmenuitem.h"
 #include <QHBoxLayout>

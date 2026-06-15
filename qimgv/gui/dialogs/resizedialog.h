@@ -14,7 +14,7 @@
 #include <QVBoxLayout>
 #include <QComboBox>
 
-#include "settings.h"
+#include "settings_types.h"
 
 class QRadioButton;
 class QDoubleSpinBox;

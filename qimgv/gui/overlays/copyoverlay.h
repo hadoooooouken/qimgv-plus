@@ -6,7 +6,6 @@
 #include <QKeyEvent>
 #include "gui/customwidgets/overlaywidget.h"
 #include "gui/customwidgets/pathselectormenuitem.h"
-#include "settings.h"
 #include "components/actionmanager/actionmanager.h"
 
 class IconWidget;

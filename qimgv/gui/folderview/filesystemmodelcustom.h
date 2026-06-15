@@ -4,7 +4,6 @@
 #include <QApplication>
 #include <QFileSystemModel>
 #include <QPainter>
-#include "settings.h"
 #include "utils/imagelib.h"
 
 class FileSystemModelCustom : public QFileSystemModel

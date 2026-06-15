@@ -36,7 +36,7 @@
 #include "gui/panels/sidepanel/sidepanel.h"
 #include "gui/viewers/documentwidget.h"
 #include "gui/viewers/viewerwidget.h"
-#include "settings.h"
+#include "settings_types.h"
 
 struct CurrentInfo {
   int index;

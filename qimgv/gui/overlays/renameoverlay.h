@@ -7,8 +7,6 @@
 
 #include "gui/customwidgets/overlaywidget.h"
 #include "components/actionmanager/actionmanager.h"
-#include "settings.h"
-
 class IconWidget;
 class IconButton;
 class PushButtonFocusInd;

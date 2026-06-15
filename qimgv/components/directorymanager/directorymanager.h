@@ -16,7 +16,7 @@
 #include <filesystem>
 #include <algorithm>
 
-#include "settings.h"
+#include "settings_types.h"
 #include "watchers/directorywatcher.h"
 #include "utils/stuff.h"
 #include "sourcecontainers/fsentry.h"

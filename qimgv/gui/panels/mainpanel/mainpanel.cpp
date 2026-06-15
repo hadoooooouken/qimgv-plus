@@ -1,4 +1,5 @@
 #include "mainpanel.h"
+#include "settings.h"
 
 MainPanel::MainPanel(FloatingWidgetContainer *parent) : SlidePanel(parent) {
     // buttons stuff

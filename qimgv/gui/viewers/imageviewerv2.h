@@ -15,7 +15,7 @@
 #include <QDebug>
 #include <memory>
 #include <cmath>
-#include "settings.h"
+#include "settings_types.h"
 
 enum MouseInteractionState {
     MOUSE_NONE,

@@ -1,4 +1,5 @@
 #include "documentinfo.h"
+#include "settings.h"
 
 DocumentInfo::DocumentInfo(QString path)
     : mDocumentType(DocumentType::NONE),

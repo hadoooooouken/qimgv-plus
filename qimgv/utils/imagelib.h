@@ -7,7 +7,7 @@
 #include <QElapsedTimer>
 #include <QProcess>
 #include "sourcecontainers/documentinfo.h"
-#include "settings.h"
+#include "settings_types.h"
 
 
 struct ColorMatrix {

@@ -5,7 +5,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <memory>
-#include "settings.h"
+#include "settings_types.h"
 
 class FilterPixmapItem : public QGraphicsPixmapItem, protected QOpenGLFunctions {
 public:

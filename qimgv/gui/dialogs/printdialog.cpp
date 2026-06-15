@@ -1,4 +1,5 @@
 #include "printdialog.h"
+#include "settings.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLabel>

@@ -1,4 +1,5 @@
 #include "thumbnailerrunnable.h"
+#include "settings.h"
 #include "utils/colormanager.h"
 #include <QPainter>
 #include <memory>

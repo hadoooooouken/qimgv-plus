@@ -1,4 +1,5 @@
 #include "folderview.h"
+#include "settings.h"
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>

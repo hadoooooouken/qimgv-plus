@@ -1,7 +1,7 @@
 #pragma once
 
 #include "floatingwidget.h"
-#include "settings.h"
+#include "settings_types.h"
 #include <QBoxLayout>
 #include <QDebug>
 #include <QGraphicsOpacityEffect>

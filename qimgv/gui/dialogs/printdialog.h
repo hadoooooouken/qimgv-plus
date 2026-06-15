@@ -9,8 +9,6 @@
 #include <QGraphicsColorizeEffect>
 #include <QDebug>
 #include "components/thumbnailer/thumbnailer.h"
-#include "settings.h"
-
 class QLabel;
 class QComboBox;
 class QRadioButton;

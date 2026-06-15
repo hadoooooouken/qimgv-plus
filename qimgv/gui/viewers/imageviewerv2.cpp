@@ -1,4 +1,5 @@
 #include "imageviewerv2.h"
+#include "settings.h"
 #include "panoramagraphicsitem.h"
 #include <QKeyEvent>
 #include <QOpenGLContext>

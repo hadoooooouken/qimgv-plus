@@ -1,4 +1,5 @@
 #include "thumbnailwidget.h"
+#include "settings.h"
 #include <QPainterPath>
 
 ThumbnailWidget::ThumbnailWidget(QGraphicsItem *parent) :

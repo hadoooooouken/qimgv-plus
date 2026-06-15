@@ -1,4 +1,5 @@
 #include "centralwidget.h"
+#include "settings.h"
 
 CentralWidget::CentralWidget(std::shared_ptr<DocumentWidget> _docWidget, std::shared_ptr<FolderViewProxy> _folderView, QWidget *parent)
     : QStackedWidget(parent),

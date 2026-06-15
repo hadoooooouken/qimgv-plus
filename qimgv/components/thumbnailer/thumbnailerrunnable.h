@@ -9,7 +9,6 @@
 #include "components/cache/thumbnailcache.h"
 #include "utils/imagefactory.h"
 #include "utils/imagelib.h"
-#include "settings.h"
 #include <memory>
 #include <QImageWriter>
 

@@ -1,4 +1,5 @@
 #include "croppanel.h"
+#include "settings.h"
 #include "gui/customwidgets/styledcombobox.h"
 #include "gui/customwidgets/pushbuttonfocusind.h"
 #include <QVBoxLayout>

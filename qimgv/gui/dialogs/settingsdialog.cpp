@@ -1,4 +1,5 @@
 #include "settingsdialog.h"
+#include "settings.h"
 #include "components/cache/thumbnailcache.h"
 #include <QCheckBox>
 #include <QComboBox>

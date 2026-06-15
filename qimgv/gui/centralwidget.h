@@ -3,7 +3,7 @@
 #include <QStackedWidget>
 #include "gui/folderview/folderviewproxy.h"
 #include "gui/viewers/documentwidget.h"
-#include "settings.h"
+#include "settings_types.h"
 
 
 class CentralWidget : public QStackedWidget

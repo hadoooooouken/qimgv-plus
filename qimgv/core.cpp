@@ -6,6 +6,7 @@
  */
 
 #include "core.h"
+#include "settings.h"
 #include <QRegularExpression>
 #include <QTemporaryFile>
 #include <QCoreApplication>

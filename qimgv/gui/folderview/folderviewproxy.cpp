@@ -1,4 +1,5 @@
 #include "folderviewproxy.h"
+#include "settings.h"
 
 FolderViewProxy::FolderViewProxy(QWidget *parent)
     : QWidget(parent),

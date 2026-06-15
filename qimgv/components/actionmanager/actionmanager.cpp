@@ -1,4 +1,5 @@
 #include "actionmanager.h"
+#include "settings.h"
 
 ActionManager *actionManager = nullptr;
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gui/customwidgets/overlaywidget.h"
-#include "settings.h"
 #include <QPushButton>
 
 class IconWidget;

@@ -1,4 +1,5 @@
 #include "bookmarkswidget.h"
+#include "settings.h"
 #include <QDropEvent>
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>

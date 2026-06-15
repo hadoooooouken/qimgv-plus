@@ -1,4 +1,5 @@
 #include "resizedialog.h"
+#include "settings.h"
 #include <QDir>
 #include <QFileInfo>
 

@@ -4,7 +4,7 @@
 #include <QPixmap>
 #include <QMetaType>
 #include "sourcecontainers/image.h"
-#include "settings.h" // move enums somewhere else?
+#include "settings_types.h"
 
 class ScalerRequest {
 public:

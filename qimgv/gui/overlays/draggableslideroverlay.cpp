@@ -1,4 +1,5 @@
 #include "draggableslideroverlay.h"
+#include "settings.h"
 #include "gui/customwidgets/iconbutton.h"
 #include "gui/customwidgets/iconwidget.h"
 #include <QFormLayout>

@@ -1,4 +1,5 @@
 #include "scalerrunnable.h"
+#include "settings.h"
 
 #include <QElapsedTimer>
 
