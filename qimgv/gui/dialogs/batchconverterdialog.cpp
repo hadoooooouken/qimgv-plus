@@ -232,7 +232,7 @@ bool LinkedSliderSpin::eventFilter(QObject *watched, QEvent *event) {
 // ==================== BatchConverterDialog UI Setup ====================
 
 void BatchConverterDialog::setupUi() {
-    resize(1048, 972);
+    resize(1048, 996);
     setWindowTitle(tr("Batch Converter"));
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -280,13 +280,13 @@ void BatchConverterDialog::setupLeftPanel(QBoxLayout *mainLayout) {
 
 void BatchConverterDialog::setupRightPanel(QBoxLayout *mainLayout) {
     scrollArea = new QScrollArea(this);
-    scrollArea->setMinimumSize(600, 0);
-    scrollArea->setMaximumSize(600, 16777215);
+    scrollArea->setMinimumSize(500, 0);
+    scrollArea->setMaximumSize(500, 16777215);
     scrollArea->setWidgetResizable(true);
 
     QWidget *scrollWidget = new QWidget();
     QVBoxLayout *scrollLayout = new QVBoxLayout(scrollWidget);
-    scrollLayout->setContentsMargins(0, 0, 0, 0);
+    scrollLayout->setContentsMargins(14, 0, 14, 0);
 
     setupFormatSection(scrollLayout);
     setupResizeSection(scrollLayout);
@@ -385,7 +385,21 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     hLayout->addWidget(lHeight);
     hLayout->addWidget(height);
     absLayout->addLayout(hLayout);
+
+    QHBoxLayout *resSizeLayout = new QHBoxLayout();
+    QLabel *lComSizes = new QLabel(tr("Common sizes:"), this);
+    lComSizes->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    resComboBox = new QComboBox(this);
+    resComboBox->setMinimumSize(0, 30);
+    resSizeLayout->addWidget(lComSizes);
+    resSizeLayout->addWidget(resComboBox);
+    absLayout->addLayout(resSizeLayout);
+
     lCol->addLayout(absLayout);
+
+    resetButton = new QPushButton(tr("Reset"), this);
+    resetButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    lCol->addWidget(resetButton);
 
     QHBoxLayout *chkLayout = new QHBoxLayout();
     keepAspectRatio = new QCheckBox(tr("Keep aspect ratio"), this);
@@ -396,6 +410,7 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     chkLayout->addWidget(keepAspectRatio);
     chkLayout->addWidget(useUpscaylCheckBox);
     lCol->addLayout(chkLayout);
+
 
     QHBoxLayout *cbLayout = new QHBoxLayout();
     QVBoxLayout *fLayout = new QVBoxLayout();
@@ -414,23 +429,6 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     lCol->addLayout(cbLayout);
 
     splitLayout->addLayout(lCol);
-
-    // Right Column
-    QVBoxLayout *rCol = new QVBoxLayout();
-    rCol->setSpacing(6);
-    QLabel *lComSizes = new QLabel(tr("Common sizes:"), this);
-    lComSizes->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    rCol->addWidget(lComSizes);
-    
-    resComboBox = new QComboBox(this);
-    resComboBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    rCol->addWidget(resComboBox);
-
-    resetButton = new QPushButton(tr("Reset"), this);
-    resetButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    rCol->addWidget(resetButton);
-
-    splitLayout->addLayout(rCol);
     rcLayout->addLayout(splitLayout);
     scrollLayout->addWidget(resizeContainer);
 }
@@ -794,6 +792,9 @@ void BatchConverterDialog::onResetSizes() {
     resComboBox->blockSignals(true);
     resComboBox->setCurrentIndex(0);
     resComboBox->blockSignals(false);
+    percent->blockSignals(true);
+    percent->setValue(100.0);
+    percent->blockSignals(false);
     targetSize = originalSize;
     updateToTargetValues();
 }
