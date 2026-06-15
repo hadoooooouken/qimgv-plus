@@ -4,6 +4,7 @@
 #include "components/thumbnailer/thumbnailer.h"
 #include "sourcecontainers/thumbnail.h"
 #include "utils/imagelib.h"
+#include "components/batchconverter/batchconverter.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDialog>
@@ -20,13 +21,8 @@
 #include <QSlider>
 #include <QSpinBox>
 #include <QStringList>
-#include <QThreadPool>
 #include <QVBoxLayout>
 #include <QBoxLayout>
-
-#ifdef USE_UPSCAYL
-class RealESRGAN;
-#endif
 
 class QFileInfo;
 
@@ -96,6 +92,7 @@ public:
 
 public slots:
     void onProgressUpdated(int index, QString status, QString details, bool success);
+    void onFinished(int successCount, int failedCount, int totalCount);
 
 private slots:
     void onQualitySliderChanged(int value);
@@ -133,8 +130,8 @@ private:
     void setupBottomPanel(QVBoxLayout *mainLayout);
 
     QStringList inputPaths;
-    QThreadPool threadPool;
     Thumbnailer *thumbnailer;
+    BatchConverter *m_converter;
 
     // UI Pointers
     QPushButton *selectAllBtn;
@@ -188,10 +185,7 @@ private:
 
     int totalFiles = 0;
     int processedFiles = 0;
-    int successCount = 0;
-    int failedCount = 0;
-    std::atomic<bool> isConverting{false};
-    std::atomic<bool> isCancelled{false};
+    bool isConverting = false;
 
     QSize originalSize, targetSize, desktopSize;
     int lastEdited = 0;
@@ -201,64 +195,11 @@ private:
 
     void updateUiState();
     void startConversion();
-    void finalizeConversion();
     void updateSelectedCount();
     void updateToTargetValues();
-    void cleanupSharedUpscayl();
-    QString buildDestPath(const QFileInfo &srcFi, const QString &pattern, int index, const QString &formatExt, const QString &finalOutDir) const;
-    bool loadUpscaylModel(const QString &upscaylModel);
 
     void collectResizeWidgets();
     void collectColorWidgets();
     void setResizeWidgetsEnabled(bool enabled);
     void setColorWidgetsEnabled(bool enabled);
-
-#ifdef USE_UPSCAYL
-    RealESRGAN *sharedResrgan = nullptr;
-#endif
-
-    friend class BatchWorkerTask;
-};
-
-class BatchWorkerTask : public QRunnable {
-public:
-    BatchWorkerTask(BatchConverterDialog *dialog, int index,
-                    const QString &srcPath, const QString &destPath,
-                    const QString &format, int quality, bool doResize,
-                    QSize targetSize, bool keepAspectRatio, bool useUpscayl,
-                    QString upscaylModel, int scalingFilter,
-                    float exposure, float contrast, float brightness,
-                    float temp, float tint, float saturation, float hue)
-        : dialog(dialog), index(index), srcPath(srcPath), destPath(destPath),
-          format(format), quality(quality), doResize(doResize),
-          targetSize(targetSize), keepAspectRatio(keepAspectRatio),
-          useUpscayl(useUpscayl), upscaylModel(upscaylModel),
-          scalingFilter(scalingFilter), exposure(exposure), contrast(contrast),
-          brightness(brightness), temp(temp), tint(tint),
-          saturation(saturation), hue(hue) {}
-
-    void run() override;
-
-private:
-    QImage applyResize(const QImage &img, const QSize &targetSize, bool keepAspect, int filter);
-
-    BatchConverterDialog *dialog;
-    int index;
-    QString srcPath;
-    QString destPath;
-    QString format;
-    int quality;
-    bool doResize;
-    QSize targetSize;
-    bool keepAspectRatio;
-    bool useUpscayl;
-    QString upscaylModel;
-    int scalingFilter;
-    float exposure;
-    float contrast;
-    float brightness;
-    float temp;
-    float tint;
-    float saturation;
-    float hue;
 };

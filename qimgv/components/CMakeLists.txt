@@ -26,6 +26,7 @@ target_sources(qimgv-plus PRIVATE
     directorymanager/watchers/watcherevent.cpp
     directorymanager/watchers/watcherworker.cpp
 
+    batchconverter/batchconverter.cpp
 )
 
 if(UPSCAYL_SUPPORT)

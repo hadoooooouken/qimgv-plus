@@ -586,7 +586,9 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
              colors.scrollbar_hover.name());
     setStyleSheet(dialogStyle);
 
-    threadPool.setMaxThreadCount(QThread::idealThreadCount());
+    m_converter = new BatchConverter(this);
+    connect(m_converter, &BatchConverter::progressUpdated, this, &BatchConverterDialog::onProgressUpdated);
+    connect(m_converter, &BatchConverter::finished, this, &BatchConverterDialog::onFinished);
 
     formatComboBox->addItem("JPEG (*.jpg *.jpeg *.jpe *.jfif)", "jpg");
     formatComboBox->addItem("PNG (*.png)", "png");
@@ -716,10 +718,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
 }
 
 BatchConverterDialog::~BatchConverterDialog() {
-    isCancelled = true;
-    threadPool.clear();
-    threadPool.waitForDone();
-    cleanupSharedUpscayl();
+    m_converter->cancel();
     thumbnailer->clearTasks();
     thumbnailer->waitForDone();
     delete thumbnailer;
@@ -966,10 +965,7 @@ void BatchConverterDialog::onConvertClicked() {
     }
 
     isConverting = true;
-    isCancelled = false;
     processedFiles = 0;
-    successCount = 0;
-    failedCount = 0;
 
     progressBar->setMaximum(checkedCount);
     progressBar->setValue(0);
@@ -979,91 +975,48 @@ void BatchConverterDialog::onConvertClicked() {
 }
 
 void BatchConverterDialog::startConversion() {
-    QString baseOutDir = outDirEdit->text().trimmed();
-    QString finalOutDir = baseOutDir;
-
-    if (subfolderCheckBox->isChecked()) {
-        QString subfolderName = "Batch_" + QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
-        QDir baseDir(baseOutDir);
-        if (baseDir.mkdir(subfolderName)) finalOutDir = baseOutDir + "/" + subfolderName;
-    }
-
-    QString formatExt = formatComboBox->currentData().toString();
-    int quality = qualitySlider->value();
-    bool doResize = resizeEnableCheckBox->isChecked();
-    QSize resizeTarget = targetSize;
-    bool keepAspect = keepAspectRatio->isChecked();
-    bool useUpscayl = doResize && useUpscaylCheckBox->isChecked();
-    QString upscaylModel = upscaylModelComboBox->currentText();
+    BatchJob job;
+    job.format = formatComboBox->currentData().toString();
+    job.quality = qualitySlider->value();
+    job.doResize = resizeEnableCheckBox->isChecked();
+    job.targetSize = targetSize;
+    job.keepAspectRatio = keepAspectRatio->isChecked();
+    job.useUpscayl = job.doResize && useUpscaylCheckBox->isChecked();
+    job.upscaylModel = upscaylModelComboBox->currentText();
 
 #ifdef USE_UPSCAYL
     settings->setResizeUseUpscayl(useUpscaylCheckBox->isChecked());
-    settings->setUpscaylModel(upscaylModel);
+    settings->setUpscaylModel(job.upscaylModel);
     settings->sync();
 #endif
 
-    int filter = filterComboBox->currentData().toInt();
+    job.scalingFilter = filterComboBox->currentData().toInt();
     bool doColor = colorEnableCheckBox->isChecked();
 
-    // Convert UI values to coefficients expected by ImageLib::applyColorAdjustments
-    float exposure = doColor ? static_cast<float>(exposureWidget->value()) : 0.0f;
-    float contrast = doColor ? static_cast<float>(contrastWidget->value() / 100.0) : 1.0f;
-    float brightness = doColor ? static_cast<float>(brightnessWidget->value() / 100.0) : 0.0f;
-    float saturation = doColor ? static_cast<float>(saturationWidget->value() / 100.0) : 1.0f;
-    float hue = doColor ? static_cast<float>(hueWidget->value()) : 0.0f;
-    float temp = doColor ? static_cast<float>(tempWidget->value() / 100.0) : 0.0f;
-    float tint = doColor ? static_cast<float>(tintWidget->value() / 100.0) : 0.0f;
+    job.exposure = doColor ? static_cast<float>(exposureWidget->value()) : 0.0f;
+    job.contrast = doColor ? static_cast<float>(contrastWidget->value() / 100.0) : 1.0f;
+    job.brightness = doColor ? static_cast<float>(brightnessWidget->value() / 100.0) : 0.0f;
+    job.saturation = doColor ? static_cast<float>(saturationWidget->value() / 100.0) : 1.0f;
+    job.hue = doColor ? static_cast<float>(hueWidget->value()) : 0.0f;
+    job.temp = doColor ? static_cast<float>(tempWidget->value() / 100.0) : 0.0f;
+    job.tint = doColor ? static_cast<float>(tintWidget->value() / 100.0) : 0.0f;
 
-    QString pattern = patternEdit->text();
-    bool overwrite = overwriteCheckBox->isChecked();
+    job.pattern = patternEdit->text();
+    job.overwrite = overwriteCheckBox->isChecked();
+    job.outputDir = outDirEdit->text().trimmed();
+    job.createSubfolder = subfolderCheckBox->isChecked();
 
-    if (useUpscayl) {
-        threadPool.setMaxThreadCount(1);
-        if (!loadUpscaylModel(upscaylModel)) {
-            return;
-        }
-    } else {
-        threadPool.setMaxThreadCount(QThread::idealThreadCount());
-    }
-
-    int activeIndex = 0;
+    QList<int> selectedIndices;
     for (int i = 0; i < fileListWidget->count(); ++i) {
         QListWidgetItem *item = fileListWidget->item(i);
         BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
-        if (!widget || !widget->isChecked()) continue;
-
-        widget->setStatus(tr("Pending"), "", true);
-        QString srcPath = widget->filePath();
-        QFileInfo srcFi(srcPath);
-
-        QString destPath = buildDestPath(srcFi, pattern, activeIndex + 1, formatExt, finalOutDir);
-
-        if (destPath.isEmpty()) {
-            processedFiles++;
-            failedCount++;
-            progressBar->setValue(processedFiles);
-            widget->setStatus(tr("Failed"), tr("Invalid destination path"), false);
-            continue;
+        if (widget && widget->isChecked()) {
+            selectedIndices.append(i);
+            widget->setStatus(tr("Pending"), "", true);
         }
-
-        if (!overwrite && QFileInfo::exists(destPath)) {
-            processedFiles++;
-            successCount++;
-            progressBar->setValue(processedFiles);
-            widget->setStatus(tr("Done"), tr("Skipped (Exists)"), true);
-            continue;
-        }
-
-        widget->setStatus(tr("Processing..."), "", true);
-        BatchWorkerTask *task = new BatchWorkerTask(
-            this, i, srcPath, destPath, formatExt, quality, doResize, resizeTarget,
-            keepAspect, useUpscayl, upscaylModel, filter, exposure, contrast,
-            brightness, temp, tint, saturation, hue);
-        threadPool.start(task);
-        activeIndex++;
     }
 
-    if (processedFiles >= progressBar->maximum()) finalizeConversion();
+    m_converter->start(inputPaths, selectedIndices, job);
 }
 
 void BatchConverterDialog::onProgressUpdated(int index, QString status, QString details, bool success) {
@@ -1072,102 +1025,28 @@ void BatchConverterDialog::onProgressUpdated(int index, QString status, QString 
     if (widget) widget->setStatus(status, details, success);
 
     processedFiles++;
-    if (success) successCount++;
-    else failedCount++;
-
     progressBar->setValue(processedFiles);
     statusLabel->setText(tr("Processed %1 / %2 files.").arg(processedFiles).arg(progressBar->maximum()));
-
-    if (processedFiles >= progressBar->maximum() || isCancelled) finalizeConversion();
 }
 
-void BatchConverterDialog::finalizeConversion() {
+void BatchConverterDialog::onFinished(int successCount, int failedCount, int totalCount) {
     isConverting = false;
-    cleanupSharedUpscayl();
     updateUiState();
     statusLabel->setText(tr("Finished. Success: %1, Failed: %2").arg(successCount).arg(failedCount));
     QMessageBox::information(this, tr("Batch Conversion Complete"),
                              tr("Batch process complete.\n\nSuccessfully converted: %1\nFailed: %2\nTotal files: %3")
-                             .arg(successCount).arg(failedCount).arg(processedFiles));
+                             .arg(successCount).arg(failedCount).arg(totalCount));
 }
 
 void BatchConverterDialog::onCancelClicked() {
     if (isConverting) {
-        isCancelled = true;
-        threadPool.clear();
-        threadPool.waitForDone();
-        cleanupSharedUpscayl();
+        m_converter->cancel();
         isConverting = false;
         updateUiState();
         statusLabel->setText(tr("Stopped by user."));
     } else {
         reject();
     }
-}
-
-QString BatchConverterDialog::buildDestPath(const QFileInfo &srcFi, const QString &pattern, int index, const QString &formatExt, const QString &finalOutDir) const {
-    QString safeBaseName = srcFi.baseName();
-    safeBaseName.replace("/", "_");
-    safeBaseName.replace("\\", "_");
-
-    QString targetName = pattern;
-    targetName.replace("{name}", safeBaseName);
-    targetName.replace("{ext}", formatExt);
-    targetName.replace("{date}", QDate::currentDate().toString("yyyy-MM-dd"));
-    targetName.replace("{index}", QString::number(index));
-
-    if (!targetName.contains(".")) {
-        targetName += "." + formatExt;
-    }
-
-    QString canonicalOut = QDir(finalOutDir).canonicalPath();
-    if (canonicalOut.isEmpty()) {
-        canonicalOut = QDir(finalOutDir).absolutePath();
-    }
-    QString full = QDir::cleanPath(canonicalOut + "/" + targetName);
-    if (!full.startsWith(canonicalOut + "/")) {
-        return QString();
-    }
-
-    return full;
-}
-
-bool BatchConverterDialog::loadUpscaylModel(const QString &upscaylModel) {
-#ifdef USE_UPSCAYL
-    statusLabel->setText(tr("Loading AI Model..."));
-    qApp->processEvents();
-
-    sharedResrgan = new RealESRGAN(-1, false);
-    sharedResrgan->scale = 4;
-    sharedResrgan->prepadding = 10;
-    sharedResrgan->tilesize = sharedResrgan->autoTilesize();
-
-    QString appDir = QCoreApplication::applicationDirPath();
-    QString paramQStr = appDir + "/models/" + upscaylModel + ".param";
-    QString binQStr = appDir + "/models/" + upscaylModel + ".bin";
-
-    int loadRes = sharedResrgan->load(paramQStr.toStdWString(), binQStr.toStdWString());
-    if (loadRes != 0) {
-        delete sharedResrgan;
-        sharedResrgan = nullptr;
-        statusLabel->setText(tr("Failed to load AI model."));
-        QMessageBox::warning(this, tr("AI Error"), tr("Failed to load AI upscaling model: %1").arg(upscaylModel));
-        return false;
-    }
-    return true;
-#else
-    Q_UNUSED(upscaylModel);
-    return false;
-#endif
-}
-
-void BatchConverterDialog::cleanupSharedUpscayl() {
-    #ifdef USE_UPSCAYL
-    if (sharedResrgan) {
-        delete sharedResrgan;
-        sharedResrgan = nullptr;
-    }
-    #endif
 }
 
 void BatchConverterDialog::collectResizeWidgets() {
@@ -1210,132 +1089,4 @@ void BatchConverterDialog::onResizeEnabledChanged(bool enabled) {
 
 void BatchConverterDialog::onColorEnabledChanged(bool enabled) {
     setColorWidgetsEnabled(enabled);
-}
-
-// ==================== BatchWorkerTask ====================
-QImage BatchWorkerTask::applyResize(const QImage &img, const QSize &targetSize, bool keepAspect, int filter) {
-    if (img.isNull()) return img;
-    QSize finalSize = targetSize;
-    if (keepAspect) {
-        finalSize = img.size().scaled(targetSize, Qt::KeepAspectRatio);
-    }
-    std::shared_ptr<const QImage> imgPtr = std::make_shared<const QImage>(img);
-    QImage scaledImg = ImageLib::scaled(imgPtr, finalSize, static_cast<ScalingFilter>(filter));
-    return scaledImg.isNull() ? img : scaledImg;
-}
-
-void BatchWorkerTask::run() {
-    if (dialog->isCancelled) return;
-    QImage srcImg(srcPath);
-    if (srcImg.isNull()) {
-        if (dialog->isCancelled) return;
-        QMetaObject::invokeMethod(
-            dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
-            Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
-            Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Load Error")),
-            Q_ARG(bool, false));
-        return;
-    }
-
-    QImage processedImg = srcImg;
-
-    bool colorModified = (std::abs(brightness) > ImageLib::kAdjustEpsilon ||
-                          std::abs(contrast - 1.0f) > ImageLib::kAdjustEpsilon ||
-                          std::abs(saturation - 1.0f) > ImageLib::kAdjustEpsilon ||
-                          std::abs(temp) > ImageLib::kAdjustEpsilon ||
-                          std::abs(tint) > ImageLib::kAdjustEpsilon ||
-                          std::abs(exposure) > ImageLib::kAdjustEpsilon ||
-                          std::abs(hue) > ImageLib::kAdjustEpsilon);
-    if (colorModified) {
-        if (dialog->isCancelled) return;
-        std::shared_ptr<const QImage> srcPtr = std::make_shared<const QImage>(processedImg);
-        QImage adj = ImageLib::applyColorAdjustments(
-            srcPtr, exposure, contrast, brightness, temp, tint, saturation, hue);
-        if (!adj.isNull()) {
-            processedImg = adj;
-        }
-    }
-
-    if (useUpscayl) {
-        if (dialog->isCancelled) return;
-#ifdef USE_UPSCAYL
-        if (dialog->sharedResrgan) {
-            QImage imgRgba = processedImg.convertToFormat(QImage::Format_ARGB32);
-            qint64 inW = imgRgba.width();
-            qint64 inH = imgRgba.height();
-
-            constexpr qint64 kMaxUpscalePixels = 64LL * 1024 * 1024;
-            if (inW <= 0 || inH <= 0 || (inW * inH) > kMaxUpscalePixels) {
-                if (dialog->isCancelled) return;
-                QMetaObject::invokeMethod(
-                    dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
-                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
-                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Invalid size")),
-                    Q_ARG(bool, false));
-                return;
-            }
-
-            int scale = dialog->sharedResrgan->scale;
-            if (scale <= 0) scale = 4;
-
-            qint64 outW = inW * scale;
-            qint64 outH = inH * scale;
-
-            constexpr qint64 kMaxIntVal = 2147483647; // std::numeric_limits<int>::max()
-            if (outW > kMaxIntVal || outH > kMaxIntVal) {
-                if (dialog->isCancelled) return;
-                QMetaObject::invokeMethod(
-                    dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
-                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
-                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Output size too large")),
-                    Q_ARG(bool, false));
-                return;
-            }
-
-            QImage outImg(static_cast<int>(outW), static_cast<int>(outH), QImage::Format_ARGB32);
-            if (outImg.isNull()) {
-                if (dialog->isCancelled) return;
-                QMetaObject::invokeMethod(
-                    dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
-                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
-                    Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Out of memory")),
-                    Q_ARG(bool, false));
-                return;
-            }
-            if (dialog->sharedResrgan->processPixels(
-                    imgRgba.constBits(), static_cast<int>(inW), static_cast<int>(inH),
-                    outImg.bits(), static_cast<int>(outW), static_cast<int>(outH)) == 0) {
-                processedImg = outImg;
-            }
-        }
-#endif
-        if (doResize && processedImg.size() != targetSize) {
-            if (dialog->isCancelled) return;
-            processedImg = applyResize(processedImg, targetSize, keepAspectRatio, scalingFilter);
-        }
-    } else if (doResize) {
-        if (dialog->isCancelled) return;
-        processedImg = applyResize(processedImg, targetSize, keepAspectRatio, scalingFilter);
-    }
-
-    if (dialog->isCancelled) return;
-    QByteArray formatBa = format.toLatin1();
-    bool saved = processedImg.save(destPath, formatBa.constData(), quality);
-    QString detailsStr = QString("%1 \xe2\x80\xa2 %2x%3")
-                            .arg(format.toUpper())
-                            .arg(processedImg.width())
-                            .arg(processedImg.height());
-
-    if (saved) {
-        QMetaObject::invokeMethod(
-            dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
-            Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Done")),
-            Q_ARG(QString, detailsStr), Q_ARG(bool, true));
-    } else {
-        QMetaObject::invokeMethod(
-            dialog, "onProgressUpdated", Qt::QueuedConnection, Q_ARG(int, index),
-            Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Failed")),
-            Q_ARG(QString, QCoreApplication::translate("BatchConverterDialog", "Save Error")),
-            Q_ARG(bool, false));
-    }
 }
