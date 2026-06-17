@@ -52,8 +52,18 @@ Core::Core()
   connect(upscaler.get(), &Upscaler::upscaleStarted, this, [this]() {
       mw->showMessage(tr("AI Upscaling..."), 3600000);
   });
-  connect(upscaler.get(), &Upscaler::upscaleFinished, this, &Core::onUpscaleFinished);
-  connect(upscaler.get(), &Upscaler::upscaleAborted, this, &Core::onUpscaleAborted);
+  connect(upscaler.get(), &Upscaler::upscaleFinished, this,
+      [this](QImage cropImg, QRect origCrop, QString path, QSize) {
+          mw->hideMessage();
+          if (mw->panoramaMode()) {
+              mw->hideUpscaledCrop();
+              return;
+          }
+          if (state.hasActiveImage && path == state.currentFilePath)
+              mw->onUpscaleFinished(cropImg, origCrop);
+      });
+  connect(upscaler.get(), &Upscaler::upscaleAborted, mw, &MW::hideMessage);
+
   connect(upscaler.get(), &Upscaler::requestUpscaleParams, this, [this](const QString &path, bool *ok, QRect *visibleRect, double *currentScale, double *dpr) {
       if (!state.hasActiveImage || path != state.currentFilePath || mw->panoramaMode() || mw->isBusyInteracting()) {
           *ok = false;
@@ -82,7 +92,13 @@ Core::~Core() {
 
 void Core::readSettings() {
 #ifdef USE_UPSCAYL
-  upscaler->readSettings();
+  if (upscaler) {
+      upscaler->readSettings();
+      if (!settings->useUpscayl()) {
+          upscaler->reset();
+          mw->hideUpscaledCrop();
+      }
+  }
 #endif
   loopSlideshow = settings->loopSlideshow();
   folderEndAction = settings->folderEndAction();
@@ -1552,22 +1568,6 @@ void Core::onScalingFinished(QPixmap scaled, ScalerRequest req) {
   }
 }
 
-#ifdef USE_UPSCAYL
-void Core::onUpscaleFinished(QImage cropImg, QRect origCrop, QString path, QSize targetSize) {
-  mw->hideMessage();
-  if (mw->panoramaMode()) {
-    mw->hideUpscaledCrop();
-    return;
-  }
-  if (state.hasActiveImage && path == state.currentFilePath) {
-    mw->onUpscaleFinished(cropImg, origCrop);
-  }
-}
-
-void Core::onUpscaleAborted() {
-  mw->hideMessage();
-}
-#endif
 
 // reset state; clear cache; etc
 void Core::reset() {

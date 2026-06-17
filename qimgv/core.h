@@ -185,9 +185,6 @@ private slots:
     void historyForward();
     void modelDelayLoad();
 #ifdef USE_UPSCAYL
-private slots:
-    void onUpscaleFinished(QImage cropImg, QRect origCrop, QString path, QSize targetSize);
-    void onUpscaleAborted();
 private:
     std::unique_ptr<class Upscaler> upscaler;
 #endif
