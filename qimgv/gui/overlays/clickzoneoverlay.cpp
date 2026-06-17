@@ -35,9 +35,17 @@ ClickZoneOverlay::~ClickZoneOverlay() {
 }
 
 void ClickZoneOverlay::readSettings() {
-  if (settings->clickableEdgesVisible() == drawZones)
+  bool newDrawZones = settings->clickableEdgesVisible();
+  // Nav button color follows the thumbpanel color — the same value that
+  // "Use black for background and thumbnail bar" already controls.
+  // Strip alpha: thumbpanel inherits thumbnailOpacity, buttons must be opaque.
+  QColor newButtonColor = settings->colorScheme().thumbpanel;
+  newButtonColor.setAlphaF(1.0);
+
+  if (newDrawZones == drawZones && newButtonColor == mButtonColor)
     return;
-  drawZones = settings->clickableEdgesVisible();
+  drawZones = newDrawZones;
+  mButtonColor = newButtonColor;
   update();
 }
 
@@ -125,49 +133,57 @@ void ClickZoneOverlay::recalculateGeometry() {
 }
 
 void ClickZoneOverlay::resizeEvent(QResizeEvent *event) {
-  mLeftZone = QRect(0, 0, zoneSize, height());
-  mRightZone = QRect(width() - zoneSize, 0, zoneSize, height());
+  // Hit zones: full height strips — functional area is unchanged.
+  mLeftZone  = QRect(0,             0, kZoneWidth, height());
+  mRightZone = QRect(width() - kZoneWidth, 0, kZoneWidth, height());
+
+  // Visible pill rects: 1/3 of window height (with safe minimum), offset from edges.
+  const int buttonHeight = qMax(height() / kButtonHeightDivisor, kButtonMinHeight);
+  const int buttonY      = (height() - buttonHeight) / 2;
+  mLeftButton  = QRect(kButtonEdgeMargin,
+                       buttonY,
+                       kButtonWidth,
+                       buttonHeight);
+  mRightButton = QRect(width() - kButtonEdgeMargin - kButtonWidth,
+                       buttonY,
+                       kButtonWidth,
+                       buttonHeight);
 }
 
 void ClickZoneOverlay::paintEvent(QPaintEvent *event) {
   Q_UNUSED(event)
   if (activeZone == HIGHLIGHT_NONE || !drawZones || width() <= 250)
     return;
+
   QPainter p(this);
-  if (isPressed)
-    p.setOpacity(0.30f);
-  else
-    p.setOpacity(0.40f);
-  QBrush brush;
-  brush.setColor(QColor(0, 0, 0));
-  brush.setStyle(Qt::SolidPattern);
+  p.setRenderHint(QPainter::Antialiasing);
+  // Full opacity here — the QGraphicsOpacityEffect fade animation handles
+  // the smooth appear/disappear on hover. No extra transparency needed.
+  p.setBrush(mButtonColor);
+  p.setPen(Qt::NoPen);
 
   if (activeZone == HIGHLIGHT_LEFT) {
-    p.fillRect(mLeftZone, brush);
-    drawPixmap(p, pixmapLeft, mLeftZone);
+    p.drawRoundedRect(mLeftButton, kButtonRadius, kButtonRadius);
+    drawPixmap(p, pixmapLeft, mLeftButton);
   }
   if (activeZone == HIGHLIGHT_RIGHT) {
-    p.fillRect(mRightZone, brush);
-    drawPixmap(p, pixmapRight, mRightZone);
+    p.drawRoundedRect(mRightButton, kButtonRadius, kButtonRadius);
+    drawPixmap(p, pixmapRight, mRightButton);
   }
 }
 
-// draws pixmap centered inside rect
-void ClickZoneOverlay::drawPixmap(QPainter &p, QPixmap *pixmap, QRect rect) {
-  if (isPressed)
-    p.setOpacity(0.37f);
-  else
-    p.setOpacity(0.5f);
+// Draws the arrow pixmap centered inside the visible button rect.
+void ClickZoneOverlay::drawPixmap(QPainter &p, QPixmap *pixmap, QRect buttonRect) {
   p.setRenderHint(QPainter::SmoothPixmapTransform);
   QPointF pos;
   if (hiResPixmaps) {
-    pos = QPointF(rect.left() + rect.width() / 2 -
-                      pixmap->width() / (2 * pixmapDrawScale),
-                  rect.top() + rect.height() / 2 -
+    pos = QPointF(buttonRect.left() + buttonRect.width()  / 2 -
+                      pixmap->width()  / (2 * pixmapDrawScale),
+                  buttonRect.top()  + buttonRect.height() / 2 -
                       pixmap->height() / (2 * pixmapDrawScale));
   } else {
-    pos = QPointF(rect.left() + rect.width() / 2 - pixmap->width() / 2,
-                  rect.top() + rect.height() / 2 - pixmap->height() / 2);
+    pos = QPointF(buttonRect.left() + buttonRect.width()  / 2 - pixmap->width()  / 2,
+                  buttonRect.top()  + buttonRect.height() / 2 - pixmap->height() / 2);
   }
   p.drawPixmap(pos, *pixmap);
 }
