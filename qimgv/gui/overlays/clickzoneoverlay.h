@@ -30,6 +30,7 @@ public:
 
 private slots:
     void onAnimationFinished();
+    void recolorIcons();
 
 public slots:
     void readSettings();

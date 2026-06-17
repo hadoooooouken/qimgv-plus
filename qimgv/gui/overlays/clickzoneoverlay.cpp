@@ -38,14 +38,13 @@ void ClickZoneOverlay::readSettings() {
   bool newDrawZones = settings->clickableEdgesVisible();
   // Nav button color follows the thumbpanel color — the same value that
   // "Use black for background and thumbnail bar" already controls.
-  // Strip alpha: thumbpanel inherits thumbnailOpacity, buttons must be opaque.
   QColor newButtonColor = settings->colorScheme().thumbpanel;
-  newButtonColor.setAlphaF(1.0);
 
   if (newDrawZones == drawZones && newButtonColor == mButtonColor)
     return;
   drawZones = newDrawZones;
   mButtonColor = newButtonColor;
+  recolorIcons();
   update();
 }
 
@@ -65,7 +64,6 @@ QPixmap *ClickZoneOverlay::loadPixmap(QString path) {
     pixmap = new QPixmap(path);
     pixmapDrawScale = dpr;
   }
-  ImageLib::recolor(*pixmap, QColor(255, 255, 255));
   if (pixmap->isNull()) {
     delete pixmap;
     pixmap = new QPixmap();
@@ -186,4 +184,21 @@ void ClickZoneOverlay::drawPixmap(QPainter &p, QPixmap *pixmap, QRect buttonRect
                   buttonRect.top()  + buttonRect.height() / 2 - pixmap->height() / 2);
   }
   p.drawPixmap(pos, *pixmap);
+}
+
+void ClickZoneOverlay::recolorIcons() {
+    if (!pixmapLeft || !pixmapRight)
+        return;
+
+    QColor arrowColor;
+    if (mButtonColor.lightnessF() > 0.5) {
+        // Light theme
+        arrowColor = QColor(100, 100, 100);
+    } else {
+        // Dark theme
+        arrowColor = QColor(164, 164, 164);
+    }
+
+    ImageLib::recolor(*pixmapLeft,  arrowColor);
+    ImageLib::recolor(*pixmapRight, arrowColor);
 }
