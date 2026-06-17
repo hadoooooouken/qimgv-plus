@@ -26,6 +26,15 @@
 #include "utils/inputmap.h"
 
 //------------------------------------------------------------------------------
+void initSingletons() {
+  inputMap = InputMap::getInstance();
+  appActions = Actions::getInstance();
+  settings = Settings::getInstance();
+  scriptManager = ScriptManager::getInstance();
+  actionManager = ActionManager::getInstance();
+  shrRes = SharedResources::getInstance();
+}
+//------------------------------------------------------------------------------
 void cleanupSingletons() {
   delete actionManager;
   actionManager = nullptr;
@@ -121,23 +130,13 @@ int main(int argc, char *argv[]) {
 
   int exitCode = 0;
   if (parser.isSet("build-options")) {
-    inputMap = InputMap::getInstance();
-    appActions = Actions::getInstance();
-    settings = Settings::getInstance();
-    scriptManager = ScriptManager::getInstance();
-    actionManager = ActionManager::getInstance();
-    shrRes = SharedResources::getInstance();
+    initSingletons();
 
     CmdOptionsRunner r;
     QTimer::singleShot(0, &r, &CmdOptionsRunner::showBuildOptions);
     exitCode = a.exec();
   } else if (parser.isSet("gen-thumbs")) {
-    inputMap = InputMap::getInstance();
-    appActions = Actions::getInstance();
-    settings = Settings::getInstance();
-    scriptManager = ScriptManager::getInstance();
-    actionManager = ActionManager::getInstance();
-    shrRes = SharedResources::getInstance();
+    initSingletons();
 
     int size = settings->folderViewIconSize();
     if (parser.isSet("gen-thumbs-size"))
@@ -194,12 +193,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Primary instance, initialize all singletons
-    inputMap = InputMap::getInstance();
-    appActions = Actions::getInstance();
-    settings = Settings::getInstance();
-    scriptManager = ScriptManager::getInstance();
-    actionManager = ActionManager::getInstance();
-    shrRes = SharedResources::getInstance();
+    initSingletons();
 
     {
       Core core;
