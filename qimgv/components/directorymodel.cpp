@@ -18,10 +18,19 @@ DirectoryModel::DirectoryModel(QObject *parent) :
     connect(&dirManager, &DirectoryManager::sortingChanged, this, &DirectoryModel::onSortingChanged);
     connect(&loader, &Loader::loadFinished, this, &DirectoryModel::onImageReady);
     connect(&loader, &Loader::loadFailed, this, &DirectoryModel::loadFailed);
+    connect(scaler.get(), &Scaler::scalingFinished, this, &DirectoryModel::scalingFinished);
 }
 
 DirectoryModel::~DirectoryModel() {
     loader.clearTasks();
+}
+
+void DirectoryModel::clearScaler() {
+    scaler->clear();
+}
+
+void DirectoryModel::requestScaled(const ScalerRequest &req) {
+    scaler->requestScaled(req);
 }
 
 int DirectoryModel::totalCount() const {

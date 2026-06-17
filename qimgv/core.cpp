@@ -204,7 +204,7 @@ void Core::connectComponents() {
   connect(mw, &MW::prevImageRequested, this, &Core::prevImage);
 
   connect(mw, &MW::scalingRequested, this, &Core::scalingRequest);
-  connect(model->scaler.get(), &Scaler::scalingFinished, this,
+  connect(model.get(), &DirectoryModel::scalingFinished, this,
           &Core::onScalingFinished);
 
   connect(settings, &Settings::settingsChanged, this, [this]() {
@@ -223,7 +223,7 @@ void Core::connectComponents() {
 
           ColorManager::invalidateCache();
           if (state.hasActiveImage && state.currentImg) {
-              model->scaler->clear();
+              model->clearScaler();
               guiSetImage(state.currentImg);
           }
       }
@@ -441,6 +441,7 @@ void Core::onFirstRun() {
                   4000);
 
   settings->setScalingFilter(QI_FILTER_CAS);
+  settings->setImageFitMode(FIT_WINDOW);
 
   settings->setFirstRun(false);
   settings->setLastVersion(appVersion);
@@ -1513,7 +1514,7 @@ void Core::scalingRequest(QSize size, ScalingFilter filter) {
   if (mw->isVisible() && state.hasActiveImage) {
     std::shared_ptr<Image> forScale = model->getImage(state.currentFilePath);
     if (forScale) {
-      model->scaler->requestScaled(
+      model->requestScaled(
           ScalerRequest(forScale, size, state.currentFilePath, filter));
     }
   }
@@ -1576,7 +1577,7 @@ void Core::reset() {
   state.hasActiveImage = false;
   state.currentFilePath = "";
   state.currentImg.reset();
-  model->scaler->clear();
+  model->clearScaler();
   model->setDirectory("");
 }
 
@@ -1896,7 +1897,7 @@ void Core::jumpToLast() {
 
 void Core::onLoadFailed(const QString &path) {
   mw->showMessage(tr("Load failed: ") + path);
-  model->scaler->clear();
+  model->clearScaler();
   if (path == state.currentFilePath)
     mw->closeImage();
 }
@@ -1916,7 +1917,7 @@ void Core::onModelItemReady(std::shared_ptr<Image> img, const QString &path) {
 }
 
 void Core::modelDelayLoad() {
-  model->scaler->clear();
+  model->clearScaler();
   model->setDirectory(state.directoryPath);
   mw->setDirectoryPath(state.directoryPath);
   model->updateImage(state.currentFilePath, state.currentImg);

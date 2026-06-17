@@ -14,7 +14,8 @@ public:
     explicit DirectoryModel(QObject *parent = nullptr);
     ~DirectoryModel();
 
-    std::unique_ptr<Scaler> scaler;
+    void clearScaler();
+    void requestScaled(const ScalerRequest &req);
 
     void load(QString filePath, bool asyncHint);
     void preload(QString filePath);
@@ -88,8 +89,10 @@ signals:
     void indexChanged(int oldIndex, int index);
     void imageReady(std::shared_ptr<Image> img, const QString&);
     void imageUpdated(QString filePath);
+    void scalingFinished(QPixmap result, ScalerRequest req);
 
 private:
+    std::unique_ptr<Scaler> scaler;
     DirectoryManager dirManager;
     Loader loader;
     Cache cache;
