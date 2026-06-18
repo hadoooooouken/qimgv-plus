@@ -568,7 +568,7 @@ void SettingsDialog::readSettings() {
   expandImagesGroupContents->setEnabled(settings->expandImage());
   applyFilterAt100CheckBox->setChecked(settings->applyFilterAt100());
   bgOpacitySlider->setValue(
-      static_cast<int>(settings->backgroundOpacity() * 100));
+      qRound(settings->backgroundOpacity() * 100.0));
   sortingComboBox->setCurrentIndex(settings->sortingMode());
   confirmDeleteCheckBox->setChecked(settings->confirmDelete());
   confirmTrashCheckBox->setChecked(settings->confirmTrash());
@@ -746,7 +746,7 @@ void SettingsDialog::readSettings() {
   themeSelectorComboBox->setCurrentIndex(
       static_cast<int>(settings->themeMode()));
   thumbOpacitySlider->setValue(
-      static_cast<int>(settings->thumbnailOpacity() * 100));
+      qRound(settings->thumbnailOpacity() * 100.0));
   thumbOpacityPercentLabel->setText(
       QString::number(thumbOpacitySlider->value()) + "%");
   useBlackBackgroundCheckBox->setChecked(settings->useBlackBackground());
@@ -816,7 +816,7 @@ void SettingsDialog::saveSettings() {
   settings->setApplyFilterAt100(applyFilterAt100CheckBox->isChecked());
 
   settings->setBackgroundOpacity(
-      static_cast<qreal>(bgOpacitySlider->value()) / 100.f);
+      static_cast<qreal>(bgOpacitySlider->value()) / 100.0);
   settings->setSortingMode(
       static_cast<SortingMode>(sortingComboBox->currentIndex()));
   settings->setConfirmDelete(confirmDeleteCheckBox->isChecked());
@@ -922,7 +922,7 @@ void SettingsDialog::saveSettings() {
   }
   settings->setThemeMode(
       static_cast<ThemeMode>(themeSelectorComboBox->currentIndex()));
-  settings->setThumbnailOpacity(thumbOpacitySlider->value() / 100.f);
+  settings->setThumbnailOpacity(thumbOpacitySlider->value() / 100.0);
   settings->setUseBlackBackground(useBlackBackgroundCheckBox->isChecked());
 
   saveColorScheme();
