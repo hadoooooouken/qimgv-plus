@@ -49,33 +49,16 @@ void DraggableSliderOverlay::addSliderRow(QFormLayout *formLayout,
     QHBoxLayout *rowLayout = new QHBoxLayout();
     rowLayout->setSpacing(6);
 
-    IconButton *minusBtn = new IconButton(this);
-    minusBtn->setFixedSize(18, 18);
-    minusBtn->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-out18.png");
-    rowLayout->addWidget(minusBtn);
-
     slider = new QSlider(Qt::Horizontal, this);
     slider->setMinimum(min);
     slider->setMaximum(max);
     slider->setValue(defaultValue);
     rowLayout->addWidget(slider);
 
-    IconButton *plusBtn = new IconButton(this);
-    plusBtn->setFixedSize(18, 18);
-    plusBtn->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-in18.png");
-    rowLayout->addWidget(plusBtn);
-
     valLabel = new QLabel(this);
     valLabel->setMinimumWidth(45);
     valLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     rowLayout->addWidget(valLabel);
-
-    connect(minusBtn, &IconButton::clicked, this, [slider]() {
-        slider->setValue(slider->value() - 5);
-    });
-    connect(plusBtn, &IconButton::clicked, this, [slider]() {
-        slider->setValue(slider->value() + 5);
-    });
 
     QLabel *label = new QLabel(labelText, this);
     formLayout->addRow(label, rowLayout);
