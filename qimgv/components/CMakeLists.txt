@@ -33,6 +33,8 @@ if(UPSCAYL_SUPPORT)
     target_sources(qimgv-plus PRIVATE
         upscaler/upscaler.cpp
         upscaler/upscalerrunnable.cpp
+        upscaler/upscaylresizerunnable.cpp
+        upscaler/upscaylresizerunnable.h
     )
 endif()
 

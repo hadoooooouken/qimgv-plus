@@ -20,7 +20,7 @@ public:
         return &instance;
     }
 
-    bool init(const QString &appDir);
+    bool init(const QString &appDir, const QString &modelName = QString());
     QImage upscale(const QImage &inputImage);
     void destroy();
 

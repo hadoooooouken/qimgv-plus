@@ -12,9 +12,9 @@
 
 UpscaylScaler::UpscaylScaler() : realesrgan(nullptr) {}
 
-bool UpscaylScaler::init(const QString &appDir) {
+bool UpscaylScaler::init(const QString &appDir, const QString &requestedModelName) {
     QMutexLocker locker(&mutex);
-    QString modelName = settings->upscaylModel();
+    QString modelName = requestedModelName.isEmpty() ? settings->upscaylModel() : requestedModelName;
     if (realesrgan && loadedModel == modelName) {
         return true;
     }

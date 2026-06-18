@@ -104,12 +104,11 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
   comboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
   comboBox->addItem(tr("Smart sharpen"), QI_FILTER_SMART);
 
-  ScalingFilter currentFilter = settings->scalingFilter();
-  int idx = comboBox->findData(currentFilter);
+  int idx = comboBox->findData(QI_FILTER_SMART);
   if (idx != -1) {
     comboBox->setCurrentIndex(idx);
   } else {
-    comboBox->setCurrentIndex(1); // default to Bilinear
+    comboBox->setCurrentIndex(2); // default to Smart sharpen
   }
 
 #ifdef USE_UPSCAYL

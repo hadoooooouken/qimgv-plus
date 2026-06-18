@@ -574,6 +574,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     m_converter = new BatchConverter(this);
     connect(m_converter, &BatchConverter::progressUpdated, this, &BatchConverterDialog::onProgressUpdated);
     connect(m_converter, &BatchConverter::finished, this, &BatchConverterDialog::onFinished);
+    connect(m_converter, &BatchConverter::cancelled, this, &BatchConverterDialog::onCancelled);
 
     formatComboBox->addItem("JPEG (*.jpg *.jpeg *.jpe *.jfif)", "jpg");
     formatComboBox->addItem("PNG (*.png)", "png");
@@ -877,11 +878,17 @@ void BatchConverterDialog::onFormatChanged(int index) {
 }
 
 void BatchConverterDialog::updateUiState() {
-    scrollArea->setEnabled(!isConverting);
-    convertButton->setEnabled(!isConverting);
-    selectAllBtn->setEnabled(!isConverting);
-    deselectAllBtn->setEnabled(!isConverting);
-    cancelButton->setText(isConverting ? tr("Stop") : tr("Cancel"));
+    scrollArea->setEnabled(!isConverting && !isCancelling);
+    convertButton->setEnabled(!isConverting && !isCancelling);
+    selectAllBtn->setEnabled(!isConverting && !isCancelling);
+    deselectAllBtn->setEnabled(!isConverting && !isCancelling);
+    if (isCancelling) {
+        cancelButton->setText(tr("Stopping..."));
+        cancelButton->setEnabled(false);
+    } else {
+        cancelButton->setText(isConverting ? tr("Stop") : tr("Cancel"));
+        cancelButton->setEnabled(true);
+    }
 }
 
 void BatchConverterDialog::onConvertClicked() {
@@ -950,6 +957,8 @@ void BatchConverterDialog::startConversion() {
     job.format = formatComboBox->currentData().toString();
     job.quality = qualitySlider->value();
     job.doResize = resizeEnableCheckBox->isChecked();
+    job.resizeByPercent = byPercentage->isChecked();
+    job.resizePercent = percent->value();
     job.targetSize = targetSize;
     job.keepAspectRatio = keepAspectRatio->isChecked();
     job.useUpscayl = job.doResize && useUpscaylCheckBox->isChecked();
@@ -1011,13 +1020,24 @@ void BatchConverterDialog::onFinished(int successCount, int failedCount, int tot
 
 void BatchConverterDialog::onCancelClicked() {
     if (isConverting) {
-        m_converter->cancel();
-        isConverting = false;
-        updateUiState();
-        statusLabel->setText(tr("Stopped by user."));
+        if (!isCancelling) {
+            isCancelling = true;
+            m_converter->cancel();
+            updateUiState();
+            statusLabel->setText(tr("Stopping..."));
+        }
+    } else if (isCancelling) {
+        // Do nothing, wait for cancellation to finish
     } else {
         reject();
     }
+}
+
+void BatchConverterDialog::onCancelled(int successCount, int failedCount, int totalCount) {
+    isConverting = false;
+    isCancelling = false;
+    updateUiState();
+    statusLabel->setText(tr("Stopped by user. Success: %1, Failed: %2").arg(successCount).arg(failedCount));
 }
 
 void BatchConverterDialog::collectResizeWidgets() {

@@ -22,23 +22,47 @@ public:
                            const BatchJob &job,
                            std::shared_ptr<std::atomic<bool>> cancelFlag)
         : m_converter(converter), m_index(index), m_srcPath(srcPath), m_destPath(destPath),
-          m_job(job), m_cancelFlag(cancelFlag) {}
+          m_job(job), m_cancelFlag(cancelFlag) {
+        m_converter->onRunnableCreated();
+    }
+
+    ~BatchConverterRunnable() override {
+        m_converter->onRunnableDestroyed();
+    }
 
     void run() override {
-        if (*m_cancelFlag) return;
+        auto notifyFinished = [this](const QString &status, const QString &details, bool success) {
+            QMetaObject::invokeMethod(
+                m_converter, "onTaskFinished", Qt::QueuedConnection, Q_ARG(int, m_index),
+                Q_ARG(QString, status), Q_ARG(QString, details), Q_ARG(bool, success));
+        };
+        auto notifyStopped = [this, &notifyFinished]() {
+            notifyFinished(QCoreApplication::translate("BatchConverter", "Stopped"), QString(), false);
+        };
+
+        if (m_cancelFlag->load()) {
+            notifyStopped();
+            return;
+        }
 
         QImage srcImg(m_srcPath);
         if (srcImg.isNull()) {
-            if (*m_cancelFlag) return;
-            QMetaObject::invokeMethod(
-                m_converter, "onTaskFinished", Qt::QueuedConnection, Q_ARG(int, m_index),
-                Q_ARG(QString, QCoreApplication::translate("BatchConverter", "Failed")),
-                Q_ARG(QString, QCoreApplication::translate("BatchConverter", "Load Error")),
-                Q_ARG(bool, false));
+            if (m_cancelFlag->load()) {
+                notifyStopped();
+                return;
+            }
+            notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                           QCoreApplication::translate("BatchConverter", "Load Error"), false);
             return;
         }
 
         QImage processedImg = srcImg;
+
+        QSize targetSize = m_job.targetSize;
+        if (m_job.resizeByPercent) {
+            double scale = m_job.resizePercent / 100.0;
+            targetSize = QSize(qRound(srcImg.width() * scale), qRound(srcImg.height() * scale));
+        }
 
         bool colorModified = (std::abs(m_job.brightness) > ImageLib::kAdjustEpsilon ||
                               std::abs(m_job.contrast - 1.0f) > ImageLib::kAdjustEpsilon ||
@@ -48,7 +72,10 @@ public:
                               std::abs(m_job.exposure) > ImageLib::kAdjustEpsilon ||
                               std::abs(m_job.hue) > ImageLib::kAdjustEpsilon);
         if (colorModified) {
-            if (*m_cancelFlag) return;
+            if (m_cancelFlag->load()) {
+                notifyStopped();
+                return;
+            }
             std::shared_ptr<const QImage> srcPtr = std::make_shared<const QImage>(processedImg);
             QImage adj = ImageLib::applyColorAdjustments(
                 srcPtr, m_job.exposure, m_job.contrast, m_job.brightness, m_job.temp, m_job.tint, m_job.saturation, m_job.hue);
@@ -58,39 +85,51 @@ public:
         }
 
         if (m_job.useUpscayl) {
-            if (*m_cancelFlag) return;
+            if (m_cancelFlag->load()) {
+                notifyStopped();
+                return;
+            }
 #ifdef USE_UPSCAYL
-            if (!UpscaylScaler::getInstance()->init(QCoreApplication::applicationDirPath())) {
-                if (*m_cancelFlag) return;
-                QMetaObject::invokeMethod(
-                    m_converter, "onTaskFinished", Qt::QueuedConnection, Q_ARG(int, m_index),
-                    Q_ARG(QString, QCoreApplication::translate("BatchConverter", "Failed")),
-                    Q_ARG(QString, QCoreApplication::translate("BatchConverter", "AI Model Error")),
-                    Q_ARG(bool, false));
+            if (!UpscaylScaler::getInstance()->init(QCoreApplication::applicationDirPath(), m_job.upscaylModel)) {
+                if (m_cancelFlag->load()) {
+                    notifyStopped();
+                    return;
+                }
+                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                               QCoreApplication::translate("BatchConverter", "AI Model Error"), false);
                 return;
             }
             QImage upscaled = UpscaylScaler::getInstance()->upscale(processedImg);
             if (upscaled.isNull()) {
-                if (*m_cancelFlag) return;
-                QMetaObject::invokeMethod(
-                    m_converter, "onTaskFinished", Qt::QueuedConnection, Q_ARG(int, m_index),
-                    Q_ARG(QString, QCoreApplication::translate("BatchConverter", "Failed")),
-                    Q_ARG(QString, QCoreApplication::translate("BatchConverter", "AI Upscaling Failed")),
-                    Q_ARG(bool, false));
+                if (m_cancelFlag->load()) {
+                    notifyStopped();
+                    return;
+                }
+                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                               QCoreApplication::translate("BatchConverter", "AI Upscaling Failed"), false);
                 return;
             }
             processedImg = upscaled;
 #endif
-            if (m_job.doResize && processedImg.size() != m_job.targetSize) {
-                if (*m_cancelFlag) return;
-                processedImg = applyResize(processedImg, m_job.targetSize, m_job.keepAspectRatio, m_job.scalingFilter);
+            if (m_job.doResize && processedImg.size() != targetSize) {
+                if (m_cancelFlag->load()) {
+                    notifyStopped();
+                    return;
+                }
+                processedImg = applyResize(processedImg, targetSize, m_job.keepAspectRatio, m_job.scalingFilter);
             }
         } else if (m_job.doResize) {
-            if (*m_cancelFlag) return;
-            processedImg = applyResize(processedImg, m_job.targetSize, m_job.keepAspectRatio, m_job.scalingFilter);
+            if (m_cancelFlag->load()) {
+                notifyStopped();
+                return;
+            }
+            processedImg = applyResize(processedImg, targetSize, m_job.keepAspectRatio, m_job.scalingFilter);
         }
 
-        if (*m_cancelFlag) return;
+        if (m_cancelFlag->load()) {
+            notifyStopped();
+            return;
+        }
         QByteArray formatBa = m_job.format.toLatin1();
         bool saved = processedImg.save(m_destPath, formatBa.constData(), m_job.quality);
         QString detailsStr = QString("%1 \u2022 %2x%3")
@@ -99,16 +138,10 @@ public:
                                 .arg(processedImg.height());
 
         if (saved) {
-            QMetaObject::invokeMethod(
-                m_converter, "onTaskFinished", Qt::QueuedConnection, Q_ARG(int, m_index),
-                Q_ARG(QString, QCoreApplication::translate("BatchConverter", "Done")),
-                Q_ARG(QString, detailsStr), Q_ARG(bool, true));
+            notifyFinished(QCoreApplication::translate("BatchConverter", "Done"), detailsStr, true);
         } else {
-            QMetaObject::invokeMethod(
-                m_converter, "onTaskFinished", Qt::QueuedConnection, Q_ARG(int, m_index),
-                Q_ARG(QString, QCoreApplication::translate("BatchConverter", "Failed")),
-                Q_ARG(QString, QCoreApplication::translate("BatchConverter", "Save Error")),
-                Q_ARG(bool, false));
+            notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                           QCoreApplication::translate("BatchConverter", "Save Error"), false);
         }
     }
 
@@ -138,18 +171,20 @@ BatchConverter::BatchConverter(QObject *parent)
 }
 
 BatchConverter::~BatchConverter() {
-    cancel();
+    cancelAndWait();
 }
 
 void BatchConverter::start(const QStringList &allPaths, const QList<int> &selectedIndices, const BatchJob &job) {
     if (m_isConverting) return;
 
     m_isConverting = true;
+    m_isCancelling = false;
     *m_cancelFlag = false;
     m_totalFiles = selectedIndices.size();
     m_processedFiles = 0;
     m_successCount = 0;
     m_failedCount = 0;
+    m_inFlightTasksCount = 0;
 
     QString finalOutDir = job.outputDir;
     if (job.createSubfolder) {
@@ -202,14 +237,52 @@ void BatchConverter::start(const QStringList &allPaths, const QList<int> &select
 }
 
 void BatchConverter::cancel() {
-    if (!m_isConverting) return;
+    if (!m_isConverting || m_isCancelling) return;
+    m_isCancelling = true;
     *m_cancelFlag = true;
     m_threadPool.clear();
+    if (m_inFlightTasksCount == 0) {
+        finishCancellation();
+    }
+}
+
+void BatchConverter::cancelAndWait() {
+    if (m_isConverting || m_isCancelling) {
+        *m_cancelFlag = true;
+        m_isCancelling = true;
+        m_threadPool.clear();
+    }
     m_threadPool.waitForDone();
     m_isConverting = false;
+    m_isCancelling = false;
+}
+
+void BatchConverter::finishCancellation() {
+    if (!m_isConverting && !m_isCancelling) return;
+    m_isConverting = false;
+    m_isCancelling = false;
+    emit cancelled(m_successCount, m_failedCount, m_totalFiles);
+}
+
+void BatchConverter::onRunnableCreated() {
+    m_inFlightTasksCount++;
+}
+
+void BatchConverter::onRunnableDestroyed() {
+    if (--m_inFlightTasksCount == 0) {
+        if (m_isCancelling) {
+            QMetaObject::invokeMethod(this, "finishCancellation", Qt::QueuedConnection);
+        }
+    }
 }
 
 void BatchConverter::onTaskFinished(int index, QString status, QString details, bool success) {
+    if (!m_isConverting && !m_isCancelling) return;
+
+    if (m_isCancelling) {
+        return;
+    }
+
     if (success) {
         m_successCount++;
     } else {
@@ -219,7 +292,7 @@ void BatchConverter::onTaskFinished(int index, QString status, QString details, 
 
     emit progressUpdated(index, status, details, success);
 
-    if (m_processedFiles >= m_totalFiles || *m_cancelFlag) {
+    if (m_processedFiles >= m_totalFiles) {
         m_isConverting = false;
         emit finished(m_successCount, m_failedCount, m_totalFiles);
     }

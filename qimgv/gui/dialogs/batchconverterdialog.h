@@ -94,6 +94,7 @@ public:
 public slots:
     void onProgressUpdated(int index, QString status, QString details, bool success);
     void onFinished(int successCount, int failedCount, int totalCount);
+    void onCancelled(int successCount, int failedCount, int totalCount);
 
 private slots:
     void onQualitySliderChanged(int value);
@@ -183,6 +184,7 @@ private:
     int totalFiles = 0;
     int processedFiles = 0;
     bool isConverting = false;
+    bool isCancelling = false;
     bool m_conversionStarted = false;
 
     QSize originalSize, targetSize;

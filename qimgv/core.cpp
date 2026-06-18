@@ -10,9 +10,11 @@
 #include <QRegularExpression>
 #include <QTemporaryFile>
 #include <QCoreApplication>
+#include <QThreadPool>
 
 #ifdef USE_UPSCAYL
 #include "components/upscaler/upscaler.h"
+#include "components/upscaler/upscaylresizerunnable.h"
 #endif
 
 #include <QColorSpace>
@@ -1300,30 +1302,53 @@ void Core::rotateByDegrees(int degrees) {
 void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString upscaylModel) {
 #ifdef USE_UPSCAYL
   if (useUpscayl) {
+    if (model->isEmpty())
+      return;
+
+    if (aiResizeActive) {
+      mw->showMessage(tr("AI resize is already running."));
+      return;
+    }
+
+    const auto selection = currentSelection();
+    if (selection.isEmpty())
+      return;
+
+    if (selection.size() > 1) {
+      mw->showWarning(tr("AI resize supports one image at a time."));
+      return;
+    }
+
+    const QString path = selection.constFirst();
+    auto img = getEditableImage(path);
+    if (!img) {
+      mw->showError(tr("Could not resize image."));
+      return;
+    }
+
+    std::shared_ptr<const QImage> source = img->getImage();
+    if (!source || source->isNull()) {
+      mw->showError(tr("Could not resize image."));
+      return;
+    }
+
+    UpscaylResizeRequest request;
+    request.path = path;
+    request.targetSize = size;
+    request.filter = filter;
+    request.modelName = upscaylModel;
+    request.sourceImage = source;
+    request.generation = ++aiResizeGeneration;
+
+    aiResizeActive = true;
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    std::function<QImage(std::shared_ptr<const QImage>)> editFunc = [size, filter, upscaylModel](std::shared_ptr<const QImage> source) -> QImage {
-      if (!source) return QImage();
-      QString appDir = QCoreApplication::applicationDirPath();
-      QString oldModel = settings->upscaylModel();
-      settings->setUpscaylModel(upscaylModel);
-      QImage upscaled;
-      if (UpscaylScaler::getInstance()->init(appDir)) {
-          upscaled = UpscaylScaler::getInstance()->upscale(*source);
-      }
-      settings->setUpscaylModel(oldModel);
-      if (upscaled.isNull()) {
-          return *source;
-      }
-      // If the target size is not equal to the 4x upscaled size, scale it to the requested size
-      if (upscaled.size() != size) {
-          std::shared_ptr<const QImage> upscaledPtr = std::make_shared<const QImage>(upscaled);
-          QImage finalImg = ImageLib::scaled(upscaledPtr, size, filter);
-          return finalImg;
-      }
-      return upscaled;
-    };
-    edit_template(false, tr("Resize (AI)"), {editFunc});
-    QApplication::restoreOverrideCursor();
+    mw->showMessage(tr("AI resizing..."), 3600000);
+
+    auto task = new UpscaylResizeRunnable(request);
+    task->setAutoDelete(false);
+    connect(task, &UpscaylResizeRunnable::finished, task, &QObject::deleteLater, Qt::QueuedConnection);
+    connect(task, &UpscaylResizeRunnable::finished, this, &Core::onAiResizeFinished, Qt::QueuedConnection);
+    QThreadPool::globalInstance()->start(task);
     return;
   }
 #else
@@ -1333,6 +1358,43 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
 
   edit_template(false, tr("Resize"), {ImageLib::scaled}, size, filter);
 }
+
+#ifdef USE_UPSCAYL
+void Core::onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error) {
+  if (generation != aiResizeGeneration)
+    return;
+
+  aiResizeActive = false;
+  QApplication::restoreOverrideCursor();
+  mw->hideMessage();
+
+  if (!success || image.isNull()) {
+    mw->showError(error.isEmpty() ? tr("AI resize failed.") : error);
+    return;
+  }
+
+  if (!model->containsFile(path)) {
+    mw->showWarning(tr("AI resize finished, but the image is no longer in the list."));
+    return;
+  }
+
+  auto img = getEditableImage(path);
+  if (!img) {
+    mw->showError(tr("Could not apply AI resize."));
+    return;
+  }
+
+  img->setEditedImage(std::unique_ptr<const QImage>(new QImage(std::move(image))));
+  model->updateImage(path, std::static_pointer_cast<Image>(img));
+
+  if (state.hasActiveImage && path == state.currentFilePath) {
+    updateInfoString();
+    mw->showMessageSuccess(tr("AI resize finished."));
+  } else {
+    mw->showMessageSuccess(tr("AI resize finished for %1.").arg(QFileInfo(path).fileName()));
+  }
+}
+#endif
 
 void Core::crop(QRect rect) {
   if (mw->currentViewMode() == MODE_FOLDERVIEW)
@@ -1574,6 +1636,8 @@ void Core::onScalingFinished(QPixmap scaled, ScalerRequest req) {
 void Core::reset() {
 #ifdef USE_UPSCAYL
   upscaler->reset();
+  aiResizeActive = false;
+  aiResizeGeneration++;
 #endif
   state.hasActiveImage = false;
   state.currentFilePath = "";

@@ -5,6 +5,7 @@
 #include <QMutex>
 #include <QClipboard>
 #include <QDrag>
+#include <QImage>
 #include <QFileSystemModel>
 #include <QDesktopServices>
 #include <QTranslator>
@@ -187,6 +188,11 @@ private slots:
 #ifdef USE_UPSCAYL
 private:
     std::unique_ptr<class Upscaler> upscaler;
+    int aiResizeGeneration = 0;
+    bool aiResizeActive = false;
+
+private slots:
+    void onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error);
 #endif
 private:
     QStringList backHistory, forwardHistory;
