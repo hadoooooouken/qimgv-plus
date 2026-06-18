@@ -89,6 +89,7 @@ class BatchConverterDialog : public QDialog {
 public:
     explicit BatchConverterDialog(const QList<QString> &filePaths, QWidget *parent = nullptr);
     ~BatchConverterDialog();
+    bool conversionWasStarted() const { return m_conversionStarted; }
 
 public slots:
     void onProgressUpdated(int index, QString status, QString details, bool success);
@@ -182,6 +183,7 @@ private:
     int totalFiles = 0;
     int processedFiles = 0;
     bool isConverting = false;
+    bool m_conversionStarted = false;
 
     QSize originalSize, targetSize;
     int lastEdited = 0;

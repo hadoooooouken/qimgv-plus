@@ -941,6 +941,7 @@ void BatchConverterDialog::onConvertClicked() {
     }
 
     isConverting = true;
+    m_conversionStarted = true;
     processedFiles = 0;
 
     progressBar->setMaximum(checkedCount);

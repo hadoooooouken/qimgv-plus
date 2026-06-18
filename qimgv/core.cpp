@@ -1238,8 +1238,9 @@ void Core::showBatchConverter() {
   }
   if (!filePaths.isEmpty()) {
     QString currentDirPath = model->directoryPath();
-    mw->showBatchConverter(filePaths);
-    if (!currentDirPath.isEmpty()) {
+    BatchConverterDialog dialog(filePaths, mw);
+    dialog.exec();
+    if (dialog.conversionWasStarted() && !currentDirPath.isEmpty()) {
       model->setDirectory(currentDirPath);
     }
   }
