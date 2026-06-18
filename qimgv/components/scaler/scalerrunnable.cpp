@@ -1,5 +1,6 @@
 #include "scalerrunnable.h"
 #include "settings.h"
+#include "utils/colormanager.h"
 
 #include <QElapsedTimer>
 
@@ -28,6 +29,7 @@ void ScalerRunnable::run() {
             scaled = ImageLib::scaled(req.image->getImage(), req.size, req.filter);
         }
     }
+    scaled = ColorManager::applyColorManagement(scaled);
     //qDebug() << ">> " << req.size << ": " << t.elapsed();
     emit finished(scaled, req);
 }

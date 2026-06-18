@@ -86,6 +86,9 @@ void ImageStatic::loadGeneric() {
       image = std::move(img);
     }
   }
+  if (image) {
+    imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+  }
   mLoaded = true;
 }
 
@@ -102,6 +105,9 @@ void ImageStatic::loadICO() {
   QPixmap iconPix = icon.pixmap(maxSize);
   std::unique_ptr<const QImage> img(new QImage(iconPix.toImage()));
   image = std::move(img);
+  if (image) {
+    imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+  }
   mLoaded = true;
 }
 
@@ -178,10 +184,25 @@ bool ImageStatic::save() { return save(mPath); }
 
 std::unique_ptr<QPixmap> ImageStatic::getPixmap() {
   std::unique_ptr<QPixmap> pix(new QPixmap());
-  if (isEdited() && imageEdited) {
-    pix->convertFromImage(ColorManager::applyColorManagement(*imageEdited));
-  } else if (image) {
-    pix->convertFromImage(ColorManager::applyColorManagement(*image));
+  if (settings && settings->colorManagementEnabled()) {
+    QColorSpace targetSpace = ColorManager::getTargetColorSpace();
+    if (isEdited() && imageEdited) {
+      if (!imageColorManagedEdited || imageColorManagedEdited->colorSpace() != targetSpace) {
+        imageColorManagedEdited = std::make_shared<const QImage>(ColorManager::applyColorManagement(*imageEdited));
+      }
+      pix->convertFromImage(*imageColorManagedEdited);
+    } else if (image) {
+      if (!imageColorManaged || imageColorManaged->colorSpace() != targetSpace) {
+        imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+      }
+      pix->convertFromImage(*imageColorManaged);
+    }
+  } else {
+    if (isEdited() && imageEdited) {
+      pix->convertFromImage(*imageEdited);
+    } else if (image) {
+      pix->convertFromImage(*image);
+    }
   }
   return pix;
 }
@@ -211,6 +232,9 @@ bool ImageStatic::setEditedImage(std::unique_ptr<const QImage> imageEditedNew) {
       return true;
     }
     imageEdited = std::move(imageEditedNew);
+    if (imageEdited) {
+      imageColorManagedEdited = std::make_shared<const QImage>(ColorManager::applyColorManagement(*imageEdited));
+    }
     mEdited = true;
     return true;
   }
@@ -220,6 +244,7 @@ bool ImageStatic::setEditedImage(std::unique_ptr<const QImage> imageEditedNew) {
 bool ImageStatic::discardEditedImage() {
   if (imageEdited) {
     imageEdited.reset();
+    imageColorManagedEdited.reset();
     mEdited = false;
     return true;
   }

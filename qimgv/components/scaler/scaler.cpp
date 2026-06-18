@@ -1,5 +1,4 @@
 #include "scaler.h"
-#include "utils/colormanager.h"
 #include <QDebug>
 
 #define SCALER_DEBUG 0
@@ -158,7 +157,7 @@ void Scaler::slotStartBufferedRequest() {
 }
 
 void Scaler::slotForwardScaledResult(QImage image, ScalerRequest req) {
-    QPixmap pixmap = QPixmap::fromImage(ColorManager::applyColorManagement(image));
+    QPixmap pixmap = QPixmap::fromImage(image);
     emit scalingFinished(pixmap, req);
 }
 
