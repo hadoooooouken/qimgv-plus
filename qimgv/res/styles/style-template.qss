@@ -549,41 +549,58 @@ QPushButton[accessibleName="FolderViewBatchButton"]:pressed {
 }
 
 /*----------------------------------------------------------------------------*/
+/* Global QSlider styling */
+/*----------------------------------------------------------------------------*/
 [accessibleName="FolderViewSlider"] {
     margin-top: 1px;
 }
 
-[accessibleName="FolderViewSlider"]::groove:horizontal {
-    border-top: 1px solid %panel_button_pressed%;
-    border-bottom: 1px solid %panel_button_pressed%;
-    height: 6px;
-    margin: 0 12px;
+QSlider:horizontal {
+    height: 20px;
+    background: transparent;
 }
 
-[accessibleName="FolderViewSlider"]::sub-page:horizontal { /* left */
-    background: %panel_button_pressed%;
-    border: 1px solid %panel_button_pressed%;
-    height: 6px;
+QSlider::groove:horizontal {
+    height: 4px;
+    border-radius: 2px;
+    background: %sys_window_tinted_hc2%;
 }
 
-[accessibleName="FolderViewSlider"]::add-page:horizontal { /* right */
-    background: %panel_button_pressed%;
-    border: 1px solid %panel_button_pressed%;
-    height: 6px;
+QSlider::sub-page:horizontal {
+    height: 4px;
+    border-radius: 2px;
+    background: %accent%;
 }
 
-[accessibleName="FolderViewSlider"]::handle:horizontal {
-    background: %text_lc2%;
-    border: 1px solid %text_lc2%;
+QSlider::add-page:horizontal {
+    height: 4px;
+    border-radius: 2px;
+    background: %sys_window_tinted_hc2%;
+}
+
+QSlider::sub-page:horizontal:disabled {
+    background: %widget_border%;
+}
+
+QSlider::handle:horizontal {
+    background: %accent%;
+    border: 2px solid %widget%;
     width: 12px;
     height: 12px;
-    border-radius: 1px;
-    margin: -4px -12px;
+    margin: -6px 0px;
+    border-radius: 8px;
 }
 
-[accessibleName="FolderViewSlider"]::handle:horizontal:hover {
+SettingsDialog QSlider::handle:horizontal {
+    border-color: %sys_window_tinted_lc2%;
+}
+
+QSlider::handle:horizontal:hover {
+    background: %accent_light%;
+}
+
+QSlider::handle:horizontal:disabled {
     background: %text%;
-    border-color: %text%;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -899,30 +916,4 @@ PrintDialog QRadioButton:hover,
 PrintDialog QCheckBox:hover {
     /*  background-color: %sys_window_tinted%;  */
 }
-/*----------------------------------------------------------------------------*/
-/* Color Adjustments & CAS Overlay Sliders styling */
-ColorAdjustmentsOverlay QSlider,
-CasSettingsOverlay QSlider {
-    height: 18px;
-    background: transparent;
-}
 
-ColorAdjustmentsOverlay QSlider::groove:horizontal,
-CasSettingsOverlay QSlider::groove:horizontal {
-    height: 2px;
-    background: %sys_window_tinted_hc2%;
-    border-radius: 1px;
-}
-
-ColorAdjustmentsOverlay QSlider::handle:horizontal,
-CasSettingsOverlay QSlider::handle:horizontal {
-    background: %accent%;
-    width: 8px;
-    margin: -8px 0px;
-    border-radius: 1px;
-}
-
-ColorAdjustmentsOverlay QSlider::handle:horizontal:hover,
-CasSettingsOverlay QSlider::handle:horizontal:hover {
-    background: %accent_hover_rgba%;
-}

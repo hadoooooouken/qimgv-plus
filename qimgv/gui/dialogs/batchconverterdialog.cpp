@@ -564,13 +564,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
                 "QScrollBar::handle:vertical:hover { background-color: %10; }"
                 "QScrollBar::sub-page, QScrollBar::add-page { background: none; }"
                 "QProgressBar { border: 1px solid %4; border-radius: 3px; text-align: center; color: %7; background-color: %8; }"
-                "QProgressBar::chunk { background-color: %6; }"
-                "QSlider { height: 18px; background: transparent; }"
-                "QSlider::groove:horizontal { height: 4px; background: %5; border-radius: 2px; }"
-                "QSlider::sub-page:horizontal { background: %6; border-radius: 2px; }"
-                "QSlider::sub-page:horizontal:disabled { background: %4; }"
-                "QSlider::handle:horizontal { background: %3; width: 12px; height: 12px; margin: -4px 0px; border-radius: 6px; }"
-                "QSlider::handle:horizontal:disabled { background: %2; }")
+                "QProgressBar::chunk { background-color: %6; }")
         .arg(colors.widget.name(), colors.text.name(), colors.text_hc.name(),
              colors.widget_border.name(), colors.button.name(), colors.accent.name(),
              colors.text_hc2.name(), colors.folderview.name(), colors.scrollbar.name(),

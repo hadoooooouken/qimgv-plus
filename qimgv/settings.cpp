@@ -271,6 +271,7 @@ void Settings::loadStylesheet() {
     styleSheet.replace("%thumbpanel_hc2%", colors.thumbpanel_hc2.name());
     styleSheet.replace("%folderview_hc%", colors.folderview_hc.name());
     styleSheet.replace("%folderview_hc2%", colors.folderview_hc2.name());
+    styleSheet.replace("%accent_light%", colors.accent.lighter(130).name());
     styleSheet.replace("%accent%", colors.accent.name());
     styleSheet.replace("%input_field_focus%", colors.input_field_focus.name());
     styleSheet.replace("%overlay%", colors.overlay.name());
