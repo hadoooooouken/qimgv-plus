@@ -7,6 +7,15 @@ ThumbnailStripProxy::ThumbnailStripProxy(QWidget *parent)
 }
 
 void ThumbnailStripProxy::init() {
+    initEager();
+    applyBufferedState();
+}
+
+// Lightweight construction — creates the ThumbnailStrip widget and wires up
+// signals, but does NOT populate or apply buffered state. Safe to call while
+// the panel is still hidden so the heavy QGraphicsView/Scene allocation
+// happens outside the animation path.
+void ThumbnailStripProxy::initEager() {
     if(thumbnailStrip)
         return;
     qApp->processEvents(); // chew through events in case we have something that alters stateBuf in queue
@@ -24,8 +33,15 @@ void ThumbnailStripProxy::init() {
     connect(thumbnailStrip.get(), &ThumbnailStrip::forwardRequested, this, &ThumbnailStripProxy::forwardRequested);
 
     thumbnailStrip->show();
+    mNeedsBufferApply = true;
+}
 
-    // apply buffer
+// Applies the buffered state (populate, select, focus) to the real strip.
+// This is the expensive part that was previously blocking the animation.
+void ThumbnailStripProxy::applyBufferedState() {
+    if(!mNeedsBufferApply || !thumbnailStrip)
+        return;
+    mNeedsBufferApply = false;
     thumbnailStrip->populate(stateBuf.itemCount);
     thumbnailStrip->select(stateBuf.selection);
     // wait till layout stuff happens
@@ -147,6 +163,9 @@ void ThumbnailStripProxy::readSettings() {
 }
 
 void ThumbnailStripProxy::showEvent(QShowEvent *event) {
-    init();
+    if(!thumbnailStrip)
+        initEager(); // lightweight construction only
+    if(mNeedsBufferApply)
+        QTimer::singleShot(0, this, &ThumbnailStripProxy::applyBufferedState);
     QWidget::showEvent(event);
 }

@@ -92,7 +92,7 @@ std::shared_ptr<ThumbnailStripProxy> MainPanel::getThumbnailStrip() {
 }
 
 void MainPanel::setupThumbnailStrip() {
-    thumbnailStrip->init();
+    thumbnailStrip->initEager();
     // adjust size & position
     readSettings();
 }

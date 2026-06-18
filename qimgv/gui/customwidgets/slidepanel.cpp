@@ -73,6 +73,9 @@ void SlidePanel::showAnimated() {
       setProperty("pos", endPosition);
       QWidget::show();
       QWidget::raise();
+      // Pre-cache: force one render cycle so the opacity effect
+      // allocates its compositing pixmap before the animation starts
+      repaint();
     }
     if (timeline.state() != QTimeLine::Running)
       timeline.start();

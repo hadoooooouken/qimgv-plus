@@ -2,6 +2,7 @@
 
 #include "gui/panels/mainpanel/thumbnailstrip.h"
 #include <QMutexLocker>
+#include <QTimer>
 
 struct ThumbnailStripStateBuffer {
     QList<int> selection;
@@ -14,6 +15,7 @@ class ThumbnailStripProxy : public QWidget, public IDirectoryView {
 public:
     ThumbnailStripProxy(QWidget *parent = nullptr);
     void init();
+    void initEager();
     bool isInitialized();
     QSize itemSize();
     void readSettings();
@@ -46,9 +48,13 @@ signals:
     void backRequested() override;
     void forwardRequested() override;
 
+private slots:
+    void applyBufferedState();
+
 private:
     std::shared_ptr<ThumbnailStrip> thumbnailStrip = nullptr;
     QVBoxLayout layout;
     ThumbnailStripStateBuffer stateBuf;
     QMutex m;
+    bool mNeedsBufferApply = false;
 };
