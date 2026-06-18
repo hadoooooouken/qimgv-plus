@@ -16,14 +16,22 @@ ClickZoneOverlay::ClickZoneOverlay(FloatingWidgetContainer *parent)
           &ClickZoneOverlay::readSettings);
   readSettings();
 
-  fadeEffect = new QGraphicsOpacityEffect(this);
-  this->setGraphicsEffect(fadeEffect);
-  fadeAnimation = new QPropertyAnimation(fadeEffect, "opacity");
-  fadeAnimation->setDuration(200);
-  fadeAnimation->setEasingCurve(QEasingCurve::OutCubic);
-  connect(fadeAnimation, &QPropertyAnimation::finished, this, &ClickZoneOverlay::onAnimationFinished);
+  // QTimeLine-based animation matching SlidePanel.
+  // Replaces QGraphicsOpacityEffect which caused arrow/background desync
+  // due to internal pixmap caching on a full-screen widget.
+  mEasingCurve.setType(QEasingCurve::OutCubic);
 
-  fadeEffect->setOpacity(0);
+  mTimeline.setDuration(kAnimationDuration);
+  mTimeline.setEasingCurve(QEasingCurve::Linear);
+  mTimeline.setStartFrame(0);
+  mTimeline.setEndFrame(kAnimationDuration);
+  mTimeline.setUpdateInterval(8);
+
+  connect(&mTimeline, &QTimeLine::frameChanged, this,
+          &ClickZoneOverlay::animationUpdate);
+  connect(&mTimeline, &QTimeLine::finished, this,
+          &ClickZoneOverlay::onAnimationFinish);
+
   this->show();
 }
 
@@ -96,32 +104,52 @@ void ClickZoneOverlay::setPressed(bool mode) {
 }
 
 void ClickZoneOverlay::setHighlightedZone(ActiveHighlightZone zone) {
-    if(activeZone == zone && fadeAnimation->state() != QPropertyAnimation::Running)
+    if (activeZone == zone && mTimeline.state() != QTimeLine::Running)
         return;
 
-    // If moving from one side to another, we don't restart from 0,
-    // we just change the target icon and continue fading in if needed.
-    if(zone != HIGHLIGHT_NONE) {
+    if (zone != HIGHLIGHT_NONE) {
+        // Switch sides without restarting from zero — just update the
+        // active zone and keep fading in if we haven't reached full opacity.
         activeZone = zone;
         update();
-        if(fadeEffect->opacity() < 0.99 && fadeAnimation->endValue().toReal() != 1.0) {
-            fadeAnimation->stop();
-            fadeAnimation->setStartValue(fadeEffect->opacity());
-            fadeAnimation->setEndValue(1.0);
-            fadeAnimation->start();
+        if (mHiding || (mCurrentOpacity < 0.99 && mTimeline.state() != QTimeLine::Running)) {
+            mHiding = false;
+            mEasingCurve.setType(QEasingCurve::OutCubic);
+            if (mTimeline.state() != QTimeLine::Running)
+                mTimeline.start();
         }
     } else {
-        // Fade out to NONE
-        fadeAnimation->stop();
-        fadeAnimation->setStartValue(fadeEffect->opacity());
-        fadeAnimation->setEndValue(0.0);
-        fadeAnimation->start();
+        // Begin fade-out + slide-out
+        if (!mHiding) {
+            mHiding = true;
+            mEasingCurve.setType(QEasingCurve::InCubic);
+            if (mTimeline.state() != QTimeLine::Running)
+                mTimeline.start();
+        }
     }
 }
 
-void ClickZoneOverlay::onAnimationFinished() {
-    if(fadeEffect->opacity() <= 0.01) {
+void ClickZoneOverlay::animationUpdate(int frame) {
+    qreal progress = static_cast<qreal>(frame) / kAnimationDuration;
+    qreal value = mEasingCurve.valueForProgress(progress);
+
+    mCurrentOpacity = mHiding ? (1.0 - value) : value;
+
+    // Slide offset: left button slides from -kSlideAmount, right from +kSlideAmount
+    int slideBase = (activeZone == HIGHLIGHT_LEFT) ? -kSlideAmount : kSlideAmount;
+    if (mHiding)
+        mSlideOffset = static_cast<int>(slideBase * value);
+    else
+        mSlideOffset = static_cast<int>(slideBase * (1.0 - value));
+
+    update();
+}
+
+void ClickZoneOverlay::onAnimationFinish() {
+    if (mHiding) {
         activeZone = HIGHLIGHT_NONE;
+        mCurrentOpacity = 0.0;
+        mSlideOffset = 0;
         update();
     }
 }
@@ -155,18 +183,22 @@ void ClickZoneOverlay::paintEvent(QPaintEvent *event) {
 
   QPainter p(this);
   p.setRenderHint(QPainter::Antialiasing);
-  // Full opacity here — the QGraphicsOpacityEffect fade animation handles
-  // the smooth appear/disappear on hover. No extra transparency needed.
+  // Opacity applied directly via QPainter — both the rounded rect and the
+  // arrow pixmap are drawn in the same pass with the same opacity value,
+  // eliminating the desync caused by QGraphicsOpacityEffect pixmap caching.
+  p.setOpacity(mCurrentOpacity);
   p.setBrush(mButtonColor);
   p.setPen(Qt::NoPen);
 
   if (activeZone == HIGHLIGHT_LEFT) {
-    p.drawRoundedRect(mLeftButton, kButtonRadius, kButtonRadius);
-    drawPixmap(p, pixmapLeft, mLeftButton);
+    QRect shifted = mLeftButton.translated(mSlideOffset, 0);
+    p.drawRoundedRect(shifted, kButtonRadius, kButtonRadius);
+    drawPixmap(p, pixmapLeft, shifted);
   }
   if (activeZone == HIGHLIGHT_RIGHT) {
-    p.drawRoundedRect(mRightButton, kButtonRadius, kButtonRadius);
-    drawPixmap(p, pixmapRight, mRightButton);
+    QRect shifted = mRightButton.translated(mSlideOffset, 0);
+    p.drawRoundedRect(shifted, kButtonRadius, kButtonRadius);
+    drawPixmap(p, pixmapRight, shifted);
   }
 }
 
