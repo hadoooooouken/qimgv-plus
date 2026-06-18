@@ -413,6 +413,15 @@ void ThumbnailView::unloadAllThumbnails() {
     }
 }
 
+void ThumbnailView::setBlockThumbnailLoading(bool block) {
+    if (blockThumbnailLoading != block) {
+        blockThumbnailLoading = block;
+        if (!blockThumbnailLoading) {
+            loadVisibleThumbnails();
+        }
+    }
+}
+
 void ThumbnailView::loadVisibleThumbnails() {
     loadTimer.stop();
     if(isVisible() && !blockThumbnailLoading) {

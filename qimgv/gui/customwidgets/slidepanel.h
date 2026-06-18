@@ -66,4 +66,8 @@ private:
   qreal panelVisibleOpacity = 1.0;
   QPoint startPosition, endPosition;
   bool mLayoutManaged = false;
+
+signals:
+  void animationStarted();
+  void animationFinished();
 };

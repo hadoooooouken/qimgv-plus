@@ -53,6 +53,7 @@ public:
     void clearSelection();
     void deselect(int index);
     void unloadAllThumbnails();
+    void setBlockThumbnailLoading(bool block);
 
 public slots:
     void show();

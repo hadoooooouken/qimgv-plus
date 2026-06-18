@@ -50,6 +50,8 @@ signals:
 
 private slots:
     void applyBufferedState();
+    void onAnimationStarted();
+    void onAnimationFinished();
 
 private:
     std::shared_ptr<ThumbnailStrip> thumbnailStrip = nullptr;

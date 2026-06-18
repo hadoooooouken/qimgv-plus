@@ -1,4 +1,5 @@
 #include "thumbnailstripproxy.h"
+#include "gui/customwidgets/slidepanel.h"
 
 ThumbnailStripProxy::ThumbnailStripProxy(QWidget *parent)
     : QWidget(parent)
@@ -34,6 +35,24 @@ void ThumbnailStripProxy::initEager() {
 
     thumbnailStrip->show();
     mNeedsBufferApply = true;
+
+    QWidget *parent = parentWidget();
+    SlidePanel *slidePanel = nullptr;
+    while (parent) {
+        slidePanel = qobject_cast<SlidePanel*>(parent);
+        if (slidePanel) {
+            break;
+        }
+        parent = parent->parentWidget();
+    }
+    if (slidePanel) {
+        connect(slidePanel, &SlidePanel::animationStarted, this, &ThumbnailStripProxy::onAnimationStarted);
+        connect(slidePanel, &SlidePanel::animationFinished, this, &ThumbnailStripProxy::onAnimationFinished);
+    }
+
+    if(stateBuf.itemCount > 0) {
+        applyBufferedState();
+    }
 }
 
 // Applies the buffered state (populate, select, focus) to the real strip.
@@ -58,6 +77,7 @@ void ThumbnailStripProxy::populate(int count) {
     QMutexLocker ml(&m);
     stateBuf.itemCount = count;
     if(thumbnailStrip) {
+        mNeedsBufferApply = false;
         ml.unlock();
         thumbnailStrip->populate(stateBuf.itemCount);
     } else {
@@ -165,7 +185,24 @@ void ThumbnailStripProxy::readSettings() {
 void ThumbnailStripProxy::showEvent(QShowEvent *event) {
     if(!thumbnailStrip)
         initEager(); // lightweight construction only
-    if(mNeedsBufferApply)
+    if(mNeedsBufferApply) {
         QTimer::singleShot(0, this, &ThumbnailStripProxy::applyBufferedState);
+    } else {
+        thumbnailStrip->updateGeometry();
+        qApp->processEvents(); // let the scene calculate bounding rects and positions
+        thumbnailStrip->focusOnSelection();
+    }
     QWidget::showEvent(event);
+}
+
+void ThumbnailStripProxy::onAnimationStarted() {
+    if (thumbnailStrip) {
+        thumbnailStrip->setBlockThumbnailLoading(true);
+    }
+}
+
+void ThumbnailStripProxy::onAnimationFinished() {
+    if (thumbnailStrip) {
+        thumbnailStrip->setBlockThumbnailLoading(false);
+    }
 }

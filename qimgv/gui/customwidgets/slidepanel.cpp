@@ -52,6 +52,7 @@ void SlidePanel::hideAnimated() {
   else if (!this->isHidden() && timeline.state() != QTimeLine::Running) {
     mHiding = true;
     outCurve.setType(QEasingCurve::InCubic);
+    emit animationStarted();
     timeline.start();
   }
 }
@@ -77,8 +78,10 @@ void SlidePanel::showAnimated() {
       // allocates its compositing pixmap before the animation starts
       repaint();
     }
-    if (timeline.state() != QTimeLine::Running)
+    if (timeline.state() != QTimeLine::Running) {
+      emit animationStarted();
       timeline.start();
+    }
   }
 }
 
@@ -155,6 +158,7 @@ void SlidePanel::onAnimationFinish() {
     fadeEffect->setOpacity(panelVisibleOpacity);
     setProperty("pos", startPosition);
   }
+  emit animationFinished();
 }
 
 QRect SlidePanel::triggerRect() { return mTriggerRect; }
