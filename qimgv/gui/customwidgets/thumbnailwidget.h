@@ -18,8 +18,11 @@ enum ThumbnailStyle {
     THUMB_NORMAL_CENTERED
 };
 
+class QTimeLine;
+
 class ThumbnailWidget : public QGraphicsWidget {
     Q_OBJECT
+    Q_PROPERTY(qreal hoverOpacity READ getHoverOpacity WRITE setHoverOpacity)
 
 public:
     ThumbnailWidget(QGraphicsItem *parent = nullptr);
@@ -71,6 +74,8 @@ protected:
     void updateGeometry() override;
     void setHovered(bool);
     bool isHovered();
+    qreal getHoverOpacity() const { return hoverOpacity; }
+    void setHoverOpacity(qreal opacity);
     void updateBackgroundRect();
     void updateThumbnailDrawPosition();
     void updateDpr(qreal newDpr);
@@ -83,6 +88,8 @@ protected:
     QRect drawRectCentered, nameRect, infoRect;
     bool mUseThumbPanelColors = false;
     qreal dpr = 1.0;
+    qreal hoverOpacity = 0.0;
+    QTimeLine *hoverTimeline = nullptr;
     void updateBoundingRect();
     ThumbnailStyle thumbStyle;
 };

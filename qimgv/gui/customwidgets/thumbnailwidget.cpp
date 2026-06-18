@@ -1,6 +1,18 @@
 #include "thumbnailwidget.h"
 #include "settings.h"
 #include <QPainterPath>
+#include <QTimeLine>
+
+namespace {
+constexpr int HoverEnterDurationMs = 100;
+constexpr int HoverLeaveDurationMs = 60;
+constexpr qreal MinHoverOpacity = 0.0;
+constexpr qreal MaxHoverOpacity = 1.0;
+constexpr qreal BackgroundCornerRadius = 8.0;
+constexpr qreal HighlightInnerCornerRadius = 7.0;
+constexpr qreal ThumbnailCornerRadius = 4.0;
+constexpr qreal HoverHighlightBaseOpacity = 0.2;
+}
 
 ThumbnailWidget::ThumbnailWidget(QGraphicsItem *parent) :
     QGraphicsWidget(parent),
@@ -15,23 +27,30 @@ ThumbnailWidget::ThumbnailWidget(QGraphicsItem *parent) :
     marginY(2),
     labelSpacing(9),
     textHeight(15),
+    hoverOpacity(MinHoverOpacity),
+    hoverTimeline(nullptr),
     thumbStyle(THUMB_SIMPLE)
 {
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     dpr = qApp->devicePixelRatio();
-    if(trunc(dpr) == dpr) // don't enable for fractional scaling
-        setCacheMode(QGraphicsItem::DeviceCoordinateCache);
     setAcceptHoverEvents(true);
     font.setBold(false);
     QFontMetrics fm(font);
     textHeight = fm.height();
+
+    hoverTimeline = new QTimeLine(HoverEnterDurationMs, this);
+#ifdef _WIN32
+    hoverTimeline->setUpdateInterval(8);
+#else
+    hoverTimeline->setUpdateInterval(16);
+#endif
+    hoverTimeline->setEasingCurve(QEasingCurve::OutQuad);
+    connect(hoverTimeline, &QTimeLine::valueChanged, this, &ThumbnailWidget::setHoverOpacity);
 }
 
 void ThumbnailWidget::updateDpr(qreal newDpr) {
     if(dpr != newDpr) {
         dpr = newDpr;
-        if(trunc(dpr) == dpr) // don't enable for fractional scaling
-            setCacheMode(QGraphicsItem::DeviceCoordinateCache);
         updateThumbnailDrawPosition();
         updateBackgroundRect();
     }
@@ -71,6 +90,10 @@ void ThumbnailWidget::reset() {
     highlighted = false;
     hovered = false;
     isLoaded = false;
+    if(hoverTimeline) {
+        hoverTimeline->stop();
+    }
+    hoverOpacity = MinHoverOpacity;
     update();
 }
 
@@ -186,7 +209,7 @@ void ThumbnailWidget::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
     // actual thumbnail still has incorrect dpr but it is still drawn "correctly" so whatever
     updateDpr(painter->paintEngine()->paintDevice()->devicePixelRatioF());
 
-    if(isHovered() && !isHighlighted())
+    if((hoverOpacity > MinHoverOpacity) && !isHighlighted())
         drawHoverBg(painter);
     if(isHighlighted())
         drawHighlight(painter);
@@ -208,7 +231,7 @@ void ThumbnailWidget::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
             drawIcon(painter, &errorIcon);
         } else {
             drawThumbnail(painter, thumbnail->pixmap().get());
-            if(isHovered())
+            if(hoverOpacity > MinHoverOpacity)
                 drawHoverHighlight(painter);
         }
         if(thumbStyle != THUMB_SIMPLE)
@@ -226,12 +249,12 @@ void ThumbnailWidget::drawHighlight(QPainter *painter) {
         painter->setOpacity(0.40f * op);
         painter->setPen(Qt::NoPen);
         painter->setBrush(settings->colorScheme().accent);
-        painter->drawRoundedRect(bgRect, 8.0, 8.0);
+        painter->drawRoundedRect(bgRect, BackgroundCornerRadius, BackgroundCornerRadius);
         painter->setBrush(Qt::NoBrush);
         painter->setOpacity(0.70f * op);
         QPen pen(settings->colorScheme().accent, 2);
         painter->setPen(pen);
-        painter->drawRoundedRect(bgRect.adjusted(1,1,-1,-1), 7.0, 7.0); // 2px pen
+        painter->drawRoundedRect(bgRect.adjusted(1,1,-1,-1), HighlightInnerCornerRadius, HighlightInnerCornerRadius); // 2px pen
         painter->setOpacity(op);
         painter->setRenderHints(hints);
     }
@@ -244,7 +267,8 @@ void ThumbnailWidget::drawHoverBg(QPainter *painter) {
     QColor hoverBg = mUseThumbPanelColors ? settings->colorScheme().thumbpanel_hc : settings->colorScheme().folderview_hc;
     painter->setPen(Qt::NoPen);
     painter->setBrush(hoverBg);
-    painter->drawRoundedRect(bgRect, 8.0, 8.0);
+    painter->setOpacity(hoverOpacity * op);
+    painter->drawRoundedRect(bgRect, BackgroundCornerRadius, BackgroundCornerRadius);
     painter->setBrush(Qt::NoBrush);
     painter->setOpacity(op);
     painter->setRenderHints(hints);
@@ -254,10 +278,10 @@ void ThumbnailWidget::drawHoverHighlight(QPainter *painter) {
     auto op = painter->opacity();
     auto mode = painter->compositionMode();
     painter->setCompositionMode(QPainter::CompositionMode_Plus);
-    painter->setOpacity(0.2f);
+    painter->setOpacity(HoverHighlightBaseOpacity * hoverOpacity * op);
     painter->save();
     QPainterPath path;
-    path.addRoundedRect(drawRectCentered, 4.0, 4.0);
+    path.addRoundedRect(drawRectCentered, ThumbnailCornerRadius, ThumbnailCornerRadius);
     painter->setClipPath(path, Qt::IntersectClip);
     painter->drawPixmap(drawRectCentered, *thumbnail->pixmap());
     painter->restore();
@@ -331,19 +355,19 @@ void ThumbnailWidget::drawDropHover(QPainter *painter) {
     painter->setOpacity(0.1f * op);
     painter->setPen(Qt::NoPen);
     painter->setBrush(clr);
-    painter->drawRoundedRect(bgRect, 8.0, 8.0);
+    painter->drawRoundedRect(bgRect, BackgroundCornerRadius, BackgroundCornerRadius);
     painter->setBrush(Qt::NoBrush);
     painter->setOpacity(op);
     QPen pen(clr, 2);
     painter->setPen(pen);
-    painter->drawRoundedRect(bgRect.adjusted(1,1,-1,-1), 7.0, 7.0);
+    painter->drawRoundedRect(bgRect.adjusted(1,1,-1,-1), HighlightInnerCornerRadius, HighlightInnerCornerRadius);
     painter->setRenderHints(hints);
 }
 
 void ThumbnailWidget::drawThumbnail(QPainter* painter, const QPixmap *pixmap) {
     painter->save();
     QPainterPath path;
-    path.addRoundedRect(drawRectCentered, 4.0, 4.0);
+    path.addRoundedRect(drawRectCentered, ThumbnailCornerRadius, ThumbnailCornerRadius);
     painter->setClipPath(path, Qt::IntersectClip);
     painter->drawPixmap(drawRectCentered, *pixmap);
     painter->restore();
@@ -375,12 +399,27 @@ void ThumbnailWidget::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
 void ThumbnailWidget::setHovered(bool mode) {
     if(hovered != mode) {
         hovered = mode;
-        update();
+        if(hoverTimeline) {
+            hoverTimeline->setDirection(mode ? QTimeLine::Forward : QTimeLine::Backward);
+            hoverTimeline->setDuration(mode ? HoverEnterDurationMs : HoverLeaveDurationMs);
+            if(hoverTimeline->state() != QTimeLine::Running) {
+                hoverTimeline->start();
+            }
+        } else {
+            setHoverOpacity(mode ? MaxHoverOpacity : MinHoverOpacity);
+        }
     }
 }
 
 bool ThumbnailWidget::isHovered() {
     return hovered;
+}
+
+void ThumbnailWidget::setHoverOpacity(qreal opacity) {
+    if(hoverOpacity != opacity) {
+        hoverOpacity = opacity;
+        update();
+    }
 }
 
 void ThumbnailWidget::updateThumbnailDrawPosition() {
