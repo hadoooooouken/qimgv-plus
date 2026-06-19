@@ -34,6 +34,8 @@ protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
 private:
+    static constexpr float kDownscaleThreshold = 0.999f;
+
     float mExposure = 0.0f;    // -3.0f to 3.0f
     float mContrast = 1.0f;   // 0.0f to 3.0f
     float mBrightness = 0.0f; // -1.0f to 1.0f

@@ -162,10 +162,27 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         return;
     }
 
-    if (!mTexture || mLastImage.cacheKey() != mImage.cacheKey()) {
+    GLint maxTexSize = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexSize);
+    if (maxTexSize > 0 && (mImage.width() > maxTexSize || mImage.height() > maxTexSize)) {
+        fallbackPaint(painter);
+        return;
+    }
+
+    bool needMips = (transScaleX < kDownscaleThreshold || transScaleY < kDownscaleThreshold || activeSmartGpu);
+    bool canReuse = mTexture &&
+                    mTexture->width() == mImage.width() &&
+                    mTexture->height() == mImage.height() &&
+                    (!needMips || mTexture->mipLevels() > 1);
+
+    if (canReuse) {
+        if (mLastImage.cacheKey() != mImage.cacheKey()) {
+            mTexture->setData(mImage, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
+            mLastImage = mImage;
+        }
+    } else {
         mTexture.reset();
-        // Generate mipmaps for smooth downscaling
-        mTexture = std::make_unique<QOpenGLTexture>(mImage, QOpenGLTexture::GenerateMipMaps);
+        mTexture = std::make_unique<QOpenGLTexture>(mImage, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
         mTexture->setWrapMode(QOpenGLTexture::ClampToEdge);
         mLastImage = mImage;
     }
@@ -178,7 +195,7 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     // Use trilinear filtering (MipMapLinear) for downscaling or active GPU Smart Sharpen
     QOpenGLTexture::Filter minFilter = filter;
-    if (filter == QOpenGLTexture::Linear && (transScaleX < 0.999 || transScaleY < 0.999 || activeSmartGpu)) {
+    if (filter == QOpenGLTexture::Linear && (transScaleX < kDownscaleThreshold || transScaleY < kDownscaleThreshold || activeSmartGpu)) {
         minFilter = QOpenGLTexture::LinearMipMapLinear;
     }
     mTexture->setMinificationFilter(minFilter);
@@ -217,7 +234,7 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     mProgram->setUniformValue("casContrast", mCasContrast);
     mProgram->setUniformValue("casSharpening", activeCasSharpening);
     mProgram->setUniformValue("sharpenMode", activeSmartGpu ? (int)QI_FILTER_SMART_GPU : (int)mScalingFilter);
-    mProgram->setUniformValue("isDownscaling", (transScaleX < 0.999) ? 1 : 0);
+    mProgram->setUniformValue("isDownscaling", (transScaleX < kDownscaleThreshold) ? 1 : 0);
 
     float x1 = offset().x();
     float y1 = offset().y();
