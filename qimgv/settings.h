@@ -19,6 +19,8 @@
 #include <QStringList>
 #include <QThread>
 #include <QVersionNumber>
+#include <atomic>
+#include <QReadWriteLock>
 
 #include "settings_types.h"
 
@@ -293,6 +295,30 @@ private:
   void createColorVariants();
 
   void setupCache();
+
+  void initCache();
+
+  // Thread-safe cached values
+  std::atomic<bool> mCachedUseUpscayl{false};
+  std::atomic<bool> mCachedResizeUseUpscayl{false};
+  std::atomic<bool> mCachedPreloadUpscayl{false};
+  std::atomic<bool> mCachedUpscaylLimitEnabled{false};
+  std::atomic<int> mCachedUpscaylLimitValue{200};
+  std::atomic<int> mCachedMemoryAllocationLimit{2048};
+  std::atomic<int> mCachedThumbnailResolution{256};
+  std::atomic<bool> mCachedColorManagementEnabled{false};
+  std::atomic<bool> mCachedJxlAnimation{false};
+  std::atomic<int> mCachedPngSaveQuality{3};
+  std::atomic<int> mCachedJPEGSaveQuality{95};
+  std::atomic<int> mCachedModernSaveQuality{90};
+
+  mutable QReadWriteLock mProfileLock;
+  QString mCachedMonitorColorProfileType;
+  QString mCachedMonitorColorProfilePath;
+
+  mutable QReadWriteLock mExcludedPathsLock;
+  QString mCachedExcludedCachePaths;
+  QStringList mCachedExcludedCachePathsList;
 
 signals:
   void settingsChanged();

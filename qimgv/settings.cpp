@@ -36,6 +36,40 @@ Settings::Settings(QObject *parent) : QObject(parent) {
                             QSettings::IniFormat);
   themeConf = std::make_unique<QSettings>(mConfDir->absolutePath() + "/theme.ini",
                             QSettings::IniFormat);
+  initCache();
+}
+//------------------------------------------------------------------------------
+void Settings::initCache() {
+  mCachedUseUpscayl.store(settingsConf->value("useUpscayl", false).toBool(), std::memory_order_relaxed);
+  mCachedResizeUseUpscayl.store(settingsConf->value("resizeUseUpscayl", false).toBool(), std::memory_order_relaxed);
+  mCachedPreloadUpscayl.store(settingsConf->value("preloadUpscayl", false).toBool(), std::memory_order_relaxed);
+  mCachedUpscaylLimitEnabled.store(settingsConf->value("upscaylLimitEnabled", false).toBool(), std::memory_order_relaxed);
+  mCachedUpscaylLimitValue.store(settingsConf->value("upscaylLimitValue", 200).toInt(), std::memory_order_relaxed);
+
+  int limit = settingsConf->value("memoryAllocationLimit", 2048).toInt();
+  if (limit < 512) limit = 512;
+  else if (limit > 8192) limit = 8192;
+  mCachedMemoryAllocationLimit.store(limit, std::memory_order_relaxed);
+
+  mCachedThumbnailResolution.store(settingsConf->value("thumbnailResolution", 256).toInt(), std::memory_order_relaxed);
+  mCachedColorManagementEnabled.store(settingsConf->value("colorManagementEnabled", false).toBool(), std::memory_order_relaxed);
+  mCachedJxlAnimation.store(settingsConf->value("jxlAnimation", false).toBool(), std::memory_order_relaxed);
+
+  mCachedPngSaveQuality.store(std::clamp(settingsConf->value("pngSaveQuality", 3).toInt(), 0, 9), std::memory_order_relaxed);
+  mCachedJPEGSaveQuality.store(std::clamp(settingsConf->value("JPEGSaveQuality", 95).toInt(), 0, 100), std::memory_order_relaxed);
+  mCachedModernSaveQuality.store(std::clamp(settingsConf->value("modernSaveQuality", 90).toInt(), 0, 100), std::memory_order_relaxed);
+
+  {
+    QWriteLocker locker(&mProfileLock);
+    mCachedMonitorColorProfileType = settingsConf->value("monitorColorProfileType", "System").toString();
+    mCachedMonitorColorProfilePath = settingsConf->value("monitorColorProfilePath", "").toString();
+  }
+
+  {
+    QWriteLocker locker(&mExcludedPathsLock);
+    mCachedExcludedCachePaths = settingsConf->value("excludedCachePaths", "").toString();
+    mCachedExcludedCachePathsList = mCachedExcludedCachePaths.split(';');
+  }
 }
 //------------------------------------------------------------------------------
 Settings::~Settings() {
@@ -79,12 +113,13 @@ void Settings::sync() {
 QString Settings::thumbnailCacheDir() { return mThumbCacheDir->path() + "/"; }
 //------------------------------------------------------------------------------
 int Settings::thumbnailResolution() {
-  return settings->settingsConf->value("thumbnailResolution", 256).toInt();
+  return mCachedThumbnailResolution.load(std::memory_order_relaxed);
 }
 
 void Settings::setThumbnailResolution(int size) {
   size = qBound(128, size, 512);
   settings->settingsConf->setValue("thumbnailResolution", size);
+  mCachedThumbnailResolution.store(size, std::memory_order_relaxed);
 }
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -580,19 +615,21 @@ void Settings::setUsePreloader(bool mode) {
 //------------------------------------------------------------------------------
 #ifdef USE_UPSCAYL
 bool Settings::useUpscayl() {
-  return settings->settingsConf->value("useUpscayl", false).toBool();
+  return mCachedUseUpscayl.load(std::memory_order_relaxed);
 }
 
 void Settings::setUseUpscayl(bool mode) {
   settings->settingsConf->setValue("useUpscayl", mode);
+  mCachedUseUpscayl.store(mode, std::memory_order_relaxed);
 }
 
 bool Settings::preloadUpscayl() {
-  return settings->settingsConf->value("preloadUpscayl", false).toBool();
+  return mCachedPreloadUpscayl.load(std::memory_order_relaxed);
 }
 
 void Settings::setPreloadUpscayl(bool mode) {
   settings->settingsConf->setValue("preloadUpscayl", mode);
+  mCachedPreloadUpscayl.store(mode, std::memory_order_relaxed);
 }
 
 QString Settings::upscaylModel() {
@@ -605,27 +642,30 @@ void Settings::setUpscaylModel(const QString &model) {
 }
 
 bool Settings::upscaylLimitEnabled() {
-  return settings->settingsConf->value("upscaylLimitEnabled", false).toBool();
+  return mCachedUpscaylLimitEnabled.load(std::memory_order_relaxed);
 }
 
 void Settings::setUpscaylLimitEnabled(bool enabled) {
   settings->settingsConf->setValue("upscaylLimitEnabled", enabled);
+  mCachedUpscaylLimitEnabled.store(enabled, std::memory_order_relaxed);
 }
 
 int Settings::upscaylLimitValue() {
-  return settings->settingsConf->value("upscaylLimitValue", 200).toInt();
+  return mCachedUpscaylLimitValue.load(std::memory_order_relaxed);
 }
 
 void Settings::setUpscaylLimitValue(int value) {
   settings->settingsConf->setValue("upscaylLimitValue", value);
+  mCachedUpscaylLimitValue.store(value, std::memory_order_relaxed);
 }
 
 bool Settings::resizeUseUpscayl() {
-  return settings->settingsConf->value("resizeUseUpscayl", false).toBool();
+  return mCachedResizeUseUpscayl.load(std::memory_order_relaxed);
 }
 
 void Settings::setResizeUseUpscayl(bool enabled) {
   settings->settingsConf->setValue("resizeUseUpscayl", enabled);
+  mCachedResizeUseUpscayl.store(enabled, std::memory_order_relaxed);
 }
 
 bool Settings::hasUpscaylModels() {
@@ -785,27 +825,38 @@ void Settings::setLoopSlideshow(bool mode) {
 }
 
 bool Settings::colorManagementEnabled() {
-  return settings->settingsConf->value("colorManagementEnabled", false).toBool();
+  return mCachedColorManagementEnabled.load(std::memory_order_relaxed);
 }
 
 void Settings::setColorManagementEnabled(bool enabled) {
   settings->settingsConf->setValue("colorManagementEnabled", enabled);
+  mCachedColorManagementEnabled.store(enabled, std::memory_order_relaxed);
 }
 
 QString Settings::monitorColorProfileType() {
-  return settings->settingsConf->value("monitorColorProfileType", "System").toString();
+  QReadLocker locker(&mProfileLock);
+  return mCachedMonitorColorProfileType;
 }
 
 void Settings::setMonitorColorProfileType(const QString &type) {
   settings->settingsConf->setValue("monitorColorProfileType", type);
+  {
+    QWriteLocker locker(&mProfileLock);
+    mCachedMonitorColorProfileType = type;
+  }
 }
 
 QString Settings::monitorColorProfilePath() {
-  return settings->settingsConf->value("monitorColorProfilePath", "").toString();
+  QReadLocker locker(&mProfileLock);
+  return mCachedMonitorColorProfilePath;
 }
 
 void Settings::setMonitorColorProfilePath(const QString &path) {
   settings->settingsConf->setValue("monitorColorProfilePath", path);
+  {
+    QWriteLocker locker(&mProfileLock);
+    mCachedMonitorColorProfilePath = path;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -1011,33 +1062,30 @@ void Settings::setExpandLimit(int value) {
   settings->settingsConf->setValue("expandLimit", value);
 }
 int Settings::JPEGSaveQuality() {
-  int quality = std::clamp(
-      settings->settingsConf->value("JPEGSaveQuality", 95).toInt(), 0, 100);
-  return quality;
+  return mCachedJPEGSaveQuality.load(std::memory_order_relaxed);
 }
 
 void Settings::setJPEGSaveQuality(int value) {
   settings->settingsConf->setValue("JPEGSaveQuality", value);
+  mCachedJPEGSaveQuality.store(std::clamp(value, 0, 100), std::memory_order_relaxed);
 }
 //------------------------------------------------------------------------------
 int Settings::pngSaveQuality() {
-  int quality = std::clamp(
-      settings->settingsConf->value("pngSaveQuality", 3).toInt(), 0, 9);
-  return quality;
+  return mCachedPngSaveQuality.load(std::memory_order_relaxed);
 }
 
 void Settings::setPngSaveQuality(int value) {
   settings->settingsConf->setValue("pngSaveQuality", value);
+  mCachedPngSaveQuality.store(std::clamp(value, 0, 9), std::memory_order_relaxed);
 }
 //------------------------------------------------------------------------------
 int Settings::modernSaveQuality() {
-  int quality = std::clamp(
-      settings->settingsConf->value("modernSaveQuality", 90).toInt(), 0, 100);
-  return quality;
+  return mCachedModernSaveQuality.load(std::memory_order_relaxed);
 }
 
 void Settings::setModernSaveQuality(int value) {
   settings->settingsConf->setValue("modernSaveQuality", value);
+  mCachedModernSaveQuality.store(std::clamp(value, 0, 100), std::memory_order_relaxed);
 }
 //------------------------------------------------------------------------------
 ScalingFilter Settings::scalingFilter() {
@@ -1279,11 +1327,12 @@ void Settings::setLastPrinter(QString name) {
 }
 //------------------------------------------------------------------------------
 bool Settings::jxlAnimation() {
-  return settings->settingsConf->value("jxlAnimation", false).toBool();
+  return mCachedJxlAnimation.load(std::memory_order_relaxed);
 }
 
 void Settings::setJxlAnimation(bool mode) {
   settings->settingsConf->setValue("jxlAnimation", mode);
+  mCachedJxlAnimation.store(mode, std::memory_order_relaxed);
 }
 //------------------------------------------------------------------------------
 bool Settings::autoResizeWindow() {
@@ -1306,17 +1355,15 @@ void Settings::setAutoResizeLimit(int percent) {
 }
 //------------------------------------------------------------------------------
 int Settings::memoryAllocationLimit() {
-  int limit =
-      settings->settingsConf->value("memoryAllocationLimit", 2048).toInt();
-  if (limit < 512)
-    limit = 512;
-  else if (limit > 8192)
-    limit = 8192;
-  return limit;
+  return mCachedMemoryAllocationLimit.load(std::memory_order_relaxed);
 }
 
 void Settings::setMemoryAllocationLimit(int limitMB) {
   settings->settingsConf->setValue("memoryAllocationLimit", limitMB);
+  int limit = limitMB;
+  if (limit < 512) limit = 512;
+  else if (limit > 8192) limit = 8192;
+  mCachedMemoryAllocationLimit.store(limit, std::memory_order_relaxed);
 }
 //------------------------------------------------------------------------------
 bool Settings::panelCenterSelection() {
@@ -1428,21 +1475,30 @@ void Settings::setMultiInstance(bool mode) {
 }
 //------------------------------------------------------------------------------
 QString Settings::excludedCachePaths() {
-  return settings->settingsConf->value("excludedCachePaths", "").toString();
+  QReadLocker locker(&mExcludedPathsLock);
+  return mCachedExcludedCachePaths;
 }
 
 void Settings::setExcludedCachePaths(QString paths) {
   settings->settingsConf->setValue("excludedCachePaths", paths);
+  {
+    QWriteLocker locker(&mExcludedPathsLock);
+    mCachedExcludedCachePaths = paths;
+    mCachedExcludedCachePathsList = paths.split(';');
+  }
 }
 
 bool Settings::isPathExcludedFromCache(const QString &path) {
-  QString excludedStr = excludedCachePaths();
-  if (excludedStr.isEmpty()) {
-    return false;
+  QStringList parts;
+  {
+    QReadLocker locker(&mExcludedPathsLock);
+    if (mCachedExcludedCachePaths.isEmpty()) {
+      return false;
+    }
+    parts = mCachedExcludedCachePathsList;
   }
 
   QString cleanPath = QDir::cleanPath(path);
-  QStringList parts = excludedStr.split(';');
   for (const QString &part : parts) {
     QString trimmed = part.trimmed();
     if (trimmed.isEmpty()) {
