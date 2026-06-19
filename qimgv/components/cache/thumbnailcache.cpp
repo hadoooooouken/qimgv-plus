@@ -22,6 +22,7 @@ QSqlDatabase ThumbnailCache::getDatabaseConnection() {
         QSqlQuery query(db);
         query.exec("PRAGMA journal_mode=WAL;");
         query.exec("PRAGMA synchronous=NORMAL;");
+        query.exec("PRAGMA busy_timeout=2000;");
         query.exec("CREATE TABLE IF NOT EXISTS thumbnails ("
                    "id TEXT PRIMARY KEY, "
                    "last_modified TEXT, "
@@ -60,7 +61,10 @@ void ThumbnailCache::saveThumbnail(const QImage *image, QString id) {
     QByteArray ba;
     QBuffer buffer(&ba);
     buffer.open(QIODevice::WriteOnly);
-    image->save(&buffer, "JXL", 85);
+    
+    QImage thumbCopy = *image; // cheap shallow copy
+    thumbCopy.setText(QStringLiteral("effort"), QStringLiteral("2"));
+    thumbCopy.save(&buffer, "JXL", 85);
     
     QSqlQuery query(db);
     query.prepare("INSERT OR REPLACE INTO thumbnails (id, last_modified, original_width, original_height, label, data) "

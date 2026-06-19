@@ -1466,6 +1466,18 @@ bool QJpegXLHandler::write(const QImage &image)
             JxlEncoderSetFrameLossless(encoder_options, JXL_FALSE);
         }
 
+        // Set compression effort if specified in image metadata
+        int effort = 7;
+        QString effortStr = image.text(QStringLiteral("effort"));
+        if (!effortStr.isEmpty()) {
+            bool ok;
+            int val = effortStr.toInt(&ok);
+            if (ok && val >= 1 && val <= 9) {
+                effort = val;
+            }
+        }
+        JxlEncoderFrameSettingsSetOption(encoder_options, JXL_ENC_FRAME_SETTING_EFFORT, effort);
+
         size_t buffer_size;
         if (tmpimage.format() == QImage::Format_RGBX32FPx4) { // pack 32-bit depth RGBX -> RGB
             buffer_size = 12 * size_t(tmpimage.width()) * size_t(tmpimage.height());
