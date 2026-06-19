@@ -5,6 +5,67 @@
 #include <cmath>
 #include <algorithm>
 #include <immintrin.h>
+#include <QThreadPool>
+#include <QRunnable>
+#include <QSemaphore>
+#include <QCoreApplication>
+#include <functional>
+
+namespace {
+// Bicubic coefficients
+constexpr float kBicubicCoeff1 = -0.5f;
+constexpr float kBicubicCoeff2 = 1.5f;
+constexpr float kBicubicCoeff3 = -2.5f;
+constexpr float kBicubicCoeff4 = 1.0f;
+constexpr float kBicubicCoeff5 = -1.5f;
+constexpr float kBicubicCoeff6 = 2.0f;
+constexpr float kBicubicCoeff7 = 0.5f;
+
+// Unsharp mask constants
+constexpr float kUnsharpSharpStrength = 1.15f;
+constexpr float kUnsharpBlurStrength = 0.15f;
+constexpr float kColorMax = 255.0f;
+constexpr float kRoundOffset = 0.5f;
+
+// Sliding window size
+constexpr int kSlidingWindowSize = 3;
+
+// Gaussian blur constants
+constexpr int kGaussianKernelSize = 9;
+constexpr int kGaussianHalfWidth = 4;
+constexpr float kGaussianWeights[kGaussianKernelSize] = {
+  0.02763f, 0.06628f, 0.12384f, 0.18017f, 0.20416f, 0.18017f, 0.12384f, 0.06628f, 0.02763f
+};
+
+// Task runner helper
+class ScalerTask : public QRunnable {
+    std::function<void()> m_func;
+public:
+    ScalerTask(std::function<void()> func) : m_func(func) {
+        setAutoDelete(true);
+    }
+    void run() override {
+        m_func();
+    }
+};
+
+// Helper to convert 4 packed unsigned 8-bit integers (in lower 32-bits of __m128i) to 4 single-precision float values
+inline __m128 cvtepu8_ps(__m128i val) {
+    return _mm_cvtepi32_ps(_mm_cvtepu8_epi32(val));
+}
+
+// Thread pool helper childed to QCoreApplication to avoid static destruction issues
+QThreadPool* getScalingThreadPool() {
+    static QThreadPool* pool = []() {
+        QThreadPool* p = new QThreadPool(QCoreApplication::instance());
+        int threads = std::thread::hardware_concurrency();
+        if (threads <= 0) threads = 4;
+        p->setMaxThreadCount(threads);
+        return p;
+    }();
+    return pool;
+}
+}
 
 void ImageLib::recolor(QPixmap &pixmap, QColor color) {
   QPainter p(&pixmap);
@@ -233,10 +294,10 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
       hWeights[x].x1 = std::clamp(xin,     0, W_src - 1);
       hWeights[x].x2 = std::clamp(xin + 1, 0, W_src - 1);
       hWeights[x].x3 = std::clamp(xin + 2, 0, W_src - 1);
-      hWeights[x].w0 = -0.5f * dx * dx * dx + dx * dx - 0.5f * dx;
-      hWeights[x].w1 = 1.5f * dx * dx * dx - 2.5f * dx * dx + 1.0f;
-      hWeights[x].w2 = -1.5f * dx * dx * dx + 2.0f * dx * dx + 0.5f * dx;
-      hWeights[x].w3 = 0.5f * dx * dx * dx - 0.5f * dx * dx;
+      hWeights[x].w0 = kBicubicCoeff1 * dx * dx * dx + dx * dx + kBicubicCoeff1 * dx;
+      hWeights[x].w1 = kBicubicCoeff2 * dx * dx * dx + kBicubicCoeff3 * dx * dx + kBicubicCoeff4;
+      hWeights[x].w2 = kBicubicCoeff5 * dx * dx * dx + kBicubicCoeff6 * dx * dx + kBicubicCoeff7 * dx;
+      hWeights[x].w3 = kBicubicCoeff7 * dx * dx * dx + kBicubicCoeff1 * dx * dx;
     }
 
     // Precompute vertical weights and clamp indices
@@ -253,34 +314,81 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
       vWeights[y].y1 = std::clamp(yin,     0, H_src - 1);
       vWeights[y].y2 = std::clamp(yin + 1, 0, H_src - 1);
       vWeights[y].y3 = std::clamp(yin + 2, 0, H_src - 1);
-      vWeights[y].w0 = -0.5f * dy * dy * dy + dy * dy - 0.5f * dy;
-      vWeights[y].w1 = 1.5f * dy * dy * dy - 2.5f * dy * dy + 1.0f;
-      vWeights[y].w2 = -1.5f * dy * dy * dy + 2.0f * dy * dy + 0.5f * dy;
-      vWeights[y].w3 = 0.5f * dy * dy * dy - 0.5f * dy * dy;
+      vWeights[y].w0 = kBicubicCoeff1 * dy * dy * dy + dy * dy + kBicubicCoeff1 * dy;
+      vWeights[y].w1 = kBicubicCoeff2 * dy * dy * dy + kBicubicCoeff3 * dy * dy + kBicubicCoeff4;
+      vWeights[y].w2 = kBicubicCoeff5 * dy * dy * dy + kBicubicCoeff6 * dy * dy + kBicubicCoeff7 * dy;
+      vWeights[y].w3 = kBicubicCoeff7 * dy * dy * dy + kBicubicCoeff1 * dy * dy;
     }
 
     // Horizontal pass: W_src x H_src -> W_dst x H_src
     QImage interImg(W_dst, H_src, srcImg.format());
     
     // Determine thread count
-    unsigned int numThreads = std::thread::hardware_concurrency();
-    if (numThreads == 0) numThreads = 4;
+    int numThreads = std::thread::hardware_concurrency();
+    if (numThreads <= 0) numThreads = 4;
+
+    QThreadPool* pool = getScalingThreadPool();
 
     {
-      std::vector<std::thread> threads;
+      QSemaphore semaphore;
       int rowsPerThread = H_src / numThreads;
       if (rowsPerThread == 0) rowsPerThread = 1;
 
-      for (unsigned int i = 0; i < numThreads; ++i) {
+      int numTasks = 0;
+      for (int i = 0; i < numThreads; ++i) {
         int y_start = i * rowsPerThread;
         int y_end = (i == numThreads - 1) ? H_src : (i + 1) * rowsPerThread;
         if (y_start >= H_src) break;
 
-        threads.emplace_back([&srcImg, &interImg, &hWeights, W_dst, y_start, y_end]() {
+        numTasks++;
+        pool->start(new ScalerTask([&srcImg, &interImg, &hWeights, W_dst, y_start, y_end, &semaphore]() {
           for (int y = y_start; y < y_end; ++y) {
             const uint32_t* srcRow = (const uint32_t*)srcImg.constScanLine(y);
             uint32_t* interRow = (uint32_t*)interImg.scanLine(y);
-            for (int x = 0; x < W_dst; ++x) {
+
+            int x = 0;
+            int limit = W_dst - 1;
+            for (; x < limit; x += 2) {
+              const auto& hw_a = hWeights[x];
+              const auto& hw_b = hWeights[x + 1];
+
+              uint32_t p0_a = srcRow[hw_a.x0];
+              uint32_t p1_a = srcRow[hw_a.x1];
+              uint32_t p2_a = srcRow[hw_a.x2];
+              uint32_t p3_a = srcRow[hw_a.x3];
+
+              uint32_t p0_b = srcRow[hw_b.x0];
+              uint32_t p1_b = srcRow[hw_b.x1];
+              uint32_t p2_b = srcRow[hw_b.x2];
+              uint32_t p3_b = srcRow[hw_b.x3];
+
+              __m256 v_p0 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p0_a)), cvtepu8_ps(_mm_cvtsi32_si128(p0_b)));
+              __m256 v_p1 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p1_a)), cvtepu8_ps(_mm_cvtsi32_si128(p1_b)));
+              __m256 v_p2 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p2_a)), cvtepu8_ps(_mm_cvtsi32_si128(p2_b)));
+              __m256 v_p3 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p3_a)), cvtepu8_ps(_mm_cvtsi32_si128(p3_b)));
+
+              __m256 w0 = _mm256_setr_ps(hw_a.w0, hw_a.w0, hw_a.w0, hw_a.w0, hw_b.w0, hw_b.w0, hw_b.w0, hw_b.w0);
+              __m256 w1 = _mm256_setr_ps(hw_a.w1, hw_a.w1, hw_a.w1, hw_a.w1, hw_b.w1, hw_b.w1, hw_b.w1, hw_b.w1);
+              __m256 w2 = _mm256_setr_ps(hw_a.w2, hw_a.w2, hw_a.w2, hw_a.w2, hw_b.w2, hw_b.w2, hw_b.w2, hw_b.w2);
+              __m256 w3 = _mm256_setr_ps(hw_a.w3, hw_a.w3, hw_a.w3, hw_a.w3, hw_b.w3, hw_b.w3, hw_b.w3, hw_b.w3);
+
+              __m256 res = _mm256_mul_ps(v_p0, w0);
+              res = _mm256_fmadd_ps(v_p1, w1, res);
+              res = _mm256_fmadd_ps(v_p2, w2, res);
+              res = _mm256_fmadd_ps(v_p3, w3, res);
+
+              __m256 rounded = _mm256_add_ps(res, _mm256_set1_ps(kRoundOffset));
+              rounded = _mm256_min_ps(_mm256_max_ps(rounded, _mm256_setzero_ps()), _mm256_set1_ps(kColorMax));
+
+              __m256i res_i = _mm256_cvtps_epi32(rounded);
+
+              __m256i packed_16 = _mm256_packus_epi32(res_i, res_i);
+              __m256i packed_8 = _mm256_packus_epi16(packed_16, packed_16);
+
+              interRow[x] = _mm_cvtsi128_si32(_mm256_castsi256_si128(packed_8));
+              interRow[x + 1] = _mm_cvtsi128_si32(_mm256_extractf128_si256(packed_8, 1));
+            }
+            if (x < W_dst) {
               const auto& hw = hWeights[x];
               uint32_t p0 = srcRow[hw.x0];
               uint32_t p1 = srcRow[hw.x1];
@@ -292,37 +400,38 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               float r = hw.w0 * ((p0 >> 16) & 0xFF) + hw.w1 * ((p1 >> 16) & 0xFF) + hw.w2 * ((p2 >> 16) & 0xFF) + hw.w3 * ((p3 >> 16) & 0xFF);
               float a = hw.w0 * ((p0 >> 24) & 0xFF) + hw.w1 * ((p1 >> 24) & 0xFF) + hw.w2 * ((p2 >> 24) & 0xFF) + hw.w3 * ((p3 >> 24) & 0xFF);
 
-              uint8_t ub = std::clamp(b + 0.5f, 0.0f, 255.0f);
-              uint8_t ug = std::clamp(g + 0.5f, 0.0f, 255.0f);
-              uint8_t ur = std::clamp(r + 0.5f, 0.0f, 255.0f);
-              uint8_t ua = std::clamp(a + 0.5f, 0.0f, 255.0f);
+              uint8_t ub = std::clamp(b + kRoundOffset, 0.0f, kColorMax);
+              uint8_t ug = std::clamp(g + kRoundOffset, 0.0f, kColorMax);
+              uint8_t ur = std::clamp(r + kRoundOffset, 0.0f, kColorMax);
+              uint8_t ua = std::clamp(a + kRoundOffset, 0.0f, kColorMax);
 
               interRow[x] = (ua << 24) | (ur << 16) | (ug << 8) | ub;
             }
           }
-        });
+          semaphore.release(1);
+        }));
       }
-      for (auto& t : threads) {
-        t.join();
-      }
+      semaphore.acquire(numTasks);
     }
 
     // Vertical pass + Cross-kernel Sharpening combined in one step
     QImage destImg(W_dst, H_dst, srcImg.format());
 
     {
-      std::vector<std::thread> threads;
+      QSemaphore semaphore;
       int rowsPerThread = H_dst / numThreads;
       if (rowsPerThread == 0) rowsPerThread = 1;
 
-      for (unsigned int i = 0; i < numThreads; ++i) {
+      int numTasks = 0;
+      for (int i = 0; i < numThreads; ++i) {
         int y_start = i * rowsPerThread;
         int y_end = (i == numThreads - 1) ? H_dst : (i + 1) * rowsPerThread;
         if (y_start >= H_dst) break;
 
-        threads.emplace_back([&interImg, &destImg, &vWeights, W_dst, H_dst, y_start, y_end]() {
+        numTasks++;
+        pool->start(new ScalerTask([&interImg, &destImg, &vWeights, W_dst, H_dst, y_start, y_end, &semaphore]() {
           // Thread-local sliding window buffer
-          std::vector<std::vector<uint32_t>> rowBuffers(3, std::vector<uint32_t>(W_dst));
+          std::vector<std::vector<uint32_t>> rowBuffers(kSlidingWindowSize, std::vector<uint32_t>(W_dst));
 
           auto fillRowBuffer = [&](int yd, int bufIdx) {
             int yd_clamped = std::clamp(yd, 0, H_dst - 1);
@@ -333,7 +442,45 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
             const uint32_t* r3 = (const uint32_t*)interImg.constScanLine(vw.y3);
             uint32_t* out = rowBuffers[bufIdx].data();
 
-            for (int x = 0; x < W_dst; ++x) {
+            __m256 w0 = _mm256_set1_ps(vw.w0);
+            __m256 w1 = _mm256_set1_ps(vw.w1);
+            __m256 w2 = _mm256_set1_ps(vw.w2);
+            __m256 w3 = _mm256_set1_ps(vw.w3);
+
+            int x = 0;
+            int limit = W_dst - 1;
+            for (; x < limit; x += 2) {
+              uint32_t p0_a = r0[x];
+              uint32_t p0_b = r0[x + 1];
+              uint32_t p1_a = r1[x];
+              uint32_t p1_b = r1[x + 1];
+              uint32_t p2_a = r2[x];
+              uint32_t p2_b = r2[x + 1];
+              uint32_t p3_a = r3[x];
+              uint32_t p3_b = r3[x + 1];
+
+              __m256 v_p0 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p0_a)), cvtepu8_ps(_mm_cvtsi32_si128(p0_b)));
+              __m256 v_p1 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p1_a)), cvtepu8_ps(_mm_cvtsi32_si128(p1_b)));
+              __m256 v_p2 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p2_a)), cvtepu8_ps(_mm_cvtsi32_si128(p2_b)));
+              __m256 v_p3 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p3_a)), cvtepu8_ps(_mm_cvtsi32_si128(p3_b)));
+
+              __m256 res = _mm256_mul_ps(v_p0, w0);
+              res = _mm256_fmadd_ps(v_p1, w1, res);
+              res = _mm256_fmadd_ps(v_p2, w2, res);
+              res = _mm256_fmadd_ps(v_p3, w3, res);
+
+              __m256 rounded = _mm256_add_ps(res, _mm256_set1_ps(kRoundOffset));
+              rounded = _mm256_min_ps(_mm256_max_ps(rounded, _mm256_setzero_ps()), _mm256_set1_ps(kColorMax));
+
+              __m256i res_i = _mm256_cvtps_epi32(rounded);
+
+              __m256i packed_16 = _mm256_packus_epi32(res_i, res_i);
+              __m256i packed_8 = _mm256_packus_epi16(packed_16, packed_16);
+
+              out[x] = _mm_cvtsi128_si32(_mm256_castsi256_si128(packed_8));
+              out[x + 1] = _mm_cvtsi128_si32(_mm256_extractf128_si256(packed_8, 1));
+            }
+            if (x < W_dst) {
               uint32_t p0 = r0[x];
               uint32_t p1 = r1[x];
               uint32_t p2 = r2[x];
@@ -344,10 +491,10 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               float r = vw.w0 * ((p0 >> 16) & 0xFF) + vw.w1 * ((p1 >> 16) & 0xFF) + vw.w2 * ((p2 >> 16) & 0xFF) + vw.w3 * ((p3 >> 16) & 0xFF);
               float a = vw.w0 * ((p0 >> 24) & 0xFF) + vw.w1 * ((p1 >> 24) & 0xFF) + vw.w2 * ((p2 >> 24) & 0xFF) + vw.w3 * ((p3 >> 24) & 0xFF);
 
-              uint8_t ub = std::clamp(b + 0.5f, 0.0f, 255.0f);
-              uint8_t ug = std::clamp(g + 0.5f, 0.0f, 255.0f);
-              uint8_t ur = std::clamp(r + 0.5f, 0.0f, 255.0f);
-              uint8_t ua = std::clamp(a + 0.5f, 0.0f, 255.0f);
+              uint8_t ub = std::clamp(b + kRoundOffset, 0.0f, kColorMax);
+              uint8_t ug = std::clamp(g + kRoundOffset, 0.0f, kColorMax);
+              uint8_t ur = std::clamp(r + kRoundOffset, 0.0f, kColorMax);
+              uint8_t ua = std::clamp(a + kRoundOffset, 0.0f, kColorMax);
 
               out[x] = (ua << 24) | (ur << 16) | (ug << 8) | ub;
             }
@@ -361,9 +508,9 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
           for (int y = y_start; y < y_end; ++y) {
             uint32_t* dstRow = (uint32_t*)destImg.scanLine(y);
 
-            int idxT = (y - y_start) % 3;
-            int idxC = (y - y_start + 1) % 3;
-            int idxB = (y - y_start + 2) % 3;
+            int idxT = (y - y_start) % kSlidingWindowSize;
+            int idxC = (y - y_start + 1) % kSlidingWindowSize;
+            int idxB = (y - y_start + 2) % kSlidingWindowSize;
 
             const uint32_t* rowT = rowBuffers[idxT].data();
             const uint32_t* rowC = rowBuffers[idxC].data();
@@ -461,11 +608,10 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               fillRowBuffer(y + 2, idxT);
             }
           }
-        });
+          semaphore.release(1);
+        }));
       }
-      for (auto& t : threads) {
-        t.join();
-      }
+      semaphore.acquire(numTasks);
     }
 
     return destImg;
@@ -475,55 +621,49 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
     // Base resize using Qt bilinear scaling
     QImage scaledImg = srcImg.scaled(destSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
-    // Precompute 1D Gaussian kernel coefficients for sigma = 2.0 (kernel size 9)
-    static const float gWeights[9] = {
-      0.02763f, 0.06628f, 0.12384f, 0.18017f, 0.20416f, 0.18017f, 0.12384f, 0.06628f, 0.02763f
-    };
-
     QImage destImg(W_dst, H_dst, srcImg.format());
 
     // Determine thread count
-    unsigned int numThreads = std::thread::hardware_concurrency();
-    if (numThreads == 0) numThreads = 4;
+    int numThreads = std::thread::hardware_concurrency();
+    if (numThreads <= 0) numThreads = 4;
+
+    QThreadPool* pool = getScalingThreadPool();
 
     {
-      std::vector<std::thread> threads;
+      QSemaphore semaphore;
       int rowsPerThread = H_dst / numThreads;
       if (rowsPerThread == 0) rowsPerThread = 1;
 
-      for (unsigned int i = 0; i < numThreads; ++i) {
+      int numTasks = 0;
+      for (int i = 0; i < numThreads; ++i) {
         int y_start = i * rowsPerThread;
         int y_end = (i == numThreads - 1) ? H_dst : (i + 1) * rowsPerThread;
         if (y_start >= H_dst) break;
 
-        threads.emplace_back([&scaledImg, &destImg, W_dst, H_dst, y_start, y_end]() {
+        numTasks++;
+        pool->start(new ScalerTask([&scaledImg, &destImg, W_dst, H_dst, y_start, y_end, &semaphore]() {
           // Thread-local sliding window buffer: stores 9 rows of horizontally blurred floats
-          std::vector<std::vector<float>> rowBuffers(9, std::vector<float>(W_dst * 4));
+          std::vector<std::vector<float>> rowBuffers(kGaussianKernelSize, std::vector<float>(W_dst * 4));
 
           auto blurRowHorizontal = [&](int yd, float* outRow) {
             int yd_clamped = std::clamp(yd, 0, H_dst - 1);
             const uint32_t* srcRow = (const uint32_t*)scaledImg.constScanLine(yd_clamped);
             for (int x = 0; x < W_dst; ++x) {
-              float sumB = 0.0f, sumG = 0.0f, sumR = 0.0f, sumA = 0.0f;
-              for (int k = -4; k <= 4; ++k) {
+              __m128 sum = _mm_setzero_ps();
+              for (int k = -kGaussianHalfWidth; k <= kGaussianHalfWidth; ++k) {
                 int sx = std::clamp(x + k, 0, W_dst - 1);
                 uint32_t p = srcRow[sx];
-                float kw = gWeights[k + 4];
-                sumB += kw * (p & 0xFF);
-                sumG += kw * ((p >> 8) & 0xFF);
-                sumR += kw * ((p >> 16) & 0xFF);
-                sumA += kw * ((p >> 24) & 0xFF);
+                __m128 kw = _mm_set1_ps(kGaussianWeights[k + kGaussianHalfWidth]);
+                __m128 v_p = cvtepu8_ps(_mm_cvtsi32_si128(p));
+                sum = _mm_fmadd_ps(kw, v_p, sum);
               }
-              outRow[x * 4 + 0] = sumB;
-              outRow[x * 4 + 1] = sumG;
-              outRow[x * 4 + 2] = sumR;
-              outRow[x * 4 + 3] = sumA;
+              _mm_storeu_ps(&outRow[x * 4], sum);
             }
           };
 
           // Prime window
-          for (int r = 0; r < 9; ++r) {
-            blurRowHorizontal(y_start - 4 + r, rowBuffers[r].data());
+          for (int r = 0; r < kGaussianKernelSize; ++r) {
+            blurRowHorizontal(y_start - kGaussianHalfWidth + r, rowBuffers[r].data());
           }
 
           for (int y = y_start; y < y_end; ++y) {
@@ -532,48 +672,40 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
 
             // Compute vertical Gaussian blur + Unsharp Mask blending on the fly
             for (int x = 0; x < W_dst; ++x) {
-              float sumB = 0.0f, sumG = 0.0f, sumR = 0.0f, sumA = 0.0f;
-              for (int k = 0; k < 9; ++k) {
-                int bufIdx = (y - y_start + k) % 9;
-                float kw = gWeights[k];
-                const float* r = rowBuffers[bufIdx].data();
-                sumB += kw * r[x * 4 + 0];
-                sumG += kw * r[x * 4 + 1];
-                sumR += kw * r[x * 4 + 2];
-                sumA += kw * r[x * 4 + 3];
+              __m128 sum = _mm_setzero_ps();
+              for (int k = 0; k < kGaussianKernelSize; ++k) {
+                int bufIdx = (y - y_start + k) % kGaussianKernelSize;
+                __m128 kw = _mm_set1_ps(kGaussianWeights[k]);
+                __m128 r_val = _mm_loadu_ps(&rowBuffers[bufIdx][x * 4]);
+                sum = _mm_fmadd_ps(kw, r_val, sum);
               }
 
               uint32_t origP = origRow[x];
-              float origB = origP & 0xFF;
-              float origG = (origP >> 8) & 0xFF;
-              float origR = (origP >> 16) & 0xFF;
-              float origA = (origP >> 24) & 0xFF;
+              __m128 orig_f = cvtepu8_ps(_mm_cvtsi32_si128(origP));
 
               // strength: 0.15 unsharp mask -> 1.15 * original - 0.15 * blurred
-              float finalB = 1.15f * origB - 0.15f * sumB;
-              float finalG = 1.15f * origG - 0.15f * sumG;
-              float finalR = 1.15f * origR - 0.15f * sumR;
-              float finalA = 1.15f * origA - 0.15f * sumA;
+              __m128 final_f = _mm_fmsub_ps(_mm_set1_ps(kUnsharpSharpStrength), orig_f, _mm_mul_ps(_mm_set1_ps(kUnsharpBlurStrength), sum));
 
-              uint8_t ub = std::clamp(finalB + 0.5f, 0.0f, 255.0f);
-              uint8_t ug = std::clamp(finalG + 0.5f, 0.0f, 255.0f);
-              uint8_t ur = std::clamp(finalR + 0.5f, 0.0f, 255.0f);
-              uint8_t ua = std::clamp(finalA + 0.5f, 0.0f, 255.0f);
+              __m128 rounded = _mm_add_ps(final_f, _mm_set1_ps(kRoundOffset));
+              rounded = _mm_min_ps(_mm_max_ps(rounded, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
 
-              dstRow[x] = (ua << 24) | (ur << 16) | (ug << 8) | ub;
+              __m128i res_i = _mm_cvtps_epi32(rounded);
+              __m128i packed_16 = _mm_packus_epi32(res_i, res_i);
+              __m128i packed_8 = _mm_packus_epi16(packed_16, packed_16);
+
+              dstRow[x] = _mm_cvtsi128_si32(packed_8);
             }
 
             // Advance window
             if (y < H_dst - 1) {
-              int idx_to_replace = (y - y_start) % 9;
+              int idx_to_replace = (y - y_start) % kGaussianKernelSize;
               blurRowHorizontal(y + 5, rowBuffers[idx_to_replace].data());
             }
           }
-        });
+          semaphore.release(1);
+        }));
       }
-      for (auto& t : threads) {
-        t.join();
-      }
+      semaphore.acquire(numTasks);
     }
 
     return destImg;
