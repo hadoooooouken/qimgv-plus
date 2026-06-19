@@ -1486,6 +1486,16 @@ void Core::applyColorAdjustments(float exposure, float contrast, float brightnes
   if (!img)
     return;
 
+  bool hasAdjustments = (std::abs(brightness) > ImageLib::kAdjustEpsilon ||
+                         std::abs(contrast - 1.0f) > ImageLib::kAdjustEpsilon ||
+                         std::abs(saturation - 1.0f) > ImageLib::kAdjustEpsilon ||
+                         std::abs(hue) > ImageLib::kAdjustEpsilon ||
+                         std::abs(exposure) > ImageLib::kAdjustEpsilon ||
+                         std::abs(temperature) > ImageLib::kAdjustEpsilon ||
+                         std::abs(tint) > ImageLib::kAdjustEpsilon);
+  if (!hasAdjustments)
+    return;
+
   QImage adjusted = ImageLib::applyColorAdjustments(img->getImage(), exposure, contrast, brightness, temperature, tint, saturation, hue);
   if (adjusted.isNull())
     return;
