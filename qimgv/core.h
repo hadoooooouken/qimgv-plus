@@ -86,6 +86,7 @@ private:
     QString selectedPath();
     void guiSetImage(std::shared_ptr<Image> img);
     QTimer slideshowTimer;
+    QTimer preloadTimer;
 
     void startSlideshowTimer();
     void startSlideshow();
@@ -185,6 +186,7 @@ private slots:
     void historyBack();
     void historyForward();
     void modelDelayLoad();
+    void preloadNeighbors();
 #ifdef USE_UPSCAYL
 private:
     std::unique_ptr<class Upscaler> upscaler;

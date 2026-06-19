@@ -26,6 +26,10 @@
 
 #include "utils/colormanager.h"
 
+namespace {
+constexpr int PreloadDebounceDelayMs = 200;
+}
+
 Core::Core()
     : QObject(), folderEndAction(FOLDER_END_NO_ACTION), loopSlideshow(false),
       mDrag(nullptr), slideshow(false), shuffle(false) {
@@ -47,6 +51,7 @@ Core::Core()
   lastFolderIconSortingMode = settings->folderIconSortingMode();
   lastThumbPanelStyle = settings->thumbPanelStyle();
   slideshowTimer.setSingleShot(true);
+  preloadTimer.setSingleShot(true);
   connect(settings, &Settings::settingsChanged, this, &Core::readSettings);
 
 #ifdef USE_UPSCAYL
@@ -302,6 +307,7 @@ void Core::connectComponents() {
   connect(model.get(), &DirectoryModel::loadFailed, this, &Core::onLoadFailed);
 
   connect(&slideshowTimer, &QTimer::timeout, this, &Core::nextImageSlideshow);
+  connect(&preloadTimer, &QTimer::timeout, this, &Core::preloadNeighbors);
 }
 
 void Core::initActions() {
@@ -1819,12 +1825,9 @@ bool Core::loadFileIndex(int index, bool async, bool preload) {
   if (entry.path.isEmpty())
     return false;
   state.currentFilePath = entry.path;
+  preloadTimer.stop();
   model->unloadExcept(entry.path, preload);
   model->load(entry.path, async);
-  if (preload) {
-    model->preload(model->nextOf(entry.path));
-    model->preload(model->prevOf(entry.path));
-  }
   thumbPanelPresenter.selectAndFocus(entry.path);
   folderViewPresenter.selectAndFocus(entry.path);
   updateInfoString();
@@ -2055,6 +2058,9 @@ void Core::onModelItemReady(std::shared_ptr<Image> img, const QString &path) {
       QTimer::singleShot(40, this, SLOT(modelDelayLoad()));
     }
     model->unloadExcept(state.currentFilePath, settings->usePreloader());
+    if (settings->usePreloader()) {
+      preloadTimer.start(PreloadDebounceDelayMs);
+    }
   }
 }
 
@@ -2064,6 +2070,13 @@ void Core::modelDelayLoad() {
   mw->setDirectoryPath(state.directoryPath);
   model->updateImage(state.currentFilePath, state.currentImg);
   updateInfoString();
+}
+
+void Core::preloadNeighbors() {
+  if (state.hasActiveImage && !state.currentFilePath.isEmpty()) {
+    model->preload(model->nextOf(state.currentFilePath));
+    model->preload(model->prevOf(state.currentFilePath));
+  }
 }
 
 void Core::onModelItemUpdated(QString filePath) {

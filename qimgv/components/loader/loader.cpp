@@ -1,8 +1,12 @@
 #include "loader.h"
 
+namespace {
+constexpr int MaxLoaderThreads = 3;
+}
+
 Loader::Loader() {
     pool = new QThreadPool(this);
-    pool->setMaxThreadCount(2);
+    pool->setMaxThreadCount(MaxLoaderThreads);
 }
 
 Loader::~Loader() {
