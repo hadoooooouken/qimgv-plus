@@ -9,6 +9,7 @@
 #include <QTextStream>
 #include <cmath>
 #include <QGraphicsScene>
+#include <QGraphicsView>
 
 PanoramaGraphicsItem::PanoramaGraphicsItem(QGraphicsItem *parent)
     : QGraphicsObject(parent)
@@ -18,19 +19,31 @@ PanoramaGraphicsItem::PanoramaGraphicsItem(QGraphicsItem *parent)
 
 PanoramaGraphicsItem::~PanoramaGraphicsItem()
 {
-    // QOpenGLTexture and QOpenGLShaderProgram need a current context to release GPU resources.
-    // If no context is current, we release them to avoid calling their destructors (which would make glDelete* calls),
-    // preventing potential driver hangs/crashes at the cost of a CPU memory leak.
-    if (!QOpenGLContext::currentContext()) {
-        mTexture.release();
-        mProgram.release();
+    releaseGlResources(true);
+
+    if (mProgram) {
+        // QOpenGLShaderProgram needs a current context to release GPU resources.
+        // If no context is current, we try to make it current. If that still fails,
+        // we release ownership to avoid calling its destructor (preventing potential
+        // driver hangs/crashes at the cost of a CPU memory leak).
+        if (!QOpenGLContext::currentContext()) {
+            if (auto *glWidget = findGlWidget()) {
+                glWidget->makeCurrent();
+            }
+        }
+        if (QOpenGLContext::currentContext()) {
+            mProgram.reset();
+        } else {
+            mProgram.release();
+        }
     }
 }
 
 void PanoramaGraphicsItem::setImage(std::shared_ptr<const QImage> image)
 {
     mImage = image;
-    mTexture.reset();
+    mTextureDirty = true;
+    releaseGlResources(false);
     prepareGeometryChange();
     update();
 }
@@ -119,6 +132,11 @@ void PanoramaGraphicsItem::initShader()
 
 void PanoramaGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+    if (mTextureDirty) {
+        mTexture.reset();
+        mTextureDirty = false;
+    }
+
     if (!mImage || mImage->isNull()) return;
 
     QOpenGLWidget *glWidget = qobject_cast<QOpenGLWidget*>(widget);
@@ -202,4 +220,43 @@ void PanoramaGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsIt
     mProgram->release();
 
     painter->endNativePainting();
+}
+
+QVariant PanoramaGraphicsItem::itemChange(GraphicsItemChange change, const QVariant &value) {
+    if (change == ItemVisibleHasChanged) {
+        if (!value.toBool()) {
+            mTextureDirty = true;
+            releaseGlResources(false);
+        }
+    }
+    return QGraphicsObject::itemChange(change, value);
+}
+
+void PanoramaGraphicsItem::releaseGlResources(bool forceRelease) {
+    if (!mTexture) return;
+
+    // QOpenGLTexture needs a current context to release GPU resources.
+    // We try to make it current first. If that fails and forceRelease is true,
+    // we release ownership to avoid driver crashes at the cost of a memory leak.
+    if (!QOpenGLContext::currentContext()) {
+        if (auto *glWidget = findGlWidget()) {
+            glWidget->makeCurrent();
+        }
+    }
+    if (QOpenGLContext::currentContext()) {
+        mTexture.reset();
+    } else if (forceRelease) {
+        mTexture.release();
+    }
+}
+
+QOpenGLWidget* PanoramaGraphicsItem::findGlWidget() const {
+    if (auto *s = scene()) {
+        for (auto *view : s->views()) {
+            if (auto *glWidget = qobject_cast<QOpenGLWidget*>(view->viewport())) {
+                return glWidget;
+            }
+        }
+    }
+    return nullptr;
 }

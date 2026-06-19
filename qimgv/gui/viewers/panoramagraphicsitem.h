@@ -23,14 +23,20 @@ public:
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
+protected:
+    QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
+
 private:
     void initShader();
+    void releaseGlResources(bool forceRelease = false);
+    class QOpenGLWidget* findGlWidget() const;
     
     std::shared_ptr<const QImage> mImage;
     std::unique_ptr<QOpenGLShaderProgram> mProgram;
     std::unique_ptr<QOpenGLTexture> mTexture;
     bool mInitialized = false;
     bool mShaderFailed = false;
+    bool mTextureDirty = false;
     
     float mYaw = 0.0f;
     float mPitch = 0.0f;

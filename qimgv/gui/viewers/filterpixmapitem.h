@@ -32,6 +32,7 @@ public:
 
 protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
 
 private:
     static constexpr float kDownscaleThreshold = 0.999f;
@@ -59,4 +60,7 @@ private:
     Qt::TransformationMode mTransformationMode = Qt::SmoothTransformation;
 
     void initShader();
+    void releaseGlResources(bool forceRelease = false);
+    class QOpenGLWidget* findGlWidget() const;
 };
+
