@@ -646,7 +646,7 @@ void FolderView::paintEvent(QPaintEvent *) {
 }
 
 void FolderView::resizeEvent(QResizeEvent *event) {
-    Q_UNUSED(event)
+    FloatingWidgetContainer::resizeEvent(event);
     if(width() < 600)
         placesPanel->setVisible(false);
     else if (togglePlacesPanelButton->isChecked())
