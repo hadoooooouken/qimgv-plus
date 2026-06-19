@@ -25,6 +25,9 @@
 class Settings : public QObject {
   Q_OBJECT
 public:
+  static constexpr int MinThumbnailerThreads = 1;
+  static constexpr int MaxThumbnailerThreads = 32;
+
   static Settings *getInstance();
   ~Settings();
   QStringList supportedMimeTypes();

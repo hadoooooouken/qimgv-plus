@@ -3373,8 +3373,8 @@ void SettingsDialog::setupUi() {
         sizePolicy2.setHeightForWidth(thumbnailerThreadsSlider->sizePolicy().hasHeightForWidth());
         thumbnailerThreadsSlider->setSizePolicy(sizePolicy2);
         thumbnailerThreadsSlider->setMinimumSize(QSize(180, 25));
-        thumbnailerThreadsSlider->setMinimum(1);
-        thumbnailerThreadsSlider->setMaximum(8);
+        thumbnailerThreadsSlider->setMinimum(Settings::MinThumbnailerThreads);
+        thumbnailerThreadsSlider->setMaximum(Settings::MaxThumbnailerThreads);
         thumbnailerThreadsSlider->setPageStep(1);
         thumbnailerThreadsSlider->setOrientation(Qt::Orientation::Horizontal);
         thumbnailerThreadsSlider->setTickPosition(QSlider::TickPosition::TicksBelow);

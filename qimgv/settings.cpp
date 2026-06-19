@@ -975,10 +975,11 @@ int Settings::slideshowInterval() {
 }
 //------------------------------------------------------------------------------
 int Settings::thumbnailerThreadCount() {
-  int count = settings->settingsConf->value("thumbnailerThreads", 6).toInt();
-  if (count < 1)
-    count = 6;
-  return count;
+  int defaultCount = std::clamp(QThread::idealThreadCount() / 2, MinThumbnailerThreads, MaxThumbnailerThreads);
+  int count = settings->settingsConf->value("thumbnailerThreads", defaultCount).toInt();
+  if (count < MinThumbnailerThreads)
+    count = defaultCount;
+  return std::clamp(count, MinThumbnailerThreads, MaxThumbnailerThreads);
 }
 
 void Settings::setThumbnailerThreadCount(int count) {

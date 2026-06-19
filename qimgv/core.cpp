@@ -7,6 +7,7 @@
 
 #include "core.h"
 #include "settings.h"
+#include <algorithm>
 #include <QRegularExpression>
 #include <QTemporaryFile>
 #include <QCoreApplication>
@@ -466,6 +467,10 @@ void Core::onFirstRun() {
 
   settings->setScalingFilter(QI_FILTER_CAS);
   settings->setImageFitMode(FIT_WINDOW);
+
+  // Set default thumbnailer threads on first run
+  int defaultCount = std::clamp(QThread::idealThreadCount() / 2, Settings::MinThumbnailerThreads, Settings::MaxThumbnailerThreads);
+  settings->setThumbnailerThreadCount(defaultCount);
 
   settings->setFirstRun(false);
   settings->setLastVersion(appVersion);
