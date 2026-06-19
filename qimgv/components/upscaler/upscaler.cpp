@@ -57,7 +57,10 @@ QImage UpscaylScaler::upscale(const QImage &inputImage, const std::atomic<bool> 
         return QImage();
     }
 
-    QImage imgRgba = inputImage.convertToFormat(QImage::Format_ARGB32);
+    QImage imgRgba = inputImage;
+    if (imgRgba.format() != QImage::Format_ARGB32 && imgRgba.format() != QImage::Format_RGB32) {
+        imgRgba = imgRgba.convertToFormat(QImage::Format_ARGB32);
+    }
     qint64 inW = imgRgba.width();
     qint64 inH = imgRgba.height();
 
