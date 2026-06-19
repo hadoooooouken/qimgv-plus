@@ -8,6 +8,8 @@
 #include <QTimer>
 #include <QMutex>
 #include <memory>
+#include <atomic>
+#include <QThreadPool>
 #include "sourcecontainers/image.h"
 
 #ifdef USE_UPSCAYL
@@ -21,7 +23,7 @@ public:
     }
 
     bool init(const QString &appDir, const QString &modelName = QString());
-    QImage upscale(const QImage &inputImage);
+    QImage upscale(const QImage &inputImage, const std::atomic<bool> *abortFlag = nullptr);
     void destroy();
 
     ~UpscaylScaler() = default;
@@ -43,7 +45,7 @@ public:
     void requestUpscale(std::shared_ptr<Image> image, QSize targetSize, QString path);
     void readSettings();
     void reset();
-    bool isRequestStale(const QString &path, const QSize &targetSize) const;
+    bool isRequestStale(uint64_t taskGeneration) const;
 
 signals:
     void upscaleStarted();
@@ -53,8 +55,8 @@ signals:
 
 private slots:
     void onUpscaylTimerTimeout();
-    void onTaskFinished(QImage cropImg, QRect origCrop, QString path, QSize targetSize);
-    void onTaskAborted(QString path, QSize targetSize);
+    void onTaskFinished(QImage cropImg, QRect origCrop, QString path, QSize targetSize, uint64_t taskGeneration);
+    void onTaskAborted(QString path, QSize targetSize, uint64_t taskGeneration);
 
 private:
     void triggerUpscaylProcessing(QRect visibleRect, double currentScale, double dpr);
@@ -78,4 +80,8 @@ private:
 
     QSize latestUpscaylSize;
     mutable QMutex stateMutex;
+
+    std::atomic<uint64_t> currentGeneration{0};
+    std::shared_ptr<std::atomic<bool>> currentAbortFlag;
+    QThreadPool *pool = nullptr;
 };
