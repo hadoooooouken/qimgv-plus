@@ -822,77 +822,110 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
 
   __m256 v_offset = _mm256_set1_ps(cm.offset);
 
-  for (int y = 0; y < height; ++y) {
-    QRgb *line = reinterpret_cast<QRgb*>(dst.scanLine(y));
-    int x = 0;
-    int avx_end = width - 8;
+  dst.detach();
+  uchar *bits = dst.bits();
+  int bytesPerLine = dst.bytesPerLine();
 
-    for (; x <= avx_end; x += 8) {
-      __m256i pix = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&line[x]));
+  int numThreads = std::thread::hardware_concurrency();
+  if (numThreads <= 0) numThreads = 4;
 
-      // Extract channels as 32-bit integers
-      __m256i b_i = _mm256_and_si256(pix, mask_b_i);
-      __m256i g_i = _mm256_srli_epi32(_mm256_and_si256(pix, mask_g_i), 8);
-      __m256i r_i = _mm256_srli_epi32(_mm256_and_si256(pix, mask_r_i), 16);
-      __m256i a_i = _mm256_and_si256(pix, mask_a_i);
+  QThreadPool* pool = getScalingThreadPool();
 
-      // Convert to float
-      __m256 b_f = _mm256_cvtepi32_ps(b_i);
-      __m256 g_f = _mm256_cvtepi32_ps(g_i);
-      __m256 r_f = _mm256_cvtepi32_ps(r_i);
+  {
+    QSemaphore semaphore;
+    int rowsPerThread = height / numThreads;
+    if (rowsPerThread == 0) rowsPerThread = 1;
 
-      // Normalize to [0.0, 1.0]
-      b_f = _mm256_mul_ps(b_f, inv255);
-      g_f = _mm256_mul_ps(g_f, inv255);
-      r_f = _mm256_mul_ps(r_f, inv255);
+    int numTasks = 0;
+    for (int i = 0; i < numThreads; ++i) {
+      int y_start = i * rowsPerThread;
+      int y_end = (i == numThreads - 1) ? height : (i + 1) * rowsPerThread;
+      if (y_start >= height) break;
 
-      // Apply matrix: out = M * in + offset
-      __m256 out_r = _mm256_fmadd_ps(v_m00, r_f, _mm256_fmadd_ps(v_m01, g_f, _mm256_fmadd_ps(v_m02, b_f, v_offset)));
-      __m256 out_g = _mm256_fmadd_ps(v_m10, r_f, _mm256_fmadd_ps(v_m11, g_f, _mm256_fmadd_ps(v_m12, b_f, v_offset)));
-      __m256 out_b = _mm256_fmadd_ps(v_m20, r_f, _mm256_fmadd_ps(v_m21, g_f, _mm256_fmadd_ps(v_m22, b_f, v_offset)));
+      numTasks++;
+      pool->start(new ScalerTask([bits, bytesPerLine, cm, width, y_start, y_end, &semaphore,
+                                  mask_b_i, mask_g_i, mask_r_i, mask_a_i,
+                                  inv255, scale255, round05, v_zero, v_255,
+                                  v_m00, v_m01, v_m02,
+                                  v_m10, v_m11, v_m12,
+                                  v_m20, v_m21, v_m22,
+                                  v_offset]() {
+        for (int y = y_start; y < y_end; ++y) {
+          QRgb *line = reinterpret_cast<QRgb*>(bits + y * bytesPerLine);
+          int x = 0;
+          int avx_end = width - 8;
 
-      // Scale to [0.0, 255.0] and add 0.5 for rounding
-      out_r = _mm256_fmadd_ps(out_r, scale255, round05);
-      out_g = _mm256_fmadd_ps(out_g, scale255, round05);
-      out_b = _mm256_fmadd_ps(out_b, scale255, round05);
+          for (; x <= avx_end; x += 8) {
+            __m256i pix = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&line[x]));
 
-      // Clamp to [0, 255]
-      out_r = _mm256_min_ps(_mm256_max_ps(out_r, v_zero), v_255);
-      out_g = _mm256_min_ps(_mm256_max_ps(out_g, v_zero), v_255);
-      out_b = _mm256_min_ps(_mm256_max_ps(out_b, v_zero), v_255);
+            // Extract channels as 32-bit integers
+            __m256i b_i = _mm256_and_si256(pix, mask_b_i);
+            __m256i g_i = _mm256_srli_epi32(_mm256_and_si256(pix, mask_g_i), 8);
+            __m256i r_i = _mm256_srli_epi32(_mm256_and_si256(pix, mask_r_i), 16);
+            __m256i a_i = _mm256_and_si256(pix, mask_a_i);
 
-      // Convert back to integers
-      __m256i out_r_i = _mm256_cvtps_epi32(out_r);
-      __m256i out_g_i = _mm256_cvtps_epi32(out_g);
-      __m256i out_b_i = _mm256_cvtps_epi32(out_b);
+            // Convert to float
+            __m256 b_f = _mm256_cvtepi32_ps(b_i);
+            __m256 g_f = _mm256_cvtepi32_ps(g_i);
+            __m256 r_f = _mm256_cvtepi32_ps(r_i);
 
-      // Repack channels into ARGB format
-      __m256i out_r_shifted = _mm256_slli_epi32(out_r_i, 16);
-      __m256i out_g_shifted = _mm256_slli_epi32(out_g_i, 8);
+            // Normalize to [0.0, 1.0]
+            b_f = _mm256_mul_ps(b_f, inv255);
+            g_f = _mm256_mul_ps(g_f, inv255);
+            r_f = _mm256_mul_ps(r_f, inv255);
 
-      __m256i out_pix = _mm256_or_si256(a_i, _mm256_or_si256(out_r_shifted, _mm256_or_si256(out_g_shifted, out_b_i)));
+            // Apply matrix: out = M * in + offset
+            __m256 out_r = _mm256_fmadd_ps(v_m00, r_f, _mm256_fmadd_ps(v_m01, g_f, _mm256_fmadd_ps(v_m02, b_f, v_offset)));
+            __m256 out_g = _mm256_fmadd_ps(v_m10, r_f, _mm256_fmadd_ps(v_m11, g_f, _mm256_fmadd_ps(v_m12, b_f, v_offset)));
+            __m256 out_b = _mm256_fmadd_ps(v_m20, r_f, _mm256_fmadd_ps(v_m21, g_f, _mm256_fmadd_ps(v_m22, b_f, v_offset)));
 
-      _mm256_storeu_si256(reinterpret_cast<__m256i*>(&line[x]), out_pix);
+            // Scale to [0.0, 255.0] and add 0.5 for rounding
+            out_r = _mm256_fmadd_ps(out_r, scale255, round05);
+            out_g = _mm256_fmadd_ps(out_g, scale255, round05);
+            out_b = _mm256_fmadd_ps(out_b, scale255, round05);
+
+            // Clamp to [0, 255]
+            out_r = _mm256_min_ps(_mm256_max_ps(out_r, v_zero), v_255);
+            out_g = _mm256_min_ps(_mm256_max_ps(out_g, v_zero), v_255);
+            out_b = _mm256_min_ps(_mm256_max_ps(out_b, v_zero), v_255);
+
+            // Convert back to integers
+            __m256i out_r_i = _mm256_cvtps_epi32(out_r);
+            __m256i out_g_i = _mm256_cvtps_epi32(out_g);
+            __m256i out_b_i = _mm256_cvtps_epi32(out_b);
+
+            // Repack channels into ARGB format
+            __m256i out_r_shifted = _mm256_slli_epi32(out_r_i, 16);
+            __m256i out_g_shifted = _mm256_slli_epi32(out_g_i, 8);
+
+            __m256i out_pix = _mm256_or_si256(a_i, _mm256_or_si256(out_r_shifted, _mm256_or_si256(out_g_shifted, out_b_i)));
+
+            _mm256_storeu_si256(reinterpret_cast<__m256i*>(&line[x]), out_pix);
+          }
+
+          // Scalar fallback loop for remaining pixels
+          for (; x < width; ++x) {
+            QRgb pixel = line[x];
+            unsigned int a = pixel & 0xFF000000;
+            float r = ((pixel >> 16) & 0xFF) / 255.0f;
+            float g = ((pixel >> 8) & 0xFF) / 255.0f;
+            float b = (pixel & 0xFF) / 255.0f;
+
+            float out_r = cm.m[0][0] * r + cm.m[0][1] * g + cm.m[0][2] * b + cm.offset;
+            float out_g = cm.m[1][0] * r + cm.m[1][1] * g + cm.m[1][2] * b + cm.offset;
+            float out_b = cm.m[2][0] * r + cm.m[2][1] * g + cm.m[2][2] * b + cm.offset;
+
+            int nr = std::clamp(static_cast<int>(out_r * 255.0f + 0.5f), 0, 255);
+            int ng = std::clamp(static_cast<int>(out_g * 255.0f + 0.5f), 0, 255);
+            int nb = std::clamp(static_cast<int>(out_b * 255.0f + 0.5f), 0, 255);
+
+            line[x] = a | (nr << 16) | (ng << 8) | nb;
+          }
+        }
+        semaphore.release(1);
+      }));
     }
-
-    // Scalar fallback loop for remaining pixels
-    for (; x < width; ++x) {
-      QRgb pixel = line[x];
-      unsigned int a = pixel & 0xFF000000;
-      float r = ((pixel >> 16) & 0xFF) / 255.0f;
-      float g = ((pixel >> 8) & 0xFF) / 255.0f;
-      float b = (pixel & 0xFF) / 255.0f;
-
-      float out_r = cm.m[0][0] * r + cm.m[0][1] * g + cm.m[0][2] * b + cm.offset;
-      float out_g = cm.m[1][0] * r + cm.m[1][1] * g + cm.m[1][2] * b + cm.offset;
-      float out_b = cm.m[2][0] * r + cm.m[2][1] * g + cm.m[2][2] * b + cm.offset;
-
-      int nr = std::clamp(static_cast<int>(out_r * 255.0f + 0.5f), 0, 255);
-      int ng = std::clamp(static_cast<int>(out_g * 255.0f + 0.5f), 0, 255);
-      int nb = std::clamp(static_cast<int>(out_b * 255.0f + 0.5f), 0, 255);
-
-      line[x] = a | (nr << 16) | (ng << 8) | nb;
-    }
+    semaphore.acquire(numTasks);
   }
 
   return dst;
