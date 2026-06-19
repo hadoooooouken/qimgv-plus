@@ -9,6 +9,12 @@
 #include <QDebug>
 #include <QDateTime>
 #include <QRegularExpression>
+#include <QSet>
+#include <QPointer>
+#include <QThreadPool>
+#include <QRunnable>
+#include <atomic>
+#include <memory>
 
 #include <vector>
 #include <string>
@@ -39,8 +45,10 @@ typedef bool (DirectoryManager::*CompareFunction)(const FSEntry &e1, const FSEnt
 
 class DirectoryManager : public QObject {
     Q_OBJECT
+    friend class DirectoryScanner;
 public:
     DirectoryManager();
+    ~DirectoryManager();
     // ignored if the same dir is already opened
     bool setDirectory(QString);
     bool setDirectoryRecursive(QString);
@@ -133,6 +141,10 @@ private:
     void addEntriesFromDirectoryRecursive(std::vector<FSEntry> &entryVec, QString directoryPath);
     bool checkFileRange(int index) const;
     bool checkDirRange(int index) const;
+
+    std::shared_ptr<std::atomic<bool>> currentScanCancelled;
+    bool isScanning = false;
+    void handleScanFinished(const QString &path, std::vector<FSEntry> files, std::vector<FSEntry> dirs);
 
 private slots:
     void onFileAddedExternal(QString fileName);

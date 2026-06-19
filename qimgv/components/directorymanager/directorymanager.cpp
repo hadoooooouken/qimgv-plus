@@ -1,7 +1,172 @@
 #include "directorymanager.h"
 #include "settings.h"
 
+#include <QThreadPool>
+#include <QRunnable>
+#include <QPointer>
+#include <QSet>
+#include <atomic>
+#include <memory>
+
 namespace fs = std::filesystem;
+
+class DirectoryScanner : public QRunnable {
+public:
+    DirectoryScanner(QString directoryPath,
+                     bool recursive,
+                     bool showHiddenFiles,
+                     QRegularExpression regex,
+                     QPointer<DirectoryManager> manager,
+                     std::shared_ptr<std::atomic<bool>> cancelled)
+        : directoryPath(directoryPath),
+          recursive(recursive),
+          showHiddenFiles(showHiddenFiles),
+          regex(regex),
+          manager(manager),
+          cancelled(cancelled) {
+        setAutoDelete(true);
+    }
+
+    void run() override {
+        if (!manager || (cancelled && cancelled->load())) {
+            return;
+        }
+
+        std::vector<FSEntry> files;
+        std::vector<FSEntry> dirs;
+        std::error_code ec;
+        auto stdPath = toStdString(directoryPath);
+
+        if (recursive) {
+            fs::recursive_directory_iterator it(stdPath, ec);
+            fs::recursive_directory_iterator end;
+            while (it != end) {
+                if (cancelled && cancelled->load()) return;
+                if (ec) break;
+
+                const auto& entry = *it;
+                QString name = QString::fromStdWString(entry.path().filename().generic_wstring());
+                QString path = QString::fromStdWString(entry.path().generic_wstring());
+
+                bool isDir = false;
+                try {
+                    isDir = entry.is_directory();
+                } catch (...) {
+                    it.increment(ec);
+                    continue;
+                }
+
+                if (isDir) {
+#ifdef Q_OS_WIN32
+                    if (!showHiddenFiles) {
+                        DWORD attributes = GetFileAttributes(entry.path().c_str());
+                        if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN)) {
+                            it.disable_recursion_pending();
+                        }
+                    }
+#else
+                    if (!showHiddenFiles && name.startsWith(".")) {
+                        it.disable_recursion_pending();
+                    }
+#endif
+                    it.increment(ec);
+                    continue;
+                }
+
+                auto match = regex.match(name);
+                if (match.hasMatch()) {
+                    FSEntry newEntry;
+                    try {
+                        newEntry.name = name;
+                        newEntry.path = path;
+                        newEntry.isDirectory = false;
+                        newEntry.size = entry.file_size();
+                        newEntry.modifyTime = entry.last_write_time();
+                    } catch (...) {
+                        it.increment(ec);
+                        continue;
+                    }
+                    files.emplace_back(newEntry);
+                }
+                it.increment(ec);
+            }
+        } else {
+            fs::directory_iterator it(stdPath, ec);
+            fs::directory_iterator end;
+            while (it != end) {
+                if (cancelled && cancelled->load()) return;
+                if (ec) break;
+
+                const auto& entry = *it;
+                QString name = QString::fromStdWString(entry.path().filename().generic_wstring());
+                QString path = QString::fromStdWString(entry.path().generic_wstring());
+
+#ifndef Q_OS_WIN32
+                if (!showHiddenFiles && name.startsWith(".")) {
+                    it.increment(ec);
+                    continue;
+                }
+#else
+                DWORD attributes = GetFileAttributes(entry.path().c_str());
+                if (!showHiddenFiles && attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN)) {
+                    it.increment(ec);
+                    continue;
+                }
+#endif
+
+                bool isDir = false;
+                try {
+                    isDir = entry.is_directory();
+                } catch (...) {
+                    it.increment(ec);
+                    continue;
+                }
+
+                if (isDir) {
+                    FSEntry newEntry;
+                    newEntry.name = name;
+                    newEntry.path = path;
+                    newEntry.isDirectory = true;
+                    dirs.emplace_back(newEntry);
+                } else {
+                    auto match = regex.match(name);
+                    if (match.hasMatch()) {
+                        FSEntry newEntry;
+                        try {
+                            newEntry.name = name;
+                            newEntry.path = path;
+                            newEntry.isDirectory = false;
+                            newEntry.size = entry.file_size();
+                            newEntry.modifyTime = entry.last_write_time();
+                        } catch (...) {
+                            it.increment(ec);
+                            continue;
+                        }
+                        files.emplace_back(newEntry);
+                    }
+                }
+                it.increment(ec);
+            }
+        }
+
+        if (cancelled && cancelled->load()) return;
+
+        QPointer<DirectoryManager> mgr = manager;
+        QMetaObject::invokeMethod(mgr, [mgr, path = directoryPath, files = std::move(files), dirs = std::move(dirs), cancelled = this->cancelled]() mutable {
+            if (mgr && (!cancelled || !cancelled->load())) {
+                mgr->handleScanFinished(path, std::move(files), std::move(dirs));
+            }
+        });
+    }
+
+private:
+    QString directoryPath;
+    bool recursive;
+    bool showHiddenFiles;
+    QRegularExpression regex;
+    QPointer<DirectoryManager> manager;
+    std::shared_ptr<std::atomic<bool>> cancelled;
+};
 
 DirectoryManager::DirectoryManager() :
     watcher(nullptr),
@@ -13,6 +178,12 @@ DirectoryManager::DirectoryManager() :
     readSettings();
     setSortingMode(settings->sortingMode());
     connect(settings, &Settings::settingsChanged, this, &DirectoryManager::readSettings);
+}
+
+DirectoryManager::~DirectoryManager() {
+    if (currentScanCancelled) {
+        currentScanCancelled->store(true);
+    }
 }
 
 template< typename T, typename Pred >
@@ -104,6 +275,11 @@ void DirectoryManager::readSettings() {
 }
 
 bool DirectoryManager::setDirectory(QString dirPath) {
+    if (currentScanCancelled) {
+        currentScanCancelled->store(true);
+        isScanning = false;
+    }
+
     if(dirPath.isEmpty()) {
         fileEntryVec.clear();
         dirEntryVec.clear();
@@ -129,14 +305,33 @@ bool DirectoryManager::setDirectory(QString dirPath) {
     mListSource = SOURCE_DIRECTORY;
     mDirectoryPath = dirPath;
 
-    loadEntryList(dirPath, false);
-    sortEntryLists();
-    emit loaded(dirPath);
-    startFileWatcher(dirPath);
+    fileEntryVec.clear();
+    dirEntryVec.clear();
+    fileLookupMap.clear();
+    dirLookupMap.clear();
+
+    currentScanCancelled = std::make_shared<std::atomic<bool>>(false);
+    isScanning = true;
+
+    auto scanner = new DirectoryScanner(
+        dirPath,
+        false, // recursive
+        settings->showHiddenFiles(),
+        regex,
+        this,
+        currentScanCancelled
+    );
+    QThreadPool::globalInstance()->start(scanner);
+
     return true;
 }
 
 bool DirectoryManager::setDirectoryRecursive(QString dirPath) {
+    if (currentScanCancelled) {
+        currentScanCancelled->store(true);
+        isScanning = false;
+    }
+
     if(dirPath.isEmpty()) {
         return false;
     }
@@ -151,19 +346,41 @@ bool DirectoryManager::setDirectoryRecursive(QString dirPath) {
     stopFileWatcher();
     mListSource = SOURCE_DIRECTORY_RECURSIVE;
     mDirectoryPath = dirPath;
-    loadEntryList(dirPath, true);
-    sortEntryLists();
-    emit loaded(dirPath);
+
+    fileEntryVec.clear();
+    dirEntryVec.clear();
+    fileLookupMap.clear();
+    dirLookupMap.clear();
+
+    currentScanCancelled = std::make_shared<std::atomic<bool>>(false);
+    isScanning = true;
+
+    auto scanner = new DirectoryScanner(
+        dirPath,
+        true, // recursive
+        settings->showHiddenFiles(),
+        regex,
+        this,
+        currentScanCancelled
+    );
+    QThreadPool::globalInstance()->start(scanner);
+
     return true;
 }
 
 bool DirectoryManager::setFileList(const QStringList &filePaths) {
+    if (currentScanCancelled) {
+        currentScanCancelled->store(true);
+        isScanning = false;
+    }
     if(filePaths.isEmpty()) {
         return false;
     }
     stopFileWatcher();
     fileEntryVec.clear();
     dirEntryVec.clear();
+    fileLookupMap.clear();
+    dirLookupMap.clear();
     mListSource = SOURCE_LIST;
     mDirectoryPath = "";
     
@@ -636,5 +853,29 @@ void DirectoryManager::rebuildDirLookupMap() {
     dirLookupMap.reserve(dirEntryVec.size());
     for(int i = 0; i < (int)dirEntryVec.size(); ++i) {
         dirLookupMap.insert(lookupKey(dirEntryVec[i].path), i);
+    }
+}
+
+void DirectoryManager::handleScanFinished(const QString &path, std::vector<FSEntry> files, std::vector<FSEntry> dirs) {
+    fileEntryVec = std::move(files);
+    dirEntryVec = std::move(dirs);
+
+    // Sort files
+    std::sort(fileEntryVec.begin(), fileEntryVec.end(), std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    rebuildFileLookupMap();
+
+    // Sort directories
+    if (settings->sortFolders()) {
+        std::sort(dirEntryVec.begin(), dirEntryVec.end(), std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    } else {
+        std::sort(dirEntryVec.begin(), dirEntryVec.end(), std::bind(&DirectoryManager::path_entry_compare, this, std::placeholders::_1, std::placeholders::_2));
+    }
+    rebuildDirLookupMap();
+
+    isScanning = false;
+    emit loaded(path);
+
+    if (mListSource == SOURCE_DIRECTORY) {
+        startFileWatcher(path);
     }
 }
