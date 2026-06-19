@@ -600,12 +600,14 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
 
     fileListWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     fileListWidget->setResizeMode(QListView::Adjust);
+    m_itemWidgets.reserve(filePaths.size());
     for (const QString &path : filePaths) {
         QListWidgetItem *item = new QListWidgetItem(fileListWidget);
         BatchItemWidget *widget = new BatchItemWidget(path, this);
         item->setSizeHint(widget->sizeHint());
         fileListWidget->addItem(item);
         fileListWidget->setItemWidget(item, widget);
+        m_itemWidgets.append(widget);
         connect(widget, &BatchItemWidget::checkedStateChanged, this, &BatchConverterDialog::onCheckedStateChanged);
         thumbnailer->getThumbnailAsync(path, 48, true, false);
     }
@@ -804,17 +806,13 @@ void BatchConverterDialog::onUseUpscaylToggled(bool checked) {
 }
 
 void BatchConverterDialog::onSelectAll() {
-    for (int i = 0; i < fileListWidget->count(); ++i) {
-        QListWidgetItem *item = fileListWidget->item(i);
-        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
+    for (BatchItemWidget *widget : m_itemWidgets) {
         if (widget) widget->setChecked(true);
     }
 }
 
 void BatchConverterDialog::onDeselectAll() {
-    for (int i = 0; i < fileListWidget->count(); ++i) {
-        QListWidgetItem *item = fileListWidget->item(i);
-        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
+    for (BatchItemWidget *widget : m_itemWidgets) {
         if (widget) widget->setChecked(false);
     }
 }
@@ -826,9 +824,7 @@ void BatchConverterDialog::onCheckedStateChanged() {
 void BatchConverterDialog::updateSelectedCount() {
     int checkedCount = 0;
     qint64 totalSizeBytes = 0;
-    for (int i = 0; i < fileListWidget->count(); ++i) {
-        QListWidgetItem *item = fileListWidget->item(i);
-        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
+    for (BatchItemWidget *widget : m_itemWidgets) {
         if (widget && widget->isChecked()) {
             checkedCount++;
             totalSizeBytes += widget->fileSize();
@@ -912,9 +908,7 @@ void BatchConverterDialog::onConvertClicked() {
     }
 
     int checkedCount = 0;
-    for (int i = 0; i < fileListWidget->count(); ++i) {
-        QListWidgetItem *item = fileListWidget->item(i);
-        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
+    for (BatchItemWidget *widget : m_itemWidgets) {
         if (widget && widget->isChecked()) checkedCount++;
     }
 
@@ -992,9 +986,8 @@ void BatchConverterDialog::startConversion() {
     job.createSubfolder = subfolderCheckBox->isChecked();
 
     QList<int> selectedIndices;
-    for (int i = 0; i < fileListWidget->count(); ++i) {
-        QListWidgetItem *item = fileListWidget->item(i);
-        BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
+    for (int i = 0; i < m_itemWidgets.size(); ++i) {
+        BatchItemWidget *widget = m_itemWidgets[i];
         if (widget && widget->isChecked()) {
             selectedIndices.append(i);
             widget->setStatus(tr("Pending"), "", true);
@@ -1005,9 +998,10 @@ void BatchConverterDialog::startConversion() {
 }
 
 void BatchConverterDialog::onProgressUpdated(int index, QString status, QString details, bool success) {
-    QListWidgetItem *item = fileListWidget->item(index);
-    BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
-    if (widget) widget->setStatus(status, details, success);
+    if (index >= 0 && index < m_itemWidgets.size()) {
+        BatchItemWidget *widget = m_itemWidgets[index];
+        if (widget) widget->setStatus(status, details, success);
+    }
 
     if (status != tr("Processing...")) {
         processedFiles++;

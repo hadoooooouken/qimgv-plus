@@ -192,6 +192,7 @@ private:
 
     QList<QWidget*> m_resizeWidgets;
     QList<QWidget*> m_colorWidgets;
+    QList<BatchItemWidget*> m_itemWidgets;
 
     void updateUiState();
     void startConversion();
