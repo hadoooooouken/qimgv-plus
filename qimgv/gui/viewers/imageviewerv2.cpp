@@ -1626,19 +1626,28 @@ QRect ImageViewerV2::visibleImageRect() const {
   QRect imgBounds(0, 0, image->width(), image->height());
   QRect intersected = imageRectF.toAlignedRect().intersected(imgBounds);
 
-  QPixmap scaled = currentScaledPixmapCopy();
-  if (scaled.isNull())
+  QSize scaledSize;
+  if (!imageScaled.isNull()) {
+    scaledSize = imageScaled.size();
+  } else {
+    QSize tSize = scaledSizeR() * dpr;
+    if (tSize.isEmpty())
+      return QRect();
+    scaledSize = image->size().scaled(tSize, Qt::KeepAspectRatio);
+  }
+
+  if (scaledSize.isEmpty())
     return QRect();
 
-  double scaleX = (double)scaled.width() / image->width();
-  double scaleY = (double)scaled.height() / image->height();
+  double scaleX = (double)scaledSize.width() / image->width();
+  double scaleY = (double)scaledSize.height() / image->height();
 
   QRect scaledVisibleRect(qRound(intersected.x() * scaleX),
                           qRound(intersected.y() * scaleY),
                           qRound(intersected.width() * scaleX),
                           qRound(intersected.height() * scaleY));
 
-  QRect scaledBounds(0, 0, scaled.width(), scaled.height());
+  QRect scaledBounds(0, 0, scaledSize.width(), scaledSize.height());
   return scaledVisibleRect.intersected(scaledBounds);
 }
 
