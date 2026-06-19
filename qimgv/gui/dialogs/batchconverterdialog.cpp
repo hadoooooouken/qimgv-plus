@@ -701,10 +701,15 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
 }
 
 BatchConverterDialog::~BatchConverterDialog() {
+    disconnect(m_converter, nullptr, this, nullptr);
     m_converter->cancel();
+    m_converter->setParent(nullptr);
+    m_converter->enableSelfDestruct();
+
+    disconnect(thumbnailer, nullptr, this, nullptr);
     thumbnailer->clearTasks();
-    thumbnailer->waitForDone();
-    delete thumbnailer;
+    thumbnailer->setParent(nullptr);
+    thumbnailer->enableSelfDestruct();
 }
 
 void BatchConverterDialog::onQualitySliderChanged(int value) {
@@ -1004,9 +1009,11 @@ void BatchConverterDialog::onProgressUpdated(int index, QString status, QString 
     BatchItemWidget *widget = qobject_cast<BatchItemWidget*>(fileListWidget->itemWidget(item));
     if (widget) widget->setStatus(status, details, success);
 
-    processedFiles++;
-    progressBar->setValue(processedFiles);
-    statusLabel->setText(tr("Processed %1 / %2 files.").arg(processedFiles).arg(progressBar->maximum()));
+    if (status != tr("Processing...")) {
+        processedFiles++;
+        progressBar->setValue(processedFiles);
+        statusLabel->setText(tr("Processed %1 / %2 files.").arg(processedFiles).arg(progressBar->maximum()));
+    }
 }
 
 void BatchConverterDialog::onFinished(int successCount, int failedCount, int totalCount) {

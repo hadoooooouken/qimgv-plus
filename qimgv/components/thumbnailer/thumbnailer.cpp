@@ -51,4 +51,14 @@ void Thumbnailer::onTaskStart(QString filePath, int size) {
 void Thumbnailer::onTaskEnd(std::shared_ptr<Thumbnail> thumbnail, QString filePath) {
     runningTasks.remove(filePath, thumbnail->size());
     emit thumbnailReady(thumbnail, filePath);
+    if(m_selfDestructOnFinished && runningTasks.isEmpty()) {
+        deleteLater();
+    }
+}
+
+void Thumbnailer::enableSelfDestruct() {
+    m_selfDestructOnFinished = true;
+    if(runningTasks.isEmpty()) {
+        deleteLater();
+    }
 }

@@ -45,6 +45,8 @@ public:
     void cancelAndWait();
     void onRunnableCreated();
     void onRunnableDestroyed();
+    void enableSelfDestruct();
+    int inFlightTasksCount() const { return m_inFlightTasksCount.load(); }
 
     bool isRunning() const { return m_isConverting; }
     bool isCancelling() const { return m_isCancelling; }
@@ -66,6 +68,8 @@ private:
     std::atomic<bool> m_isCancelling{false};
     std::shared_ptr<std::atomic<bool>> m_cancelFlag;
     std::atomic<int> m_inFlightTasksCount{0};
+    std::atomic<bool> m_selfDestructOnFinished{false};
+    std::atomic<bool> m_deleteLaterCalled{false};
 
     int m_totalFiles = 0;
     int m_processedFiles = 0;

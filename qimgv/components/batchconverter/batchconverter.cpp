@@ -273,6 +273,20 @@ void BatchConverter::onRunnableDestroyed() {
         if (m_isCancelling) {
             QMetaObject::invokeMethod(this, "finishCancellation", Qt::QueuedConnection);
         }
+        if (m_selfDestructOnFinished) {
+            if (!m_deleteLaterCalled.exchange(true)) {
+                QMetaObject::invokeMethod(this, "deleteLater", Qt::QueuedConnection);
+            }
+        }
+    }
+}
+
+void BatchConverter::enableSelfDestruct() {
+    m_selfDestructOnFinished = true;
+    if (m_inFlightTasksCount == 0) {
+        if (!m_deleteLaterCalled.exchange(true)) {
+            QMetaObject::invokeMethod(this, "deleteLater", Qt::QueuedConnection);
+        }
     }
 }
 
