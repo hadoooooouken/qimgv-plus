@@ -573,13 +573,36 @@ void Core::removePermanent() {
   auto paths = currentSelection();
   if (!paths.count())
     return;
+
+  int dirCount = 0;
+  int fileCount = 0;
+  for (const auto &path : std::as_const(paths)) {
+    if (QFileInfo(path).isDir()) {
+      dirCount++;
+    } else {
+      fileCount++;
+    }
+  }
+
   if (settings->confirmDelete()) {
     QString msg;
-    if (paths.count() > 1)
-      msg = tr("Delete ") + QString::number(paths.count()) +
-            tr(" items permanently?");
-    else
-      msg = tr("Delete item permanently?");
+    if (paths.count() > 1) {
+      if (dirCount > 0 && fileCount == 0) {
+        msg = tr("Delete ") + QString::number(paths.count()) +
+              tr(" folders permanently?");
+      } else if (fileCount > 0 && dirCount == 0) {
+        msg = tr("Delete ") + QString::number(paths.count()) +
+              tr(" files permanently?");
+      } else {
+        msg = tr("Delete ") + QString::number(paths.count()) +
+              tr(" items permanently?");
+      }
+    } else {
+      if (dirCount > 0)
+        msg = tr("Delete folder permanently?");
+      else
+        msg = tr("Delete file permanently?");
+    }
     if (!mw->showConfirmation(tr("Delete permanently"), msg))
       return;
   }
@@ -595,13 +618,25 @@ void Core::removePermanent() {
       successCount++;
   }
   if (paths.count() == 1) {
-    if (result == FileOpResult::SUCCESS)
-      mw->showMessageSuccess(tr("File removed"));
-    else
+    if (result == FileOpResult::SUCCESS) {
+      if (dirCount > 0)
+        mw->showMessageSuccess(tr("Folder removed"));
+      else
+        mw->showMessageSuccess(tr("File removed"));
+    } else {
       outputError(result);
+    }
   } else if (paths.count() > 1) {
-    mw->showMessageSuccess(tr("Removed: ") + QString::number(successCount) +
-                           tr(" files"));
+    if (dirCount > 0 && fileCount == 0) {
+      mw->showMessageSuccess(tr("Removed: ") + QString::number(successCount) +
+                             tr(" folders"));
+    } else if (fileCount > 0 && dirCount == 0) {
+      mw->showMessageSuccess(tr("Removed: ") + QString::number(successCount) +
+                             tr(" files"));
+    } else {
+      mw->showMessageSuccess(tr("Removed: ") + QString::number(successCount) +
+                             tr(" items"));
+    }
   }
 }
 
@@ -609,13 +644,33 @@ void Core::moveToTrash() {
   auto paths = currentSelection();
   if (!paths.count())
     return;
+
+  int dirCount = 0;
+  int fileCount = 0;
+  for (const auto &path : std::as_const(paths)) {
+    if (QFileInfo(path).isDir()) {
+      dirCount++;
+    } else {
+      fileCount++;
+    }
+  }
+
   if (settings->confirmTrash()) {
     QString msg;
-    if (paths.count() > 1)
-      msg =
-          tr("Move ") + QString::number(paths.count()) + tr(" items to trash?");
-    else
-      msg = tr("Move item to trash?");
+    if (paths.count() > 1) {
+      if (dirCount > 0 && fileCount == 0) {
+        msg = tr("Move ") + QString::number(paths.count()) + tr(" folders to trash?");
+      } else if (fileCount > 0 && dirCount == 0) {
+        msg = tr("Move ") + QString::number(paths.count()) + tr(" files to trash?");
+      } else {
+        msg = tr("Move ") + QString::number(paths.count()) + tr(" items to trash?");
+      }
+    } else {
+      if (dirCount > 0)
+        msg = tr("Move folder to trash?");
+      else
+        msg = tr("Move file to trash?");
+    }
     if (!mw->showConfirmation(tr("Move to trash"), msg))
       return;
   }
@@ -631,13 +686,25 @@ void Core::moveToTrash() {
       successCount++;
   }
   if (paths.count() == 1) {
-    if (result == FileOpResult::SUCCESS)
-      mw->showMessageSuccess(tr("Moved to trash"));
-    else
+    if (result == FileOpResult::SUCCESS) {
+      if (dirCount > 0)
+        mw->showMessageSuccess(tr("Folder moved to trash"));
+      else
+        mw->showMessageSuccess(tr("Moved to trash"));
+    } else {
       outputError(result);
+    }
   } else if (paths.count() > 1) {
-    mw->showMessageSuccess(tr("Moved to trash: ") +
-                           QString::number(successCount) + tr(" files"));
+    if (dirCount > 0 && fileCount == 0) {
+      mw->showMessageSuccess(tr("Moved to trash: ") +
+                             QString::number(successCount) + tr(" folders"));
+    } else if (fileCount > 0 && dirCount == 0) {
+      mw->showMessageSuccess(tr("Moved to trash: ") +
+                             QString::number(successCount) + tr(" files"));
+    } else {
+      mw->showMessageSuccess(tr("Moved to trash: ") +
+                             QString::number(successCount) + tr(" items"));
+    }
   }
 }
 
