@@ -57,18 +57,12 @@ public:
                 }
 
                 if (isDir) {
-#ifdef Q_OS_WIN32
                     if (!showHiddenFiles) {
                         DWORD attributes = GetFileAttributes(entry.path().c_str());
                         if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN)) {
                             it.disable_recursion_pending();
                         }
                     }
-#else
-                    if (!showHiddenFiles && name.startsWith(".")) {
-                        it.disable_recursion_pending();
-                    }
-#endif
                     it.increment(ec);
                     continue;
                 }
@@ -101,19 +95,6 @@ public:
                 QString name = QString::fromStdWString(entry.path().filename().generic_wstring());
                 QString path = QString::fromStdWString(entry.path().generic_wstring());
 
-#ifndef Q_OS_WIN32
-                if (!showHiddenFiles && name.startsWith(".")) {
-                    it.increment(ec);
-                    continue;
-                }
-#else
-                DWORD attributes = GetFileAttributes(entry.path().c_str());
-                if (!showHiddenFiles && attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN)) {
-                    it.increment(ec);
-                    continue;
-                }
-#endif
-
                 bool isDir = false;
                 try {
                     isDir = entry.is_directory();
@@ -123,6 +104,13 @@ public:
                 }
 
                 if (isDir) {
+                    if (!showHiddenFiles) {
+                        DWORD attributes = GetFileAttributes(entry.path().c_str());
+                        if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN)) {
+                            it.increment(ec);
+                            continue;
+                        }
+                    }
                     FSEntry newEntry;
                     newEntry.name = name;
                     newEntry.path = path;
@@ -131,6 +119,13 @@ public:
                 } else {
                     auto match = regex.match(name);
                     if (match.hasMatch()) {
+                        if (!showHiddenFiles) {
+                            DWORD attributes = GetFileAttributes(entry.path().c_str());
+                            if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN)) {
+                                it.increment(ec);
+                                continue;
+                            }
+                        }
                         FSEntry newEntry;
                         try {
                             newEntry.name = name;
@@ -566,46 +561,57 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
         return;
     }
 
+    bool showHiddenFiles = settings->showHiddenFiles();
     for(const auto & entry : fs::directory_iterator(stdPath, ec)) {
         if(ec) break;
         QString name = QString::fromStdWString(entry.path().filename().generic_wstring());
-#ifndef Q_OS_WIN32
-        // ignore hidden files
-        if(!settings->showHiddenFiles() && name.startsWith("."))
+
+        bool isDir = false;
+        try {
+            isDir = entry.is_directory();
+        } catch (...) {
             continue;
-#else
-        DWORD attributes = GetFileAttributes(entry.path().c_str());
-        if(!settings->showHiddenFiles() && attributes & FILE_ATTRIBUTE_HIDDEN)
-            continue;
-#endif
+        }
+
         QString path = QString::fromStdWString(entry.path().generic_wstring());
-        match = regex.match(name);
-        if(entry.is_directory()) { // this can still throw std::bad_alloc ..
+
+        if(isDir) {
+            if(!showHiddenFiles) {
+                DWORD attributes = GetFileAttributes(entry.path().c_str());
+                if(attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN))
+                    continue;
+            }
             FSEntry newEntry;
             try {
                 newEntry.name = name;
                 newEntry.path = path;
                 newEntry.isDirectory = true;
-                //newEntry.size = entry.file_size();
-                //newEntry.modifyTime = entry.last_write_time();
             } catch (const std::filesystem::filesystem_error &err) {
                 qWarning() << "[DirectoryManager]" << err.what();
                 continue;
             }
             dirEntryVec.emplace_back(newEntry);
-        } else if (match.hasMatch()) {
-            FSEntry newEntry;
-            try {
-                newEntry.name = name;
-                newEntry.path = path;
-                newEntry.isDirectory = false;
-                newEntry.size = entry.file_size();
-                newEntry.modifyTime = entry.last_write_time();
-            } catch (const std::filesystem::filesystem_error &err) {
-                qWarning() << "[DirectoryManager]" << err.what();
-                continue;
+        } else {
+            match = regex.match(name);
+            if(match.hasMatch()) {
+                if(!showHiddenFiles) {
+                    DWORD attributes = GetFileAttributes(entry.path().c_str());
+                    if(attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN))
+                        continue;
+                }
+                FSEntry newEntry;
+                try {
+                    newEntry.name = name;
+                    newEntry.path = path;
+                    newEntry.isDirectory = false;
+                    newEntry.size = entry.file_size();
+                    newEntry.modifyTime = entry.last_write_time();
+                } catch (const std::filesystem::filesystem_error &err) {
+                    qWarning() << "[DirectoryManager]" << err.what();
+                    continue;
+                }
+                entryVec.emplace_back(newEntry);
             }
-            entryVec.emplace_back(newEntry);
         }
     }
 }
@@ -620,10 +626,21 @@ void DirectoryManager::addEntriesFromDirectoryRecursive(std::vector<FSEntry> &en
 
     for(const auto & entry : fs::recursive_directory_iterator(stdPath, ec)) {
         if(ec) break;
+        bool isDir = false;
+        try {
+            isDir = entry.is_directory();
+        } catch (...) {
+            continue;
+        }
+
+        if(isDir) {
+            continue;
+        }
+
         QString name = QString::fromStdWString(entry.path().filename().generic_wstring());
-        QString path = QString::fromStdWString(entry.path().generic_wstring());
         match = regex.match(name);
-        if(!entry.is_directory() && match.hasMatch()) {
+        if(match.hasMatch()) {
+            QString path = QString::fromStdWString(entry.path().generic_wstring());
             FSEntry newEntry;
             try {
                 newEntry.name = name;
