@@ -6,6 +6,7 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 #include <QPainter>
+#include <QScreen>
 
 ImageViewerV2::ImageViewerV2(QWidget *parent)
     : QGraphicsView(parent), image(nullptr),
@@ -122,6 +123,15 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   QObject::connect(scaleTimer, &QTimer::timeout,
                    [this]() { this->requestScaling(); });
 
+  fullscreenUpdateTimer = new QTimer(this);
+  fullscreenUpdateTimer->setSingleShot(true);
+  connect(fullscreenUpdateTimer, &QTimer::timeout, this, [this]() {
+    if (mIsFullscreen) {
+      viewport()->update();
+      lastFullscreenUpdate.restart();
+    }
+  });
+
   readSettings();
   connect(settings, &Settings::settingsChanged, this,
           &ImageViewerV2::readSettings);
@@ -218,6 +228,8 @@ void ImageViewerV2::onFullscreenModeChanged(bool mode) {
     bgColor = settings->colorScheme().background_fullscreen;
     bgColor.setAlphaF(1.0);
   } else {
+    fullscreenUpdateTimer->stop();
+    lastFullscreenUpdate.invalidate();
     bgColor = settings->colorScheme().background;
     bgColor.setAlphaF(settings->backgroundOpacity());
   }
@@ -680,7 +692,28 @@ void ImageViewerV2::mousePressEvent(QMouseEvent *event) {
 void ImageViewerV2::mouseMoveEvent(QMouseEvent *event) {
   QWidget::mouseMoveEvent(event);
   if (mIsFullscreen) {
-    viewport()->update();
+    int interval = 16;
+    if (QScreen *scr = this->screen()) {
+      double scrRate = scr->refreshRate();
+      if (scrRate > 0.0) {
+        interval = qMax(1, qRound(1000.0 / scrRate));
+      }
+    }
+
+    if (!lastFullscreenUpdate.isValid()) {
+      lastFullscreenUpdate.start();
+      viewport()->update();
+    } else {
+      qint64 elapsed = lastFullscreenUpdate.elapsed();
+      if (elapsed >= interval) {
+        viewport()->update();
+        lastFullscreenUpdate.restart();
+      } else {
+        if (!fullscreenUpdateTimer->isActive()) {
+          fullscreenUpdateTimer->start(interval - elapsed);
+        }
+      }
+    }
   }
   if (mPanoramaMode && (event->buttons() & Qt::LeftButton)) {
     int dx = event->pos().x() - mouseMoveStartPos.x();

@@ -239,4 +239,6 @@ private:
     bool mPanoramaMode = false;
     float mPanoramaYaw = 0.0f, mPanoramaPitch = 0.0f, mPanoramaFov = 90.0f;
     QString currentFilePath;
+    QElapsedTimer lastFullscreenUpdate;
+    QTimer *fullscreenUpdateTimer = nullptr;
 };
