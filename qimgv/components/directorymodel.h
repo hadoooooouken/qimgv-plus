@@ -89,7 +89,7 @@ signals:
     void indexChanged(int oldIndex, int index);
     void imageReady(std::shared_ptr<Image> img, const QString&);
     void imageUpdated(QString filePath);
-    void scalingFinished(QPixmap result, ScalerRequest req);
+    void scalingFinished(QImage result, ScalerRequest req);
 
 private:
     std::unique_ptr<Scaler> scaler;

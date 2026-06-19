@@ -75,6 +75,10 @@ std::shared_ptr<const QImage> ImageAnimated::getImage() {
     return img;
 }
 
+std::shared_ptr<const QImage> ImageAnimated::getDisplayImage() {
+    return getImage();
+}
+
 std::shared_ptr<QMovie> ImageAnimated::getMovie() {
 
     if(movie == nullptr) {

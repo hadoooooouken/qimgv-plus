@@ -15,6 +15,7 @@ public:
     virtual ~Image() = 0;
     virtual std::unique_ptr<QPixmap> getPixmap() = 0;
     virtual std::shared_ptr<const QImage> getImage() = 0;
+    virtual std::shared_ptr<const QImage> getDisplayImage() = 0;
     DocumentType type() const;
     QString filePath() const;
     virtual int height() = 0;

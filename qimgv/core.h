@@ -119,7 +119,7 @@ private slots:
     void rotateRight();
     void close();
     void scalingRequest(QSize, ScalingFilter);
-    void onScalingFinished(QPixmap scaled, ScalerRequest req);
+    void onScalingFinished(QImage scaled, ScalerRequest req);
     void copyCurrentFile(QString destDirectory);
     void moveCurrentFile(QString destDirectory);
     void copyPathsTo(QList<QString> paths, QString destDirectory);

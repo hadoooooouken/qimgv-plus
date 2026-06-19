@@ -12,6 +12,7 @@ public:
 
     std::unique_ptr<QPixmap> getPixmap();
     std::shared_ptr<const QImage> getImage();
+    std::shared_ptr<const QImage> getDisplayImage() override;
     std::shared_ptr<QMovie> getMovie();
     int height();
     int width();

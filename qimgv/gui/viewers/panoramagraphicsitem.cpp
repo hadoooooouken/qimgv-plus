@@ -27,9 +27,9 @@ PanoramaGraphicsItem::~PanoramaGraphicsItem()
     }
 }
 
-void PanoramaGraphicsItem::setPixmap(std::shared_ptr<QPixmap> pixmap)
+void PanoramaGraphicsItem::setImage(std::shared_ptr<const QImage> image)
 {
-    mPixmap = pixmap;
+    mImage = image;
     mTexture.reset();
     prepareGeometryChange();
     update();
@@ -119,24 +119,24 @@ void PanoramaGraphicsItem::initShader()
 
 void PanoramaGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    if (!mPixmap || mPixmap->isNull()) return;
+    if (!mImage || mImage->isNull()) return;
 
     QOpenGLWidget *glWidget = qobject_cast<QOpenGLWidget*>(widget);
     if (!glWidget) {
         // Fallback (not really a panorama, just a flat image)
-        painter->drawPixmap(0, 0, *mPixmap);
+        painter->drawImage(0, 0, *mImage);
         return;
     }
 
     initShader();
     if (mShaderFailed) {
         // Fallback (not really a panorama, just a flat image)
-        painter->drawPixmap(0, 0, *mPixmap);
+        painter->drawImage(0, 0, *mImage);
         return;
     }
     
     if (!mTexture) {
-        mTexture = std::make_unique<QOpenGLTexture>(mPixmap->toImage());
+        mTexture = std::make_unique<QOpenGLTexture>(*mImage);
         mTexture->setMagnificationFilter(QOpenGLTexture::Linear);
         mTexture->setMinificationFilter(QOpenGLTexture::Linear);
         mTexture->setWrapMode(QOpenGLTexture::Repeat); // Important for panoramas

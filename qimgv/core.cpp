@@ -1599,7 +1599,7 @@ void Core::scalingRequest(QSize size, ScalingFilter filter) {
   }
 }
 
-void Core::onScalingFinished(QPixmap scaled, ScalerRequest req) {
+void Core::onScalingFinished(QImage scaled, ScalerRequest req) {
   if (state.hasActiveImage && req.path == state.currentFilePath) {
     mw->onScalingFinished(scaled);
 #ifdef USE_UPSCAYL
@@ -2018,7 +2018,7 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
   }
   DocumentType type = img->type();
   if (type == STATIC) {
-    mw->showImage(img->getPixmap(), img->filePath());
+    mw->showImage(img->getDisplayImage(), img->filePath());
   } else if (type == ANIMATED) {
     auto animated = dynamic_cast<ImageAnimated *>(img.get());
     mw->showAnimation(animated->getMovie());

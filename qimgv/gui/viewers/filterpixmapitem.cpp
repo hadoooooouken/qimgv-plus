@@ -10,7 +10,7 @@
 #include <cmath>
 
 FilterPixmapItem::FilterPixmapItem(QGraphicsItem *parent)
-    : QGraphicsPixmapItem(parent)
+    : QGraphicsItem(parent)
 {
 }
 
@@ -22,6 +22,36 @@ FilterPixmapItem::~FilterPixmapItem() {
         mTexture.release();
         mProgram.release();
     }
+}
+
+void FilterPixmapItem::setImage(const QImage &image) {
+    prepareGeometryChange();
+    mImage = image;
+    update();
+}
+
+void FilterPixmapItem::setOffset(const QPointF &offset) {
+    if (mOffset == offset) return;
+    prepareGeometryChange();
+    mOffset = offset;
+    update();
+}
+
+void FilterPixmapItem::setOffset(qreal x, qreal y) {
+    setOffset(QPointF(x, y));
+}
+
+void FilterPixmapItem::setTransformationMode(Qt::TransformationMode mode) {
+    if (mTransformationMode == mode) return;
+    mTransformationMode = mode;
+    update();
+}
+
+QRectF FilterPixmapItem::boundingRect() const {
+    if (mImage.isNull()) return QRectF();
+    qreal dpr = mImage.devicePixelRatio();
+    if (dpr <= 0.0) dpr = 1.0;
+    return QRectF(mOffset, QSizeF(mImage.width() / dpr, mImage.height() / dpr));
 }
 
 void FilterPixmapItem::setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
@@ -102,36 +132,42 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         activeSmartGpu = false;
     }
 
-    // 1. Fallback to default QGraphicsPixmapItem paint if there are no adjustments
+    auto fallbackPaint = [this](QPainter *p) {
+        bool oldSmooth = p->renderHints() & QPainter::SmoothPixmapTransform;
+        p->setRenderHint(QPainter::SmoothPixmapTransform, mTransformationMode == Qt::SmoothTransformation);
+        p->drawImage(mOffset, mImage);
+        p->setRenderHint(QPainter::SmoothPixmapTransform, oldSmooth);
+    };
+
+    // 1. Fallback to default paint if there are no adjustments
     if (qAbs(mBrightness) < ImageLib::kAdjustEpsilon && qAbs(mContrast - 1.0f) < ImageLib::kAdjustEpsilon && qAbs(mSaturation - 1.0f) < ImageLib::kAdjustEpsilon && qAbs(mHue) < ImageLib::kAdjustEpsilon &&
         qAbs(mExposure) < ImageLib::kAdjustEpsilon && qAbs(mTemperature) < ImageLib::kAdjustEpsilon && qAbs(mTint) < ImageLib::kAdjustEpsilon &&
         activeCasSharpening < ImageLib::kAdjustEpsilon && !activeSmartGpu) {
-        QGraphicsPixmapItem::paint(painter, option, widget);
+        fallbackPaint(painter);
         return;
     }
 
-    QPixmap currentPixmap = pixmap();
-    if (currentPixmap.isNull()) return;
+    if (mImage.isNull()) return;
 
     QOpenGLWidget *glWidget = qobject_cast<QOpenGLWidget*>(widget);
     if (!glWidget) {
         // Fallback if not rendering on an OpenGL viewport
-        QGraphicsPixmapItem::paint(painter, option, widget);
+        fallbackPaint(painter);
         return;
     }
 
     initShader();
     if (mShaderFailed) {
-        QGraphicsPixmapItem::paint(painter, option, widget);
+        fallbackPaint(painter);
         return;
     }
 
-    if (!mTexture || mLastPixmap.cacheKey() != currentPixmap.cacheKey()) {
+    if (!mTexture || mLastImage.cacheKey() != mImage.cacheKey()) {
         mTexture.reset();
         // Generate mipmaps for smooth downscaling
-        mTexture = std::make_unique<QOpenGLTexture>(currentPixmap.toImage(), QOpenGLTexture::GenerateMipMaps);
+        mTexture = std::make_unique<QOpenGLTexture>(mImage, QOpenGLTexture::GenerateMipMaps);
         mTexture->setWrapMode(QOpenGLTexture::ClampToEdge);
-        mLastPixmap = currentPixmap;
+        mLastImage = mImage;
     }
 
     // Match filtering to transformationMode
@@ -160,6 +196,11 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     projection.ortho(0, glWidget->width(), glWidget->height(), 0, -1.0, 1.0);
     QMatrix4x4 matrix = projection * modelview;
 
+    qreal dpr = mImage.devicePixelRatio();
+    if (dpr <= 0.0) dpr = 1.0;
+    qreal logicalWidth = mImage.width() / dpr;
+    qreal logicalHeight = mImage.height() / dpr;
+
     mProgram->setUniformValue("matrix", matrix);
     mProgram->setUniformValue("tex", 0);
     ColorMatrix cm = ImageLib::getColorAdjustmentMatrix(mExposure, mContrast, mBrightness, mTemperature, mTint, mSaturation, mHue);
@@ -172,7 +213,7 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     mProgram->setUniformValue("colorMatrix", colorMatrix);
     mProgram->setUniformValue("colorOffset", cm.offset);
-    mProgram->setUniformValue("pixelSize", QVector2D(1.0f / (currentPixmap.width() * transScaleX), 1.0f / (currentPixmap.height() * transScaleY)));
+    mProgram->setUniformValue("pixelSize", QVector2D(1.0f / (logicalWidth * transScaleX), 1.0f / (logicalHeight * transScaleY)));
     mProgram->setUniformValue("casContrast", mCasContrast);
     mProgram->setUniformValue("casSharpening", activeCasSharpening);
     mProgram->setUniformValue("sharpenMode", activeSmartGpu ? (int)QI_FILTER_SMART_GPU : (int)mScalingFilter);
@@ -180,8 +221,8 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     float x1 = offset().x();
     float y1 = offset().y();
-    float x2 = x1 + currentPixmap.width();
-    float y2 = y1 + currentPixmap.height();
+    float x2 = x1 + logicalWidth;
+    float y2 = y1 + logicalHeight;
 
     GLfloat vertices[] = {
         x1, y1,

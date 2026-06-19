@@ -207,6 +207,30 @@ std::unique_ptr<QPixmap> ImageStatic::getPixmap() {
   return pix;
 }
 
+std::shared_ptr<const QImage> ImageStatic::getDisplayImage() {
+  if (settings && settings->colorManagementEnabled()) {
+    QColorSpace targetSpace = ColorManager::getTargetColorSpace();
+    if (isEdited() && imageEdited) {
+      if (!imageColorManagedEdited || imageColorManagedEdited->colorSpace() != targetSpace) {
+        imageColorManagedEdited = std::make_shared<const QImage>(ColorManager::applyColorManagement(*imageEdited));
+      }
+      return imageColorManagedEdited;
+    } else if (image) {
+      if (!imageColorManaged || imageColorManaged->colorSpace() != targetSpace) {
+        imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+      }
+      return imageColorManaged;
+    }
+  } else {
+    if (isEdited() && imageEdited) {
+      return imageEdited;
+    } else if (image) {
+      return image;
+    }
+  }
+  return nullptr;
+}
+
 std::shared_ptr<const QImage> ImageStatic::getSourceImage() { return image; }
 
 std::shared_ptr<const QImage> ImageStatic::getImage() {

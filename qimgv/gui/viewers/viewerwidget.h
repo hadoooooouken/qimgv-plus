@@ -29,9 +29,9 @@ public:
     void setInteractionEnabled(bool mode);
     bool interactionEnabled();
 
-    bool showImage(std::unique_ptr<QPixmap> pixmap, QString filePath = "");
+    bool showImage(std::shared_ptr<const QImage> image, QString filePath = "");
     bool showAnimation(std::shared_ptr<QMovie> movie);
-    void onScalingFinished(QPixmap scaled);
+    void onScalingFinished(QImage scaled);
     void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
     void hideUpscaledCrop();
     bool panoramaMode() const { return imageViewer ? imageViewer->panoramaMode() : false; }

@@ -157,8 +157,7 @@ void Scaler::slotStartBufferedRequest() {
 }
 
 void Scaler::slotForwardScaledResult(QImage image, ScalerRequest req) {
-    QPixmap pixmap = QPixmap::fromImage(image);
-    emit scalingFinished(pixmap, req);
+    emit scalingFinished(image, req);
 }
 
 void Scaler::startRequest(ScalerRequest req) {

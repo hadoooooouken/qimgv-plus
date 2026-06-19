@@ -43,9 +43,9 @@ public:
     virtual QRect scaledRectR() const;
     virtual float currentScale() const;
     virtual QSize sourceSize() const;
-    virtual void showImage(std::unique_ptr<QPixmap> _pixmap, QString filePath = "");
+    virtual void showImage(std::shared_ptr<const QImage> _image, QString filePath = "");
     virtual void showAnimation(std::shared_ptr<QMovie> _animation);
-    virtual void setScaledPixmap(QPixmap newFrame);
+    virtual void setScaledImage(QImage newFrame);
     void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
     void hideUpscaledCrop();
     virtual bool isDisplaying() const;
@@ -150,8 +150,8 @@ private slots:
     void onDPRChanged();
 private:
     QGraphicsScene *scene;
-    std::shared_ptr<QPixmap> pixmap;
-    QPixmap pixmapScaled;
+    std::shared_ptr<const QImage> image;
+    QImage imageScaled;
     std::shared_ptr<QMovie> movie;
     FilterPixmapItem pixmapItem, pixmapItemScaled, pixmapItemCrop;
     QTimer *animationTimer, *scaleTimer;
@@ -214,9 +214,9 @@ private:
     QPointF sceneRoundPos(QPointF scenePoint) const;
     QRectF sceneRoundRect(QRectF sceneRect) const;
     void doZoom(float newScale);
-    void swapToOriginalPixmap();
+    void swapToOriginalImage();
     void setZoomAnchor(QPoint viewportPos);
-    void updatePixmap(std::unique_ptr<QPixmap> newPixmap);
+    void updateImage(std::shared_ptr<const QImage> newImage);
     Qt::TransformationMode selectTransformationMode();
     void centerIfNecessary();
     void snapToEdges();

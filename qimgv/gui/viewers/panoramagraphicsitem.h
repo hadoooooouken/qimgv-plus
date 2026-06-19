@@ -15,7 +15,7 @@ public:
     explicit PanoramaGraphicsItem(QGraphicsItem *parent = nullptr);
     ~PanoramaGraphicsItem();
 
-    void setPixmap(std::shared_ptr<QPixmap> pixmap);
+    void setImage(std::shared_ptr<const QImage> image);
     
     void setViewParameters(float yaw, float pitch, float fov);
     void setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
@@ -26,7 +26,7 @@ public:
 private:
     void initShader();
     
-    std::shared_ptr<QPixmap> mPixmap;
+    std::shared_ptr<const QImage> mImage;
     std::unique_ptr<QOpenGLShaderProgram> mProgram;
     std::unique_ptr<QOpenGLTexture> mTexture;
     bool mInitialized = false;

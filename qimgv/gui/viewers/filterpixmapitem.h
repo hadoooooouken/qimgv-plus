@@ -1,21 +1,34 @@
 #pragma once
 
-#include <QGraphicsPixmapItem>
+#include <QGraphicsItem>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
+#include <QImage>
 #include <memory>
 #include "settings_types.h"
 
-class FilterPixmapItem : public QGraphicsPixmapItem, protected QOpenGLFunctions {
+class FilterPixmapItem : public QGraphicsItem, protected QOpenGLFunctions {
 public:
     explicit FilterPixmapItem(QGraphicsItem *parent = nullptr);
     ~FilterPixmapItem();
+
+    void setImage(const QImage &image);
+    QImage image() const { return mImage; }
+
+    void setOffset(const QPointF &offset);
+    void setOffset(qreal x, qreal y);
+    QPointF offset() const { return mOffset; }
+
+    void setTransformationMode(Qt::TransformationMode mode);
+    Qt::TransformationMode transformationMode() const { return mTransformationMode; }
 
     void setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
     void setCasSettings(float sharpening, float contrast);
     void setScalingFilter(ScalingFilter filter);
     void setApplyFilterAt100(bool enabled);
+
+    QRectF boundingRect() const override;
 
 protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -37,7 +50,11 @@ private:
     bool mShaderFailed = false;
     std::unique_ptr<QOpenGLShaderProgram> mProgram;
     std::unique_ptr<QOpenGLTexture> mTexture;
-    QPixmap mLastPixmap;
+
+    QImage mImage;
+    QImage mLastImage;
+    QPointF mOffset;
+    Qt::TransformationMode mTransformationMode = Qt::SmoothTransformation;
 
     void initShader();
 };

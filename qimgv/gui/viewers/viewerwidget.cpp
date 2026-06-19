@@ -233,11 +233,11 @@ bool ViewerWidget::interactionEnabled() {
     return mInteractionEnabled;
 }
 
-bool ViewerWidget::showImage(std::unique_ptr<QPixmap> pixmap, QString filePath) {
-    if(!pixmap)
+bool ViewerWidget::showImage(std::shared_ptr<const QImage> image, QString filePath) {
+    if(!image)
         return false;
     enableImageViewer();
-    imageViewer->showImage(std::move(pixmap), filePath);
+    imageViewer->showImage(image, filePath);
     onScaleChanged(imageViewer->currentScale());
     hideCursorTimed(false);
     return true;
@@ -266,8 +266,8 @@ ImageFitMode ViewerWidget::fitMode() {
     return imageViewer->fitMode();
 }
 
-void ViewerWidget::onScalingFinished(QPixmap scaled) {
-    imageViewer->setScaledPixmap(scaled);
+void ViewerWidget::onScalingFinished(QImage scaled) {
+    imageViewer->setScaledImage(scaled);
 }
 
 void ViewerWidget::setUpscaledCrop(const QImage &cropImg, QRect origCrop) {

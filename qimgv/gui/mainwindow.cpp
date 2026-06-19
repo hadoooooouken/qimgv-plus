@@ -262,10 +262,10 @@ void MW::preShowResize(QSize sz) {
         settings->setWindowGeometry(newGeom);
 }
 
-void MW::showImage(std::unique_ptr<QPixmap> pixmap, QString filePath) {
+void MW::showImage(std::shared_ptr<const QImage> image, QString filePath) {
     if(settings->autoResizeWindow())
-        preShowResize(pixmap->size());
-    viewerWidget->showImage(std::move(pixmap), filePath);
+        preShowResize(image->size());
+    viewerWidget->showImage(image, filePath);
     updateCropPanelData();
 }
 
@@ -479,7 +479,7 @@ bool MW::isCropPanelActive() {
     return (activeSidePanel == SIDEPANEL_CROP);
 }
 
-void MW::onScalingFinished(QPixmap scaled) {
+void MW::onScalingFinished(QImage scaled) {
     viewerWidget->onScalingFinished(scaled);
 }
 
