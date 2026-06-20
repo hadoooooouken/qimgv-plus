@@ -15,7 +15,7 @@ public:
     virtual QString watchPath() const;
     bool isObserving();
 
-public Q_SLOTS:
+public slots:
     void observe();
     void stopObserving();
 

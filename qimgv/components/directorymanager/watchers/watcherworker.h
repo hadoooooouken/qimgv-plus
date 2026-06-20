@@ -10,10 +10,10 @@ public:
     WatcherWorker();
     virtual void run() = 0;
 
-public Q_SLOTS:
+public slots:
     void setRunning(bool running);
 
-Q_SIGNALS:
+signals:
     void error(const QString& errorMessage);
     void started();
     void finished();
