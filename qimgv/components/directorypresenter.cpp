@@ -262,11 +262,20 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
       QSvgRenderer svgRenderer;
       svgRenderer.load(
           QString(":/res/icons/common/other/folder32-scalable.svg"));
-      int factor = (size * 0.90f) / svgRenderer.defaultSize().width();
-      QPixmap *pixmap = new QPixmap(svgRenderer.defaultSize() * factor);
+      int factor = size / svgRenderer.defaultSize().width();
+      QSize baseSize = svgRenderer.defaultSize() * factor;
+      qreal dpr = qApp->devicePixelRatio();
+      QPixmap *pixmap = new QPixmap(baseSize);
+      pixmap->setDevicePixelRatio(dpr);
       pixmap->fill(Qt::transparent);
+      
+      QRectF logicalRect(QPointF(0, 0), QSizeF(baseSize) / dpr);
+      QRectF renderedRect = logicalRect;
+      renderedRect.setSize(logicalRect.size() * 0.90f);
+      renderedRect.moveCenter(logicalRect.center());
+
       QPainter pixPainter(pixmap);
-      svgRenderer.render(&pixPainter);
+      svgRenderer.render(&pixPainter, renderedRect);
       pixPainter.end();
 
       ImageLib::recolor(*pixmap, settings->colorScheme().icons);
@@ -427,7 +436,7 @@ DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
     return std::shared_ptr<Thumbnail>(
         new Thumbnail(dirName, tr("Folder"), size, nullptr));
 
-  int factor = (size * 0.90f) / svgRenderer.defaultSize().width();
+  int factor = size / svgRenderer.defaultSize().width();
   QSize baseSize = svgRenderer.defaultSize() * factor;
 
   if (baseSize.isEmpty())
@@ -440,10 +449,13 @@ DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
   pixmap->fill(Qt::transparent);
 
   QRectF logicalRect(QPointF(0, 0), QSizeF(baseSize) / dpr);
+  QRectF renderedRect = logicalRect;
+  renderedRect.setSize(logicalRect.size() * 0.90f);
+  renderedRect.moveCenter(logicalRect.center());
 
   {
     QPainter painter(pixmap);
-    svgRenderer.render(&painter, logicalRect);
+    svgRenderer.render(&painter, renderedRect);
   } // painter scope ends here, so it's safe to recolor
 
   ImageLib::recolor(*pixmap, settings->colorScheme().icons);
@@ -454,8 +466,9 @@ DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
   painter.setRenderHint(QPainter::SmoothPixmapTransform);
 
   // Approximation for the folder "window" (in logical coordinates)
-  QRectF windowRect(logicalRect.width() * 0.025, logicalRect.height() * 0.17,
-                    logicalRect.width() * 0.95, logicalRect.height() * 0.80);
+  QRectF windowRect(renderedRect.left() + renderedRect.width() * 0.025,
+                    renderedRect.top() + renderedRect.height() * 0.17,
+                    renderedRect.width() * 0.95, renderedRect.height() * 0.80);
 
   // Maintain aspect ratio of the thumbnail inside the window
   // innerThumb already has its own dpr set, drawPixmap will handle it
