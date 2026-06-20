@@ -22,8 +22,6 @@ public:
     virtual int width() = 0;
     virtual QSize size() = 0;
     bool isLoaded() const;
-    virtual bool save() = 0;
-    virtual bool save(QString destPath) = 0;
     QString fileName() const;
     QString baseName() const;
     QString format() const;

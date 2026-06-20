@@ -26,11 +26,10 @@ public:
 
     bool setEditedImage(std::unique_ptr<const QImage> imageEditedNew);
     bool discardEditedImage();
+    void commitEdits();
 
 public slots:
     void crop(QRect newRect);
-    bool save();
-    bool save(QString destPath);
 
 private:
     void load();
@@ -39,5 +38,4 @@ private:
     mutable std::shared_ptr<const QImage> imageColorManagedEdited;
     void loadGeneric();
     void loadICO();
-    QString generateHash(QString str);
 };

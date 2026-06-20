@@ -39,28 +39,6 @@ int ImageAnimated::frameCount() const {
     return mFrameCount;
 }
 
-bool ImageAnimated::save(QString destPath) {
-    QFile file(mPath);
-    if(file.exists()) {
-        if(!file.copy(destPath)) {
-            qWarning() << "Unable to save file.";
-            return false;
-        } else {
-            if(destPath == this->filePath()) {
-                mDocInfo->refresh();
-            }
-            return true;
-        }
-    } else {
-        qWarning() << "Unable to save file. Perhaps the source file was deleted?";
-        return false;
-    }
-}
-
-bool ImageAnimated::save() {
-    return false;
-}
-
 // in case of gif returns current frame
 std::unique_ptr<QPixmap> ImageAnimated::getPixmap() {
     return std::unique_ptr<QPixmap>(new QPixmap(mPath, mDocInfo->format().toStdString().c_str()));

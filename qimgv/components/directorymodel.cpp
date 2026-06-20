@@ -1,4 +1,6 @@
 #include "directorymodel.h"
+#include "sourcecontainers/imagestatic.h"
+#include "settings.h"
 
 DirectoryModel::DirectoryModel(QObject *parent) :
     QObject(parent),
@@ -231,7 +233,45 @@ bool DirectoryModel::saveFile(const QString &filePath, const QString &destPath) 
     if(!containsFile(filePath) || !cache.contains(filePath))
         return false;
     auto img = cache.get(filePath);
-    if(img->save(destPath)) {
+    bool success = false;
+    if(img->type() == ANIMATED) {
+        if(filePath == destPath) {
+            success = true;
+        } else {
+            QFile file(filePath);
+            if(file.exists()) {
+                if(QFile::exists(destPath)) {
+                    QFile::remove(destPath);
+                }
+                success = file.copy(destPath);
+            }
+        }
+    } else if(img->type() == STATIC) {
+        auto imgStatic = dynamic_cast<ImageStatic*>(img.get());
+        if(imgStatic) {
+            QFileInfo fi(destPath);
+            QString ext = fi.suffix();
+            int quality = 95;
+            if (ext.compare("png", Qt::CaseInsensitive) == 0) {
+                quality = settings->pngSaveQuality() * 10;
+            } else if (ext.compare("jpg", Qt::CaseInsensitive) == 0 ||
+                       ext.compare("jpeg", Qt::CaseInsensitive) == 0) {
+                quality = settings->JPEGSaveQuality();
+            } else if (ext.compare("jxl", Qt::CaseInsensitive) == 0 ||
+                       ext.compare("webp", Qt::CaseInsensitive) == 0 ||
+                       ext.compare("avif", Qt::CaseInsensitive) == 0) {
+                quality = settings->modernSaveQuality();
+            }
+            success = FileOperations::saveImage(*imgStatic->getImage(), destPath, quality);
+            if(success) {
+                bool isOverwrite = (destPath.compare(filePath, Qt::CaseInsensitive) == 0);
+                if(isOverwrite) {
+                    imgStatic->commitEdits();
+                }
+            }
+        }
+    }
+    if(success) {
         if(filePath == destPath) { // replace
             dirManager.updateFileEntry(destPath);
             emit fileModified(destPath);

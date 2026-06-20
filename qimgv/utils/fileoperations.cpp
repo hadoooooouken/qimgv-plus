@@ -1,4 +1,5 @@
 #include "fileoperations.h"
+#include <QImage>
 
 QString FileOperations::generateHash(const QString &str) {
     return QString(QCryptographicHash::hash(str.toUtf8(), QCryptographicHash::Md5).toHex());
@@ -276,4 +277,45 @@ void FileOperations::moveToTrash(const QString &filePath, FileOpResult &result) 
 
 bool FileOperations::moveToTrashImpl(const QString &filePath) {
     return QFile::moveToTrash(filePath);
+}
+
+bool FileOperations::saveImage(const QImage &image, const QString &destPath, int quality) {
+    if (image.isNull()) {
+        qWarning() << "FileOperations::saveImage() - Source image is null.";
+        return false;
+    }
+    QString tmpPath = destPath + "_" + generateHash(destPath);
+    QFileInfo fi(destPath);
+    QString ext = fi.suffix();
+
+    bool backupExists = false, success = false, originalExists = false;
+
+    if (QFile::exists(destPath))
+        originalExists = true;
+
+    // backup the original file if possible
+    if (originalExists) {
+        QFile::remove(tmpPath);
+        if (!QFile::copy(destPath, tmpPath)) {
+            qWarning() << "FileOperations::saveImage() - Could not create file backup.";
+            return false;
+        }
+        backupExists = true;
+    }
+
+    // save file
+    success = image.save(destPath, ext.toStdString().c_str(), quality);
+
+    if (backupExists) {
+        if (success) {
+            // everything ok - remove the backup
+            QFile::remove(tmpPath);
+        } else if (originalExists) {
+            // revert on fail
+            QFile::remove(destPath);
+            QFile::copy(tmpPath, destPath);
+            QFile::remove(tmpPath);
+        }
+    }
+    return success;
 }

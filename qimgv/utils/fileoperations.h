@@ -26,6 +26,8 @@ enum FileOpResult {
     OTHER_ERROR
 };
 
+class QImage;
+
 class FileOperations {
 public:
     static void copyFileTo(const QString &srcFilePath, const QString &destDirPath, bool force, FileOpResult &result);
@@ -36,8 +38,9 @@ public:
     static void moveToTrash(const QString &filePath, FileOpResult &result);
 
     static QString decodeResult(const FileOpResult &result);
+    static QString generateHash(const QString &str);
+    static bool saveImage(const QImage &image, const QString &destPath, int quality);
 
 private:
     static bool moveToTrashImpl(const QString &path);
-    static QString generateHash(const QString &str);
 };

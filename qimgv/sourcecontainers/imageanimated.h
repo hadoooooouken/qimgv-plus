@@ -16,9 +16,6 @@ public:
     QSize size();
 
     int frameCount() const override;
-public slots:
-    bool save();
-    bool save(QString destPath);
 
 signals:
     void frameChanged(QPixmap*);

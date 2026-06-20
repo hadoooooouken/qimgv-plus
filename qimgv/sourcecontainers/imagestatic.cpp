@@ -101,75 +101,13 @@ void ImageStatic::loadICO() {
   mLoaded = true;
 }
 
-QString ImageStatic::generateHash(QString str) {
-  return QString(
-      QCryptographicHash::hash(str.toUtf8(), QCryptographicHash::Md5).toHex());
-}
-
-bool ImageStatic::save(QString destPath) {
-  QString tmpPath = destPath + "_" + generateHash(destPath);
-  QFileInfo fi(destPath);
-  QString ext = fi.suffix();
-  // png compression note from libpng
-  // Note that tests have shown that zlib compression levels 3-6 usually perform
-  // as well as level 9 for PNG images, and do considerably fewer caclulations
-  int quality = 95;
-  if (ext.compare("png", Qt::CaseInsensitive) == 0)
-    quality = settings->pngSaveQuality() * 10;
-  else if (ext.compare("jpg", Qt::CaseInsensitive) == 0 ||
-           ext.compare("jpeg", Qt::CaseInsensitive) == 0)
-    quality = settings->JPEGSaveQuality();
-  else if (ext.compare("jxl", Qt::CaseInsensitive) == 0 ||
-           ext.compare("webp", Qt::CaseInsensitive) == 0 ||
-           ext.compare("avif", Qt::CaseInsensitive) == 0)
-    quality = settings->modernSaveQuality();
-
-  bool backupExists = false, success = false, originalExists = false;
-
-  if (QFile::exists(destPath))
-    originalExists = true;
-
-  // backup the original file if possible
-  if (originalExists) {
-    QFile::remove(tmpPath);
-    if (!QFile::copy(destPath, tmpPath)) {
-      qWarning() << "ImageStatic::save() - Could not create file backup.";
-      return false;
-    }
-    backupExists = true;
-  }
-  bool isOverwrite = (destPath.compare(mPath, Qt::CaseInsensitive) == 0);
-
-  // save file
+void ImageStatic::commitEdits() {
   if (isEdited()) {
-    success = imageEdited->save(destPath, ext.toStdString().c_str(), quality);
-    // only replace the base image when overwriting the original file;
-    // Save-As to a different path must keep the original image intact
-    if (isOverwrite) {
-      image.swap(imageEdited);
-      discardEditedImage();
-    }
-  } else {
-    success = image->save(destPath, ext.toStdString().c_str(), quality);
-  }
-  if (backupExists) {
-    if (success) {
-      // everything ok - remove the backup
-      QFile file(tmpPath);
-      file.remove();
-    } else if (originalExists) {
-      // revert on fail
-      QFile::remove(mDocInfo->filePath());
-      QFile::copy(tmpPath, mDocInfo->filePath());
-      QFile::remove(tmpPath);
-    }
-  }
-  if (isOverwrite && success)
+    image.swap(imageEdited);
+    discardEditedImage();
     mDocInfo->refresh();
-  return success;
+  }
 }
-
-bool ImageStatic::save() { return save(mPath); }
 
 std::unique_ptr<QPixmap> ImageStatic::getPixmap() {
   std::unique_ptr<QPixmap> pix(new QPixmap());
