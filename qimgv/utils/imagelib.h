@@ -46,5 +46,6 @@ class ImageLib {
         static void recolor(QPixmap &pixmap, QColor color);
         static ColorMatrix getColorAdjustmentMatrix(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
         static QImage applyColorAdjustments(std::shared_ptr<const QImage> source, float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
+        static QImage loadICO(const QString &path);
 };
 

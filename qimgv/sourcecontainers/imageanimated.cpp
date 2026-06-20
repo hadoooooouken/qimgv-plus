@@ -2,8 +2,6 @@
 #include <QImageReader>
 #include <time.h>
 
-// TODO: this class is kinda useless now. redesign?
-
 ImageAnimated::ImageAnimated(QString _path)
     : Image(_path)
 {
@@ -41,7 +39,6 @@ int ImageAnimated::frameCount() {
     return mFrameCount;
 }
 
-// TODO: overwrite (self included)
 bool ImageAnimated::save(QString destPath) {
     QFile file(mPath);
     if(file.exists()) {
@@ -61,7 +58,6 @@ bool ImageAnimated::save(QString destPath) {
 }
 
 bool ImageAnimated::save() {
-    //TODO
     return false;
 }
 

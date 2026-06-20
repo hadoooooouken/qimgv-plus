@@ -1,7 +1,5 @@
 #include "cropoverlay.h"
 
-// TODO: this is pretty old. Clean up
-
 CropOverlay::CropOverlay(FloatingWidgetContainer *parent) : FloatingWidget(parent),
     startPos(QPoint(0, 0)),
     endPos(QPoint(0, 0)),
@@ -277,7 +275,6 @@ void CropOverlay::setResizeAnchor(CursorAction action) {
 }
 
 //------------------------------------------------------------------------------
-// TODO: flip selection rectangle
 void CropOverlay::resizeSelection(QPoint delta) {
     if(lockAspectRatio)
         resizeSelectionAR(delta);
@@ -288,16 +285,9 @@ void CropOverlay::resizeSelection(QPoint delta) {
 }
 
 //------------------------------------------------------------------------------
-// TODO: split this up
 void CropOverlay::resizeSelectionAR(QPoint delta) {
     QSizeF newSz(selectionRect.size());
     QSizeF maxSz;
-    /* ~JustQtThings~
-     * int QRect::bottom() const
-     *   Note that for historical reasons this function returns top() + height() - 1;
-     *   use y() + height() to retrieve the true y-coordinate.
-     * same for QRect::right()
-     */
     switch(cursorAction) {
         case DRAG_TOPLEFT:
             // get max selection size

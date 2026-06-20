@@ -10,6 +10,8 @@
 #include <QSemaphore>
 #include <QCoreApplication>
 #include <functional>
+#include <QIcon>
+#include <QPixmap>
 
 namespace {
 // Bicubic coefficients
@@ -929,5 +931,21 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
   }
 
   return dst;
+}
+
+QImage ImageLib::loadICO(const QString &path) {
+  QIcon icon(path);
+  QList<QSize> sizes = icon.availableSizes();
+  if (sizes.isEmpty()) {
+    return QImage();
+  }
+  QSize maxSize(0, 0);
+  for (auto sz : std::as_const(sizes)) {
+    if (maxSize.width() < sz.width()) {
+      maxSize = sz;
+    }
+  }
+  QPixmap iconPix = icon.pixmap(maxSize);
+  return iconPix.toImage();
 }
 

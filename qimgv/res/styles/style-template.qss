@@ -71,7 +71,6 @@ QPushButton:hover, [accessibleName="Button"]:hover, [accessibleName="ButtonSetLe
     color: %text_hc2%;
 }
 
-/* TODO: fix me */
 QPushButton:pressed,
 [accessibleName="Button"]:pressed,
 [accessibleName="Button"][pressed="true"],

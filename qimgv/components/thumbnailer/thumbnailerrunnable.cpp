@@ -1,6 +1,7 @@
 #include "thumbnailerrunnable.h"
 #include "settings.h"
 #include "utils/colormanager.h"
+#include "utils/imagelib.h"
 #include <QPainter>
 #include <memory>
 
@@ -149,6 +150,30 @@ ThumbnailerRunnable::~ThumbnailerRunnable() {}
 std::pair<QImage, QSize>
 ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
                                      bool squared) {
+  bool isIco = (format && QString::compare(QString::fromLatin1(format), QStringLiteral("ico"), Qt::CaseInsensitive) == 0);
+  if (isIco) {
+    QImage fullSize = ImageLib::loadICO(path);
+    if (!fullSize.isNull()) {
+      QSize originalSize = fullSize.size();
+      Qt::AspectRatioMode ARMode =
+          squared ? (Qt::KeepAspectRatioByExpanding) : (Qt::KeepAspectRatio);
+      QSize scaledSize = originalSize.scaled(size, size, ARMode);
+      QImage result;
+      if (squared) {
+        QRect clip(0, 0, size, size);
+        QRect scaledRect(QPoint(0, 0), scaledSize);
+        clip.moveCenter(scaledRect.center());
+        QImage scaled = fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                                        Qt::SmoothTransformation);
+        result = ImageLib::croppedRaw(&scaled, clip);
+      } else {
+        result = fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                                 Qt::SmoothTransformation);
+      }
+      return std::make_pair(result, originalSize);
+    }
+  }
+
   auto reader = std::make_unique<QImageReader>(path, format);
   reader->setAllocationLimit(settings->memoryAllocationLimit());
 

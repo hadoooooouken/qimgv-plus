@@ -223,7 +223,6 @@ void MW::fitWindowStretch() {
 }
 
 // switch between 1:1 and Fit All
-// TODO: move to viewerWidget?
 void MW::switchFitMode() {
     if(viewerWidget->fitMode() == FIT_WINDOW)
         viewerWidget->setFitMode(FIT_ORIGINAL);

@@ -92,20 +92,10 @@ void ImageStatic::loadGeneric() {
   mLoaded = true;
 }
 
-// TODO: move this out somewhere to use in other places
 void ImageStatic::loadICO() {
-  // Big brain code. It's mostly for small ico files so whatever. I'm not
-  // patching Qt for this.
-  QIcon icon(mPath);
-  QList<QSize> sizes = icon.availableSizes();
-  QSize maxSize(0, 0);
-  for (auto sz : std::as_const(sizes))
-    if (maxSize.width() < sz.width())
-      maxSize = sz;
-  QPixmap iconPix = icon.pixmap(maxSize);
-  std::unique_ptr<const QImage> img(new QImage(iconPix.toImage()));
-  image = std::move(img);
-  if (image) {
+  QImage loaded = ImageLib::loadICO(mPath);
+  if (!loaded.isNull()) {
+    image = std::make_shared<const QImage>(std::move(loaded));
     imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
   }
   mLoaded = true;
@@ -116,7 +106,6 @@ QString ImageStatic::generateHash(QString str) {
       QCryptographicHash::hash(str.toUtf8(), QCryptographicHash::Md5).toHex());
 }
 
-// TODO: move saving to directorymodel
 bool ImageStatic::save(QString destPath) {
   QString tmpPath = destPath + "_" + generateHash(destPath);
   QFileInfo fi(destPath);
