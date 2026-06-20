@@ -230,20 +230,19 @@ bool DocumentInfo::detectAnimatedAvif() {
 }
 
 void DocumentInfo::loadExifTags() {
-    if(exifLoaded)
+    if (exifLoaded)
         return;
     exifLoaded = true;
     exifTags.clear();
+
 #ifdef USE_EXIV2
     try {
         std::unique_ptr<Exiv2::Image> image;
-
         image = Exiv2::ImageFactory::open(fileInfo.filePath().toUtf8().toStdString());
-
         assert(image.get() != 0);
         image->readMetadata();
         Exiv2::ExifData &exifData = image->exifData();
-        if(exifData.empty())
+        if (exifData.empty())
             return;
 
         Exiv2::ExifKey make("Exif.Image.Make");
@@ -259,21 +258,21 @@ void DocumentInfo::loadExifTags() {
         Exiv2::ExifData::const_iterator it;
 
         it = exifData.findKey(make);
-        if(it != exifData.end() /* && it->count() */)
+        if (it != exifData.end())
             exifTags.insert(QObject::tr("Make"), QString::fromStdString(it->value().toString()));
 
         it = exifData.findKey(model);
-        if(it != exifData.end())
+        if (it != exifData.end())
             exifTags.insert(QObject::tr("Model"), QString::fromStdString(it->value().toString()));
 
         it = exifData.findKey(dateTime);
-        if(it != exifData.end())
+        if (it != exifData.end())
             exifTags.insert(QObject::tr("Date/Time"), QString::fromStdString(it->value().toString()));
 
         it = exifData.findKey(exposureTime);
-        if(it != exifData.end()) {
+        if (it != exifData.end()) {
             Exiv2::Rational r = it->toRational();
-            if(r.first < r.second) {
+            if (r.first < r.second) {
                 qreal exp = round(static_cast<qreal>(r.second) / r.first);
                 exifTags.insert(QObject::tr("ExposureTime"), "1/" + QString::number(exp) + QObject::tr(" sec"));
             } else {
@@ -283,57 +282,46 @@ void DocumentInfo::loadExifTags() {
         }
 
         it = exifData.findKey(fnumber);
-        if(it != exifData.end()) {
+        if (it != exifData.end()) {
             Exiv2::Rational r = it->toRational();
             qreal fn = static_cast<qreal>(r.first) / r.second;
             exifTags.insert(QObject::tr("F Number"), "f/" + QString::number(fn, 'g', 3));
         }
 
         it = exifData.findKey(isoSpeedRatings);
-        if(it != exifData.end())
+        if (it != exifData.end())
             exifTags.insert(QObject::tr("ISO Speed ratings"), QString::fromStdString(it->value().toString()));
 
         it = exifData.findKey(flash);
-        if(it != exifData.end())
+        if (it != exifData.end())
             exifTags.insert(QObject::tr("Flash"), QString::fromStdString(it->value().toString()));
 
         it = exifData.findKey(focalLength);
-        if(it != exifData.end()) {
+        if (it != exifData.end()) {
             Exiv2::Rational r = it->toRational();
             qreal fn = static_cast<qreal>(r.first) / r.second;
             exifTags.insert(QObject::tr("Focal Length"), QString::number(fn, 'g', 3) + QObject::tr(" mm"));
         }
 
         it = exifData.findKey(userComment);
-        if(it != exifData.end()) {
-            // crop out 'charset=ascii' etc"
+        if (it != exifData.end()) {
             auto comment = QString::fromStdString(it->value().toString());
-            if(comment.startsWith(QLatin1String("charset=")))
+            if (comment.startsWith(QLatin1String("charset=")))
                 comment.remove(0, comment.indexOf(QLatin1Char(' ')) + 1);
             exifTags.insert(QObject::tr("UserComment"), comment);
         }
     }
-
-// this should work with both 0.28 and <0.28
-#if not EXIV2_TEST_VERSION(0, 28, 0)
-#ifdef __WIN32
+#if !EXIV2_TEST_VERSION(0, 28, 0)
     catch (Exiv2::BasicError<wchar_t>& e) {
         qWarning() << "Caught Exiv2::BasicError exception:\n" << e.what() << "\n";
         return;
     }
-#else
-    catch (Exiv2::BasicError<char>& e) {
-        qWarning() << "Caught Exiv2::BasicError exception:\n" << e.what() << "\n";
-        return;
-    }
 #endif
-#endif
-
     catch (Exiv2::Error& e) {
         qWarning() << "Caught Exiv2 exception:\n" << e.what() << "\n";
         return;
     }
-#endif
+#endif  // USE_EXIV2
 }
 
 QMap<QString, QString> DocumentInfo::getExifTags() {

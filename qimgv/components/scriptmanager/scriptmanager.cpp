@@ -77,14 +77,13 @@ void ScriptManager::runCommandDetached(QString cmd) {
 }
 
 void ScriptManager::processArguments(QStringList &cmd, std::shared_ptr<Image> img) {
-    for (auto& i : cmd) {
-        if(i.contains("%file%"))
-            i.replace("%file%", img.get()->filePath());
-#ifdef __WIN32
-        // force "\" as a directory separator
-        i.replace("/", "\\");
-        i.replace("\\\\", "\\");
-#endif
+    for (auto &arg : cmd) {
+        if (arg.contains("%file%")) {
+            arg.replace("%file%", img->filePath());
+        }
+        // Windows always uses backslashes
+        arg.replace("/", "\\");
+        arg.replace("\\\\", "\\");
     }
 }
 
