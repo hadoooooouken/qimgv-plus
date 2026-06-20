@@ -120,6 +120,7 @@ private:
     QSpacerItem *pathbarSpacer;
     QLabel *selectionCountLabel;
     QPushButton *batchButton;
+    QLabel *gridSizeLabel;
     QSlider *zoomSlider;
     QSpacerItem *zoomSliderSpacer;
     StyledComboBox *folderSortingComboBox;

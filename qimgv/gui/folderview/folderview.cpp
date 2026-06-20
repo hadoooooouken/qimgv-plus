@@ -231,6 +231,10 @@ void FolderView::setupUi() {
     batchButton->setAccessibleName("FolderViewBatchButton");
     horizontalLayout_5->addWidget(batchButton);
     
+    gridSizeLabel = new QLabel(tr("Grid size"), topBar);
+    gridSizeLabel->setAccessibleName("FolderViewGridSizeLabel");
+    horizontalLayout_5->addWidget(gridSizeLabel);
+
     zoomSlider = new QSlider(Qt::Horizontal, topBar);
     zoomSlider->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     zoomSlider->setMinimumWidth(110);
@@ -674,11 +678,13 @@ void FolderView::resizeEvent(QResizeEvent *event) {
 
     if(width() < 510) {
         zoomSlider->setVisible(false);
+        gridSizeLabel->setVisible(false);
         zoomSliderSpacer->changeSize(0, 20, QSizePolicy::Fixed, QSizePolicy::Fixed);
         pathbarSpacer->changeSize(0, 20, QSizePolicy::Fixed, QSizePolicy::Fixed);
         topBar->layout()->invalidate();
     } else {
         zoomSlider->setVisible(true);
+        gridSizeLabel->setVisible(true);
         zoomSliderSpacer->changeSize(3, 20, QSizePolicy::Fixed, QSizePolicy::Fixed);
         pathbarSpacer->changeSize(12, 20, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
         topBar->layout()->invalidate();

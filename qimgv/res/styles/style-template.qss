@@ -507,6 +507,11 @@ QLabel[accessibleName="SelectionCountLabel"] {
     margin-right: 8px;
 }
 
+QLabel[accessibleName="FolderViewGridSizeLabel"] {
+    color: %text_hc%;
+    margin-right: 6px;
+}
+
 QPushButton[accessibleName="FolderViewBatchButton"] {
     color: %text_hc%;
     background-color: %panel_button%;
