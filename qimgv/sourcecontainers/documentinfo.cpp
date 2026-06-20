@@ -78,7 +78,7 @@ void DocumentInfo::detectFormat() {
     static QMimeDatabase mimeDb;
     // Fast check by extension first to bail out on videos
     QMimeType fastMime = mimeDb.mimeTypeForFile(fileInfo.filePath(), QMimeDatabase::MatchExtension);
-    if(fastMime.name().startsWith("video/")) {
+    if(fastMime.name().startsWith(QLatin1String("video/"))) {
         mDocumentType = DocumentType::NONE;
         return;
     }
@@ -308,8 +308,8 @@ void DocumentInfo::loadExifTags() {
         if(it != exifData.end()) {
             // crop out 'charset=ascii' etc"
             auto comment = QString::fromStdString(it->value().toString());
-            if(comment.startsWith("charset="))
-                comment.remove(0, comment.indexOf(" ") + 1);
+            if(comment.startsWith(QLatin1String("charset=")))
+                comment.remove(0, comment.indexOf(QLatin1Char(' ')) + 1);
             exifTags.insert(QObject::tr("UserComment"), comment);
         }
     }

@@ -70,10 +70,10 @@ void ThumbnailCache::saveThumbnail(const QImage *image, QString id) {
     query.prepare("INSERT OR REPLACE INTO thumbnails (id, last_modified, original_width, original_height, label, data) "
                   "VALUES (:id, :last_modified, :original_width, :original_height, :label, :data)");
     query.bindValue(":id", id);
-    query.bindValue(":last_modified", image->text("lastModified"));
-    query.bindValue(":original_width", image->text("originalWidth").toInt());
-    query.bindValue(":original_height", image->text("originalHeight").toInt());
-    query.bindValue(":label", image->text("label"));
+    query.bindValue(":last_modified", image->text(QStringLiteral("lastModified")));
+    query.bindValue(":original_width", image->text(QStringLiteral("originalWidth")).toInt());
+    query.bindValue(":original_height", image->text(QStringLiteral("originalHeight")).toInt());
+    query.bindValue(":label", image->text(QStringLiteral("label")));
     query.bindValue(":data", ba);
     
     if (!query.exec()) {
@@ -98,10 +98,10 @@ std::unique_ptr<QImage> ThumbnailCache::readThumbnail(QString id) {
         
         auto thumb = std::make_unique<QImage>();
         if (thumb->loadFromData(ba)) {
-            thumb->setText("lastModified", lastModified);
-            thumb->setText("originalWidth", QString::number(originalWidth));
-            thumb->setText("originalHeight", QString::number(originalHeight));
-            thumb->setText("label", label);
+            thumb->setText(QStringLiteral("lastModified"), lastModified);
+            thumb->setText(QStringLiteral("originalWidth"), QString::number(originalWidth));
+            thumb->setText(QStringLiteral("originalHeight"), QString::number(originalHeight));
+            thumb->setText(QStringLiteral("label"), label);
             return thumb;
         }
     }

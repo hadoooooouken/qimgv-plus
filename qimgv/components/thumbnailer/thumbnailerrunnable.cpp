@@ -19,11 +19,10 @@ QString ThumbnailerRunnable::generateIdString(QString path, int size,
                                               bool crop) {
   QString queryStr = path + QString::number(size);
   if (crop)
-    queryStr.append("s");
-  queryStr = QString("%1").arg(QString(
+    queryStr.append(QLatin1Char('s'));
+  return QString::fromLatin1(
       QCryptographicHash::hash(queryStr.toUtf8(), QCryptographicHash::Md5)
-          .toHex()));
-  return queryStr;
+          .toHex());
 }
 
 std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
@@ -43,13 +42,13 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
 
   if (!force && activeCache) {
     image = activeCache->readThumbnail(thumbnailId);
-    if (image && image->text("lastModified") != time)
+    if (image && image->text(QStringLiteral("lastModified")) != time)
       image.reset(nullptr);
   }
 
   if (!image) {
     if (imgInfo.type() == DocumentType::NONE) {
-      return std::make_shared<Thumbnail>(imgInfo.fileName(), "", size, nullptr);
+      return std::make_shared<Thumbnail>(imgInfo.fileName(), QString(), size, nullptr);
     }
     std::pair<QImage, QSize> pair;
     pair = createThumbnail(imgInfo.filePath(),
@@ -58,7 +57,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
     image = std::make_unique<QImage>(pair.first);
     QSize originalSize = pair.second;
 
-    if (image && imgInfo.format() == "pdf") {
+    if (image && imgInfo.format() == QLatin1String("pdf")) {
       QImage opaqueImg(image->size(), QImage::Format_RGB32);
       opaqueImg.fill(Qt::white);
       QPainter painter(&opaqueImg);
@@ -73,12 +72,12 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
 
     if (image) {
       // put in image info
-      image->setText("originalWidth", QString::number(originalSize.width()));
-      image->setText("originalHeight", QString::number(originalSize.height()));
-      image->setText("lastModified", time);
+      image->setText(QStringLiteral("originalWidth"), QString::number(originalSize.width()));
+      image->setText(QStringLiteral("originalHeight"), QString::number(originalSize.height()));
+      image->setText(QStringLiteral("lastModified"), time);
 
       if (imgInfo.type() == ANIMATED)
-        image->setText("label", " [a]");
+        image->setText(QStringLiteral("label"), QStringLiteral(" [a]"));
 
       if (activeCache) {
         if (originalSize.width() > settings->thumbnailResolution() || originalSize.height() > settings->thumbnailResolution())
@@ -88,7 +87,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
   }
 
   if (!image) {
-    return std::make_shared<Thumbnail>(imgInfo.fileName(), "error", size, nullptr);
+    return std::make_shared<Thumbnail>(imgInfo.fileName(), QStringLiteral("error"), size, nullptr);
   }
 
   // scale and crop to the requested grid size
@@ -122,7 +121,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
     }
   }
 
-  if (image && imgInfo.format() == "pdf" && image->hasAlphaChannel()) {
+  if (image && imgInfo.format() == QLatin1String("pdf") && image->hasAlphaChannel()) {
     QImage opaqueImg(image->size(), QImage::Format_RGB32);
     opaqueImg.fill(Qt::white);
     QPainter painter(&opaqueImg);
@@ -136,11 +135,11 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
 
   QString label;
   if (pixmapPtr->width() == 0) {
-    label = "error";
+    label = QStringLiteral("error");
   } else {
     // put info into Thumbnail object
-    label = image->text("originalWidth") + "x" + image->text("originalHeight") +
-            image->text("label");
+    label = image->text(QStringLiteral("originalWidth")) + QLatin1Char('x') + image->text(QStringLiteral("originalHeight")) +
+            image->text(QStringLiteral("label"));
   }
   return std::make_shared<Thumbnail>(imgInfo.fileName(), label, size, pixmapPtr);
 }
