@@ -73,7 +73,7 @@ void ImageStatic::loadGeneric() {
   // it rare enough so lets just convert it to the closest working thing
   if (img->format() == QImage::Format_Mono) {
     QImage *imgConverted = new QImage();
-    *imgConverted = img->convertToFormat(QImage::Format_Grayscale8);
+    *imgConverted = img->convertToFormat(QImage::Format_ARGB32);
     image.reset(imgConverted);
   } else {
     // set image
