@@ -70,6 +70,11 @@ private:
     void resizeSelection(QPoint d);
     void resizeSelectionAR(QPoint d);
     void resizeSelectionFree(QPoint d);
+    void resizeCornerAR(QPoint delta);
+    void resizeLeftAR(QPoint delta);
+    void resizeRightAR(QPoint delta);
+    void resizeTopAR(QPoint delta);
+    void resizeBottomAR(QPoint delta);
     void recalculateGeometry();
     QPoint mapPointToImage(QPoint p);
     void updateSelectionDrawRect();
