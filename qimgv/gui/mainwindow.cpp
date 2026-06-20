@@ -230,10 +230,11 @@ void MW::fitWindowStretch() {
 
 // switch between 1:1 and Fit All
 void MW::switchFitMode() {
-    if(viewerWidget->fitMode() == FIT_WINDOW)
-        viewerWidget->setFitMode(FIT_ORIGINAL);
-    else
-        viewerWidget->setFitMode(FIT_WINDOW);
+    if(viewerWidget->interactionEnabled()) {
+        viewerWidget->switchFitMode();
+    } else {
+        showMessage(tr("Zoom temporary disabled"));
+    }
 }
 
 void MW::closeImage() {

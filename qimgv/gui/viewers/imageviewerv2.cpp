@@ -1210,6 +1210,15 @@ void ImageViewerV2::setFitWindowStretch() {
   requestScaling();
 }
 
+void ImageViewerV2::switchFitMode() {
+  if (imageFitMode == FIT_WINDOW) {
+    setFitMode(FIT_ORIGINAL);
+  } else {
+    setFitMode(FIT_WINDOW);
+  }
+}
+
+
 void ImageViewerV2::resizeEvent(QResizeEvent *event) {
   QGraphicsView::resizeEvent(event);
   // reset this so we won't generate unnecessary drag'n'drop event

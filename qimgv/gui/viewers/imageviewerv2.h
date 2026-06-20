@@ -92,6 +92,7 @@ public slots:
     virtual void setFitWidth();
     virtual void setFitWindow();
     virtual void setFitWindowStretch();
+    void switchFitMode();
     virtual void zoomIn();
     virtual void zoomOut();
     virtual void zoomInCursor();
