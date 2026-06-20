@@ -467,6 +467,8 @@ void Core::onFirstRun() {
 
   settings->setScalingFilter(QI_FILTER_CAS);
   settings->setImageFitMode(FIT_WINDOW);
+  settings->setBackgroundOpacity(0.8);
+  settings->setThumbnailOpacity(0.6);
 
   // Set default thumbnailer threads on first run
   int defaultCount = std::clamp(QThread::idealThreadCount() / 2, Settings::MinThumbnailerThreads, Settings::MaxThumbnailerThreads);

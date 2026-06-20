@@ -491,9 +491,9 @@ void Settings::setThemeMode(ThemeMode mode) {
 qreal Settings::thumbnailOpacity() {
   bool ok = false;
   qreal value =
-      settings->settingsConf->value("thumbnailOpacity", 0.5).toReal(&ok);
+      settings->settingsConf->value("thumbnailOpacity", 0.6).toReal(&ok);
   if (!ok)
-    return 0.5;
+    return 0.6;
   if (value > 1.0)
     return 1.0;
   if (value < 0.0)
@@ -533,9 +533,9 @@ void Settings::setLastVersion(QVersionNumber &ver) {
 qreal Settings::backgroundOpacity() {
   bool ok = false;
   qreal value =
-      settings->settingsConf->value("backgroundOpacity", 0.5).toReal(&ok);
+      settings->settingsConf->value("backgroundOpacity", 0.8).toReal(&ok);
   if (!ok)
-    return 0.5;
+    return 0.8;
   if (value > 1.0)
     return 1.0;
   if (value < 0.0)

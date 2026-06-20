@@ -512,38 +512,6 @@ void SettingsDialog::adjustSizeToContents() {
   // container
   // stackedWidget->layout()->activate();
   this->setMinimumWidth(sizeHint().width() + 22);
-
-  // qDebug() << "window:" << this->sizeHint() << this->minimumSizeHint() <<
-  // this->size(); qDebug() << "stackedwidget:" << stackedWidget->sizeHint()
-  // << stackedWidget->minimumSizeHint() << stackedWidget->size();
-  // qDebug() << "scrollarea:" << scrollArea->sizeHint() <<
-  // scrollArea->minimumSizeHint() << scrollArea->size(); qDebug() <<
-  // "scrollareawidget:" << scrollAreaWidgetContents->sizeHint() <<
-  // scrollAreaWidgetContents->minimumSizeHint() <<
-  // scrollAreaWidgetContents->size(); qDebug() << "grid" <<
-  // gridLayout_15->sizeHint(); qDebug() << "wtf" <<
-  // startInFolderViewCheckBox->sizeHint() <<
-  // startInFolderViewCheckBox->minimumSizeHint();
-}
-//------------------------------------------------------------------------------
-void SettingsDialog::resetToDesktopTheme() {
-  settings->setThemeMode(THEME_AUTO);
-  settings->setThumbnailOpacity(0.5);
-  settings->setUseBlackBackground(false);
-  // Clear custom accent in themeConf
-  settings->clearCustomAccent();
-  this->readColorScheme();
-
-  // Update UI controls
-  themeSelectorComboBox->setCurrentIndex(static_cast<int>(THEME_AUTO));
-  thumbOpacitySlider->setValue(50);
-  thumbOpacityPercentLabel->setText("50%");
-  useBlackBackgroundCheckBox->setChecked(false);
-
-  useCustomAccentCheckBox->blockSignals(true);
-  useCustomAccentCheckBox->setChecked(false);
-  colorSelectorAccent->setEnabled(false);
-  useCustomAccentCheckBox->blockSignals(false);
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::setupSidebar() {}

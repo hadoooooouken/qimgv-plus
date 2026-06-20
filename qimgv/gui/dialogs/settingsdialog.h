@@ -487,7 +487,6 @@ private slots:
     void onJPEGQualitySliderChanged(int value);
     void onPNGQualitySliderChanged(int value);
     void onModernQualitySliderChanged(int value);
-    void resetToDesktopTheme();    
     void onAutoResizeLimitSliderChanged(int value);
     void onMouseScrollingSpeedSliderChanged(int value);
     void onThumbnailResolutionSliderChanged(int value);
