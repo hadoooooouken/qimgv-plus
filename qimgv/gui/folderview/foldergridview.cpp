@@ -490,16 +490,16 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
             menu.addSeparator();
 
             ContextMenuItem *itemTrash = addCustomAction(tr("Move to trash"), ":/res/icons/common/menuitem/trash16.png");
-            itemTrash->setTextColor(QColor("#ff5c5c"));
-            itemTrash->setIconColor(QColor("#ff5c5c"));
+            itemTrash->setTextColor(settings->colorScheme().trash);
+            itemTrash->setIconColor(settings->colorScheme().trash);
             connect(itemTrash, &ContextMenuItem::pressed, this, [this, &menu]() {
                 menu.close();
                 actionManager->invokeAction("moveToTrash");
             });
 
             ContextMenuItem *itemDelete = addCustomAction(tr("Delete permanently"), ":/res/icons/common/buttons/panel/close16.png");
-            itemDelete->setTextColor(QColor("#ff5c5c"));
-            itemDelete->setIconColor(QColor("#ff5c5c"));
+            itemDelete->setTextColor(settings->colorScheme().danger);
+            itemDelete->setIconColor(settings->colorScheme().danger);
             connect(itemDelete, &ContextMenuItem::pressed, this, [this, &menu]() {
                 menu.close();
                 actionManager->invokeAction("removeFile");

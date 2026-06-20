@@ -75,6 +75,8 @@ public:
     QColor folderview_button_hover;
     QColor folderview_button_pressed;
     QColor input_field_focus;
+    QColor danger;
+    QColor trash;
 
 
 private:

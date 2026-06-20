@@ -31,7 +31,8 @@ if(MSVC)
     # Enable Whole Program Optimization (/GL) and Link Time Code Generation (/LTCG) natively in MSBuild/VS
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    message(STATUS "AVX2, full optimizations (/O2 /Ob2 /Oi /Ot), security hardening (/GS /guard:cf /DYNAMICBASE /HIGHENTROPYVA), CRT warnings suppression and LTCG/GL enabled for Release")
+    add_compile_options(/wd4005)
+    message(STATUS "AVX2, full optimizations (/O2 /Ob2 /Oi /Ot), security hardening (/GS /guard:cf /DYNAMICBASE /HIGHENTROPYVA), CRT and C4005 warnings suppression and LTCG/GL enabled for Release")
 endif()
 
 # USER OPTIONS

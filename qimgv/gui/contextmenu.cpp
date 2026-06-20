@@ -213,12 +213,12 @@ void ContextMenu::setupUi()
     addSeparator(actionsLayout, 4, 4);
 
     addItem(m_trash,            "moveToTrash",        tr("Move to trash"),      ":/res/icons/common/menuitem/trash16.png");
-    m_trash->setTextColor(QColor("#ff5c5c"));
-    m_trash->setIconColor(QColor("#ff5c5c"));
+    m_trash->setTextColor(settings->colorScheme().trash);
+    m_trash->setIconColor(settings->colorScheme().trash);
 
     addItem(m_deletePermanently, "removeFile",        tr("Delete permanently"), ":/res/icons/common/buttons/panel/close16.png");
-    m_deletePermanently->setTextColor(QColor("#ff5c5c"));
-    m_deletePermanently->setIconColor(QColor("#ff5c5c"));
+    m_deletePermanently->setTextColor(settings->colorScheme().danger);
+    m_deletePermanently->setIconColor(settings->colorScheme().danger);
 
     mainPageLayout->addLayout(actionsLayout);
     m_stackedWidget->addWidget(mainPage);

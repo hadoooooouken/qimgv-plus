@@ -73,6 +73,8 @@ void ColorScheme::setBaseColors(BaseColorScheme base) {
   status_processing = base.status_processing;
   status_success = base.status_success;
   tid = base.tid;
+  danger = QColor("#D15B5B");
+  trash = QColor("#B98B6A");
   createColorVariants();
 }
 
