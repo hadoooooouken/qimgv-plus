@@ -481,6 +481,18 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
                 emit batchRequested();
             });
 
+            ContextMenuItem *itemAddFolder = addCustomAction(tr("Add folder"), ":/res/icons/common/buttons/contextmenu/add-folder.png", actionManager->shortcutForAction("createDirectory"));
+            connect(itemAddFolder, &ContextMenuItem::pressed, this, [this, &menu]() {
+                menu.close();
+                actionManager->invokeAction("createDirectory");
+            });
+
+            ContextMenuItem *itemShowInFolder = addCustomAction(tr("Show in folder"), ":/res/icons/common/menuitem/folder16.png", actionManager->shortcutForAction("showInDirectory"));
+            connect(itemShowInFolder, &ContextMenuItem::pressed, this, [this, &menu]() {
+                menu.close();
+                actionManager->invokeAction("showInDirectory");
+            });
+
             ContextMenuItem *itemRename = addCustomAction(tr("Rename"), ":/res/icons/common/overlay/edit16.png");
             connect(itemRename, &ContextMenuItem::pressed, this, [this, &menu]() {
                 menu.close();

@@ -168,6 +168,7 @@ private slots:
     void onModelLoaded();
     void outputError(const FileOpResult &error) const;
     void showInDirectory();
+    void createDirectory();
     void onDirectoryViewFileActivated(QString filePath);
     void onDirectoryViewFilesActivated(QList<QString> filePaths, QString activePath);
     bool loadFileList(const QList<QString> &filePaths, QString activePath = "");

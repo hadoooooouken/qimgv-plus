@@ -105,6 +105,7 @@ signals:
     void toggleScalingFilter();
     void cycleScalingFilter();
     void showInDirectory();
+    void createDirectory();
     void toggleSlideshow();
     void discardEdits();
     void goUp();

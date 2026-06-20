@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
+        <file>res/icons/common/buttons/contextmenu/add-folder.png</file>
+        <file>res/icons/common/buttons/contextmenu/add-folder@2x.png</file>
         <file>res/icons/common/buttons/contextmenu/fit-width18.png</file>
         <file>res/icons/common/buttons/contextmenu/fit-width18@2x.png</file>
         <file>res/icons/common/buttons/contextmenu/fit-height-stretch18.png</file>

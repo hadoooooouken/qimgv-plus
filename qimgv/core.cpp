@@ -7,6 +7,7 @@
 
 #include "core.h"
 #include "settings.h"
+#include <QInputDialog>
 #include <algorithm>
 #include <QRegularExpression>
 #include <QTemporaryFile>
@@ -390,6 +391,8 @@ void Core::initActions() {
 #endif
   connect(actionManager, &ActionManager::showInDirectory, this,
           &Core::showInDirectory);
+  connect(actionManager, &ActionManager::createDirectory, this,
+          &Core::createDirectory);
   connect(actionManager, &ActionManager::toggleSlideshow, this,
           &Core::toggleSlideshow);
   connect(actionManager, &ActionManager::goUp, this, &Core::loadParentDir);
@@ -1063,6 +1066,39 @@ void Core::showInDirectory() {
   QStringList args;
   args << "/select," << QDir::toNativeSeparators(selectedPath());
   QProcess::startDetached("explorer", args);
+}
+
+void Core::createDirectory() {
+  if (!model)
+    return;
+  QString currentDirPath = model->directoryPath();
+  if (currentDirPath.isEmpty())
+    return;
+
+  bool ok;
+  QString newFolderName = QInputDialog::getText(mw, tr("Add folder"),
+                                                tr("Folder name:"), QLineEdit::Normal,
+                                                "", &ok);
+  if (!ok || newFolderName.trimmed().isEmpty())
+    return;
+
+  QDir currentDir(currentDirPath);
+  if (currentDir.exists(newFolderName)) {
+    mw->showError(tr("Folder already exists"));
+    return;
+  }
+
+  if (mw->getFolderView()) {
+    mw->getFolderView()->setWatchingEnabled(false);
+  }
+
+  if (!currentDir.mkdir(newFolderName)) {
+    mw->showError(tr("Failed to create folder"));
+  }
+
+  if (mw->getFolderView()) {
+    mw->getFolderView()->setWatchingEnabled(true);
+  }
 }
 
 void Core::interactiveCopy(QList<QString> paths, QString destDirectory) {
