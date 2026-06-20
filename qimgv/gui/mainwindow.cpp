@@ -3,6 +3,12 @@
 #include <QClipboard>
 #include <QApplication>
 
+namespace {
+constexpr int MIN_WINDOW_WIDTH = 256;
+constexpr int MIN_WINDOW_HEIGHT = 256;
+}
+
+
 
 MW::MW(QWidget *parent)
     : FloatingWidgetContainer(parent),
@@ -28,7 +34,7 @@ MW::MW(QWidget *parent)
     layout.setContentsMargins(0,0,0,0);
     layout.setSpacing(0);
 
-    setMinimumSize(10,10);
+    setMinimumSize(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT);
 
     // do not steal focus when clicked
     // this is just a container. accept key events only

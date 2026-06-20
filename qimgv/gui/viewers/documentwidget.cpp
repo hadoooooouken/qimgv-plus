@@ -1,6 +1,12 @@
 #include "documentwidget.h"
 #include "settings.h"
 
+namespace {
+constexpr int MIN_WINDOW_WIDTH_FOR_PANEL = 800;
+constexpr int MIN_WINDOW_HEIGHT_FOR_PANEL = 500;
+}
+
+
 DocumentWidget::DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget,
                                QWidget *parent)
     : FloatingWidgetContainer(parent), mainPanel(nullptr), mPanelPinned(false),
@@ -79,7 +85,11 @@ void DocumentWidget::setPanelPinned(bool mode) {
       break;
     }
     mainPanel->setLayoutManaged(true);
-    mainPanel->show();
+    if (isSizeAllowed()) {
+      mainPanel->show();
+    } else {
+      mainPanel->hide();
+    }
   }
   mPanelPinned = mode;
 }
@@ -113,10 +123,12 @@ void DocumentWidget::hideFloatingPanelDelayed() {
 
 void DocumentWidget::setPanelEnabled(bool mode) {
   mPanelEnabled = mode;
-  if (!mode)
+  if (!mode) {
     mainPanel->hide();
-  else
+  } else {
     setupMainPanel();
+    updatePanelVisibility();
+  }
 }
 
 bool DocumentWidget::panelEnabled() { return mPanelEnabled; }
@@ -145,7 +157,7 @@ void DocumentWidget::mouseMoveEvent(QMouseEvent *event) {
     return;
   }
   // show on hover event
-  if (mPanelEnabled && (mIsFullscreen || !mPanelFullscreenOnly)) {
+  if (mPanelEnabled && (mIsFullscreen || !mPanelFullscreenOnly) && isSizeAllowed()) {
     if (mainPanel->triggerRect().contains(event->pos()) && !avoidPanelFlag) {
       hideTimer.stop();
       mainPanel->showAnimated();
@@ -176,7 +188,7 @@ void DocumentWidget::enterEvent(QEnterEvent *event) {
   // we can't track move events outside the window (without additional timer),
   // so just hook the panel event here
   if (!mPanelPinned && mPanelEnabled &&
-      (mIsFullscreen || !mPanelFullscreenOnly)) {
+      (mIsFullscreen || !mPanelFullscreenOnly) && isSizeAllowed()) {
     if (mainPanel->triggerRect().contains(mapFromGlobal(cursor().pos())) &&
         !avoidPanelFlag) {
       hideTimer.stop();
@@ -192,4 +204,30 @@ void DocumentWidget::leaveEvent(QEvent *event) {
   // instead do the panel hiding in MW::leaveEvent  (it works properly in root
   // window) mainPanel->hide();
   avoidPanelFlag = false;
+}
+
+bool DocumentWidget::isSizeAllowed() const {
+  const QWidget *w = window();
+  if (w) {
+    return w->width() >= MIN_WINDOW_WIDTH_FOR_PANEL &&
+           w->height() >= MIN_WINDOW_HEIGHT_FOR_PANEL;
+  }
+  return true;
+}
+
+void DocumentWidget::updatePanelVisibility() {
+  if (!isSizeAllowed()) {
+    if (mainPanel && !mainPanel->isHidden()) {
+      mainPanel->hide();
+    }
+  } else {
+    if (mPanelEnabled && mPanelPinned && mainPanel && mainPanel->isHidden()) {
+      mainPanel->show();
+    }
+  }
+}
+
+void DocumentWidget::resizeEvent(QResizeEvent *event) {
+  FloatingWidgetContainer::resizeEvent(event);
+  updatePanelVisibility();
 }

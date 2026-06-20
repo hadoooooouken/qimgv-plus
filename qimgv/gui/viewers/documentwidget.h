@@ -30,11 +30,15 @@ private slots:
     void hideFloatingPanelDelayed();
 
 protected:
-    void enterEvent(QEnterEvent *event);
-    void leaveEvent(QEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
+    void enterEvent(QEnterEvent *event) override;
+    void leaveEvent(QEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
+    bool isSizeAllowed() const;
+    void updatePanelVisibility();
+
     QBoxLayout *layout;
     std::shared_ptr<ViewerWidget> mViewWidget;
     std::shared_ptr<MainPanel> mainPanel;
