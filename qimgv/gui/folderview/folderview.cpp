@@ -522,6 +522,12 @@ void FolderView::onFolderSortingChanged(SortingMode mode) {
     folderSortingComboBox->blockSignals(false);
 }
 
+void FolderView::setWatchingEnabled(bool enabled) {
+    if (dirModel) {
+        dirModel->setOption(QFileSystemModel::DontWatchForChanges, !enabled);
+    }
+}
+
 FolderView::~FolderView() {
     dirTreeView->setModel(nullptr);
 }

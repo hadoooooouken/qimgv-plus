@@ -621,6 +621,9 @@ void Core::removePermanent() {
   }
   FileOpResult result;
   int successCount = 0;
+  if (mw->getFolderView()) {
+    mw->getFolderView()->setWatchingEnabled(false);
+  }
   for (const auto &path : std::as_const(paths)) {
     QFileInfo fi(path);
     if (fi.isDir())
@@ -629,6 +632,9 @@ void Core::removePermanent() {
       result = removeFile(path, false);
     if (result == FileOpResult::SUCCESS)
       successCount++;
+  }
+  if (mw->getFolderView()) {
+    mw->getFolderView()->setWatchingEnabled(true);
   }
   if (paths.count() == 1) {
     if (result == FileOpResult::SUCCESS) {
@@ -689,6 +695,9 @@ void Core::moveToTrash() {
   }
   FileOpResult result;
   int successCount = 0;
+  if (mw->getFolderView()) {
+    mw->getFolderView()->setWatchingEnabled(false);
+  }
   for (const auto &path : std::as_const(paths)) {
     QFileInfo fi(path);
     if (fi.isDir())
@@ -697,6 +706,9 @@ void Core::moveToTrash() {
       result = removeFile(path, true);
     if (result == FileOpResult::SUCCESS)
       successCount++;
+  }
+  if (mw->getFolderView()) {
+    mw->getFolderView()->setWatchingEnabled(true);
   }
   if (paths.count() == 1) {
     if (result == FileOpResult::SUCCESS) {
@@ -947,15 +959,27 @@ void Core::setFoldersDisplay(bool mode) {
 }
 
 void Core::renameCurrentSelection(QString newName) {
-  if (!model->fileCount() || newName.isEmpty() || selectedPath().isEmpty())
+  if (newName.isEmpty() || selectedPath().isEmpty())
     return;
   FileOpResult result;
+  if (mw->getFolderView()) {
+    mw->getFolderView()->setWatchingEnabled(false);
+  }
   model->renameEntry(selectedPath(), newName, false, result);
+  if (mw->getFolderView()) {
+    mw->getFolderView()->setWatchingEnabled(true);
+  }
   if (result == FileOpResult::DESTINATION_DIR_EXISTS) {
     mw->toggleRenameOverlay(newName);
   } else if (result == FileOpResult::DESTINATION_FILE_EXISTS) {
     if (mw->showConfirmation(tr("File exists"), tr("Overwrite file?"))) {
+      if (mw->getFolderView()) {
+        mw->getFolderView()->setWatchingEnabled(false);
+      }
       model->renameEntry(selectedPath(), newName, true, result);
+      if (mw->getFolderView()) {
+        mw->getFolderView()->setWatchingEnabled(true);
+      }
     } else {
       // show rename dialog again
       mw->toggleRenameOverlay(newName);
@@ -1119,11 +1143,21 @@ void Core::doInteractiveCopy(QString path, QString destDirectory,
 // -----------------------------------------------------------------------------------
 
 void Core::interactiveMove(QList<QString> paths, QString destDirectory) {
+  if (mw->getFolderView()) {
+    mw->getFolderView()->setWatchingEnabled(false);
+  }
   DialogResult overwriteFiles;
   for (const auto &path : std::as_const(paths)) {
     doInteractiveMove(path, destDirectory, overwriteFiles);
-    if (overwriteFiles.cancel)
+    if (overwriteFiles.cancel) {
+      if (mw->getFolderView()) {
+        mw->getFolderView()->setWatchingEnabled(true);
+      }
       return;
+    }
+  }
+  if (mw->getFolderView()) {
+    mw->getFolderView()->setWatchingEnabled(true);
   }
 }
 
@@ -1571,7 +1605,7 @@ void Core::sortBySize() {
 }
 
 void Core::showRenameDialog() {
-  if (model->isEmpty())
+  if (selectedPath().isEmpty())
     return;
   QFileInfo fi(selectedPath());
   mw->toggleRenameOverlay(fi.fileName());
