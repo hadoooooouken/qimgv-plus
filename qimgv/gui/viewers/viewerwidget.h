@@ -30,7 +30,7 @@ public:
     bool interactionEnabled();
 
     bool showImage(std::shared_ptr<const QImage> image, QString filePath = "");
-    bool showAnimation(std::shared_ptr<QMovie> movie);
+    bool showAnimation(const QString &filePath, const QString &format);
     void onScalingFinished(QImage scaled);
     void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
     void hideUpscaledCrop();

@@ -35,7 +35,7 @@ void ImageAnimated::load() {
     mLoaded = true;
 }
 
-int ImageAnimated::frameCount() {
+int ImageAnimated::frameCount() const {
     return mFrameCount;
 }
 
@@ -75,15 +75,7 @@ std::shared_ptr<const QImage> ImageAnimated::getDisplayImage() {
     return getImage();
 }
 
-std::shared_ptr<QMovie> ImageAnimated::getMovie() {
 
-    if(movie == nullptr) {
-        movie.reset(new QMovie());
-        movie->setFileName(mPath);
-        movie->setFormat(mDocInfo->format().toStdString().c_str());
-    }
-    return movie;
-}
 
 int ImageAnimated::height() {
     return mSize.height();

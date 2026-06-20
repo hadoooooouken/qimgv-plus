@@ -67,7 +67,7 @@ public:
   void onUpscaleFinished(const QImage &cropImg, QRect origCrop);
   void hideUpscaledCrop();
   void showImage(std::shared_ptr<const QImage> image, QString filePath = "");
-  void showAnimation(std::shared_ptr<QMovie> movie);
+  void showAnimation(const QString &filePath, const QString &format, QSize size);
 
   QRect visibleImageRect() const;
   QRect visibleOriginalImageRect() const;

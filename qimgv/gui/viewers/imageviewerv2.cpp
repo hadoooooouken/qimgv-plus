@@ -365,8 +365,9 @@ void ImageViewerV2::updateImage(std::shared_ptr<const QImage> newImage) {
   }
 }
 
-void ImageViewerV2::showAnimation(std::shared_ptr<QMovie> _movie) {
-  if (_movie && _movie->isValid()) {
+void ImageViewerV2::showAnimation(const QString &filePath, const QString &format) {
+  auto newMovie = std::make_shared<QMovie>(filePath, format.toUtf8());
+  if (newMovie && newMovie->isValid()) {
     // Update DPR just in case an event was missed or not delivered yet
     float newDpr = this->devicePixelRatioF();
     if (dpr != newDpr) {
@@ -375,7 +376,7 @@ void ImageViewerV2::showAnimation(std::shared_ptr<QMovie> _movie) {
       gestureThreshold = static_cast<int>(dpr * 40.);
     }
     reset();
-    movie = _movie;
+    movie = newMovie;
     movie->jumpToFrame(0);
     Qt::TransformationMode mode = selectTransformationMode();
     pixmapItem.setTransformationMode(mode);

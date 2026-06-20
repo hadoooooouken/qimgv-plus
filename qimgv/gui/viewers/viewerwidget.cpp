@@ -245,11 +245,11 @@ bool ViewerWidget::showImage(std::shared_ptr<const QImage> image, QString filePa
     return true;
 }
 
-bool ViewerWidget::showAnimation(std::shared_ptr<QMovie> movie) {
-    if(!movie)
+bool ViewerWidget::showAnimation(const QString &filePath, const QString &format) {
+    if(filePath.isEmpty())
         return false;
     enableImageViewer();
-    imageViewer->showAnimation(movie);
+    imageViewer->showAnimation(filePath, format);
     onScaleChanged(imageViewer->currentScale());
     hideCursorTimed(false);
     return true;

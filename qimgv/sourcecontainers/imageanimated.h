@@ -1,8 +1,6 @@
 #pragma once
 
 #include "image.h"
-#include <QMovie>
-#include <QTimer>
 
 class ImageAnimated : public Image {
 public:
@@ -13,15 +11,11 @@ public:
     std::unique_ptr<QPixmap> getPixmap();
     std::shared_ptr<const QImage> getImage();
     std::shared_ptr<const QImage> getDisplayImage() override;
-    std::shared_ptr<QMovie> getMovie();
     int height();
     int width();
     QSize size();
 
-    bool isEditable();
-    bool isEdited();
-
-    int frameCount();
+    int frameCount() const override;
 public slots:
     bool save();
     bool save(QString destPath);
@@ -33,5 +27,4 @@ private:
     void load();
     QSize mSize;
     int mFrameCount;
-    std::shared_ptr<QMovie> movie;
 };

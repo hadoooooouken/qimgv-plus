@@ -275,10 +275,10 @@ void MW::showImage(std::shared_ptr<const QImage> image, QString filePath) {
     updateCropPanelData();
 }
 
-void MW::showAnimation(std::shared_ptr<QMovie> movie) {
+void MW::showAnimation(const QString &filePath, const QString &format, QSize size) {
     if(settings->autoResizeWindow())
-        preShowResize(movie->frameRect().size());
-    viewerWidget->showAnimation(movie);
+        preShowResize(size);
+    viewerWidget->showAnimation(filePath, format);
     updateCropPanelData();
 }
 

@@ -44,7 +44,7 @@ public:
     virtual float currentScale() const;
     virtual QSize sourceSize() const;
     virtual void showImage(std::shared_ptr<const QImage> _image, QString filePath = "");
-    virtual void showAnimation(std::shared_ptr<QMovie> _animation);
+    virtual void showAnimation(const QString &filePath, const QString &format);
     virtual void setScaledImage(QImage newFrame);
     void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
     void hideUpscaledCrop();

@@ -2020,12 +2020,8 @@ void Core::nextImageSlideshow() {
 void Core::startSlideshowTimer() {
   // start timer only for static images or single frame gifs
   auto img = model->getImage(state.currentFilePath);
-  if (img->type() == STATIC) {
+  if (img && (img->type() == STATIC || img->frameCount() <= 1)) {
     slideshowTimer.start();
-  } else if (img->type() == ANIMATED) {
-    auto anim = dynamic_cast<ImageAnimated *>(img.get());
-    if (anim && anim->frameCount() <= 1)
-      slideshowTimer.start();
   }
 }
 
@@ -2115,8 +2111,7 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
   if (type == STATIC) {
     mw->showImage(img->getDisplayImage(), img->filePath());
   } else if (type == ANIMATED) {
-    auto animated = dynamic_cast<ImageAnimated *>(img.get());
-    mw->showAnimation(animated->getMovie());
+    mw->showAnimation(img->filePath(), img->format(), img->size());
   }
   img->isEdited() ? mw->showSaveOverlay() : mw->hideSaveOverlay();
   mw->setExifInfo(img->getExifTags());
