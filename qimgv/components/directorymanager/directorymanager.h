@@ -31,7 +31,7 @@
 #include "windows.h"
 #endif
 
-enum FileListSource { // rename? wip
+enum FileListSource {
     SOURCE_DIRECTORY,
     SOURCE_DIRECTORY_RECURSIVE,
     SOURCE_LIST
@@ -40,8 +40,6 @@ enum FileListSource { // rename? wip
 class DirectoryManager;
 
 typedef bool (DirectoryManager::*CompareFunction)(const FSEntry &e1, const FSEntry &e2) const;
-
-//TODO: rename? EntrySomething?
 
 class DirectoryManager : public QObject {
     Q_OBJECT

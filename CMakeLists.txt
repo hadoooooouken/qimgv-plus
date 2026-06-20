@@ -39,13 +39,17 @@ option(EXIV2 "For reading/writing exif tags" ON)
 
 # FIND PACKAGES
 set(QT_VERSION_MAJOR 6)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Svg SvgWidgets PrintSupport OpenGLWidgets Sql)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Network Svg SvgWidgets PrintSupport OpenGLWidgets Sql)
 
 
 if(EXIV2)
-    # Hint to find the local exiv2 build in formats/exiv2
-    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/formats/exiv2")
-    find_package(exiv2 REQUIRED)
+    # Try to find exiv2 in standard paths first, fallback to the local build
+    find_package(exiv2 QUIET)
+    if(NOT exiv2_FOUND)
+        # Hint to find the local exiv2 build in formats/exiv2
+        list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/formats/exiv2")
+        find_package(exiv2 REQUIRED)
+    endif()
 endif()
 
 
@@ -73,8 +77,8 @@ if(UPSCAYL_SUPPORT)
     endif()
     
     # Configure NCNN options for Vulkan support
-    set(NCNN_VULKAN ON CACHE BOOL "Build NCNN with Vulkan support" FORCE)
-    set(NCNN_VULKAN_ONLINE_SPIRV ON CACHE BOOL "Build NCNN with Vulkan online SPIRV compilation support" FORCE)
+    set(NCNN_VULKAN ON CACHE BOOL "Build NCNN with Vulkan support")
+    set(NCNN_VULKAN_ONLINE_SPIRV ON CACHE BOOL "Build NCNN with Vulkan online SPIRV compilation support")
     
     add_subdirectory(upscayl-ncnn/src)
 endif()
