@@ -20,12 +20,14 @@
 
 #include <QColorSpace>
 
-#ifdef __WIN32
 #include <tchar.h>
 #include <windows.h>
-#endif
 
 #include "utils/colormanager.h"
+#include <QGuiApplication>
+#include <QScreen>
+#include <QThread>
+#include "sourcecontainers/imagestatic.h"
 
 namespace {
 constexpr int PreloadDebounceDelayMs = 200;
@@ -132,7 +134,6 @@ void Core::showGui() {
 void Core::raiseWindow() {
   if (mw) {
     mw->showDefault();
-#ifdef __WIN32
     HWND hwnd = (HWND)mw->winId();
     if (IsIconic(hwnd)) {
       ShowWindow(hwnd, SW_RESTORE);
@@ -146,7 +147,6 @@ void Core::raiseWindow() {
 
     SetForegroundWindow(hwnd);
     SetActiveWindow(hwnd);
-#endif
     mw->raise();
     mw->activateWindow();
   }
@@ -1587,41 +1587,132 @@ void Core::setWallpaper() {
   if (model->isEmpty() || selectedPath().isEmpty())
     return;
   auto img = model->getImage(selectedPath());
-  if (img->type() != DocumentType::STATIC) {
+  if (!img || img->type() != DocumentType::STATIC) {
     mw->showMessage(tr("Set wallpaper: file not supported"));
     return;
   }
-#ifdef __WIN32
-  // set fit mode (registry)
-  LONG status;
-  HKEY hKey;
-  status = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0,
-                        KEY_WRITE, &hKey);
-  if ((status == ERROR_SUCCESS) && (hKey != nullptr)) {
-    LPCTSTR value = TEXT("WallpaperStyle");
-    LPCTSTR data = TEXT("10");
-    status =
-        RegSetValueEx(hKey, value, 0, REG_SZ, (LPBYTE)data, _tcslen(data) + 1);
-    RegCloseKey(hKey);
+
+  auto imgStatic = std::dynamic_pointer_cast<ImageStatic>(img);
+  if (!imgStatic) {
+    mw->showMessage(tr("Set wallpaper: file not supported"));
+    return;
   }
-  // set wallpaper path
-  SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0,
-                        (char *)(selectedPath().toStdWString().c_str()),
-                        SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-#else
-  auto session = qgetenv("DESKTOP_SESSION").toLower();
-  if (session.contains("plasma"))
-    ScriptManager::runCommand("plasma-apply-wallpaperimage \"" +
-                              selectedPath() + "\"");
-  else if (session.contains("gnome"))
-    ScriptManager::runCommand(
-        "gsettings set org.gnome.desktop.background picture-uri \"" +
-        selectedPath() + "\"");
-  else
-    mw->showMessage(tr("Action is not supported in your desktop session (\"") +
-                        session + "\")",
-                    3000);
-#endif
+
+  auto sourceImage = imgStatic->getImage();
+  if (!sourceImage || sourceImage->isNull()) {
+    mw->showMessage(tr("Set wallpaper: failed to get image"));
+    return;
+  }
+
+  QScreen *screen = QGuiApplication::primaryScreen();
+  if (!screen) {
+    mw->showMessage(tr("Set wallpaper: screen not found"));
+    return;
+  }
+  QSize monitorSize = screen->size();
+  QString wallpaperPath = settings->tmpDir() + "qimgv_wallpaper.png";
+
+  mw->showMessage(tr("Setting wallpaper..."), 10000);
+
+  auto *mwPointer = this->mw;
+
+  QThread *thread = QThread::create([sourceImage, monitorSize, wallpaperPath, mwPointer]() {
+    int monitorWidth = monitorSize.width();
+    int monitorHeight = monitorSize.height();
+
+    if (monitorWidth <= 0 || monitorHeight <= 0) {
+      QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
+        mwPointer->showMessage(tr("Set wallpaper: invalid monitor size"));
+      }, Qt::QueuedConnection);
+      return;
+    }
+
+    int imageWidth = sourceImage->width();
+    int imageHeight = sourceImage->height();
+
+    double mAR = (double)monitorWidth / monitorHeight;
+    double iAR = (double)imageWidth / imageHeight;
+
+    QImage croppedImage;
+    if (std::abs(iAR - mAR) < 0.001) {
+      croppedImage = *sourceImage;
+    } else {
+      int cropW = imageWidth;
+      int cropH = imageHeight;
+
+      if (iAR > mAR) {
+        cropW = qRound(imageHeight * mAR);
+      } else {
+        cropH = qRound(imageWidth / mAR);
+      }
+
+      int cropX = (imageWidth - cropW) / 2;
+      int cropY = (imageHeight - cropH) / 2;
+
+      cropX = std::clamp(cropX, 0, imageWidth - 1);
+      cropY = std::clamp(cropY, 0, imageHeight - 1);
+      cropW = std::clamp(cropW, 1, imageWidth - cropX);
+      cropH = std::clamp(cropH, 1, imageHeight - cropY);
+
+      croppedImage = sourceImage->copy(cropX, cropY, cropW, cropH);
+    }
+
+    if (croppedImage.isNull()) {
+      QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
+        mwPointer->showMessage(tr("Set wallpaper: cropping failed"));
+      }, Qt::QueuedConnection);
+      return;
+    }
+
+    QImage scaledImg;
+    if (croppedImage.size() == monitorSize) {
+      scaledImg = croppedImage;
+    } else {
+      auto croppedShared = std::make_shared<const QImage>(croppedImage);
+      scaledImg = ImageLib::scaled_Smart(croppedShared, monitorSize);
+    }
+
+    if (scaledImg.isNull()) {
+      QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
+        mwPointer->showMessage(tr("Set wallpaper: scaling failed"));
+      }, Qt::QueuedConnection);
+      return;
+    }
+
+    if (!scaledImg.save(wallpaperPath, "PNG")) {
+      QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
+        mwPointer->showMessage(tr("Set wallpaper: failed to save PNG"));
+      }, Qt::QueuedConnection);
+      return;
+    }
+
+    // set fit mode (registry) to fit:center
+    HKEY hKey;
+    LONG status = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0,
+                              KEY_WRITE, &hKey);
+    if ((status == ERROR_SUCCESS) && (hKey != nullptr)) {
+      LPCTSTR valueStyle = TEXT("WallpaperStyle");
+      LPCTSTR dataStyle = TEXT("0"); // Center
+      RegSetValueEx(hKey, valueStyle, 0, REG_SZ, (LPBYTE)dataStyle, static_cast<DWORD>((_tcslen(dataStyle) + 1) * sizeof(TCHAR)));
+
+      LPCTSTR valueTile = TEXT("TileWallpaper");
+      LPCTSTR dataTile = TEXT("0"); // No Tile
+      RegSetValueEx(hKey, valueTile, 0, REG_SZ, (LPBYTE)dataTile, static_cast<DWORD>((_tcslen(dataTile) + 1) * sizeof(TCHAR)));
+
+      RegCloseKey(hKey);
+    }
+    // set wallpaper path
+    SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0,
+                          (char *)(wallpaperPath.toStdWString().c_str()),
+                          SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
+
+    QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
+      mwPointer->showMessageSuccess(tr("Wallpaper set"));
+    }, Qt::QueuedConnection);
+  });
+
+  connect(thread, &QThread::finished, thread, &QObject::deleteLater);
+  thread->start();
 }
 
 void Core::print() {

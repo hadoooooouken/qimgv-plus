@@ -70,6 +70,7 @@ private:
     ContextMenuItem *m_open;
     ContextMenuItem *m_folderView;
     ContextMenuItem *m_settings;
+    ContextMenuItem *m_setWallpaper;
     ContextMenuItem *m_openWith;
     ContextMenuItem *m_showLocation;
 

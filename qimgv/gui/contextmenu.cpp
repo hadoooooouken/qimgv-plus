@@ -208,6 +208,7 @@ void ContextMenu::setupUi()
     actionsLayout->addWidget(m_openWith);
 
     addItem(m_showLocation,     "showInDirectory",    tr("Show in folder"),     ":/res/icons/common/menuitem/folder16.png");
+    addItem(m_setWallpaper,     "setWallpaper",       tr("Set as wallpaper"),   ":/res/icons/common/menuitem/document-view16.png");
     addItem(m_settings,         "openSettings",       tr("Settings"),           ":/res/icons/common/menuitem/settings16.png");
 
     addSeparator(actionsLayout, 4, 4);
@@ -324,6 +325,7 @@ void ContextMenu::setImageEntriesEnabled(bool mode)
     m_panoramaMode->setEnabled(mode);
     m_openWith->setEnabled(mode);
     m_showLocation->setEnabled(mode);
+    m_setWallpaper->setEnabled(mode);
 }
 
 void ContextMenu::setCasSettingsVisible(bool visible)
