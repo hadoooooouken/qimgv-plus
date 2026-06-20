@@ -11,6 +11,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSlider>
+#include <cmath>
 #include <QSplitter>
 #include <QHeaderView>
 #include <QPainter>
@@ -110,10 +111,10 @@ FolderView::FolderView(QWidget *parent) :
     int max = thumbnailGrid->THUMBNAIL_SIZE_MAX;
     int step = thumbnailGrid->ZOOM_STEP;
 
-    zoomSlider->setMinimum(min / step);
-    zoomSlider->setMaximum(max / step);
+    zoomSlider->setMinimum(700);
+    zoomSlider->setMaximum(900);
     zoomSlider->setSingleStep(1);
-    zoomSlider->setPageStep(1);
+    zoomSlider->setPageStep(50);
 
     splitter->setStretchFactor(1, 50);
 
@@ -135,6 +136,9 @@ FolderView::FolderView(QWidget *parent) :
     connect(rootButton, &IconButton::clicked, this, &FolderView::onRootBtn);
 
     connect(zoomSlider, &QSlider::valueChanged, this, &FolderView::onZoomSliderValueChanged);
+    connect(zoomSlider, &QSlider::sliderReleased, this, [this]() {
+        settings->setFolderViewIconSize(thumbnailGrid->thumbnailSize());
+    });
     connect(sortingComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &FolderView::onSortingSelected);
     connect(folderSortingComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &FolderView::onFolderSortingSelected);
     connect(togglePlacesPanelButton, &ActionButton::toggled, this, &FolderView::onPlacesPanelButtonChecked);
@@ -469,12 +473,28 @@ void FolderView::onDroppedInByIndex(QList<QString> paths, QModelIndex index) {
 
 
 void FolderView::onThumbnailSizeChanged(int newSize) {
-    zoomSlider->setValue(newSize / thumbnailGrid->ZOOM_STEP);
-    settings->setFolderViewIconSize(newSize);
+    int sliderValue = std::round(std::log2(newSize) * 100.0);
+    if (zoomSlider->value() != sliderValue) {
+        zoomSlider->blockSignals(true);
+        zoomSlider->setValue(sliderValue);
+        zoomSlider->blockSignals(false);
+    }
+    if (!zoomSlider->isSliderDown()) {
+        settings->setFolderViewIconSize(newSize);
+    }
 }
 
 void FolderView::onZoomSliderValueChanged(int value) {
-    thumbnailGrid->setThumbnailSize(value * thumbnailGrid->ZOOM_STEP);
+    if (std::abs(value - 800) <= 8) {
+        value = 800;
+        if (zoomSlider->value() != 800) {
+            zoomSlider->blockSignals(true);
+            zoomSlider->setValue(800);
+            zoomSlider->blockSignals(false);
+        }
+    }
+    int newSize = std::round(std::pow(2.0, value / 100.0));
+    thumbnailGrid->setThumbnailSize(newSize);
 }
 
 // changed by user via combobox

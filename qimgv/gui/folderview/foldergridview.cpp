@@ -405,7 +405,7 @@ void FolderGridView::setThumbnailSize(int newSize) {
     if(lastSelected() != -1)
         ensureVisible(thumbnails.at(lastSelected()), 0, 40);
     emit thumbnailSizeChanged(mThumbnailSize);
-    loadVisibleThumbnails();
+    loadVisibleThumbnailsDelayed();
 }
 
 void FolderGridView::fitSceneToContents() {

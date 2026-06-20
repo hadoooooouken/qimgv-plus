@@ -426,10 +426,9 @@ void ThumbnailWidget::updateThumbnailDrawPosition() {
     if(thumbnail && thumbnail->pixmap()) {
         QPoint topLeft;
         qreal h = mThumbnailSize * 0.75;
-        // Always scale to fit the current cell dimensions
+        // Always scale to fit the current cell dimensions (either up or down) to keep resizing smooth
         QSize pixmapSize = thumbnail->pixmap()->size();
-        if(pixmapSize.width() > mThumbnailSize || pixmapSize.height() > h)
-            pixmapSize = pixmapSize.scaled(mThumbnailSize, h, Qt::KeepAspectRatio);
+        pixmapSize = pixmapSize.scaled(mThumbnailSize, h, Qt::KeepAspectRatio);
 
         topLeft.setX((width()  - pixmapSize.width())  / 2.0);
         if(thumbStyle == THUMB_SIMPLE)
