@@ -1612,11 +1612,17 @@ void Core::setWallpaper() {
   QSize monitorSize = screen->size();
   QString wallpaperPath = settings->tmpDir() + "qimgv_wallpaper.png";
 
+  QString appDir = QCoreApplication::applicationDirPath();
+  QString modelName;
+#ifdef USE_UPSCAYL
+  modelName = settings->upscaylModel();
+#endif
+
   mw->showMessage(tr("Setting wallpaper..."), 10000);
 
   auto *mwPointer = this->mw;
 
-  QThread *thread = QThread::create([sourceImage, monitorSize, wallpaperPath, mwPointer]() {
+  QThread *thread = QThread::create([sourceImage, monitorSize, wallpaperPath, mwPointer, appDir, modelName]() {
     int monitorWidth = monitorSize.width();
     int monitorHeight = monitorSize.height();
 
@@ -1665,11 +1671,39 @@ void Core::setWallpaper() {
     }
 
     QImage scaledImg;
-    if (croppedImage.size() == monitorSize) {
-      scaledImg = croppedImage;
-    } else {
-      auto croppedShared = std::make_shared<const QImage>(croppedImage);
-      scaledImg = ImageLib::scaled_Smart(croppedShared, monitorSize);
+    bool upscalingNeeded = (croppedImage.width() < monitorWidth || croppedImage.height() < monitorHeight);
+    bool aiUpscaleSuccess = false;
+
+#ifdef USE_UPSCAYL
+    if (upscalingNeeded) {
+      QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
+        mwPointer->showMessage(tr("AI upscaling..."), 60000);
+      }, Qt::QueuedConnection);
+
+      if (UpscaylScaler::getInstance()->init(appDir, modelName)) {
+        QImage upscaled = UpscaylScaler::getInstance()->upscale(croppedImage);
+        if (!upscaled.isNull()) {
+          if (upscaled.size() == monitorSize) {
+            scaledImg = upscaled;
+          } else {
+            auto upscaledShared = std::make_shared<const QImage>(upscaled);
+            scaledImg = ImageLib::scaled_Smart(upscaledShared, monitorSize);
+          }
+          if (!scaledImg.isNull()) {
+            aiUpscaleSuccess = true;
+          }
+        }
+      }
+    }
+#endif
+
+    if (!aiUpscaleSuccess) {
+      if (croppedImage.size() == monitorSize) {
+        scaledImg = croppedImage;
+      } else {
+        auto croppedShared = std::make_shared<const QImage>(croppedImage);
+        scaledImg = ImageLib::scaled_Smart(croppedShared, monitorSize);
+      }
     }
 
     if (scaledImg.isNull()) {
