@@ -333,7 +333,7 @@ void DirectoryPresenter::onItemActivated(int absoluteIndex) {
       
       QList<QString> filePaths = expandedSelectedPaths();
       
-      if (!filePaths.isEmpty()) {
+      if (filePaths.count() > 1) {
           emit filesActivated(filePaths, filePaths.contains(activePath) ? activePath : filePaths.first());
           return;
       }
