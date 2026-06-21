@@ -339,10 +339,9 @@ void ViewerWidget::hideCursor() {
         return;
     if(settings->cursorAutohide()) {
         QPoint posMapped = mapFromGlobal(QCursor::pos());
-        //if(settings->enableClickZoneThing())
-        // ignore when we are hovering the click zone
-        if(clickZoneOverlay->leftZone().contains(posMapped) ||
-            clickZoneOverlay->leftZone().contains(posMapped))
+        if(clickZoneOverlay->isVisible() &&
+           (clickZoneOverlay->leftZone().contains(posMapped) ||
+            clickZoneOverlay->rightZone().contains(posMapped)))
         {
             return;
         }
@@ -470,7 +469,12 @@ void ViewerWidget::onFullscreenModeChanged(bool mode) {
 
 void ViewerWidget::readSettings() {
     imageViewer->readSettings();
-    if(settings->clickableEdges()) {
+    bool showClickZones = settings->clickableEdges();
+    if(settings->panelEnabled() && (settings->panelPosition() == PANEL_LEFT || settings->panelPosition() == PANEL_RIGHT)) {
+        showClickZones = false;
+    }
+
+    if(showClickZones) {
         imageViewer->viewport()->installEventFilter(this);
         clickZoneOverlay->show();
     } else {
