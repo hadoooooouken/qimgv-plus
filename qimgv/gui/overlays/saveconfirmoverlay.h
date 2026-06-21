@@ -21,6 +21,9 @@ signals:
 private slots:
     void readSettings();
 
+protected:
+    void showEvent(QShowEvent *event) override;
+
 private:
     IconWidget *headerIcon = nullptr;
     IconButton *closeButton = nullptr;

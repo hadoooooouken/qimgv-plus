@@ -1,6 +1,7 @@
 #include "saveconfirmoverlay.h"
 #include "settings.h"
 #include "gui/customwidgets/iconwidget.h"
+#include <QShowEvent>
 #include "gui/customwidgets/iconbutton.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -96,12 +97,23 @@ void SaveConfirmOverlay::setupUi() {
 
 void SaveConfirmOverlay::readSettings() {
     // don't interfere with the main panel
-    if(settings->panelEnabled() && settings->panelPosition() == PanelPosition::PANEL_BOTTOM) {
-        setPosition(FloatingWidgetPosition::TOPRIGHT);
+    if (settings->panelEnabled() &&
+        (settings->panelPosition() == PanelPosition::PANEL_BOTTOM ||
+         settings->panelPosition() == PanelPosition::PANEL_LEFT ||
+         settings->panelPosition() == PanelPosition::PANEL_RIGHT)) {
+        setPosition(FloatingWidgetPosition::TOP);
+        setVerticalMargin(35);
     } else {
-        setPosition(FloatingWidgetPosition::BOTTOMRIGHT);
+        setPosition(FloatingWidgetPosition::BOTTOM);
+        setVerticalMargin(80); // offset to avoid taskbar
     }
     update();
+}
+
+void SaveConfirmOverlay::showEvent(QShowEvent *event) {
+    OverlayWidget::showEvent(event);
+    ensurePolished();
+    recalculateGeometry();
 }
 
 SaveConfirmOverlay::~SaveConfirmOverlay() = default;
