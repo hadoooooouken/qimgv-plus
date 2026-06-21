@@ -153,6 +153,7 @@ private slots:
 protected:
   void mouseMoveEvent(QMouseEvent *event);
   bool event(QEvent *event);
+  bool eventFilter(QObject *obj, QEvent *event) override;
   void paintEvent(QPaintEvent *event);
   void closeEvent(QCloseEvent *event);
   void dragEnterEvent(QDragEnterEvent *e);

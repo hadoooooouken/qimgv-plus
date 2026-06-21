@@ -531,3 +531,9 @@ void ViewerWidget::updateCasSettings() {
 bool ViewerWidget::isBusyInteracting() const {
     return imageViewer ? imageViewer->isBusyInteracting() : false;
 }
+
+void ViewerWidget::onMouseMoveFullscreen() {
+    if (imageViewer) {
+        imageViewer->onMouseMoveFullscreen();
+    }
+}

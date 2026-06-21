@@ -42,6 +42,7 @@ public:
     ScalingFilter scalingFilter();
     void setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
     void updateCasSettings();
+    void onMouseMoveFullscreen();
 
 private:
     QVBoxLayout layout;

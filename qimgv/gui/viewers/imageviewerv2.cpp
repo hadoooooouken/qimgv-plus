@@ -690,32 +690,41 @@ void ImageViewerV2::mousePressEvent(QMouseEvent *event) {
   }
 }
 
-void ImageViewerV2::mouseMoveEvent(QMouseEvent *event) {
-  QWidget::mouseMoveEvent(event);
+void ImageViewerV2::onMouseMoveFullscreen() {
   if (mIsFullscreen) {
-    int interval = 16;
+    constexpr int defaultFullscreenIntervalMs = 16;
+    constexpr double msPerSecond = 1000.0;
+    int interval = defaultFullscreenIntervalMs;
     if (QScreen *scr = this->screen()) {
       double scrRate = scr->refreshRate();
       if (scrRate > 0.0) {
-        interval = qMax(1, qRound(1000.0 / scrRate));
+        interval = qMax(1, qRound(msPerSecond / scrRate));
       }
     }
 
-    if (!lastFullscreenUpdate.isValid()) {
-      lastFullscreenUpdate.start();
-      viewport()->update();
-    } else {
-      qint64 elapsed = lastFullscreenUpdate.elapsed();
-      if (elapsed >= interval) {
-        viewport()->update();
-        lastFullscreenUpdate.restart();
+    auto *vp = viewport();
+    if (vp) {
+      if (!lastFullscreenUpdate.isValid()) {
+        lastFullscreenUpdate.start();
+        vp->update();
       } else {
-        if (!fullscreenUpdateTimer->isActive()) {
-          fullscreenUpdateTimer->start(interval - elapsed);
+        qint64 elapsed = lastFullscreenUpdate.elapsed();
+        if (elapsed >= interval) {
+          vp->update();
+          lastFullscreenUpdate.restart();
+        } else {
+          if (fullscreenUpdateTimer && !fullscreenUpdateTimer->isActive()) {
+            fullscreenUpdateTimer->start(interval - elapsed);
+          }
         }
       }
     }
   }
+}
+
+void ImageViewerV2::mouseMoveEvent(QMouseEvent *event) {
+  QWidget::mouseMoveEvent(event);
+  onMouseMoveFullscreen();
   if (mPanoramaMode && (event->buttons() & Qt::LeftButton)) {
     int dx = event->pos().x() - mouseMoveStartPos.x();
     int dy = event->pos().y() - mouseMoveStartPos.y();

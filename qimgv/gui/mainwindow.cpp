@@ -61,9 +61,11 @@ MW::MW(QWidget *parent)
     currentDisplay = settings->lastDisplay();
     maximized = settings->maximizedWindow();
     restoreWindowGeometry();
+    qApp->installEventFilter(this);
 }
 
 MW::~MW() {
+    qApp->removeEventFilter(this);
     if (floatingMessage) {
         delete floatingMessage;
     }
@@ -602,6 +604,15 @@ bool MW::event(QEvent *event) {
             viewerWidget->hideContextMenu();
     }
     return QWidget::event(event);
+}
+
+bool MW::eventFilter(QObject *obj, QEvent *event) {
+    if (event && event->type() == QEvent::MouseMove && isFullScreen()) {
+        if (viewerWidget) {
+            viewerWidget->onMouseMoveFullscreen();
+        }
+    }
+    return FloatingWidgetContainer::eventFilter(obj, event);
 }
 
 // hook up to actionManager
