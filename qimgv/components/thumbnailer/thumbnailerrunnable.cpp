@@ -5,6 +5,8 @@
 #include <QPainter>
 #include <memory>
 
+#include <QColorSpace>
+
 ThumbnailerRunnable::ThumbnailerRunnable(ThumbnailCache *_cache, QString _path,
                                          int _size, bool _crop, bool _force)
     : path(_path), size(_size), crop(_crop), force(_force), cache(_cache) {}
@@ -45,6 +47,15 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
     image = activeCache->readThumbnail(thumbnailId);
     if (image && image->text(QStringLiteral("lastModified")) != time)
       image.reset(nullptr);
+
+    if (image) {
+      bool isHdrFile = (imgInfo.format() == QLatin1String("hdr") ||
+                        imgInfo.format() == QLatin1String("exr") ||
+                        imgInfo.format() == QLatin1String("pfm"));
+      if (isHdrFile) {
+        *image = image->convertedToColorSpace(QColorSpace(QColorSpace::SRgbLinear));
+      }
+    }
   }
 
   if (!image) {
