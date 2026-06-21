@@ -30,7 +30,7 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 
 - **Basic Image Editing**: Quick crop, rotate, and resize operations.
 
-- **Folder View Mode**: Seamless grid browsing with support for left mouse button rectangular selection and options to open only selected files.
+- **Folder View Mode**: Seamless grid browsing with support for left mouse button rectangular selection and options to open only selected files (including folders).
 
 - **Quick Copy / Move**: Easily categorize or organize your files into configurable folders.
 
@@ -83,6 +83,7 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 | Folder view | Backspace / Esc / MiddleClick |
 | Print / Export PDF | Ctrl+P |
 | Toggle scaling filter (nearest / configured) | N |
+| Cycle scaling filter | Shift+N |
 | Toggle Use Upscayl | Alt+I |
 | Settings  | P |
 | Exit application | Ctrl+Q / Alt+X |
