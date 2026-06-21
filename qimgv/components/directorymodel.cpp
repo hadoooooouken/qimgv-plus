@@ -129,6 +129,10 @@ bool DirectoryModel::forceInsert(QString filePath) {
     return dirManager.forceInsertFileEntry(filePath);
 }
 
+bool DirectoryModel::insertDir(const QString &dirPath) {
+    return dirManager.insertDirEntry(dirPath);
+}
+
 void DirectoryModel::setSortingMode(SortingMode mode) {
     dirManager.setSortingMode(mode);
 }

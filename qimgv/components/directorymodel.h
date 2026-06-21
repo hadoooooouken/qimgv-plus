@@ -34,6 +34,7 @@ public:
     QDateTime lastModified(QString filePath) const;
 
     bool forceInsert(QString filePath);
+    bool insertDir(const QString &dirPath);
     void copyFileTo(const QString &srcFile, const QString &destDirPath, bool force, FileOpResult &result);
     void moveFileTo(const QString &srcFile, const QString &destDirPath, bool force, FileOpResult &result);
     void renameEntry(const QString &oldFilePath, const QString &newName, bool force, FileOpResult &result);

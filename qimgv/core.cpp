@@ -1088,16 +1088,11 @@ void Core::createDirectory() {
     return;
   }
 
-  if (mw->getFolderView()) {
-    mw->getFolderView()->setWatchingEnabled(false);
-  }
-
-  if (!currentDir.mkdir(newFolderName)) {
+  if (currentDir.mkdir(newFolderName)) {
+    QString newDirPath = currentDir.absoluteFilePath(newFolderName);
+    model->insertDir(newDirPath);
+  } else {
     mw->showError(tr("Failed to create folder"));
-  }
-
-  if (mw->getFolderView()) {
-    mw->getFolderView()->setWatchingEnabled(true);
   }
 }
 
