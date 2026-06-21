@@ -75,4 +75,5 @@ private:
 
     std::shared_ptr<Thumbnail> composeFolderThumbnail(int size, const QString &dirName, const QPixmap &innerThumb);
     std::shared_ptr<Thumbnail> composeUpArrowThumbnail(int size);
+    QList<QString> expandedSelectedPaths() const;
 };

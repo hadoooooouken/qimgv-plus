@@ -1,6 +1,9 @@
 #include "directorypresenter.h"
 #include <QPainter>
 #include <QPainterPath>
+#include <QDirIterator>
+#include <QSet>
+#include <QRegularExpression>
 #include "settings.h"
 
 DirectoryPresenter::DirectoryPresenter(QObject *parent)
@@ -328,14 +331,10 @@ void DirectoryPresenter::onItemActivated(int absoluteIndex) {
       else
           activePath = model->filePathAt(mShowDirs ? absoluteIndex - model->dirCount() : absoluteIndex);
       
-      QList<QString> filePaths;
-      for (const QString& path : selectedPaths()) {
-          if (model->containsFile(path))
-              filePaths << path;
-      }
+      QList<QString> filePaths = expandedSelectedPaths();
       
-      if (filePaths.count() > 1) {
-          emit filesActivated(filePaths, filePaths.first());
+      if (!filePaths.isEmpty()) {
+          emit filesActivated(filePaths, filePaths.contains(activePath) ? activePath : filePaths.first());
           return;
       }
   }
@@ -354,15 +353,42 @@ void DirectoryPresenter::onOpenSelectedRequested() {
   if (!model)
     return;
 
-  QList<QString> filePaths;
-  for (const QString& path : selectedPaths()) {
-      if (model->containsFile(path))
-          filePaths << path;
-  }
+  QList<QString> filePaths = expandedSelectedPaths();
 
   if (!filePaths.isEmpty()) {
       emit filesActivated(filePaths, filePaths.first());
   }
+}
+
+QList<QString> DirectoryPresenter::expandedSelectedPaths() const {
+  QList<QString> filePaths;
+  if (!model)
+      return filePaths;
+
+  QSet<QString> visited;
+  QRegularExpression regex(settings->supportedFormatsRegex(), QRegularExpression::CaseInsensitiveOption);
+
+  for (const QString& path : selectedPaths()) {
+      if (model->containsFile(path)) {
+          if (!visited.contains(path)) {
+              visited.insert(path);
+              filePaths << path;
+          }
+      } else if (model->containsDir(path)) {
+          QDirIterator it(path, QDir::Files, QDirIterator::Subdirectories);
+          while (it.hasNext()) {
+              QString filePath = QDir::fromNativeSeparators(it.next());
+              QString fileName = it.fileName();
+              if (regex.match(fileName).hasMatch()) {
+                  if (!visited.contains(filePath)) {
+                      visited.insert(filePath);
+                      filePaths << filePath;
+                  }
+              }
+          }
+      }
+  }
+  return filePaths;
 }
 
 void DirectoryPresenter::onDraggedOut() { emit draggedOut(selectedPaths()); }
