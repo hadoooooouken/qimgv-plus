@@ -75,7 +75,6 @@ target_link_libraries(kimg_exr PRIVATE
 # LibRaw (Enabled with local build)
 set(LIBRAW_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/LibRaw")
 kimageformats_add_plugin(kimg_raw SOURCES raw.cpp scanlineconverter.cpp)
-target_compile_features(kimg_raw PRIVATE cxx_std_20)
 target_include_directories(kimg_raw PRIVATE "${LIBRAW_ROOT}")
 target_link_libraries(kimg_raw PRIVATE "${LIBRAW_ROOT}/buildfiles/release-x86_64/libraw_static.lib")
 target_compile_definitions(kimg_raw PRIVATE LIBRAW_NODLL)

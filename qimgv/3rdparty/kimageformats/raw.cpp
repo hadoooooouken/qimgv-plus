@@ -16,8 +16,6 @@
 #include <QSet>
 #include <QTimeZone>
 
-#include <format>
-
 #if defined(Q_OS_WINDOWS) && !defined(NOMINMAX)
 #define NOMINMAX
 #endif
@@ -330,21 +328,22 @@ QString createTimeTag(time_t time, const char *tag)
 QString createFlashTag(short flash, const char *tag)
 {
     QStringList l;
+    auto lc = QLocale::c();
     // EXIF specifications
     auto t = QStringLiteral("true");
     auto f = QStringLiteral("false");
     l << QStringLiteral("<exif:Fired>%1</exif:Fired>").arg((flash & 1) ? t : f);
     l << QStringLiteral("<exif:Function>%1</exif:Function>").arg((flash & (1 << 5)) ? t : f);
     l << QStringLiteral("<exif:RedEyeMode>%1</exif:RedEyeMode>").arg((flash & (1 << 6)) ? t : f);
-    l << QStringLiteral("<exif:Mode>%1</exif:Mode>").arg(QString::fromStdString(std::format("{}", (int(flash) >> 3) & 3)));
-    l << QStringLiteral("<exif:Return>%1</exif:Return>").arg(QString::fromStdString(std::format("{}", (int(flash) >> 1) & 3)));
+    l << QStringLiteral("<exif:Mode>%1</exif:Mode>").arg(lc.toString((int(flash) >> 3) & 3));
+    l << QStringLiteral("<exif:Return>%1</exif:Return>").arg(lc.toString((int(flash) >> 1) & 3));
     return createTag(l.join(QChar()), tag);
 }
 
 QString createTag(quint64 n, const char *tag, quint64 invalid = 0)
 {
     if (n != invalid) {
-        return createTag(QString::fromStdString(std::format("{}", n)), tag);
+        return createTag(QLocale::c().toString(n), tag);
     }
     return QString();
 }
@@ -352,7 +351,7 @@ QString createTag(quint64 n, const char *tag, quint64 invalid = 0)
 QString createTag(qint16 n, const char *tag, qint16 invalid = 0)
 {
     if (n != invalid) {
-        return createTag(QString::fromStdString(std::format("{}", n)), tag);
+        return createTag(QLocale::c().toString(n), tag);
     }
     return QString();
 }
@@ -360,7 +359,7 @@ QString createTag(qint16 n, const char *tag, qint16 invalid = 0)
 QString createTag(quint16 n, const char *tag, quint16 invalid = 0)
 {
     if (n != invalid) {
-        return createTag(QString::fromStdString(std::format("{}", n)), tag);
+        return createTag(QLocale::c().toString(n), tag);
     }
     return QString();
 }
@@ -368,11 +367,9 @@ QString createTag(quint16 n, const char *tag, quint16 invalid = 0)
 QString createTag(float f, const char *tag, qint32 mul = 1)
 {
     if (f != 0) {
-        if (mul > 1) {
-            auto value = std::format("{}/{}", static_cast<int>(f * mul), mul);
-            return QStringLiteral("<%1>%2</%1>").arg(QString::fromLatin1(tag), QString::fromStdString(value));
-        }
-        return QStringLiteral("<%1>%2</%1>").arg(QString::fromLatin1(tag), QString::fromStdString(std::format("{}", f)));
+        if (mul > 1)
+            return QStringLiteral("<%1>%2/%3</%1>").arg(QString::fromLatin1(tag), QLocale::c().toString(int(f * mul))).arg(mul);
+        return QStringLiteral("<%1>%2</%1>").arg(QString::fromLatin1(tag), QLocale::c().toString(f));
     }
     return QString();
 }
@@ -382,20 +379,22 @@ QString createTag(libraw_gps_info_t gps, const char *tag)
     auto tmp = QString::fromLatin1(tag);
     if (tmp.contains(QStringLiteral("Latitude"), Qt::CaseInsensitive)) {
         if (gps.latref != '\0') {
-            auto value = std::format("{:.0f},{:.4f}{}",
-                                     gps.latitude[0],
-                                     gps.latitude[1] + gps.latitude[2] / 60,
-                                     gps.latref);
-            return createTag(QString::fromStdString(value), tag);
+            auto lc = QLocale::c();
+            auto value = QStringLiteral("%1,%2%3")
+                             .arg(lc.toString(gps.latitude[0], 'f', 0),
+                                  lc.toString(gps.latitude[1] + gps.latitude[2] / 60, 'f', 4),
+                                  QString(QChar::fromLatin1(gps.latref)));
+            return createTag(value, tag);
         }
     }
     if (tmp.contains(QStringLiteral("Longitude"), Qt::CaseInsensitive)) {
         if (gps.longref != '\0') {
-            auto value = std::format("{:.0f},{:.4f}{}",
-                                     gps.longitude[0],
-                                     gps.longitude[1] + gps.longitude[2] / 60,
-                                     gps.longref);
-            return createTag(QString::fromStdString(value), tag);
+            auto lc = QLocale::c();
+            auto value = QStringLiteral("%1,%2%3")
+                             .arg(lc.toString(gps.longitude[0], 'f', 0),
+                                  lc.toString(gps.longitude[1] + gps.longitude[2] / 60, 'f', 4),
+                                  QString(QChar::fromLatin1(gps.longref)));
+            return createTag(value, tag);
         }
     }
     if (tmp.contains(QStringLiteral("Altitude"), Qt::CaseInsensitive)) {
