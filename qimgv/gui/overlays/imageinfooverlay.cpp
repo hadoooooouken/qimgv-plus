@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QStyle>
 
 ImageInfoOverlay::ImageInfoOverlay(FloatingWidgetContainer *parent) :
     OverlayWidget(parent)
@@ -15,6 +16,7 @@ ImageInfoOverlay::ImageInfoOverlay(FloatingWidgetContainer *parent) :
     entryStub.setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     connect(closeButton,  &IconButton::clicked, this, &ImageInfoOverlay::hide);
     this->setPosition(FloatingWidgetPosition::RIGHT);
+    setMouseTracking(true);
 
     if(parent)
         setContainerSize(parent->size());
@@ -100,6 +102,9 @@ void ImageInfoOverlay::setExifInfo(QMap<QString, QString> info) {
         entryStub.setText("<no metadata found>");
     }
 
+    // mark last entry for QSS bottom border-radius
+    updateEntryStyles();
+
     if(!isHidden() && entryCount != info.count()) {
         // wait for layout change
         qApp->processEvents();
@@ -109,6 +114,7 @@ void ImageInfoOverlay::setExifInfo(QMap<QString, QString> info) {
 }
 
 void ImageInfoOverlay::show() {
+    mManuallyPositioned = false;
     OverlayWidget::show();
     adjustSize();
     recalculateGeometry();
@@ -116,4 +122,74 @@ void ImageInfoOverlay::show() {
 
 void ImageInfoOverlay::wheelEvent(QWheelEvent *event) {
     event->accept();
+}
+
+void ImageInfoOverlay::mousePressEvent(QMouseEvent *event) {
+    // allow drag only from the header area (top ~30px)
+    if(event->button() == Qt::LeftButton && event->pos().y() < 30) {
+        mDragging = true;
+        mDragStartPos = event->globalPosition().toPoint();
+        mDragStartWidgetPos = this->pos();
+        setCursor(Qt::ClosedHandCursor);
+        event->accept();
+    } else {
+        FloatingWidget::mousePressEvent(event);
+    }
+}
+
+void ImageInfoOverlay::mouseMoveEvent(QMouseEvent *event) {
+    if(mDragging) {
+        QPoint delta = event->globalPosition().toPoint() - mDragStartPos;
+        QPoint newPos = mDragStartWidgetPos + delta;
+        // clamp within parent bounds
+        QSize cs = containerSize();
+        newPos.setX(qBound(0, newPos.x(), cs.width() - width()));
+        newPos.setY(qBound(0, newPos.y(), cs.height() - height()));
+        move(newPos);
+        mManuallyPositioned = true;
+        event->accept();
+    } else {
+        // show open hand cursor when hovering the header area
+        if(event->pos().y() < 30)
+            setCursor(Qt::OpenHandCursor);
+        else
+            setCursor(Qt::ArrowCursor);
+        event->accept();
+    }
+}
+
+void ImageInfoOverlay::mouseReleaseEvent(QMouseEvent *event) {
+    if(mDragging) {
+        mDragging = false;
+        setCursor(Qt::ArrowCursor);
+        event->accept();
+    } else {
+        FloatingWidget::mouseReleaseEvent(event);
+    }
+}
+
+void ImageInfoOverlay::recalculateGeometry() {
+    if(mManuallyPositioned) {
+        // just clamp to container bounds, don't reset position
+        QPoint p = pos();
+        QSize cs = containerSize();
+        p.setX(qBound(0, p.x(), qMax(0, cs.width() - width())));
+        p.setY(qBound(0, p.y(), qMax(0, cs.height() - height())));
+        move(p);
+        return;
+    }
+    OverlayWidget::recalculateGeometry();
+}
+
+void ImageInfoOverlay::updateEntryStyles() {
+    for(int i = 0; i < entries.count(); i++) {
+        bool isLast = (i == entries.count() - 1);
+        QString pos = isLast ? "last" : "middle";
+        if(entries[i]->property("entryPosition").toString() != pos) {
+            entries[i]->setProperty("entryPosition", pos);
+            // force QSS re-evaluation
+            entries[i]->style()->unpolish(entries[i]);
+            entries[i]->style()->polish(entries[i]);
+        }
+    }
 }
