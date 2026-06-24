@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <ranges>
 #include <span>
 #include <immintrin.h>
 #include <QThreadPool>
@@ -944,12 +945,7 @@ QImage ImageLib::loadICO(const QString &path) {
   if (sizes.isEmpty()) {
     return QImage();
   }
-  QSize maxSize(0, 0);
-  for (auto sz : std::as_const(sizes)) {
-    if (maxSize.width() < sz.width()) {
-      maxSize = sz;
-    }
-  }
+  QSize maxSize = *std::ranges::max_element(sizes, {}, &QSize::width);
   QPixmap iconPix = icon.pixmap(maxSize);
   return iconPix.toImage();
 }
