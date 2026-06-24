@@ -14,14 +14,6 @@
 #include <QPixmap>
 
 namespace {
-// Bicubic coefficients
-constexpr float kBicubicCoeff1 = -0.5f;
-constexpr float kBicubicCoeff2 = 1.5f;
-constexpr float kBicubicCoeff3 = -2.5f;
-constexpr float kBicubicCoeff4 = 1.0f;
-constexpr float kBicubicCoeff5 = -1.5f;
-constexpr float kBicubicCoeff6 = 2.0f;
-constexpr float kBicubicCoeff7 = 0.5f;
 
 // Unsharp mask constants
 constexpr float kUnsharpSharpStrength = 1.15f;
@@ -296,10 +288,10 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
       hWeights[x].x1 = std::clamp(xin,     0, W_src - 1);
       hWeights[x].x2 = std::clamp(xin + 1, 0, W_src - 1);
       hWeights[x].x3 = std::clamp(xin + 2, 0, W_src - 1);
-      hWeights[x].w0 = kBicubicCoeff1 * dx * dx * dx + dx * dx + kBicubicCoeff1 * dx;
-      hWeights[x].w1 = kBicubicCoeff2 * dx * dx * dx + kBicubicCoeff3 * dx * dx + kBicubicCoeff4;
-      hWeights[x].w2 = kBicubicCoeff5 * dx * dx * dx + kBicubicCoeff6 * dx * dx + kBicubicCoeff7 * dx;
-      hWeights[x].w3 = kBicubicCoeff7 * dx * dx * dx + kBicubicCoeff1 * dx * dx;
+      hWeights[x].w0 = BicubicWeights::w0(dx);
+      hWeights[x].w1 = BicubicWeights::w1(dx);
+      hWeights[x].w2 = BicubicWeights::w2(dx);
+      hWeights[x].w3 = BicubicWeights::w3(dx);
     }
 
     // Precompute vertical weights and clamp indices
@@ -316,10 +308,10 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
       vWeights[y].y1 = std::clamp(yin,     0, H_src - 1);
       vWeights[y].y2 = std::clamp(yin + 1, 0, H_src - 1);
       vWeights[y].y3 = std::clamp(yin + 2, 0, H_src - 1);
-      vWeights[y].w0 = kBicubicCoeff1 * dy * dy * dy + dy * dy + kBicubicCoeff1 * dy;
-      vWeights[y].w1 = kBicubicCoeff2 * dy * dy * dy + kBicubicCoeff3 * dy * dy + kBicubicCoeff4;
-      vWeights[y].w2 = kBicubicCoeff5 * dy * dy * dy + kBicubicCoeff6 * dy * dy + kBicubicCoeff7 * dy;
-      vWeights[y].w3 = kBicubicCoeff7 * dy * dy * dy + kBicubicCoeff1 * dy * dy;
+      vWeights[y].w0 = BicubicWeights::w0(dy);
+      vWeights[y].w1 = BicubicWeights::w1(dy);
+      vWeights[y].w2 = BicubicWeights::w2(dy);
+      vWeights[y].w3 = BicubicWeights::w3(dy);
     }
 
     // Horizontal pass: W_src x H_src -> W_dst x H_src
@@ -738,7 +730,7 @@ ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, f
 
   // 3. Hue rotate
   if (std::abs(hue) > kAdjustEpsilon) {
-    float hueRad = hue * 3.14159265358979323846f / 180.0f;
+    float hueRad = hue * static_cast<float>(ImageLib::kPi) / 180.0f;
     float cosAngle = std::cos(hueRad);
     float sinAngle = std::sin(hueRad);
     float k = 0.57735f;

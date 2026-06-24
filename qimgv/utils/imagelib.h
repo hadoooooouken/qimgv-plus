@@ -4,6 +4,7 @@
 #include <QPixmapCache>
 #include <QDebug>
 #include <memory>
+#include <numbers>
 #include <QElapsedTimer>
 #include <QProcess>
 #include "sourcecontainers/documentinfo.h"
@@ -19,7 +20,7 @@ struct ColorMatrix {
 class ImageLib {
     public:
         static constexpr float kAdjustEpsilon = 0.001f;
-        static constexpr double kPi = 3.14159265358979323846;
+        static constexpr double kPi = std::numbers::pi;
 
         static QImage rotatedRaw(const QImage *src, int grad);
         static QImage rotated(std::shared_ptr<const QImage> src, int grad);
@@ -49,3 +50,14 @@ class ImageLib {
         static QImage loadICO(const QString &path);
 };
 
+
+// Compile-time bicubic weight calculator (Mitchell-Netravali, a = -0.5)
+// constexpr (not consteval) so the functions are also callable at runtime
+// with a fractional-pixel offset while still folding when given a
+// constant-expression argument.
+namespace BicubicWeights {
+    constexpr float w0(float t) noexcept { return -0.5f*t*t*t +      t*t - 0.5f*t; }
+    constexpr float w1(float t) noexcept { return  1.5f*t*t*t - 2.5f*t*t          + 1.0f; }
+    constexpr float w2(float t) noexcept { return -1.5f*t*t*t + 2.0f*t*t + 0.5f*t; }
+    constexpr float w3(float t) noexcept { return  0.5f*t*t*t - 0.5f*t*t; }
+} // namespace BicubicWeights
