@@ -659,10 +659,10 @@ void DirectoryManager::addEntriesFromDirectoryRecursive(std::vector<FSEntry> &en
 
 void DirectoryManager::sortEntryLists() {
     if(settings->sortFolders())
-        std::sort(dirEntryVec.begin(), dirEntryVec.end(), std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+        std::ranges::sort(dirEntryVec, comparator());
     else
-        std::sort(dirEntryVec.begin(), dirEntryVec.end(), std::bind(&DirectoryManager::path_entry_compare, this, std::placeholders::_1, std::placeholders::_2));
-    std::sort(fileEntryVec.begin(), fileEntryVec.end(), std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+        std::ranges::sort(dirEntryVec, pathComparator());
+    std::ranges::sort(fileEntryVec, comparator());
     rebuildFileLookupMap();
     rebuildDirLookupMap();
 }
@@ -698,7 +698,7 @@ bool DirectoryManager::forceInsertFileEntry(const QString &filePath) {
     QString fileName = QString::fromStdWString(stdPath.filename().wstring());
     
     FSEntry FSEntry(filePath, fileName, fs::file_size(stdPath, ec), fs::last_write_time(stdPath, ec), false);
-    insert_sorted(fileEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    insert_sorted(fileEntryVec, FSEntry, comparator());
     rebuildFileLookupMap();
     if(!directoryPath().isEmpty()) {
         qDebug() << "fileIns" << filePath << directoryPath();
@@ -756,7 +756,7 @@ void DirectoryManager::renameFileEntry(const QString &oldFilePath, const QString
     std::error_code ec;
     fs::path stdPath(toStdString(newFilePath));
     FSEntry FSEntry(newFilePath, newFileName, fs::file_size(stdPath, ec), fs::last_write_time(stdPath, ec), false);
-    insert_sorted(fileEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    insert_sorted(fileEntryVec, FSEntry, comparator());
     rebuildFileLookupMap();
     qDebug() << "fileRen" << oldFilePath << newFilePath;
     emit fileRenamed(oldFilePath, oldIndex, newFilePath, indexOfFile(newFilePath));
@@ -772,7 +772,7 @@ bool DirectoryManager::insertDirEntry(const QString &dirPath) {
     FSEntry.name = dirName;
     FSEntry.path = dirPath;
     FSEntry.isDirectory = true;
-    insert_sorted(dirEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    insert_sorted(dirEntryVec, FSEntry, comparator());
     rebuildDirLookupMap();
     qDebug() << "dirIns" << dirPath;
     emit dirAdded(dirPath);
@@ -803,7 +803,7 @@ void DirectoryManager::renameDirEntry(const QString &oldDirPath, const QString &
     FSEntry.name = newDirName;
     FSEntry.path = newDirPath;
     FSEntry.isDirectory = true;
-    insert_sorted(dirEntryVec, FSEntry, std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    insert_sorted(dirEntryVec, FSEntry, comparator());
     rebuildDirLookupMap();
     qDebug() << "dirRen" << oldDirPath << newDirPath;
     emit dirRenamed(oldDirPath, oldIndex, newDirPath, indexOfDir(newDirPath));
@@ -878,14 +878,14 @@ void DirectoryManager::handleScanFinished(const QString &path, std::vector<FSEnt
     dirEntryVec = std::move(dirs);
 
     // Sort files
-    std::sort(fileEntryVec.begin(), fileEntryVec.end(), std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+    std::ranges::sort(fileEntryVec, comparator());
     rebuildFileLookupMap();
 
     // Sort directories
     if (settings->sortFolders()) {
-        std::sort(dirEntryVec.begin(), dirEntryVec.end(), std::bind(compareFunction(), this, std::placeholders::_1, std::placeholders::_2));
+        std::ranges::sort(dirEntryVec, comparator());
     } else {
-        std::sort(dirEntryVec.begin(), dirEntryVec.end(), std::bind(&DirectoryManager::path_entry_compare, this, std::placeholders::_1, std::placeholders::_2));
+        std::ranges::sort(dirEntryVec, pathComparator());
     }
     rebuildDirLookupMap();
 

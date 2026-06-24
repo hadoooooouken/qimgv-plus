@@ -21,6 +21,7 @@
 #include <iostream>
 #include <filesystem>
 #include <algorithm>
+#include <ranges>
 
 #include "settings_types.h"
 #include "watchers/directorywatcher.h"
@@ -130,6 +131,8 @@ private:
     bool date_entry_compare(const FSEntry &e1, const FSEntry &e2) const;
     bool date_entry_compare_reverse(const FSEntry &e1, const FSEntry &e2) const;
     CompareFunction compareFunction();
+    auto comparator() { auto fn = compareFunction(); return [this, fn](const FSEntry& a, const FSEntry& b) { return (this->*fn)(a, b); }; }
+    auto pathComparator() { return [this](const FSEntry& a, const FSEntry& b) { return path_entry_compare(a, b); }; }
     bool size_entry_compare(const FSEntry &e1, const FSEntry &e2) const;
     bool size_entry_compare_reverse(const FSEntry &e1, const FSEntry &e2) const;
     void startFileWatcher(QString directoryPath);

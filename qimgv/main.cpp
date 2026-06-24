@@ -144,8 +144,7 @@ int main(int argc, char *argv[]) {
 
     CmdOptionsRunner r;
     QTimer::singleShot(0, &r,
-                       std::bind(&CmdOptionsRunner::generateThumbs, &r,
-                                 parser.value("gen-thumbs"), size));
+                       [&r, path = parser.value("gen-thumbs"), size] { r.generateThumbs(path, size); });
     exitCode = a.exec();
   } else {
     // -----------------------------------------------------------------------------
