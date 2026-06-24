@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <span>
 #include <immintrin.h>
 #include <QThreadPool>
 #include <QRunnable>
@@ -42,6 +43,18 @@ public:
         m_func();
     }
 };
+
+// Returns a writable span over one scan-line of a 32-bpp image.
+inline std::span<uint32_t> scanlineSpan(QImage &img, int y) {
+    return { reinterpret_cast<uint32_t *>(img.scanLine(y)),
+             static_cast<size_t>(img.width()) };
+}
+
+// Returns a read-only span.
+inline std::span<const uint32_t> constScanlineSpan(const QImage &img, int y) {
+    return { reinterpret_cast<const uint32_t *>(img.constScanLine(y)),
+             static_cast<size_t>(img.width()) };
+}
 
 // Helper to convert 4 packed unsigned 8-bit integers (in lower 32-bits of __m128i) to 4 single-precision float values
 inline __m128 cvtepu8_ps(__m128i val) {
@@ -337,8 +350,8 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
         numTasks++;
         pool->start(new ScalerTask([&srcImg, &interImg, &hWeights, W_dst, y_start, y_end, &semaphore]() {
           for (int y = y_start; y < y_end; ++y) {
-            const uint32_t* srcRow = (const uint32_t*)srcImg.constScanLine(y);
-            uint32_t* interRow = (uint32_t*)interImg.scanLine(y);
+            auto srcRow   = constScanlineSpan(srcImg, y);
+            auto interRow = scanlineSpan(interImg, y);
 
             int x = 0;
             int limit = W_dst - 1;
@@ -430,10 +443,10 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
           auto fillRowBuffer = [&](int yd, int bufIdx) {
             int yd_clamped = std::clamp(yd, 0, H_dst - 1);
             const auto& vw = vWeights[yd_clamped];
-            const uint32_t* r0 = (const uint32_t*)interImg.constScanLine(vw.y0);
-            const uint32_t* r1 = (const uint32_t*)interImg.constScanLine(vw.y1);
-            const uint32_t* r2 = (const uint32_t*)interImg.constScanLine(vw.y2);
-            const uint32_t* r3 = (const uint32_t*)interImg.constScanLine(vw.y3);
+            auto r0 = constScanlineSpan(interImg, vw.y0);
+            auto r1 = constScanlineSpan(interImg, vw.y1);
+            auto r2 = constScanlineSpan(interImg, vw.y2);
+            auto r3 = constScanlineSpan(interImg, vw.y3);
             uint32_t* out = rowBuffers[bufIdx].data();
 
             __m256 w0 = _mm256_set1_ps(vw.w0);
@@ -500,7 +513,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
           fillRowBuffer(y_start + 1, 2);
 
           for (int y = y_start; y < y_end; ++y) {
-            uint32_t* dstRow = (uint32_t*)destImg.scanLine(y);
+            auto dstRow = scanlineSpan(destImg, y);
 
             int idxT = (y - y_start) % kSlidingWindowSize;
             int idxC = (y - y_start + 1) % kSlidingWindowSize;
@@ -641,7 +654,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
 
           auto blurRowHorizontal = [&](int yd, float* outRow) {
             int yd_clamped = std::clamp(yd, 0, H_dst - 1);
-            const uint32_t* srcRow = (const uint32_t*)scaledImg.constScanLine(yd_clamped);
+            auto srcRow = constScanlineSpan(scaledImg, yd_clamped);
             for (int x = 0; x < W_dst; ++x) {
               __m128 sum = _mm_setzero_ps();
               for (int k = -kGaussianHalfWidth; k <= kGaussianHalfWidth; ++k) {
@@ -661,8 +674,8 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
           }
 
           for (int y = y_start; y < y_end; ++y) {
-            uint32_t* dstRow = (uint32_t*)destImg.scanLine(y);
-            const uint32_t* origRow = (const uint32_t*)scaledImg.constScanLine(y);
+            auto dstRow  = scanlineSpan(destImg, y);
+            auto origRow = constScanlineSpan(scaledImg, y);
 
             // Compute vertical Gaussian blur + Unsharp Mask blending on the fly
             for (int x = 0; x < W_dst; ++x) {
