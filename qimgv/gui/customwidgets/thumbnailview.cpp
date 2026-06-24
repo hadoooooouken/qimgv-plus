@@ -353,7 +353,7 @@ void ThumbnailView::insertItem(int index) {
     select(newSelection);
 
     updateScrollbarIndicator();
-    loadVisibleThumbnails();
+    loadVisibleThumbnailsDelayed();
 }
 
 void ThumbnailView::removeItem(int index) {
@@ -372,7 +372,7 @@ void ThumbnailView::removeItem(int index) {
             newSelection << ((index >= itemCount()) ? itemCount() - 1 : index);
         select(newSelection);
         updateScrollbarIndicator();
-        loadVisibleThumbnails();
+        loadVisibleThumbnailsDelayed();
     }
 }
 
