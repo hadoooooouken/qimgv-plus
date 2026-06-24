@@ -47,7 +47,12 @@ add_subdirectory(utils)
 add_subdirectory(3rdparty/kimageformats)
 
 # C++ STANDARD
-target_compile_features(qimgv-plus PRIVATE cxx_std_17)
+target_compile_features(qimgv-plus PRIVATE cxx_std_23)
+
+if(MSVC)
+    target_compile_options(qimgv-plus PRIVATE /std:c++latest)
+endif()
+
 set_target_properties(qimgv-plus PROPERTIES 
     CXX_EXTENSIONS OFF
     RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../release"

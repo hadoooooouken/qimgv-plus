@@ -1,5 +1,5 @@
 # shellex/CMakeLists.txt
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.25)
 
 project(qimgvshellex LANGUAGES CXX)
 
@@ -15,7 +15,11 @@ add_library(qimgvshellex SHARED
 )
 
 # Standard C++ features
-target_compile_features(qimgvshellex PRIVATE cxx_std_17)
+target_compile_features(qimgvshellex PRIVATE cxx_std_23)
+
+if(MSVC)
+    target_compile_options(qimgvshellex PRIVATE /std:c++latest)
+endif()
 
 # Disable Qt version tagging to allow delay-loading (prevents data symbol imports)
 target_compile_definitions(qimgvshellex PRIVATE QT_NO_VERSION_TAGGING)
