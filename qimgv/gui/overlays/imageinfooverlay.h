@@ -42,5 +42,4 @@ private:
     QPoint mDragStartWidgetPos;
 
     void setupUi();
-    void updateEntryStyles();
 };

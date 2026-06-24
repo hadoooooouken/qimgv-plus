@@ -4,7 +4,6 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QStyle>
 
 ImageInfoOverlay::ImageInfoOverlay(FloatingWidgetContainer *parent) :
     OverlayWidget(parent)
@@ -65,6 +64,7 @@ void ImageInfoOverlay::setupUi() {
     // --- entry layout ---
     entryLayout = new QVBoxLayout();
     entryLayout->setSpacing(0);
+    entryLayout->setContentsMargins(1, 2, 1, 2);
     entryLayout->setSizeConstraint(QLayout::SetFixedSize);
     verticalLayout->addLayout(entryLayout);
 }
@@ -101,9 +101,6 @@ void ImageInfoOverlay::setExifInfo(QMap<QString, QString> info) {
         entryLayout->addWidget(&entryStub);
         entryStub.setText("<no metadata found>");
     }
-
-    // mark last entry for QSS bottom border-radius
-    updateEntryStyles();
 
     if(!isHidden() && entryCount != info.count()) {
         // wait for layout change
@@ -179,17 +176,4 @@ void ImageInfoOverlay::recalculateGeometry() {
         return;
     }
     OverlayWidget::recalculateGeometry();
-}
-
-void ImageInfoOverlay::updateEntryStyles() {
-    for(int i = 0; i < entries.count(); i++) {
-        bool isLast = (i == entries.count() - 1);
-        QString pos = isLast ? "last" : "middle";
-        if(entries[i]->property("entryPosition").toString() != pos) {
-            entries[i]->setProperty("entryPosition", pos);
-            // force QSS re-evaluation
-            entries[i]->style()->unpolish(entries[i]);
-            entries[i]->style()->polish(entries[i]);
-        }
-    }
 }
