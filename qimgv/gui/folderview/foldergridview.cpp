@@ -431,93 +431,99 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
     ThumbnailView::mouseReleaseEvent(event);
 
     if (isRightClick && !wasGesture) {
-        if (!selection().isEmpty()) {
-            QMenu menu(this);
-            menu.setAttribute(Qt::WA_TranslucentBackground);
-            menu.setWindowFlags(menu.windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
+        QMenu menu(this);
+        menu.setAttribute(Qt::WA_TranslucentBackground);
+        menu.setWindowFlags(menu.windowFlags() | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint);
 
-            // styling:
-            QString stylesheet = 
-                "QMenu {"
-                " background-color: %1;"
-                " border: 1px solid %2;"
-                " border-radius: 8px;"
-                " padding: 4px 0px;"
-                "}"
-                "QMenu::separator {"
-                " height: 1px;"
-                " background-color: %2;"
-                " margin: 4px 11px;"
-                "}";
-            auto scheme = settings->colorScheme();
-            stylesheet = stylesheet.arg(
-                scheme.widget.name(),
-                scheme.widget_border.name());
-            menu.setStyleSheet(stylesheet);
+        // styling:
+        QString stylesheet =
+            "QMenu {"
+            " background-color: %1;"
+            " border: 1px solid %2;"
+            " border-radius: 8px;"
+            " padding: 4px 0px;"
+            "}"
+            "QMenu::separator {"
+            " height: 1px;"
+            " background-color: %2;"
+            " margin: 4px 11px;"
+            "}";
+        auto scheme = settings->colorScheme();
+        stylesheet = stylesheet.arg(
+            scheme.widget.name(),
+            scheme.widget_border.name());
+        menu.setStyleSheet(stylesheet);
 
-            auto addCustomAction = [&](const QString &text, const QString &iconPath, const QString &shortcut = "") {
-                QWidgetAction *wa = new QWidgetAction(&menu);
-                ContextMenuItem *item = new ContextMenuItem(this);
-                item->setText(text);
-                item->setIconPath(iconPath);
-                item->setMinimumWidth(212);
-                if (!shortcut.isEmpty()) {
-                    item->setShortcutText(shortcut);
-                }
-                wa->setDefaultWidget(item);
-                menu.addAction(wa);
-                return item;
-            };
+        bool hasSelection = !selection().isEmpty();
 
-            ContextMenuItem *itemOpen = addCustomAction(tr("Open only selected"), ":/res/icons/common/menuitem/document-view16.png");
-            connect(itemOpen, &ContextMenuItem::pressed, this, [this, &menu]() {
-                menu.close();
-                QTimer::singleShot(0, this, [this]() { emit openSelectedRequested(); });
-            });
+        auto addCustomAction = [&](const QString &text, const QString &iconPath, const QString &shortcut = "") {
+            QWidgetAction *wa = new QWidgetAction(&menu);
+            ContextMenuItem *item = new ContextMenuItem(this);
+            item->setText(text);
+            item->setIconPath(iconPath);
+            item->setMinimumWidth(212);
+            if (!shortcut.isEmpty()) {
+                item->setShortcutText(shortcut);
+            }
+            wa->setDefaultWidget(item);
+            menu.addAction(wa);
+            return item;
+        };
 
-            ContextMenuItem *itemBatch = addCustomAction(tr("Batch convert"), ":/res/icons/common/menuitem/settings16.png");
-            connect(itemBatch, &ContextMenuItem::pressed, this, [this, &menu]() {
-                menu.close();
-                emit batchRequested();
-            });
+        ContextMenuItem *itemOpen = addCustomAction(tr("Open only selected"), ":/res/icons/common/menuitem/document-view16.png");
+        itemOpen->setEnabled(hasSelection);
+        connect(itemOpen, &ContextMenuItem::pressed, this, [this, &menu]() {
+            menu.close();
+            QTimer::singleShot(0, this, [this]() { emit openSelectedRequested(); });
+        });
 
-            ContextMenuItem *itemAddFolder = addCustomAction(tr("Add folder"), ":/res/icons/common/buttons/contextmenu/add-folder.png", actionManager->shortcutForAction("createDirectory"));
-            connect(itemAddFolder, &ContextMenuItem::pressed, this, [this, &menu]() {
-                menu.close();
-                actionManager->invokeAction("createDirectory");
-            });
+        ContextMenuItem *itemBatch = addCustomAction(tr("Batch convert"), ":/res/icons/common/menuitem/settings16.png");
+        itemBatch->setEnabled(hasSelection);
+        connect(itemBatch, &ContextMenuItem::pressed, this, [this, &menu]() {
+            menu.close();
+            emit batchRequested();
+        });
 
-            ContextMenuItem *itemShowInFolder = addCustomAction(tr("Show in folder"), ":/res/icons/common/menuitem/folder16.png", actionManager->shortcutForAction("showInDirectory"));
-            connect(itemShowInFolder, &ContextMenuItem::pressed, this, [this, &menu]() {
-                menu.close();
-                actionManager->invokeAction("showInDirectory");
-            });
+        ContextMenuItem *itemAddFolder = addCustomAction(tr("Add folder"), ":/res/icons/common/buttons/contextmenu/add-folder.png", actionManager->shortcutForAction("createDirectory"));
+        connect(itemAddFolder, &ContextMenuItem::pressed, this, [this, &menu]() {
+            menu.close();
+            actionManager->invokeAction("createDirectory");
+        });
 
-            ContextMenuItem *itemRename = addCustomAction(tr("Rename"), ":/res/icons/common/overlay/edit16.png");
-            connect(itemRename, &ContextMenuItem::pressed, this, [this, &menu]() {
-                menu.close();
-                actionManager->invokeAction("renameFile");
-            });
+        ContextMenuItem *itemShowInFolder = addCustomAction(tr("Show in folder"), ":/res/icons/common/menuitem/folder16.png", actionManager->shortcutForAction("showInDirectory"));
+        connect(itemShowInFolder, &ContextMenuItem::pressed, this, [this, &menu]() {
+            menu.close();
+            actionManager->invokeAction("showInDirectory");
+        });
 
-            menu.addSeparator();
+        ContextMenuItem *itemRename = addCustomAction(tr("Rename"), ":/res/icons/common/overlay/edit16.png");
+        itemRename->setEnabled(hasSelection);
+        connect(itemRename, &ContextMenuItem::pressed, this, [this, &menu]() {
+            menu.close();
+            actionManager->invokeAction("renameFile");
+        });
 
-            ContextMenuItem *itemTrash = addCustomAction(tr("Move to trash"), ":/res/icons/common/menuitem/trash16.png");
-            itemTrash->setTextColor(settings->colorScheme().trash);
-            itemTrash->setIconColor(settings->colorScheme().trash);
-            connect(itemTrash, &ContextMenuItem::pressed, this, [this, &menu]() {
-                menu.close();
-                actionManager->invokeAction("moveToTrash");
-            });
+        menu.addSeparator();
 
-            ContextMenuItem *itemDelete = addCustomAction(tr("Delete permanently"), ":/res/icons/common/buttons/panel/close16.png");
-            itemDelete->setTextColor(settings->colorScheme().danger);
-            itemDelete->setIconColor(settings->colorScheme().danger);
-            connect(itemDelete, &ContextMenuItem::pressed, this, [this, &menu]() {
-                menu.close();
-                actionManager->invokeAction("removeFile");
-            });
+        ContextMenuItem *itemTrash = addCustomAction(tr("Move to trash"), ":/res/icons/common/menuitem/trash16.png");
+        itemTrash->setTextColor(settings->colorScheme().trash);
+        itemTrash->setIconColor(settings->colorScheme().trash);
+        itemTrash->setEnabled(hasSelection);
+        connect(itemTrash, &ContextMenuItem::pressed, this, [this, &menu]() {
+            menu.close();
+            actionManager->invokeAction("moveToTrash");
+        });
 
-            menu.exec(event->globalPos());
-        }
+        ContextMenuItem *itemDelete = addCustomAction(tr("Delete permanently"), ":/res/icons/common/buttons/panel/close16.png");
+        itemDelete->setTextColor(settings->colorScheme().danger);
+        itemDelete->setIconColor(settings->colorScheme().danger);
+        itemDelete->setEnabled(hasSelection);
+        connect(itemDelete, &ContextMenuItem::pressed, this, [this, &menu]() {
+            menu.close();
+            actionManager->invokeAction("removeFile");
+        });
+
+        menu.exec(event->globalPos());
     }
+
 }
