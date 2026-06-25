@@ -491,6 +491,7 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
         });
 
         ContextMenuItem *itemShowInFolder = addCustomAction(tr("Show in folder"), ":/res/icons/common/menuitem/folder16.png", actionManager->shortcutForAction("showInDirectory"));
+        itemShowInFolder->setEnabled(hasSelection);
         connect(itemShowInFolder, &ContextMenuItem::pressed, this, [this, &menu]() {
             menu.close();
             actionManager->invokeAction("showInDirectory");

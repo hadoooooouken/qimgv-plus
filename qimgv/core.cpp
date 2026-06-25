@@ -1597,8 +1597,10 @@ void Core::discardEdits() {
 QString Core::selectedPath() {
   if (!model)
     return "";
-  else if (mw->currentViewMode() == MODE_FOLDERVIEW)
-    return folderViewPresenter.selectedPaths().constLast();
+  else if (mw->currentViewMode() == MODE_FOLDERVIEW) {
+    auto paths = folderViewPresenter.selectedPaths();
+    return paths.isEmpty() ? QString() : paths.constLast();
+  }
   else
     return state.currentFilePath;
 }
