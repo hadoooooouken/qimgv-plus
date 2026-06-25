@@ -213,6 +213,7 @@ void ImageViewerV2::readSettings() {
       }
       requestScaling();
     } else {
+      imageFitMode = imageFitModeDefault;
       applyFitMode();
       requestScaling();
     }
