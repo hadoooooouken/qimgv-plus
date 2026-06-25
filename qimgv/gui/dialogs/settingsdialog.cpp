@@ -3931,10 +3931,10 @@ void SettingsDialog::retranslateUi() {
         label_9->setText(QCoreApplication::translate("SettingsDialog", "View", nullptr));
         label_40->setText(QCoreApplication::translate("SettingsDialog", "Display options", nullptr));
         label_2->setText(QCoreApplication::translate("SettingsDialog", "Image fit:", nullptr));
-        fitModeWindow->setText(QCoreApplication::translate("SettingsDialog", "Fit in window", nullptr));
-        fitModeWidth->setText(QCoreApplication::translate("SettingsDialog", "Stretch to width", nullptr));
+        fitModeWindow->setText(QCoreApplication::translate("SettingsDialog", "Fit to window", nullptr));
+        fitModeWidth->setText(QCoreApplication::translate("SettingsDialog", "Fit to width", nullptr));
         fitMode1to1->setText(QCoreApplication::translate("SettingsDialog", "1:1", nullptr));
-        fitModeWindowStretch->setText(QCoreApplication::translate("SettingsDialog", "Fit in window (stretch)", nullptr));
+        fitModeWindowStretch->setText(QCoreApplication::translate("SettingsDialog", "Fit to height", nullptr));
         keepFitModeCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Keep fit mode when switching images", nullptr));
         label_26->setText(QCoreApplication::translate("SettingsDialog", "Focus in 1:1 mode:", nullptr));
         focus1to1Top->setText(QCoreApplication::translate("SettingsDialog", "Top", nullptr));
