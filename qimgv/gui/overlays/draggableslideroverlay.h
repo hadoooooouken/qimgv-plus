@@ -19,7 +19,7 @@ public:
     void setCustomPosition(const QPoint &globalPos);
 
 protected:
-    QHBoxLayout *createHeader(const QString &title);
+    QWidget *createHeader(const QString &title);
     void addSliderRow(QFormLayout *formLayout,
                       const QString &labelText,
                       QSlider *&slider,

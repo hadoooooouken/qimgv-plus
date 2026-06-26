@@ -15,20 +15,25 @@ DraggableSliderOverlay::DraggableSliderOverlay(FloatingWidgetContainer *parent)
 
 DraggableSliderOverlay::~DraggableSliderOverlay() = default;
 
-QHBoxLayout *DraggableSliderOverlay::createHeader(const QString &title)
+QWidget *DraggableSliderOverlay::createHeader(const QString &title)
 {
-    QHBoxLayout *headerLayout = new QHBoxLayout();
+    QWidget *headerWidget = new QWidget(this);
+    headerWidget->setAccessibleName("OverlayHeaderWidget");
+
+    QHBoxLayout *headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setSpacing(0);
     headerLayout->setContentsMargins(0, 0, 0, 0);
 
-    IconWidget *headerIcon = new IconWidget(this);
-    headerIcon->setFixedSize(16, 16);
+    IconWidget *headerIcon = new IconWidget(headerWidget);
+    headerIcon->setAccessibleName("OverlayHeaderIcon");
     headerIcon->setIconPath(":/res/icons/common/settings/appearance32.png");
 
-    QLabel *titleLabel = new QLabel(title, this);
+    QLabel *titleLabel = new QLabel(title, headerWidget);
+    titleLabel->setAccessibleName("OverlayHeaderLabel");
     titleLabel->setStyleSheet("font-weight: bold;");
 
-    IconButton *closeButton = new IconButton(this);
-    closeButton->setFixedSize(16, 16);
+    IconButton *closeButton = new IconButton(headerWidget);
+    closeButton->setAccessibleName("OverlayHeaderButton");
     closeButton->setIconPath(":/res/icons/common/overlay/close-dim16.png");
     connect(closeButton, &IconButton::clicked, this, &DraggableSliderOverlay::hide);
 
@@ -37,7 +42,7 @@ QHBoxLayout *DraggableSliderOverlay::createHeader(const QString &title)
     headerLayout->addStretch(1);
     headerLayout->addWidget(closeButton);
 
-    return headerLayout;
+    return headerWidget;
 }
 
 void DraggableSliderOverlay::addSliderRow(QFormLayout *formLayout,

@@ -48,11 +48,15 @@ void ColorAdjustmentsOverlay::setupUi()
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(12, 8, 12, 12);
-    mainLayout->setSpacing(8);
+    mainLayout->setContentsMargins(0, 0, 0, 12);
+    mainLayout->setSpacing(0);
 
     // Header
-    mainLayout->addLayout(createHeader(tr("Color adjustments")));
+    mainLayout->addWidget(createHeader(tr("Color adjustments")));
+
+    QVBoxLayout *contentLayout = new QVBoxLayout();
+    contentLayout->setContentsMargins(12, 8, 12, 0);
+    contentLayout->setSpacing(8);
 
     // Content: use QFormLayout for auto-aligned labels
     QFormLayout *formLayout = new QFormLayout();
@@ -69,7 +73,7 @@ void ColorAdjustmentsOverlay::setupUi()
     addSliderRow(formLayout, tr("Saturation"),  m_saturationSlider,  m_saturationValLabel,     0, 200, 100);
     addSliderRow(formLayout, tr("Hue"),         m_hueSlider,         m_hueValLabel,          -180, 180, 0);
 
-    mainLayout->addLayout(formLayout);
+    contentLayout->addLayout(formLayout);
 
     // Button row
     QHBoxLayout *buttonLayout = new QHBoxLayout();
@@ -91,7 +95,9 @@ void ColorAdjustmentsOverlay::setupUi()
     buttonLayout->addWidget(compareButton);
     buttonLayout->addWidget(applyButton);
     buttonLayout->addWidget(resetButton);
-    mainLayout->addLayout(buttonLayout);
+    contentLayout->addLayout(buttonLayout);
+
+    mainLayout->addLayout(contentLayout);
 
     // Connections
     connect(resetButton, &QPushButton::clicked, this, &ColorAdjustmentsOverlay::resetAdjustments);

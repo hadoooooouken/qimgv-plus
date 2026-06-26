@@ -38,11 +38,15 @@ void CasSettingsOverlay::setupUi()
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(12, 8, 12, 12);
-    mainLayout->setSpacing(8);
+    mainLayout->setContentsMargins(0, 0, 0, 12);
+    mainLayout->setSpacing(0);
 
     // Header
-    mainLayout->addLayout(createHeader(tr("CAS Settings")));
+    mainLayout->addWidget(createHeader(tr("CAS Settings")));
+
+    QVBoxLayout *contentLayout = new QVBoxLayout();
+    contentLayout->setContentsMargins(12, 8, 12, 0);
+    contentLayout->setSpacing(8);
 
     // Content: use QFormLayout for auto-aligned labels
     QFormLayout *formLayout = new QFormLayout();
@@ -56,7 +60,7 @@ void CasSettingsOverlay::setupUi()
     addSliderRow(formLayout, tr("Contrast"),   m_contrastSlider, m_contrastValLabel, 0, 100,
                  qRound(settings->casContrast() * 100.0f));
 
-    mainLayout->addLayout(formLayout);
+    contentLayout->addLayout(formLayout);
 
     // Reset button (right-aligned, like original)
     QHBoxLayout *buttonLayout = new QHBoxLayout();
@@ -66,7 +70,9 @@ void CasSettingsOverlay::setupUi()
     resetButton->setAccessibleName("Button");
     buttonLayout->addStretch(1);
     buttonLayout->addWidget(resetButton);
-    mainLayout->addLayout(buttonLayout);
+    contentLayout->addLayout(buttonLayout);
+
+    mainLayout->addLayout(contentLayout);
 
     connect(resetButton, &QPushButton::clicked, this, &CasSettingsOverlay::onResetClicked);
 
