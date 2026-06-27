@@ -1927,6 +1927,7 @@ bool Core::loadPath(QString path) {
     return false;
 
   // load file / folderview
+  bool success = false;
   if (fileInfo.isFile()) {
     int index = model->indexOfFile(fileInfo.absoluteFilePath());
     // DirectoryManager only checks file extensions via regex (performance
@@ -1956,14 +1957,19 @@ bool Core::loadPath(QString path) {
       }
     }
     mw->enableDocumentView();
-    return loadFileIndex(index, false, settings->usePreloader());
+    success = loadFileIndex(index, false, settings->usePreloader());
   } else {
     if (mw->currentViewMode() == MODE_DOCUMENT && model->fileCount() > 0) {
-      return loadFileIndex(0, false, settings->usePreloader());
+      success = loadFileIndex(0, false, settings->usePreloader());
+    } else {
+      mw->enableFolderView();
+      success = true;
     }
-    mw->enableFolderView();
-    return true;
   }
+  if (success && settings->rememberLastFolder()) {
+    settings->setLastFolder(state.directoryPath);
+  }
+  return success;
 }
 
 bool Core::setDirectory(QString path) {
@@ -1980,6 +1986,7 @@ bool Core::setDirectory(QString path) {
       return false;
     }
     mw->setDirectoryPath(path);
+    state.directoryPath = path;
   }
   return true;
 }
@@ -2342,7 +2349,9 @@ bool Core::hasActiveState() const {
 }
 
 void Core::loadDefaultPath() {
-    if (settings->defaultViewMode() == MODE_FOLDERVIEW) {
+    if (settings->rememberLastFolder() && !settings->lastFolder().isEmpty() && QFileInfo(settings->lastFolder()).exists()) {
+        loadPath(settings->lastFolder());
+    } else if (settings->defaultViewMode() == MODE_FOLDERVIEW) {
         QStringList bookmarks = settings->bookmarks();
         if (!bookmarks.isEmpty() && QFileInfo(bookmarks.first()).exists()) {
             loadPath(bookmarks.first());

@@ -84,6 +84,7 @@ private:
     QCheckBox *fullscreenCheckBox;
     QCheckBox *startInFolderViewCheckBox;
     QCheckBox *standbyCheckBox;
+    QCheckBox *rememberLastFolderCheckBox;
     QSpacerItem *verticalSpacer_19;
     QWidget *UIOptionsGroup;
     QVBoxLayout *verticalLayout_11;

@@ -1482,6 +1482,23 @@ void Settings::setMultiInstance(bool mode) {
   settings->settingsConf->setValue("multiInstance", mode);
 }
 //------------------------------------------------------------------------------
+bool Settings::rememberLastFolder() {
+  return settings->settingsConf->value("rememberLastFolder", false).toBool();
+}
+
+void Settings::setRememberLastFolder(bool mode) {
+  settings->settingsConf->setValue("rememberLastFolder", mode);
+}
+
+QString Settings::lastFolder() {
+  return settings->settingsConf->value("lastFolder", "").toString();
+}
+
+void Settings::setLastFolder(const QString &path) {
+  settings->settingsConf->setValue("lastFolder", path);
+  settings->settingsConf->sync();
+}
+//------------------------------------------------------------------------------
 QString Settings::excludedCachePaths() {
   QReadLocker locker(&mExcludedPathsLock);
   return mCachedExcludedCachePaths;

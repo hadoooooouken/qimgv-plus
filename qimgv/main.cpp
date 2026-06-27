@@ -224,7 +224,9 @@ int main(int argc, char *argv[]) {
 
       if (parser.positionalArguments().count())
         core.loadPath(parser.positionalArguments().at(0));
-      else if (settings->defaultViewMode() == MODE_FOLDERVIEW) {
+      else if (settings->rememberLastFolder() && !settings->lastFolder().isEmpty() && QFileInfo(settings->lastFolder()).exists()) {
+        core.loadPath(settings->lastFolder());
+      } else if (settings->defaultViewMode() == MODE_FOLDERVIEW) {
         QStringList bookmarks = settings->bookmarks();
         if (!bookmarks.isEmpty() && QFileInfo(bookmarks.first()).exists())
           core.loadPath(bookmarks.first());

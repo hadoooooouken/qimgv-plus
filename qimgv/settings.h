@@ -283,6 +283,11 @@ public:
   bool multiInstance();
   void setMultiInstance(bool mode);
 
+  bool rememberLastFolder();
+  void setRememberLastFolder(bool mode);
+  QString lastFolder();
+  void setLastFolder(const QString &path);
+
   QString excludedCachePaths();
   void setExcludedCachePaths(QString paths);
   bool isPathExcludedFromCache(const QString &path);
