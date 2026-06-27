@@ -91,6 +91,10 @@ public:
   DialogResult fileReplaceDialog(QString source, QString target,
                                  FileReplaceMode mode, bool multiple);
 
+  void saveWindowGeometry();
+  void restoreWindowGeometry();
+
+
 private:
   std::shared_ptr<ViewerWidget> viewerWidget;
   QHBoxLayout layout;
@@ -126,8 +130,6 @@ private:
   int lastScalePercent = -1;
 
 
-  void saveWindowGeometry();
-  void restoreWindowGeometry();
   void saveCurrentDisplay();
   void setupUi();
   FloatingMessageProxy *activeFloatingMessage();
@@ -144,7 +146,6 @@ private:
 private slots:
   void updateCurrentDisplay();
   void readSettings();
-  void adaptToWindowState();
   void onWindowGeometryChanged();
   void onInfoUpdated();
   void onScaleChanged(qreal scale);
@@ -268,4 +269,6 @@ public slots:
   void toggleUpscayl();
 #endif
   void showBatchConverter(const QList<QString> &paths);
+  void adaptToWindowState();
+
 };

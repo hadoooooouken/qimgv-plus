@@ -2337,8 +2337,15 @@ void Core::suspendToStandby() {
     stopSlideshow();
     preloadTimer.stop();
     mw->closeImage();
-    this->reset(); 
+    this->reset();
     mw->setDirectoryPath("");
+
+    if (mw->isMaximized()) {
+        mw->showNormal();
+        qApp->processEvents();
+    }
+
+    mw->saveWindowGeometry();
     mw->hide();
     EmptyWorkingSet(GetCurrentProcess());
 }
