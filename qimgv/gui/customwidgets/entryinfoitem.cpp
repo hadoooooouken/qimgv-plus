@@ -11,7 +11,7 @@ EntryInfoItem::EntryInfoItem(QWidget *parent) : QWidget(parent) {
     valueLabel.setFixedSize(142,30);
 
     // add some padding for easier text selection
-    valueLabel.setContentsMargins(3,0,0,0);
+    valueLabel.setContentsMargins(3,1,0,0);
     valueLabel.setTextInteractionFlags(Qt::TextSelectableByMouse);
     valueLabel.setCursor(Qt::IBeamCursor);
 }

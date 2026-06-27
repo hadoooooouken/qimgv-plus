@@ -66,7 +66,7 @@ void MainPanel::setPosition(PanelPosition p) {
         break;
         case PANEL_BOTTOM:
             buttonsLayout.setDirection(QBoxLayout::BottomToTop);
-            layout()->setContentsMargins(0,3,0,0);
+            layout()->setContentsMargins(0,3,1,0);
             buttonsLayout.setContentsMargins(4,0,0,0);
         break;
         case PANEL_LEFT:
