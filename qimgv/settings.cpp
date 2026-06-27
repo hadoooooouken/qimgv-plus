@@ -706,6 +706,14 @@ void Settings::setFullscreenMode(bool mode) {
   settings->settingsConf->setValue("openInFullscreen", mode);
 }
 //------------------------------------------------------------------------------
+bool Settings::standbyMode() {
+  return settings->settingsConf->value("standbyMode", false).toBool();
+}
+
+void Settings::setStandbyMode(bool mode) {
+  settings->settingsConf->setValue("standbyMode", mode);
+}
+//------------------------------------------------------------------------------
 bool Settings::maximizedWindow() {
   return settings->stateConf->value("maximizedWindow", false).toBool();
 }

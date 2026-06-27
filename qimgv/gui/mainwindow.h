@@ -187,6 +187,7 @@ signals:
   void folderSortingSelected(SortingMode);
   void colorAdjustmentsApplyRequested(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
   void batchRequested();
+  void suspendRequested();
 
   // viewerWidget
   void scalingRequested(QSize, ScalingFilter);

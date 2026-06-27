@@ -57,6 +57,8 @@ public:
 #endif
   bool fullscreenMode();
   void setFullscreenMode(bool mode);
+  bool standbyMode();
+  void setStandbyMode(bool mode);
   ImageFitMode imageFitMode();
   void setImageFitMode(ImageFitMode mode);
   QRect windowGeometry();

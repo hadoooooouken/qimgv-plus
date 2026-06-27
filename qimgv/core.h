@@ -41,11 +41,15 @@ public:
     Core();
     ~Core();
     void showGui();
+    bool hasActiveState() const;
+    void loadDefaultPath();
 
 public slots:
     void updateInfoString();
     bool loadPath(QString);
     void raiseWindow();
+    void suspendToStandby();
+    void forceExit();
 
 
 private:

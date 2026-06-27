@@ -85,9 +85,9 @@ FolderView::FolderView(QWidget *parent) :
     upButton->setTriggerMode(TriggerMode::ClickTrigger);
     settingsButton->setAction("openSettings");
     settingsButton->setIconPath(":/res/icons/common/buttons/panel/settings16.png");
-    exitButton->setAction("exit");
-    exitButton->setIconPath(":/res/icons/common/buttons/panel/close16.png");
-    exitButton->setIconOffset(-1, 0);
+    connect(exitButton, &QPushButton::clicked, this, []() {
+        actionManager->invokeAction("exit");
+    });
     docViewButton->setAction("documentView");
     docViewButton->setIconPath(":/res/icons/common/buttons/panel/document-view20.png");
     togglePlacesPanelButton->setCheckable(true);
@@ -288,11 +288,11 @@ void FolderView::setupUi() {
     panelRightEdgeSpacer = new QSpacerItem(2, 20, QSizePolicy::Fixed, QSizePolicy::Minimum);
     horizontalLayout_5->addSpacerItem(panelRightEdgeSpacer);
     
-    exitButton = new ActionButton(topBar);
+    exitButton = new QPushButton(tr("Quit"), topBar);
     exitButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-    exitButton->setMinimumWidth(40);
-    exitButton->setMaximumWidth(40);
-    exitButton->setAccessibleName("PanelButtonRE");
+    exitButton->setFocusPolicy(Qt::NoFocus);
+    exitButton->setAccessibleName("FolderViewBatchButton");
+    exitButton->setToolTip(tr("Quit qimgv"));
     horizontalLayout_5->addWidget(exitButton);
     
     verticalLayout->addWidget(topBar);
@@ -545,7 +545,6 @@ void FolderView::hide() {
 }
 
 void FolderView::onFullscreenModeChanged(bool mode) {
-    exitButton->setHidden(!mode);
     if(mode) // hide 2px spacer
         panelRightEdgeSpacer->changeSize(0, 20, QSizePolicy::Fixed, QSizePolicy::Fixed);
     else // show spacer

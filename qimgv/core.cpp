@@ -96,6 +96,7 @@ Core::Core()
 
 Core::~Core() {
   delete translator;
+  delete mw;
 
   QString instanceTempDir = settings->tmpDir() + "temp_" + QString::number(QCoreApplication::applicationPid()) + "/";
   QDir(instanceTempDir).removeRecursively();
@@ -310,6 +311,7 @@ void Core::connectComponents() {
 
   connect(&slideshowTimer, &QTimer::timeout, this, &Core::nextImageSlideshow);
   connect(&preloadTimer, &QTimer::timeout, this, &Core::preloadNeighbors);
+  connect(mw, &MW::suspendRequested, this, &Core::suspendToStandby);
 }
 
 void Core::initActions() {
@@ -344,7 +346,7 @@ void Core::initActions() {
           &Core::setWallpaper);
   connect(actionManager, &ActionManager::save, this, &Core::saveCurrentFile);
   connect(actionManager, &ActionManager::saveAs, this, &Core::requestSavePath);
-  connect(actionManager, &ActionManager::exit, this, &Core::close);
+  connect(actionManager, &ActionManager::exit, this, &Core::forceExit);
   connect(actionManager, &ActionManager::closeFullScreenOrExit, mw,
           &MW::closeFullScreenOrExit);
   connect(actionManager, &ActionManager::removeFile, this,
@@ -583,7 +585,7 @@ void Core::rotateLeft() { rotateByDegrees(-90); }
 
 void Core::rotateRight() { rotateByDegrees(90); }
 
-void Core::close() { mw->close(); }
+void Core::close() { forceExit(); }
 
 void Core::removePermanent() {
   auto paths = currentSelection();
@@ -1888,6 +1890,7 @@ void Core::reset() {
 #endif
   state.hasActiveImage = false;
   state.currentFilePath = "";
+  state.directoryPath = "";
   state.currentImg.reset();
   model->clearScaler();
   model->setDirectory("");
@@ -2323,4 +2326,33 @@ void Core::updateInfoString() {
   mw->setCurrentInfo(index, model->fileCount(), model->filePathAt(index),
                      model->fileNameAt(index), imageSize, fileSize, format,
                      colorProfile, slideshow, shuffle, edited);
+}
+
+void Core::suspendToStandby() {
+    stopSlideshow();
+    preloadTimer.stop();
+    this->reset(); 
+    mw->closeImage();
+    mw->setDirectoryPath("");
+    mw->hide();
+    SetProcessWorkingSetSize(GetCurrentProcess(), (SIZE_T)-1, (SIZE_T)-1);
+}
+
+bool Core::hasActiveState() const {
+    return state.hasActiveImage || !state.directoryPath.isEmpty();
+}
+
+void Core::loadDefaultPath() {
+    if (settings->defaultViewMode() == MODE_FOLDERVIEW) {
+        QStringList bookmarks = settings->bookmarks();
+        if (!bookmarks.isEmpty()) {
+            loadPath(bookmarks.first());
+        } else {
+            loadPath(QDir::homePath());
+        }
+    }
+}
+
+void Core::forceExit() {
+    QApplication::quit();
 }

@@ -634,6 +634,8 @@ void SettingsDialog::readSettings() {
   else
     startInFolderViewCheckBox->setChecked(false);
 
+  standbyCheckBox->setChecked(settings->standbyMode());
+
   if (settings->folderEndAction() == FOLDER_END_NO_ACTION)
     folderEndNoAction->setChecked(true);
   else if (settings->folderEndAction() == FOLDER_END_LOOP)
@@ -819,6 +821,8 @@ void SettingsDialog::saveSettings() {
     settings->setDefaultViewMode(MODE_FOLDERVIEW);
   else
     settings->setDefaultViewMode(MODE_DOCUMENT);
+
+  settings->setStandbyMode(standbyCheckBox->isChecked());
 
   if (folderEndNoAction->isChecked())
     settings->setFolderEndAction(FOLDER_END_NO_ACTION);
@@ -1424,6 +1428,11 @@ void SettingsDialog::setupUi() {
         startInFolderViewCheckBox->setObjectName("startInFolderViewCheckBox");
 
         verticalLayout_20->addWidget(startInFolderViewCheckBox);
+
+        standbyCheckBox = new QCheckBox(generalGroup);
+        standbyCheckBox->setObjectName("standbyCheckBox");
+
+        verticalLayout_20->addWidget(standbyCheckBox);
 
 
         verticalLayout_12->addLayout(verticalLayout_20);
@@ -3871,6 +3880,7 @@ void SettingsDialog::retranslateUi() {
         label_48->setText(QCoreApplication::translate("SettingsDialog", "Requires application restart", nullptr));
         fullscreenCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Open in fullscreen", nullptr));
         startInFolderViewCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Start in folder view by default", nullptr));
+        standbyCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Enable standby mode on close", nullptr));
         label_15->setText(QCoreApplication::translate("SettingsDialog", "User interface", nullptr));
         showExtendedInfoTitle->setText(QCoreApplication::translate("SettingsDialog", "Image info in window title", nullptr));
         showInfoBarFullscreen->setText(QCoreApplication::translate("SettingsDialog", "Fullscreen info bar", nullptr));

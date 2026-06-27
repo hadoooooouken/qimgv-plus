@@ -195,6 +195,7 @@ int main(int argc, char *argv[]) {
     initSingletons();
 
     {
+      QApplication::setQuitOnLastWindowClosed(false);
       Core core;
 
       if (server) {
@@ -213,6 +214,8 @@ int main(int argc, char *argv[]) {
                                  core.raiseWindow();
                                  if (!pathReceived.isEmpty()) {
                                    core.loadPath(pathReceived);
+                                 } else if (!core.hasActiveState()) {
+                                   core.loadDefaultPath();
                                  }
                                });
             });

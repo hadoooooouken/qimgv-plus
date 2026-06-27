@@ -2,6 +2,7 @@
 #include "settings.h"
 #include <QClipboard>
 #include <QApplication>
+#include <QGuiApplication>
 
 namespace {
 constexpr int MIN_WINDOW_WIDTH = 256;
@@ -672,9 +673,15 @@ void MW::close() {
 }
 
 void MW::closeEvent(QCloseEvent *event) {
-    // catch the close event when user presses X on the window itself
-    event->accept();
-    actionManager->invokeAction("exit");
+    if (qGuiApp && qGuiApp->isSavingSession()) {
+        event->accept();
+    } else if (settings->standbyMode()) {
+        event->ignore();
+        emit suspendRequested();
+    } else {
+        event->accept();
+        actionManager->invokeAction("exit");
+    }
 }
 
 void MW::dragEnterEvent(QDragEnterEvent *e) {

@@ -130,7 +130,7 @@ private:
     ActionButton *docViewButton;
     ActionButton *settingsButton;
     QSpacerItem *panelRightEdgeSpacer;
-    ActionButton *exitButton;
+    QPushButton *exitButton;
 
     // Contents
     QWidget *contentsWidget;
