@@ -99,7 +99,6 @@ private slots:
 
     void onSplitterMoved();
     void onHomeBtn();
-    void onRootBtn();
     void onTreeViewTabOut();
     void onSelectionChanged();
     void onBatchClicked();
@@ -143,7 +142,6 @@ private:
     BookmarksWidget *bookmarksWidget;
     QSpacerItem *placesPanelSpacer;
     ClickableLabel *directoriesLabel;
-    IconButton *rootButton;
     IconButton *homeButton;
     TreeViewCustom *dirTreeView;
 

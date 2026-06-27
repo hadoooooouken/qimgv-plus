@@ -99,7 +99,6 @@ FolderView::FolderView(QWidget *parent) :
 
     newBookmarkButton->setIconPath(":/res/icons/common/buttons/panel-small/add-new12.png");
     homeButton->setIconPath(":/res/icons/common/buttons/panel-small/home12.png");
-    rootButton->setIconPath(":/res/icons/common/buttons/panel-small/root12.png");
 
     bookmarksLabel->setAcceptDrops(true);
     newBookmarkButton->setAcceptDrops(true);
@@ -132,7 +131,6 @@ FolderView::FolderView(QWidget *parent) :
 
     connect(newBookmarkButton, &IconButton::clicked, this, &FolderView::newBookmark);
     connect(homeButton, &IconButton::clicked, this, &FolderView::onHomeBtn);
-    connect(rootButton, &IconButton::clicked, this, &FolderView::onRootBtn);
 
     connect(zoomSlider, &QSlider::valueChanged, this, &FolderView::onZoomSliderValueChanged);
     connect(zoomSlider, &QSlider::sliderReleased, this, [this]() {
@@ -195,6 +193,7 @@ void FolderView::setupUi() {
     togglePlacesPanelButton->setMinimumWidth(40);
     togglePlacesPanelButton->setMaximumWidth(40);
     togglePlacesPanelButton->setAccessibleName("CheckableButtonLE");
+    togglePlacesPanelButton->setToolTip(tr("Toggle side panel"));
     horizontalLayout_5->addWidget(togglePlacesPanelButton);
     
     pathBar = new QWidget(topBar);
@@ -210,6 +209,7 @@ void FolderView::setupUi() {
     upButton->setMinimumWidth(34);
     upButton->setMaximumWidth(34);
     upButton->setAccessibleName("PathBarButton");
+    upButton->setToolTip(tr("Go up"));
     horizontalLayout->addWidget(upButton);
     
     pathLabel = new QLabel("[path]", pathBar);
@@ -255,6 +255,7 @@ void FolderView::setupUi() {
     folderSortingComboBox->setContextMenuPolicy(Qt::NoContextMenu);
     folderSortingComboBox->setAccessibleName("PanelComboBox");
     folderSortingComboBox->addItems({tr("A - Z"), tr("Z - A"), tr("Size"), tr("Size (desc)"), tr("Oldest"), tr("Newest")});
+    folderSortingComboBox->setToolTip(tr("Folder icon sorting"));
     horizontalLayout_5->addWidget(folderSortingComboBox);
     
     horizontalSpacer_folderSort = new QSpacerItem(4, 20, QSizePolicy::Fixed, QSizePolicy::Minimum);
@@ -265,6 +266,7 @@ void FolderView::setupUi() {
     sortingComboBox->setContextMenuPolicy(Qt::NoContextMenu);
     sortingComboBox->setAccessibleName("PanelComboBox");
     sortingComboBox->addItems({tr("A - Z"), tr("Z - A"), tr("Size"), tr("Size (desc)"), tr("Oldest"), tr("Newest")});
+    sortingComboBox->setToolTip(tr("Sort folders and images"));
     horizontalLayout_5->addWidget(sortingComboBox);
     
     QSpacerItem *horizontalSpacer_2 = new QSpacerItem(8, 20, QSizePolicy::Fixed, QSizePolicy::Minimum);
@@ -275,6 +277,7 @@ void FolderView::setupUi() {
     docViewButton->setMinimumWidth(38);
     docViewButton->setMaximumWidth(38);
     docViewButton->setAccessibleName("PanelButton");
+    docViewButton->setToolTip(tr("Viewer"));
     horizontalLayout_5->addWidget(docViewButton);
     
     settingsButton = new ActionButton(topBar);
@@ -282,6 +285,7 @@ void FolderView::setupUi() {
     settingsButton->setMinimumWidth(38);
     settingsButton->setMaximumWidth(38);
     settingsButton->setAccessibleName("PanelButton");
+    settingsButton->setToolTip(tr("Settings"));
     horizontalLayout_5->addWidget(settingsButton);
     
     panelRightEdgeSpacer = new QSpacerItem(2, 20, QSizePolicy::Fixed, QSizePolicy::Minimum);
@@ -363,16 +367,11 @@ void FolderView::setupUi() {
     horizontalLayout_8->setSpacing(0);
     horizontalLayout_8->setContentsMargins(0, 0, 0, 0);
     
-    rootButton = new IconButton(placesPanel);
-    rootButton->setMinimumSize(26, 26);
-    rootButton->setMaximumSize(26, 26);
-    rootButton->setAccessibleName("PlacesPanelButton");
-    horizontalLayout_8->addWidget(rootButton);
-    
     homeButton = new IconButton(placesPanel);
     homeButton->setMinimumSize(26, 26);
     homeButton->setMaximumSize(26, 26);
     homeButton->setAccessibleName("PlacesPanelButton");
+    homeButton->setToolTip(tr("Home"));
     horizontalLayout_8->addWidget(homeButton);
     
     horizontalLayout_6->addLayout(horizontalLayout_8);
@@ -587,10 +586,6 @@ void FolderView::focusOnSelection() {
 
 void FolderView::onHomeBtn() {
     emit directorySelected(QDir::homePath());
-}
-
-void FolderView::onRootBtn() {
-    emit directorySelected("/");
 }
 
 void FolderView::setDirectoryPath(QString path) {
