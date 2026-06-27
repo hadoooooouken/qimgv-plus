@@ -3881,6 +3881,9 @@ void SettingsDialog::retranslateUi() {
         fullscreenCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Open in fullscreen", nullptr));
         startInFolderViewCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Start in folder view by default", nullptr));
         standbyCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Enable standby mode on close", nullptr));
+#if QT_CONFIG(tooltip)
+        standbyCheckBox->setToolTip(QCoreApplication::translate("SettingsDialog", "Keeps the application running in the background when closed. Subsequent launches will be instant.", nullptr));
+#endif // QT_CONFIG(tooltip)
         label_15->setText(QCoreApplication::translate("SettingsDialog", "User interface", nullptr));
         showExtendedInfoTitle->setText(QCoreApplication::translate("SettingsDialog", "Image info in window title", nullptr));
         showInfoBarFullscreen->setText(QCoreApplication::translate("SettingsDialog", "Fullscreen info bar", nullptr));

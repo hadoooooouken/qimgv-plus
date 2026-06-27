@@ -16,6 +16,8 @@
         <file>res/icons/common/buttons/contextmenu/zoom-out18@2x.png</file>
         <file>res/icons/common/buttons/panel/close16.png</file>
         <file>res/icons/common/buttons/panel/close16@2x.png</file>
+        <file>res/icons/common/buttons/panel/quit16.png</file>
+        <file>res/icons/common/buttons/panel/quit16@2x.png</file>
         <file>res/icons/common/buttons/panel/folderview20.png</file>
         <file>res/icons/common/buttons/panel/folderview20@2x.png</file>
         <file>res/icons/common/buttons/panel/open20.png</file>

@@ -122,7 +122,6 @@ private slots:
     void onLoadFailed(const QString &path);
     void rotateLeft();
     void rotateRight();
-    void close();
     void scalingRequest(QSize, ScalingFilter);
     void onScalingFinished(QImage scaled, ScalerRequest req);
     void copyCurrentFile(QString destDirectory);

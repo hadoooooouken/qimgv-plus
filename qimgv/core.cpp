@@ -23,6 +23,7 @@
 
 #include <tchar.h>
 #include <windows.h>
+#include <psapi.h>
 
 #include "utils/colormanager.h"
 #include <QGuiApplication>
@@ -584,8 +585,6 @@ bool Core::loadFileList(const QList<QString> &filePaths, QString activePath) {
 void Core::rotateLeft() { rotateByDegrees(-90); }
 
 void Core::rotateRight() { rotateByDegrees(90); }
-
-void Core::close() { forceExit(); }
 
 void Core::removePermanent() {
   auto paths = currentSelection();
@@ -2331,11 +2330,11 @@ void Core::updateInfoString() {
 void Core::suspendToStandby() {
     stopSlideshow();
     preloadTimer.stop();
-    this->reset(); 
     mw->closeImage();
+    this->reset(); 
     mw->setDirectoryPath("");
     mw->hide();
-    SetProcessWorkingSetSize(GetCurrentProcess(), (SIZE_T)-1, (SIZE_T)-1);
+    EmptyWorkingSet(GetCurrentProcess());
 }
 
 bool Core::hasActiveState() const {
@@ -2345,7 +2344,7 @@ bool Core::hasActiveState() const {
 void Core::loadDefaultPath() {
     if (settings->defaultViewMode() == MODE_FOLDERVIEW) {
         QStringList bookmarks = settings->bookmarks();
-        if (!bookmarks.isEmpty()) {
+        if (!bookmarks.isEmpty() && QFileInfo(bookmarks.first()).exists()) {
             loadPath(bookmarks.first());
         } else {
             loadPath(QDir::homePath());
