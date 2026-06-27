@@ -97,7 +97,6 @@ Core::Core()
 
 Core::~Core() {
   delete translator;
-  delete mw;
 
   QString instanceTempDir = settings->tmpDir() + "temp_" + QString::number(QCoreApplication::applicationPid()) + "/";
   QDir(instanceTempDir).removeRecursively();
