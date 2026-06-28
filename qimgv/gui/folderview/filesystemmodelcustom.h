@@ -4,6 +4,8 @@
 #include <QApplication>
 #include <QFileSystemModel>
 #include <QPainter>
+#include <QHash>
+#include <QString>
 #include "utils/imagelib.h"
 
 class FileSystemModelCustom : public QFileSystemModel
@@ -12,11 +14,13 @@ public:
     FileSystemModelCustom(QObject *parent = nullptr);
     ~FileSystemModelCustom() override;
     QVariant data(const QModelIndex &index, int role) const override;
+    bool hasChildren(const QModelIndex &parent = QModelIndex()) const override;
 
 protected:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 private:
     QPixmap folderIcon;
+    mutable QHash<QString, bool> hasSubfoldersCache;
 };
 
 #endif // FILESYSTEMMODELCUSTOM_H

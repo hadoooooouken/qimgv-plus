@@ -1,5 +1,6 @@
 #include "filesystemmodelcustom.h"
 #include "settings.h"
+#include <QDirIterator>
 
 FileSystemModelCustom::FileSystemModelCustom(QObject *parent) : QFileSystemModel(parent) {
     qreal dpr = qApp->devicePixelRatio();
@@ -11,6 +12,23 @@ FileSystemModelCustom::FileSystemModelCustom(QObject *parent) : QFileSystemModel
 
     connect(settings, &Settings::settingsChanged, this, [this]() {
         ImageLib::recolor(this->folderIcon, settings->colorScheme().icons);
+    });
+
+    connect(this, &QAbstractItemModel::rowsInserted, this, [this](const QModelIndex &parent, int first, int last) {
+        if (parent.isValid()) {
+            hasSubfoldersCache.remove(filePath(parent));
+        }
+    });
+    connect(this, &QAbstractItemModel::rowsRemoved, this, [this](const QModelIndex &parent, int first, int last) {
+        if (parent.isValid()) {
+            hasSubfoldersCache.remove(filePath(parent));
+        }
+    });
+    connect(this, &QAbstractItemModel::modelReset, this, [this]() {
+        hasSubfoldersCache.clear();
+    });
+    connect(this, &QAbstractItemModel::layoutChanged, this, [this]() {
+        hasSubfoldersCache.clear();
     });
 }
 
@@ -30,4 +48,41 @@ Qt::ItemFlags FileSystemModelCustom::flags(const QModelIndex& index) const {
         //return Qt::ItemIsDropEnabled;    // Allow drops in the top-level (no parent)
     }
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled;
+}
+
+bool FileSystemModelCustom::hasChildren(const QModelIndex &parent) const {
+    if (parent.column() > 0) {
+        return false;
+    }
+    if (!parent.isValid()) {
+        return true;
+    }
+    if (!isDir(parent)) {
+        return false;
+    }
+
+    QString path = filePath(parent);
+
+    auto it = hasSubfoldersCache.constFind(path);
+    if (it != hasSubfoldersCache.constEnd()) {
+        return it.value();
+    }
+
+    if (!canFetchMore(parent)) {
+        bool hasSub = rowCount(parent) > 0;
+        hasSubfoldersCache.insert(path, hasSub);
+        return hasSub;
+    }
+
+    QDir::Filters filters = filter();
+    if (!(filters & QDir::Dirs)) {
+        filters |= QDir::Dirs;
+    }
+    filters |= QDir::NoDotAndDotDot;
+    filters &= ~QDir::Files;
+
+    QDirIterator dirIt(path, filters);
+    bool hasSub = dirIt.hasNext();
+    hasSubfoldersCache.insert(path, hasSub);
+    return hasSub;
 }
