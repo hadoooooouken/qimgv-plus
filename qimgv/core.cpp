@@ -134,24 +134,39 @@ void Core::showGui() {
 }
 
 void Core::raiseWindow() {
-  if (mw) {
-    mw->showDefault();
-    HWND hwnd = (HWND)mw->winId();
-    if (IsIconic(hwnd)) {
-      ShowWindow(hwnd, SW_RESTORE);
-    }
+  if (!mw) return;
 
-    // Classic topmost-toggle trick to force window activation and bypass focus
-    // prevention
-    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-    SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0,
-                 SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
-
-    SetForegroundWindow(hwnd);
-    SetActiveWindow(hwnd);
-    mw->raise();
-    mw->activateWindow();
+  if (m_resumeFromStandby) {
+      m_resumeFromStandby = false;
+      if (m_lastViewMode == MODE_FOLDERVIEW) {
+          mw->enableFolderView();
+      } else {
+          mw->enableDocumentView();
+      }
+      if (m_lastViewMode == MODE_DOCUMENT && !m_lastFilePath.isEmpty()) {
+          loadPath(m_lastFilePath);
+      }
   }
+
+  mw->setUpdatesEnabled(false);
+  mw->showDefault();
+  QApplication::processEvents();
+  mw->setUpdatesEnabled(true);
+  mw->repaint();
+
+  HWND hwnd = (HWND)mw->winId();
+  if (IsIconic(hwnd)) {
+    ShowWindow(hwnd, SW_RESTORE);
+  }
+
+  SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+  SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0,
+               SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
+
+  SetForegroundWindow(hwnd);
+  SetActiveWindow(hwnd);
+  mw->raise();
+  mw->activateWindow();
 }
 
 // create MainWindow and all widgets
@@ -2334,6 +2349,8 @@ void Core::updateInfoString() {
 }
 
 void Core::suspendToStandby() {
+    m_resumeFromStandby = true;
+    m_lastViewMode = mw->currentViewMode();
     stopSlideshow();
     preloadTimer.stop();
     mw->closeImage();

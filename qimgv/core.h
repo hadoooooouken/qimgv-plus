@@ -203,6 +203,9 @@ private slots:
 private:
     QStringList backHistory, forwardHistory;
     bool blockHistory = false;
+    ViewMode m_lastViewMode = MODE_DOCUMENT;
+    QString m_lastFilePath;
+    bool m_resumeFromStandby = false;
     bool lastCMEnabled = false;
     QString lastCMType = "";
     QString lastCMPath = "";
