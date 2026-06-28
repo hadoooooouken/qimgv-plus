@@ -418,7 +418,7 @@ void ImageViewerV2::showImage(std::shared_ptr<const QImage> _image,
     bool isRotationOrMirror = (isSameFile && oldSize.isValid() &&
                                (oldSize.width() * oldSize.height() ==
                                 newSize.width() * newSize.height()));
-
+                                
     float prevScale = currentScale();
     ImageFitMode prevFitMode = imageFitMode;
     QPointF relativePos(0.5, 0.5);
@@ -1243,6 +1243,7 @@ void ImageViewerV2::resizeEvent(QResizeEvent *event) {
       centerIfNecessary();
       snapToEdges();
     } else {
+      scrollBarWorkaround = true;
       applyFitMode();
     }
     update();
