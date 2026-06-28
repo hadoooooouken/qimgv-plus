@@ -79,6 +79,16 @@ FolderView::FolderView(QWidget *parent) :
     header->hideSection(3); // mod date
 
     dirModel->setRootPath("");
+    connect(dirModel, &QFileSystemModel::directoryLoaded,
+        this, [this](const QString &path) {
+            if (path == m_pendingScrollPath) {
+                QModelIndex current = dirTreeView->currentIndex();
+                if (current.isValid() && dirModel->filePath(current) == path) {
+                    dirTreeView->scrollTo(current, QAbstractItemView::PositionAtCenter);
+                }
+                m_pendingScrollPath.clear();
+            }
+        });
     // -------------------------------
     upButton->setAction("goUp");
     upButton->setIconPath(":/res/icons/common/buttons/panel/up16.png");
@@ -607,14 +617,12 @@ void FolderView::setDirectoryPath(QString path) {
     if(keepExpand)
         dirTreeView->expand(targetIndex);
 
-    // ok, i'm done with this shit. none of the "solutions" work
-    // just do scrollTo after a delay and hope that model is loaded by then
-    // larger than ~150ms becomes too noticeable
-    QTimer::singleShot(150, this, &FolderView::fsTreeScrollToCurrent);
-}
-
-void FolderView::fsTreeScrollToCurrent() {
-    dirTreeView->scrollTo(dirTreeView->currentIndex());
+    if (!dirModel->canFetchMore(targetIndex)) {
+        dirTreeView->scrollTo(targetIndex, QAbstractItemView::PositionAtCenter);
+        m_pendingScrollPath.clear();
+    } else {
+        m_pendingScrollPath = path;
+    }
 }
 
 void FolderView::onTreeViewClicked(QModelIndex index) {

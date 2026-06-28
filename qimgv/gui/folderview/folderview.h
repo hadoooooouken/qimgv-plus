@@ -95,7 +95,6 @@ private slots:
     void onPlacesPanelButtonChecked(bool mode);
     void onBookmarkClicked(QString dirPath);
     void newBookmark();
-    void fsTreeScrollToCurrent();
 
     void onSplitterMoved();
     void onHomeBtn();
@@ -105,7 +104,7 @@ private slots:
 
 private:
     void setupUi();
-
+    QString m_pendingScrollPath;
     int lastThumbnailResolution = 256;
     int dirCount = 0;
     FileSystemModelCustom *dirModel;
