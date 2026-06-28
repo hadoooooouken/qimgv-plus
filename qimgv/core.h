@@ -47,7 +47,7 @@ public:
 public slots:
     void updateInfoString();
     bool loadPath(QString);
-    void raiseWindow();
+    void raiseWindow(const QString &pathReceived = QString());
     void suspendToStandby();
     void forceExit();
 

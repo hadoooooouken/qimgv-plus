@@ -211,12 +211,7 @@ int main(int argc, char *argv[]) {
                                  QDataStream in(clientSocket);
                                  QString pathReceived;
                                  in >> pathReceived;
-                                 core.raiseWindow();
-                                 if (!pathReceived.isEmpty()) {
-                                   core.loadPath(pathReceived);
-                                 } else if (!core.hasActiveState()) {
-                                   core.loadDefaultPath();
-                                 }
+                                 core.raiseWindow(pathReceived);
                                });
             });
         server->listen(serverName);

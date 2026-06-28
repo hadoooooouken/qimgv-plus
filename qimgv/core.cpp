@@ -131,18 +131,30 @@ void Core::showGui() {
         mw->showDefault();
 }
 
-void Core::raiseWindow() {
+void Core::raiseWindow(const QString &pathReceived) {
   if (!mw) return;
 
   if (m_resumeFromStandby) {
       m_resumeFromStandby = false;
-      if (m_lastViewMode == MODE_FOLDERVIEW) {
-          mw->enableFolderView();
+      if (!pathReceived.isEmpty()) {
+          loadPath(pathReceived);
+      } else if (!hasActiveState()) {
+          loadDefaultPath();
       } else {
-          mw->enableDocumentView();
+          if (m_lastViewMode == MODE_FOLDERVIEW) {
+              mw->enableFolderView();
+          } else {
+              mw->enableDocumentView();
+          }
+          if (m_lastViewMode == MODE_DOCUMENT && !m_lastFilePath.isEmpty()) {
+              loadPath(m_lastFilePath);
+          }
       }
-      if (m_lastViewMode == MODE_DOCUMENT && !m_lastFilePath.isEmpty()) {
-          loadPath(m_lastFilePath);
+  } else {
+      if (!pathReceived.isEmpty()) {
+          loadPath(pathReceived);
+      } else if (!hasActiveState()) {
+          loadDefaultPath();
       }
   }
 
