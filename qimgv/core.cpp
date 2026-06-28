@@ -134,6 +134,8 @@ void Core::showGui() {
 void Core::raiseWindow(const QString &pathReceived) {
   if (!mw) return;
 
+  bool resumed = m_resumeFromStandby;
+
   if (m_resumeFromStandby) {
       m_resumeFromStandby = false;
       if (!pathReceived.isEmpty()) {
@@ -158,11 +160,13 @@ void Core::raiseWindow(const QString &pathReceived) {
       }
   }
 
-  mw->setUpdatesEnabled(false);
   mw->showDefault();
   QApplication::processEvents();
-  mw->setUpdatesEnabled(true);
-  mw->repaint();
+
+  if (resumed && mw->isMaximized()) {
+      mw->setWindowState(Qt::WindowNoState);
+      mw->setWindowState(Qt::WindowMaximized);
+  }
 
   HWND hwnd = (HWND)mw->winId();
   if (IsIconic(hwnd)) {
@@ -2366,11 +2370,6 @@ void Core::suspendToStandby() {
     mw->closeImage();
     this->reset();
     mw->setDirectoryPath("");
-
-    if (mw->isMaximized()) {
-        mw->showNormal();
-        qApp->processEvents();
-    }
 
     mw->saveWindowGeometry();
     mw->hide();
