@@ -127,10 +127,8 @@ void Core::readSettings() {
 }
 
 void Core::showGui() {
-  if (mw && !mw->isVisible())
-    mw->showDefault();
-  qApp->processEvents();
-  QTimer::singleShot(50, mw, SLOT(setupFullUi()));
+    if (mw && !mw->isVisible())
+        mw->showDefault();
 }
 
 void Core::raiseWindow() {

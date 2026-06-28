@@ -1200,3 +1200,13 @@ void MW::leaveEvent(QEvent *event) {
 //}
 
 void MW::togglePanorama() { viewerWidget->togglePanorama(); }
+
+void MW::showEvent(QShowEvent *event) {
+    FloatingWidgetContainer::showEvent(event);
+    if (m_uiSetupDone)
+        return;
+    m_uiSetupDone = true;
+    QMetaObject::invokeMethod(
+        this, &MW::setupFullUi, Qt::QueuedConnection
+    );
+}

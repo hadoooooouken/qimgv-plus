@@ -11,8 +11,6 @@
 #include <QWindow>
 
 
-
-
 #include "components/actionmanager/actionmanager.h"
 #include "gui/centralwidget.h"
 #include "gui/customwidgets/floatingwidgetcontainer.h"
@@ -100,7 +98,6 @@ private:
   QHBoxLayout layout;
   QTimer windowGeometryChangeTimer;
   int currentDisplay;
-
   bool m_pseudoFullscreen;
   bool cropPanelActive, showInfoBarFullscreen, maximized;
   std::shared_ptr<DocumentWidget> docWidget;
@@ -111,31 +108,24 @@ private:
   CropPanel *cropPanel;
   CropOverlay *cropOverlay;
   SaveConfirmOverlay *saveOverlay;
-
   CopyOverlay *copyOverlay;
-
   RenameOverlay *renameOverlay;
   ColorAdjustmentsOverlayProxy *colorAdjustmentsOverlay = nullptr;
   CasSettingsOverlay *casSettingsOverlay = nullptr;
-
   ImageInfoOverlayProxy *imageInfoOverlay;
-
   ControlsOverlay *controlsOverlay;
   FullscreenInfoOverlayProxy *infoBarFullscreen;
   FloatingMessageProxy *floatingMessage;
   FloatingMessageProxy *floatingMessageFolderView;
-
   PanelPosition panelPosition;
   CurrentInfo info;
   int lastScalePercent = -1;
-
+  bool m_uiSetupDone = false;
 
   void saveCurrentDisplay();
   void setupUi();
   FloatingMessageProxy *activeFloatingMessage();
-
   void mouseDoubleClickEvent(QMouseEvent *event);
-
   void setupCropPanel();
   void setupCopyOverlay();
   void setupSaveOverlay();
@@ -160,12 +150,12 @@ protected:
   void dragEnterEvent(QDragEnterEvent *e);
   void dropEvent(QDropEvent *event);
   void resizeEvent(QResizeEvent *event);
-
   void mousePressEvent(QMouseEvent *event);
   void keyPressEvent(QKeyEvent *event);
   void wheelEvent(QWheelEvent *event);
   void mouseReleaseEvent(QMouseEvent *event);
   void leaveEvent(QEvent *event);
+  void showEvent(QShowEvent *event) override;
 
   // bool focusNextPrevChild(bool);
 signals:
