@@ -26,7 +26,7 @@ public:
     qreal dpr;
     BatchConvertButton(const QString& text, QWidget* parent = nullptr) : QPushButton(text, parent) {
         dpr = this->devicePixelRatioF();
-        QString path = ":/res/icons/common/buttons/panel/settings16.png";
+        QString path = ":/res/icons/common/menuitem/appearance16.png";
         if (dpr >= 1.001) {
             path.replace(".", "@2x.");
             iconPixmap.load(path);
@@ -39,7 +39,7 @@ public:
         setStyleSheet("text-align: left; padding-left: 8px; padding-right: 38px;");
         
         connect(settings, &Settings::settingsChanged, this, [this]() {
-            QString path = ":/res/icons/common/buttons/panel/settings16.png";
+            QString path = ":/res/icons/common/menuitem/appearance16.png";
             if (this->dpr >= 1.001) path.replace(".", "@2x.");
             this->iconPixmap.load(path);
             if (this->dpr >= 1.001) this->iconPixmap.setDevicePixelRatio(this->dpr >= 1.999 ? this->dpr : 2.0);

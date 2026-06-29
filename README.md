@@ -168,7 +168,7 @@ qimgv-plus integrates **[upscayl-ncnn](https://github.com/upscayl/upscayl-ncnn) 
 
 Multi-threaded background queue processor:
 
-- **Interactive Selection**: Includes filename, thumbnail, original format, and size info with checkboxes to filter the queue. Access this by selecting multiple files in Folder View and clicking **Batch convert ⇄**.
+- **Interactive Selection**: Includes filename, thumbnail, original format, and size info with checkboxes to filter the queue. Access this by selecting multiple files in Folder View and clicking **Batch convert**.
 - **Output Options**: Target path selection, filename pattern templates (e.g., `{name}`), optional timestamped subdirectories (`Batch_YYYY-MM-DD_HH-MM-SS`), and file overwrite settings.
 - **Formats**: Converts to **JPEG**, **PNG** (with 0-9 compression level slider), **WebP**, **JPEG-XL (JXL)**, **AVIF**, **BMP**, **TIFF**, and **QOI** with custom quality sliders.
 - **Resizing**: Scaling by percentage or custom resolution, presets, aspect ratio lock, and quick enforcers ("Fit Desktop" / "Fill Desktop").

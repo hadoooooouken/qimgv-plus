@@ -477,7 +477,7 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
             QTimer::singleShot(0, this, [this]() { emit openSelectedRequested(); });
         });
 
-        ContextMenuItem *itemBatch = addCustomAction(tr("Batch convert"), ":/res/icons/common/menuitem/settings16.png");
+        ContextMenuItem *itemBatch = addCustomAction(tr("Batch convert"), ":/res/icons/common/menuitem/appearance16.png");
         itemBatch->setEnabled(hasSelection);
         connect(itemBatch, &ContextMenuItem::pressed, this, [this, &menu]() {
             menu.close();
