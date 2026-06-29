@@ -50,7 +50,6 @@ public slots:
     void onFullscreenModeChanged(bool mode);
     void onSortingChanged(SortingMode mode);
     void onFolderSortingChanged(SortingMode mode);
-    void setWatchingEnabled(bool enabled);
 
 
 protected:

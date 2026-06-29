@@ -188,12 +188,6 @@ void FolderViewProxy::onFolderSortingChanged(SortingMode mode) {
     }
 }
 
-void FolderViewProxy::setWatchingEnabled(bool enabled) {
-    if(folderView) {
-        folderView->setWatchingEnabled(enabled);
-    }
-}
-
 FloatingWidgetContainer *FolderViewProxy::getWidgetContainer() {
     return folderView.get();
 }
