@@ -530,7 +530,8 @@ void BatchConverterDialog::setupBottomPanel(QVBoxLayout *mainLayout) {
 
 // ==================== BatchConverterDialog ====================
 
-BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWidget *parent)
+BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWidget *parent,
+                                             const QString &defaultOutputDir)
     : QDialog(parent), inputPaths(filePaths) {
     setupUi();
     setWindowModality(Qt::ApplicationModal);
@@ -614,8 +615,19 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     totalFiles = filePaths.size();
     updateSelectedCount();
 
-    if (!filePaths.isEmpty())
-        outDirEdit->setText(QFileInfo(filePaths[0]).absolutePath());
+    QString initialOutputDir;
+    if (!defaultOutputDir.isEmpty()) {
+        QFileInfo defaultDirInfo(defaultOutputDir);
+        if (defaultDirInfo.exists() && defaultDirInfo.isDir()) {
+            initialOutputDir = defaultDirInfo.absoluteFilePath();
+        }
+    }
+    if (initialOutputDir.isEmpty() && !filePaths.isEmpty()) {
+        initialOutputDir = QFileInfo(filePaths[0]).absolutePath();
+    }
+    if (!initialOutputDir.isEmpty()) {
+        outDirEdit->setText(initialOutputDir);
+    }
 
     filterComboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
     filterComboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);

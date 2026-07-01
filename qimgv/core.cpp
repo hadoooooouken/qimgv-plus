@@ -1337,16 +1337,12 @@ void Core::showResizeDialog() {
 }
 
 void Core::showBatchConverter() {
-  QList<QString> selected = folderViewPresenter.selectedPaths();
-  QList<QString> filePaths;
-  for (const QString &path : selected) {
-    if (QFileInfo(path).isFile()) {
-      filePaths.append(path);
-    }
-  }
+  QList<QString> filePaths = folderViewPresenter.expandedSelectedPaths();
+  QString defaultOutputDir = folderViewPresenter.firstSelectedDirectoryPath();
+
   if (!filePaths.isEmpty()) {
     QString currentDirPath = model->directoryPath();
-    BatchConverterDialog dialog(filePaths, mw);
+    BatchConverterDialog dialog(filePaths, mw, defaultOutputDir);
     dialog.exec();
     if (dialog.conversionWasStarted() && !currentDirPath.isEmpty()) {
       model->setDirectory(currentDirPath);

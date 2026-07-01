@@ -87,7 +87,8 @@ class BatchConverterDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit BatchConverterDialog(const QList<QString> &filePaths, QWidget *parent = nullptr);
+    explicit BatchConverterDialog(const QList<QString> &filePaths, QWidget *parent = nullptr,
+                                  const QString &defaultOutputDir = QString());
     ~BatchConverterDialog();
     bool conversionWasStarted() const { return m_conversionStarted; }
 

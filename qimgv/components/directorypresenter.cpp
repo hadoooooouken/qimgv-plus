@@ -2,6 +2,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QDirIterator>
+#include <QFileInfo>
 #include <QSet>
 #include <QRegularExpression>
 #include "settings.h"
@@ -368,27 +369,41 @@ QList<QString> DirectoryPresenter::expandedSelectedPaths() const {
   QSet<QString> visited;
   QRegularExpression regex(settings->supportedFormatsRegex(), QRegularExpression::CaseInsensitiveOption);
 
-  for (const QString& path : selectedPaths()) {
-      if (model->containsFile(path)) {
-          if (!visited.contains(path)) {
-              visited.insert(path);
-              filePaths << path;
-          }
-      } else if (model->containsDir(path)) {
-          QDirIterator it(path, QDir::Files, QDirIterator::Subdirectories);
-          while (it.hasNext()) {
-              QString filePath = QDir::fromNativeSeparators(it.next());
-              QString fileName = it.fileName();
-              if (regex.match(fileName).hasMatch()) {
-                  if (!visited.contains(filePath)) {
-                      visited.insert(filePath);
-                      filePaths << filePath;
-                  }
-              }
-          }
+  for (const QString &path : selectedPaths()) {
+    if (model->containsFile(path)) {
+      if (!visited.contains(path)) {
+        visited.insert(path);
+        filePaths << path;
       }
+    } else if (model->containsDir(path)) {
+      QDirIterator it(path, QDir::Files, QDirIterator::Subdirectories);
+      while (it.hasNext()) {
+        QString filePath = QDir::fromNativeSeparators(it.next());
+        QString fileName = it.fileName();
+        if (regex.match(fileName).hasMatch()) {
+          if (!visited.contains(filePath)) {
+            visited.insert(filePath);
+            filePaths << filePath;
+          }
+        }
+      }
+    }
   }
   return filePaths;
+}
+
+QString DirectoryPresenter::firstSelectedDirectoryPath() const {
+  if (!model)
+    return {};
+
+  for (const QString &path : selectedPaths()) {
+    QFileInfo info(path);
+    if (info.isDir()) {
+      return info.absoluteFilePath();
+    }
+  }
+
+  return {};
 }
 
 void DirectoryPresenter::onDraggedOut() { emit draggedOut(selectedPaths()); }
