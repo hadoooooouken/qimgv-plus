@@ -1,6 +1,6 @@
 # qimgv-plus
 
-[![Version](https://img.shields.io/github/v/tag/hadoooooouken/qimgv-plus?color=blue&label=Version)](https://github.com/hadoooooouken/qimgv-plus/releases/latest) ![Platform](https://img.shields.io/badge/Platform-Windows-0078D4?logo=windows&logoColor=white) ![C++](https://img.shields.io/badge/C%2B%2B-26-00599C?logo=c%2B%2B&logoColor=white) ![Qt](https://img.shields.io/badge/Qt-6.11-41CD52?logo=qt&logoColor=white) ![CPU](https://img.shields.io/badge/CPU-AVX2-orange) ![GPU](https://img.shields.io/badge/GPU-OpenGL-0696D7?logo=opengl&logoColor=white) ![AI Upscaling](https://img.shields.io/badge/AI_Upscaling-Upscayl%20(Vulkan)-8A2BE2)
+[![Version](https://img.shields.io/github/v/tag/hadoooooouken/qimgv-plus?color=blue&label=Version&include_v=false)](https://github.com/hadoooooouken/qimgv-plus/releases/latest) ![Platform](https://img.shields.io/badge/Platform-Windows-0078D4?logo=windows&logoColor=white) ![C++](https://img.shields.io/badge/C%2B%2B-26-00599C?logo=c%2B%2B&logoColor=white) ![Qt](https://img.shields.io/badge/Qt-6.11-41CD52?logo=qt&logoColor=white) ![CPU](https://img.shields.io/badge/CPU-AVX2-orange) ![GPU](https://img.shields.io/badge/GPU-OpenGL-0696D7?logo=opengl&logoColor=white) ![AI Upscaling](https://img.shields.io/badge/AI_Upscaling-Upscayl%20(Vulkan)-8A2BE2)
 
 A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image viewer, featuring high-quality GPU-accelerated scaling (FidelityFX CAS) and native support for modern image formats.
 
