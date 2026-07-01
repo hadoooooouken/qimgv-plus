@@ -531,6 +531,14 @@ void FolderView::onFolderSortingChanged(SortingMode mode) {
     folderSortingComboBox->blockSignals(false);
 }
 
+void FolderView::refreshFilesystemModel(const QString &path) {
+    if (!dirModel)
+        return;
+
+    dirModel->refreshPath(path);
+    dirTreeView->viewport()->update();
+}
+
 FolderView::~FolderView() {
     dirTreeView->setModel(nullptr);
 }

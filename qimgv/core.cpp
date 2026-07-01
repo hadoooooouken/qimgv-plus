@@ -664,9 +664,12 @@ void Core::removePermanent() {
   }
   if (paths.count() == 1) {
     if (result == FileOpResult::SUCCESS) {
-      if (dirCount > 0)
+      if (dirCount > 0) {
+        auto folderView = mw->getFolderView();
+        if (folderView)
+          folderView->refreshFilesystemModel(QFileInfo(paths.first()).absolutePath());
         mw->showMessageSuccess(tr("Folder removed"));
-      else
+      } else
         mw->showMessageSuccess(tr("File removed"));
     } else {
       outputError(result);
@@ -732,9 +735,12 @@ void Core::moveToTrash() {
   }
   if (paths.count() == 1) {
     if (result == FileOpResult::SUCCESS) {
-      if (dirCount > 0)
+      if (dirCount > 0) {
+        auto folderView = mw->getFolderView();
+        if (folderView)
+          folderView->refreshFilesystemModel(QFileInfo(paths.first()).absolutePath());
         mw->showMessageSuccess(tr("Folder moved to trash"));
-      else
+      } else
         mw->showMessageSuccess(tr("Moved to trash"));
     } else {
       outputError(result);
@@ -1096,6 +1102,9 @@ void Core::createDirectory() {
   if (currentDir.mkdir(newFolderName)) {
     QString newDirPath = currentDir.absoluteFilePath(newFolderName);
     model->insertDir(newDirPath);
+    auto folderView = mw->getFolderView();
+    if (folderView)
+      folderView->refreshFilesystemModel(currentDirPath);
   } else {
     mw->showError(tr("Failed to create folder"));
   }

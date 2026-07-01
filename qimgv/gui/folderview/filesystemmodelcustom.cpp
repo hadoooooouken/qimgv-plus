@@ -50,6 +50,26 @@ Qt::ItemFlags FileSystemModelCustom::flags(const QModelIndex& index) const {
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDropEnabled;
 }
 
+void FileSystemModelCustom::refreshPath(const QString &path) {
+    hasSubfoldersCache.clear();
+
+    if (!path.isEmpty()) {
+        QModelIndex targetIndex = index(path);
+        if (targetIndex.isValid()) {
+            QString rootPath = filePath(targetIndex);
+            if (!rootPath.isEmpty()) {
+                setRootPath(rootPath);
+                setRootPath("");
+                setRootPath(rootPath);
+                return;
+            }
+        }
+    }
+
+    setRootPath("");
+    setRootPath("");
+}
+
 bool FileSystemModelCustom::hasChildren(const QModelIndex &parent) const {
     if (parent.column() > 0) {
         return false;

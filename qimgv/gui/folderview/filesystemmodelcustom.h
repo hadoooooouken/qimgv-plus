@@ -15,6 +15,7 @@ public:
     ~FileSystemModelCustom() override;
     QVariant data(const QModelIndex &index, int role) const override;
     bool hasChildren(const QModelIndex &parent = QModelIndex()) const override;
+    void refreshPath(const QString &path = QString());
 
 protected:
     Qt::ItemFlags flags(const QModelIndex &index) const override;

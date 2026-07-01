@@ -188,6 +188,12 @@ void FolderViewProxy::onFolderSortingChanged(SortingMode mode) {
     }
 }
 
+void FolderViewProxy::refreshFilesystemModel(const QString &path) {
+    if(folderView) {
+        folderView->refreshFilesystemModel(path);
+    }
+}
+
 FloatingWidgetContainer *FolderViewProxy::getWidgetContainer() {
     return folderView.get();
 }
