@@ -40,6 +40,6 @@ body:
     attributes:
       label: "Environment"
       description: "OS version, qimgv-plus version, etc."
-      placeholder: "e.g., Windows 11, Ubuntu 24.04, qimgv-plus v1.0.0"
+      placeholder: "e.g., Windows 11, qimgv-plus v1.0.0"
     validations:
       required: true
