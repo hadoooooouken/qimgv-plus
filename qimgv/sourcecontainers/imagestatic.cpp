@@ -26,15 +26,6 @@ void ImageStatic::load() {
 }
 
 void ImageStatic::loadGeneric() {
-  /* QImageReader::read() seems more reliable than just reading via QImage.
-   * For example: "Invalid JPEG file structure: two SOF markers"
-   * QImageReader::read() returns false, but still reads an image. Meanwhile
-   * QImage just fails. I havent checked qimage's code, but it seems like it
-   * sees an exception from libjpeg or whatever and just gives up on reading the
-   * file.
-   *
-   * tldr: qimage bad
-   */
   QImageReader r(mPath, mDocInfo->format().toStdString().c_str());
   r.setAllocationLimit(settings->memoryAllocationLimit());
   QSize sz = r.size();
