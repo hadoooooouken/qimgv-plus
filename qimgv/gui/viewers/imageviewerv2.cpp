@@ -185,7 +185,9 @@ void ImageViewerV2::readSettings() {
   if (expandLimit < 1.0f)
     expandLimit = maxScale;
   keepFitMode = settings->keepFitMode();
-  imageFitModeDefault = settings->imageFitMode();
+  ImageFitMode newFitModeDefault = settings->imageFitMode();
+  bool defaultFitModeChanged = (imageFitModeDefault != newFitModeDefault);
+  imageFitModeDefault = newFitModeDefault;
   zoomStep = settings->zoomStep();
   focusIn1to1 = settings->focusPointIn1to1Mode();
   trackpadDetection = settings->trackpadDetection();
@@ -213,7 +215,9 @@ void ImageViewerV2::readSettings() {
       }
       requestScaling();
     } else {
-      imageFitMode = imageFitModeDefault;
+      if (defaultFitModeChanged) {
+        imageFitMode = imageFitModeDefault;
+      }
       applyFitMode();
       requestScaling();
     }
