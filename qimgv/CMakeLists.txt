@@ -115,6 +115,17 @@ if(WIN32)
         )
     endif()
 
+    # 1b. Custom qtiff.dll with JPEG compression support (overrides stock after windeployqt)
+    set(CUSTOM_QTIFF_DLL "${CMAKE_CURRENT_SOURCE_DIR}/../build_scripts/qtiff_jpeg/install/qtiff.dll")
+    if(EXISTS "${CUSTOM_QTIFF_DLL}")
+        add_custom_command(TARGET qimgv-plus POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CUSTOM_QTIFF_DLL}"
+                "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/qtiff.dll"
+            COMMENT "Deploying custom qtiff.dll with JPEG compression support..."
+        )
+    endif()
+
     # 2. Exiv2
     if(EXIV2)
         add_custom_command(TARGET qimgv-plus POST_BUILD
