@@ -232,6 +232,22 @@ bool DocumentInfo::detectAnimatedAvif() {
 void DocumentInfo::loadExifTags() {
     if (exifLoaded)
         return;
+
+    // Formats supported by the application but either completely unknown 
+    // to Exiv2 or having zero metadata support. Bypassing them avoids 
+    // first-chance exceptions during debugging sessions.
+    static const QStringList unsupportedByExiv2 = {
+        "gif", "bmp", "svg", "hdr", "exr", "pdf", 
+        "tga", "kra", "ora", "jxr", "qoi", "dds",
+        "ai"
+    };
+
+    // Skip Exiv2 processing for unsupported image and document types
+    if (unsupportedByExiv2.contains(mFormat)) {
+        exifLoaded = true;
+        return;
+    }
+
     exifLoaded = true;
     exifTags.clear();
 
