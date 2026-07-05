@@ -28,6 +28,9 @@ public:
     bool discardEditedImage();
     void commitEdits();
 
+    static QHash<QString,int> pageOverride;
+    int frameCount() const override;
+
 public slots:
     void crop(QRect newRect);
 
@@ -39,4 +42,5 @@ private:
     mutable std::shared_ptr<const QImage> imageColorManagedEdited;
     void loadGeneric();
     void loadICO();
+    int mPageCount = 1;
 };

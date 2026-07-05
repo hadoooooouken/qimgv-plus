@@ -369,6 +369,8 @@ void Core::initActions() {
   connect(actionManager, &ActionManager::flipV, this, &Core::flipV);
   connect(actionManager, &ActionManager::rotateLeft, this, &Core::rotateLeft);
   connect(actionManager, &ActionManager::rotateRight, this, &Core::rotateRight);
+  connect(actionManager, &ActionManager::nextPage, this, &Core::nextPage);
+  connect(actionManager, &ActionManager::prevPage, this, &Core::prevPage);
   connect(actionManager, &ActionManager::openSettings, mw, &MW::showSettings);
   connect(actionManager, &ActionManager::crop, this, &Core::toggleCropPanel);
   connect(actionManager, &ActionManager::setWallpaper, this,
@@ -613,6 +615,31 @@ bool Core::loadFileList(const QList<QString> &filePaths, QString activePath) {
 void Core::rotateLeft() { rotateByDegrees(-90); }
 
 void Core::rotateRight() { rotateByDegrees(90); }
+
+void Core::nextPage() {
+  if (!state.hasActiveImage || !state.currentImg)
+    return;
+  int count = state.currentImg->frameCount();
+  if (count <= 1)
+    return;
+  QString path = state.currentFilePath;
+  int cur = ImageStatic::pageOverride.value(path, 0);
+  if (cur + 1 >= count)
+    return;
+  ImageStatic::pageOverride[path] = cur + 1;
+  model->reload(path);
+}
+
+void Core::prevPage() {
+  if (!state.hasActiveImage || !state.currentImg)
+    return;
+  QString path = state.currentFilePath;
+  int cur = ImageStatic::pageOverride.value(path, 0);
+  if (cur <= 0)
+    return;
+  ImageStatic::pageOverride[path] = cur - 1;
+  model->reload(path);
+}
 
 void Core::removePermanent() {
   auto paths = currentSelection();

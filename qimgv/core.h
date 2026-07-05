@@ -122,6 +122,8 @@ private slots:
     void onLoadFailed(const QString &path);
     void rotateLeft();
     void rotateRight();
+    void nextPage();
+    void prevPage();
     void scalingRequest(QSize, ScalingFilter);
     void onScalingFinished(QImage scaled, ScalerRequest req);
     void copyCurrentFile(QString destDirectory);

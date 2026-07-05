@@ -78,6 +78,8 @@ signals:
     void resize();
     void rotateLeft();
     void rotateRight();
+    void nextPage();
+    void prevPage();
     void exit();
     void removeFile();
     void copyFile();

@@ -15,6 +15,12 @@ ImageStatic::ImageStatic(std::unique_ptr<DocumentInfo> _info)
 
 ImageStatic::~ImageStatic() {}
 
+QHash<QString,int> ImageStatic::pageOverride;
+
+int ImageStatic::frameCount() const {
+  return mPageCount;
+}
+
 // load image data from disk
 void ImageStatic::load() {
   if (isLoaded()) {
@@ -31,6 +37,14 @@ void ImageStatic::load() {
 void ImageStatic::loadGeneric() {
   QImageReader r(mPath, mDocInfo->format().toStdString().c_str());
   r.setAllocationLimit(settings->memoryAllocationLimit());
+
+  int count = r.imageCount();
+  mPageCount = count > 0 ? count : 1;
+
+  int page = pageOverride.value(mPath, 0);
+  if (page > 0 && page < mPageCount)
+    r.jumpToImage(page);
+
   QSize sz = r.size();
   if (sz.isValid() && sz.width() > 0 && sz.height() > 0) {
     constexpr int kMaxDimension = 16384;
@@ -89,16 +103,22 @@ void ImageStatic::loadPdf() {
     qWarning() << "ImageStatic: failed to load pdf" << mPath;
     return;
   }
-  if (doc.pageCount() < 1) {
+  int pageCount = doc.pageCount();
+  if (pageCount < 1) {
     qWarning() << "ImageStatic: pdf has no pages" << mPath;
     return;
   }
+  mPageCount = pageCount;
+
+  int page = pageOverride.value(mPath, 0);
+  if (page < 0 || page >= pageCount)
+    page = 0;
 
   constexpr qreal kDpi = 5.0 * 72.0;
-  QSizeF ptSize = doc.pagePointSize(0);
+  QSizeF ptSize = doc.pagePointSize(page);
   QSize pixelSize = (ptSize * kDpi / 72.0).toSize();
 
-  QImage rendered = doc.render(0, pixelSize);
+  QImage rendered = doc.render(page, pixelSize);
   if (rendered.isNull()) {
     qWarning() << "ImageStatic: failed to render pdf page" << mPath;
     return;
