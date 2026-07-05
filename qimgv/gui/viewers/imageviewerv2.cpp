@@ -996,6 +996,18 @@ void ImageViewerV2::keyPressEvent(QKeyEvent *event) {
     event->ignore();
     return;
   }
+  if (event->key() == Qt::Key_PageUp) {
+    int scrollDistance = viewport() ? viewport()->height() : DEFAULT_SCROLL_DISTANCE;
+    scroll(0, -scrollDistance, true);
+    event->accept();
+    return;
+  }
+  if (event->key() == Qt::Key_PageDown) {
+    int scrollDistance = viewport() ? viewport()->height() : DEFAULT_SCROLL_DISTANCE;
+    scroll(0, scrollDistance, true);
+    event->accept();
+    return;
+  }
   QGraphicsView::keyPressEvent(event);
 }
 
