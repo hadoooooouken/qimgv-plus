@@ -33,6 +33,7 @@ public slots:
 
 private:
     void load();
+    void loadPdf();
     std::shared_ptr<const QImage> image, imageEdited;
     mutable std::shared_ptr<const QImage> imageColorManaged;
     mutable std::shared_ptr<const QImage> imageColorManagedEdited;

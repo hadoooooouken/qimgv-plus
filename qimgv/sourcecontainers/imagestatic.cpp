@@ -2,6 +2,7 @@
 #include "settings.h"
 #include "utils/colormanager.h"
 #include <QPainter>
+#include <QPdfDocument>
 #include <time.h>
 
 
@@ -21,6 +22,8 @@ void ImageStatic::load() {
   }
   if (mDocInfo->mimeType().name() == "image/vnd.microsoft.icon")
     loadICO();
+  else if (mDocInfo->format() == "pdf")
+    loadPdf();
   else
     loadGeneric();
 }
@@ -30,16 +33,12 @@ void ImageStatic::loadGeneric() {
   r.setAllocationLimit(settings->memoryAllocationLimit());
   QSize sz = r.size();
   if (sz.isValid() && sz.width() > 0 && sz.height() > 0) {
-    if (mDocInfo->format() == "pdf") {
-      r.setScaledSize(sz * 5);
-    } else {
-      constexpr int kMaxDimension = 16384;
-      if (sz.width() > kMaxDimension || sz.height() > kMaxDimension) {
-        QSize scaledSize = sz;
-        scaledSize.scale(kMaxDimension, kMaxDimension, Qt::KeepAspectRatio);
-        r.setScaledSize(scaledSize);
-        qWarning() << "ImageStatic: Image size" << sz << "exceeds limit. Downscaling to" << scaledSize << "for display.";
-      }
+    constexpr int kMaxDimension = 16384;
+    if (sz.width() > kMaxDimension || sz.height() > kMaxDimension) {
+      QSize scaledSize = sz;
+      scaledSize.scale(kMaxDimension, kMaxDimension, Qt::KeepAspectRatio);
+      r.setScaledSize(scaledSize);
+      qWarning() << "ImageStatic: Image size" << sz << "exceeds limit. Downscaling to" << scaledSize << "for display.";
     }
   }
   QImage *tmp = new QImage();
@@ -48,14 +47,6 @@ void ImageStatic::loadGeneric() {
              << "Error:" << r.errorString();
     delete tmp;
     return;
-  }
-  if (mDocInfo->format() == "pdf") {
-    QImage opaqueImg(tmp->size(), QImage::Format_RGB32);
-    opaqueImg.fill(Qt::white);
-    QPainter painter(&opaqueImg);
-    painter.drawImage(0, 0, *tmp);
-    painter.end();
-    *tmp = opaqueImg;
   }
   std::unique_ptr<const QImage> img(tmp);
   img =
@@ -89,6 +80,42 @@ void ImageStatic::loadICO() {
     image = std::make_shared<const QImage>(std::move(loaded));
     imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
   }
+  mLoaded = true;
+}
+
+void ImageStatic::loadPdf() {
+  QPdfDocument doc;
+  if (doc.load(mPath) != QPdfDocument::Error::None) {
+    qWarning() << "ImageStatic: failed to load pdf" << mPath;
+    return;
+  }
+  if (doc.pageCount() < 1) {
+    qWarning() << "ImageStatic: pdf has no pages" << mPath;
+    return;
+  }
+
+  constexpr qreal kDpi = 5.0 * 72.0;
+  QSizeF ptSize = doc.pagePointSize(0);
+  QSize pixelSize = (ptSize * kDpi / 72.0).toSize();
+
+  QImage rendered = doc.render(0, pixelSize);
+  if (rendered.isNull()) {
+    qWarning() << "ImageStatic: failed to render pdf page" << mPath;
+    return;
+  }
+
+  QImage opaqueImg(rendered.size(), QImage::Format_RGB32);
+  opaqueImg.fill(Qt::white);
+  QPainter painter(&opaqueImg);
+  painter.drawImage(0, 0, rendered);
+  painter.end();
+
+  std::unique_ptr<const QImage> img(new QImage(std::move(opaqueImg)));
+  img = ImageLib::exifRotated(std::move(img), mDocInfo.get()->exifOrientation());
+  image = std::move(img);
+
+  if (image)
+    imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
   mLoaded = true;
 }
 

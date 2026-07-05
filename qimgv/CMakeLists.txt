@@ -68,6 +68,7 @@ target_link_libraries(qimgv-plus PRIVATE
     Qt6::Sql 
     Qt6::OpenGLWidgets 
     Qt6::SvgWidgets
+    Qt6::Pdf
 )
 
 # OPTION DEFINITIONS, LINKING

@@ -40,7 +40,7 @@ option(EXIV2 "For reading/writing exif tags" ON)
 
 # FIND PACKAGES
 set(QT_VERSION_MAJOR 6)
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Network Svg SvgWidgets PrintSupport OpenGLWidgets Sql)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Network Svg SvgWidgets PrintSupport OpenGLWidgets Sql Pdf)
 
 
 if(EXIV2)
