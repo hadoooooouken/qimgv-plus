@@ -7,6 +7,7 @@
 #include <QOpenGLWidget>
 #include <QPainter>
 #include <QScreen>
+#include <QCoreApplication>
 
 ImageViewerV2::ImageViewerV2(QWidget *parent)
     : QGraphicsView(parent), image(nullptr),
@@ -19,7 +20,7 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
       mViewLock(LOCK_NONE), imageFitMode(FIT_WINDOW),
       mScalingFilter(QI_FILTER_BILINEAR), imageFitModeDefault(FIT_WINDOW),
       scene(nullptr), zoomTimeLine(nullptr), zoomStartScale(1.0f),
-      zoomTargetScale(1.0f) {
+      zoomTargetScale(1.0f), mAnimationActive(false) {
   setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
   this->viewport()->setAttribute(Qt::WA_OpaquePaintEvent, false);
   setFocusPolicy(Qt::NoFocus);
@@ -246,15 +247,15 @@ void ImageViewerV2::onFullscreenModeChanged(bool mode) {
 void ImageViewerV2::startAnimation() {
   if (movie && movie->frameCount() > 1) {
     stopAnimation();
+    mAnimationActive = true;
     emit animationPaused(false);
-    // movie->jumpToFrame(0);
-    // emit frameChanged(0);
     animationTimer->start(movie->nextFrameDelay());
   }
 }
 
 void ImageViewerV2::stopAnimation() {
   if (movie) {
+    mAnimationActive = false;
     emit animationPaused(true);
     animationTimer->stop();
   }
@@ -262,7 +263,7 @@ void ImageViewerV2::stopAnimation() {
 
 void ImageViewerV2::pauseResume() {
   if (movie) {
-    if (animationTimer->isActive())
+    if (mAnimationActive)
       stopAnimation();
     else
       startAnimation();
@@ -274,12 +275,12 @@ void ImageViewerV2::enableDrags() { dragsEnabled = true; }
 void ImageViewerV2::disableDrags() { dragsEnabled = false; }
 
 void ImageViewerV2::onAnimationTimer() {
-  if (!movie)
+  if (!movie || !mAnimationActive)
     return;
   if (movie->currentFrameNumber() == movie->frameCount() - 1) {
     // last frame
     if (!loopPlayback) {
-      emit animationPaused(true);
+      stopAnimation();
       emit playbackFinished();
       return;
     } else {
@@ -292,10 +293,6 @@ void ImageViewerV2::onAnimationTimer() {
       return;
     }
   }
-  emit frameChanged(movie->currentFrameNumber());
-  QImage frameImg = movie->currentImage();
-  updateImage(std::make_shared<const QImage>(frameImg));
-  animationTimer->start(movie->nextFrameDelay());
 }
 
 void ImageViewerV2::nextFrame() {
@@ -323,10 +320,9 @@ bool ImageViewerV2::showAnimationFrame(int frame) {
     return false;
   if (movie->currentFrameNumber() == frame)
     return true;
-  // at the first glance this may seem retarded
-  // because it is
-  // unfortunately i dont see a *better* way to do seeking with QMovie
-  // QMovie::CacheAll is buggy and memory inefficient
+
+  bool blocked = movie->blockSignals(true);
+
   if (frame < movie->currentFrameNumber())
     movie->jumpToFrame(0);
   while (frame != movie->currentFrameNumber()) {
@@ -335,10 +331,46 @@ bool ImageViewerV2::showAnimationFrame(int frame) {
       break;
     }
   }
-  emit frameChanged(movie->currentFrameNumber());
-  QImage frameImg = movie->currentImage();
-  updateImage(std::make_shared<const QImage>(frameImg));
+
+  movie->blockSignals(blocked);
+
+  onMovieFrameChanged(movie->currentFrameNumber());
   return true;
+}
+
+void ImageViewerV2::onMovieFrameChanged(int frameNumber) {
+  if (!movie)
+    return;
+
+  QImage frameImg = movie->currentImage();
+  if (frameImg.isNull())
+    return;
+
+  bool isFirstFrame = (image == nullptr || image->isNull());
+
+  updateImage(std::make_shared<const QImage>(frameImg));
+  emit frameChanged(frameNumber);
+
+  if (isFirstFrame) {
+    emit durationChanged(movie->frameCount());
+
+    updateMinScale();
+    if (!keepFitMode || imageFitMode == FIT_FREE)
+      imageFitMode = imageFitModeDefault;
+
+    if (mViewLock == LOCK_NONE) {
+      applyFitMode();
+    } else {
+      imageFitMode = FIT_FREE;
+      fitFree(lockedScale);
+      if (mViewLock == LOCK_ALL)
+        applySavedViewportPos();
+    }
+  }
+
+  if (mAnimationActive && movie->frameCount() > 1) {
+    animationTimer->start(movie->nextFrameDelay());
+  }
 }
 
 void ImageViewerV2::updateImage(std::shared_ptr<const QImage> newImage) {
@@ -371,6 +403,9 @@ void ImageViewerV2::updateImage(std::shared_ptr<const QImage> newImage) {
 }
 
 void ImageViewerV2::showAnimation(const QString &filePath, const QString &format) {
+  reset();
+  QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
   auto newMovie = std::make_shared<QMovie>(filePath, format.toUtf8());
   if (newMovie && newMovie->isValid()) {
     // Update DPR just in case an event was missed or not delivered yet
@@ -380,28 +415,13 @@ void ImageViewerV2::showAnimation(const QString &filePath, const QString &format
       zoomThreshold = static_cast<int>(dpr * 4.);
       gestureThreshold = static_cast<int>(dpr * 40.);
     }
-    reset();
     movie = newMovie;
-    movie->jumpToFrame(0);
+    connect(movie.get(), &QMovie::frameChanged, this, &ImageViewerV2::onMovieFrameChanged);
+
     Qt::TransformationMode mode = selectTransformationMode();
     pixmapItem.setTransformationMode(mode);
-    QImage frameImg = movie->currentImage();
-    updateImage(std::make_shared<const QImage>(frameImg));
-    emit durationChanged(movie->frameCount());
-    emit frameChanged(0);
 
-    updateMinScale();
-    if (!keepFitMode || imageFitMode == FIT_FREE)
-      imageFitMode = imageFitModeDefault;
-
-    if (mViewLock == LOCK_NONE) {
-      applyFitMode();
-    } else {
-      imageFitMode = FIT_FREE;
-      fitFree(lockedScale);
-      if (mViewLock == LOCK_ALL)
-        applySavedViewportPos();
-    }
+    movie->jumpToFrame(0);
     startAnimation();
   }
 }
@@ -443,6 +463,7 @@ void ImageViewerV2::showImage(std::shared_ptr<const QImage> _image,
     }
 
     reset();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
     currentFilePath = filePath;
 
@@ -516,7 +537,13 @@ void ImageViewerV2::reset() {
   }
   image.reset();
   stopAnimation();
-  movie = nullptr;
+  mAnimationActive = false;
+  mSvgMode = false;
+  mPanoramaMode = false;
+  if (movie) {
+    disconnect(movie.get(), &QMovie::frameChanged, this, &ImageViewerV2::onMovieFrameChanged);
+    movie = nullptr;
+  }
   centerOn(10000, 10000);
   // when this view is not in focus this it won't update the background
   // so we force it here

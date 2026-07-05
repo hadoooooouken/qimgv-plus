@@ -161,7 +161,7 @@ private:
     QPoint mouseMoveStartPos, mousePressPos, drawPos;
     bool transparencyGrid, expandImage, keepFitMode,
          loopPlayback,     mIsFullscreen,  scrollBarWorkaround,
-         useFixedZoomLevels, trackpadDetection;
+         useFixedZoomLevels, trackpadDetection, mAnimationActive;
     QList<float> zoomLevels;
     MouseInteractionState mouseInteraction;
     const int SCROLL_UPDATE_RATE = 7;
@@ -206,6 +206,7 @@ private:
     void mouseMoveZoom(QMouseEvent *event);
     void reset();
     void applyFitMode();
+    void onMovieFrameChanged(int frameNumber);
 
     QTimeLine *scrollTimeLineX, *scrollTimeLineY;
     QTimeLine *zoomTimeLine;
