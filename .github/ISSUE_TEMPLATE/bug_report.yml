@@ -1,0 +1,45 @@
+name: "🐛 Bug Report"
+description: "Submit a bug report for qimgv-plus"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️ Important Notice
+        The Issues section of this repository is reserved **strictly for bug reports**.
+        
+        If you want to ask a question, suggest a feature, or discuss the project, please **do not** open an issue. Use [GitHub Discussions](https://github.com/hadoooooouken/qimgv-plus/discussions) instead.
+        
+        *Any issues that are not actual bug reports will be closed without review. Thank you for helping me keep the project clean!*
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Bug Description"
+      description: "A clear and concise description of what the bug is."
+      placeholder: "What went wrong?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Tell me how to make the bug happen."
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: "Environment"
+      description: "OS version, qimgv-plus version, etc."
+      placeholder: "e.g., Windows 11, qimgv-plus v1.0.0"
+    validations:
+      required: true
