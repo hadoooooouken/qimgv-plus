@@ -47,6 +47,7 @@ signals:
     void draggedOver(int) override;
     void backRequested() override;
     void forwardRequested() override;
+    void openSelectedRequested() override;
 
 private slots:
     void applyBufferedState();
