@@ -43,8 +43,8 @@ void ActionManager::initDefaults() {
   actionManager->defaults.insert("V", "flipV");
   actionManager->defaults.insert(InputMap::keyNameCtrl() + "+R", "rotateRight");
   actionManager->defaults.insert(InputMap::keyNameCtrl() + "+L", "rotateLeft");
-  actionManager->defaults.insert("Ctrl+PgDown", "nextPage");
-  actionManager->defaults.insert("Ctrl+PgUp", "prevPage");
+  actionManager->defaults.insert(",", "prevPage");
+  actionManager->defaults.insert(".", "nextPage");
   actionManager->defaults.insert(InputMap::keyNameCtrl() + "+WheelUp",
                                  "zoomInCursor");
   actionManager->defaults.insert(InputMap::keyNameCtrl() + "+WheelDown",
