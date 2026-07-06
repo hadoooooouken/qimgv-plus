@@ -20,7 +20,6 @@ WindowsWatcherPrivate::WindowsWatcherPrivate(WindowsWatcher* qq)
     : DirectoryWatcherPrivate(qq, new WindowsWorker())
 {
     auto windowsWorker = static_cast<WindowsWorker*>(worker.data());
-    qRegisterMetaType<FILE_NOTIFY_INFORMATION*>("FILE_NOTIFY_INFORMATION*");
 
     connect(windowsWorker, &WindowsWorker::notifyEvent,
             this, &WindowsWatcherPrivate::dispatchNotify);
@@ -57,13 +56,10 @@ HANDLE WindowsWatcherPrivate::requestDirectoryHandle(const QString& path)
     return hDirectory;
 }
 
-void WindowsWatcherPrivate::dispatchNotify(FILE_NOTIFY_INFORMATION* notify) {
+void WindowsWatcherPrivate::dispatchNotify(int action, const QString &name) {
     Q_Q(WindowsWatcher);
 
-    int len = notify->FileNameLength / sizeof(WCHAR);
-    QString name = QString::fromWCharArray(static_cast<wchar_t*>(notify->FileName), len);
-
-    switch (notify->Action)
+    switch (action)
     {
         case FILE_ACTION_ADDED:
             emit q->fileCreated(name);
@@ -71,15 +67,6 @@ void WindowsWatcherPrivate::dispatchNotify(FILE_NOTIFY_INFORMATION* notify) {
 
         case FILE_ACTION_MODIFIED:
             emit q->fileModified(name);
-            // ??
-            /*WatcherEvent* event;
-            if (findEventIndexByName(name) != -1)
-                return;
-
-            event = new WatcherEvent(name, WatcherEvent::MODIFIED);
-            event->mTimerId = startTimer(500);
-            directoryEvents.push_back(event);
-            */
             break;
 
         case FILE_ACTION_REMOVED:
@@ -95,7 +82,7 @@ void WindowsWatcherPrivate::dispatchNotify(FILE_NOTIFY_INFORMATION* notify) {
             break;
 
         default:
-            qWarning() << "Some error, notify->Action" << notify->Action;
+            qWarning() << "Some error, notify->Action" << action;
     }
 }
 

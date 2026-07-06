@@ -64,7 +64,9 @@ void WindowsWorker::run() {
                 FILE_NOTIFY_INFORMATION *fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer[0]);
                 do {
                     if(fni->Action != 0) {
-                        emit notifyEvent(fni);
+                        int len = fni->FileNameLength / sizeof(WCHAR);
+                        QString name = QString::fromWCharArray(static_cast<wchar_t*>(fni->FileName), len);
+                        emit notifyEvent(fni->Action, name);
                     }
                     if(fni->NextEntryOffset == 0)
                         break;

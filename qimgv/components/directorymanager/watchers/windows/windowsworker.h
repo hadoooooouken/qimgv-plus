@@ -15,7 +15,7 @@ public:
     virtual void run() override;
 
 signals:
-    void notifyEvent(FILE_NOTIFY_INFORMATION*);
+    void notifyEvent(int action, const QString &fileName);
 
 private:
     HANDLE hDir;
