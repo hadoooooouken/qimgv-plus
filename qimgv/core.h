@@ -9,6 +9,7 @@
 #include <QFileSystemModel>
 #include <QDesktopServices>
 #include <QTranslator>
+#include <QSet>
 #include "appversion.h"
 #include "settings_types.h"
 #include "components/directorymodel.h"
@@ -89,8 +90,17 @@ private:
     void attachModel(DirectoryModel *_model);
     QString selectedPath();
     void guiSetImage(std::shared_ptr<Image> img);
+    void notifyPageChange(const std::shared_ptr<Image> &img);
     QTimer slideshowTimer;
     QTimer preloadTimer;
+
+    // set by nextPage()/prevPage() right before a reload triggered by the
+    // page-turn hotkeys; consumed by notifyPageChange() to tell an explicit
+    // page turn apart from a regular file load reaching the same code path
+    bool pageChangeRequested = false;
+    // paths for which the "this document has multiple pages" hint was
+    // already shown once during the current folder visit; cleared in reset()
+    QSet<QString> autoPageHintShown;
 
     void startSlideshowTimer();
     void startSlideshow();

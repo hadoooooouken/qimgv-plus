@@ -33,6 +33,7 @@
 
 namespace {
 constexpr int PreloadDebounceDelayMs = 200;
+constexpr int PageChangeMessageDurationMs = 900;
 }
 
 Core::Core()
@@ -627,6 +628,7 @@ void Core::nextPage() {
   if (cur + 1 >= count)
     return;
   ImageStatic::pageOverride[path] = cur + 1;
+  pageChangeRequested = true;
   model->reload(path);
 }
 
@@ -638,6 +640,7 @@ void Core::prevPage() {
   if (cur <= 0)
     return;
   ImageStatic::pageOverride[path] = cur - 1;
+  pageChangeRequested = true;
   model->reload(path);
 }
 
@@ -1918,6 +1921,8 @@ void Core::reset() {
   state.currentFilePath = "";
   state.directoryPath = "";
   state.currentImg.reset();
+  pageChangeRequested = false;
+  autoPageHintShown.clear();
   model->clearScaler();
   model->setDirectory("");
 }
@@ -2247,6 +2252,7 @@ void Core::onModelItemReady(std::shared_ptr<Image> img, const QString &path) {
   if (path == state.currentFilePath) {
     state.currentImg = img;
     guiSetImage(img);
+    notifyPageChange(img);
     updateInfoString();
     if (state.delayModel) {
       this->showGui();
@@ -2310,6 +2316,35 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
   }
   img->isEdited() ? mw->showSaveOverlay() : mw->hideSaveOverlay();
   mw->setExifInfo(img->getExifTags());
+}
+
+// Shows a "Page N/M" floating message for multi-page static documents
+// (PDF/TIFF, etc.). Two triggers are handled here:
+//  - an explicit page turn via nextPage()/prevPage(), flagged through
+//    pageChangeRequested and shown every time;
+//  - the first time browsing lands on a multi-page document, shown once
+//    per file per folder visit via autoPageHintShown.
+// Animated formats are excluded: their frameCount() reports animation
+// frames, not document pages, and isn't relevant to this notification.
+void Core::notifyPageChange(const std::shared_ptr<Image> &img) {
+  if (!img || img->type() != STATIC || img->frameCount() <= 1) {
+    pageChangeRequested = false;
+    return;
+  }
+
+  bool isExplicitPageTurn = pageChangeRequested;
+  pageChangeRequested = false;
+
+  QString path = img->filePath();
+  if (!isExplicitPageTurn) {
+    if (autoPageHintShown.contains(path))
+      return;
+    autoPageHintShown.insert(path);
+  }
+
+  int page = ImageStatic::pageOverride.value(path, 0) + 1;
+  mw->showMessage(tr("Page %1/%2").arg(page).arg(img->frameCount()),
+                   PageChangeMessageDurationMs);
 }
 
 void Core::updateInfoString() {
