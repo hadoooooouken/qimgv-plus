@@ -259,6 +259,16 @@ void ActionManager::readShortcuts() {
     shortcuts.insert(shiftC, "copyViewportClipboard");
   }
 
+  // If the user doesn't have a shortcut for prevPage, and comma is not bound, assign it.
+  if (shortcuts.key("prevPage", "").isEmpty() && !shortcuts.contains(",")) {
+    shortcuts.insert(",", "prevPage");
+  }
+
+  // If the user doesn't have a shortcut for nextPage, and period is not bound, assign it.
+  if (shortcuts.key("nextPage", "").isEmpty() && !shortcuts.contains(".")) {
+    shortcuts.insert(".", "nextPage");
+  }
+
 #ifdef USE_UPSCAYL
   // If the user doesn't have a shortcut for toggleUpscayl, and Alt+I is not bound to anything else,
   // we bind it to Alt+I by default.
