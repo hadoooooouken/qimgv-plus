@@ -92,6 +92,7 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 | Toggle panorama mode | Shift+P |
 | Panorama: Look around | Click & drag mouse (360° view) |
 | Panorama: Zoom | MouseWheel (360° view) |
+| Page Navigation | , . (< >) |
 
 ... and more.
 
