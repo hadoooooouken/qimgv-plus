@@ -628,8 +628,8 @@ void Core::nextPage() {
   if (cur + 1 >= count)
     return;
   ImageStatic::pageOverride[path] = cur + 1;
-  pageChangeRequested = true;
   model->reload(path);
+  showPageChangeMessage(path);
 }
 
 void Core::prevPage() {
@@ -640,8 +640,8 @@ void Core::prevPage() {
   if (cur <= 0)
     return;
   ImageStatic::pageOverride[path] = cur - 1;
-  pageChangeRequested = true;
   model->reload(path);
+  showPageChangeMessage(path);
 }
 
 void Core::removePermanent() {
@@ -1921,7 +1921,6 @@ void Core::reset() {
   state.currentFilePath = "";
   state.directoryPath = "";
   state.currentImg.reset();
-  pageChangeRequested = false;
   autoPageHintShown.clear();
   model->clearScaler();
   model->setDirectory("");
@@ -2252,7 +2251,7 @@ void Core::onModelItemReady(std::shared_ptr<Image> img, const QString &path) {
   if (path == state.currentFilePath) {
     state.currentImg = img;
     guiSetImage(img);
-    notifyPageChange(img);
+    maybeShowPageHint(img);
     updateInfoString();
     if (state.delayModel) {
       this->showGui();
@@ -2318,32 +2317,44 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
   mw->setExifInfo(img->getExifTags());
 }
 
-// Shows a "Page N/M" floating message for multi-page static documents
-// (PDF/TIFF, etc.). Two triggers are handled here:
-//  - an explicit page turn via nextPage()/prevPage(), flagged through
-//    pageChangeRequested and shown every time;
-//  - the first time browsing lands on a multi-page document, shown once
-//    per file per folder visit via autoPageHintShown.
+// Shows a one-time "this document has multiple pages" hint the first time
+// browsing lands on a multi-page static document (PDF/TIFF, etc.) during
+// the current folder visit. Explicit page turns are handled separately by
+// showPageChangeMessage(), called directly from nextPage()/prevPage() —
+// see its comment for why no shared flag is needed to tell the two apart.
 // Animated formats are excluded: their frameCount() reports animation
 // frames, not document pages, and isn't relevant to this notification.
-void Core::notifyPageChange(const std::shared_ptr<Image> &img) {
-  if (!img || img->type() != STATIC || img->frameCount() <= 1) {
-    pageChangeRequested = false;
+void Core::maybeShowPageHint(const std::shared_ptr<Image> &img) {
+  if (!img || img->type() != STATIC || img->frameCount() <= 1)
     return;
-  }
-
-  bool isExplicitPageTurn = pageChangeRequested;
-  pageChangeRequested = false;
 
   QString path = img->filePath();
-  if (!isExplicitPageTurn) {
-    if (autoPageHintShown.contains(path))
-      return;
-    autoPageHintShown.insert(path);
-  }
+  if (autoPageHintShown.contains(path))
+    return;
+  autoPageHintShown.insert(path);
 
   int page = ImageStatic::pageOverride.value(path, 0) + 1;
   mw->showMessage(tr("Page %1/%2").arg(page).arg(img->frameCount()),
+                   PageChangeMessageDurationMs);
+}
+
+// Shows "Page N/M" for `path` right after an explicit page-turn hotkey.
+// DirectoryModel::reload() performs its load synchronously and emits
+// imageReady() through a same-thread direct connection, so by the time
+// model->reload(path) returns above in nextPage()/prevPage(), state.currentImg
+// already reflects the freshly reloaded page. This lets us report the result
+// directly instead of correlating it via a shared flag across two events,
+// which sidesteps any risk of that flag being consumed by an unrelated event.
+// NOTE: this relies on reload() staying synchronous; if it's ever made
+// asynchronous, this call must move to a completion callback instead.
+void Core::showPageChangeMessage(const QString &path) {
+  if (state.currentFilePath != path || !state.currentImg)
+    return;
+  if (state.currentImg->type() != STATIC || state.currentImg->frameCount() <= 1)
+    return;
+
+  int page = ImageStatic::pageOverride.value(path, 0) + 1;
+  mw->showMessage(tr("Page %1/%2").arg(page).arg(state.currentImg->frameCount()),
                    PageChangeMessageDurationMs);
 }
 
