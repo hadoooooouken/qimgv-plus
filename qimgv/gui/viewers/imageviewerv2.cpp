@@ -539,7 +539,6 @@ void ImageViewerV2::reset() {
   stopAnimation();
   mAnimationActive = false;
   mSvgMode = false;
-  mPanoramaMode = false;
   if (movie) {
     disconnect(movie.get(), &QMovie::frameChanged, this, &ImageViewerV2::onMovieFrameChanged);
     movie = nullptr;
