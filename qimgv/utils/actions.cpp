@@ -49,8 +49,6 @@ void Actions::init() {
   mActions.insert("flipH", QVersionNumber(0, 6, 3));
   mActions.insert("flipV", QVersionNumber(0, 6, 3));
   mActions.insert("folderView", QVersionNumber(0, 6, 85));
-  mActions.insert("folderView", QVersionNumber(0, 6, 85));
-  mActions.insert("folderView", QVersionNumber(0, 6, 85));
   mActions.insert("documentView", QVersionNumber(0, 6, 88));
   mActions.insert("toggleFolderView", QVersionNumber(0, 6, 88));
   mActions.insert("moveToTrash", QVersionNumber(0, 6, 89));
