@@ -107,14 +107,6 @@
         <translation>Yüzde:</translation>
     </message>
     <message>
-        <source>Width:</source>
-        <translation type="vanished">Genişlik:</translation>
-    </message>
-    <message>
-        <source>Height:</source>
-        <translation type="vanished">Yükseklik:</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="405"/>
         <source>Keep aspect ratio</source>
         <translation>En boy oranını koru</translation>
@@ -138,14 +130,6 @@
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="390"/>
         <source>Common sizes:</source>
         <translation>Ortak boyutlar:</translation>
-    </message>
-    <message>
-        <source>Fit to desktop</source>
-        <translation type="vanished">Masaüstüne sığdır</translation>
-    </message>
-    <message>
-        <source>Fill desktop (expanding)</source>
-        <translation type="vanished">Masaüstünü doldur (genişleterek)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="400"/>
@@ -239,7 +223,7 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="524"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="890"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="902"/>
         <source>Cancel</source>
         <translation>İptal</translation>
     </message>
@@ -259,110 +243,110 @@
         <translation>Maks. Yükseklik:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="620"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="632"/>
         <source>Nearest</source>
         <translation>En yakın komşu</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="621"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="633"/>
         <source>Bilinear</source>
         <translation>Bilineer</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="622"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="634"/>
         <source>Smart sharpen</source>
         <translation>Akıllı keskinleştirme</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="626"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="638"/>
         <source>Original size</source>
         <translation>Orijinal boyut</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="649"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="661"/>
         <source>Reset: %1 x %2</source>
         <translation>Sıfırla: %1 x %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="674"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="686"/>
         <source>No AI models found in models/ directory.</source>
         <translation>models/ dizininde Yapay Zekâ modeli bulunamadı.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="679"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="691"/>
         <source>AI Upscaling is disabled in this build.</source>
         <translation>Yapay Zeka Ölçeklendirme bu sürümde devre dışı bırakıldı.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="834"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="846"/>
         <source>%1 files selected (%2 MB)</source>
         <translation>%1 dosya seçildi (%2 MB)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="838"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="850"/>
         <source>Select Output Directory</source>
         <translation>Çıkış Dizinini Seçin</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="855"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="856"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="867"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="868"/>
         <source>PNG Compression level (0 - none, 9 - max)</source>
         <translation>PNG sıkıştırma seviyesi (0 - yok, 9 - maks)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="871"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="872"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="883"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="884"/>
         <source>Quality (1 - lowest, 100 - highest)</source>
         <translation>Kalite (1 - en düşük, 100 - en yüksek)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="887"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1028"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="899"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1040"/>
         <source>Stopping...</source>
         <translation>Durduruluyor...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="890"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="902"/>
         <source>Stop</source>
         <translation>Durdur</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="900"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="912"/>
         <source>Invalid Directory</source>
         <translation>Geçersiz Dizin</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="900"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="912"/>
         <source>Please select a valid output directory.</source>
         <translation>Lütfen geçerli bir çıkış dizini seçin.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="906"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="918"/>
         <source>Invalid Pattern</source>
         <translation>Geçersiz Şablon</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="906"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="918"/>
         <source>Filename pattern cannot contain path traversal sequences (..) or absolute paths.</source>
         <translation>Dosya adı şablonu, yol geçiş dizilimleri (..) veya mutlak yollar içeremez.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="916"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="928"/>
         <source>No files</source>
         <translation>Dosya yok</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="916"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="928"/>
         <source>No files selected in the queue. Please check at least one file.</source>
         <translation>Kuyrukta hiç dosya seçilmedi. Lütfen en az bir dosyayı işaretleyin.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="932"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="944"/>
         <source>Resolution Limit Exceeded</source>
         <translation>Çözünürlük Sınırı Aşıldı</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="933"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="945"/>
         <source>Target resolution (%1x%2) exceeds safety limits.
 
 Maximum allowed dimension: %3 px
@@ -377,62 +361,38 @@ Please reduce the percentage or absolute size.</source>
 Lütfen yüzdeyi veya mutlak boyutu azaltın.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="949"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1006"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="961"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1018"/>
         <source>Processing...</source>
         <translation>İşleniyor...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1041"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1053"/>
         <source>Stopped by user. Success: %1, Failed: %2</source>
         <translation>Kullanıcı tarafından durduruldu. Başarılı: %1, Başarısız: %2</translation>
     </message>
     <message>
-        <source>Loading AI Model...</source>
-        <translation type="vanished">Yapay Zeka Modeli Yükleniyor...</translation>
-    </message>
-    <message>
-        <source>Failed to load AI model.</source>
-        <translation type="vanished">Yapay Zeka modeli yüklenemedi.</translation>
-    </message>
-    <message>
-        <source>AI Error</source>
-        <translation type="vanished">Yapay Zeka Hatası</translation>
-    </message>
-    <message>
-        <source>Failed to load AI upscaling model: %1</source>
-        <translation type="vanished">Yapay Zeka ölçeklendirme modeli yüklenemedi: %1</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="993"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1005"/>
         <source>Pending</source>
         <translation>Beklemede</translation>
     </message>
     <message>
-        <source>Done</source>
-        <translation type="vanished">Tamamlandı</translation>
-    </message>
-    <message>
-        <source>Skipped (Exists)</source>
-        <translation type="vanished">Atlandı (Mevcut)</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1009"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1021"/>
         <source>Processed %1 / %2 files.</source>
         <translation>%1 / %2 dosya işlendi.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1016"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1028"/>
         <source>Finished. Success: %1, Failed: %2</source>
         <translation>Bitti. Başarılı: %1, Başarısız: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1017"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1029"/>
         <source>Batch Conversion Complete</source>
         <translation>Toplu Dönüştürme Tamamlandı</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1018"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1030"/>
         <source>Batch process complete.
 
 Successfully converted: %1
@@ -443,22 +403,6 @@ Total files: %3</source>
 Başarıyla dönüştürülen: %1
 Başarısız: %2
 Toplam dosya: %3</translation>
-    </message>
-    <message>
-        <source>Stopped by user.</source>
-        <translation type="vanished">Kullanıcı tarafından durduruldu.</translation>
-    </message>
-    <message>
-        <source>Failed</source>
-        <translation type="vanished">Başarısız</translation>
-    </message>
-    <message>
-        <source>Load Error</source>
-        <translation type="vanished">Yükleme Hatası</translation>
-    </message>
-    <message>
-        <source>Save Error</source>
-        <translation type="vanished">Kaydetme Hatası</translation>
     </message>
 </context>
 <context>
@@ -503,22 +447,7 @@ Toplam dosya: %3</translation>
     </message>
 </context>
 <context>
-    <name>ChangelogWindow</name>
-    <message>
-        <source>Close, never show changelogs</source>
-        <translation type="vanished">Kapat, değişiklik günlüğünü asla gösterme</translation>
-    </message>
-    <message>
-        <source>Close</source>
-        <translation type="vanished">Kapat</translation>
-    </message>
-</context>
-<context>
     <name>ColorAdjustmentsOverlay</name>
-    <message>
-        <source>OverlayHeaderWidget</source>
-        <translation type="vanished">OverlayHeaderWidget</translation>
-    </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="55"/>
         <source>Color adjustments</source>
@@ -530,17 +459,9 @@ Toplam dosya: %3</translation>
         <translation>Pozlama</translation>
     </message>
     <message>
-        <source>+0.00</source>
-        <translation type="vanished">+0.00</translation>
-    </message>
-    <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="70"/>
         <source>Brightness</source>
         <translation>Parlaklık</translation>
-    </message>
-    <message>
-        <source>0%</source>
-        <translation type="vanished">0%</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="69"/>
@@ -548,17 +469,9 @@ Toplam dosya: %3</translation>
         <translation>Kontrast</translation>
     </message>
     <message>
-        <source>100%</source>
-        <translation type="vanished">100%</translation>
-    </message>
-    <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="71"/>
         <source>Temperature</source>
         <translation>Sıcaklık</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation type="vanished">0</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="72"/>
@@ -569,10 +482,6 @@ Toplam dosya: %3</translation>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="74"/>
         <source>Hue</source>
         <translation>Renk tonu</translation>
-    </message>
-    <message>
-        <source>0°</source>
-        <translation type="vanished">0°</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="73"/>
@@ -601,10 +510,6 @@ Toplam dosya: %3</translation>
         <location filename="../../gui/contextmenu.cpp" line="199"/>
         <source>Rename</source>
         <translation>Yeniden adlandır</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation type="vanished">Düzenle</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="196"/>
@@ -699,428 +604,418 @@ Toplam dosya: %3</translation>
 <context>
     <name>Core</name>
     <message>
-        <location filename="../../core.cpp" line="462"/>
+        <location filename="../../core.cpp" line="493"/>
         <source>Updated: </source>
         <translation>Güncellendi: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="470"/>
+        <location filename="../../core.cpp" line="501"/>
         <source>Welcome to </source>
         <translation>Hoş geldiniz</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="471"/>
+        <location filename="../../core.cpp" line="502"/>
         <source> version </source>
         <translation> sürüm </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="489"/>
+        <location filename="../../core.cpp" line="520"/>
         <source>Shuffle mode: OFF</source>
         <translation>Karıştırma modu: KAPALI</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="492"/>
+        <location filename="../../core.cpp" line="523"/>
         <source>Shuffle mode: ON</source>
         <translation>Karıştırma modu: AÇIK</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="501"/>
+        <location filename="../../core.cpp" line="532"/>
         <source>Slideshow: OFF</source>
         <translation>Slayt gösterisi: KAPALI</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="505"/>
+        <location filename="../../core.cpp" line="536"/>
         <source>Slideshow: ON</source>
         <translation>Slayt gösterisi: AÇIK</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="608"/>
-        <location filename="../../core.cpp" line="611"/>
-        <location filename="../../core.cpp" line="614"/>
+        <location filename="../../core.cpp" line="666"/>
+        <location filename="../../core.cpp" line="669"/>
+        <location filename="../../core.cpp" line="672"/>
         <source>Delete </source>
         <translation>Sil </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="609"/>
+        <location filename="../../core.cpp" line="667"/>
         <source> folders permanently?</source>
         <translation> klasörü kalıcı olarak silinsin mi?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="612"/>
+        <location filename="../../core.cpp" line="670"/>
         <source> files permanently?</source>
         <translation> dosyayı kalıcı olarak silinsin mi?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="615"/>
+        <location filename="../../core.cpp" line="673"/>
         <source> items permanently?</source>
         <translation> öge kalıcı olarak silinsin mi?</translation>
     </message>
     <message>
-        <source>Delete item permanently?</source>
-        <translation type="vanished">Kalıcı olarak silmek istiyor musunuz?</translation>
-    </message>
-    <message>
-        <location filename="../../core.cpp" line="623"/>
+        <location filename="../../core.cpp" line="681"/>
         <source>Delete permanently</source>
         <translation>Kalıcı olarak sil</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="648"/>
+        <location filename="../../core.cpp" line="703"/>
         <source>File removed</source>
         <translation>Dosya kaldırıldı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="654"/>
-        <location filename="../../core.cpp" line="657"/>
-        <location filename="../../core.cpp" line="660"/>
+        <location filename="../../core.cpp" line="709"/>
+        <location filename="../../core.cpp" line="712"/>
+        <location filename="../../core.cpp" line="715"/>
         <source>Removed: </source>
         <translation>Kaldırıldı: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="658"/>
-        <location filename="../../core.cpp" line="732"/>
+        <location filename="../../core.cpp" line="713"/>
+        <location filename="../../core.cpp" line="784"/>
         <source> files</source>
         <translation> dosya</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="685"/>
-        <location filename="../../core.cpp" line="687"/>
-        <location filename="../../core.cpp" line="689"/>
+        <location filename="../../core.cpp" line="740"/>
+        <location filename="../../core.cpp" line="742"/>
+        <location filename="../../core.cpp" line="744"/>
         <source>Move </source>
         <translation>Taşı </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="689"/>
+        <location filename="../../core.cpp" line="744"/>
         <source> items to trash?</source>
         <translation> öge çöp kutusuna taşınsın mı?</translation>
     </message>
     <message>
-        <source>Move item to trash?</source>
-        <translation type="vanished">Öğeyi çöp kutusuna taşımak istiyor musunuz?</translation>
-    </message>
-    <message>
-        <location filename="../../core.cpp" line="697"/>
+        <location filename="../../core.cpp" line="752"/>
         <source>Move to trash</source>
         <translation>Çöp kutusuna taşı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="720"/>
+        <location filename="../../core.cpp" line="772"/>
         <source>Folder moved to trash</source>
         <translation>Klasör çöp kutusuna taşındı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="722"/>
+        <location filename="../../core.cpp" line="774"/>
         <source>Moved to trash</source>
         <translation>Çöp kutusuna taşındı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="728"/>
-        <location filename="../../core.cpp" line="731"/>
-        <location filename="../../core.cpp" line="734"/>
+        <location filename="../../core.cpp" line="780"/>
+        <location filename="../../core.cpp" line="783"/>
+        <location filename="../../core.cpp" line="786"/>
         <source>Moved to trash: </source>
         <translation>Çöp kutusuna taşındı: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="805"/>
+        <location filename="../../core.cpp" line="857"/>
         <source>File copied</source>
         <translation>Dosya kopyalandı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="812"/>
+        <location filename="../../core.cpp" line="864"/>
         <source>Path copied</source>
         <translation>Dosya yolu kopyalandı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="979"/>
-        <location filename="../../core.cpp" line="1287"/>
-        <location filename="../../core.cpp" line="1309"/>
+        <location filename="../../core.cpp" line="1025"/>
+        <location filename="../../core.cpp" line="1321"/>
+        <location filename="../../core.cpp" line="1343"/>
         <source>File exists</source>
         <translation>Dosya zaten var</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="979"/>
+        <location filename="../../core.cpp" line="1025"/>
         <source>Overwrite file?</source>
         <translation>Dosyanın üzerine yazılsın mı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1080"/>
+        <location filename="../../core.cpp" line="1120"/>
         <source>Add folder</source>
         <translation>Klasör ekle</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1081"/>
+        <location filename="../../core.cpp" line="1121"/>
         <source>Folder name:</source>
         <translation>Klasör adı:</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1088"/>
+        <location filename="../../core.cpp" line="1128"/>
         <source>Folder already exists</source>
         <translation>Klasör zaten var</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1096"/>
+        <location filename="../../core.cpp" line="1139"/>
         <source>Failed to create folder</source>
         <translation>Klasör oluşturulamadı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1160"/>
-        <location filename="../../core.cpp" line="1247"/>
+        <location filename="../../core.cpp" line="1203"/>
+        <location filename="../../core.cpp" line="1281"/>
         <source>Could not create directory </source>
         <translation>Dizin oluşturulamadı </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1285"/>
+        <location filename="../../core.cpp" line="1319"/>
         <source>File moved.</source>
         <translation>Dosya taşındı.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1288"/>
-        <location filename="../../core.cpp" line="1310"/>
+        <location filename="../../core.cpp" line="1322"/>
+        <location filename="../../core.cpp" line="1344"/>
         <source>Destination file exists. Overwrite?</source>
         <translation>Dosya hedefte var. Üzerine yazılsın mı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1307"/>
+        <location filename="../../core.cpp" line="1341"/>
         <source>File copied.</source>
         <translation>Dosya kopyalandı.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1378"/>
+        <location filename="../../core.cpp" line="1408"/>
         <source>Perform action &quot;</source>
         <translation>Eylemi gerçekleştir: &quot;</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1379"/>
+        <location filename="../../core.cpp" line="1409"/>
         <source>Changes will be saved immediately.</source>
         <translation>Değişiklikler hemen kaydedilecektir.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1400"/>
+        <location filename="../../core.cpp" line="1430"/>
         <source>Flip horizontal</source>
         <translation>Yatay çevir</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1404"/>
+        <location filename="../../core.cpp" line="1434"/>
         <source>Flip vertical</source>
         <translation>Dikey çevir</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1409"/>
+        <location filename="../../core.cpp" line="1439"/>
         <source>Rotate</source>
         <translation>Döndür</translation>
     </message>
     <message>
-        <source>Resize (AI)</source>
-        <translation type="vanished">Yeniden Boyutlandır (YZ)</translation>
-    </message>
-    <message>
-        <location filename="../../core.cpp" line="1470"/>
+        <location filename="../../core.cpp" line="1500"/>
         <source>Resize</source>
         <translation>Yeniden boyutlandır</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1513"/>
-        <location filename="../../core.cpp" line="1519"/>
+        <location filename="../../core.cpp" line="1543"/>
+        <location filename="../../core.cpp" line="1549"/>
         <source>Crop</source>
         <translation>Kırp</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1578"/>
+        <location filename="../../core.cpp" line="1608"/>
         <source>File saved</source>
         <translation>Dosya kaydedildi</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1581"/>
+        <location filename="../../core.cpp" line="1611"/>
         <source>Could not save file</source>
         <translation>Dosya kaydedilemedi</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1659"/>
-        <location filename="../../core.cpp" line="1665"/>
+        <location filename="../../core.cpp" line="1689"/>
+        <location filename="../../core.cpp" line="1695"/>
         <source>Set wallpaper: file not supported</source>
         <translation>Duvar kağıdı yap: dosya desteklenmiyor</translation>
     </message>
     <message>
-        <source>Action is not supported in your desktop session (&quot;</source>
-        <translation type="vanished">Masaüstü oturumunuzda bu işlem desteklenmiyor (&quot;</translation>
-    </message>
-    <message>
-        <location filename="../../core.cpp" line="1826"/>
+        <location filename="../../core.cpp" line="1856"/>
         <source>Could not open image</source>
         <translation>Görüntü açılamadı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1830"/>
+        <location filename="../../core.cpp" line="1860"/>
         <source>Can only print static images</source>
         <translation>Sadece hareketsiz görüntüler yazdırılabilir</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="65"/>
+        <location filename="../../core.cpp" line="66"/>
         <source>AI Upscaling...</source>
         <translation>Yapay Zeka Ölçekleme...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="619"/>
+        <location filename="../../core.cpp" line="677"/>
         <source>Delete folder permanently?</source>
         <translation>Klasörü kalıcı olarak sil?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="621"/>
+        <location filename="../../core.cpp" line="679"/>
         <source>Delete file permanently?</source>
         <translation>Dosyayı kalıcı olarak sil?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="646"/>
+        <location filename="../../core.cpp" line="701"/>
         <source>Folder removed</source>
         <translation>Klasör kaldırıldı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="655"/>
-        <location filename="../../core.cpp" line="729"/>
+        <location filename="../../core.cpp" line="710"/>
+        <location filename="../../core.cpp" line="781"/>
         <source> folders</source>
         <translation> klasör</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="661"/>
-        <location filename="../../core.cpp" line="735"/>
+        <location filename="../../core.cpp" line="716"/>
+        <location filename="../../core.cpp" line="787"/>
         <source> items</source>
         <translation> öğe</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="685"/>
+        <location filename="../../core.cpp" line="740"/>
         <source> folders to trash?</source>
         <translation> klasörü çöp kutusuna taşı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="687"/>
+        <location filename="../../core.cpp" line="742"/>
         <source> files to trash?</source>
         <translation> dosyayı çöp kutusuna taşı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="693"/>
+        <location filename="../../core.cpp" line="748"/>
         <source>Move folder to trash?</source>
         <translation>Klasörü çöp kutusuna taşı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="695"/>
+        <location filename="../../core.cpp" line="750"/>
         <source>Move file to trash?</source>
         <translation>Dosyayı çöp kutusuna taşı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1420"/>
+        <location filename="../../core.cpp" line="1450"/>
         <source>AI resize is already running.</source>
         <translation>Yapay Zekâ boyutlandırma zaten çalışıyor.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1429"/>
+        <location filename="../../core.cpp" line="1459"/>
         <source>AI resize supports one image at a time.</source>
         <translation>Yapay Zekâ boyutlandırma aynı anda yalnızca bir resmi destekler.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1436"/>
-        <location filename="../../core.cpp" line="1442"/>
+        <location filename="../../core.cpp" line="1466"/>
+        <location filename="../../core.cpp" line="1472"/>
         <source>Could not resize image.</source>
         <translation>Resim boyutlandırılamadı.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1456"/>
+        <location filename="../../core.cpp" line="1486"/>
         <source>AI resizing...</source>
         <translation>Yapay Zekâ ile boyutlandırılıyor...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1483"/>
+        <location filename="../../core.cpp" line="1513"/>
         <source>AI resize failed.</source>
         <translation>Yapay Zekâ ile boyutlandırma başarısız.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1488"/>
+        <location filename="../../core.cpp" line="1518"/>
         <source>AI resize finished, but the image is no longer in the list.</source>
         <translation>Yapay Zekâ boyutlandırma bitti ancak resim artık listede değil.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1494"/>
+        <location filename="../../core.cpp" line="1524"/>
         <source>Could not apply AI resize.</source>
         <translation>Yapay Zekâ boyutlandırma uygulanamadı.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1503"/>
+        <location filename="../../core.cpp" line="1533"/>
         <source>AI resize finished.</source>
         <translation>Yapay Zekâ boyutlandırma bitti.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1505"/>
+        <location filename="../../core.cpp" line="1535"/>
         <source>AI resize finished for %1.</source>
         <translation>%1 için Yapay Zekâ boyutlandırma bitti.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1671"/>
+        <location filename="../../core.cpp" line="1701"/>
         <source>Set wallpaper: failed to get image</source>
         <translation>Duvar kağıdı ayarla: resim alınamadı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1677"/>
+        <location filename="../../core.cpp" line="1707"/>
         <source>Set wallpaper: screen not found</source>
         <translation>Duvar kağıdı ayarla: ekran bulunamadı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1689"/>
+        <location filename="../../core.cpp" line="1719"/>
         <source>Setting wallpaper...</source>
         <translation>Duvar kağıdı ayarlanıyor...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1699"/>
+        <location filename="../../core.cpp" line="1729"/>
         <source>Set wallpaper: invalid monitor size</source>
         <translation>Duvar kağıdı ayarla: geçersiz ekran boyutu</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1736"/>
+        <location filename="../../core.cpp" line="1766"/>
         <source>Set wallpaper: cropping failed</source>
         <translation>Duvar kağıdı ayarla: kırpma başarısız</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1748"/>
+        <location filename="../../core.cpp" line="1778"/>
         <source>AI upscaling...</source>
         <translation>Yapay Zekâ ile ölçekleniyor...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1779"/>
+        <location filename="../../core.cpp" line="1809"/>
         <source>Set wallpaper: scaling failed</source>
         <translation>Duvar kağıdı ayarla: ölçekleme başarısız</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1786"/>
+        <location filename="../../core.cpp" line="1816"/>
         <source>Set wallpaper: failed to save PNG</source>
         <translation>Duvar kağıdı ayarla: PNG kaydedilemedi</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1812"/>
+        <location filename="../../core.cpp" line="1842"/>
         <source>Wallpaper set</source>
         <translation>Duvar kağıdı ayarlandı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1920"/>
+        <location filename="../../core.cpp" line="1951"/>
         <source>Could not open path: </source>
         <translation>Dosya yolu açılamadı: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1985"/>
+        <location filename="../../core.cpp" line="2016"/>
         <source>Could not load folder: </source>
         <translation>Klasör yüklenemedi: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2179"/>
+        <location filename="../../core.cpp" line="2210"/>
         <source>End of directory.</source>
         <translation>Dizin sonu.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2213"/>
+        <location filename="../../core.cpp" line="2244"/>
         <source>Load failed: </source>
         <translation>Yükleme başarısız: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2275"/>
+        <location filename="../../core.cpp" line="2307"/>
         <source>Error: could not load image.</source>
         <translation>Hata: Görüntü yüklenemedi.</translation>
+    </message>
+    <message>
+        <location filename="../../core.cpp" line="2337"/>
+        <location filename="../../core.cpp" line="2357"/>
+        <source>Page %1/%2</source>
+        <translation>Sayfa %1/%2</translation>
     </message>
 </context>
 <context>
@@ -1229,10 +1124,10 @@ Toplam dosya: %3</translation>
 <context>
     <name>DirectoryPresenter</name>
     <message>
-        <location filename="../../components/directorypresenter.cpp" line="287"/>
-        <location filename="../../components/directorypresenter.cpp" line="463"/>
-        <location filename="../../components/directorypresenter.cpp" line="470"/>
-        <location filename="../../components/directorypresenter.cpp" line="515"/>
+        <location filename="../../components/directorypresenter.cpp" line="288"/>
+        <location filename="../../components/directorypresenter.cpp" line="478"/>
+        <location filename="../../components/directorypresenter.cpp" line="485"/>
+        <location filename="../../components/directorypresenter.cpp" line="530"/>
         <source>Folder</source>
         <translation>Klasör</translation>
     </message>
@@ -1372,159 +1267,119 @@ Toplam dosya: %3</translation>
 <context>
     <name>FolderView</name>
     <message>
-        <source>Form</source>
-        <translation type="vanished">Biçim</translation>
-    </message>
-    <message>
-        <source>[path]</source>
-        <translation type="vanished">[yol]</translation>
-    </message>
-    <message>
-        <source>Batch convert  ⇄</source>
-        <translation type="vanished">Toplu dönüştür  ⇄</translation>
-    </message>
-    <message>
-        <source>FolderViewSlider</source>
-        <translation type="vanished">FolderViewSlider</translation>
-    </message>
-    <message>
-        <source>PanelComboBox</source>
-        <translation type="vanished">PanelComboBox</translation>
-    </message>
-    <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="196"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="206"/>
         <source>Toggle side panel</source>
         <translation>Yan paneli aç/kapat</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="212"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="222"/>
         <source>Go up</source>
         <translation>Yukarı git</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="224"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="234"/>
         <source>15 images selected</source>
         <translation>15 görsel seçildi</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="228"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="238"/>
         <source>Batch convert</source>
         <translation>Toplu dönüştür</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="233"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="243"/>
         <source>Grid size</source>
         <translation>Izgara boyutu</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>A - Z</source>
         <translation>A - Z</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>Z - A</source>
         <translation>Z - A</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>Size</source>
         <translation>Boyut</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>Size (desc)</source>
         <translation>Boyut (azalan)</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>Oldest</source>
         <translation>En eski</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>Newest</source>
         <translation>En yeni</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="258"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
         <source>Folder icon sorting</source>
         <translation>Klasör simgesi sıralaması</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="269"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="279"/>
         <source>Sort folders and images</source>
         <translation>Klasörleri ve resimleri sırala</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="280"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="290"/>
         <source>Viewer</source>
         <translation>Görüntüleyici</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="288"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="298"/>
         <source>Settings</source>
         <translation>Ayarlar</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="299"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="309"/>
         <source>Quit qimgv-plus</source>
         <translation>qimgv-plus&apos;tan çık</translation>
     </message>
     <message>
-        <source>PanelButton</source>
-        <translation type="vanished">PanelButton</translation>
-    </message>
-    <message>
-        <source>PanelButtonRE</source>
-        <translation type="vanished">PanelButtonRE</translation>
-    </message>
-    <message>
-        <source>PlacesPanel</source>
-        <translation type="vanished">PlacesPanel</translation>
-    </message>
-    <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="337"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="347"/>
         <source>BOOKMARKS</source>
         <translation>HIZLI ERİŞİM</translation>
     </message>
     <message>
-        <source>PlacesPanelButton</source>
-        <translation type="vanished">PlacesPanelButton</translation>
-    </message>
-    <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="363"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="373"/>
         <source>FILESYSTEM</source>
         <translation>DOSYA SİSTEMİ</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="374"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="384"/>
         <source>Home</source>
         <translation>Giriş</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="740"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="750"/>
         <source>1 image selected</source>
         <translation>1 resim seçildi</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="742"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="752"/>
         <source>%1 images selected</source>
         <translation>%1 resim seçildi</translation>
     </message>
 </context>
 <context>
     <name>ImageInfoOverlay</name>
-    <message>
-        <source>OverlayHeaderWidget</source>
-        <translation type="vanished">OverlayHeaderWidget</translation>
-    </message>
     <message>
         <location filename="../../gui/overlays/imageinfooverlay.cpp" line="52"/>
         <source>EXIF Tags</source>
@@ -1807,59 +1662,59 @@ Toplam dosya: %3</translation>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="262"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="278"/>
         <source>Make</source>
         <translation>Marka</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="266"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="282"/>
         <source>Model</source>
         <translation>Model</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="270"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="286"/>
         <source>Date/Time</source>
         <translation>Tarih/Saat</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="277"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="280"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="293"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="296"/>
         <source>ExposureTime</source>
         <translation>Pozlama süresi</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="277"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="280"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="293"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="296"/>
         <source> sec</source>
         <translation> saniye</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="288"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="304"/>
         <source>F Number</source>
         <translation>F numarası</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="293"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="309"/>
         <source>ISO Speed ratings</source>
         <translation>ISO hız derecesi</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="297"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="313"/>
         <source>Flash</source>
         <translation>Flaş</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="303"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="319"/>
         <source>Focal Length</source>
         <translation>Odak uzaklığı</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="303"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="319"/>
         <source> mm</source>
         <translation> mm</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="311"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="327"/>
         <source>UserComment</source>
         <translation>Kullanıcı yorumu</translation>
     </message>
@@ -1999,50 +1854,6 @@ Toplam dosya: %3</translation>
         <location filename="../../gui/dialogs/resizedialog.cpp" line="254"/>
         <source>Select:</source>
         <translation>Seç:</translation>
-    </message>
-    <message>
-        <source>1366 x 768</source>
-        <translation type="vanished">1366 x 768</translation>
-    </message>
-    <message>
-        <source>1440 x 900</source>
-        <translation type="vanished">1440 x 900</translation>
-    </message>
-    <message>
-        <source>1440 x 1050</source>
-        <translation type="vanished">1440 x 1050</translation>
-    </message>
-    <message>
-        <source>1600 x 1200</source>
-        <translation type="vanished">1600 x 1200</translation>
-    </message>
-    <message>
-        <source>1920 x 1080 (FullHD)</source>
-        <translation type="vanished">1920 x 1080 (FullHD)</translation>
-    </message>
-    <message>
-        <source>1920 x 1200 (FullHD)</source>
-        <translation type="vanished">1920 x 1200 (FullHD)</translation>
-    </message>
-    <message>
-        <source>2560 x 1080</source>
-        <translation type="vanished">2560 x 1080</translation>
-    </message>
-    <message>
-        <source>2560 x 1440</source>
-        <translation type="vanished">2560 x 1440</translation>
-    </message>
-    <message>
-        <source>2560 x 1600</source>
-        <translation type="vanished">2560 x 1600</translation>
-    </message>
-    <message>
-        <source>3840 x 1600 (UW 4K)</source>
-        <translation type="vanished">3840 x 1600 (UW 4K)</translation>
-    </message>
-    <message>
-        <source>3840 x 2160 (UHD-1)</source>
-        <translation type="vanished">3840 x 2160 (UHD-1)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.cpp" line="269"/>
@@ -2318,10 +2129,6 @@ Toplam dosya: %3</translation>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3897"/>
         <source>Fullscreen info bar</source>
         <translation>Tam ekranda bilgi çubuğunu göster</translation>
-    </message>
-    <message>
-        <source>Status bar</source>
-        <translation type="vanished">Durum çubuğunu göster</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3904"/>
@@ -2608,80 +2415,6 @@ Toplam dosya: %3</translation>
         <translation>qimgv-plus Hakkında</translation>
     </message>
     <message>
-        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot;
-&quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-hr { height: 1px; border-width: 0;
-}
-li.unchecked::marker { content: &quot;\2610&quot;; }
-li.checked::marker { content: &quot;\2612&quot;; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px;
-margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;This is a fast and easy to use image viewer&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty;
-margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;
-font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Github page:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;
-text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/hadoooooouken/qimgv-plus&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600;
-font-style:italic;&quot;&gt;Original project:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline;
-color:#007af4;&quot;&gt;https://github.com/easymodo/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Plus version developer:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;hadooooouken&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Original developer:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;easymodo&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus/graphs/contributors&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;Contributors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;qimgv is licensed under &lt;/span&gt;&lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.en.html&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;GNU GPL Version 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;
--qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Report any issues / request features &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt;
-text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="vanished">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot;
-&quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-hr { height: 1px; border-width: 0;
-}
-li.unchecked::marker { content: &quot;\2610&quot;; }
-li.checked::marker { content: &quot;\2612&quot;; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px;
-margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Bu hızlı ve kullanımı kolay bir resim görüntüleyicidir&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty;
-margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;
-font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;GitHub sayfası:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;
-text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/hadoooooouken/qimgv-plus&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600;
-font-style:italic;&quot;&gt;Orijinal proje:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline;
-color:#007af4;&quot;&gt;https://github.com/easymodo/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Plus sürüm geliştiricisi:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;hadooooouken&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Orijinal geliştirici:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;easymodo&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus/graphs/contributors&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;Katkıda Bulunanlar&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;qimgv şu lisans altındadır: &lt;/span&gt;&lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.en.html&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;GNU GPL Sürüm 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;
--qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Hataları bildirin / özellik isteyin: &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt;
-text-decoration: underline; color:#007af4;&quot;&gt;buradan&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3947"/>
         <source>Show hidden files</source>
         <translation>Gizli dosyaları göster</translation>
@@ -2722,21 +2455,9 @@ text-decoration: underline; color:#007af4;&quot;&gt;buradan&lt;/span&gt;&lt;/a&g
         <translation>Görüntü yerleşimi:</translation>
     </message>
     <message>
-        <source>Fit in window</source>
-        <translation type="vanished">Pencereye sığdır</translation>
-    </message>
-    <message>
-        <source>Stretch to width</source>
-        <translation type="vanished">Genişliğe göre esnet</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3957"/>
         <source>1:1</source>
         <translation>1:1</translation>
-    </message>
-    <message>
-        <source>Fit in window (stretch)</source>
-        <translation type="vanished">Pencereye sığdır (uzat)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3959"/>

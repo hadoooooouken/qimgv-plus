@@ -107,14 +107,6 @@
         <translation>パーセント:</translation>
     </message>
     <message>
-        <source>Width:</source>
-        <translation type="vanished">幅:</translation>
-    </message>
-    <message>
-        <source>Height:</source>
-        <translation type="vanished">高さ:</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="405"/>
         <source>Keep aspect ratio</source>
         <translation>縦横比を維持</translation>
@@ -138,14 +130,6 @@
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="390"/>
         <source>Common sizes:</source>
         <translation>一般的なサイズ:</translation>
-    </message>
-    <message>
-        <source>Fit to desktop</source>
-        <translation type="vanished">デスクトップに合わせる</translation>
-    </message>
-    <message>
-        <source>Fill desktop (expanding)</source>
-        <translation type="vanished">デスクトップを埋める (拡大)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="400"/>
@@ -239,7 +223,7 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="524"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="890"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="902"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
@@ -259,110 +243,110 @@
         <translation>最大高:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="620"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="632"/>
         <source>Nearest</source>
         <translation>ニアレストネイバー</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="621"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="633"/>
         <source>Bilinear</source>
         <translation>バイリニア</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="622"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="634"/>
         <source>Smart sharpen</source>
         <translation>スマートシャープ</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="626"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="638"/>
         <source>Original size</source>
         <translation>オリジナルサイズ</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="649"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="661"/>
         <source>Reset: %1 x %2</source>
         <translation>リセット: %1 x %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="674"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="686"/>
         <source>No AI models found in models/ directory.</source>
         <translation>models/ ディレクトリにAIモデルが見つかりません。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="679"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="691"/>
         <source>AI Upscaling is disabled in this build.</source>
         <translation>このビルドでは AI アップスケーリングは無効です。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="834"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="846"/>
         <source>%1 files selected (%2 MB)</source>
         <translation>選択されたファイル: %1 (%2 MB)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="838"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="850"/>
         <source>Select Output Directory</source>
         <translation>出力ディレクトリを選択</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="855"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="856"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="867"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="868"/>
         <source>PNG Compression level (0 - none, 9 - max)</source>
         <translation>PNG 圧縮レベル (0 - なし, 9 - 最大)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="871"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="872"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="883"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="884"/>
         <source>Quality (1 - lowest, 100 - highest)</source>
         <translation>品質 (1 - 最低, 100 - 最高)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="887"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1028"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="899"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1040"/>
         <source>Stopping...</source>
         <translation>停止中...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="890"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="902"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="900"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="912"/>
         <source>Invalid Directory</source>
         <translation>無効なディレクトリ</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="900"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="912"/>
         <source>Please select a valid output directory.</source>
         <translation>有効な出力ディレクトリを選択してください。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="906"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="918"/>
         <source>Invalid Pattern</source>
         <translation>無効なパターン</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="906"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="918"/>
         <source>Filename pattern cannot contain path traversal sequences (..) or absolute paths.</source>
         <translation>ファイル名パターンには、パス移動シーケンス（..）や絶対パスを含めることはできません。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="916"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="928"/>
         <source>No files</source>
         <translation>ファイルがありません</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="916"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="928"/>
         <source>No files selected in the queue. Please check at least one file.</source>
         <translation>キューにファイルが選択されていません。少なくとも1つのファイルにチェックを入れてください。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="932"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="944"/>
         <source>Resolution Limit Exceeded</source>
         <translation>解像度制限を超過しました</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="933"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="945"/>
         <source>Target resolution (%1x%2) exceeds safety limits.
 
 Maximum allowed dimension: %3 px
@@ -377,62 +361,38 @@ Please reduce the percentage or absolute size.</source>
 パーセンテージまたは絶対サイズを小さくしてください。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="949"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1006"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="961"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1018"/>
         <source>Processing...</source>
         <translation>処理中...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1041"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1053"/>
         <source>Stopped by user. Success: %1, Failed: %2</source>
         <translation>ユーザーによって停止されました。成功: %1、失敗: %2</translation>
     </message>
     <message>
-        <source>Loading AI Model...</source>
-        <translation type="vanished">AI モデルをロード中...</translation>
-    </message>
-    <message>
-        <source>Failed to load AI model.</source>
-        <translation type="vanished">AI モデルのロードに失敗しました。</translation>
-    </message>
-    <message>
-        <source>AI Error</source>
-        <translation type="vanished">AI エラー</translation>
-    </message>
-    <message>
-        <source>Failed to load AI upscaling model: %1</source>
-        <translation type="vanished">AI アップスケーリングモデルのロードに失敗しました: %1</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="993"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1005"/>
         <source>Pending</source>
         <translation>待機中</translation>
     </message>
     <message>
-        <source>Done</source>
-        <translation type="vanished">完了</translation>
-    </message>
-    <message>
-        <source>Skipped (Exists)</source>
-        <translation type="vanished">スキップ (存在します)</translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1009"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1021"/>
         <source>Processed %1 / %2 files.</source>
         <translation>%1 / %2 個のファイルを処理しました。</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1016"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1028"/>
         <source>Finished. Success: %1, Failed: %2</source>
         <translation>終了しました。成功: %1, 失敗: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1017"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1029"/>
         <source>Batch Conversion Complete</source>
         <translation>バッチ変換完了</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1018"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1030"/>
         <source>Batch process complete.
 
 Successfully converted: %1
@@ -443,22 +403,6 @@ Total files: %3</source>
 正常に変換されたファイル: %1
 失敗: %2
 総ファイル数: %3</translation>
-    </message>
-    <message>
-        <source>Stopped by user.</source>
-        <translation type="vanished">ユーザーによって停止されました。</translation>
-    </message>
-    <message>
-        <source>Failed</source>
-        <translation type="vanished">失敗</translation>
-    </message>
-    <message>
-        <source>Load Error</source>
-        <translation type="vanished">読み込みエラー</translation>
-    </message>
-    <message>
-        <source>Save Error</source>
-        <translation type="vanished">保存エラー</translation>
     </message>
 </context>
 <context>
@@ -503,22 +447,7 @@ Total files: %3</source>
     </message>
 </context>
 <context>
-    <name>ChangelogWindow</name>
-    <message>
-        <source>Close, never show changelogs</source>
-        <translation type="vanished">閉じる。今後変更履歴を表示しない</translation>
-    </message>
-    <message>
-        <source>Close</source>
-        <translation type="vanished">閉じる</translation>
-    </message>
-</context>
-<context>
     <name>ColorAdjustmentsOverlay</name>
-    <message>
-        <source>OverlayHeaderWidget</source>
-        <translation type="vanished">OverlayHeaderWidget</translation>
-    </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="55"/>
         <source>Color adjustments</source>
@@ -530,17 +459,9 @@ Total files: %3</source>
         <translation>露出</translation>
     </message>
     <message>
-        <source>+0.00</source>
-        <translation type="vanished">+0.00</translation>
-    </message>
-    <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="70"/>
         <source>Brightness</source>
         <translation>明るさ</translation>
-    </message>
-    <message>
-        <source>0%</source>
-        <translation type="vanished">0%</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="69"/>
@@ -548,17 +469,9 @@ Total files: %3</source>
         <translation>コントラスト</translation>
     </message>
     <message>
-        <source>100%</source>
-        <translation type="vanished">100%</translation>
-    </message>
-    <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="71"/>
         <source>Temperature</source>
         <translation>色温度</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation type="vanished">0</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="72"/>
@@ -569,10 +482,6 @@ Total files: %3</source>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="74"/>
         <source>Hue</source>
         <translation>色相</translation>
-    </message>
-    <message>
-        <source>0°</source>
-        <translation type="vanished">0°</translation>
     </message>
     <message>
         <location filename="../../gui/overlays/coloradjustmentsoverlay.cpp" line="73"/>
@@ -601,10 +510,6 @@ Total files: %3</source>
         <location filename="../../gui/contextmenu.cpp" line="199"/>
         <source>Rename</source>
         <translation>名前の変更</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation type="vanished">編集</translation>
     </message>
     <message>
         <location filename="../../gui/contextmenu.cpp" line="196"/>
@@ -699,428 +604,418 @@ Total files: %3</source>
 <context>
     <name>Core</name>
     <message>
-        <location filename="../../core.cpp" line="462"/>
+        <location filename="../../core.cpp" line="493"/>
         <source>Updated: </source>
         <translation>更新: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="470"/>
+        <location filename="../../core.cpp" line="501"/>
         <source>Welcome to </source>
         <translation>ようこそ </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="471"/>
+        <location filename="../../core.cpp" line="502"/>
         <source> version </source>
         <translation> バージョン </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="489"/>
+        <location filename="../../core.cpp" line="520"/>
         <source>Shuffle mode: OFF</source>
         <translation>シャッフルモード: OFF</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="492"/>
+        <location filename="../../core.cpp" line="523"/>
         <source>Shuffle mode: ON</source>
         <translation>シャッフルモード: ON</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="501"/>
+        <location filename="../../core.cpp" line="532"/>
         <source>Slideshow: OFF</source>
         <translation>スライドショー: OFF</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="505"/>
+        <location filename="../../core.cpp" line="536"/>
         <source>Slideshow: ON</source>
         <translation>スライドショー: ON</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="608"/>
-        <location filename="../../core.cpp" line="611"/>
-        <location filename="../../core.cpp" line="614"/>
+        <location filename="../../core.cpp" line="666"/>
+        <location filename="../../core.cpp" line="669"/>
+        <location filename="../../core.cpp" line="672"/>
         <source>Delete </source>
         <translation>削除 </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="609"/>
+        <location filename="../../core.cpp" line="667"/>
         <source> folders permanently?</source>
         <translation> 個のフォルダを完全に削除しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="612"/>
+        <location filename="../../core.cpp" line="670"/>
         <source> files permanently?</source>
         <translation> 個のファイルを完全に削除しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="615"/>
+        <location filename="../../core.cpp" line="673"/>
         <source> items permanently?</source>
         <translation>個のアイテムを完全に削除しますか？</translation>
     </message>
     <message>
-        <source>Delete item permanently?</source>
-        <translation type="vanished">アイテムを完全に削除しますか？</translation>
-    </message>
-    <message>
-        <location filename="../../core.cpp" line="623"/>
+        <location filename="../../core.cpp" line="681"/>
         <source>Delete permanently</source>
         <translation>完全に削除</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="648"/>
+        <location filename="../../core.cpp" line="703"/>
         <source>File removed</source>
         <translation>ファイルを削除しました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="654"/>
-        <location filename="../../core.cpp" line="657"/>
-        <location filename="../../core.cpp" line="660"/>
+        <location filename="../../core.cpp" line="709"/>
+        <location filename="../../core.cpp" line="712"/>
+        <location filename="../../core.cpp" line="715"/>
         <source>Removed: </source>
         <translation>削除済み: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="658"/>
-        <location filename="../../core.cpp" line="732"/>
+        <location filename="../../core.cpp" line="713"/>
+        <location filename="../../core.cpp" line="784"/>
         <source> files</source>
         <translation> 個のファイル</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="685"/>
-        <location filename="../../core.cpp" line="687"/>
-        <location filename="../../core.cpp" line="689"/>
+        <location filename="../../core.cpp" line="740"/>
+        <location filename="../../core.cpp" line="742"/>
+        <location filename="../../core.cpp" line="744"/>
         <source>Move </source>
         <translation>移動 </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="689"/>
+        <location filename="../../core.cpp" line="744"/>
         <source> items to trash?</source>
         <translation>個のアイテムをゴミ箱へ移動しますか？</translation>
     </message>
     <message>
-        <source>Move item to trash?</source>
-        <translation type="vanished">アイテムをゴミ箱へ移動しますか？</translation>
-    </message>
-    <message>
-        <location filename="../../core.cpp" line="697"/>
+        <location filename="../../core.cpp" line="752"/>
         <source>Move to trash</source>
         <translation>ゴミ箱へ移動</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="720"/>
+        <location filename="../../core.cpp" line="772"/>
         <source>Folder moved to trash</source>
         <translation>フォルダがゴミ箱に移動されました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="722"/>
+        <location filename="../../core.cpp" line="774"/>
         <source>Moved to trash</source>
         <translation>ゴミ箱に移動しました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="728"/>
-        <location filename="../../core.cpp" line="731"/>
-        <location filename="../../core.cpp" line="734"/>
+        <location filename="../../core.cpp" line="780"/>
+        <location filename="../../core.cpp" line="783"/>
+        <location filename="../../core.cpp" line="786"/>
         <source>Moved to trash: </source>
         <translation>ゴミ箱に移動しました: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="805"/>
+        <location filename="../../core.cpp" line="857"/>
         <source>File copied</source>
         <translation>ファイルがコピーされました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="812"/>
+        <location filename="../../core.cpp" line="864"/>
         <source>Path copied</source>
         <translation>パスがコピーされました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="979"/>
-        <location filename="../../core.cpp" line="1287"/>
-        <location filename="../../core.cpp" line="1309"/>
+        <location filename="../../core.cpp" line="1025"/>
+        <location filename="../../core.cpp" line="1321"/>
+        <location filename="../../core.cpp" line="1343"/>
         <source>File exists</source>
         <translation>ファイルは存在します</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="979"/>
+        <location filename="../../core.cpp" line="1025"/>
         <source>Overwrite file?</source>
         <translation>ファイルを上書きしますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1080"/>
+        <location filename="../../core.cpp" line="1120"/>
         <source>Add folder</source>
         <translation>フォルダを追加</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1081"/>
+        <location filename="../../core.cpp" line="1121"/>
         <source>Folder name:</source>
         <translation>フォルダ名:</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1088"/>
+        <location filename="../../core.cpp" line="1128"/>
         <source>Folder already exists</source>
         <translation>フォルダはすでに存在します</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1096"/>
+        <location filename="../../core.cpp" line="1139"/>
         <source>Failed to create folder</source>
         <translation>フォルダの作成に失敗しました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1160"/>
-        <location filename="../../core.cpp" line="1247"/>
+        <location filename="../../core.cpp" line="1203"/>
+        <location filename="../../core.cpp" line="1281"/>
         <source>Could not create directory </source>
         <translation>ディレクトリを作成できませんでした </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1285"/>
+        <location filename="../../core.cpp" line="1319"/>
         <source>File moved.</source>
         <translation>ファイルが移動されました。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1288"/>
-        <location filename="../../core.cpp" line="1310"/>
+        <location filename="../../core.cpp" line="1322"/>
+        <location filename="../../core.cpp" line="1344"/>
         <source>Destination file exists. Overwrite?</source>
         <translation>移動先にファイルが存在します。上書きしますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1307"/>
+        <location filename="../../core.cpp" line="1341"/>
         <source>File copied.</source>
         <translation>ファイルがコピーされました。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1378"/>
+        <location filename="../../core.cpp" line="1408"/>
         <source>Perform action &quot;</source>
         <translation>アクションを実行 &quot;</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1379"/>
+        <location filename="../../core.cpp" line="1409"/>
         <source>Changes will be saved immediately.</source>
         <translation>変更はすぐに保存されます。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1400"/>
+        <location filename="../../core.cpp" line="1430"/>
         <source>Flip horizontal</source>
         <translation>水平方向に反転</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1404"/>
+        <location filename="../../core.cpp" line="1434"/>
         <source>Flip vertical</source>
         <translation>垂直方向に反転</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1409"/>
+        <location filename="../../core.cpp" line="1439"/>
         <source>Rotate</source>
         <translation>回転</translation>
     </message>
     <message>
-        <source>Resize (AI)</source>
-        <translation type="vanished">サイズ変更 (AI)</translation>
-    </message>
-    <message>
-        <location filename="../../core.cpp" line="1470"/>
+        <location filename="../../core.cpp" line="1500"/>
         <source>Resize</source>
         <translation>リサイズ</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1513"/>
-        <location filename="../../core.cpp" line="1519"/>
+        <location filename="../../core.cpp" line="1543"/>
+        <location filename="../../core.cpp" line="1549"/>
         <source>Crop</source>
         <translation>切り抜き</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1578"/>
+        <location filename="../../core.cpp" line="1608"/>
         <source>File saved</source>
         <translation>ファイルが保存されました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1581"/>
+        <location filename="../../core.cpp" line="1611"/>
         <source>Could not save file</source>
         <translation>ファイルを保存できませんでした</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1659"/>
-        <location filename="../../core.cpp" line="1665"/>
+        <location filename="../../core.cpp" line="1689"/>
+        <location filename="../../core.cpp" line="1695"/>
         <source>Set wallpaper: file not supported</source>
         <translation>壁紙に設定: サポートされていないファイルです</translation>
     </message>
     <message>
-        <source>Action is not supported in your desktop session (&quot;</source>
-        <translation type="vanished">このデスクトップセッションではアクションがサポートされていません (&quot;</translation>
-    </message>
-    <message>
-        <location filename="../../core.cpp" line="1826"/>
+        <location filename="../../core.cpp" line="1856"/>
         <source>Could not open image</source>
         <translation>画像を開けませんでした</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1830"/>
+        <location filename="../../core.cpp" line="1860"/>
         <source>Can only print static images</source>
         <translation>静止画像のみ印刷できます</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="65"/>
+        <location filename="../../core.cpp" line="66"/>
         <source>AI Upscaling...</source>
         <translation>AIアップスケーリング...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="619"/>
+        <location filename="../../core.cpp" line="677"/>
         <source>Delete folder permanently?</source>
         <translation>フォルダを完全に削除しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="621"/>
+        <location filename="../../core.cpp" line="679"/>
         <source>Delete file permanently?</source>
         <translation>ファイルを完全に削除しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="646"/>
+        <location filename="../../core.cpp" line="701"/>
         <source>Folder removed</source>
         <translation>フォルダが削除されました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="655"/>
-        <location filename="../../core.cpp" line="729"/>
+        <location filename="../../core.cpp" line="710"/>
+        <location filename="../../core.cpp" line="781"/>
         <source> folders</source>
         <translation> 個のフォルダ</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="661"/>
-        <location filename="../../core.cpp" line="735"/>
+        <location filename="../../core.cpp" line="716"/>
+        <location filename="../../core.cpp" line="787"/>
         <source> items</source>
         <translation> 個の項目</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="685"/>
+        <location filename="../../core.cpp" line="740"/>
         <source> folders to trash?</source>
         <translation> 個のフォルダをゴミ箱に移動しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="687"/>
+        <location filename="../../core.cpp" line="742"/>
         <source> files to trash?</source>
         <translation> 個のファイルをゴミ箱に移動しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="693"/>
+        <location filename="../../core.cpp" line="748"/>
         <source>Move folder to trash?</source>
         <translation>フォルダをゴミ箱に移動しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="695"/>
+        <location filename="../../core.cpp" line="750"/>
         <source>Move file to trash?</source>
         <translation>ファイルをゴミ箱に移動しますか？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1420"/>
+        <location filename="../../core.cpp" line="1450"/>
         <source>AI resize is already running.</source>
         <translation>AIリサイズはすでに実行されています。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1429"/>
+        <location filename="../../core.cpp" line="1459"/>
         <source>AI resize supports one image at a time.</source>
         <translation>AIリサイズは一度に1つの画像のみサポートします。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1436"/>
-        <location filename="../../core.cpp" line="1442"/>
+        <location filename="../../core.cpp" line="1466"/>
+        <location filename="../../core.cpp" line="1472"/>
         <source>Could not resize image.</source>
         <translation>画像をリサイズできませんでした。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1456"/>
+        <location filename="../../core.cpp" line="1486"/>
         <source>AI resizing...</source>
         <translation>AIリサイズ中...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1483"/>
+        <location filename="../../core.cpp" line="1513"/>
         <source>AI resize failed.</source>
         <translation>AIリサイズに失敗しました。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1488"/>
+        <location filename="../../core.cpp" line="1518"/>
         <source>AI resize finished, but the image is no longer in the list.</source>
         <translation>AIリサイズが完了しましたが、画像はもうリストにありません。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1494"/>
+        <location filename="../../core.cpp" line="1524"/>
         <source>Could not apply AI resize.</source>
         <translation>AIリサイズを適用できませんでした。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1503"/>
+        <location filename="../../core.cpp" line="1533"/>
         <source>AI resize finished.</source>
         <translation>AIリサイズが完了しました。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1505"/>
+        <location filename="../../core.cpp" line="1535"/>
         <source>AI resize finished for %1.</source>
         <translation>%1 のAIリサイズが完了しました。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1671"/>
+        <location filename="../../core.cpp" line="1701"/>
         <source>Set wallpaper: failed to get image</source>
         <translation>壁紙設定: 画像の取得に失敗しました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1677"/>
+        <location filename="../../core.cpp" line="1707"/>
         <source>Set wallpaper: screen not found</source>
         <translation>壁紙設定: 画面が見つかりません</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1689"/>
+        <location filename="../../core.cpp" line="1719"/>
         <source>Setting wallpaper...</source>
         <translation>壁紙を設定中...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1699"/>
+        <location filename="../../core.cpp" line="1729"/>
         <source>Set wallpaper: invalid monitor size</source>
         <translation>壁紙設定: モニターサイズが無効です</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1736"/>
+        <location filename="../../core.cpp" line="1766"/>
         <source>Set wallpaper: cropping failed</source>
         <translation>壁紙設定: 切り抜きに失敗しました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1748"/>
+        <location filename="../../core.cpp" line="1778"/>
         <source>AI upscaling...</source>
         <translation>AI拡大中...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1779"/>
+        <location filename="../../core.cpp" line="1809"/>
         <source>Set wallpaper: scaling failed</source>
         <translation>壁紙設定: スケーリングに失敗しました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1786"/>
+        <location filename="../../core.cpp" line="1816"/>
         <source>Set wallpaper: failed to save PNG</source>
         <translation>壁紙設定: PNGの保存に失敗しました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1812"/>
+        <location filename="../../core.cpp" line="1842"/>
         <source>Wallpaper set</source>
         <translation>壁紙を設定しました</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1920"/>
+        <location filename="../../core.cpp" line="1951"/>
         <source>Could not open path: </source>
         <translation>パスを開けませんでした: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1985"/>
+        <location filename="../../core.cpp" line="2016"/>
         <source>Could not load folder: </source>
         <translation>フォルダを読み込めませんでした: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2179"/>
+        <location filename="../../core.cpp" line="2210"/>
         <source>End of directory.</source>
         <translation>ディレクトリの終わり。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2213"/>
+        <location filename="../../core.cpp" line="2244"/>
         <source>Load failed: </source>
         <translation>読み込みに失敗しました: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2275"/>
+        <location filename="../../core.cpp" line="2307"/>
         <source>Error: could not load image.</source>
         <translation>エラー: 画像を読み込めませんでした。</translation>
+    </message>
+    <message>
+        <location filename="../../core.cpp" line="2337"/>
+        <location filename="../../core.cpp" line="2357"/>
+        <source>Page %1/%2</source>
+        <translation>%1/%2 ページ</translation>
     </message>
 </context>
 <context>
@@ -1229,10 +1124,10 @@ Total files: %3</source>
 <context>
     <name>DirectoryPresenter</name>
     <message>
-        <location filename="../../components/directorypresenter.cpp" line="287"/>
-        <location filename="../../components/directorypresenter.cpp" line="463"/>
-        <location filename="../../components/directorypresenter.cpp" line="470"/>
-        <location filename="../../components/directorypresenter.cpp" line="515"/>
+        <location filename="../../components/directorypresenter.cpp" line="288"/>
+        <location filename="../../components/directorypresenter.cpp" line="478"/>
+        <location filename="../../components/directorypresenter.cpp" line="485"/>
+        <location filename="../../components/directorypresenter.cpp" line="530"/>
         <source>Folder</source>
         <translation>フォルダ</translation>
     </message>
@@ -1372,159 +1267,119 @@ Total files: %3</source>
 <context>
     <name>FolderView</name>
     <message>
-        <source>Form</source>
-        <translation type="vanished">Form</translation>
-    </message>
-    <message>
-        <source>[path]</source>
-        <translation type="vanished">[path]</translation>
-    </message>
-    <message>
-        <source>Batch convert  ⇄</source>
-        <translation type="vanished">一括変換  ⇄</translation>
-    </message>
-    <message>
-        <source>FolderViewSlider</source>
-        <translation type="vanished">FolderViewSlider</translation>
-    </message>
-    <message>
-        <source>PanelComboBox</source>
-        <translation type="vanished">PanelComboBox</translation>
-    </message>
-    <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="196"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="206"/>
         <source>Toggle side panel</source>
         <translation>サイドパネルを切り替え</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="212"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="222"/>
         <source>Go up</source>
         <translation>上に移動</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="224"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="234"/>
         <source>15 images selected</source>
         <translation>15枚の画像を選択中</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="228"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="238"/>
         <source>Batch convert</source>
         <translation>一括変換</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="233"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="243"/>
         <source>Grid size</source>
         <translation>グリッドサイズ</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>A - Z</source>
         <translation>A - Z</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>Z - A</source>
         <translation>Z - A</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>Size</source>
         <translation>サイズ</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>Size (desc)</source>
         <translation>サイズ (降順)</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>Oldest</source>
         <translation>古い順</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="257"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
         <source>Newest</source>
         <translation>新しい順</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="258"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
         <source>Folder icon sorting</source>
         <translation>フォルダアイコンの並べ替え</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="269"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="279"/>
         <source>Sort folders and images</source>
         <translation>フォルダと画像を並べ替え</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="280"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="290"/>
         <source>Viewer</source>
         <translation>ビューア</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="288"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="298"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="299"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="309"/>
         <source>Quit qimgv-plus</source>
         <translation>qimgv-plusを終了</translation>
     </message>
     <message>
-        <source>PanelButton</source>
-        <translation type="vanished">PanelButton</translation>
-    </message>
-    <message>
-        <source>PanelButtonRE</source>
-        <translation type="vanished">PanelButtonRE</translation>
-    </message>
-    <message>
-        <source>PlacesPanel</source>
-        <translation type="vanished">PlacesPanel</translation>
-    </message>
-    <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="337"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="347"/>
         <source>BOOKMARKS</source>
         <translation>お気に入り</translation>
     </message>
     <message>
-        <source>PlacesPanelButton</source>
-        <translation type="vanished">PlacesPanelButton</translation>
-    </message>
-    <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="363"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="373"/>
         <source>FILESYSTEM</source>
         <translation>ファイルシステム</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="374"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="384"/>
         <source>Home</source>
         <translation>ホーム</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="740"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="750"/>
         <source>1 image selected</source>
         <translation>1 枚の画像を選択中</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="742"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="752"/>
         <source>%1 images selected</source>
         <translation>%1 枚の画像を選択中</translation>
     </message>
 </context>
 <context>
     <name>ImageInfoOverlay</name>
-    <message>
-        <source>OverlayHeaderWidget</source>
-        <translation type="vanished">OverlayHeaderWidget</translation>
-    </message>
     <message>
         <location filename="../../gui/overlays/imageinfooverlay.cpp" line="52"/>
         <source>EXIF Tags</source>
@@ -1807,59 +1662,59 @@ Total files: %3</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="262"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="278"/>
         <source>Make</source>
         <translation>メーカー</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="266"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="282"/>
         <source>Model</source>
         <translation>モデル</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="270"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="286"/>
         <source>Date/Time</source>
         <translation>日時</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="277"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="280"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="293"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="296"/>
         <source>ExposureTime</source>
         <translation>露出時間</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="277"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="280"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="293"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="296"/>
         <source> sec</source>
         <translation> 秒</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="288"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="304"/>
         <source>F Number</source>
         <translation>F値</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="293"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="309"/>
         <source>ISO Speed ratings</source>
         <translation>ISOスピードレート</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="297"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="313"/>
         <source>Flash</source>
         <translation>フラッシュ</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="303"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="319"/>
         <source>Focal Length</source>
         <translation>焦点距離</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="303"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="319"/>
         <source> mm</source>
         <translation> mm</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="311"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="327"/>
         <source>UserComment</source>
         <translation>ユーザーコメント</translation>
     </message>
@@ -1999,50 +1854,6 @@ Total files: %3</source>
         <location filename="../../gui/dialogs/resizedialog.cpp" line="254"/>
         <source>Select:</source>
         <translation>選択:</translation>
-    </message>
-    <message>
-        <source>1366 x 768</source>
-        <translation type="vanished">1366 x 768</translation>
-    </message>
-    <message>
-        <source>1440 x 900</source>
-        <translation type="vanished">1440 x 900</translation>
-    </message>
-    <message>
-        <source>1440 x 1050</source>
-        <translation type="vanished">1440 x 1050</translation>
-    </message>
-    <message>
-        <source>1600 x 1200</source>
-        <translation type="vanished">1600 x 1200</translation>
-    </message>
-    <message>
-        <source>1920 x 1080 (FullHD)</source>
-        <translation type="vanished">1920 x 1080 (FullHD)</translation>
-    </message>
-    <message>
-        <source>1920 x 1200 (FullHD)</source>
-        <translation type="vanished">1920 x 1200 (FullHD)</translation>
-    </message>
-    <message>
-        <source>2560 x 1080</source>
-        <translation type="vanished">2560 x 1080</translation>
-    </message>
-    <message>
-        <source>2560 x 1440</source>
-        <translation type="vanished">2560 x 1440</translation>
-    </message>
-    <message>
-        <source>2560 x 1600</source>
-        <translation type="vanished">2560 x 1600</translation>
-    </message>
-    <message>
-        <source>3840 x 1600 (UW 4K)</source>
-        <translation type="vanished">3840 x 1600 (UW 4K)</translation>
-    </message>
-    <message>
-        <source>3840 x 2160 (UHD-1)</source>
-        <translation type="vanished">3840 x 2160 (UHD-1)</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.cpp" line="269"/>
@@ -2318,10 +2129,6 @@ Total files: %3</source>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3897"/>
         <source>Fullscreen info bar</source>
         <translation>フルスクリーン情報バー</translation>
-    </message>
-    <message>
-        <source>Status bar</source>
-        <translation type="vanished">ステータスバー</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3904"/>
@@ -2608,80 +2415,6 @@ Total files: %3</source>
         <translation>qimgv-plus について</translation>
     </message>
     <message>
-        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot;
-&quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-hr { height: 1px; border-width: 0;
-}
-li.unchecked::marker { content: &quot;\2610&quot;; }
-li.checked::marker { content: &quot;\2612&quot;; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px;
-margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;This is a fast and easy to use image viewer&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty;
-margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;
-font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Github page:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;
-text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/hadoooooouken/qimgv-plus&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600;
-font-style:italic;&quot;&gt;Original project:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline;
-color:#007af4;&quot;&gt;https://github.com/easymodo/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Plus version developer:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;hadooooouken&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Original developer:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;easymodo&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus/graphs/contributors&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;Contributors&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;qimgv is licensed under &lt;/span&gt;&lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.en.html&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;GNU GPL Version 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;
--qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;Report any issues / request features &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt;
-text-decoration: underline; color:#007af4;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="vanished">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot;
-&quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-hr { height: 1px; border-width: 0;
-}
-li.unchecked::marker { content: &quot;\2610&quot;; }
-li.checked::marker { content: &quot;\2612&quot;; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px;
-margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;軽快で使いやすい画像ビューアです&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty;
-margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;
-font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;GitHubページ:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;
-text-decoration: underline; color:#007af4;&quot;&gt;https://github.com/hadoooooouken/qimgv-plus&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600;
-font-style:italic;&quot;&gt;オリジナルプロジェクト:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo/qimgv&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline;
-color:#007af4;&quot;&gt;https://github.com/easymodo/qimgv&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;Plus版開発者:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;hadooooouken&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic;&quot;&gt;オリジナル開発者:&lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic;&quot;&gt; &lt;/span&gt;&lt;a href=&quot;https://github.com/easymodo&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;easymodo&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus/graphs/contributors&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;貢献者&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot;
-font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;qimgv は以下のライセンスに基づいて提供されています: &lt;/span&gt;&lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.en.html&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt; text-decoration: underline; color:#007af4;&quot;&gt;GNU GPL バージョン 3&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;
--qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:10pt;&quot;&gt;バグ報告 / 機能要望はこちら: &lt;/span&gt;&lt;a href=&quot;https://github.com/hadoooooouken/qimgv-plus/issues&quot;&gt;&lt;span style=&quot; font-family:&apos;Droid Sans&apos;; font-size:10pt;
-text-decoration: underline; color:#007af4;&quot;&gt;こちら&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3947"/>
         <source>Show hidden files</source>
         <translation>隠しファイルを表示</translation>
@@ -2722,21 +2455,9 @@ text-decoration: underline; color:#007af4;&quot;&gt;こちら&lt;/span&gt;&lt;/a
         <translation>画像のフィット:</translation>
     </message>
     <message>
-        <source>Fit in window</source>
-        <translation type="vanished">ウィンドウに合わせる</translation>
-    </message>
-    <message>
-        <source>Stretch to width</source>
-        <translation type="vanished">幅に合わせる</translation>
-    </message>
-    <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3957"/>
         <source>1:1</source>
         <translation>1:1</translation>
-    </message>
-    <message>
-        <source>Fit in window (stretch)</source>
-        <translation type="vanished">ウィンドウに合わせる（引き伸ばす）</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3959"/>
