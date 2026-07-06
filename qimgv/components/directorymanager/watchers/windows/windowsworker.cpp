@@ -58,21 +58,44 @@ void WindowsWorker::run() {
         }
         //qDebug() << "_3";
         bool WAIT = false;
-        if(GetOverlappedResult(hDir, &ovl, &dwBytes, WAIT)) {
+        if (GetOverlappedResult(hDir, &ovl, &dwBytes, WAIT)) {
             bPending = false;
-            if(dwBytes != 0) {
-                FILE_NOTIFY_INFORMATION *fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer[0]);
+
+            if (dwBytes == 0) {
+                qWarning() << "ReadDirectoryChangesW buffer overflow: notifications were lost.";
+            } else {
+                FILE_NOTIFY_INFORMATION *fni =
+                    reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer[0]);
+
                 do {
-                    if(fni->Action != 0) {
-                        int len = fni->FileNameLength / sizeof(WCHAR);
-                        QString name = QString::fromWCharArray(static_cast<wchar_t*>(fni->FileName), len);
+                    if (fni->Action != 0) {
+                        const int len = fni->FileNameLength / sizeof(WCHAR);
+                        const QString name = QString::fromWCharArray(
+                            reinterpret_cast<const wchar_t*>(fni->FileName),
+                            len);
+
                         emit notifyEvent(fni->Action, name);
                     }
-                    if(fni->NextEntryOffset == 0)
+
+                    if (fni->NextEntryOffset == 0)
                         break;
-                    fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(reinterpret_cast<PCHAR>(fni) + fni->NextEntryOffset);
+
+                    fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(
+                        reinterpret_cast<PCHAR>(fni) + fni->NextEntryOffset);
+
                 } while (true);
             }
+        }
+        else {
+            const DWORD error = GetLastError();
+
+            if (error != ERROR_IO_INCOMPLETE) {
+                qCritical() << "GetOverlappedResult failed:" << error;
+                break;
+            }
+
+            // ERROR_IO_INCOMPLETE:
+            // asynchronous operation is still pending, continue polling
         }
         Sleep(POLL_RATE_MS);
     }
