@@ -159,7 +159,7 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     if (qAbs(mBrightness) < ImageLib::kAdjustEpsilon && qAbs(mContrast - 1.0f) < ImageLib::kAdjustEpsilon && qAbs(mSaturation - 1.0f) < ImageLib::kAdjustEpsilon && qAbs(mHue) < ImageLib::kAdjustEpsilon &&
         qAbs(mExposure) < ImageLib::kAdjustEpsilon && qAbs(mTemperature) < ImageLib::kAdjustEpsilon && qAbs(mTint) < ImageLib::kAdjustEpsilon &&
         activeCasSharpening < ImageLib::kAdjustEpsilon && !activeSmartGpu) {
-        releaseGlResources(false);
+        // releaseGlResources(false); Avoid releasing GL texture on every no-effects paint call to prevent recreate thrashing near 1:1 zoom
         fallbackPaint(painter);
         return;
     }
