@@ -134,6 +134,8 @@ void Core::showGui() {
 
 void Core::raiseWindow(const QString &pathReceived) {
   if (!mw) return;
+  if (m_raiseWindowActive) return;
+  RaiseWindowGuard raiseWindowGuard(m_raiseWindowActive);
 
   bool resumed = m_resumeFromStandby;
 

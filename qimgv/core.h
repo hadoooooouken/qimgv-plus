@@ -210,6 +210,21 @@ private slots:
     void onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error);
 #endif
 private:
+    // Guards Core::raiseWindow() against re-entrant invocation (e.g. if a
+    // future code path ends up calling it from within its own call stack).
+    // Sets the flag for the guard's lifetime; resets it on every exit path,
+    // including early returns, via RAII.
+    class RaiseWindowGuard {
+    public:
+        explicit RaiseWindowGuard(bool &flag) : active(flag) { active = true; }
+        ~RaiseWindowGuard() { active = false; }
+        RaiseWindowGuard(const RaiseWindowGuard &) = delete;
+        RaiseWindowGuard &operator=(const RaiseWindowGuard &) = delete;
+    private:
+        bool &active;
+    };
+    bool m_raiseWindowActive = false;
+
     QStringList backHistory, forwardHistory;
     bool blockHistory = false;
     ViewMode m_lastViewMode = MODE_DOCUMENT;
