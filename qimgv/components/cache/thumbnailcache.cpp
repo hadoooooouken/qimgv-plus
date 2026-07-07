@@ -8,29 +8,36 @@ ThumbnailCache::ThumbnailCache() {
 }
 
 QSqlDatabase ThumbnailCache::getDatabaseConnection() {
-    QString connectionName = QString("thumbnail_db_%1").arg(reinterpret_cast<quintptr>(QThread::currentThreadId()));
-    if (QSqlDatabase::contains(connectionName)) {
-        QSqlDatabase db = QSqlDatabase::database(connectionName);
-        if (db.isOpen()) {
+    if (threadConnections.hasLocalData()) {
+        QSqlDatabase &db = threadConnections.localData()->db;
+        if (db.isOpen() || db.open())
             return db;
-        }
+        return db;
     }
-    
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", connectionName);
-    db.setDatabaseName(cacheDirPath + "thumbnails.db");
+
+    const QString connectionName = QStringLiteral("thumbnail_db_%1")
+        .arg(reinterpret_cast<quintptr>(QThread::currentThreadId()));
+
+    QSqlDatabase db = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connectionName);
+    db.setDatabaseName(cacheDirPath + QStringLiteral("thumbnails.db"));
     if (db.open()) {
         QSqlQuery query(db);
-        query.exec("PRAGMA journal_mode=WAL;");
-        query.exec("PRAGMA synchronous=NORMAL;");
-        query.exec("PRAGMA busy_timeout=2000;");
-        query.exec("CREATE TABLE IF NOT EXISTS thumbnails ("
+        query.exec(QStringLiteral("PRAGMA journal_mode=WAL;"));
+        query.exec(QStringLiteral("PRAGMA synchronous=NORMAL;"));
+        query.exec(QStringLiteral("PRAGMA busy_timeout=2000;"));
+        query.exec(QStringLiteral("CREATE TABLE IF NOT EXISTS thumbnails ("
                    "id TEXT PRIMARY KEY, "
                    "last_modified TEXT, "
                    "original_width INTEGER, "
                    "original_height INTEGER, "
                    "label TEXT, "
-                   "data BLOB);");
+                   "data BLOB);"));
     }
+
+    // QThreadStorage takes ownership; ThreadLocalConnection's destructor
+    // will run on this same thread (on exit or replacement), closing and
+    // removing the connection with correct thread affinity.
+    threadConnections.setLocalData(new ThreadLocalConnection(db, connectionName));
     return db;
 }
 

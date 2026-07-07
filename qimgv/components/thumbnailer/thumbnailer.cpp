@@ -1,6 +1,5 @@
 #include "thumbnailer.h"
 #include "settings.h"
-#include <QSqlDatabase>
 
 Thumbnailer::Thumbnailer() {
     cache = std::make_unique<ThumbnailCache>();
@@ -16,18 +15,13 @@ Thumbnailer::~Thumbnailer() {
     pool->clear();
     pool->waitForDone();
 
-    // Close and remove SQLite database connections created by this thumbnailer's threads
-    for (const QString &conn : QSqlDatabase::connectionNames()) {
-        if (conn.startsWith(QStringLiteral("thumbnail_db_"))) {
-            {
-                QSqlDatabase db = QSqlDatabase::database(conn, false);
-                if (db.isOpen()) {
-                    db.close();
-                }
-            }
-            QSqlDatabase::removeDatabase(conn);
-        }
-    }
+    // Explicitly delete (rather than let the QObject parent-child mechanism
+    // do it later): this joins every worker thread now. Each thread's
+    // ThumbnailCache::ThreadLocalConnection is destroyed inside its own
+    // owning thread as part of that thread's shutdown, before this call
+    // returns and before `cache` is torn down below.
+    delete pool;
+    pool = nullptr;
 }
 
 void Thumbnailer::waitForDone() {
