@@ -20,7 +20,7 @@ public slots:
 
 private:
     std::unique_ptr<ThumbnailCache> cache;
-    QThreadPool *pool;
+    std::unique_ptr<QThreadPool> pool;
     void startThumbnailerThread(QString filePath, int size, bool crop, bool force);
     QMultiMap<QString, int> runningTasks;
     QMultiMap<QString, int> queuedTasks;

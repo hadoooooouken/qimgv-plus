@@ -3,7 +3,7 @@
 
 Thumbnailer::Thumbnailer() {
     cache = std::make_unique<ThumbnailCache>();
-    pool = new QThreadPool(this);
+    pool = std::make_unique<QThreadPool>();
     int threads = settings->thumbnailerThreadCount();
     int globalThreads = QThreadPool::globalInstance()->maxThreadCount();
     if(threads > globalThreads)
@@ -15,13 +15,12 @@ Thumbnailer::~Thumbnailer() {
     pool->clear();
     pool->waitForDone();
 
-    // Explicitly delete (rather than let the QObject parent-child mechanism
-    // do it later): this joins every worker thread now. Each thread's
-    // ThumbnailCache::ThreadLocalConnection is destroyed inside its own
-    // owning thread as part of that thread's shutdown, before this call
-    // returns and before `cache` is torn down below.
-    delete pool;
-    pool = nullptr;
+    // No manual delete: `pool` is std::unique_ptr<QThreadPool>, declared
+    // after `cache` in the header, so ordinary C++ member destruction
+    // (reverse of declaration order) destroys it here, joining every
+    // worker thread and running each ThreadLocalConnection's destructor
+    // on its owning thread, before `cache` (and its QThreadStorage) is
+    // destroyed below.
 }
 
 void Thumbnailer::waitForDone() {
