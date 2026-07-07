@@ -162,7 +162,6 @@ void Core::raiseWindow(const QString &pathReceived) {
   }
 
   mw->showDefault();
-  QApplication::processEvents();
 
   if (resumed && mw->isMaximized()) {
       mw->setWindowState(Qt::WindowNoState);
