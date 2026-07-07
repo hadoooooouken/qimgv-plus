@@ -1,7 +1,6 @@
 #include "windowsworker.h"
 
 WindowsWorker::WindowsWorker() : WatcherWorker(), hDir(INVALID_HANDLE_VALUE) {
-
 }
 
 WindowsWorker::~WindowsWorker() {
@@ -89,6 +88,11 @@ void WindowsWorker::run() {
         else {
             const DWORD error = GetLastError();
 
+            // Handle cancellation gracefully
+            if (error == ERROR_OPERATION_ABORTED) {
+                break;
+            }
+
             if (error != ERROR_IO_INCOMPLETE) {
                 qCritical() << "GetOverlappedResult failed:" << error;
                 break;
@@ -98,5 +102,10 @@ void WindowsWorker::run() {
             // asynchronous operation is still pending, continue polling
         }
         Sleep(POLL_RATE_MS);
+    }
+
+    // Close event handle to avoid leak
+    if (ovl.hEvent) {
+        CloseHandle(ovl.hEvent);
     }
 }
