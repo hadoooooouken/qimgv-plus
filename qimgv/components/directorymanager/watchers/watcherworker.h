@@ -11,7 +11,7 @@ public:
     virtual void run() = 0;
 
 public slots:
-    void setRunning(bool running);
+    virtual void setRunning(bool running);
 
 signals:
     void error(const QString& errorMessage);
