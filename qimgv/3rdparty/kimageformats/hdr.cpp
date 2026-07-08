@@ -157,14 +157,25 @@ public:
                         primaries << d;
                 }
                 if (primaries.size() == 8) {
-                    auto cs = QColorSpace(QPointF(primaries.at(6), primaries.at(7)),
-                                          QPointF(primaries.at(0), primaries.at(1)),
-                                          QPointF(primaries.at(2), primaries.at(3)),
-                                          QPointF(primaries.at(4), primaries.at(5)),
-                                          QColorSpace::TransferFunction::Linear);
-                    cs.setDescription(QStringLiteral("Embedded RGB"));
-                    if (cs.isValid())
-                        h.m_colorSpace = cs;
+                    // Skip if all primaries are zero (invalid) to avoid QColorSpace warning
+                    bool valid = false;
+                    for (int i = 0; i < 8; ++i) {
+                        if (primaries.at(i) != 0.0) {
+                            valid = true;
+                            break;
+                        }
+                    }
+                    if (valid) {
+                        qCDebug(HDRPLUGIN) << "About to construct QColorSpace from HDR PRIMARIES:" << primaries;
+                        auto cs = QColorSpace(QPointF(primaries.at(6), primaries.at(7)),
+                                            QPointF(primaries.at(0), primaries.at(1)),
+                                            QPointF(primaries.at(2), primaries.at(3)),
+                                            QPointF(primaries.at(4), primaries.at(5)),
+                                            QColorSpace::TransferFunction::Linear);
+                        cs.setDescription(QStringLiteral("Embedded RGB"));
+                        if (cs.isValid())
+                            h.m_colorSpace = cs;
+                    }
                 }
             }
 

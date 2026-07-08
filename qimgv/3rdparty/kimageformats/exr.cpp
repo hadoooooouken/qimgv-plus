@@ -384,13 +384,23 @@ static void readColorSpace(const Imf::Header &header, QImage &image)
         // Creating the ICC profile from Chromaticities
         if (auto chroma = header.findTypedAttribute<Imf::ChromaticitiesAttribute>("chromaticities")) {
             auto &&v = chroma->value();
-            cs = QColorSpace(QPointF(v.white.x, v.white.y),
-                             QPointF(v.red.x, v.red.y),
-                             QPointF(v.green.x, v.green.y),
-                             QPointF(v.blue.x, v.blue.y),
-                             QColorSpace::TransferFunction::Linear);
-            if (cs.isValid())
-                cs.setDescription(QStringLiteral("Embedded RGB (linear)"));
+            // Skip invalid chromaticities (all primaries zero) to avoid QColorSpace warning
+            if (v.white.x != 0.0 || v.white.y != 0.0 ||
+                v.red.x   != 0.0 || v.red.y   != 0.0 ||
+                v.green.x != 0.0 || v.green.y != 0.0 ||
+                v.blue.x  != 0.0 || v.blue.y  != 0.0)
+            {
+                qCDebug(LOG_EXRPLUGIN) << "About to construct QColorSpace from EXR chromaticities:"
+                        << v.white.x << v.white.y << v.red.x << v.red.y
+                        << v.green.x << v.green.y << v.blue.x << v.blue.y;
+                cs = QColorSpace(QPointF(v.white.x, v.white.y),
+                                 QPointF(v.red.x, v.red.y),
+                                 QPointF(v.green.x, v.green.y),
+                                 QPointF(v.blue.x, v.blue.y),
+                                 QColorSpace::TransferFunction::Linear);
+                if (cs.isValid())
+                    cs.setDescription(QStringLiteral("Embedded RGB (linear)"));
+            }
         }
     }
 
