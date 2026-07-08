@@ -36,7 +36,7 @@ HANDLE WindowsWatcherPrivate::requestDirectoryHandle(const QString& path)
                     FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                     nullptr,
                     OPEN_EXISTING,
-                    FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
+                    FILE_FLAG_BACKUP_SEMANTICS,
                     nullptr);
 
         if (hDirectory == INVALID_HANDLE_VALUE)
