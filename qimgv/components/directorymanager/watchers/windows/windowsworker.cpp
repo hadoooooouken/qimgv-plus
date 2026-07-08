@@ -8,7 +8,6 @@ WindowsWorker::~WindowsWorker() {
 }
 
 void WindowsWorker::setDirectoryHandle(HANDLE hDir) {
-    //qDebug() << "setHandle" << this->hDir << " -> " << hDir;
     freeHandle();
     this->hDir = hDir;
 }
@@ -23,89 +22,114 @@ void WindowsWorker::freeHandle() {
 
 void WindowsWorker::run() {
     isRunning = true;
-    DWORD error = 0;
-    bool bPending = false;
     DWORD dwBytes = 0;
+    std::vector<BYTE> buffer(1024 * 64);
     OVERLAPPED ovl = {0};
-    std::vector<BYTE> buffer(1024*64);
 
     ovl.hEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
-
-    if(!ovl.hEvent) {
-        qWarning() << "[WindowsWorker] CreateEvent failed?";
+    if (!ovl.hEvent) {
+        qWarning() << "[WindowsWorker] CreateEvent failed";
+        isRunning = false;
+        return;
     }
 
-    ::ResetEvent(ovl.hEvent); // is this needed?
-
-    while(isRunning) {
-        //qDebug() << "_1";
-        bPending = ReadDirectoryChangesW(hDir,
-                                         &buffer[0],
-                                         (DWORD)buffer.size(),
-                                         FALSE,
-                                         FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE,
-                                         &dwBytes,
-                                         &ovl,
-                                         nullptr);
-        //qDebug() << "_2";
-        if(!bPending) {
-            error = GetLastError();
-            if(error == ERROR_IO_INCOMPLETE) {
-                qWarning() << "ERROR_IO_INCOMPLETE";
-                continue;
-            }
+    // Issue the first change notification request.
+    if (!ReadDirectoryChangesW(hDir,
+                               buffer.data(),
+                               static_cast<DWORD>(buffer.size()),
+                               FALSE,
+                               FILE_NOTIFY_CHANGE_FILE_NAME |
+                                   FILE_NOTIFY_CHANGE_DIR_NAME |
+                                   FILE_NOTIFY_CHANGE_LAST_WRITE,
+                               &dwBytes,
+                               &ovl,
+                               nullptr)) {
+        DWORD err = GetLastError();
+        if (err != ERROR_IO_PENDING) {
+            qCritical() << "[WindowsWorker] Initial ReadDirectoryChangesW failed:" << err;
+            CloseHandle(ovl.hEvent);
+            isRunning = false;
+            return;
         }
-        //qDebug() << "_3";
-        bool WAIT = false;
-        if (GetOverlappedResult(hDir, &ovl, &dwBytes, WAIT)) {
-            bPending = false;
+        // ERROR_IO_PENDING is the expected outcome for an asynchronous call.
+    }
 
-            if (dwBytes == 0) {
-                qWarning() << "ReadDirectoryChangesW buffer overflow: notifications were lost.";
-            } else {
-                FILE_NOTIFY_INFORMATION *fni =
-                    reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer[0]);
+    while (isRunning) {
+        // Wait for the I/O to complete, but wake up periodically to check the stop flag.
+        DWORD waitResult = ::WaitForSingleObject(ovl.hEvent, POLL_RATE_MS);
 
-                do {
-                    if (fni->Action != 0) {
-                        const int len = fni->FileNameLength / sizeof(WCHAR);
-                        const QString name = QString::fromWCharArray(
-                            reinterpret_cast<const wchar_t*>(fni->FileName),
-                            len);
-
-                        emit notifyEvent(fni->Action, name);
-                    }
-
-                    if (fni->NextEntryOffset == 0)
-                        break;
-
-                    fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(
-                        reinterpret_cast<PCHAR>(fni) + fni->NextEntryOffset);
-
-                } while (true);
-            }
+        // If the thread was asked to stop, wait for the final (cancelled) I/O
+        // to complete so the overlapped structure can be safely destroyed.
+        if (!isRunning) {
+            // freeHandle() should have already called CancelIoEx. Wait until
+            // the pending operation finishes (the event will be signaled).
+            ::WaitForSingleObject(ovl.hEvent, INFINITE);
+            break; // clean up after the loop
         }
-        else {
-            const DWORD error = GetLastError();
 
-            // Handle cancellation gracefully
-            if (error == ERROR_OPERATION_ABORTED) {
+        if (waitResult == WAIT_TIMEOUT) {
+            // No completion yet, just loop again and re-check isRunning.
+            continue;
+        }
+
+        if (waitResult != WAIT_OBJECT_0) {
+            qCritical() << "[WindowsWorker] WaitForSingleObject failed:" << GetLastError();
+            break;
+        }
+
+        // I/O completed – retrieve the result.
+        if (!GetOverlappedResult(hDir, &ovl, &dwBytes, FALSE)) {
+            DWORD err = GetLastError();
+            if (err == ERROR_OPERATION_ABORTED) {
+                // The operation was cancelled (e.g., during shutdown).
                 break;
             }
+            qCritical() << "[WindowsWorker] GetOverlappedResult failed:" << err;
+            break;
+        }
 
-            if (error != ERROR_IO_INCOMPLETE) {
-                qCritical() << "GetOverlappedResult failed:" << error;
+        // Process the received notifications.
+        if (dwBytes > 0) {
+            FILE_NOTIFY_INFORMATION *fni =
+                reinterpret_cast<FILE_NOTIFY_INFORMATION*>(buffer.data());
+            do {
+                if (fni->Action != 0) {
+                    const int len = fni->FileNameLength / sizeof(WCHAR);
+                    const QString name = QString::fromWCharArray(
+                        reinterpret_cast<const wchar_t*>(fni->FileName), len);
+                    emit notifyEvent(fni->Action, name);
+                }
+                if (fni->NextEntryOffset == 0)
+                    break;
+                fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(
+                    reinterpret_cast<PCHAR>(fni) + fni->NextEntryOffset);
+            } while (true);
+        } else {
+            // dwBytes == 0 means the buffer overflowed – some notifications were lost.
+            qWarning() << "[WindowsWorker] Buffer overflow, notifications lost";
+        }
+
+        // Re-issue the change notification for the next batch of events.
+        ::ResetEvent(ovl.hEvent);
+        if (!ReadDirectoryChangesW(hDir,
+                                   buffer.data(),
+                                   static_cast<DWORD>(buffer.size()),
+                                   FALSE,
+                                   FILE_NOTIFY_CHANGE_FILE_NAME |
+                                       FILE_NOTIFY_CHANGE_DIR_NAME |
+                                       FILE_NOTIFY_CHANGE_LAST_WRITE,
+                                   &dwBytes,
+                                   &ovl,
+                                   nullptr)) {
+            DWORD err = GetLastError();
+            if (err != ERROR_IO_PENDING) {
+                qCritical() << "[WindowsWorker] ReadDirectoryChangesW re-issue failed:" << err;
                 break;
             }
-
-            // ERROR_IO_INCOMPLETE:
-            // asynchronous operation is still pending, continue polling
         }
-        Sleep(POLL_RATE_MS);
     }
 
-    // Close event handle to avoid leak
-    if (ovl.hEvent) {
-        CloseHandle(ovl.hEvent);
-    }
+    // Clean up the event handle. At this point the overlapped operation is definitely finished.
+    CloseHandle(ovl.hEvent);
+    isRunning = false;
 }
