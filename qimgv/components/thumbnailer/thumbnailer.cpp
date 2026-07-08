@@ -30,6 +30,7 @@ void Thumbnailer::waitForDone() {
 void Thumbnailer::clearTasks() {
     pool->clear();
     queuedTasks.clear();
+    pendingReruns.clear();
 }
 
 std::shared_ptr<Thumbnail> Thumbnailer::getThumbnail(QString filePath, int size) {
@@ -37,8 +38,25 @@ std::shared_ptr<Thumbnail> Thumbnailer::getThumbnail(QString filePath, int size)
 }
 
 void Thumbnailer::getThumbnailAsync(QString path, int size, bool crop, bool force) {
-    if(!runningTasks.contains(path, size) && !queuedTasks.contains(path, size))
-        startThumbnailerThread(path, size, crop, force);
+    // Task hasn't started yet (still queued in the pool) - actual file read
+    // hasn't begun, so when it does start it will see the current mtime on
+    // its own. No point duplicating the request, drop it like before.
+    if(queuedTasks.contains(path, size))
+        return;
+
+    if(runningTasks.contains(path, size)) {
+        auto key = qMakePair(path, size);
+        auto it = pendingReruns.find(key);
+        if(it != pendingReruns.end()) {
+            it->force = it->force || force; // never downgrade true -> false
+            it->crop = crop;
+        } else {
+            pendingReruns.insert(key, PendingRerun{crop, force});
+        }
+        return;
+    }
+
+    startThumbnailerThread(path, size, crop, force);
 }
 
 void Thumbnailer::startThumbnailerThread(QString filePath, int size, bool crop, bool force) {
@@ -56,7 +74,22 @@ void Thumbnailer::onTaskStart(QString filePath, int size) {
 }
 
 void Thumbnailer::onTaskEnd(std::shared_ptr<Thumbnail> thumbnail, QString filePath) {
-    runningTasks.remove(filePath, thumbnail->size());
+    int size = thumbnail->size();
+    runningTasks.remove(filePath, size);
+
+    auto key = qMakePair(filePath, size);
+    auto it = pendingReruns.find(key);
+    if(it != pendingReruns.end()) {
+        PendingRerun rerun = it.value();
+        pendingReruns.erase(it);
+        // rerun.force is passed through as-is (not hardcoded to true) - with
+        // force=false, generate() checks mtime against the cache itself, so a
+        // spurious duplicate request just returns the cached thumbnail
+        // instead of triggering a real regeneration.
+        startThumbnailerThread(filePath, size, rerun.crop, rerun.force);
+        return;
+    }
+
     emit thumbnailReady(thumbnail, filePath);
     if(m_selfDestructOnFinished && runningTasks.isEmpty()) {
         deleteLater();

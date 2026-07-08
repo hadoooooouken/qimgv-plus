@@ -1,25 +1,37 @@
 #include "fsentry.h"
 
+namespace fs = std::filesystem;
+
 FSEntry::FSEntry() {
 }
 
 FSEntry::FSEntry(const QString &path) {
-    std::filesystem::directory_entry stdEntry(toStdString(path));
+    std::error_code ec;
+    fs::directory_entry stdEntry(toStdString(path), ec);
+    if(ec) {
+        // File is transiently unreadable (still being written/copied,
+        // share violation, etc). Leave entry default-constructed; the
+        // watcher will fire again once the write settles.
+        return;
+    }
+
     QString name = QString::fromStdString(stdEntry.path().filename().generic_string());
-    if(stdEntry.is_directory()) {
-        try {
-            this->name = name;
-            this->path = path;
-            this->isDirectory = true;
-        } catch (const std::filesystem::filesystem_error &) { }
+
+    if(stdEntry.is_directory(ec)) {
+        if(ec) return;
+        this->name = name;
+        this->path = path;
+        this->isDirectory = true;
     } else {
-        try {
-            this->name = name;
-            this->path = path;
-            this->isDirectory = false;
-            this->size = stdEntry.file_size();
-            this->modifyTime = stdEntry.last_write_time();
-        } catch (const std::filesystem::filesystem_error &) { }
+        if(ec) return;
+        this->name = name;
+        this->path = path;
+        this->isDirectory = false;
+        this->size = stdEntry.file_size(ec);
+        if(ec) this->size = 0;
+        this->modifyTime = stdEntry.last_write_time(ec);
+        // ec left set here just means modifyTime stays default - next
+        // watcher event for this file will pick it up correctly
     }
 }
 
