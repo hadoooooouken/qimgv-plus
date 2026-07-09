@@ -181,17 +181,58 @@ void WindowsWorker::run() {
     if (currentCtx) {
         CancelIoEx(currentCtx->hDir, &currentCtx->ovl);
         CloseHandle(currentCtx->hDir);
+        currentCtx->hDir = INVALID_HANDLE_VALUE;
 
-        // Best-effort drain of the final cancellation completion so we
-        // don't leak ctx. If this times out we accept a one-time leak
-        // rather than hanging shutdown.
-        DWORD bytesTransferred = 0;
-        ULONG_PTR key = 0;
-        LPOVERLAPPED pOvl = nullptr;
-        GetQueuedCompletionStatus(hIOCP, &bytesTransferred, &key, &pOvl, 2000);
+        // Drain completions until we see the one that actually belongs to
+        // currentCtx's cancelled read. We must NOT just grab whatever the
+        // queue hands us first: with rapid directory switches (A->B->C)
+        // there can be stale, still-undelivered cancellation packets from
+        // *previous* switchTo() calls sitting ahead of it in the queue
+        // (out-of-order delivery is normal for IOCP, and standby/resume
+        // widens this window further). Grabbing one of those and deleting
+        // currentCtx unconditionally, as before, left the real cancellation
+        // for currentCtx unconfirmed - the kernel could still write into
+        // ctx->ovl / ctx->buffer after we'd already freed that memory,
+        // corrupting the heap. Each packet we actually dequeue is safe to
+        // free immediately (its completion is real by definition); we just
+        // keep going until the one we free is currentCtx itself.
+        const ULONGLONG deadline = GetTickCount64() + 2000;
+        while (currentCtx) {
+            ULONGLONG now = GetTickCount64();
+            if (now >= deadline) {
+                // Give up: accept a one-time leak of currentCtx rather than
+                // free memory the kernel might still be about to write into.
+                currentCtx = nullptr;
+                break;
+            }
 
-        delete currentCtx;
-        currentCtx = nullptr;
+            DWORD bytesTransferred = 0;
+            ULONG_PTR key = 0;
+            LPOVERLAPPED pOvl = nullptr;
+            GetQueuedCompletionStatus(hIOCP, &bytesTransferred, &key, &pOvl,
+                                       static_cast<DWORD>(deadline - now));
+
+            if (!pOvl) {
+                // Timeout or a fatal error with no packet at all - queue is
+                // empty, nothing left to drain.
+                currentCtx = nullptr;
+                break;
+            }
+
+            if (key == KEY_SWITCH) {
+                // A switchTo() request we posted to ourselves but never got
+                // to process because KEY_QUIT arrived first.
+                delete reinterpret_cast<DirWatchCtx*>(pOvl);
+                continue;
+            }
+
+            DirWatchCtx* ctx = CONTAINING_RECORD(pOvl, DirWatchCtx, ovl);
+            bool wasCurrent = (ctx == currentCtx);
+            delete ctx; // this completion is genuinely for ctx, safe to free
+            if (wasCurrent)
+                currentCtx = nullptr;
+            // else: stale ctx from an earlier switchTo(), keep waiting
+        }
     }
 
     isRunning = false;
