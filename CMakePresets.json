@@ -33,6 +33,14 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "qimgv-x64-relwithdebinfo",
+      "displayName": "qimgv: x64 RelWithDebInfo",
+      "inherits": "windows-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
     }
   ],
   "buildPresets": [
@@ -43,6 +51,10 @@
     {
       "name": "qimgv-x64-release",
       "configurePreset": "qimgv-x64-release"
+    },
+    {
+      "name": "qimgv-x64-relwithdebinfo",
+      "configurePreset": "qimgv-x64-relwithdebinfo"
     }
   ]
 }
