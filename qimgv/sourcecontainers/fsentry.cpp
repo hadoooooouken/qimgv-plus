@@ -15,7 +15,7 @@ FSEntry::FSEntry(const QString &path) {
         return;
     }
 
-    QString name = QString::fromStdString(stdEntry.path().filename().generic_string());
+    QString name = QString::fromStdWString(stdEntry.path().filename().generic_wstring());
 
     if(stdEntry.is_directory(ec)) {
         if(ec) return;
