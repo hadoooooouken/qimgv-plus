@@ -276,7 +276,7 @@ void Settings::loadStylesheet() {
     styleSheet.replace("%rename_overlay_width%",
                        QString::number(rename_overlay_width) + "px");
 
-    styleSheet.replace("%icontheme%", "light");
+    styleSheet.replace("%icontheme%", isDark ? "light" : "dark");
     styleSheet.replace("%contextmenu_border_radius%", "8px");
     styleSheet.replace("%sys_window%", sys_window.name());
     styleSheet.replace("%sys_window_tinted%", sys_window_tinted.name());
