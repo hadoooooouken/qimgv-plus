@@ -20,7 +20,7 @@ struct KSamplerInfo
     double  denoise      = 1.0;  // Denoise
     int     steps        = 0;    // Steps
     QStringList loraNames;     // LoRA — chain of LoraLoader nodes (may be empty)
-
+    QString positivePrompt;   // Positive prompt text
     QString sourceNodeId; // id of the KSampler node the parameters were taken from
 };
 
@@ -35,6 +35,19 @@ public:
     static std::expected<KSamplerInfo, QString> parseFromJson(const QByteArray &promptJson);
 
 private:
+    // Walks backward through a conditioning input (positive) to find
+    // the originating CLIPTextEncode node(s) and return their text. Follows
+    // simple pass-through nodes (ControlNetApply, ConditioningSetArea, etc.)
+    // and merges both branches of ConditioningCombine.
+    static QString resolveConditioningText(const QJsonObject &prompt,
+                                            const QJsonValue &conditioningInput,
+                                            QSet<QString> visited = {});
+    // Resolves a text-producing input that may be a literal string or a link
+    // into a node that builds the string dynamically (concatenation,
+    // find/replace, etc.). Collects every string value reachable from the
+    // node.
+    static QString resolveTextLink(const QJsonObject &prompt, const QJsonValue &v,
+                                    QSet<QString> &visited);
     static QJsonObject findMainKSamplerNode(const QJsonObject &prompt, QString &outId);
     static QString resolveModelChain(const QJsonObject &prompt, const QJsonValue &modelInput,
                                       QStringList &loraNames);

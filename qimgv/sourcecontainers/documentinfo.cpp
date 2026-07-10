@@ -394,6 +394,8 @@ void DocumentInfo::loadGenerationInfo() {
     generationInfo.append({ QObject::tr("Steps"), QString::number(info.steps) });
     if (!info.loraNames.isEmpty())
         generationInfo.append({ QObject::tr("LoRA"), info.loraNames.join(QStringLiteral(", ")) });
+    if (!info.positivePrompt.isEmpty())
+        generationInfo.append({ QObject::tr("Prompt"), info.positivePrompt });
 }
 
 QList<QPair<QString, QString>> DocumentInfo::getGenerationInfo() {

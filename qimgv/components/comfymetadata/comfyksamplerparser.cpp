@@ -222,6 +222,87 @@ double ComfyKSamplerParser::resolveSeedValue(const QJsonObject &prompt,
     return 0;
 }
 
+QString ComfyKSamplerParser::resolveConditioningText(const QJsonObject &prompt,
+                                                       const QJsonValue &conditioningInput,
+                                                       QSet<QString> visited)
+{
+    if (!isLink(conditioningInput))
+        return {};
+
+    QJsonArray link = conditioningInput.toArray();
+    QString srcId = link.at(0).toVariant().toString();
+
+    if (!prompt.contains(srcId) || visited.contains(srcId))
+        return {};
+    visited.insert(srcId);
+
+    QJsonObject srcNode = prompt.value(srcId).toObject();
+    QString classType = srcNode.value("class_type").toString();
+    QJsonObject srcInputs = srcNode.value("inputs").toObject();
+
+    // The actual prompt text lives on the CLIPTextEncode node(s). Covers the
+    // plain CLIPTextEncode as well as SDXL's text_g/text_l variant.
+    if (classType.contains("CLIPTextEncode", Qt::CaseInsensitive)) {
+        QStringList parts;
+        for (const char *key : { "text", "text_g", "text_l" }) {
+            QSet<QString> textVisited;
+            QString text = resolveTextLink(prompt, srcInputs.value(key), textVisited);
+            if (!text.isEmpty())
+                parts << text;
+        }
+        return parts.join(QStringLiteral(" "));
+    }
+
+    // ConditioningCombine merges two branches — resolve and join both.
+    if (classType.contains("ConditioningCombine", Qt::CaseInsensitive)) {
+        QString a = resolveConditioningText(prompt, srcInputs.value("conditioning_1"), visited);
+        QString b = resolveConditioningText(prompt, srcInputs.value("conditioning_2"), visited);
+        if (!a.isEmpty() && !b.isEmpty())
+            return a + QStringLiteral(" ") + b;
+        return a.isEmpty() ? b : a;
+    }
+
+    // Other pass-through nodes (ControlNetApply, ConditioningSetArea,
+    // ConditioningZeroOut, Switch/Mux nodes, etc.) carry the chain forward
+    // through a single conditioning-shaped input.
+    QJsonValue nextLink = pickPassThroughLink(srcInputs, QStringLiteral("conditioning"));
+    if (isLink(nextLink))
+        return resolveConditioningText(prompt, nextLink, visited);
+
+    return {};
+}
+
+QString ComfyKSamplerParser::resolveTextLink(const QJsonObject &prompt,
+                                              const QJsonValue &v,
+                                              QSet<QString> &visited)
+{
+    if (v.isString())
+        return v.toString();
+
+    if (!isLink(v))
+        return {};
+
+    QJsonArray link = v.toArray();
+    QString srcId = link.at(0).toVariant().toString();
+    if (!prompt.contains(srcId) || visited.contains(srcId))
+        return {};
+    visited.insert(srcId);
+
+    QJsonObject srcInputs = prompt.value(srcId).toObject().value("inputs").toObject();
+
+    QStringList parts;
+    for (auto it = srcInputs.constBegin(); it != srcInputs.constEnd(); ++it) {
+        if (it.value().isString() && !it.value().toString().isEmpty()) {
+            parts << it.value().toString();
+        } else if (isLink(it.value())) {
+            QString sub = resolveTextLink(prompt, it.value(), visited);
+            if (!sub.isEmpty())
+                parts << sub;
+        }
+    }
+    return parts.join(QStringLiteral(" "));
+}
+
 QJsonObject ComfyKSamplerParser::findMainKSamplerNode(const QJsonObject &prompt, QString &outId)
 {
     // Collect all candidates for the role of KSampler.
@@ -342,6 +423,8 @@ std::expected<KSamplerInfo, QString> ComfyKSamplerParser::parseFromJson(const QB
     info.vaeName = findLoaderValue(prompt,
                                     { "VAELoader" },
                                     { "vae_name" });
+    // Positive prompt – walk up the conditioning links
+    info.positivePrompt = resolveConditioningText(prompt, inputs.value("positive"));
 
     return info;
 }
