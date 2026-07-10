@@ -49,7 +49,7 @@ void ImageInfoOverlay::setupUi() {
     headerIcon->setAccessibleName("OverlayHeaderIcon");
     horizontalLayout->addWidget(headerIcon);
 
-    QLabel *label = new QLabel(tr("EXIF Tags"), header);
+    QLabel *label = new QLabel(tr("Image info"), header);
     QSizePolicy labelPolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     labelPolicy.setHorizontalStretch(1);
     label->setSizePolicy(labelPolicy);

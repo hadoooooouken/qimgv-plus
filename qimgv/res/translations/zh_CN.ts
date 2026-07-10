@@ -604,242 +604,242 @@ Total files: %3</source>
 <context>
     <name>Core</name>
     <message>
-        <location filename="../../core.cpp" line="493"/>
+        <location filename="../../core.cpp" line="494"/>
         <source>Updated: </source>
         <translation>更新到: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="501"/>
+        <location filename="../../core.cpp" line="502"/>
         <source>Welcome to </source>
         <translation>欢迎使用 </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="502"/>
+        <location filename="../../core.cpp" line="503"/>
         <source> version </source>
         <translation> 版本 </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="520"/>
+        <location filename="../../core.cpp" line="521"/>
         <source>Shuffle mode: OFF</source>
         <translation>随机模式: 关闭</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="523"/>
+        <location filename="../../core.cpp" line="524"/>
         <source>Shuffle mode: ON</source>
         <translation>随机模式: 启用</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="532"/>
+        <location filename="../../core.cpp" line="533"/>
         <source>Slideshow: OFF</source>
         <translation>幻灯片播放：关闭</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="536"/>
+        <location filename="../../core.cpp" line="537"/>
         <source>Slideshow: ON</source>
         <translation>幻灯片播放：启用</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="666"/>
-        <location filename="../../core.cpp" line="669"/>
-        <location filename="../../core.cpp" line="672"/>
+        <location filename="../../core.cpp" line="667"/>
+        <location filename="../../core.cpp" line="670"/>
+        <location filename="../../core.cpp" line="673"/>
         <source>Delete </source>
         <translation>永久删除 </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="667"/>
+        <location filename="../../core.cpp" line="668"/>
         <source> folders permanently?</source>
         <translation> 文件夹吗？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="670"/>
+        <location filename="../../core.cpp" line="671"/>
         <source> files permanently?</source>
         <translation> 文件吗？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="673"/>
+        <location filename="../../core.cpp" line="674"/>
         <source> items permanently?</source>
         <translation> 个项目?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="681"/>
+        <location filename="../../core.cpp" line="682"/>
         <source>Delete permanently</source>
         <translation>永久删除</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="703"/>
+        <location filename="../../core.cpp" line="704"/>
         <source>File removed</source>
         <translation>文件已删除</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="709"/>
-        <location filename="../../core.cpp" line="712"/>
-        <location filename="../../core.cpp" line="715"/>
+        <location filename="../../core.cpp" line="710"/>
+        <location filename="../../core.cpp" line="713"/>
+        <location filename="../../core.cpp" line="716"/>
         <source>Removed: </source>
         <translation>成功删除: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="713"/>
-        <location filename="../../core.cpp" line="784"/>
+        <location filename="../../core.cpp" line="714"/>
+        <location filename="../../core.cpp" line="785"/>
         <source> files</source>
         <translation> 个文件</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="740"/>
-        <location filename="../../core.cpp" line="742"/>
-        <location filename="../../core.cpp" line="744"/>
+        <location filename="../../core.cpp" line="741"/>
+        <location filename="../../core.cpp" line="743"/>
+        <location filename="../../core.cpp" line="745"/>
         <source>Move </source>
         <translation>移动 </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="744"/>
+        <location filename="../../core.cpp" line="745"/>
         <source> items to trash?</source>
         <translation> 个项目到回收站?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="752"/>
+        <location filename="../../core.cpp" line="753"/>
         <source>Move to trash</source>
         <translation>删除到回收站</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="772"/>
+        <location filename="../../core.cpp" line="773"/>
         <source>Folder moved to trash</source>
         <translation>文件夹已移至回收站</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="774"/>
+        <location filename="../../core.cpp" line="775"/>
         <source>Moved to trash</source>
         <translation>删除到回收站</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="780"/>
-        <location filename="../../core.cpp" line="783"/>
-        <location filename="../../core.cpp" line="786"/>
+        <location filename="../../core.cpp" line="781"/>
+        <location filename="../../core.cpp" line="784"/>
+        <location filename="../../core.cpp" line="787"/>
         <source>Moved to trash: </source>
         <translation>移动到回收站： </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="857"/>
+        <location filename="../../core.cpp" line="858"/>
         <source>File copied</source>
         <translation>文件已拷贝</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="864"/>
+        <location filename="../../core.cpp" line="865"/>
         <source>Path copied</source>
         <translation>目录已拷贝</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1025"/>
-        <location filename="../../core.cpp" line="1321"/>
-        <location filename="../../core.cpp" line="1343"/>
+        <location filename="../../core.cpp" line="1026"/>
+        <location filename="../../core.cpp" line="1322"/>
+        <location filename="../../core.cpp" line="1344"/>
         <source>File exists</source>
         <translation>文件已经存在</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1025"/>
+        <location filename="../../core.cpp" line="1026"/>
         <source>Overwrite file?</source>
         <translation>覆盖文件吗?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1120"/>
+        <location filename="../../core.cpp" line="1121"/>
         <source>Add folder</source>
         <translation>新建文件夹</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1121"/>
+        <location filename="../../core.cpp" line="1122"/>
         <source>Folder name:</source>
         <translation>文件夹名称:</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1128"/>
+        <location filename="../../core.cpp" line="1129"/>
         <source>Folder already exists</source>
         <translation>文件夹已存在</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1139"/>
+        <location filename="../../core.cpp" line="1140"/>
         <source>Failed to create folder</source>
         <translation>新建文件夹失败</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1203"/>
-        <location filename="../../core.cpp" line="1281"/>
+        <location filename="../../core.cpp" line="1204"/>
+        <location filename="../../core.cpp" line="1282"/>
         <source>Could not create directory </source>
         <translation>不能建立该目录 </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1319"/>
+        <location filename="../../core.cpp" line="1320"/>
         <source>File moved.</source>
         <translation>文件已移动.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1322"/>
-        <location filename="../../core.cpp" line="1344"/>
+        <location filename="../../core.cpp" line="1323"/>
+        <location filename="../../core.cpp" line="1345"/>
         <source>Destination file exists. Overwrite?</source>
         <translation>目标文件已经存在. 覆盖吗?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1341"/>
+        <location filename="../../core.cpp" line="1342"/>
         <source>File copied.</source>
         <translation>文件已拷贝.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1408"/>
+        <location filename="../../core.cpp" line="1409"/>
         <source>Perform action &quot;</source>
         <translation>执行操作 \&quot;</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1409"/>
+        <location filename="../../core.cpp" line="1410"/>
         <source>Changes will be saved immediately.</source>
         <translation>更改将立即保存.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1430"/>
+        <location filename="../../core.cpp" line="1431"/>
         <source>Flip horizontal</source>
         <translation>水平翻转</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1434"/>
+        <location filename="../../core.cpp" line="1435"/>
         <source>Flip vertical</source>
         <translation>垂直翻转</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1439"/>
+        <location filename="../../core.cpp" line="1440"/>
         <source>Rotate</source>
         <translation>旋转</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1500"/>
+        <location filename="../../core.cpp" line="1501"/>
         <source>Resize</source>
         <translation>调整大小</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1543"/>
-        <location filename="../../core.cpp" line="1549"/>
+        <location filename="../../core.cpp" line="1544"/>
+        <location filename="../../core.cpp" line="1550"/>
         <source>Crop</source>
         <translation>裁剪</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1608"/>
+        <location filename="../../core.cpp" line="1609"/>
         <source>File saved</source>
         <translation>文件已保存</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1611"/>
+        <location filename="../../core.cpp" line="1612"/>
         <source>Could not save file</source>
         <translation>不能保存文件</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1689"/>
-        <location filename="../../core.cpp" line="1695"/>
+        <location filename="../../core.cpp" line="1690"/>
+        <location filename="../../core.cpp" line="1696"/>
         <source>Set wallpaper: file not supported</source>
         <translation>设为壁纸: 不支持的文件格式</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1856"/>
+        <location filename="../../core.cpp" line="1857"/>
         <source>Could not open image</source>
         <translation>不能打开图片</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1860"/>
+        <location filename="../../core.cpp" line="1861"/>
         <source>Can only print static images</source>
         <translation>只能打印静态图片</translation>
     </message>
@@ -849,171 +849,171 @@ Total files: %3</source>
         <translation>AI 放大中...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="677"/>
+        <location filename="../../core.cpp" line="678"/>
         <source>Delete folder permanently?</source>
         <translation>永久删除文件夹吗？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="679"/>
+        <location filename="../../core.cpp" line="680"/>
         <source>Delete file permanently?</source>
         <translation>永久删除文件吗？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="701"/>
+        <location filename="../../core.cpp" line="702"/>
         <source>Folder removed</source>
         <translation>文件夹已移除</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="710"/>
-        <location filename="../../core.cpp" line="781"/>
+        <location filename="../../core.cpp" line="711"/>
+        <location filename="../../core.cpp" line="782"/>
         <source> folders</source>
         <translation> 文件夹</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="716"/>
-        <location filename="../../core.cpp" line="787"/>
+        <location filename="../../core.cpp" line="717"/>
+        <location filename="../../core.cpp" line="788"/>
         <source> items</source>
         <translation> 项</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="740"/>
+        <location filename="../../core.cpp" line="741"/>
         <source> folders to trash?</source>
         <translation> 文件夹至回收站吗？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="742"/>
+        <location filename="../../core.cpp" line="743"/>
         <source> files to trash?</source>
         <translation> 文件至回收站吗？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="748"/>
+        <location filename="../../core.cpp" line="749"/>
         <source>Move folder to trash?</source>
         <translation>移动文件夹至回收站吗？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="750"/>
+        <location filename="../../core.cpp" line="751"/>
         <source>Move file to trash?</source>
         <translation>移动文件至回收站吗？</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1450"/>
+        <location filename="../../core.cpp" line="1451"/>
         <source>AI resize is already running.</source>
         <translation>AI缩放已在运行中。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1459"/>
+        <location filename="../../core.cpp" line="1460"/>
         <source>AI resize supports one image at a time.</source>
         <translation>AI缩放一次仅支持一张图像。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1466"/>
-        <location filename="../../core.cpp" line="1472"/>
+        <location filename="../../core.cpp" line="1467"/>
+        <location filename="../../core.cpp" line="1473"/>
         <source>Could not resize image.</source>
         <translation>无法缩放图像。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1486"/>
+        <location filename="../../core.cpp" line="1487"/>
         <source>AI resizing...</source>
         <translation>正在进行AI缩放...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1513"/>
+        <location filename="../../core.cpp" line="1514"/>
         <source>AI resize failed.</source>
         <translation>AI缩放失败。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1518"/>
+        <location filename="../../core.cpp" line="1519"/>
         <source>AI resize finished, but the image is no longer in the list.</source>
         <translation>AI缩放已完成，但该图像已不再列表中。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1524"/>
+        <location filename="../../core.cpp" line="1525"/>
         <source>Could not apply AI resize.</source>
         <translation>无法应用AI缩放。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1533"/>
+        <location filename="../../core.cpp" line="1534"/>
         <source>AI resize finished.</source>
         <translation>AI缩放已完成。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1535"/>
+        <location filename="../../core.cpp" line="1536"/>
         <source>AI resize finished for %1.</source>
         <translation>%1 的AI缩放已完成。</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1701"/>
+        <location filename="../../core.cpp" line="1702"/>
         <source>Set wallpaper: failed to get image</source>
         <translation>设置壁纸：获取图像失败</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1707"/>
+        <location filename="../../core.cpp" line="1708"/>
         <source>Set wallpaper: screen not found</source>
         <translation>设置壁纸：未找到屏幕</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1719"/>
+        <location filename="../../core.cpp" line="1720"/>
         <source>Setting wallpaper...</source>
         <translation>正在设置壁纸...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1729"/>
+        <location filename="../../core.cpp" line="1730"/>
         <source>Set wallpaper: invalid monitor size</source>
         <translation>设置壁纸：显示器大小无效</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1766"/>
+        <location filename="../../core.cpp" line="1767"/>
         <source>Set wallpaper: cropping failed</source>
         <translation>设置壁纸：裁剪失败</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1778"/>
+        <location filename="../../core.cpp" line="1779"/>
         <source>AI upscaling...</source>
         <translation>AI超分辨率中...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1809"/>
+        <location filename="../../core.cpp" line="1810"/>
         <source>Set wallpaper: scaling failed</source>
         <translation>设置壁纸：缩放失败</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1816"/>
+        <location filename="../../core.cpp" line="1817"/>
         <source>Set wallpaper: failed to save PNG</source>
         <translation>设置壁纸：保存PNG失败</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1842"/>
+        <location filename="../../core.cpp" line="1843"/>
         <source>Wallpaper set</source>
         <translation>壁纸已设置</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1951"/>
+        <location filename="../../core.cpp" line="1952"/>
         <source>Could not open path: </source>
         <translation>不能打开的路径: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2016"/>
+        <location filename="../../core.cpp" line="2017"/>
         <source>Could not load folder: </source>
         <translation>不能载入的目录: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2210"/>
+        <location filename="../../core.cpp" line="2211"/>
         <source>End of directory.</source>
         <translation>目录末尾.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2244"/>
+        <location filename="../../core.cpp" line="2245"/>
         <source>Load failed: </source>
         <translation>加载失败: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2307"/>
+        <location filename="../../core.cpp" line="2308"/>
         <source>Error: could not load image.</source>
         <translation>错误: 不能载入图片.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2337"/>
-        <location filename="../../core.cpp" line="2357"/>
+        <location filename="../../core.cpp" line="2338"/>
+        <location filename="../../core.cpp" line="2358"/>
         <source>Page %1/%2</source>
         <translation>第 %1/%2 页</translation>
     </message>
@@ -1368,12 +1368,12 @@ Total files: %3</source>
         <translation>主页</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="750"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="751"/>
         <source>1 image selected</source>
         <translation>已选择 1 张图像</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="752"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="753"/>
         <source>%1 images selected</source>
         <translation>已选择 %1 张图像</translation>
     </message>
@@ -1382,8 +1382,8 @@ Total files: %3</source>
     <name>ImageInfoOverlay</name>
     <message>
         <location filename="../../gui/overlays/imageinfooverlay.cpp" line="52"/>
-        <source>EXIF Tags</source>
-        <translation>EXIF标签</translation>
+        <source>Image info</source>
+        <translation>图像信息</translation>
     </message>
 </context>
 <context>
@@ -1662,59 +1662,59 @@ Total files: %3</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="278"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="288"/>
         <source>Make</source>
         <translation>相机制造商</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="282"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="292"/>
         <source>Model</source>
         <translation>相机型号</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="286"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="296"/>
         <source>Date/Time</source>
         <translation>拍摄日期</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="293"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="296"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="303"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="306"/>
         <source>ExposureTime</source>
         <translation>曝光时间</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="293"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="296"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="303"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="306"/>
         <source> sec</source>
         <translation> 秒</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="304"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="314"/>
         <source>F Number</source>
         <translation>光圈值</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="309"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="319"/>
         <source>ISO Speed ratings</source>
         <translation>ISO速度</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="313"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="323"/>
         <source>Flash</source>
         <translation>闪光灯</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="319"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="329"/>
         <source>Focal Length</source>
         <translation>焦距</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="319"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="329"/>
         <source> mm</source>
         <translation> 毫米</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="327"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="337"/>
         <source>UserComment</source>
         <translation>注释</translation>
     </message>
