@@ -29,6 +29,7 @@ public:
     qint64 fileSize() const;
     QDateTime lastModified() const;
     QMap<QString, QString> getExifTags();
+    QMap<QString, QString> getGenerationInfo();
     virtual int frameCount() const { return 1; }
 
 protected:

@@ -2315,7 +2315,10 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
     mw->showAnimation(img->filePath(), img->format(), img->size());
   }
   img->isEdited() ? mw->showSaveOverlay() : mw->hideSaveOverlay();
-  mw->setExifInfo(img->getExifTags());
+
+  QMap<QString, QString> info = img->getExifTags();
+  info.insert(img->getGenerationInfo());
+  mw->setExifInfo(info);
 }
 
 // Shows a one-time "this document has multiple pages" hint the first time

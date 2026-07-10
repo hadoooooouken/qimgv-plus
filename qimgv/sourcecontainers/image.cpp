@@ -59,3 +59,6 @@ QMap<QString, QString> Image::getExifTags() {
     return mDocInfo->getExifTags();
 }
 
+QMap<QString, QString> Image::getGenerationInfo() {
+    return mDocInfo->getGenerationInfo();
+}

@@ -44,6 +44,8 @@ public:
     void refresh();
     void loadExifTags();
     QMap<QString, QString> getExifTags();
+    void loadGenerationInfo();
+    QMap<QString, QString> getGenerationInfo();
 
 private:
     QFileInfo fileInfo;
@@ -51,6 +53,7 @@ private:
     int mOrientation;
     QString mFormat;
     bool exifLoaded;
+    bool generationInfoLoaded;
 
     // guesses file type from its contents
     // and sets extension
@@ -61,5 +64,6 @@ private:
     bool detectAnimatedJxl();
     bool detectAnimatedAvif();
     QMap<QString, QString> exifTags;
+    QMap<QString, QString> generationInfo;
     QMimeType mMimeType;
 };

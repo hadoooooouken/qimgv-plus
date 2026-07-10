@@ -27,6 +27,9 @@ target_sources(qimgv-plus PRIVATE
     directorymanager/watchers/watcherworker.cpp
 
     batchconverter/batchconverter.cpp
+
+    comfymetadata/comfyksamplerparser.cpp
+    comfymetadata/pngtextchunkreader.cpp
 )
 
 if(UPSCAYL_SUPPORT)

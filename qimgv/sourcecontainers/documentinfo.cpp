@@ -1,11 +1,13 @@
 #include "documentinfo.h"
 #include "settings.h"
+#include "components/comfymetadata/comfyksamplerparser.h"
 
 DocumentInfo::DocumentInfo(QString path)
     : mDocumentType(DocumentType::NONE),
       mOrientation(0),
       mFormat(""),
-      exifLoaded(false)
+      exifLoaded(false),
+      generationInfoLoaded(false)
 {
     fileInfo.setFile(path);
     if(!fileInfo.isFile()) {
@@ -354,6 +356,53 @@ QMap<QString, QString> DocumentInfo::getExifTags() {
     if(!exifLoaded)
         loadExifTags();
     return exifTags;
+}
+
+void DocumentInfo::loadGenerationInfo() {
+    if (generationInfoLoaded)
+        return;
+    generationInfoLoaded = true;
+    generationInfo.clear();
+
+    // ComfyUI writes its generation graph into PNG tEXt/zTXt chunks; other
+    // formats never carry this data, so skip the parse attempt entirely.
+    if (mFormat != "png" && mFormat != "apng")
+        return;
+
+    auto result = ComfyKSamplerParser::parseFromPng(filePath());
+    if (!result)
+        return; // no ComfyUI metadata in this file - not an application error
+
+    const KSamplerInfo &info = *result;
+
+    if (!info.modelName.isEmpty())
+        generationInfo.insert(QObject::tr("Checkpoint"), info.modelName);
+    if (!info.clipName.isEmpty())
+        generationInfo.insert(QObject::tr("CLIP"), info.clipName);
+    if (!info.vaeName.isEmpty())
+        generationInfo.insert(QObject::tr("VAE"), info.vaeName);
+    if (!info.loraNames.isEmpty())
+        generationInfo.insert(QObject::tr("LoRA"), info.loraNames.join(QStringLiteral(", ")));
+
+    generationInfo.insert(QObject::tr("Seed"), QString::number(info.seed));
+    generationInfo.insert(QObject::tr("Steps"), QString::number(info.steps));
+    generationInfo.insert(QObject::tr("CFG"), QString::number(info.cfg, 'g', 4));
+    if (!info.samplerName.isEmpty())
+        generationInfo.insert(QObject::tr("Sampler"), info.samplerName);
+    if (!info.scheduler.isEmpty())
+        generationInfo.insert(QObject::tr("Scheduler"), info.scheduler);
+    generationInfo.insert(QObject::tr("Denoise"), QString::number(info.denoise, 'g', 4));
+
+    if (!info.positivePrompt.isEmpty())
+        generationInfo.insert(QObject::tr("Prompt"), info.positivePrompt);
+    if (!info.negativePrompt.isEmpty())
+        generationInfo.insert(QObject::tr("Negative Prompt"), info.negativePrompt);
+}
+
+QMap<QString, QString> DocumentInfo::getGenerationInfo() {
+    if (!generationInfoLoaded)
+        loadGenerationInfo();
+    return generationInfo;
 }
 
 void DocumentInfo::loadExifOrientation() {

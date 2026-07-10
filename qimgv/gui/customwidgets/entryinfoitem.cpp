@@ -8,7 +8,17 @@ EntryInfoItem::EntryInfoItem(QWidget *parent) : QWidget(parent) {
     setLayout(&layout);
 
     nameLabel.setFixedSize(120,30);
-    valueLabel.setFixedSize(142,30);
+    nameLabel.setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    layout.setAlignment(&nameLabel, Qt::AlignTop);
+
+    // width stays fixed to match the overlay's column layout; height grows
+    // with wrapped content instead of silently clipping long values (prompts
+    // can be hundreds of characters long)
+    valueLabel.setFixedWidth(142);
+    valueLabel.setMinimumHeight(30);
+    valueLabel.setWordWrap(true);
+    valueLabel.setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    layout.setAlignment(&valueLabel, Qt::AlignTop);
 
     // add some padding for easier text selection
     valueLabel.setContentsMargins(3,0,0,0);

@@ -71,6 +71,20 @@ target_link_libraries(qimgv-plus PRIVATE
     Qt6::Pdf
 )
 
+# zlib for PngTextChunkReader (zTXt inflate). Reuses the static zs.lib already
+# built by build_scripts/build_qtiff_jpeg.ps1 for qtiff.dll, duplicated here
+# via an explicit path instead of find_package(ZLIB): FindZLIB.cmake's default
+# search order would pick up z.lib (the shared import lib) over zs.lib
+# (the static lib we actually need) since both live in the same folder.
+set(ZLIB_STATIC_LIB "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib/install/lib/zs.lib")
+set(ZLIB_STATIC_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib/install/include")
+if(EXISTS "${ZLIB_STATIC_LIB}")
+    target_include_directories(qimgv-plus PRIVATE "${ZLIB_STATIC_INCLUDE_DIR}")
+    target_link_libraries(qimgv-plus PRIVATE "${ZLIB_STATIC_LIB}")
+else()
+    message(SEND_ERROR "zlib static library not found at: ${ZLIB_STATIC_LIB} - run build_scripts/build_qtiff_jpeg.ps1 first")
+endif()
+
 # OPTION DEFINITIONS, LINKING
 if(EXIV2)
     target_link_libraries(qimgv-plus PRIVATE Exiv2::exiv2lib)
