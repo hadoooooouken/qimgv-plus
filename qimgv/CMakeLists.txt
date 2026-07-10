@@ -71,18 +71,15 @@ target_link_libraries(qimgv-plus PRIVATE
     Qt6::Pdf
 )
 
-# zlib for PngTextChunkReader (zTXt inflate). Reuses the static zs.lib already
-# built by build_scripts/build_qtiff_jpeg.ps1 for qtiff.dll, duplicated here
-# via an explicit path instead of find_package(ZLIB): FindZLIB.cmake's default
-# search order would pick up z.lib (the shared import lib) over zs.lib
-# (the static lib we actually need) since both live in the same folder.
-set(ZLIB_STATIC_LIB "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib/install/lib/zs.lib")
-set(ZLIB_STATIC_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib/install/include")
-if(EXISTS "${ZLIB_STATIC_LIB}")
-    target_include_directories(qimgv-plus PRIVATE "${ZLIB_STATIC_INCLUDE_DIR}")
-    target_link_libraries(qimgv-plus PRIVATE "${ZLIB_STATIC_LIB}")
+# zlib for PngTextChunkReader (zTXt inflate) and qtiff.dll.
+# Both now use the shared zlib-ng DLL, so only the import library is needed.
+set(ZLIB_IMPORT_LIB "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install/lib/zlib.lib")
+set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install/include")
+if(EXISTS "${ZLIB_IMPORT_LIB}")
+    target_include_directories(qimgv-plus PRIVATE "${ZLIB_INCLUDE_DIR}")
+    target_link_libraries(qimgv-plus PRIVATE "${ZLIB_IMPORT_LIB}")
 else()
-    message(SEND_ERROR "zlib static library not found at: ${ZLIB_STATIC_LIB} - run build_scripts/build_qtiff_jpeg.ps1 first")
+    message(SEND_ERROR "zlib-ng import library not found at: ${ZLIB_IMPORT_LIB} - run build_scripts/build_qtiff_jpeg.ps1 first")
 endif()
 
 # OPTION DEFINITIONS, LINKING
@@ -233,6 +230,17 @@ if(WIN32)
             message(WARNING "EXR dependency DLL NOT found at: ${_dll}")
         endif()
     endforeach()
+
+    # 9b. Copy zlib-ng shared library for qtiff.dll and qimgv-plus.exe
+    set(ZLIB_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install/bin/zlib1.dll")
+    if(EXISTS "${ZLIB_DLL_PATH}")
+        add_custom_command(TARGET qimgv-plus POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ZLIB_DLL_PATH}" "$<TARGET_FILE_DIR:qimgv-plus>/"
+            COMMENT "Deploying zlib-ng shared library (zlib1.dll)..."
+        )
+    else()
+        message(WARNING "zlib-ng DLL not found at: ${ZLIB_DLL_PATH}")
+    endif()
 
     # 10. Copy upscayl-ncnn DLL and models directory
     if(UPSCAYL_SUPPORT)

@@ -48,7 +48,9 @@ $QT_SDK_IMAGEFORMATS = Join-Path $QT_DIR "plugins\imageformats"
 $NASM_EXE    = Join-Path $FORMATS_DIR "nasm\nasm.exe"
 
 # Install prefixes for each dependency
-$ZLIB_INSTALL     = Join-Path $FORMATS_DIR "zlib\install"
+$ZLIB_SRC_DIR     = Join-Path $FORMATS_DIR "zlib-ng"
+$ZLIB_INSTALL     = Join-Path $FORMATS_DIR "zlib-ng\install"
+$ZLIB_NG_DIR      = Join-Path $FORMATS_DIR "zlib-ng"
 $JPEG_INSTALL     = Join-Path $FORMATS_DIR "libjpeg-turbo\install"
 $TIFF_INSTALL     = Join-Path $FORMATS_DIR "libtiff\install"
 $QTIFF_BUILD_DIR  = Join-Path $SCRIPT_DIR "qtiff_jpeg\build"
@@ -116,30 +118,29 @@ function Invoke-CMake {
 # Step 1: zlib (static)
 # ---------------------------------------------------------------------------
 function Build-Zlib {
-    $srcDir   = Join-Path $FORMATS_DIR "zlib"
-    $buildDir = Join-Path $srcDir "build_msvc"
-
+    $buildDir = Join-Path $ZLIB_SRC_DIR "build_msvc"
     Clear-BuildDir $buildDir
 
-    Write-Info "Configuring zlib..."
+    Write-Info "Configuring zlib-ng (compat)..."
     $args = @(
-        "-S", $srcDir,
+        "-S", $ZLIB_SRC_DIR,
         "-B", $buildDir,
         "-A", "x64",
         "-DCMAKE_INSTALL_PREFIX=$ZLIB_INSTALL",
-        "-DBUILD_SHARED_LIBS=OFF",
-        "-DZLIB_BUILD_EXAMPLES=OFF",
+        "-DBUILD_SHARED_LIBS=ON",
+        "-DZLIB_COMPAT=ON",
+        "-DZLIB_ENABLE_TESTS=OFF",
         "-DCMAKE_POLICY_DEFAULT_CMP0091=NEW"
     ) + (Get-HardeningArgs)
     Invoke-CMake $args
 
-    Write-Info "Building zlib..."
+    Write-Info "Building zlib-ng..."
     Invoke-CMake @("--build", $buildDir, "--config", "Release", "--parallel")
 
-    Write-Info "Installing zlib..."
+    Write-Info "Installing zlib-ng..."
     Invoke-CMake @("--install", $buildDir, "--config", "Release")
 
-    Write-OK "zlib installed to $ZLIB_INSTALL"
+    Write-OK "zlib-ng (compat) installed to $ZLIB_INSTALL"
 }
 
 # ---------------------------------------------------------------------------
@@ -241,7 +242,7 @@ function Build-Qtiff {
         "-DCMAKE_INSTALL_PREFIX=$QTIFF_INSTALL",
         "-DCMAKE_PREFIX_PATH=$prefixPath",
         "-DCMAKE_POLICY_DEFAULT_CMP0091=NEW",
-        "-DZLIB_LIBRARY=$ZLIB_INSTALL\lib\zs.lib",
+        "-DZLIB_LIBRARY=$ZLIB_INSTALL\lib\zlib.lib",
         "-DZLIB_INCLUDE_DIR=$ZLIB_INSTALL\include"
     ) + (Get-HardeningArgs)
     Invoke-CMake $args
