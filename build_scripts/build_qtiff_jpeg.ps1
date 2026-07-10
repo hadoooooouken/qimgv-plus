@@ -59,8 +59,8 @@ $QTIFF_INSTALL    = Join-Path $SCRIPT_DIR "qtiff_jpeg\install"
 # ---------------------------------------------------------------------------
 # Common compiler / linker hardening flags (match rebuild-all.ps1)
 # ---------------------------------------------------------------------------
-$C_FLAGS_RELEASE   = "/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /Qspectre"
-$CXX_FLAGS_RELEASE = "/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /EHsc /Qspectre"
+$C_FLAGS_RELEASE   = "/arch:AVX2 /MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /Qspectre"
+$CXX_FLAGS_RELEASE = "/arch:AVX2 /MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /EHsc /Qspectre"
 $LINKER_FLAGS      = "/guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT"
 
 function Get-HardeningArgs {
