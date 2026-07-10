@@ -92,10 +92,12 @@ QString ComfyKSamplerParser::resolveModelChain(const QJsonObject &prompt,
         }
 
         // Reached a loader node — extract the name and stop
-        if (srcInputs.contains("ckpt_name"))
-            return srcInputs.value("ckpt_name").toString();
-        if (srcInputs.contains("unet_name"))
-            return srcInputs.value("unet_name").toString();
+        static const QStringList loaderKeys = {"ckpt_name", "unet_name", "model_name", "checkpoint_name"};
+        for (const QString &key : loaderKeys) {
+            if (srcInputs.contains(key)) {
+                return srcInputs.value(key).toString();
+            }
+        }
 
         // Unknown node type (Reroute, Switch/Mux, custom loader, etc.) —
         // try to continue through whatever plausible pass-through link is
@@ -154,85 +156,70 @@ QJsonValue ComfyKSamplerParser::pickPassThroughLink(const QJsonObject &srcInputs
     return {};
 }
 
-QString ComfyKSamplerParser::resolveConditioningText(const QJsonObject &prompt,
-                                                       const QJsonValue &conditioningInput,
-                                                       QSet<QString> visited)
+double ComfyKSamplerParser::resolveSeedValue(const QJsonObject &prompt,
+                                              const QJsonValue &v,
+                                              QSet<QString> &visited)
 {
-    if (!isLink(conditioningInput))
-        return {};
+    if (v.isDouble())
+        return v.toDouble();
 
-    QJsonArray link = conditioningInput.toArray();
+    if (!isLink(v))
+        return 0;
+
+    QJsonArray link = v.toArray();
     QString srcId = link.at(0).toVariant().toString();
-
     if (!prompt.contains(srcId) || visited.contains(srcId))
-        return {};
+        return 0;
     visited.insert(srcId);
 
     QJsonObject srcNode = prompt.value(srcId).toObject();
     QString classType = srcNode.value("class_type").toString();
     QJsonObject srcInputs = srcNode.value("inputs").toObject();
 
-    // The actual prompt text lives on the CLIPTextEncode node(s). Covers the
-    // plain CLIPTextEncode as well as SDXL's text_g/text_l variant.
-    if (classType.contains("CLIPTextEncode", Qt::CaseInsensitive)) {
-        QStringList parts;
-        for (const char *key : { "text", "text_g", "text_l" }) {
-            QSet<QString> textVisited;
-            QString text = resolveTextLink(prompt, srcInputs.value(key), textVisited);
-            if (!text.isEmpty())
-                parts << text;
+    // Simple two-operand arithmetic nodes (e.g. rgthree/mikey "Simple Math")
+    // combine two of their own inputs according to a widget-provided
+    // expression such as "a+b". Only a single operator between two named
+    // operands is handled; anything more elaborate falls through below.
+    if (classType.contains("SimpleMath", Qt::CaseInsensitive) && srcInputs.value("value").isString()) {
+        QString expr = srcInputs.value("value").toString().trimmed();
+        static const QString ops = QStringLiteral("+-*/");
+        for (QChar op : ops) {
+            int idx = expr.indexOf(op);
+            if (idx <= 0) // skip missing match and a leading unary sign
+                continue;
+            QString lhsName = expr.left(idx).trimmed();
+            QString rhsName = expr.mid(idx + 1).trimmed();
+            if (!srcInputs.contains(lhsName) || !srcInputs.contains(rhsName))
+                continue;
+
+            double a = resolveSeedValue(prompt, srcInputs.value(lhsName), visited);
+            double b = resolveSeedValue(prompt, srcInputs.value(rhsName), visited);
+            switch (op.toLatin1()) {
+            case '+': return a + b;
+            case '-': return a - b;
+            case '*': return a * b;
+            case '/': return b != 0 ? a / b : a;
+            }
         }
-        return parts.join(QStringLiteral(" "));
     }
 
-    // ConditioningCombine merges two branches — resolve and join both.
-    if (classType.contains("ConditioningCombine", Qt::CaseInsensitive)) {
-        QString a = resolveConditioningText(prompt, srcInputs.value("conditioning_1"), visited);
-        QString b = resolveConditioningText(prompt, srcInputs.value("conditioning_2"), visited);
-        if (!a.isEmpty() && !b.isEmpty())
-            return a + QStringLiteral(" ") + b;
-        return a.isEmpty() ? b : a;
+    // Literal-valued nodes: "Seed (rgthree)", PrimitiveInt/PrimitiveNode,
+    // INT Constant, etc. all expose their number under one of these keys.
+    for (const char *key : { "seed", "noise_seed", "value" }) {
+        QJsonValue val = srcInputs.value(key);
+        if (val.isDouble())
+            return val.toDouble();
+        if (isLink(val))
+            return resolveSeedValue(prompt, val, visited);
     }
 
-    // Other pass-through nodes (ControlNetApply, ConditioningSetArea,
-    // ConditioningZeroOut, Switch/Mux nodes, etc.) carry the chain forward
-    // through a single conditioning-shaped input.
-    QJsonValue nextLink = pickPassThroughLink(srcInputs, QStringLiteral("conditioning"));
+    // Unknown node type — fall back to whatever single link-valued input
+    // looks like a pass-through (Reroute, etc.)
+    QJsonValue nextLink = pickPassThroughLink(srcInputs, QString());
     if (isLink(nextLink))
-        return resolveConditioningText(prompt, nextLink, visited);
+        return resolveSeedValue(prompt, nextLink, visited);
 
-    return {};
-}
-
-QString ComfyKSamplerParser::resolveTextLink(const QJsonObject &prompt,
-                                              const QJsonValue &v,
-                                              QSet<QString> &visited)
-{
-    if (v.isString())
-        return v.toString();
-
-    if (!isLink(v))
-        return {};
-
-    QJsonArray link = v.toArray();
-    QString srcId = link.at(0).toVariant().toString();
-    if (!prompt.contains(srcId) || visited.contains(srcId))
-        return {};
-    visited.insert(srcId);
-
-    QJsonObject srcInputs = prompt.value(srcId).toObject().value("inputs").toObject();
-
-    QStringList parts;
-    for (auto it = srcInputs.constBegin(); it != srcInputs.constEnd(); ++it) {
-        if (it.value().isString() && !it.value().toString().isEmpty()) {
-            parts << it.value().toString();
-        } else if (isLink(it.value())) {
-            QString sub = resolveTextLink(prompt, it.value(), visited);
-            if (!sub.isEmpty())
-                parts << sub;
-        }
-    }
-    return parts.join(QStringLiteral(" "));
+    return 0;
 }
 
 QJsonObject ComfyKSamplerParser::findMainKSamplerNode(const QJsonObject &prompt, QString &outId)
@@ -327,10 +314,15 @@ std::expected<KSamplerInfo, QString> ComfyKSamplerParser::parseFromJson(const QB
     KSamplerInfo info;
     info.sourceNodeId = mainId;
 
-    // seed / noise_seed — both variants occur (KSampler / KSamplerAdvanced)
+    // seed / noise_seed — both variants occur (KSampler / KSamplerAdvanced).
+    // The value itself may not be a literal: workflows often feed it through
+    // a separate seed/primitive node, or even a small arithmetic node (e.g.
+    // rgthree's "Simple Math" adding two seed sources together), so it has
+    // to be resolved rather than read directly off the input.
     QJsonValue seedVal = inputs.contains("seed") ? inputs.value("seed")
                                                   : inputs.value("noise_seed");
-    info.seed = static_cast<qint64>(seedVal.toDouble());
+    QSet<QString> seedVisited;
+    info.seed = static_cast<qint64>(resolveSeedValue(prompt, seedVal, seedVisited));
 
     info.steps       = inputs.value("steps").toInt();
     info.cfg         = inputs.value("cfg").toDouble();
@@ -350,10 +342,6 @@ std::expected<KSamplerInfo, QString> ComfyKSamplerParser::parseFromJson(const QB
     info.vaeName = findLoaderValue(prompt,
                                     { "VAELoader" },
                                     { "vae_name" });
-
-    // Positive / negative prompt text — walk up the conditioning links
-    info.positivePrompt = resolveConditioningText(prompt, inputs.value("positive"));
-    info.negativePrompt = resolveConditioningText(prompt, inputs.value("negative"));
 
     return info;
 }

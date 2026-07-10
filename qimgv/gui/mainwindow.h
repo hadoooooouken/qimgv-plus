@@ -79,7 +79,7 @@ public:
                       QString fileName, QSize imageSize, qint64 fileSize,
                       QString format, QString colorProfile, bool slideshow, bool shuffle,
                       bool edited);
-  void setExifInfo(QMap<QString, QString>);
+  void setExifInfo(QList<QPair<QString, QString>>);
   std::shared_ptr<FolderViewProxy> getFolderView();
   std::shared_ptr<ThumbnailStripProxy> getThumbnailPanel();
 

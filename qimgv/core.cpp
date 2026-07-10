@@ -2316,8 +2316,14 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
   }
   img->isEdited() ? mw->showSaveOverlay() : mw->hideSaveOverlay();
 
-  QMap<QString, QString> info = img->getExifTags();
-  info.insert(img->getGenerationInfo());
+  // EXIF tags don't have a meaningful display order (alphabetical is fine),
+  // but generation info does — QList<QPair<>> is used there instead of
+  // QMap specifically to keep that order intact through to the UI.
+  QList<QPair<QString, QString>> info;
+  const QMap<QString, QString> exifTags = img->getExifTags();
+  for (auto it = exifTags.constBegin(); it != exifTags.constEnd(); ++it)
+    info.append({ it.key(), it.value() });
+  info.append(img->getGenerationInfo());
   mw->setExifInfo(info);
 }
 

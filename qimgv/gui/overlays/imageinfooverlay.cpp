@@ -69,7 +69,7 @@ void ImageInfoOverlay::setupUi() {
     verticalLayout->addLayout(entryLayout);
 }
 
-void ImageInfoOverlay::setExifInfo(QMap<QString, QString> info) {
+void ImageInfoOverlay::setExifInfo(QList<QPair<QString, QString>> info) {
     // remove/add entries
     int entryCount = entries.count();
     if(entryCount > info.count()) {
@@ -83,12 +83,10 @@ void ImageInfoOverlay::setExifInfo(QMap<QString, QString> info) {
             entryLayout->addWidget(entries.last());
         }
     }
-    QMap<QString, QString>::const_iterator i = info.constBegin();
-    int entryIdx = 0;
-    while(i != info.constEnd()) {
-        entries.at(entryIdx)->setInfo(i.key(), i.value());
-        ++i;
-        ++entryIdx;
+    // Iterate in list order (as opposed to a QMap, which would always be
+    // sorted by key) so the display order set upstream is preserved.
+    for(int entryIdx = 0; entryIdx < info.count(); entryIdx++) {
+        entries.at(entryIdx)->setInfo(info.at(entryIdx).first, info.at(entryIdx).second);
     }
 
     // Hiding/showing entryStub causes flicker,

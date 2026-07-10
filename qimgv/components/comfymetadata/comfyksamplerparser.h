@@ -8,20 +8,18 @@
 
 struct KSamplerInfo
 {
-    QString    modelName;      // ckpt_name / unet_name
-    QString    clipName;       // clip_name / clip_name1
-    QString    vaeName;        // vae_name
-    QStringList loraNames;     // chain of LoraLoader nodes (may be empty)
-
-    qint64  seed        = 0;
-    int     steps        = 0;
-    double  cfg           = 0.0;
-    QString samplerName;
-    QString scheduler;
-    double  denoise      = 1.0;
-
-    QString positivePrompt; // text resolved from the "positive" conditioning chain
-    QString negativePrompt; // text resolved from the "negative" conditioning chain
+    // Order matches the desired display order: Checkpoint, CLIP, VAE,
+    // Sampler, Scheduler, Seed, CFG, Denoise, Steps, LoRA.
+    QString    modelName;      // ckpt_name / unet_name (Checkpoint)
+    QString    clipName;       // clip_name / clip_name1 (CLIP)
+    QString    vaeName;        // vae_name (VAE)
+    QString samplerName;       // Sampler
+    QString scheduler;         // Scheduler
+    qint64  seed        = 0;   // Seed
+    double  cfg           = 0.0; // CFG
+    double  denoise      = 1.0;  // Denoise
+    int     steps        = 0;    // Steps
+    QStringList loraNames;     // LoRA — chain of LoraLoader nodes (may be empty)
 
     QString sourceNodeId; // id of the KSampler node the parameters were taken from
 };
@@ -43,13 +41,16 @@ private:
     static QString findLoaderValue(const QJsonObject &prompt,
                                     const QStringList &classSubstrings,
                                     const QStringList &valueKeys);
-    // Walks backward through a conditioning input (positive/negative) to find
-    // the originating CLIPTextEncode node(s) and return their text. Follows
-    // simple pass-through nodes (ControlNetApply, ConditioningSetArea, etc.)
-    // and merges both branches of ConditioningCombine.
-    static QString resolveConditioningText(const QJsonObject &prompt,
-                                            const QJsonValue &conditioningInput,
-                                            QSet<QString> visited = {});
+    // Resolves a numeric input (used for seed) that may be a literal number
+    // or a link into a node that produces it dynamically: a literal-holding
+    // node (PrimitiveInt/PrimitiveNode, "Seed (rgthree)", etc. — exposed
+    // under a "seed"/"noise_seed"/"value" key) or a simple two-operand
+    // arithmetic node (e.g. rgthree/mikey "Simple Math" evaluating an
+    // expression like "a+b" against its own inputs). Only single-operator
+    // two-operand expressions are evaluated; anything more complex falls
+    // back through the generic literal/pass-through handling.
+    static double resolveSeedValue(const QJsonObject &prompt, const QJsonValue &v,
+                                    QSet<QString> &visited);
     // Best-effort link to follow through an unrecognized node (Reroute,
     // Switch/Mux nodes, etc.) when no known key (e.g. "model"/"conditioning")
     // is present. Prefers preferredKey if it's a link; otherwise, if a
@@ -60,16 +61,5 @@ private:
     // node - that would require running the graph, not just reading it.
     static QJsonValue pickPassThroughLink(const QJsonObject &srcInputs,
                                            const QString &preferredKey);
-    // Resolves a text-producing input that may be a literal string or a link
-    // into a node that builds the string dynamically (concatenation,
-    // find/replace, etc.). The exact input key names used by such nodes vary
-    // per node pack and aren't known ahead of time, so instead of guessing
-    // specific keys this collects every string value reachable from the
-    // node - literal values held directly, plus whatever further link
-    // inputs resolve to. This can pull in unrelated fragments (e.g. a
-    // find/replace node's search/replacement arguments), but it beats
-    // showing nothing for a workflow that builds its prompt dynamically.
-    static QString resolveTextLink(const QJsonObject &prompt, const QJsonValue &v,
-                                    QSet<QString> &visited);
     static bool isLink(const QJsonValue &v);
 };

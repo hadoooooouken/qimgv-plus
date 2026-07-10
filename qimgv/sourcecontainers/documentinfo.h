@@ -45,7 +45,7 @@ public:
     void loadExifTags();
     QMap<QString, QString> getExifTags();
     void loadGenerationInfo();
-    QMap<QString, QString> getGenerationInfo();
+    QList<QPair<QString, QString>> getGenerationInfo();
 
 private:
     QFileInfo fileInfo;
@@ -64,6 +64,10 @@ private:
     bool detectAnimatedJxl();
     bool detectAnimatedAvif();
     QMap<QString, QString> exifTags;
-    QMap<QString, QString> generationInfo;
+    // Order-preserving (unlike QMap, which is always sorted by key): the
+    // display order for this data is meaningful (Checkpoint, CLIP, VAE,
+    // Sampler, Scheduler, Seed, CFG, Denoise, Steps, LoRA) and isn't
+    // alphabetical, so insertion order must be kept intact through to the UI.
+    QList<QPair<QString, QString>> generationInfo;
     QMimeType mMimeType;
 };

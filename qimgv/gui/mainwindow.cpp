@@ -1058,7 +1058,7 @@ void MW::onScaleChanged(qreal scale) {
     }
 }
 
-void MW::setExifInfo(QMap<QString, QString> info) {
+void MW::setExifInfo(QList<QPair<QString, QString>> info) {
     if(imageInfoOverlay)
         imageInfoOverlay->setExifInfo(info);
 }

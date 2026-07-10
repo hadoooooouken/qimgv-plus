@@ -375,31 +375,28 @@ void DocumentInfo::loadGenerationInfo() {
 
     const KSamplerInfo &info = *result;
 
+    // Fixed display order: Checkpoint, CLIP, VAE, Sampler, Scheduler, Seed,
+    // CFG, Denoise, Steps, LoRA. QList<QPair<>> (unlike QMap) preserves this
+    // insertion order all the way through to the UI.
     if (!info.modelName.isEmpty())
-        generationInfo.insert(QObject::tr("Checkpoint"), info.modelName);
+        generationInfo.append({ QObject::tr("Checkpoint"), info.modelName });
     if (!info.clipName.isEmpty())
-        generationInfo.insert(QObject::tr("CLIP"), info.clipName);
+        generationInfo.append({ QObject::tr("CLIP"), info.clipName });
     if (!info.vaeName.isEmpty())
-        generationInfo.insert(QObject::tr("VAE"), info.vaeName);
-    if (!info.loraNames.isEmpty())
-        generationInfo.insert(QObject::tr("LoRA"), info.loraNames.join(QStringLiteral(", ")));
-
-    generationInfo.insert(QObject::tr("Seed"), QString::number(info.seed));
-    generationInfo.insert(QObject::tr("Steps"), QString::number(info.steps));
-    generationInfo.insert(QObject::tr("CFG"), QString::number(info.cfg, 'g', 4));
+        generationInfo.append({ QObject::tr("VAE"), info.vaeName });
     if (!info.samplerName.isEmpty())
-        generationInfo.insert(QObject::tr("Sampler"), info.samplerName);
+        generationInfo.append({ QObject::tr("Sampler"), info.samplerName });
     if (!info.scheduler.isEmpty())
-        generationInfo.insert(QObject::tr("Scheduler"), info.scheduler);
-    generationInfo.insert(QObject::tr("Denoise"), QString::number(info.denoise, 'g', 4));
-
-    if (!info.positivePrompt.isEmpty())
-        generationInfo.insert(QObject::tr("Prompt"), info.positivePrompt);
-    if (!info.negativePrompt.isEmpty())
-        generationInfo.insert(QObject::tr("Negative Prompt"), info.negativePrompt);
+        generationInfo.append({ QObject::tr("Scheduler"), info.scheduler });
+    generationInfo.append({ QObject::tr("Seed"), QString::number(info.seed) });
+    generationInfo.append({ QObject::tr("CFG"), QString::number(info.cfg, 'g', 4) });
+    generationInfo.append({ QObject::tr("Denoise"), QString::number(info.denoise, 'g', 4) });
+    generationInfo.append({ QObject::tr("Steps"), QString::number(info.steps) });
+    if (!info.loraNames.isEmpty())
+        generationInfo.append({ QObject::tr("LoRA"), info.loraNames.join(QStringLiteral(", ")) });
 }
 
-QMap<QString, QString> DocumentInfo::getGenerationInfo() {
+QList<QPair<QString, QString>> DocumentInfo::getGenerationInfo() {
     if (!generationInfoLoaded)
         loadGenerationInfo();
     return generationInfo;
