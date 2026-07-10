@@ -5,6 +5,14 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
+// Values longer than this are shown in "stacked" mode (name on its own
+// line, value wrapping at the full panel width below it) instead of the
+// default fixed 142px column. Free-form fields like generation prompts can
+// run into the hundreds of characters and are unreadable in the narrow
+// column; short fields (checkpoint name, seed, sampler, etc.) never hit
+// this threshold.
+static const int STACKED_VALUE_THRESHOLD = 100;
+
 ImageInfoOverlay::ImageInfoOverlay(FloatingWidgetContainer *parent) :
     OverlayWidget(parent)
 {
@@ -86,7 +94,9 @@ void ImageInfoOverlay::setExifInfo(QList<QPair<QString, QString>> info) {
     // Iterate in list order (as opposed to a QMap, which would always be
     // sorted by key) so the display order set upstream is preserved.
     for(int entryIdx = 0; entryIdx < info.count(); entryIdx++) {
-        entries.at(entryIdx)->setInfo(info.at(entryIdx).first, info.at(entryIdx).second);
+        const QString &val = info.at(entryIdx).second;
+        bool stacked = val.length() > STACKED_VALUE_THRESHOLD;
+        entries.at(entryIdx)->setInfo(info.at(entryIdx).first, val, stacked);
     }
 
     // Hiding/showing entryStub causes flicker,
