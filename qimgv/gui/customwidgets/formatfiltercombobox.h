@@ -22,6 +22,7 @@ public:
 protected:
     void paintEvent(QPaintEvent *e) override;
     bool eventFilter(QObject *watched, QEvent *event) override;
+    QColor iconColor() const override;
 
 private:
     QStandardItemModel *model;

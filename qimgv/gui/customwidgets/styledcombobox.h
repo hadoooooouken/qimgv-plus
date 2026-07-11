@@ -4,6 +4,7 @@
 #include <QComboBox>
 #include <QPainter>
 #include <QKeyEvent>
+#include <QColor>
 #include "utils/imagelib.h"
 
 class StyledComboBox : public QComboBox
@@ -15,6 +16,13 @@ public:
 protected:
     void paintEvent(QPaintEvent *e) override;
     void keyPressEvent(QKeyEvent *event) override;
+
+    // Color applied to the dropdown icon. Defaults to the theme's icon
+    // color; subclasses override to force a specific color in specific
+    // visual states (e.g. a highlighted/active state).
+    virtual QColor iconColor() const;
+    // Re-applies iconColor() to the currently loaded icon pixmap.
+    void refreshIconColor();
 
 private:
     bool hiResPixmap;

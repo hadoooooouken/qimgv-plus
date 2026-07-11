@@ -225,7 +225,7 @@ QComboBox QAbstractItemView {
 [accessibleName="PanelComboBox"][active="true"] {
     background-color: %accent%;
     border-color: %accent%;
-    color: %text_hc%;
+    color: #ffffff;
 }
 
 [accessibleName="PanelComboBox"][active="true"]:hover {

@@ -141,7 +141,7 @@ void FormatFilterComboBox::updateDisplayLabel() {
     setProperty("active", active);
     style()->unpolish(this);
     style()->polish(this);
-    update();
+    refreshIconColor();
 }
 
 void FormatFilterComboBox::paintEvent(QPaintEvent *e) {
@@ -164,4 +164,10 @@ bool FormatFilterComboBox::eventFilter(QObject *watched, QEvent *event) {
         }
     }
     return StyledComboBox::eventFilter(watched, event);
+}
+
+QColor FormatFilterComboBox::iconColor() const {
+    if (property("active").toBool())
+        return QColor(Qt::white);
+    return StyledComboBox::iconColor();
 }

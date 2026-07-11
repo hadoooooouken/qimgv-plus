@@ -5,7 +5,7 @@ StyledComboBox::StyledComboBox(QWidget *parent) : QComboBox(parent), hiResPixmap
 {
     dpr = this->devicePixelRatioF();
     connect(settings, &Settings::settingsChanged, [this]() {
-        ImageLib::recolor(this->downArrow, settings->colorScheme().icons);
+        refreshIconColor();
     });
 }
 
@@ -24,7 +24,17 @@ void StyledComboBox::setIconPath(QString path) {
         downArrow.load(path);
         pixmapDrawScale = dpr;
     }
-    ImageLib::recolor(downArrow, settings->colorScheme().icons);
+    refreshIconColor();
+}
+
+QColor StyledComboBox::iconColor() const {
+    return settings->colorScheme().icons;
+}
+
+void StyledComboBox::refreshIconColor() {
+    if(downArrow.isNull())
+        return;
+    ImageLib::recolor(downArrow, iconColor());
     update();
 }
 
