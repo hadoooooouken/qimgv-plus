@@ -16,8 +16,13 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # OPTIMIZATIONS & HARDENING
 if(MSVC)
     # Compiler options: AVX2, Buffer Security Check (/GS), Control Flow Guard (/guard:cf), C++ Exception Unwind (/EHsc), Spectre mitigations (/Qspectre)
+    # NOTE: /arch:AVX2 is now added to CMAKE_C_FLAGS as well, not just CMAKE_CXX_FLAGS.
+    # Without it, libdeflate (and any other plain-C code) gets built by MSVC without
+    # any AVX2/AVX-512 code paths at all: unlike GCC/Clang, MSVC has no per-function
+    # target attributes, so a SIMD path only ends up in the binary if the ENTIRE
+    # translation unit is compiled with /arch:AVX2.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2 /GS /guard:cf /EHsc /Qspectre")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /GS /guard:cf /Qspectre")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /arch:AVX2 /GS /guard:cf /Qspectre")
 
     # Linker options: Control Flow Guard (/guard:cf), ASLR (/DYNAMICBASE), 64-bit ASLR (/HIGHENTROPYVA), DEP (/NXCOMPAT), CET Shadow Stack (/CETCOMPAT)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT")
@@ -86,5 +91,4 @@ endif()
 
 add_subdirectory(qimgv)
 add_subdirectory(shellex)
-
 
