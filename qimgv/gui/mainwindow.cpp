@@ -170,8 +170,20 @@ void MW::toggleFolderView() {
     if(casSettingsOverlay)
         casSettingsOverlay->hide();
     docWidget->hideFloatingPanel();
+
+    if(centralWidget->currentViewMode() == MODE_DOCUMENT) {
+        imageInfoOverlayHiddenByFolderView = !imageInfoOverlay->isHidden();
+    }
+
     imageInfoOverlay->hide();
     centralWidget->toggleViewMode();
+
+    if(centralWidget->currentViewMode() == MODE_DOCUMENT) {
+        if(imageInfoOverlayHiddenByFolderView) {
+            imageInfoOverlay->show();
+            imageInfoOverlayHiddenByFolderView = false;
+        }
+    }
     onInfoUpdated();
 }
 
@@ -186,6 +198,11 @@ void MW::enableFolderView() {
     if(casSettingsOverlay)
         casSettingsOverlay->hide();
     docWidget->hideFloatingPanel();
+
+    if(centralWidget->currentViewMode() == MODE_DOCUMENT) {
+        imageInfoOverlayHiddenByFolderView = !imageInfoOverlay->isHidden();
+    }
+
     imageInfoOverlay->hide();
     centralWidget->showFolderView();
     onInfoUpdated();
@@ -193,6 +210,10 @@ void MW::enableFolderView() {
 
 void MW::enableDocumentView() {
     centralWidget->showDocumentView();
+    if(imageInfoOverlayHiddenByFolderView) {
+        imageInfoOverlay->show();
+        imageInfoOverlayHiddenByFolderView = false;
+    }
     onInfoUpdated();
 }
 

@@ -121,6 +121,7 @@ private:
   CurrentInfo info;
   int lastScalePercent = -1;
   bool m_uiSetupDone = false;
+  bool imageInfoOverlayHiddenByFolderView = false;
 
   void saveCurrentDisplay();
   void setupUi();
