@@ -237,6 +237,10 @@ CompareFunction DirectoryManager::compareFunction() {
 void DirectoryManager::startFileWatcher(QString directoryPath) {
     if(directoryPath == "")
         return;
+
+    if(watcher && watcher->isObserving() && watcher->watchPath() == directoryPath)
+        return; // already watching this exact path, avoid a redundant setWatchPath() cycle
+
     if(!watcher)
         watcher = DirectoryWatcher::newInstance();
 

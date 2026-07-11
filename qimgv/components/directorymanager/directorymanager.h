@@ -48,7 +48,6 @@ class DirectoryManager : public QObject {
 public:
     DirectoryManager();
     ~DirectoryManager();
-    // ignored if the same dir is already opened
     bool setDirectory(QString);
     bool setDirectoryRecursive(QString);
     bool setFileList(const QStringList &filePaths);

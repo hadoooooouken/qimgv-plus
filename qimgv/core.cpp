@@ -2306,7 +2306,6 @@ void Core::onFolderSortingSelected(SortingMode mode) {
 void Core::onFormatFilterSelected(QStringList extensions) {
   settings->setFormatFilter(extensions);
   model->setFormatFilter(extensions);
-  folderViewPresenter.reloadModel();
 }
 
 void Core::guiSetImage(std::shared_ptr<Image> img) {

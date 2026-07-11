@@ -142,7 +142,7 @@ void DirectoryModel::setFormatFilter(QStringList extensions) {
     if (dirManager.source() == SOURCE_DIRECTORY) {
         QString path = dirManager.directoryPath();
         if (!path.isEmpty())
-            setDirectory(path); // rescan with the new filter applied
+            dirManager.setDirectory(path); // rescan with the new filter, keep decode cache and watcher intact
     }
 }
 
