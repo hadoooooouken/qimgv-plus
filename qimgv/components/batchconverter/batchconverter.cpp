@@ -1,5 +1,6 @@
 #include "batchconverter.h"
 #include "utils/imagelib.h"
+#include "utils/pngwriter.h"
 #include <QImageReader>
 #include <QImage>
 #include <QDir>
@@ -131,7 +132,16 @@ public:
             return;
         }
         QByteArray formatBa = m_job.format.toLatin1();
-        bool saved = processedImg.save(m_destPath, formatBa.constData(), m_job.quality);
+        bool saved = false;
+        if (formatBa.toUpper() == "PNG") {
+            int level = (m_job.quality == 0) ? 0 : qBound(1, (m_job.quality * 12) / 9, 12);
+            saved = savePngWithLibdeflate(processedImg, m_destPath, level);
+            if (!saved) {
+                saved = processedImg.save(m_destPath, formatBa.constData(), m_job.quality);
+            }
+        } else {
+            saved = processedImg.save(m_destPath, formatBa.constData(), m_job.quality);
+        }
         QString detailsStr = QString("%1 \u2022 %2x%3")
                                 .arg(m_job.format.toUpper())
                                 .arg(processedImg.width())

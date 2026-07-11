@@ -12,6 +12,7 @@ target_sources(qimgv-plus PRIVATE
     stuff.cpp
     fileoperations.cpp
     colormanager.cpp
+    pngwriter.cpp
 )
 
 target_sources(qimgv-plus PRIVATE
