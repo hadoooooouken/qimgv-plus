@@ -604,242 +604,242 @@ Total files: %3</source>
 <context>
     <name>Core</name>
     <message>
-        <location filename="../../core.cpp" line="494"/>
+        <location filename="../../core.cpp" line="495"/>
         <source>Updated: </source>
         <translation>Обновлено: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="502"/>
+        <location filename="../../core.cpp" line="503"/>
         <source>Welcome to </source>
         <translation>Добро пожаловать в </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="503"/>
+        <location filename="../../core.cpp" line="504"/>
         <source> version </source>
         <translation> версия </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="521"/>
+        <location filename="../../core.cpp" line="522"/>
         <source>Shuffle mode: OFF</source>
         <translation>Режим перемешивания: Выключен</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="524"/>
+        <location filename="../../core.cpp" line="525"/>
         <source>Shuffle mode: ON</source>
         <translation>Режим перемешивания: Включен</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="533"/>
+        <location filename="../../core.cpp" line="534"/>
         <source>Slideshow: OFF</source>
         <translation>Слайд-шоу: Выключено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="537"/>
+        <location filename="../../core.cpp" line="538"/>
         <source>Slideshow: ON</source>
         <translation>Слайд-шоу: Включено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="667"/>
-        <location filename="../../core.cpp" line="670"/>
-        <location filename="../../core.cpp" line="673"/>
+        <location filename="../../core.cpp" line="668"/>
+        <location filename="../../core.cpp" line="671"/>
+        <location filename="../../core.cpp" line="674"/>
         <source>Delete </source>
         <translation>Удалить </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="668"/>
+        <location filename="../../core.cpp" line="669"/>
         <source> folders permanently?</source>
         <translation> папок навсегда?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="671"/>
+        <location filename="../../core.cpp" line="672"/>
         <source> files permanently?</source>
         <translation> файлов навсегда?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="674"/>
+        <location filename="../../core.cpp" line="675"/>
         <source> items permanently?</source>
         <translation> файлов навсегда?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="682"/>
+        <location filename="../../core.cpp" line="683"/>
         <source>Delete permanently</source>
         <translation>Удалить навсегда</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="704"/>
+        <location filename="../../core.cpp" line="705"/>
         <source>File removed</source>
         <translation>Файл удален</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="710"/>
-        <location filename="../../core.cpp" line="713"/>
-        <location filename="../../core.cpp" line="716"/>
+        <location filename="../../core.cpp" line="711"/>
+        <location filename="../../core.cpp" line="714"/>
+        <location filename="../../core.cpp" line="717"/>
         <source>Removed: </source>
         <translation>Удалено: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="714"/>
-        <location filename="../../core.cpp" line="785"/>
+        <location filename="../../core.cpp" line="715"/>
+        <location filename="../../core.cpp" line="786"/>
         <source> files</source>
         <translation> файлов</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="741"/>
-        <location filename="../../core.cpp" line="743"/>
-        <location filename="../../core.cpp" line="745"/>
+        <location filename="../../core.cpp" line="742"/>
+        <location filename="../../core.cpp" line="744"/>
+        <location filename="../../core.cpp" line="746"/>
         <source>Move </source>
         <translation>Переместить </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="745"/>
+        <location filename="../../core.cpp" line="746"/>
         <source> items to trash?</source>
         <translation> файлов в корзину?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="753"/>
+        <location filename="../../core.cpp" line="754"/>
         <source>Move to trash</source>
         <translation>Переместить в корзину</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="773"/>
+        <location filename="../../core.cpp" line="774"/>
         <source>Folder moved to trash</source>
         <translation>Папка перемещена в корзину</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="775"/>
+        <location filename="../../core.cpp" line="776"/>
         <source>Moved to trash</source>
         <translation>Перемещено в корзину</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="781"/>
-        <location filename="../../core.cpp" line="784"/>
-        <location filename="../../core.cpp" line="787"/>
+        <location filename="../../core.cpp" line="782"/>
+        <location filename="../../core.cpp" line="785"/>
+        <location filename="../../core.cpp" line="788"/>
         <source>Moved to trash: </source>
         <translation>Перемещено в корзину: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="858"/>
+        <location filename="../../core.cpp" line="859"/>
         <source>File copied</source>
         <translation>Файл скопирован</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="865"/>
+        <location filename="../../core.cpp" line="866"/>
         <source>Path copied</source>
         <translation>Путь скопирован</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1026"/>
-        <location filename="../../core.cpp" line="1322"/>
-        <location filename="../../core.cpp" line="1344"/>
+        <location filename="../../core.cpp" line="1027"/>
+        <location filename="../../core.cpp" line="1323"/>
+        <location filename="../../core.cpp" line="1345"/>
         <source>File exists</source>
         <translation>Файл существует</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1026"/>
+        <location filename="../../core.cpp" line="1027"/>
         <source>Overwrite file?</source>
         <translation>Перезаписать файл?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1121"/>
+        <location filename="../../core.cpp" line="1122"/>
         <source>Add folder</source>
         <translation>Добавить папку</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1122"/>
+        <location filename="../../core.cpp" line="1123"/>
         <source>Folder name:</source>
         <translation>Имя папки:</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1129"/>
+        <location filename="../../core.cpp" line="1130"/>
         <source>Folder already exists</source>
         <translation>Папка уже существует</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1140"/>
+        <location filename="../../core.cpp" line="1141"/>
         <source>Failed to create folder</source>
         <translation>Не удалось создать папку</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1204"/>
-        <location filename="../../core.cpp" line="1282"/>
+        <location filename="../../core.cpp" line="1205"/>
+        <location filename="../../core.cpp" line="1283"/>
         <source>Could not create directory </source>
         <translation>Не удалось создать папку </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1320"/>
+        <location filename="../../core.cpp" line="1321"/>
         <source>File moved.</source>
         <translation>Файл перемещен.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1323"/>
-        <location filename="../../core.cpp" line="1345"/>
+        <location filename="../../core.cpp" line="1324"/>
+        <location filename="../../core.cpp" line="1346"/>
         <source>Destination file exists. Overwrite?</source>
         <translation>Файл назначения существует. Перезаписать?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1342"/>
+        <location filename="../../core.cpp" line="1343"/>
         <source>File copied.</source>
         <translation>Файл скопирован.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1409"/>
+        <location filename="../../core.cpp" line="1410"/>
         <source>Perform action &quot;</source>
         <translation>Выполнить действие &quot;</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1410"/>
+        <location filename="../../core.cpp" line="1411"/>
         <source>Changes will be saved immediately.</source>
         <translation>Изменения будут сохранены немедленно.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1431"/>
+        <location filename="../../core.cpp" line="1432"/>
         <source>Flip horizontal</source>
         <translation>Отразить по горизонтали</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1435"/>
+        <location filename="../../core.cpp" line="1436"/>
         <source>Flip vertical</source>
         <translation>Отразить по вертикали</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1440"/>
+        <location filename="../../core.cpp" line="1441"/>
         <source>Rotate</source>
         <translation>Повернуть</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1501"/>
+        <location filename="../../core.cpp" line="1502"/>
         <source>Resize</source>
         <translation>Изменение размера</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1544"/>
-        <location filename="../../core.cpp" line="1550"/>
+        <location filename="../../core.cpp" line="1545"/>
+        <location filename="../../core.cpp" line="1551"/>
         <source>Crop</source>
         <translation>Обрезать</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1609"/>
+        <location filename="../../core.cpp" line="1610"/>
         <source>File saved</source>
         <translation>Файл сохранен</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1612"/>
+        <location filename="../../core.cpp" line="1613"/>
         <source>Could not save file</source>
         <translation>Не удалось сохранить файл</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1690"/>
-        <location filename="../../core.cpp" line="1696"/>
+        <location filename="../../core.cpp" line="1691"/>
+        <location filename="../../core.cpp" line="1697"/>
         <source>Set wallpaper: file not supported</source>
         <translation>Установка обоев: файл не поддерживается</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1857"/>
+        <location filename="../../core.cpp" line="1858"/>
         <source>Could not open image</source>
         <translation>Не удалось открыть изображение</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1861"/>
+        <location filename="../../core.cpp" line="1862"/>
         <source>Can only print static images</source>
         <translation>Печать доступна только для статических изображений</translation>
     </message>
@@ -849,171 +849,171 @@ Total files: %3</source>
         <translation>Масштабирование ИИ...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="678"/>
+        <location filename="../../core.cpp" line="679"/>
         <source>Delete folder permanently?</source>
         <translation>Удалить папку навсегда?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="680"/>
+        <location filename="../../core.cpp" line="681"/>
         <source>Delete file permanently?</source>
         <translation>Удалить файл навсегда?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="702"/>
+        <location filename="../../core.cpp" line="703"/>
         <source>Folder removed</source>
         <translation>Папка удалена</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="711"/>
-        <location filename="../../core.cpp" line="782"/>
+        <location filename="../../core.cpp" line="712"/>
+        <location filename="../../core.cpp" line="783"/>
         <source> folders</source>
         <translation> папок</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="717"/>
-        <location filename="../../core.cpp" line="788"/>
+        <location filename="../../core.cpp" line="718"/>
+        <location filename="../../core.cpp" line="789"/>
         <source> items</source>
         <translation> элементов</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="741"/>
+        <location filename="../../core.cpp" line="742"/>
         <source> folders to trash?</source>
         <translation> папок в корзину?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="743"/>
+        <location filename="../../core.cpp" line="744"/>
         <source> files to trash?</source>
         <translation> файлов в корзину?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="749"/>
+        <location filename="../../core.cpp" line="750"/>
         <source>Move folder to trash?</source>
         <translation>Переместить папку в корзину?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="751"/>
+        <location filename="../../core.cpp" line="752"/>
         <source>Move file to trash?</source>
         <translation>Переместить файл в корзину?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1451"/>
+        <location filename="../../core.cpp" line="1452"/>
         <source>AI resize is already running.</source>
         <translation>Масштабирование ИИ уже запущено.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1460"/>
+        <location filename="../../core.cpp" line="1461"/>
         <source>AI resize supports one image at a time.</source>
         <translation>Масштабирование ИИ поддерживает только одно изображение за раз.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1467"/>
-        <location filename="../../core.cpp" line="1473"/>
+        <location filename="../../core.cpp" line="1468"/>
+        <location filename="../../core.cpp" line="1474"/>
         <source>Could not resize image.</source>
         <translation>Не удалось изменить размер изображения.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1487"/>
+        <location filename="../../core.cpp" line="1488"/>
         <source>AI resizing...</source>
         <translation>Масштабирование ИИ...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1514"/>
+        <location filename="../../core.cpp" line="1515"/>
         <source>AI resize failed.</source>
         <translation>Ошибка масштабирования ИИ.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1519"/>
+        <location filename="../../core.cpp" line="1520"/>
         <source>AI resize finished, but the image is no longer in the list.</source>
         <translation>Масштабирование ИИ завершено, но изображения больше нет в списке.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1525"/>
+        <location filename="../../core.cpp" line="1526"/>
         <source>Could not apply AI resize.</source>
         <translation>Не удалось применить масштабирование ИИ.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1534"/>
+        <location filename="../../core.cpp" line="1535"/>
         <source>AI resize finished.</source>
         <translation>Масштабирование ИИ завершено.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1536"/>
+        <location filename="../../core.cpp" line="1537"/>
         <source>AI resize finished for %1.</source>
         <translation>Масштабирование ИИ для %1 завершено.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1702"/>
+        <location filename="../../core.cpp" line="1703"/>
         <source>Set wallpaper: failed to get image</source>
         <translation>Установка обоев: не удалось получить изображение</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1708"/>
+        <location filename="../../core.cpp" line="1709"/>
         <source>Set wallpaper: screen not found</source>
         <translation>Установка обоев: экран не найден</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1720"/>
+        <location filename="../../core.cpp" line="1721"/>
         <source>Setting wallpaper...</source>
         <translation>Установка обоев...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1730"/>
+        <location filename="../../core.cpp" line="1731"/>
         <source>Set wallpaper: invalid monitor size</source>
         <translation>Установка обоев: недопустимый размер монитора</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1767"/>
+        <location filename="../../core.cpp" line="1768"/>
         <source>Set wallpaper: cropping failed</source>
         <translation>Установка обоев: обрезка не удалась</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1779"/>
+        <location filename="../../core.cpp" line="1780"/>
         <source>AI upscaling...</source>
         <translation>ИИ-масштабирование...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1810"/>
+        <location filename="../../core.cpp" line="1811"/>
         <source>Set wallpaper: scaling failed</source>
         <translation>Установка обоев: масштабирование не удалось</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1817"/>
+        <location filename="../../core.cpp" line="1818"/>
         <source>Set wallpaper: failed to save PNG</source>
         <translation>Установка обоев: не удалось сохранить PNG</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1843"/>
+        <location filename="../../core.cpp" line="1844"/>
         <source>Wallpaper set</source>
         <translation>Обои установлены</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1952"/>
+        <location filename="../../core.cpp" line="1953"/>
         <source>Could not open path: </source>
         <translation>Не удалось открыть путь: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2017"/>
+        <location filename="../../core.cpp" line="2018"/>
         <source>Could not load folder: </source>
         <translation>Не удалось загрузить папку: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2211"/>
+        <location filename="../../core.cpp" line="2212"/>
         <source>End of directory.</source>
         <translation>Конец папки.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2245"/>
+        <location filename="../../core.cpp" line="2246"/>
         <source>Load failed: </source>
         <translation>Ошибка загрузки: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2308"/>
+        <location filename="../../core.cpp" line="2314"/>
         <source>Error: could not load image.</source>
         <translation>Ошибка: не удалось загрузить изображение.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2338"/>
-        <location filename="../../core.cpp" line="2358"/>
+        <location filename="../../core.cpp" line="2353"/>
+        <location filename="../../core.cpp" line="2373"/>
         <source>Page %1/%2</source>
         <translation>Страница %1/%2</translation>
     </message>
@@ -1267,121 +1267,140 @@ Total files: %3</source>
 <context>
     <name>FolderView</name>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="206"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="210"/>
         <source>Toggle side panel</source>
         <translation>Скрыть/показать боковую панель</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="222"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="226"/>
         <source>Go up</source>
         <translation>Вверх</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="234"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="238"/>
         <source>15 images selected</source>
         <translation>выбрано изображений: 15</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="238"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="242"/>
         <source>Batch convert</source>
         <translation>Пакетная конвертация</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="243"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="247"/>
         <source>Grid size</source>
         <translation>Размер сетки</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="271"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="282"/>
         <source>A - Z</source>
         <translation>A - Z</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="271"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="282"/>
         <source>Z - A</source>
         <translation>Z - A</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="271"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="282"/>
         <source>Size</source>
         <translation>Размер</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="271"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="282"/>
         <source>Size (desc)</source>
         <translation>Размер (убыв.)</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="271"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="282"/>
         <source>Oldest</source>
         <translation>Старые</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="267"/>
-        <location filename="../../gui/folderview/folderview.cpp" line="278"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="271"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="282"/>
         <source>Newest</source>
         <translation>Новые</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="268"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="272"/>
         <source>Folder icon sorting</source>
         <translation>Сортировка значков папок</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="279"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="283"/>
         <source>Sort folders and images</source>
         <translation>Сортировать папки и изображения</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="290"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="293"/>
+        <source>Filter by file format</source>
+        <translation>Фильтр по формату файла</translation>
+    </message>
+    <message>
+        <location filename="../../gui/folderview/folderview.cpp" line="304"/>
         <source>Viewer</source>
         <translation>Просмотр</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="298"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="312"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="309"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="323"/>
         <source>Quit qimgv-plus</source>
         <translation>Выйти из qimgv-plus</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="347"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="361"/>
         <source>BOOKMARKS</source>
         <translation>ЗАКЛАДКИ</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="373"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="387"/>
         <source>FILESYSTEM</source>
         <translation>ФАЙЛОВАЯ СИСТЕМА</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="384"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="398"/>
         <source>Home</source>
         <translation>Домой</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="751"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="767"/>
         <source>1 image selected</source>
         <translation>выбрано 1 изображение</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="753"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="769"/>
         <source>%1 images selected</source>
         <translation>выбрано изображений: %1</translation>
     </message>
 </context>
 <context>
+    <name>FormatFilterComboBox</name>
+    <message>
+        <location filename="../../gui/customwidgets/formatfiltercombobox.cpp" line="15"/>
+        <location filename="../../gui/customwidgets/formatfiltercombobox.cpp" line="131"/>
+        <source>All formats</source>
+        <translation>Все форматы</translation>
+    </message>
+    <message>
+        <location filename="../../gui/customwidgets/formatfiltercombobox.cpp" line="137"/>
+        <source>Custom</source>
+        <translation>Пользовательские</translation>
+    </message>
+</context>
+<context>
     <name>ImageInfoOverlay</name>
     <message>
-        <location filename="../../gui/overlays/imageinfooverlay.cpp" line="52"/>
+        <location filename="../../gui/overlays/imageinfooverlay.cpp" line="60"/>
         <source>Image info</source>
         <translation>Информация об изображении</translation>
     </message>
@@ -1397,186 +1416,186 @@ Total files: %3</source>
 <context>
     <name>MW</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="206"/>
-        <location filename="../../gui/mainwindow.cpp" line="214"/>
-        <location filename="../../gui/mainwindow.cpp" line="222"/>
-        <location filename="../../gui/mainwindow.cpp" line="230"/>
-        <location filename="../../gui/mainwindow.cpp" line="239"/>
+        <location filename="../../gui/mainwindow.cpp" line="207"/>
+        <location filename="../../gui/mainwindow.cpp" line="215"/>
+        <location filename="../../gui/mainwindow.cpp" line="223"/>
+        <location filename="../../gui/mainwindow.cpp" line="231"/>
+        <location filename="../../gui/mainwindow.cpp" line="240"/>
         <source>Zoom temporary disabled</source>
         <translation>Масштабирование временно отключено</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="297"/>
+        <location filename="../../gui/mainwindow.cpp" line="298"/>
         <source>Sorting: By Name</source>
         <translation>Сортировка: По имени</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="298"/>
+        <location filename="../../gui/mainwindow.cpp" line="299"/>
         <source>Sorting: By Name (desc.)</source>
         <translation>Сортировка: По имени (обр.)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="299"/>
+        <location filename="../../gui/mainwindow.cpp" line="300"/>
         <source>Sorting: By Time</source>
         <translation>Сортировка: По времени</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="300"/>
+        <location filename="../../gui/mainwindow.cpp" line="301"/>
         <source>Sorting: By Time (desc.)</source>
         <translation>Сортировка: По времени (обр.)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="301"/>
+        <location filename="../../gui/mainwindow.cpp" line="302"/>
         <source>Sorting: By File Size</source>
         <translation>Сортировка: По размеру</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="302"/>
+        <location filename="../../gui/mainwindow.cpp" line="303"/>
         <source>Sorting: By File Size (desc.)</source>
         <translation>Сортировка: По размеру (обр.)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="311"/>
+        <location filename="../../gui/mainwindow.cpp" line="312"/>
         <source>Folder Thumbnails: By Name</source>
         <translation>Эскизы папок: По имени</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="312"/>
+        <location filename="../../gui/mainwindow.cpp" line="313"/>
         <source>Folder Thumbnails: By Name (desc.)</source>
         <translation>Эскизы папок: По имени (обр.)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="313"/>
+        <location filename="../../gui/mainwindow.cpp" line="314"/>
         <source>Folder Thumbnails: Oldest</source>
         <translation>Эскизы папок: Старые</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="314"/>
+        <location filename="../../gui/mainwindow.cpp" line="315"/>
         <source>Folder Thumbnails: Newest</source>
         <translation>Эскизы папок: Новые</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="315"/>
+        <location filename="../../gui/mainwindow.cpp" line="316"/>
         <source>Folder Thumbnails: By File Size</source>
         <translation>Эскизы папок: По размеру файла</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="316"/>
+        <location filename="../../gui/mainwindow.cpp" line="317"/>
         <source>Folder Thumbnails: By File Size (desc.)</source>
         <translation>Эскизы папок: По размеру файла (убыв.)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="332"/>
+        <location filename="../../gui/mainwindow.cpp" line="333"/>
         <source>Zoom lock: ON</source>
         <translation>Блокировка масштаба: ВКЛ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="334"/>
+        <location filename="../../gui/mainwindow.cpp" line="335"/>
         <source>Zoom lock: OFF</source>
         <translation>Блокировка масштаба: ВЫКЛ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="341"/>
+        <location filename="../../gui/mainwindow.cpp" line="342"/>
         <source>View lock: ON</source>
         <translation>Блокировка прокрутки: ВКЛ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="343"/>
+        <location filename="../../gui/mainwindow.cpp" line="344"/>
         <source>View lock: OFF</source>
         <translation>Блокировка прокрутки: ВЫКЛ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="439"/>
-        <location filename="../../gui/mainwindow.cpp" line="444"/>
-        <location filename="../../gui/mainwindow.cpp" line="470"/>
+        <location filename="../../gui/mainwindow.cpp" line="440"/>
+        <location filename="../../gui/mainwindow.cpp" line="445"/>
+        <location filename="../../gui/mainwindow.cpp" line="471"/>
         <source>Filter: </source>
         <translation>Фильтр: </translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="439"/>
-        <location filename="../../gui/mainwindow.cpp" line="452"/>
+        <location filename="../../gui/mainwindow.cpp" line="440"/>
+        <location filename="../../gui/mainwindow.cpp" line="453"/>
         <source>Nearest</source>
         <translation>Ближайший сосед</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="444"/>
-        <location filename="../../gui/mainwindow.cpp" line="455"/>
+        <location filename="../../gui/mainwindow.cpp" line="445"/>
+        <location filename="../../gui/mainwindow.cpp" line="456"/>
         <source>Bilinear</source>
         <translation>Билинейный</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="458"/>
+        <location filename="../../gui/mainwindow.cpp" line="459"/>
         <source>Smart sharpen</source>
         <translation>Умная резкость</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="464"/>
+        <location filename="../../gui/mainwindow.cpp" line="465"/>
         <source>Smart sharpen (GPU)</source>
         <translation>Умная резкость (GPU)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="467"/>
+        <location filename="../../gui/mainwindow.cpp" line="468"/>
         <source>Configured </source>
         <translation>Настроенный </translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="480"/>
+        <location filename="../../gui/mainwindow.cpp" line="481"/>
         <source>Use Upscayl: ON</source>
         <translation>Использовать Upscayl: ВКЛ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="480"/>
+        <location filename="../../gui/mainwindow.cpp" line="481"/>
         <source>Use Upscayl: OFF</source>
         <translation>Использовать Upscayl: ВЫКЛ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="744"/>
+        <location filename="../../gui/mainwindow.cpp" line="745"/>
         <source>Save File as...</source>
         <translation>Сохранить файл как...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="912"/>
+        <location filename="../../gui/mainwindow.cpp" line="913"/>
         <source>No viewport image available to copy.</source>
         <translation>Нет доступного изображения в области просмотра для копирования.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="915"/>
+        <location filename="../../gui/mainwindow.cpp" line="916"/>
         <source>Viewport image copied to clipboard</source>
         <translation>Изображение из области просмотра скопировано в буфер обмена</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="988"/>
+        <location filename="../../gui/mainwindow.cpp" line="989"/>
         <source>Folder view</source>
         <translation>Галерея</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="989"/>
-        <location filename="../../gui/mainwindow.cpp" line="992"/>
+        <location filename="../../gui/mainwindow.cpp" line="990"/>
+        <location filename="../../gui/mainwindow.cpp" line="993"/>
         <source>No file opened.</source>
         <translation>Файл не открыт.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="1094"/>
+        <location filename="../../gui/mainwindow.cpp" line="1095"/>
         <source>End of directory</source>
         <translation>Конец папки</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="1098"/>
+        <location filename="../../gui/mainwindow.cpp" line="1099"/>
         <source>Start of directory</source>
         <translation>Начало папки</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="1102"/>
+        <location filename="../../gui/mainwindow.cpp" line="1103"/>
         <source>Fit Window</source>
         <translation>Вписать в окно</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="1106"/>
+        <location filename="../../gui/mainwindow.cpp" line="1107"/>
         <source>Fit Width</source>
         <translation>По ширине</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="1110"/>
+        <location filename="../../gui/mainwindow.cpp" line="1111"/>
         <source>Fit 1:1</source>
         <translation>Масштаб 1:1</translation>
     </message>
@@ -1662,61 +1681,116 @@ Total files: %3</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="288"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="290"/>
         <source>Make</source>
         <translation>Производитель</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="292"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="294"/>
         <source>Model</source>
         <translation>Модель</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="296"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="298"/>
         <source>Date/Time</source>
         <translation>Дата/Время</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="303"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="306"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="305"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="308"/>
         <source>ExposureTime</source>
         <translation>Выдержка</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="303"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="306"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="305"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="308"/>
         <source> sec</source>
         <translation> сек</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="314"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="316"/>
         <source>F Number</source>
         <translation>Диафрагма (F)</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="319"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="321"/>
         <source>ISO Speed ratings</source>
         <translation>Чувствительность ISO</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="323"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="325"/>
         <source>Flash</source>
         <translation>Вспышка</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="329"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="331"/>
         <source>Focal Length</source>
         <translation>Фокусное расстояние</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="329"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="331"/>
         <source> mm</source>
         <translation> мм</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="337"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="339"/>
         <source>UserComment</source>
         <translation>Комментарий</translation>
+    </message>
+    <message>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="382"/>
+        <source>Checkpoint</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="384"/>
+        <source>CLIP</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="386"/>
+        <source>VAE</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="388"/>
+        <source>Sampler</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="390"/>
+        <source>Scheduler</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="391"/>
+        <source>Seed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="392"/>
+        <source>CFG</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="393"/>
+        <source>Denoise</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="394"/>
+        <source>Steps</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="396"/>
+        <source>LoRA</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="398"/>
+        <source>Prompt</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../utils/fileoperations.cpp" line="45"/>
