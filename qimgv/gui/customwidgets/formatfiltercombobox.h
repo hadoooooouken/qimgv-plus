@@ -28,6 +28,11 @@ private:
     QStandardItemModel *model;
     QString mDisplayText;
 
+    // Left padding for the manually-drawn label. Not derived from any
+    // style metric — StyledComboBox draws no left-side decoration, so
+    // this is a pure visual-design choice for this widget specifically.
+    static constexpr int kTextLeftPadding = 9;
+
     void toggleItem(int row);
     bool anyFormatChecked() const;
     void updateDisplayLabel();

@@ -148,7 +148,7 @@ void FormatFilterComboBox::paintEvent(QPaintEvent *e) {
     StyledComboBox::paintEvent(e);
 
     QPainter p(this);
-    QRect textRect = rect().adjusted(9, 0, -26, 0);
+    QRect textRect = rect().adjusted(kTextLeftPadding, 0, -iconAreaWidth(), 0);
     p.setPen(palette().color(QPalette::ButtonText));
     p.drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft,
                fontMetrics().elidedText(mDisplayText, Qt::ElideRight, textRect.width()));

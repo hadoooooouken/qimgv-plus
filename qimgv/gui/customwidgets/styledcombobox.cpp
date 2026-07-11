@@ -10,6 +10,8 @@ StyledComboBox::StyledComboBox(QWidget *parent) : QComboBox(parent), hiResPixmap
 }
 
 void StyledComboBox::setIconPath(QString path) {
+    iconResourcePath = path; // remembered so we can reload on DPI change
+
     if(dpr >= (1.0 + 0.001)) {
         path.replace(".", "@2x.");
         hiResPixmap = true;
@@ -25,6 +27,15 @@ void StyledComboBox::setIconPath(QString path) {
         pixmapDrawScale = dpr;
     }
     refreshIconColor();
+}
+
+int StyledComboBox::iconAreaWidth() const {
+    if (downArrow.isNull())
+        return kIconRightMargin;
+
+    qreal logicalWidth = hiResPixmap ? downArrow.width() / pixmapDrawScale
+                                      : downArrow.width();
+    return kIconRightMargin + qRound(logicalWidth);
 }
 
 QColor StyledComboBox::iconColor() const {
@@ -44,10 +55,10 @@ void StyledComboBox::paintEvent(QPaintEvent *e) {
     QPointF pos(0,0);
 
     if(hiResPixmap) {
-        pos = QPointF(width() - 8 - downArrow.width() / pixmapDrawScale,
+        pos = QPointF(width() - kIconRightMargin - downArrow.width() / pixmapDrawScale,
                       height() / 2 - downArrow.height() / (2 * pixmapDrawScale));
     } else {
-        pos = QPointF(width() - downArrow.width() - 8,
+        pos = QPointF(width() - downArrow.width() - kIconRightMargin,
                       (height() - downArrow.height()) / 2);
     }
     p.drawPixmap(pos, downArrow);
@@ -55,4 +66,16 @@ void StyledComboBox::paintEvent(QPaintEvent *e) {
 
 void StyledComboBox::keyPressEvent(QKeyEvent *event) {
     event->ignore();
+}
+
+bool StyledComboBox::event(QEvent *e) {
+    if (e->type() == QEvent::DevicePixelRatioChange) {
+        qreal newDpr = devicePixelRatioF();
+        if (!qFuzzyCompare(newDpr, dpr)) {
+            dpr = newDpr;
+            if (!iconResourcePath.isEmpty())
+                setIconPath(iconResourcePath); // re-pick @1x/@2x asset, recompute pixmapDrawScale
+        }
+    }
+    return QComboBox::event(e);
 }
