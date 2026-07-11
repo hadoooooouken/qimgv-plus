@@ -106,6 +106,7 @@ void ActionManager::initDefaults() {
                                  "togglePanorama");
 #ifdef USE_UPSCAYL
   actionManager->defaults.insert(InputMap::keyNameAlt() + "+I", "toggleUpscayl");
+  actionManager->defaults.insert(InputMap::keyNameAlt() + "+" + InputMap::keyNameShift() + "+I", "cycleUpscaylModel");
 #endif
 }
 //------------------------------------------------------------------------------
@@ -275,6 +276,13 @@ void ActionManager::readShortcuts() {
   QString altI = InputMap::keyNameAlt() + "+I";
   if (shortcuts.key("toggleUpscayl", "").isEmpty() && !shortcuts.contains(altI)) {
     shortcuts.insert(altI, "toggleUpscayl");
+  }
+
+  // If the user doesn't have a shortcut for cycleUpscaylModel, and Alt+Shift+I is not bound,
+  // assign it by default.
+  QString altShiftI = InputMap::keyNameAlt() + "+" + InputMap::keyNameShift() + "+I";
+  if (shortcuts.key("cycleUpscaylModel", "").isEmpty() && !shortcuts.contains(altShiftI)) {
+    shortcuts.insert(altShiftI, "cycleUpscaylModel");
   }
 #endif
 }

@@ -54,6 +54,7 @@ public:
   bool resizeUseUpscayl();
   void setResizeUseUpscayl(bool enabled);
   bool hasUpscaylModels();
+  QStringList availableUpscaylModels();
 #endif
   bool fullscreenMode();
   void setFullscreenMode(bool mode);

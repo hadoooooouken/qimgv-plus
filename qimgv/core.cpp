@@ -424,6 +424,8 @@ void Core::initActions() {
 #ifdef USE_UPSCAYL
   connect(actionManager, &ActionManager::toggleUpscayl, mw,
           &MW::toggleUpscayl);
+  connect(actionManager, &ActionManager::cycleUpscaylModel, mw,
+          &MW::cycleUpscaylModel);
 #endif
   connect(actionManager, &ActionManager::showInDirectory, this,
           &Core::showInDirectory);

@@ -52,10 +52,20 @@ MW::MW(QWidget *parent)
     this->setAccessibleName("mainwindow");
     windowGeometryChangeTimer.setSingleShot(true);
     windowGeometryChangeTimer.setInterval(30);
+#ifdef USE_UPSCAYL
+    // Debounce so the "Model: X" message stays readable instead of being
+    // instantly overwritten by "AI Upscaling..." when the model reload
+    // triggers a rescale; also coalesces rapid repeated key presses.
+    upscaylModelSwitchTimer.setSingleShot(true);
+    upscaylModelSwitchTimer.setInterval(1500);
+#endif
     setupUi();
 
     connect(settings, &Settings::settingsChanged, this, &MW::readSettings);
     connect(&windowGeometryChangeTimer, &QTimer::timeout, this, &MW::onWindowGeometryChanged);
+#ifdef USE_UPSCAYL
+    connect(&upscaylModelSwitchTimer, &QTimer::timeout, this, &MW::onUpscaylModelSwitchTimeout);
+#endif
     connect(this, &MW::fullscreenStateChanged, this, &MW::adaptToWindowState);
 
     readSettings();
@@ -503,6 +513,31 @@ void MW::toggleUpscayl() {
     if (!settings->useUpscayl()) {
         hideUpscaledCrop();
     }
+}
+
+void MW::cycleUpscaylModel() {
+    const QStringList models = settings->availableUpscaylModels();
+    if (models.isEmpty())
+        return;
+    // Cycle from the last *requested* model, not the one currently loaded by
+    // the background worker, so repeated presses advance correctly even
+    // before the debounced refresh below has applied any of them yet.
+    const QString current = pendingUpscaylModelName.isEmpty() ? settings->upscaylModel() : pendingUpscaylModelName;
+    const int idx = models.indexOf(current);
+    const int next = (idx + 1) % models.size();
+    const QString nextModel = models.at(next);
+    pendingUpscaylModelName = nextModel;
+    settings->setUpscaylModel(nextModel);
+    showMessage(tr("Model: %1").arg(nextModel), 1500);
+    // Delay the actual reload/rescale: it triggers Upscaler::upscaleStarted,
+    // which shows an "AI Upscaling..." message that would otherwise
+    // immediately overwrite the "Model: X" message above.
+    upscaylModelSwitchTimer.start();
+}
+
+void MW::onUpscaylModelSwitchTimeout() {
+    pendingUpscaylModelName.clear();
+    settings->sendChangeNotification();
 }
 #endif
 

@@ -89,6 +89,7 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 | Toggle scaling filter (nearest / configured) | N |
 | Cycle scaling filter | Shift+N |
 | Toggle Use Upscayl | Alt+I |
+| Cycle upscaler models | Alt+Shift+I |
 | Settings  | P |
 | Exit application | Ctrl+Q / Alt+X |
 | Toggle panorama mode | Shift+P |

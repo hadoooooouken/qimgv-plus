@@ -123,6 +123,7 @@ signals:
     void casSettings();
 #ifdef USE_UPSCAYL
     void toggleUpscayl();
+    void cycleUpscaylModel();
 #endif
 };
 

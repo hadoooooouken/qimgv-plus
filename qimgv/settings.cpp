@@ -688,6 +688,22 @@ bool Settings::hasUpscaylModels() {
   }
   return exists;
 }
+
+QStringList Settings::availableUpscaylModels() {
+  QDir modelsDir(QApplication::applicationDirPath() + "/models");
+  QStringList filters;
+  filters << "*.param";
+  QStringList files = modelsDir.entryList(filters, QDir::Files, QDir::Name);
+  QStringList modelNames;
+  for (const QString &file : files) {
+    QFileInfo fi(file);
+    QString modelName = fi.baseName();
+    if (modelsDir.exists(modelName + ".bin")) {
+      modelNames.append(modelName);
+    }
+  }
+  return modelNames;
+}
 //------------------------------------------------------------------------------
 #endif
 bool Settings::keepFitMode() {

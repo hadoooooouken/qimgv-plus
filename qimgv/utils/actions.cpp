@@ -85,5 +85,6 @@ void Actions::init() {
   mActions.insert("prevPage", QVersionNumber(3, 1, 3));
 #ifdef USE_UPSCAYL
   mActions.insert("toggleUpscayl", QVersionNumber(2, 0, 0));
+  mActions.insert("cycleUpscaylModel", QVersionNumber(2, 0, 0));
 #endif
 }

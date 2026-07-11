@@ -4,57 +4,57 @@
 <context>
     <name>BatchConverter</name>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="40"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="41"/>
         <source>Stopped</source>
         <translation>Arrêté</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="54"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="98"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="108"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="143"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="214"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="55"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="99"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="109"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="153"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="224"/>
         <source>Failed</source>
         <translation>Échoué</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="55"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="56"/>
         <source>Load Error</source>
         <translation>Erreur de chargement</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="99"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="100"/>
         <source>AI Model Error</source>
         <translation>Erreur du modèle d&apos;IA</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="109"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="110"/>
         <source>AI Upscaling Failed</source>
         <translation>Échec de la mise à l&apos;échelle par IA</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="141"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="219"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="151"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="229"/>
         <source>Done</source>
         <translation>Terminé</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="144"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="154"/>
         <source>Save Error</source>
         <translation>Erreur d&apos;enregistrement</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="214"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="224"/>
         <source>Invalid destination path</source>
         <translation>Chemin de destination non valide</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="219"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="229"/>
         <source>Skipped (Exists)</source>
         <translation>Ignoré (Existe)</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="223"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="233"/>
         <source>Processing...</source>
         <translation>Traitement en cours...</translation>
     </message>
@@ -604,242 +604,242 @@ Total des fichiers : %3</translation>
 <context>
     <name>Core</name>
     <message>
-        <location filename="../../core.cpp" line="495"/>
+        <location filename="../../core.cpp" line="497"/>
         <source>Updated: </source>
         <translation>Mise à jour : </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="503"/>
+        <location filename="../../core.cpp" line="505"/>
         <source>Welcome to </source>
         <translation>Bienvenue dans </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="504"/>
+        <location filename="../../core.cpp" line="506"/>
         <source> version </source>
         <translation> version </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="522"/>
+        <location filename="../../core.cpp" line="524"/>
         <source>Shuffle mode: OFF</source>
         <translation>Mode aléatoire : OFF</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="525"/>
+        <location filename="../../core.cpp" line="527"/>
         <source>Shuffle mode: ON</source>
         <translation>Mode aléatoire : ON</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="534"/>
+        <location filename="../../core.cpp" line="536"/>
         <source>Slideshow: OFF</source>
         <translation>Diaporama : OFF</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="538"/>
+        <location filename="../../core.cpp" line="540"/>
         <source>Slideshow: ON</source>
         <translation>Diaporama : ON</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="668"/>
-        <location filename="../../core.cpp" line="671"/>
-        <location filename="../../core.cpp" line="674"/>
+        <location filename="../../core.cpp" line="670"/>
+        <location filename="../../core.cpp" line="673"/>
+        <location filename="../../core.cpp" line="676"/>
         <source>Delete </source>
         <translation>Effacer </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="669"/>
+        <location filename="../../core.cpp" line="671"/>
         <source> folders permanently?</source>
         <translation> dossiers définitivement?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="672"/>
+        <location filename="../../core.cpp" line="674"/>
         <source> files permanently?</source>
         <translation> fichiers définitivement?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="675"/>
+        <location filename="../../core.cpp" line="677"/>
         <source> items permanently?</source>
         <translation> les éléments de façon définitive ?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="683"/>
+        <location filename="../../core.cpp" line="685"/>
         <source>Delete permanently</source>
         <translation>Supprimer définitivement</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="705"/>
+        <location filename="../../core.cpp" line="707"/>
         <source>File removed</source>
         <translation>Élément supprimé</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="711"/>
-        <location filename="../../core.cpp" line="714"/>
-        <location filename="../../core.cpp" line="717"/>
+        <location filename="../../core.cpp" line="713"/>
+        <location filename="../../core.cpp" line="716"/>
+        <location filename="../../core.cpp" line="719"/>
         <source>Removed: </source>
         <translation>Supprimé : </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="715"/>
-        <location filename="../../core.cpp" line="786"/>
+        <location filename="../../core.cpp" line="717"/>
+        <location filename="../../core.cpp" line="788"/>
         <source> files</source>
         <translation> fichiers</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="742"/>
         <location filename="../../core.cpp" line="744"/>
         <location filename="../../core.cpp" line="746"/>
+        <location filename="../../core.cpp" line="748"/>
         <source>Move </source>
         <translation>Déplacer </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="746"/>
+        <location filename="../../core.cpp" line="748"/>
         <source> items to trash?</source>
         <translation> éléments vers la corbeille ?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="754"/>
+        <location filename="../../core.cpp" line="756"/>
         <source>Move to trash</source>
         <translation>Déplacer vers la corbeille</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="774"/>
+        <location filename="../../core.cpp" line="776"/>
         <source>Folder moved to trash</source>
         <translation>Dossier déplacé vers la corbeille</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="776"/>
+        <location filename="../../core.cpp" line="778"/>
         <source>Moved to trash</source>
         <translation>Déplacé vers la corbeille</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="782"/>
-        <location filename="../../core.cpp" line="785"/>
-        <location filename="../../core.cpp" line="788"/>
+        <location filename="../../core.cpp" line="784"/>
+        <location filename="../../core.cpp" line="787"/>
+        <location filename="../../core.cpp" line="790"/>
         <source>Moved to trash: </source>
         <translation>Déplacé(s) vers la corbeille : </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="859"/>
+        <location filename="../../core.cpp" line="861"/>
         <source>File copied</source>
         <translation>Fichier copié</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="866"/>
+        <location filename="../../core.cpp" line="868"/>
         <source>Path copied</source>
         <translation>Chemin copié</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1027"/>
-        <location filename="../../core.cpp" line="1323"/>
-        <location filename="../../core.cpp" line="1345"/>
+        <location filename="../../core.cpp" line="1029"/>
+        <location filename="../../core.cpp" line="1325"/>
+        <location filename="../../core.cpp" line="1347"/>
         <source>File exists</source>
         <translation>Le fichier existe</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1027"/>
+        <location filename="../../core.cpp" line="1029"/>
         <source>Overwrite file?</source>
         <translation>Écraser le fichier ?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1122"/>
+        <location filename="../../core.cpp" line="1124"/>
         <source>Add folder</source>
         <translation>Ajouter un dossier</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1123"/>
+        <location filename="../../core.cpp" line="1125"/>
         <source>Folder name:</source>
         <translation>Nom du dossier :</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1130"/>
+        <location filename="../../core.cpp" line="1132"/>
         <source>Folder already exists</source>
         <translation>Le dossier existe déjà</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1141"/>
+        <location filename="../../core.cpp" line="1143"/>
         <source>Failed to create folder</source>
         <translation>Impossible de créer le dossier</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1205"/>
-        <location filename="../../core.cpp" line="1283"/>
+        <location filename="../../core.cpp" line="1207"/>
+        <location filename="../../core.cpp" line="1285"/>
         <source>Could not create directory </source>
         <translation>Impossible de créer le répertoire </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1321"/>
+        <location filename="../../core.cpp" line="1323"/>
         <source>File moved.</source>
         <translation>Fichier déplacé.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1324"/>
-        <location filename="../../core.cpp" line="1346"/>
+        <location filename="../../core.cpp" line="1326"/>
+        <location filename="../../core.cpp" line="1348"/>
         <source>Destination file exists. Overwrite?</source>
         <translation>Le fichier de destination existe déjà. L&apos;écraser ?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1343"/>
+        <location filename="../../core.cpp" line="1345"/>
         <source>File copied.</source>
         <translation>Fichier copié.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1410"/>
+        <location filename="../../core.cpp" line="1412"/>
         <source>Perform action &quot;</source>
         <translation>Exécuter action &quot;</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1411"/>
+        <location filename="../../core.cpp" line="1413"/>
         <source>Changes will be saved immediately.</source>
         <translation>Les modifications seront immédiatement enregistrées.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1432"/>
+        <location filename="../../core.cpp" line="1434"/>
         <source>Flip horizontal</source>
         <translation>Renversement horizontal</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1436"/>
+        <location filename="../../core.cpp" line="1438"/>
         <source>Flip vertical</source>
         <translation>Renversement vertical</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1441"/>
+        <location filename="../../core.cpp" line="1443"/>
         <source>Rotate</source>
         <translation>Tourner</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1502"/>
+        <location filename="../../core.cpp" line="1504"/>
         <source>Resize</source>
         <translation>Redimensionner</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1545"/>
-        <location filename="../../core.cpp" line="1551"/>
+        <location filename="../../core.cpp" line="1547"/>
+        <location filename="../../core.cpp" line="1553"/>
         <source>Crop</source>
         <translation>Recadrer</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1610"/>
+        <location filename="../../core.cpp" line="1612"/>
         <source>File saved</source>
         <translation>Fichier enregistré</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1613"/>
+        <location filename="../../core.cpp" line="1615"/>
         <source>Could not save file</source>
         <translation>Impossible d&apos;enregistrer le fichier</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1691"/>
-        <location filename="../../core.cpp" line="1697"/>
+        <location filename="../../core.cpp" line="1693"/>
+        <location filename="../../core.cpp" line="1699"/>
         <source>Set wallpaper: file not supported</source>
         <translation>Définir le fond d&apos;écran : fichier non pris en charge</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1858"/>
+        <location filename="../../core.cpp" line="1860"/>
         <source>Could not open image</source>
         <translation>Impossible d&apos;ouvrir l&apos;image</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1862"/>
+        <location filename="../../core.cpp" line="1864"/>
         <source>Can only print static images</source>
         <translation>Ne peut imprimer que des images statiques</translation>
     </message>
@@ -849,171 +849,171 @@ Total des fichiers : %3</translation>
         <translation>Mise à l&apos;échelle IA...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="679"/>
+        <location filename="../../core.cpp" line="681"/>
         <source>Delete folder permanently?</source>
         <translation>Supprimer le dossier définitivement?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="681"/>
+        <location filename="../../core.cpp" line="683"/>
         <source>Delete file permanently?</source>
         <translation>Supprimer le fichier définitivement?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="703"/>
+        <location filename="../../core.cpp" line="705"/>
         <source>Folder removed</source>
         <translation>Dossier supprimé</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="712"/>
-        <location filename="../../core.cpp" line="783"/>
+        <location filename="../../core.cpp" line="714"/>
+        <location filename="../../core.cpp" line="785"/>
         <source> folders</source>
         <translation> dossiers</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="718"/>
-        <location filename="../../core.cpp" line="789"/>
+        <location filename="../../core.cpp" line="720"/>
+        <location filename="../../core.cpp" line="791"/>
         <source> items</source>
         <translation> éléments</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="742"/>
+        <location filename="../../core.cpp" line="744"/>
         <source> folders to trash?</source>
         <translation> dossiers vers la corbeille?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="744"/>
+        <location filename="../../core.cpp" line="746"/>
         <source> files to trash?</source>
         <translation> fichiers vers la corbeille?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="750"/>
+        <location filename="../../core.cpp" line="752"/>
         <source>Move folder to trash?</source>
         <translation>Déplacer le dossier vers la corbeille?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="752"/>
+        <location filename="../../core.cpp" line="754"/>
         <source>Move file to trash?</source>
         <translation>Déplacer le fichier vers la corbeille?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1452"/>
+        <location filename="../../core.cpp" line="1454"/>
         <source>AI resize is already running.</source>
         <translation>Le redimensionnement IA est déjà en cours.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1461"/>
+        <location filename="../../core.cpp" line="1463"/>
         <source>AI resize supports one image at a time.</source>
         <translation>Le redimensionnement IA ne supporte qu&apos;une seule image à la fois.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1468"/>
-        <location filename="../../core.cpp" line="1474"/>
+        <location filename="../../core.cpp" line="1470"/>
+        <location filename="../../core.cpp" line="1476"/>
         <source>Could not resize image.</source>
         <translation>Impossible de redimensionner l&apos;image.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1488"/>
+        <location filename="../../core.cpp" line="1490"/>
         <source>AI resizing...</source>
         <translation>Redimensionnement par l&apos;IA...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1515"/>
+        <location filename="../../core.cpp" line="1517"/>
         <source>AI resize failed.</source>
         <translation>Le redimensionnement par l&apos;IA a échoué.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1520"/>
+        <location filename="../../core.cpp" line="1522"/>
         <source>AI resize finished, but the image is no longer in the list.</source>
         <translation>Redimensionnement par l&apos;IA terminé, mais l&apos;image n&apos;est plus dans la liste.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1526"/>
+        <location filename="../../core.cpp" line="1528"/>
         <source>Could not apply AI resize.</source>
         <translation>Impossible d&apos;appliquer le redimensionnement par l&apos;IA.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1535"/>
+        <location filename="../../core.cpp" line="1537"/>
         <source>AI resize finished.</source>
         <translation>Redimensionnement par l&apos;IA terminé.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1537"/>
+        <location filename="../../core.cpp" line="1539"/>
         <source>AI resize finished for %1.</source>
         <translation>Redimensionnement par l&apos;IA terminé pour %1.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1703"/>
+        <location filename="../../core.cpp" line="1705"/>
         <source>Set wallpaper: failed to get image</source>
         <translation>Définir le fond d&apos;écran : échec de récupération de l&apos;image</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1709"/>
+        <location filename="../../core.cpp" line="1711"/>
         <source>Set wallpaper: screen not found</source>
         <translation>Définir le fond d&apos;écran : écran non trouvé</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1721"/>
+        <location filename="../../core.cpp" line="1723"/>
         <source>Setting wallpaper...</source>
         <translation>Définition du fond d&apos;écran...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1731"/>
+        <location filename="../../core.cpp" line="1733"/>
         <source>Set wallpaper: invalid monitor size</source>
         <translation>Définir le fond d&apos;écran : taille de moniteur non valide</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1768"/>
+        <location filename="../../core.cpp" line="1770"/>
         <source>Set wallpaper: cropping failed</source>
         <translation>Définir le fond d&apos;écran : échec du recadrage</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1780"/>
+        <location filename="../../core.cpp" line="1782"/>
         <source>AI upscaling...</source>
         <translation>Mise à l&apos;échelle par IA...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1811"/>
+        <location filename="../../core.cpp" line="1813"/>
         <source>Set wallpaper: scaling failed</source>
         <translation>Définir le fond d&apos;écran : échec de la mise à l&apos;échelle</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1818"/>
+        <location filename="../../core.cpp" line="1820"/>
         <source>Set wallpaper: failed to save PNG</source>
         <translation>Définir le fond d&apos;écran : échec de sauvegarde du PNG</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1844"/>
+        <location filename="../../core.cpp" line="1846"/>
         <source>Wallpaper set</source>
         <translation>Fond d&apos;écran défini</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1953"/>
+        <location filename="../../core.cpp" line="1955"/>
         <source>Could not open path: </source>
         <translation>Impossible d&apos;ouvrir le chemin : </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2018"/>
+        <location filename="../../core.cpp" line="2020"/>
         <source>Could not load folder: </source>
         <translation>Impossible de charger le dossier : </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2212"/>
+        <location filename="../../core.cpp" line="2214"/>
         <source>End of directory.</source>
         <translation>Fin du répertoire.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2246"/>
+        <location filename="../../core.cpp" line="2248"/>
         <source>Load failed: </source>
         <translation>Échec du chargement : </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2314"/>
+        <location filename="../../core.cpp" line="2316"/>
         <source>Error: could not load image.</source>
         <translation>Erreur : impossible de charger l&apos;image.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2353"/>
-        <location filename="../../core.cpp" line="2373"/>
+        <location filename="../../core.cpp" line="2355"/>
+        <location filename="../../core.cpp" line="2375"/>
         <source>Page %1/%2</source>
         <translation>Page %1 sur %2</translation>
     </message>
@@ -1416,186 +1416,191 @@ Total des fichiers : %3</translation>
 <context>
     <name>MW</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="207"/>
-        <location filename="../../gui/mainwindow.cpp" line="215"/>
-        <location filename="../../gui/mainwindow.cpp" line="223"/>
-        <location filename="../../gui/mainwindow.cpp" line="231"/>
-        <location filename="../../gui/mainwindow.cpp" line="240"/>
+        <location filename="../../gui/mainwindow.cpp" line="238"/>
+        <location filename="../../gui/mainwindow.cpp" line="246"/>
+        <location filename="../../gui/mainwindow.cpp" line="254"/>
+        <location filename="../../gui/mainwindow.cpp" line="262"/>
+        <location filename="../../gui/mainwindow.cpp" line="271"/>
         <source>Zoom temporary disabled</source>
         <translation>Zoom temporairement désactivé</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="298"/>
+        <location filename="../../gui/mainwindow.cpp" line="329"/>
         <source>Sorting: By Name</source>
         <translation>Tri : Par nom</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="299"/>
+        <location filename="../../gui/mainwindow.cpp" line="330"/>
         <source>Sorting: By Name (desc.)</source>
         <translation>Tri : Par nom (desc.)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="300"/>
+        <location filename="../../gui/mainwindow.cpp" line="331"/>
         <source>Sorting: By Time</source>
         <translation>Tri : Par date</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="301"/>
+        <location filename="../../gui/mainwindow.cpp" line="332"/>
         <source>Sorting: By Time (desc.)</source>
         <translation>Tri : Par date (desc.)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="302"/>
+        <location filename="../../gui/mainwindow.cpp" line="333"/>
         <source>Sorting: By File Size</source>
         <translation>Tri : Par taille</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="303"/>
+        <location filename="../../gui/mainwindow.cpp" line="334"/>
         <source>Sorting: By File Size (desc.)</source>
         <translation>Tri : Par taille (desc.)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="312"/>
+        <location filename="../../gui/mainwindow.cpp" line="343"/>
         <source>Folder Thumbnails: By Name</source>
         <translation>Miniatures de dossiers : par nom</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="313"/>
+        <location filename="../../gui/mainwindow.cpp" line="344"/>
         <source>Folder Thumbnails: By Name (desc.)</source>
         <translation>Miniatures de dossiers : par nom (desc.)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="314"/>
+        <location filename="../../gui/mainwindow.cpp" line="345"/>
         <source>Folder Thumbnails: Oldest</source>
         <translation>Miniatures de dossiers : les plus anciennes</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="315"/>
+        <location filename="../../gui/mainwindow.cpp" line="346"/>
         <source>Folder Thumbnails: Newest</source>
         <translation>Miniatures de dossiers : les plus récentes</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="316"/>
+        <location filename="../../gui/mainwindow.cpp" line="347"/>
         <source>Folder Thumbnails: By File Size</source>
         <translation>Miniatures de dossiers : par taille</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="317"/>
+        <location filename="../../gui/mainwindow.cpp" line="348"/>
         <source>Folder Thumbnails: By File Size (desc.)</source>
         <translation>Miniatures de dossiers : par taille (desc.)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="333"/>
+        <location filename="../../gui/mainwindow.cpp" line="364"/>
         <source>Zoom lock: ON</source>
         <translation>Verrouillage du zoom : ACTIVÉ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="335"/>
+        <location filename="../../gui/mainwindow.cpp" line="366"/>
         <source>Zoom lock: OFF</source>
         <translation>Verrouillage du zoom : DÉSACTIVÉ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="342"/>
+        <location filename="../../gui/mainwindow.cpp" line="373"/>
         <source>View lock: ON</source>
         <translation>Verrouillage de la vue : ACTIVÉ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="344"/>
+        <location filename="../../gui/mainwindow.cpp" line="375"/>
         <source>View lock: OFF</source>
         <translation>Verrouillage de la vue : DÉSACTIVÉ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="440"/>
-        <location filename="../../gui/mainwindow.cpp" line="445"/>
         <location filename="../../gui/mainwindow.cpp" line="471"/>
+        <location filename="../../gui/mainwindow.cpp" line="476"/>
+        <location filename="../../gui/mainwindow.cpp" line="502"/>
         <source>Filter: </source>
         <translation>Filtre : </translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="440"/>
-        <location filename="../../gui/mainwindow.cpp" line="453"/>
+        <location filename="../../gui/mainwindow.cpp" line="471"/>
+        <location filename="../../gui/mainwindow.cpp" line="484"/>
         <source>Nearest</source>
         <translation>Plus proche voisin</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="445"/>
-        <location filename="../../gui/mainwindow.cpp" line="456"/>
+        <location filename="../../gui/mainwindow.cpp" line="476"/>
+        <location filename="../../gui/mainwindow.cpp" line="487"/>
         <source>Bilinear</source>
         <translation>Bilinéaire</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="459"/>
+        <location filename="../../gui/mainwindow.cpp" line="490"/>
         <source>Smart sharpen</source>
         <translation>Netteté intelligente</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="465"/>
+        <location filename="../../gui/mainwindow.cpp" line="496"/>
         <source>Smart sharpen (GPU)</source>
         <translation>Netteté intelligente (GPU)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="468"/>
+        <location filename="../../gui/mainwindow.cpp" line="499"/>
         <source>Configured </source>
         <translation>Configuré </translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="481"/>
+        <location filename="../../gui/mainwindow.cpp" line="512"/>
         <source>Use Upscayl: ON</source>
         <translation>Utiliser Upscayl : ACTIVÉ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="481"/>
+        <location filename="../../gui/mainwindow.cpp" line="512"/>
         <source>Use Upscayl: OFF</source>
         <translation>Utiliser Upscayl : DÉSACTIVÉ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="745"/>
+        <location filename="../../gui/mainwindow.cpp" line="531"/>
+        <source>Model: %1</source>
+        <translation>Modèle: %1</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="801"/>
         <source>Save File as...</source>
         <translation>Enregistrer le fichier sous...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="913"/>
+        <location filename="../../gui/mainwindow.cpp" line="969"/>
         <source>No viewport image available to copy.</source>
         <translation>Aucune image disponible dans la vue pour la copie.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="916"/>
+        <location filename="../../gui/mainwindow.cpp" line="972"/>
         <source>Viewport image copied to clipboard</source>
         <translation>Image de la vue copiée dans le presse-papiers</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="989"/>
+        <location filename="../../gui/mainwindow.cpp" line="1045"/>
         <source>Folder view</source>
         <translation>Affichage dossier</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="990"/>
-        <location filename="../../gui/mainwindow.cpp" line="993"/>
+        <location filename="../../gui/mainwindow.cpp" line="1046"/>
+        <location filename="../../gui/mainwindow.cpp" line="1049"/>
         <source>No file opened.</source>
         <translation>Aucun fichier ouvert.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="1095"/>
+        <location filename="../../gui/mainwindow.cpp" line="1151"/>
         <source>End of directory</source>
         <translation>Fin du dossier</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="1099"/>
+        <location filename="../../gui/mainwindow.cpp" line="1155"/>
         <source>Start of directory</source>
         <translation>Début du dossier</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="1103"/>
+        <location filename="../../gui/mainwindow.cpp" line="1159"/>
         <source>Fit Window</source>
         <translation>Ajuster fenêtre</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="1107"/>
+        <location filename="../../gui/mainwindow.cpp" line="1163"/>
         <source>Fit Width</source>
         <translation>Ajuster largeur</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="1111"/>
+        <location filename="../../gui/mainwindow.cpp" line="1167"/>
         <source>Fit 1:1</source>
         <translation>Ajuster 1:1</translation>
     </message>
