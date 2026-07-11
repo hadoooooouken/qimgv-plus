@@ -173,3 +173,15 @@ if(EXISTS "${OPENJPH_ROOT}/lib/openjph.0.27.lib")
     target_link_libraries(kimg_jph PRIVATE "${OPENJPH_ROOT}/lib/openjph.0.27.lib")
 endif()
 
+# PNG (Enabled with local build using libspng, read-only decoder)
+# ZLIB_IMPORT_LIB / ZLIB_INCLUDE_DIR are the root CMakeLists.txt's single
+# source of truth for the zlib-ng install path (set() there before
+# add_subdirectory(3rdparty/kimageformats), so they're already in scope
+# here -- no need to re-derive the path a second time).
+set(SPNG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/libspng/install")
+if(EXISTS "${SPNG_ROOT}/lib/spng_static.lib")
+    kimageformats_add_plugin(kimg_png SOURCES png.cpp)
+    target_include_directories(kimg_png SYSTEM PRIVATE "${SPNG_ROOT}/include" "${ZLIB_INCLUDE_DIR}")
+    target_link_libraries(kimg_png PRIVATE "${SPNG_ROOT}/lib/spng_static.lib" "${ZLIB_IMPORT_LIB}")
+    target_compile_definitions(kimg_png PRIVATE SPNG_STATIC)
+endif()

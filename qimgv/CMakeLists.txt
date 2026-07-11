@@ -38,6 +38,23 @@ add_executable(qimgv-plus
 qt_add_lupdate(qimgv-plus TS_FILES ${TS_FILES})
 qt_add_lrelease(qimgv-plus TS_FILES ${TS_FILES})
 
+# zlib for PngTextChunkReader (zTXt inflate), qtiff.dll, and kimg_png.
+# All three use the shared zlib-ng DLL, so only the import library is needed.
+# NOTE: this is set() *before* add_subdirectory(3rdparty/kimageformats) below
+# on purpose -- CMake copies the parent's variables into a child directory's
+# scope only as of the moment add_subdirectory() is called, so kimg_png can
+# reuse ZLIB_IMPORT_LIB/ZLIB_INCLUDE_DIR directly only if this block runs first.
+# This is the single source of truth for the zlib-ng install path; don't
+# re-derive it with a second set() in 3rdparty/kimageformats/CMakeLists.txt.
+set(ZLIB_IMPORT_LIB "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install/lib/zlib.lib")
+set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install/include")
+if(EXISTS "${ZLIB_IMPORT_LIB}")
+    target_include_directories(qimgv-plus PRIVATE "${ZLIB_INCLUDE_DIR}")
+    target_link_libraries(qimgv-plus PRIVATE "${ZLIB_IMPORT_LIB}")
+else()
+    message(SEND_ERROR "zlib-ng import library not found at: ${ZLIB_IMPORT_LIB} - run build_scripts/build_qtiff_jpeg.ps1 first")
+endif()
+
 # ADD SOURCES
 add_subdirectory(components)
 add_subdirectory(sourcecontainers)
@@ -70,17 +87,6 @@ target_link_libraries(qimgv-plus PRIVATE
     Qt6::SvgWidgets
     Qt6::Pdf
 )
-
-# zlib for PngTextChunkReader (zTXt inflate) and qtiff.dll.
-# Both now use the shared zlib-ng DLL, so only the import library is needed.
-set(ZLIB_IMPORT_LIB "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install/lib/zlib.lib")
-set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install/include")
-if(EXISTS "${ZLIB_IMPORT_LIB}")
-    target_include_directories(qimgv-plus PRIVATE "${ZLIB_INCLUDE_DIR}")
-    target_link_libraries(qimgv-plus PRIVATE "${ZLIB_IMPORT_LIB}")
-else()
-    message(SEND_ERROR "zlib-ng import library not found at: ${ZLIB_IMPORT_LIB} - run build_scripts/build_qtiff_jpeg.ps1 first")
-endif()
 
 # OPTION DEFINITIONS, LINKING
 if(EXIV2)
@@ -148,7 +154,7 @@ if(WIN32)
 
 
     # 5. kimageformats dependencies (safe check)
-    set(_kimg_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw avif jxl kra ora jxr heif jp2 jph)
+    set(_kimg_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw avif jxl kra ora jxr heif jp2 jph png)
     foreach(_plugin ${_kimg_plugins})
         if(TARGET kimg_${_plugin})
             add_dependencies(qimgv-plus kimg_${_plugin})
@@ -185,6 +191,9 @@ if(WIN32)
     endif()
     if(TARGET kimg_jxr)
         add_custom_command(TARGET qimgv-plus POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_jxr>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/")
+    endif()
+    if(TARGET kimg_png)
+        add_custom_command(TARGET qimgv-plus POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:kimg_png>" "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/")
     endif()
 
 
@@ -255,5 +264,3 @@ if(WIN32)
         )
     endif()
 endif()
-
-
