@@ -15,7 +15,7 @@
     .\rebuild-all.ps1 -Libraries Imath,openexr -FullClean
 #>
 param(
-    [string[]] $Libraries = @("Imath","openexr","libavif","libjxl","jxrlib","LibRaw"),
+    [string[]] $Libraries = @("Imath","openexr","libavif","libjxl","jxrlib","libdeflate","LibRaw"),
     [switch]   $FullClean
 )
 
@@ -83,8 +83,8 @@ function Build-Library {
 
     Write-Info "Configuring..."
     $hardeningArgs = @(
-        "-DCMAKE_CXX_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /EHsc /Qspectre",
-        "-DCMAKE_C_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /Qspectre",
+        "-DCMAKE_CXX_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /arch:AVX2 /GS /guard:cf /EHsc /Qspectre",
+        "-DCMAKE_C_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /arch:AVX2 /GS /guard:cf /Qspectre",
         "-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=/guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT",
         "-DCMAKE_EXE_LINKER_FLAGS_RELEASE=/guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT"
     )
@@ -177,6 +177,20 @@ $ALL_LIBS = [ordered]@{
             -ConfigArgs @(
                 "-DCMAKE_INSTALL_PREFIX=$ROOT\jxrlib\install",
                 "-DBUILD_SHARED_LIBS=OFF"
+            )
+    }
+
+    "libdeflate" = {
+        Build-Library `
+            -SrcDir     "$ROOT\libdeflate" `
+            -BuildDir   "$ROOT\libdeflate\build" `
+            -InstallDir "$ROOT\libdeflate\install" `
+            -ConfigArgs @(
+                "-DCMAKE_INSTALL_PREFIX=$ROOT\libdeflate\install",
+                "-DLIBDEFLATE_BUILD_SHARED_LIB=ON",
+                "-DLIBDEFLATE_BUILD_STATIC_LIB=ON",
+                "-DLIBDEFLATE_BUILD_GZIP=OFF",
+                "-DLIBDEFLATE_BUILD_TESTS=OFF"
             )
     }
 

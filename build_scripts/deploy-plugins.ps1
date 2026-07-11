@@ -61,6 +61,7 @@ $depDlls = @(
     "formats\openexr\install\bin\OpenEXRUtil-4_0.dll"
     "formats\Imath\install\bin\Imath-3_2.dll"
     "formats\zlib-ng\install\bin\zlib1.dll"
+    "formats\libdeflate\install\bin\deflate.dll"
 )
 
 Write-Host "Deploying EXR dependency DLLs..." -ForegroundColor Cyan

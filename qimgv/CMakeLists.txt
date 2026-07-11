@@ -55,28 +55,15 @@ else()
     message(SEND_ERROR "zlib-ng import library not found at: ${ZLIB_IMPORT_LIB} - run build_scripts/build_qtiff_jpeg.ps1 first")
 endif()
 
-# libdeflate for fast PNG writing in batch converter (compiled as shared dll)
-set(LIBDEFLATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libdeflate")
-if(EXISTS "${LIBDEFLATE_DIR}/CMakeLists.txt")
-    set(LIBDEFLATE_BUILD_STATIC_LIB OFF CACHE BOOL "Build the static library" FORCE)
-    set(LIBDEFLATE_BUILD_SHARED_LIB ON CACHE BOOL "Build the shared library" FORCE)
-    set(LIBDEFLATE_COMPRESSION_SUPPORT ON CACHE BOOL "Support compression" FORCE)
-    set(LIBDEFLATE_DECOMPRESSION_SUPPORT OFF CACHE BOOL "Support decompression" FORCE)
-    set(LIBDEFLATE_ZLIB_SUPPORT ON CACHE BOOL "Support the zlib format" FORCE)
-    set(LIBDEFLATE_GZIP_SUPPORT OFF CACHE BOOL "Support the gzip format" FORCE)
-    set(LIBDEFLATE_BUILD_GZIP OFF CACHE BOOL "Build the libdeflate-gzip program" FORCE)
-    set(LIBDEFLATE_BUILD_TESTS OFF CACHE BOOL "Build the test programs" FORCE)
-
-    add_subdirectory("${LIBDEFLATE_DIR}" libdeflate EXCLUDE_FROM_ALL)
-    add_dependencies(qimgv-plus libdeflate_shared)
-
-    # Copy deflate.dll post-build
+# libdeflate for fast PNG writing in batch converter (pre-built shared dll, loaded at runtime via QLibrary)
+set(LIBDEFLATE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libdeflate/install/bin/deflate.dll")
+if(EXISTS "${LIBDEFLATE_DLL}")
     add_custom_command(TARGET qimgv-plus POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:libdeflate_shared>" "$<TARGET_FILE_DIR:qimgv-plus>/"
-        COMMENT "Deploying deflate.dll to output directory..."
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${LIBDEFLATE_DLL}" "$<TARGET_FILE_DIR:qimgv-plus>/"
+        COMMENT "Deploying deflate.dll (libdeflate) to output directory..."
     )
 else()
-    message(SEND_ERROR "libdeflate not found at: ${LIBDEFLATE_DIR}")
+    message(WARNING "libdeflate DLL not found at: ${LIBDEFLATE_DLL} - batch PNG fast encoding will be unavailable")
 endif()
 
 # ADD SOURCES
