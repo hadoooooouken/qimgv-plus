@@ -106,6 +106,7 @@ FolderView::FolderView(QWidget *parent) :
 
     sortingComboBox->setIconPath(":/res/icons/common/other/sorting-mode16.png");
     folderSortingComboBox->setIconPath(":/res/icons/common/menuitem/document-view16.png");
+    formatFilterComboBox->setIconPath(":/res/icons/common/other/sorting-mode16.png");
 
     newBookmarkButton->setIconPath(":/res/icons/common/buttons/panel-small/add-new12.png");
     homeButton->setIconPath(":/res/icons/common/buttons/panel-small/home12.png");
@@ -148,6 +149,7 @@ FolderView::FolderView(QWidget *parent) :
     });
     connect(sortingComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &FolderView::onSortingSelected);
     connect(folderSortingComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &FolderView::onFolderSortingSelected);
+    connect(formatFilterComboBox, &FormatFilterComboBox::formatSelectionChanged, this, &FolderView::formatFilterSelected);
     connect(togglePlacesPanelButton, &ActionButton::toggled, this, &FolderView::onPlacesPanelButtonChecked);
 
 
@@ -163,6 +165,8 @@ FolderView::FolderView(QWidget *parent) :
     sortingComboBox->view()->setTextElideMode(Qt::ElideNone);
     folderSortingComboBox->setItemDelegate(new QStyledItemDelegate(folderSortingComboBox));
     folderSortingComboBox->view()->setTextElideMode(Qt::ElideNone);
+    formatFilterComboBox->setItemDelegate(new QStyledItemDelegate(formatFilterComboBox));
+    formatFilterComboBox->view()->setTextElideMode(Qt::ElideNone);
 
     connect(splitter, &QSplitter::splitterMoved, this, &FolderView::onSplitterMoved);
 
@@ -278,6 +282,16 @@ void FolderView::setupUi() {
     sortingComboBox->addItems({tr("A - Z"), tr("Z - A"), tr("Size"), tr("Size (desc)"), tr("Oldest"), tr("Newest")});
     sortingComboBox->setToolTip(tr("Sort folders and images"));
     horizontalLayout_5->addWidget(sortingComboBox);
+    
+    horizontalSpacer_formatFilter = new QSpacerItem(4, 20, QSizePolicy::Fixed, QSizePolicy::Minimum);
+    horizontalLayout_5->addSpacerItem(horizontalSpacer_formatFilter);
+    
+    formatFilterComboBox = new FormatFilterComboBox(topBar);
+    formatFilterComboBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    formatFilterComboBox->setContextMenuPolicy(Qt::NoContextMenu);
+    formatFilterComboBox->setAccessibleName("PanelComboBox");
+    formatFilterComboBox->setToolTip(tr("Filter by file format"));
+    horizontalLayout_5->addWidget(formatFilterComboBox);
     
     QSpacerItem *horizontalSpacer_2 = new QSpacerItem(8, 20, QSizePolicy::Fixed, QSizePolicy::Minimum);
     horizontalLayout_5->addSpacerItem(horizontalSpacer_2);
@@ -436,6 +450,8 @@ void FolderView::readSettings() {
     folderSortingComboBox->blockSignals(true);
     folderSortingComboBox->setCurrentIndex(static_cast<int>(settings->folderIconSortingMode()));
     folderSortingComboBox->blockSignals(false);
+
+    formatFilterComboBox->setCheckedExtensions(settings->formatFilter());
 
     setPlacesPanel(settings->placesPanel());
     bookmarksWidget->setVisible(settings->placesPanelBookmarksExpanded());

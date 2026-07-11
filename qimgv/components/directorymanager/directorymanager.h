@@ -73,6 +73,7 @@ public:
     QString lastFile() const;
     void setSortingMode(SortingMode mode);
     SortingMode sortingMode() const;
+    void setFormatFilter(QStringList extensions);
     bool isFile(QString path) const;
     bool isDir(QString path) const;
 
@@ -120,7 +121,9 @@ private:
 
     DirectoryWatcher* watcher;
     void readSettings();
+    void rebuildRegex();
     SortingMode mSortingMode;
+    QStringList mFormatFilter;
     FileListSource mListSource;
     void loadEntryList(QString directoryPath, bool recursive);
 

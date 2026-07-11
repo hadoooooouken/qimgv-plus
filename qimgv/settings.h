@@ -157,6 +157,9 @@ public:
 
   QStringList bookmarks();
   void setBookmarks(QStringList paths);
+
+  QStringList formatFilter();
+  void setFormatFilter(QStringList extensions);
   bool placesPanelBookmarksExpanded();
   void setPlacesPanelBookmarksExpanded(bool mode);
   bool placesPanelTreeExpanded();

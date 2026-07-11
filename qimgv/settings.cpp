@@ -988,6 +988,14 @@ void Settings::setBookmarks(QStringList paths) {
   settings->stateConf->setValue("bookmarks", paths);
 }
 //------------------------------------------------------------------------------
+QStringList Settings::formatFilter() {
+  return settings->stateConf->value("formatFilter").toStringList();
+}
+
+void Settings::setFormatFilter(QStringList extensions) {
+  settings->stateConf->setValue("formatFilter", extensions);
+}
+//------------------------------------------------------------------------------
 bool Settings::placesPanel() {
   return settings->stateConf->value("placesPanel", true).toBool();
 }

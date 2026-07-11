@@ -266,7 +266,37 @@ void DirectoryManager::stopFileWatcher() {
 // ##############################################################
 
 void DirectoryManager::readSettings() {
-    regex.setPattern(settings->supportedFormatsRegex());
+    mFormatFilter = settings->formatFilter();
+    rebuildRegex();
+}
+
+void DirectoryManager::setFormatFilter(QStringList extensions) {
+    mFormatFilter = extensions;
+    rebuildRegex();
+}
+
+void DirectoryManager::rebuildRegex() {
+    QString pattern;
+    if (mFormatFilter.isEmpty()) {
+        pattern = settings->supportedFormatsRegex();
+    } else {
+        QSet<QString> supported;
+        for (const QByteArray &format : settings->supportedFormats())
+            supported.insert(QString(format).toLower());
+
+        QStringList active;
+        for (const QString &ext : mFormatFilter) {
+            QString lower = ext.toLower();
+            if (supported.contains(lower))
+                active << lower;
+        }
+
+        if (active.isEmpty())
+            pattern = settings->supportedFormatsRegex();
+        else
+            pattern = ".*\\.(" + active.join("|") + ")$";
+    }
+    regex.setPattern(pattern);
 }
 
 bool DirectoryManager::setDirectory(QString dirPath) {

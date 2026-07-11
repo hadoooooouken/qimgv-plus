@@ -126,6 +126,7 @@ private slots:
     void onModelItemUpdated(QString fileName);
     void onModelSortingChanged(SortingMode mode);
     void onFolderSortingSelected(SortingMode mode);
+    void onFormatFilterSelected(QStringList extensions);
     void onLoadFailed(const QString &path);
     void rotateLeft();
     void rotateRight();

@@ -3,6 +3,7 @@
 target_sources(qimgv-plus PRIVATE
     actions.cpp
     cmdoptionsrunner.cpp
+    formatgroups.cpp
     imagefactory.cpp
     imagelib.cpp
     inputmap.cpp

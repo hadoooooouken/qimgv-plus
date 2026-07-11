@@ -13,6 +13,7 @@
 #include "gui/folderview/bookmarkswidget.h"
 #include "gui/customwidgets/actionbutton.h"
 #include "gui/customwidgets/styledcombobox.h"
+#include "gui/customwidgets/formatfiltercombobox.h"
 
 class ClickableLabel;
 class QSplitter;
@@ -71,6 +72,7 @@ signals:
     void draggedToBookmarks(QList<int>) override;
     void sortingSelected(SortingMode);
     void folderSortingSelected(SortingMode);
+    void formatFilterSelected(QStringList);
     void directorySelected(QString path);
     void showFoldersChanged(bool mode);
     void copyUrlsRequested(QList<QString>, QString path);
@@ -125,6 +127,8 @@ private:
     StyledComboBox *folderSortingComboBox;
     QSpacerItem *horizontalSpacer_folderSort;
     StyledComboBox *sortingComboBox;
+    QSpacerItem *horizontalSpacer_formatFilter;
+    FormatFilterComboBox *formatFilterComboBox;
     ActionButton *docViewButton;
     ActionButton *settingsButton;
     QSpacerItem *panelRightEdgeSpacer;

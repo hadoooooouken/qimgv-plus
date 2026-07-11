@@ -254,6 +254,7 @@ void Core::connectComponents() {
   connect(mw, &MW::renameRequested, this, &Core::renameCurrentSelection);
   connect(mw, &MW::sortingSelected, this, &Core::sortBy);
   connect(mw, &MW::folderSortingSelected, this, &Core::onFolderSortingSelected);
+  connect(mw, &MW::formatFilterSelected, this, &Core::onFormatFilterSelected);
   connect(mw, &MW::showFoldersChanged, this, &Core::setFoldersDisplay);
   connect(mw, &MW::discardEditsRequested, this, &Core::discardEdits);
   connect(mw, &MW::draggedOut, this, qOverload<>(&Core::onDraggedOut));
@@ -2299,6 +2300,12 @@ void Core::onModelSortingChanged(SortingMode mode) {
 void Core::onFolderSortingSelected(SortingMode mode) {
   settings->setFolderIconSortingMode(mode);
   mw->onFolderSortingChanged(mode);
+  folderViewPresenter.reloadModel();
+}
+
+void Core::onFormatFilterSelected(QStringList extensions) {
+  settings->setFormatFilter(extensions);
+  model->setFormatFilter(extensions);
   folderViewPresenter.reloadModel();
 }
 

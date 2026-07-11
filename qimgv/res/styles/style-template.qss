@@ -221,6 +221,18 @@ QComboBox QAbstractItemView {
     background-color: %accent_hover_rgba%;
 }
 
+/* format filter dropdown: highlighted state when one format or "Custom" is active */
+[accessibleName="PanelComboBox"][active="true"] {
+    background-color: %accent%;
+    border-color: %accent%;
+    color: %text_hc%;
+}
+
+[accessibleName="PanelComboBox"][active="true"]:hover {
+    background-color: %accent%;
+    border-color: %accent%;
+}
+
 /*----------------------------------------------------------------------------*/
 /* panel buttons holder widget */
 

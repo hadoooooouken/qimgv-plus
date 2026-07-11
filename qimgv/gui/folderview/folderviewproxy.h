@@ -51,6 +51,7 @@ signals:
     void draggedToBookmarks(QList<int>) override;
     void sortingSelected(SortingMode);
     void folderSortingSelected(SortingMode);
+    void formatFilterSelected(QStringList);
     void showFoldersChanged(bool mode);
     void directorySelected(QString);
     void copyUrlsRequested(QList<QString>, QString path);

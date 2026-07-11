@@ -137,6 +137,15 @@ void DirectoryModel::setSortingMode(SortingMode mode) {
     dirManager.setSortingMode(mode);
 }
 
+void DirectoryModel::setFormatFilter(QStringList extensions) {
+    dirManager.setFormatFilter(extensions);
+    if (dirManager.source() == SOURCE_DIRECTORY) {
+        QString path = dirManager.directoryPath();
+        if (!path.isEmpty())
+            setDirectory(path); // rescan with the new filter applied
+    }
+}
+
 void DirectoryModel::removeFile(const QString &filePath, bool trash, FileOpResult &result) {
     if(trash)
         FileOperations::moveToTrash(filePath, result);
@@ -392,3 +401,5 @@ void DirectoryModel::preload(QString filePath) {
     if(containsFile(filePath) && !cache.contains(filePath))
         loader.loadAsync(filePath);
 }
+
+

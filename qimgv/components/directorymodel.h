@@ -55,6 +55,7 @@ public:
 
     void setSortingMode(SortingMode mode);
     SortingMode sortingMode() const;
+    void setFormatFilter(QStringList extensions);
 
     QString directoryPath() const;
     void unload(QString filePath);

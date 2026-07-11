@@ -28,6 +28,7 @@ target_sources(qimgv-plus PRIVATE
     customwidgets/colorselectorbutton.cpp
     customwidgets/entryinfoitem.cpp
     customwidgets/ssidebar.cpp
+    customwidgets/formatfiltercombobox.cpp
 
     dialogs/filereplacedialog.cpp
     dialogs/batchconverterdialog.cpp
