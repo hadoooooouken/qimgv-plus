@@ -3,14 +3,23 @@
     Build a custom qtiff.dll with JPEG compression support for Photoshop TIFF files.
 
 .DESCRIPTION
-    Builds a 4-step static dependency chain:
-      1. zlib         (static)
-      2. libjpeg-turbo (static, NASM SIMD)
-      3. libtiff       (static, JPEG + Old-JPEG enabled)
+    Builds a 4-step dependency chain:
+      1. zlib          (static)
+      2. libjpeg-turbo (SHARED, NASM SIMD) -> jpeg62.dll + jpeg.lib import lib
+      3. libtiff       (static, JPEG + Old-JPEG enabled, linked against the
+                        shared jpeg62.dll instead of a private static copy)
       4. qtiff.dll     (Qt image format plugin)
 
     The resulting qtiff.dll is a drop-in replacement for the stock Qt TIFF plugin,
     with full support for JPEG-compressed TIFF files (Photoshop compatibility).
+
+    libjpeg-turbo is built SHARED (not static) on purpose: this is the single
+    AVX2/LTCG-optimized JPEG codec used by BOTH qtiff.dll (via libtiff, for
+    JPEG-compressed TIFF) and qjpeg.dll (via build_qjpeg_jpeg.ps1, for plain
+    .jpg/.jpeg files). Previously each consumer got its own statically-linked
+    copy of libjpeg-turbo; now there is exactly one copy of the codec on disk
+    and in memory, shared like zlib1.dll already is. Run this script first
+    (at least through the "libjpeg-turbo" step) before build_qjpeg_jpeg.ps1.
 
 .PARAMETER Steps
     Which steps to build. Default = all four.
@@ -52,6 +61,7 @@ $ZLIB_SRC_DIR     = Join-Path $FORMATS_DIR "zlib-ng"
 $ZLIB_INSTALL     = Join-Path $FORMATS_DIR "zlib-ng\install"
 $ZLIB_NG_DIR      = Join-Path $FORMATS_DIR "zlib-ng"
 $JPEG_INSTALL     = Join-Path $FORMATS_DIR "libjpeg-turbo\install"
+$JPEG_BIN_DIR     = Join-Path $JPEG_INSTALL "bin"
 $TIFF_INSTALL     = Join-Path $FORMATS_DIR "libtiff\install"
 $QTIFF_BUILD_DIR  = Join-Path $SCRIPT_DIR "qtiff_jpeg\build"
 $QTIFF_INSTALL    = Join-Path $SCRIPT_DIR "qtiff_jpeg\install"
@@ -69,7 +79,8 @@ function Get-HardeningArgs {
         "-DCMAKE_CXX_FLAGS_RELEASE=$CXX_FLAGS_RELEASE",
         "-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=$LINKER_FLAGS",
         "-DCMAKE_EXE_LINKER_FLAGS_RELEASE=$LINKER_FLAGS",
-        "-DCMAKE_STATIC_LINKER_FLAGS_RELEASE="
+        "-DCMAKE_STATIC_LINKER_FLAGS_RELEASE=",
+        "-DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON"
     )
 }
 
@@ -114,6 +125,22 @@ function Invoke-CMake {
     }
 }
 
+# libjpeg-turbo's shared-library output name encodes SO_MAJOR_VERSION
+# (currently "62", for libjpeg 6b ABI compatibility -- e.g. jpeg62.dll),
+# while the import library keeps the stable name "jpeg.lib". Rather than
+# hardcoding the runtime DLL name (which could change if WITH_JPEG7/8 or
+# the upstream SO version ever changes), resolve it from disk.
+function Get-JpegDllPath {
+    if (-not (Test-Path $JPEG_BIN_DIR)) {
+        return $null
+    }
+    $dll = Get-ChildItem -Path $JPEG_BIN_DIR -Filter "jpeg*.dll" -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -notmatch "^turbojpeg" } |
+        Select-Object -First 1
+    if ($dll) { return $dll.FullName }
+    return $null
+}
+
 # ---------------------------------------------------------------------------
 # Step 1: zlib (static)
 # ---------------------------------------------------------------------------
@@ -144,8 +171,13 @@ function Build-Zlib {
 }
 
 # ---------------------------------------------------------------------------
-# Step 2: libjpeg-turbo (static, NASM SIMD)
+# Step 2: libjpeg-turbo (SHARED, NASM SIMD)
 # ---------------------------------------------------------------------------
+# Shared, not static: this single build is the one JPEG codec used by both
+# qtiff.dll (via libtiff, for JPEG-compressed TIFF) and qjpeg.dll (via
+# build_qjpeg_jpeg.ps1, for plain .jpg/.jpeg). ENABLE_STATIC=OFF because
+# nothing links the static archive anymore -- keeping it around would just
+# double build time for an artifact that's never consumed.
 function Build-LibjpegTurbo {
     $srcDir   = Join-Path $FORMATS_DIR "libjpeg-turbo"
     $buildDir = Join-Path $srcDir "build_msvc"
@@ -156,14 +188,14 @@ function Build-LibjpegTurbo {
 
     Clear-BuildDir $buildDir
 
-    Write-Info "Configuring libjpeg-turbo with NASM SIMD..."
+    Write-Info "Configuring libjpeg-turbo (shared) with NASM SIMD..."
     $args = @(
         "-S", $srcDir,
         "-B", $buildDir,
         "-A", "x64",
         "-DCMAKE_INSTALL_PREFIX=$JPEG_INSTALL",
-        "-DENABLE_SHARED=OFF",
-        "-DENABLE_STATIC=ON",
+        "-DENABLE_SHARED=ON",
+        "-DENABLE_STATIC=OFF",
         "-DWITH_SIMD=ON",
         "-DWITH_CRT_DLL=ON",
         "-DWITH_TURBOJPEG=OFF",
@@ -178,12 +210,24 @@ function Build-LibjpegTurbo {
     Write-Info "Installing libjpeg-turbo..."
     Invoke-CMake @("--install", $buildDir, "--config", "Release")
 
-    Write-OK "libjpeg-turbo installed to $JPEG_INSTALL"
+    $dllPath = Get-JpegDllPath
+    if ($dllPath) {
+        Write-OK "libjpeg-turbo installed to $JPEG_INSTALL (dll: $(Split-Path $dllPath -Leaf))"
+    } else {
+        Write-Warn "libjpeg-turbo installed to $JPEG_INSTALL, but no jpeg*.dll found in $JPEG_BIN_DIR"
+    }
 }
 
 # ---------------------------------------------------------------------------
 # Step 3: libtiff (static, JPEG + Old-JPEG)
 # ---------------------------------------------------------------------------
+# libtiff itself is still built static -- only its JPEG dependency changed.
+# find_package(JPEG) below now resolves to the shared jpeg.lib import library
+# (from Step 2) instead of a private static copy, so libtiff's JPEG codec
+# calls are satisfied at load time by the shared jpeg*.dll rather than
+# baked into qtiff.dll. qtiff.dll therefore gains a runtime dependency on
+# jpeg*.dll -- see Deploy-Qtiff / Deploy-JpegRuntime below and root
+# CMakeLists.txt for how that DLL is deployed alongside the plugin.
 function Build-Libtiff {
     $srcDir   = Join-Path $FORMATS_DIR "libtiff"
     $buildDir = Join-Path $srcDir "build_msvc"
@@ -288,6 +332,40 @@ function Deploy-Qtiff {
 }
 
 # ---------------------------------------------------------------------------
+# Deploy: place the shared jpeg*.dll wherever a loader might need it
+# ---------------------------------------------------------------------------
+# Unlike qtiff.dll/qjpeg.dll (Qt plugins, loaded from plugins\imageformats),
+# jpeg*.dll is an ordinary runtime dependency. Windows' default DLL search
+# order does NOT include a plugin's own directory, only the *application*
+# directory (plus system dirs / PATH) -- the same reason zlib1.dll is copied
+# next to the exe rather than into imageformats\. So this DLL needs to sit:
+#   - next to qimgv-plus.exe in the project release dir (for the built app;
+#     the real, CMake-driven copy for normal builds happens in root
+#     CMakeLists.txt, step 9c -- this is just for manual/out-of-tree runs)
+#   - in the Qt SDK's own bin\ dir (Qt Creator prepends this to PATH when
+#     running/debugging a kit's exe straight out of the build tree, before
+#     windeployqt has ever run)
+function Deploy-JpegRuntime {
+    $jpegDll = Get-JpegDllPath
+    if (-not $jpegDll) {
+        Write-Warn "No shared jpeg*.dll found in $JPEG_BIN_DIR -- skipping deploy"
+        return
+    }
+    $jpegDllName = Split-Path $jpegDll -Leaf
+
+    $qtBinDll = Join-Path $QT_DIR "bin\$jpegDllName"
+    Copy-Item $jpegDll $qtBinDll -Force
+    Write-OK "Deployed $jpegDllName to Qt SDK bin: $qtBinDll"
+
+    $releaseDll = Join-Path $ROOT "release\$jpegDllName"
+    $releaseDir = Split-Path $releaseDll -Parent
+    if (Test-Path $releaseDir) {
+        Copy-Item $jpegDll $releaseDll -Force
+        Write-OK "Deployed $jpegDllName to release: $releaseDll"
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -330,16 +408,28 @@ foreach ($step in $Steps) {
 }
 
 # Deploy if all steps succeeded
-if ($failed.Count -eq 0 -and -not $SkipDeploy -and $Steps -contains "qtiff") {
+if ($failed.Count -eq 0 -and -not $SkipDeploy) {
     Write-Host ""
     Write-Host ("=" * 60) -ForegroundColor DarkCyan
     Write-Host "  Deploy" -ForegroundColor Cyan
     Write-Host ("=" * 60) -ForegroundColor DarkCyan
-    try {
-        Deploy-Qtiff
-    } catch {
-        Write-Host "  [FAIL]  Deploy: $_" -ForegroundColor Red
-        $failed += "deploy"
+
+    if ($Steps -contains "libjpeg-turbo") {
+        try {
+            Deploy-JpegRuntime
+        } catch {
+            Write-Host "  [FAIL]  Deploy (jpeg runtime): $_" -ForegroundColor Red
+            $failed += "deploy-jpeg"
+        }
+    }
+
+    if ($Steps -contains "qtiff") {
+        try {
+            Deploy-Qtiff
+        } catch {
+            Write-Host "  [FAIL]  Deploy (qtiff): $_" -ForegroundColor Red
+            $failed += "deploy-qtiff"
+        }
     }
 }
 

@@ -64,6 +64,18 @@ $depDlls = @(
     "formats\libdeflate\install\bin\deflate.dll"
 )
 
+# libjpeg-turbo's shared DLL is versioned (e.g. jpeg62.dll) by SO_MAJOR_VERSION,
+# so resolve it by pattern instead of hardcoding the name (unlike the fixed-name
+# DLLs above). Shared by qtiff.dll (via libtiff) and qjpeg.dll.
+$jpegDll = Get-ChildItem -Path (Join-Path $projectRoot "formats\libjpeg-turbo\install\bin") `
+    -Filter "jpeg*.dll" -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -notmatch "^turbojpeg" } | Select-Object -First 1
+if ($jpegDll) {
+    $depDlls += "formats\libjpeg-turbo\install\bin\$($jpegDll.Name)"
+} else {
+    Write-Warning "Shared libjpeg-turbo DLL not found under formats\libjpeg-turbo\install\bin"
+}
+
 Write-Host "Deploying EXR dependency DLLs..." -ForegroundColor Cyan
 foreach ($relPath in $depDlls) {
     $srcPath = Join-Path $projectRoot $relPath

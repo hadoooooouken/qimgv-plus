@@ -11,6 +11,13 @@ MSVC_BASE = Path("E:/MVSC")
 MSYS2_BIN = Path("E:/MSYS2/usr/bin/bash.exe")
 FFMPEG_SRC = Path("E:/qimgv/formats/ffmpeg")
 PREFIX = FFMPEG_SRC / "ffmpeg-build-msvc"
+NASM_DIR = Path("E:/qimgv/formats/nasm")
+
+# Hardening / AVX2 flags -- must match rebuild-all.ps1, build_qtiff_jpeg.ps1,
+# build_qpng_spng.ps1 so every static library linked into the final binary
+# shares the same codegen and mitigation baseline.
+CL_HARDENING_FLAGS = "-arch:AVX2 -GS -guard:cf -Qspectre"
+LINK_HARDENING_FLAGS = "-guard:cf -DYNAMICBASE -HIGHENTROPYVA -NXCOMPAT -CETCOMPAT"
 # =========================================================
 
 def run_build():
@@ -41,6 +48,11 @@ def run_build():
 
     msvc_bin_msys = to_msys_path(msvc_bin)
     msvc_ide_msys = to_msys_path(msvc_ide)
+    nasm_dir_msys = to_msys_path(NASM_DIR)
+
+    if not NASM_DIR.exists():
+        print(f"[!] Error: NASM not found at {NASM_DIR} -- required for x86 SIMD asm")
+        sys.exit(1)
 
     # Construct clean, native MSYS2 INCLUDE and LIB representations
     inc_list = [
@@ -59,13 +71,16 @@ def run_build():
     # 3. Setup environment variables for the process execution
     env = os.environ.copy()
     
-    env["PATH"] = f"{msvc_bin};{msvc_ide};{env['PATH']}"
+    env["PATH"] = f"{msvc_bin};{msvc_ide};{NASM_DIR};{env['PATH']}"
     env["INCLUDE"] = ";".join(str(p) for p in [MSVC_BASE / f"VC/Tools/MSVC/{MSVC_VERSION}/include", sdk_include / "ucrt", sdk_include / "shared", sdk_include / "um"])
     env["LIB"] = ";".join(str(p) for p in [MSVC_BASE / f"VC/Tools/MSVC/{MSVC_VERSION}/lib/x64", sdk_lib / "ucrt" / "x64", sdk_lib / "um" / "x64"])
     
     env["CC"] = "cl"
     env["CXX"] = "cl"
     env["AR"] = "lib"
+
+    # Force MSYS2 to keep our Windows paths
+    env["MSYS2_PATH_TYPE"] = "inherit"
 
     print("[+] Paths translated to native Unix format.")
     print("[-] Launching clean build engine...")
@@ -74,9 +89,8 @@ def run_build():
     bash_script = f"""
     set -euo pipefail
     
-    export PATH="{msvc_bin_msys}:{msvc_ide_msys}:/usr/local/bin:/usr/bin:/bin"
-    export INCLUDE="{':'.join(inc_list)}"
-    export LIB="{':'.join(lib_list)}"
+    # Restore the essential MSYS2 tool paths, while keeping the inherited MSVC paths!
+    export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
     
     cd "{FFMPEG_SRC.as_posix()}"
     mkdir -p "{PREFIX.as_posix()}"
@@ -93,11 +107,13 @@ def run_build():
       --disable-network \\
       --disable-autodetect \\
       --disable-hwaccels \\
-      --disable-x86asm \\
       --enable-decoder=hevc \\
       --enable-parser=hevc \\
       --enable-demuxer=mov,mp4 \\
-      --enable-protocol=file
+      --enable-protocol=file \\
+      --extra-cflags="{CL_HARDENING_FLAGS}" \\
+      --extra-cxxflags="{CL_HARDENING_FLAGS} /EHsc" \\
+      --extra-ldflags="{LINK_HARDENING_FLAGS}"
       
     echo "[-] Cleaning workspace..."
     make clean || true

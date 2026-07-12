@@ -155,6 +155,19 @@ if(WIN32)
         )
     endif()
 
+    # 1c. Custom qjpeg.dll backed by shared libjpeg-turbo (overrides stock after windeployqt)
+    # Shares its JPEG codec with qtiff.dll above via the jpeg*.dll deployed in step 9c,
+    # instead of each plugin carrying its own copy of libjpeg-turbo.
+    set(CUSTOM_QJPEG_DLL "${CMAKE_CURRENT_SOURCE_DIR}/../build_scripts/qjpeg_jpeg/install/qjpeg.dll")
+    if(EXISTS "${CUSTOM_QJPEG_DLL}")
+        add_custom_command(TARGET qimgv-plus POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CUSTOM_QJPEG_DLL}"
+                "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/qjpeg.dll"
+            COMMENT "Deploying custom qjpeg.dll with AVX2 libjpeg-turbo support..."
+        )
+    endif()
+
     # 2. Exiv2
     if(EXIV2)
         add_custom_command(TARGET qimgv-plus POST_BUILD
@@ -260,6 +273,25 @@ if(WIN32)
         )
     else()
         message(WARNING "zlib-ng DLL not found at: ${ZLIB_DLL_PATH}")
+    endif()
+
+    # 9c. Copy shared libjpeg-turbo library for qtiff.dll (via libtiff) and qjpeg.dll.
+    # Both plugins link against this one AVX2/LTCG-optimized build (see
+    # build_scripts/build_qtiff_jpeg.ps1 Step 2 and build_qjpeg_jpeg.ps1) instead of
+    # each carrying a private static copy. Like zlib1.dll above, this has to sit next
+    # to the exe (not in imageformats/): Windows' default DLL search order covers the
+    # application directory but not a plugin's own directory.
+    # The DLL name is versioned (e.g. jpeg62.dll) by libjpeg-turbo's SO_MAJOR_VERSION,
+    # so it's resolved with a glob instead of being hardcoded.
+    file(GLOB _jpeg_dll_candidates "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjpeg-turbo/install/bin/jpeg*.dll")
+    if(_jpeg_dll_candidates)
+        list(GET _jpeg_dll_candidates 0 JPEG_DLL_PATH)
+        add_custom_command(TARGET qimgv-plus POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${JPEG_DLL_PATH}" "$<TARGET_FILE_DIR:qimgv-plus>/"
+            COMMENT "Deploying shared libjpeg-turbo library (${JPEG_DLL_PATH})..."
+        )
+    else()
+        message(WARNING "libjpeg-turbo shared DLL not found in: ${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjpeg-turbo/install/bin - run build_scripts/build_qtiff_jpeg.ps1 -Steps libjpeg-turbo first")
     endif()
 
     # 10. Copy upscayl-ncnn DLL and models directory

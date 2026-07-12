@@ -36,7 +36,15 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui)
 # IMPORTANT: tiff-config.cmake does NOT call find_dependency() for static builds (upstream TODO).
 # We must manually find ZLIB and JPEG before finding tiff so the targets exist when
 # tiff-targets.cmake tries to reference them.
+#
+# NOTE: tiff-targets.cmake references the target "libjpeg-turbo::jpeg" (from
+# libjpeg-turbo's OWN cmake package config), not "JPEG::JPEG" (from CMake's
+# built-in module-mode FindJPEG.cmake). find_package(JPEG REQUIRED) alone only
+# creates JPEG::JPEG, so tiff-targets.cmake fails to resolve its link interface.
+# We need BOTH: libjpeg-turbo's config-mode package (for the target tiff expects)
+# and the module-mode JPEG::JPEG (used directly below in target_link_libraries).
 find_package(ZLIB REQUIRED)
+find_package(libjpeg-turbo CONFIG REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(tiff REQUIRED CONFIG)
 
