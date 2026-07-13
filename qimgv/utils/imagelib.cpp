@@ -57,11 +57,6 @@ inline std::span<const uint32_t> constScanlineSpan(const QImage &img, int y) {
              static_cast<size_t>(img.width()) };
 }
 
-// Helper to convert 4 packed unsigned 8-bit integers (in lower 32-bits of __m128i) to 4 single-precision float values
-inline __m128 cvtepu8_ps(__m128i val) {
-    return _mm_cvtepi32_ps(_mm_cvtepu8_epi32(val));
-}
-
 // Thread pool helper childed to QCoreApplication to avoid static destruction issues
 QThreadPool* getScalingThreadPool() {
     static QThreadPool* pool = []() {
@@ -370,10 +365,10 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               uint32_t p2_b = srcRow[hw_b.x2];
               uint32_t p3_b = srcRow[hw_b.x3];
 
-              __m256 v_p0 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p0_a)), cvtepu8_ps(_mm_cvtsi32_si128(p0_b)));
-              __m256 v_p1 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p1_a)), cvtepu8_ps(_mm_cvtsi32_si128(p1_b)));
-              __m256 v_p2 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p2_a)), cvtepu8_ps(_mm_cvtsi32_si128(p2_b)));
-              __m256 v_p3 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p3_a)), cvtepu8_ps(_mm_cvtsi32_si128(p3_b)));
+              __m256 v_p0 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set_epi32(0, 0, p0_b, p0_a)));
+              __m256 v_p1 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set_epi32(0, 0, p1_b, p1_a)));
+              __m256 v_p2 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set_epi32(0, 0, p2_b, p2_a)));
+              __m256 v_p3 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set_epi32(0, 0, p3_b, p3_a)));
 
               __m256 w0 = _mm256_setr_ps(hw_a.w0, hw_a.w0, hw_a.w0, hw_a.w0, hw_b.w0, hw_b.w0, hw_b.w0, hw_b.w0);
               __m256 w1 = _mm256_setr_ps(hw_a.w1, hw_a.w1, hw_a.w1, hw_a.w1, hw_b.w1, hw_b.w1, hw_b.w1, hw_b.w1);
@@ -467,10 +462,10 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               uint32_t p3_a = r3[x];
               uint32_t p3_b = r3[x + 1];
 
-              __m256 v_p0 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p0_a)), cvtepu8_ps(_mm_cvtsi32_si128(p0_b)));
-              __m256 v_p1 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p1_a)), cvtepu8_ps(_mm_cvtsi32_si128(p1_b)));
-              __m256 v_p2 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p2_a)), cvtepu8_ps(_mm_cvtsi32_si128(p2_b)));
-              __m256 v_p3 = _mm256_setr_m128(cvtepu8_ps(_mm_cvtsi32_si128(p3_a)), cvtepu8_ps(_mm_cvtsi32_si128(p3_b)));
+              __m256 v_p0 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set_epi32(0, 0, p0_b, p0_a)));
+              __m256 v_p1 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set_epi32(0, 0, p1_b, p1_a)));
+              __m256 v_p2 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set_epi32(0, 0, p2_b, p2_a)));
+              __m256 v_p3 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set_epi32(0, 0, p3_b, p3_a)));
 
               __m256 res = _mm256_mul_ps(v_p0, w0);
               res = _mm256_fmadd_ps(v_p1, w1, res);
@@ -570,20 +565,20 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               __m256i R_lo = _mm256_unpacklo_epi8(reg_R, zero);
               __m256i R_hi = _mm256_unpackhi_epi8(reg_R, zero);
 
-              // sum = 4*C - T - B - L - R
-              __m256i sum_lo = _mm256_slli_epi16(C_lo, 2);
-              sum_lo = _mm256_sub_epi16(sum_lo, T_lo);
-              sum_lo = _mm256_sub_epi16(sum_lo, B_lo);
-              sum_lo = _mm256_sub_epi16(sum_lo, L_lo);
-              sum_lo = _mm256_sub_epi16(sum_lo, R_lo);
+              // Parallelizing additions to reduce latency
+              __m256i TB_lo = _mm256_add_epi16(T_lo, B_lo);
+              __m256i LR_lo = _mm256_add_epi16(L_lo, R_lo);
+              __m256i env_lo = _mm256_add_epi16(TB_lo, LR_lo);
+              __m256i C4_lo = _mm256_slli_epi16(C_lo, 2);
+              __m256i sum_lo = _mm256_sub_epi16(C4_lo, env_lo);
               __m256i diff_lo = _mm256_srai_epi16(sum_lo, 4);
               __m256i res_lo = _mm256_add_epi16(C_lo, diff_lo);
 
-              __m256i sum_hi = _mm256_slli_epi16(C_hi, 2);
-              sum_hi = _mm256_sub_epi16(sum_hi, T_hi);
-              sum_hi = _mm256_sub_epi16(sum_hi, B_hi);
-              sum_hi = _mm256_sub_epi16(sum_hi, L_hi);
-              sum_hi = _mm256_sub_epi16(sum_hi, R_hi);
+              __m256i TB_hi = _mm256_add_epi16(T_hi, B_hi);
+              __m256i LR_hi = _mm256_add_epi16(L_hi, R_hi);
+              __m256i env_hi = _mm256_add_epi16(TB_hi, LR_hi);
+              __m256i C4_hi = _mm256_slli_epi16(C_hi, 2);
+              __m256i sum_hi = _mm256_sub_epi16(C4_hi, env_hi);
               __m256i diff_hi = _mm256_srai_epi16(sum_hi, 4);
               __m256i res_hi = _mm256_add_epi16(C_hi, diff_hi);
 
@@ -653,17 +648,43 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
           // Thread-local sliding window buffer: stores 9 rows of horizontally blurred floats
           std::vector<std::vector<float>> rowBuffers(kGaussianKernelSize, std::vector<float>(W_dst * 4));
 
+          __m256 vGaussWeights256[kGaussianKernelSize];
+          __m128 vGaussWeights128[kGaussianKernelSize];
+          for (int k = 0; k < kGaussianKernelSize; ++k) {
+            vGaussWeights256[k] = _mm256_set1_ps(kGaussianWeights[k]);
+            vGaussWeights128[k] = _mm_set1_ps(kGaussianWeights[k]);
+          }
+          const __m256 vSharp256    = _mm256_set1_ps(kUnsharpSharpStrength);
+          const __m256 vBlur256     = _mm256_set1_ps(kUnsharpBlurStrength);
+          const __m256 vRound256    = _mm256_set1_ps(kRoundOffset);
+          const __m256 vColorMax256 = _mm256_set1_ps(kColorMax);
+          const __m128 vSharp128    = _mm_set1_ps(kUnsharpSharpStrength);
+          const __m128 vBlur128     = _mm_set1_ps(kUnsharpBlurStrength);
+          const __m128 vRound128    = _mm_set1_ps(kRoundOffset);
+          const __m128 vColorMax128 = _mm_set1_ps(kColorMax);
+
           auto blurRowHorizontal = [&](int yd, float* outRow) {
             int yd_clamped = std::clamp(yd, 0, H_dst - 1);
             auto srcRow = constScanlineSpan(scaledImg, yd_clamped);
-            for (int x = 0; x < W_dst; ++x) {
+
+            int x = 0;
+            for (; x + 1 < W_dst; x += 2) {
+              __m256 sum = _mm256_setzero_ps();
+              for (int k = -kGaussianHalfWidth; k <= kGaussianHalfWidth; ++k) {
+                int sxA = std::clamp(x + k, 0, W_dst - 1);
+                int sxB = std::clamp(x + 1 + k, 0, W_dst - 1);
+                __m256 v_p = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set_epi32(0, 0, srcRow[sxB], srcRow[sxA])));
+                sum = _mm256_fmadd_ps(vGaussWeights256[k + kGaussianHalfWidth], v_p, sum);
+              }
+              _mm256_storeu_ps(&outRow[x * 4], sum);
+            }
+            // Scalar/SSE tail for an odd trailing pixel
+            if (x < W_dst) {
               __m128 sum = _mm_setzero_ps();
               for (int k = -kGaussianHalfWidth; k <= kGaussianHalfWidth; ++k) {
                 int sx = std::clamp(x + k, 0, W_dst - 1);
-                uint32_t p = srcRow[sx];
-                __m128 kw = _mm_set1_ps(kGaussianWeights[k + kGaussianHalfWidth]);
-                __m128 v_p = cvtepu8_ps(_mm_cvtsi32_si128(p));
-                sum = _mm_fmadd_ps(kw, v_p, sum);
+                __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(srcRow[sx])));
+                sum = _mm_fmadd_ps(vGaussWeights128[k + kGaussianHalfWidth], v_p, sum);
               }
               _mm_storeu_ps(&outRow[x * 4], sum);
             }
@@ -679,23 +700,46 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
             auto origRow = constScanlineSpan(scaledImg, y);
 
             // Compute vertical Gaussian blur + Unsharp Mask blending on the fly
-            for (int x = 0; x < W_dst; ++x) {
+            int x = 0;
+            for (; x + 1 < W_dst; x += 2) {
+              __m256 sum = _mm256_setzero_ps();
+              for (int k = 0; k < kGaussianKernelSize; ++k) {
+                int bufIdx = (y - y_start + k) % kGaussianKernelSize;
+                __m256 r_val = _mm256_loadu_ps(&rowBuffers[bufIdx][x * 4]);
+                sum = _mm256_fmadd_ps(vGaussWeights256[k], r_val, sum);
+              }
+
+              __m128i orig_loaded = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&origRow[x]));
+              __m256 orig_f = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(orig_loaded));
+
+              // strength: 0.15 unsharp mask -> 1.15 * original - 0.15 * blurred
+              __m256 final_f = _mm256_fmsub_ps(vSharp256, orig_f, _mm256_mul_ps(vBlur256, sum));
+
+              __m256 rounded = _mm256_add_ps(final_f, vRound256);
+              rounded = _mm256_min_ps(_mm256_max_ps(rounded, _mm256_setzero_ps()), vColorMax256);
+
+              __m256i res_i = _mm256_cvtps_epi32(rounded);
+              __m256i packed_16 = _mm256_packus_epi32(res_i, res_i);
+              __m256i packed_8 = _mm256_packus_epi16(packed_16, packed_16);
+
+              dstRow[x]     = _mm_cvtsi128_si32(_mm256_castsi256_si128(packed_8));
+              dstRow[x + 1] = _mm_cvtsi128_si32(_mm256_extractf128_si256(packed_8, 1));
+            }
+            // Scalar/SSE tail for an odd trailing pixel
+            if (x < W_dst) {
               __m128 sum = _mm_setzero_ps();
               for (int k = 0; k < kGaussianKernelSize; ++k) {
                 int bufIdx = (y - y_start + k) % kGaussianKernelSize;
-                __m128 kw = _mm_set1_ps(kGaussianWeights[k]);
                 __m128 r_val = _mm_loadu_ps(&rowBuffers[bufIdx][x * 4]);
-                sum = _mm_fmadd_ps(kw, r_val, sum);
+                sum = _mm_fmadd_ps(vGaussWeights128[k], r_val, sum);
               }
 
-              uint32_t origP = origRow[x];
-              __m128 orig_f = cvtepu8_ps(_mm_cvtsi32_si128(origP));
+              __m128 orig_f = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(origRow[x])));
 
-              // strength: 0.15 unsharp mask -> 1.15 * original - 0.15 * blurred
-              __m128 final_f = _mm_fmsub_ps(_mm_set1_ps(kUnsharpSharpStrength), orig_f, _mm_mul_ps(_mm_set1_ps(kUnsharpBlurStrength), sum));
+              __m128 final_f = _mm_fmsub_ps(vSharp128, orig_f, _mm_mul_ps(vBlur128, sum));
 
-              __m128 rounded = _mm_add_ps(final_f, _mm_set1_ps(kRoundOffset));
-              rounded = _mm_min_ps(_mm_max_ps(rounded, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
+              __m128 rounded = _mm_add_ps(final_f, vRound128);
+              rounded = _mm_min_ps(_mm_max_ps(rounded, _mm_setzero_ps()), vColorMax128);
 
               __m128i res_i = _mm_cvtps_epi32(rounded);
               __m128i packed_16 = _mm_packus_epi32(res_i, res_i);
@@ -810,9 +854,6 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
   __m256i mask_r_i = _mm256_set1_epi32(0x00FF0000);
   __m256i mask_a_i = _mm256_set1_epi32(0xFF000000);
 
-  __m256 inv255 = _mm256_set1_ps(1.0f / 255.0f);
-  __m256 scale255 = _mm256_set1_ps(255.0f);
-  __m256 round05 = _mm256_set1_ps(0.5f);
   __m256 v_zero = _mm256_setzero_ps();
   __m256 v_255 = _mm256_set1_ps(255.0f);
 
@@ -828,7 +869,8 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
   __m256 v_m21 = _mm256_set1_ps(cm.m[2][1]);
   __m256 v_m22 = _mm256_set1_ps(cm.m[2][2]);
 
-  __m256 v_offset = _mm256_set1_ps(cm.offset);
+  // Pre-scale offset to avoid doing it per pixel
+  __m256 v_offset_scaled = _mm256_set1_ps(cm.offset * 255.0f + 0.5f);
 
   dst.detach();
   uchar *bits = dst.bits();
@@ -853,11 +895,11 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
       numTasks++;
       pool->start(new ScalerTask([bits, bytesPerLine, cm, width, y_start, y_end, &semaphore,
                                   mask_b_i, mask_g_i, mask_r_i, mask_a_i,
-                                  inv255, scale255, round05, v_zero, v_255,
+                                  v_zero, v_255,
                                   v_m00, v_m01, v_m02,
                                   v_m10, v_m11, v_m12,
                                   v_m20, v_m21, v_m22,
-                                  v_offset]() {
+                                  v_offset_scaled]() {
         for (int y = y_start; y < y_end; ++y) {
           QRgb *line = reinterpret_cast<QRgb*>(bits + y * bytesPerLine);
           int x = 0;
@@ -872,25 +914,15 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
             __m256i r_i = _mm256_srli_epi32(_mm256_and_si256(pix, mask_r_i), 16);
             __m256i a_i = _mm256_and_si256(pix, mask_a_i);
 
-            // Convert to float
+            // Convert to float in [0.0, 255.0] range directly without inverse division
             __m256 b_f = _mm256_cvtepi32_ps(b_i);
             __m256 g_f = _mm256_cvtepi32_ps(g_i);
             __m256 r_f = _mm256_cvtepi32_ps(r_i);
 
-            // Normalize to [0.0, 1.0]
-            b_f = _mm256_mul_ps(b_f, inv255);
-            g_f = _mm256_mul_ps(g_f, inv255);
-            r_f = _mm256_mul_ps(r_f, inv255);
-
-            // Apply matrix: out = M * in + offset
-            __m256 out_r = _mm256_fmadd_ps(v_m00, r_f, _mm256_fmadd_ps(v_m01, g_f, _mm256_fmadd_ps(v_m02, b_f, v_offset)));
-            __m256 out_g = _mm256_fmadd_ps(v_m10, r_f, _mm256_fmadd_ps(v_m11, g_f, _mm256_fmadd_ps(v_m12, b_f, v_offset)));
-            __m256 out_b = _mm256_fmadd_ps(v_m20, r_f, _mm256_fmadd_ps(v_m21, g_f, _mm256_fmadd_ps(v_m22, b_f, v_offset)));
-
-            // Scale to [0.0, 255.0] and add 0.5 for rounding
-            out_r = _mm256_fmadd_ps(out_r, scale255, round05);
-            out_g = _mm256_fmadd_ps(out_g, scale255, round05);
-            out_b = _mm256_fmadd_ps(out_b, scale255, round05);
+            // Apply matrix: out = M * in + pre_scaled_offset
+            __m256 out_r = _mm256_fmadd_ps(v_m00, r_f, _mm256_fmadd_ps(v_m01, g_f, _mm256_fmadd_ps(v_m02, b_f, v_offset_scaled)));
+            __m256 out_g = _mm256_fmadd_ps(v_m10, r_f, _mm256_fmadd_ps(v_m11, g_f, _mm256_fmadd_ps(v_m12, b_f, v_offset_scaled)));
+            __m256 out_b = _mm256_fmadd_ps(v_m20, r_f, _mm256_fmadd_ps(v_m21, g_f, _mm256_fmadd_ps(v_m22, b_f, v_offset_scaled)));
 
             // Clamp to [0, 255]
             out_r = _mm256_min_ps(_mm256_max_ps(out_r, v_zero), v_255);
@@ -915,17 +947,17 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
           for (; x < width; ++x) {
             QRgb pixel = line[x];
             unsigned int a = pixel & 0xFF000000;
-            float r = ((pixel >> 16) & 0xFF) / 255.0f;
-            float g = ((pixel >> 8) & 0xFF) / 255.0f;
-            float b = (pixel & 0xFF) / 255.0f;
+            float r = ((pixel >> 16) & 0xFF);
+            float g = ((pixel >> 8) & 0xFF);
+            float b = (pixel & 0xFF);
 
-            float out_r = cm.m[0][0] * r + cm.m[0][1] * g + cm.m[0][2] * b + cm.offset;
-            float out_g = cm.m[1][0] * r + cm.m[1][1] * g + cm.m[1][2] * b + cm.offset;
-            float out_b = cm.m[2][0] * r + cm.m[2][1] * g + cm.m[2][2] * b + cm.offset;
+            float out_r = cm.m[0][0] * r + cm.m[0][1] * g + cm.m[0][2] * b + cm.offset * 255.0f;
+            float out_g = cm.m[1][0] * r + cm.m[1][1] * g + cm.m[1][2] * b + cm.offset * 255.0f;
+            float out_b = cm.m[2][0] * r + cm.m[2][1] * g + cm.m[2][2] * b + cm.offset * 255.0f;
 
-            int nr = std::clamp(static_cast<int>(out_r * 255.0f + 0.5f), 0, 255);
-            int ng = std::clamp(static_cast<int>(out_g * 255.0f + 0.5f), 0, 255);
-            int nb = std::clamp(static_cast<int>(out_b * 255.0f + 0.5f), 0, 255);
+            int nr = std::clamp(static_cast<int>(out_r + 0.5f), 0, 255);
+            int ng = std::clamp(static_cast<int>(out_g + 0.5f), 0, 255);
+            int nb = std::clamp(static_cast<int>(out_b + 0.5f), 0, 255);
 
             line[x] = a | (nr << 16) | (ng << 8) | nb;
           }
@@ -949,4 +981,3 @@ QImage ImageLib::loadICO(const QString &path) {
   QPixmap iconPix = icon.pixmap(maxSize);
   return iconPix.toImage();
 }
-
