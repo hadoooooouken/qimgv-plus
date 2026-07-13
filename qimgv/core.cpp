@@ -201,7 +201,15 @@ void Core::attachModel(DirectoryModel *_model) {
     syncRandomizer();
 }
 
-void Core::initComponents() { attachModel(new DirectoryModel()); }
+void Core::initComponents() {
+  // One Thumbnailer shared by both presenters so opening a folder queues
+  // each thumbnail request once instead of racing two separate decodes -
+  // must happen before attachModel() triggers the first populateView().
+  thumbnailer = std::make_shared<Thumbnailer>();
+  thumbPanelPresenter.setThumbnailer(thumbnailer);
+  folderViewPresenter.setThumbnailer(thumbnailer);
+  attachModel(new DirectoryModel());
+}
 
 void Core::connectComponents() {
   thumbPanelPresenter.setView(mw->getThumbnailPanel());

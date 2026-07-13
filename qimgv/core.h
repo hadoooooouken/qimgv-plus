@@ -14,6 +14,7 @@
 #include "settings_types.h"
 #include "components/directorymodel.h"
 #include "components/directorypresenter.h"
+#include "components/thumbnailer/thumbnailer.h"
 #include "components/scriptmanager/scriptmanager.h"
 #include "gui/mainwindow.h"
 #include "utils/randomizer.h"
@@ -73,6 +74,12 @@ private:
 
     // components
     std::shared_ptr<DirectoryModel> model;
+
+    // Shared between thumbPanelPresenter and folderViewPresenter (they
+    // always mirror the same DirectoryModel/folder) so a thumbnail
+    // requested by both panels at once is decoded once, not twice. See
+    // DirectoryPresenter::setThumbnailer().
+    std::shared_ptr<Thumbnailer> thumbnailer;
 
     DirectoryPresenter thumbPanelPresenter, folderViewPresenter;
 

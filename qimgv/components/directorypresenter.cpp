@@ -9,10 +9,25 @@
 
 DirectoryPresenter::DirectoryPresenter(QObject *parent)
     : QObject(parent), mShowDirs(false) {
-  connect(&thumbnailer, &Thumbnailer::thumbnailReady, this,
+  // Own instance by default so DirectoryPresenter keeps working
+  // standalone; Core replaces it with a shared one via setThumbnailer()
+  // so the thumbnail panel and folder view dedupe requests against each
+  // other instead of each decoding the same image independently.
+  thumbnailer = std::make_shared<Thumbnailer>();
+  connect(thumbnailer.get(), &Thumbnailer::thumbnailReady, this,
           &DirectoryPresenter::onThumbnailReady);
   connect(settings, &Settings::settingsChanged, this,
           &DirectoryPresenter::onSettingsChanged);
+}
+
+void DirectoryPresenter::setThumbnailer(std::shared_ptr<Thumbnailer> newThumbnailer) {
+  if (!newThumbnailer || newThumbnailer == thumbnailer)
+    return;
+  disconnect(thumbnailer.get(), &Thumbnailer::thumbnailReady, this,
+             &DirectoryPresenter::onThumbnailReady);
+  thumbnailer = newThumbnailer;
+  connect(thumbnailer.get(), &Thumbnailer::thumbnailReady, this,
+          &DirectoryPresenter::onThumbnailReady);
 }
 
 void DirectoryPresenter::unsetModel() {
@@ -32,7 +47,7 @@ void DirectoryPresenter::unsetModel() {
              &DirectoryPresenter::onDirRenamed);
   model = nullptr;
   dirThumbnailTasks.clear();
-  thumbnailer.clearTasks();
+  thumbnailer->clearTasks();
   // also empty view?
 }
 
@@ -93,7 +108,7 @@ void DirectoryPresenter::populateView() {
   if (!model || !view)
     return;
   dirThumbnailTasks.clear();
-  thumbnailer.clearTasks();
+  thumbnailer->clearTasks();
   view->populate(mShowDirs ? model->totalCount() : model->fileCount());
   view->setDirCount(mShowDirs ? model->dirCount() : 0);
   selectAndFocus(0);
@@ -219,7 +234,7 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
     return;
   if (!mShowDirs) {
     for (int i : indexes)
-      thumbnailer.getThumbnailAsync(model->filePathAt(i), size, crop, force);
+      thumbnailer->getThumbnailAsync(model->filePathAt(i), size, crop, force);
     return;
   }
   for (int i : indexes) {
@@ -259,7 +274,7 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
       if (!list.isEmpty()) {
         QString latestImage = QDir::fromNativeSeparators(list.first().absoluteFilePath());
         dirThumbnailTasks.insert(latestImage, i);
-        thumbnailer.getThumbnailAsync(latestImage, size, false, false);
+        thumbnailer->getThumbnailAsync(latestImage, size, false, false);
       }
 
       // show default folder icon while loading
@@ -290,7 +305,7 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
       view->setThumbnail(i, thumb);
     } else {
       QString path = model->filePathAt(i - model->dirCount());
-      thumbnailer.getThumbnailAsync(path, size, crop, force);
+      thumbnailer->getThumbnailAsync(path, size, crop, force);
     }
   }
 }

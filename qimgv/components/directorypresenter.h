@@ -22,6 +22,17 @@ public:
     void setView(std::shared_ptr<IDirectoryView>);
     void setModel(std::shared_ptr<DirectoryModel> newModel);
     void unsetModel();
+    // Lets multiple DirectoryPresenter instances (e.g. the thumbnail panel
+    // and the folder view, which always mirror the same DirectoryModel)
+    // share one Thumbnailer. Sharing makes Thumbnailer's own request
+    // deduplication (queuedTasks/runningTasks/pendingReruns) effective
+    // across both presenters instead of just within each one, so opening a
+    // folder no longer decodes+resizes every image twice in parallel.
+    // Must be called before the presenter starts requesting thumbnails
+    // (i.e. right after construction) - swapping it later would silently
+    // drop the connection for any thumbnail already in flight on the
+    // previous instance.
+    void setThumbnailer(std::shared_ptr<Thumbnailer> newThumbnailer);
 
     void selectAndFocus(int index);
     void selectAndFocus(QString path);
@@ -71,7 +82,7 @@ private slots:
 private:
     std::shared_ptr<IDirectoryView> view = nullptr;
     std::shared_ptr<DirectoryModel> model = nullptr;
-    Thumbnailer thumbnailer;
+    std::shared_ptr<Thumbnailer> thumbnailer;
     bool mShowDirs;
     QMultiMap<QString, int> dirThumbnailTasks;
 
