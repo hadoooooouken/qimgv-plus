@@ -312,6 +312,7 @@ void DirectoryPresenter::onThumbnailReady(std::shared_ptr<Thumbnail> thumb,
       }
     }
     dirThumbnailTasks.remove(normalizedPath);
+    return;
   }
 
   int index = model->indexOfFile(filePath);

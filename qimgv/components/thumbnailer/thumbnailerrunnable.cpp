@@ -36,7 +36,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
   QString thumbnailId = generateIdString(path, settings->thumbnailResolution(), false);
   std::unique_ptr<QImage> image;
 
-  QString time = QString::number(imgInfo.lastModified().toMSecsSinceEpoch());
+  const qint64 lastModified = imgInfo.lastModified().toSecsSinceEpoch();
 
   ThumbnailCache *activeCache = cache;
   if (activeCache && settings->isPathExcludedFromCache(path)) {
@@ -45,7 +45,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
 
   if (!force && activeCache) {
     image = activeCache->readThumbnail(thumbnailId);
-    if (image && image->text(QStringLiteral("lastModified")) != time)
+    if (image && image->text(QStringLiteral("lastModified")).toLongLong() != lastModified)
       image.reset(nullptr);
 
     if (image) {
@@ -86,7 +86,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
       // put in image info
       image->setText(QStringLiteral("originalWidth"), QString::number(originalSize.width()));
       image->setText(QStringLiteral("originalHeight"), QString::number(originalSize.height()));
-      image->setText(QStringLiteral("lastModified"), time);
+      image->setText(QStringLiteral("lastModified"), QString::number(lastModified));
 
       if (imgInfo.type() == ANIMATED)
         image->setText(QStringLiteral("label"), QStringLiteral(" [a]"));
