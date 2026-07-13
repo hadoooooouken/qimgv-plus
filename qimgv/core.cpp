@@ -2292,6 +2292,7 @@ void Core::onModelItemUpdated(QString filePath) {
 }
 
 void Core::onModelSortingChanged(SortingMode mode) {
+  settings->setSortingMode(mode);
   mw->onSortingChanged(mode);
   thumbPanelPresenter.reloadModel();
   thumbPanelPresenter.selectAndFocus(state.currentFilePath);
