@@ -1797,7 +1797,7 @@ void Core::setWallpaper() {
             scaledImg = upscaled;
           } else {
             auto upscaledShared = std::make_shared<const QImage>(upscaled);
-            scaledImg = ImageLib::scaled_Smart(upscaledShared, monitorSize);
+            scaledImg = ImageLib::scaled_MKS2021(upscaledShared, monitorSize);
           }
           if (!scaledImg.isNull()) {
             aiUpscaleSuccess = true;
@@ -1812,7 +1812,7 @@ void Core::setWallpaper() {
         scaledImg = croppedImage;
       } else {
         auto croppedShared = std::make_shared<const QImage>(croppedImage);
-        scaledImg = ImageLib::scaled_Smart(croppedShared, monitorSize);
+        scaledImg = ImageLib::scaled_MKS2021(croppedShared, monitorSize);
       }
     }
 
