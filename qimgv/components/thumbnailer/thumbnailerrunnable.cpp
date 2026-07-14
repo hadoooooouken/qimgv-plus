@@ -103,12 +103,12 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
   }
 
   // scale and crop to the requested grid size
-  bool needsScaling = crop ? (image->width() != size || image->height() != size)
-                           : (std::max(image->width(), image->height()) != size);
+  Qt::AspectRatioMode ARMode = crop ? (Qt::KeepAspectRatioByExpanding) : (Qt::KeepAspectRatio);
+  QSize targetSize = noUpscaleScaledSize(image->size(), size, ARMode);
+  bool needsScaling = (image->size() != targetSize);
   if (needsScaling) {
-    Qt::AspectRatioMode ARMode = crop ? (Qt::KeepAspectRatioByExpanding) : (Qt::KeepAspectRatio);
-    QImage scaled = image->scaled(size, size, ARMode, Qt::SmoothTransformation);
-    
+    QImage scaled = image->scaled(targetSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+
     for (const QString &key : image->textKeys()) {
       scaled.setText(key, image->text(key));
     }
@@ -126,12 +126,15 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
         }
         image = std::move(cropped);
       } else {
+        // source too small to fill the size x size crop box without
+        // upscaling - keep it uncropped at native resolution instead
         image = std::make_unique<QImage>(scaled);
       }
     } else {
       image = std::make_unique<QImage>(scaled);
     }
   }
+
 
   if (image && imgInfo.format() == QLatin1String("pdf") && image->hasAlphaChannel()) {
     QImage opaqueImg(image->size(), QImage::Format_RGB32);
@@ -158,6 +161,26 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
 
 ThumbnailerRunnable::~ThumbnailerRunnable() {}
 
+QSize ThumbnailerRunnable::noUpscaleScaledSize(QSize originalSize, int size,
+                                               Qt::AspectRatioMode mode) {
+  if (!originalSize.isValid())
+    return originalSize;
+
+  if (mode == Qt::KeepAspectRatioByExpanding) {
+    // "Expanding" mode always wants to cover the size x size box completely,
+    // which forces an upscale once the source is smaller than that box in
+    // both dimensions. In that case just keep native resolution instead.
+    if (originalSize.width() < size && originalSize.height() < size)
+      return originalSize;
+  } else {
+    // KeepAspectRatio / IgnoreAspectRatio: no scaling is needed at all (and
+    // no upscaling happens) once the source already fits within the box.
+    if (originalSize.width() <= size && originalSize.height() <= size)
+      return originalSize;
+  }
+  return originalSize.scaled(size, size, mode);
+}
+
 std::pair<QImage, QSize>
 ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
                                      bool squared) {
@@ -168,18 +191,24 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
       QSize originalSize = fullSize.size();
       Qt::AspectRatioMode ARMode =
           squared ? (Qt::KeepAspectRatioByExpanding) : (Qt::KeepAspectRatio);
-      QSize scaledSize = originalSize.scaled(size, size, ARMode);
+      QSize scaledSize = noUpscaleScaledSize(originalSize, size, ARMode);
       QImage result;
       if (squared) {
         QRect clip(0, 0, size, size);
         QRect scaledRect(QPoint(0, 0), scaledSize);
         clip.moveCenter(scaledRect.center());
-        QImage scaled = fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
-                                        Qt::SmoothTransformation);
+        QImage scaled = (scaledSize == fullSize.size())
+                            ? fullSize
+                            : fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                                              Qt::SmoothTransformation);
         result = ImageLib::croppedRaw(&scaled, clip);
+        if (result.isNull())
+          result = scaled; // source too small to fill the crop box - keep it uncropped rather than upscale
       } else {
-        result = fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
-                                 Qt::SmoothTransformation);
+        result = (scaledSize == fullSize.size())
+                     ? fullSize
+                     : fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                                       Qt::SmoothTransformation);
       }
       return std::make_pair(result, originalSize);
     }
@@ -215,8 +244,9 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
   bool indexed = (reader->imageFormat() == QImage::Format_Indexed8);
   bool manualResize = indexed || !reader->supportsOption(QImageIOHandler::Size);
   if (!manualResize) { // resize during read via QImageReader (faster)
-    QSize scaledSize = reader->size().scaled(size, size, ARMode);
-    reader->setScaledSize(scaledSize);
+    QSize scaledSize = noUpscaleScaledSize(reader->size(), size, ARMode);
+    if (scaledSize != reader->size())
+      reader->setScaledSize(scaledSize);
     if (squared) {
       QRect clip(0, 0, size, size);
       QRect scaledRect(QPoint(0, 0), scaledSize);
@@ -251,17 +281,23 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
       fullSize = tmp;
     }
     originalSize = fullSize.size();
-    QSize scaledSize = fullSize.size().scaled(size, size, ARMode);
+    QSize scaledSize = noUpscaleScaledSize(fullSize.size(), size, ARMode);
     if (squared) {
       QRect clip(0, 0, size, size);
       QRect scaledRect(QPoint(0, 0), scaledSize);
       clip.moveCenter(scaledRect.center());
-      QImage scaled = QImage(fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
-                                              Qt::SmoothTransformation));
+      QImage scaled = (scaledSize == fullSize.size())
+                          ? fullSize
+                          : QImage(fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                                                    Qt::SmoothTransformation));
       result = ImageLib::croppedRaw(&scaled, clip);
+      if (result.isNull())
+        result = scaled; // source too small to fill the crop box - keep it uncropped rather than upscale
     } else {
-      result = fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
-                               Qt::SmoothTransformation);
+      result = (scaledSize == fullSize.size())
+                   ? fullSize
+                   : fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                                     Qt::SmoothTransformation);
     }
   }
   // force reader to close file so it can be deleted later

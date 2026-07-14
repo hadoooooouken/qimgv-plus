@@ -22,6 +22,10 @@ public:
 private:
     static QString generateIdString(QString path, int size, bool crop);
     static std::pair<QImage, QSize> createThumbnail(QString path, const char* format, int size, bool crop);
+    // Same as QSize::scaled(size, size, mode), but never enlarges an image
+    // that is already smaller than the target box - avoids blurry upscaled
+    // thumbnails for tiny source images (icons, small screenshots, etc).
+    static QSize noUpscaleScaledSize(QSize originalSize, int size, Qt::AspectRatioMode mode);
     QString path;
     int size;
     bool crop, force;

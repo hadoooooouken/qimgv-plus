@@ -426,9 +426,22 @@ void ThumbnailWidget::updateThumbnailDrawPosition() {
     if(thumbnail && thumbnail->pixmap()) {
         QPoint topLeft;
         qreal h = mThumbnailSize * 0.75;
-        // Always scale to fit the current cell dimensions (either up or down) to keep resizing smooth
-        QSize pixmapSize = thumbnail->pixmap()->size();
-        pixmapSize = pixmapSize.scaled(mThumbnailSize, h, Qt::KeepAspectRatio);
+
+        const QPixmap *pixmap = thumbnail->pixmap().get();
+        qreal pixmapDpr = pixmap->devicePixelRatioF();
+        if (pixmapDpr <= 0)
+            pixmapDpr = 1.0;
+        // Logical (device-independent) size of the source pixmap - the
+        // largest size it can be drawn at without upscaling.
+        QSize nativeSize(qRound(pixmap->width()  / pixmapDpr),
+                         qRound(pixmap->height() / pixmapDpr));
+
+        // Always scale DOWN to fit the current cell dimensions, but never
+        // scale UP past the pixmap's own resolution - avoids blurry enlarged
+        // thumbnails for source images smaller than the grid cell.
+        QSize pixmapSize = nativeSize;
+        if (nativeSize.width() > mThumbnailSize || nativeSize.height() > h)
+            pixmapSize = nativeSize.scaled(mThumbnailSize, h, Qt::KeepAspectRatio);
 
         topLeft.setX((width()  - pixmapSize.width())  / 2.0);
         if(thumbStyle == THUMB_SIMPLE)
