@@ -17,6 +17,10 @@
 
 namespace {
 
+// Forward declarations for scanline helpers
+inline std::span<uint32_t> scanlineSpan(QImage &img, int y);
+inline std::span<const uint32_t> constScanlineSpan(const QImage &img, int y);
+
 // Unsharp mask constants
 constexpr float kUnsharpSharpStrength = 1.15f;
 constexpr float kUnsharpBlurStrength = 0.15f;
@@ -119,6 +123,259 @@ void buildMksAxisTaps(int nSrc, int nDst, std::vector<MksAxisTap> &taps,
     }
 
     taps[x] = { left, right - left + 1, weightOffset };
+  }
+}
+
+// --- Fixed-width (K = 11) AVX2 fast path ---
+// buildMksAxisTaps() proves that scale <= 1 (upscaling, or no resize at all)
+// always needs at most 11 taps (filterScale is clamped to 1, so the support
+// never widens past its base 9px width, +/-1 for integer floor/ceil
+// alignment). Any actual downscale exceeds 11 taps almost immediately (12+
+// at just 1% reduction), so this path is only ever selected for upscale /
+// 1:1, which is exactly the interactive zoom / Fit-to-window / Resize-up
+// case. Genuine downscaling always falls back to the variable-tap path
+// below, which stays correct (just not AVX2-widened to 2 pixels/iteration)
+// for arbitrary scale factors.
+constexpr int kMksFixedTaps = 11;
+
+struct MksFixedTaps {
+  std::vector<int> left;
+  std::vector<std::array<float, kMksFixedTaps>> weights;
+};
+
+// Only valid to call when every tap.count in 'taps' is <= kMksFixedTaps.
+MksFixedTaps convertToFixedTaps(const std::vector<MksAxisTap> &taps,
+                                 const std::vector<float> &weightPool) {
+  MksFixedTaps fixed;
+  fixed.left.resize(taps.size());
+  fixed.weights.resize(taps.size());
+  for (size_t x = 0; x < taps.size(); ++x) {
+    fixed.left[x] = taps[x].left;
+    std::array<float, kMksFixedTaps> arr{};
+    for (int t = 0; t < taps[x].count; ++t)
+      arr[t] = weightPool[taps[x].weightOffset + t];
+    // Any remaining slots (t >= taps[x].count) stay 0.0f, which is safe:
+    // they multiply a clamped (repeated) edge pixel by zero.
+    fixed.weights[x] = arr;
+  }
+  return fixed;
+}
+
+// Horizontal fixed-11-tap pass for one row range, AVX2, 2 output pixels/iter.
+void mksHorizontalFixed(const QImage &src, QImage &inter,
+                         const MksFixedTaps &taps, int W_src, int W_dst,
+                         int y_start, int y_end) {
+  for (int y = y_start; y < y_end; ++y) {
+    auto srcRow = constScanlineSpan(src, y);
+    auto interRow = scanlineSpan(inter, y);
+
+    int x = 0;
+    for (; x + 1 < W_dst; x += 2) {
+      const auto &w0 = taps.weights[x];
+      const auto &w1 = taps.weights[x + 1];
+      int left0 = taps.left[x];
+      int left1 = taps.left[x + 1];
+
+      __m256 acc = _mm256_setzero_ps();
+      for (int t = 0; t < kMksFixedTaps; ++t) {
+        uint32_t px0 = srcRow[std::clamp(left0 + t, 0, W_src - 1)];
+        uint32_t px1 = srcRow[std::clamp(left1 + t, 0, W_src - 1)];
+
+        __m128i two = _mm_set_epi32(0, 0, px1, px0);
+        __m256 v_p = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(two));
+        __m256 v_w = _mm256_setr_ps(w0[t], w0[t], w0[t], w0[t],
+                                     w1[t], w1[t], w1[t], w1[t]);
+        acc = _mm256_fmadd_ps(v_p, v_w, acc);
+      }
+
+      acc = _mm256_add_ps(acc, _mm256_set1_ps(kRoundOffset));
+      acc = _mm256_min_ps(_mm256_max_ps(acc, _mm256_setzero_ps()), _mm256_set1_ps(kColorMax));
+      __m256i res_i = _mm256_cvtps_epi32(acc);
+
+      __m128i lo = _mm256_castsi256_si128(res_i);
+      __m128i hi = _mm256_extracti128_si256(res_i, 1);
+      interRow[x]     = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(lo, lo), _mm_packus_epi32(lo, lo)));
+      interRow[x + 1] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(hi, hi), _mm_packus_epi32(hi, hi)));
+    }
+    // Scalar/SSE tail for an odd trailing pixel
+    if (x < W_dst) {
+      const auto &w = taps.weights[x];
+      int left = taps.left[x];
+      __m128 acc = _mm_setzero_ps();
+      for (int t = 0; t < kMksFixedTaps; ++t) {
+        uint32_t px = srcRow[std::clamp(left + t, 0, W_src - 1)];
+        __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(px)));
+        acc = _mm_fmadd_ps(v_p, _mm_set1_ps(w[t]), acc);
+      }
+      acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
+      acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
+      __m128i res = _mm_cvtps_epi32(acc);
+      interRow[x] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(res, res), _mm_packus_epi32(res, res)));
+    }
+  }
+}
+
+// Vertical fixed-11-tap pass for one row range, AVX2, 2 output pixels/iter.
+void mksVerticalFixed(const QImage &inter, QImage &dst,
+                       const MksFixedTaps &taps, int H_src, int W_dst,
+                       int y_start, int y_end) {
+  for (int y = y_start; y < y_end; ++y) {
+    const auto &w = taps.weights[y];
+    int left = taps.left[y];
+    auto dstRow = scanlineSpan(dst, y);
+
+    std::array<std::span<const uint32_t>, kMksFixedTaps> rows;
+    for (int t = 0; t < kMksFixedTaps; ++t)
+      rows[t] = constScanlineSpan(inter, std::clamp(left + t, 0, H_src - 1));
+
+    int x = 0;
+    for (; x + 1 < W_dst; x += 2) {
+      __m256 acc = _mm256_setzero_ps();
+      for (int t = 0; t < kMksFixedTaps; ++t) {
+        uint32_t px0 = rows[t][x];
+        uint32_t px1 = rows[t][x + 1];
+        __m128i two = _mm_set_epi32(0, 0, px1, px0);
+        __m256 v_p = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(two));
+        acc = _mm256_fmadd_ps(v_p, _mm256_set1_ps(w[t]), acc);
+      }
+      acc = _mm256_add_ps(acc, _mm256_set1_ps(kRoundOffset));
+      acc = _mm256_min_ps(_mm256_max_ps(acc, _mm256_setzero_ps()), _mm256_set1_ps(kColorMax));
+      __m256i res_i = _mm256_cvtps_epi32(acc);
+
+      __m128i lo = _mm256_castsi256_si128(res_i);
+      __m128i hi = _mm256_extracti128_si256(res_i, 1);
+      dstRow[x]     = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(lo, lo), _mm_packus_epi32(lo, lo)));
+      dstRow[x + 1] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(hi, hi), _mm_packus_epi32(hi, hi)));
+    }
+    if (x < W_dst) {
+      __m128 acc = _mm_setzero_ps();
+      for (int t = 0; t < kMksFixedTaps; ++t) {
+        uint32_t px = rows[t][x];
+        __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(px)));
+        acc = _mm_fmadd_ps(v_p, _mm_set1_ps(w[t]), acc);
+      }
+      acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
+      acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
+      __m128i res = _mm_cvtps_epi32(acc);
+      dstRow[x] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(res, res), _mm_packus_epi32(res, res)));
+    }
+  }
+}
+
+// Horizontal variable-tap pass (fallback for genuine downscaling, where the
+// widened kernel needs more than kMksFixedTaps taps).
+//
+// Processes 2 output pixels per AVX2 iteration, same as mksHorizontalFixed.
+// Unlike the fixed path, adjacent output columns can have different tap
+// counts/left offsets here, so the shorter of the pair is padded with
+// weight 0 up to the pair's max count for the duration of the iteration;
+// the (safely clamped, just irrelevant) source pixel it reads contributes
+// nothing to the sum. A scalar/SSE tail handles a leftover odd column.
+void mksHorizontalGeneral(const QImage &src, QImage &inter,
+                           const std::vector<MksAxisTap> &taps,
+                           const std::vector<float> &weightPool, int W_src,
+                           int W_dst, int y_start, int y_end) {
+  for (int y = y_start; y < y_end; ++y) {
+    auto srcRow = constScanlineSpan(src, y);
+    auto interRow = scanlineSpan(inter, y);
+
+    int x = 0;
+    for (; x + 1 < W_dst; x += 2) {
+      const MksAxisTap &tap0 = taps[x];
+      const MksAxisTap &tap1 = taps[x + 1];
+      int maxCount = std::max(tap0.count, tap1.count);
+
+      __m256 acc = _mm256_setzero_ps();
+      for (int t = 0; t < maxCount; ++t) {
+        int srcX0 = std::clamp(tap0.left + t, 0, W_src - 1);
+        int srcX1 = std::clamp(tap1.left + t, 0, W_src - 1);
+        uint32_t px0 = srcRow[srcX0];
+        uint32_t px1 = srcRow[srcX1];
+
+        __m128i two = _mm_set_epi32(0, 0, px1, px0);
+        __m256 v_p = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(two));
+
+        float w0 = (t < tap0.count) ? weightPool[tap0.weightOffset + t] : 0.0f;
+        float w1 = (t < tap1.count) ? weightPool[tap1.weightOffset + t] : 0.0f;
+        __m256 v_w = _mm256_setr_ps(w0, w0, w0, w0, w1, w1, w1, w1);
+        acc = _mm256_fmadd_ps(v_p, v_w, acc);
+      }
+
+      acc = _mm256_add_ps(acc, _mm256_set1_ps(kRoundOffset));
+      acc = _mm256_min_ps(_mm256_max_ps(acc, _mm256_setzero_ps()), _mm256_set1_ps(kColorMax));
+      __m256i res_i = _mm256_cvtps_epi32(acc);
+
+      __m128i lo = _mm256_castsi256_si128(res_i);
+      __m128i hi = _mm256_extracti128_si256(res_i, 1);
+      interRow[x]     = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(lo, lo), _mm_packus_epi32(lo, lo)));
+      interRow[x + 1] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(hi, hi), _mm_packus_epi32(hi, hi)));
+    }
+    // Scalar/SSE tail for an odd trailing pixel
+    if (x < W_dst) {
+      const MksAxisTap &tap = taps[x];
+      __m128 acc = _mm_setzero_ps();
+      for (int t = 0; t < tap.count; ++t) {
+        int srcX = std::clamp(tap.left + t, 0, W_src - 1);
+        __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(srcRow[srcX])));
+        acc = _mm_fmadd_ps(v_p, _mm_set1_ps(weightPool[tap.weightOffset + t]), acc);
+      }
+      acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
+      acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
+      __m128i res = _mm_cvtps_epi32(acc);
+      interRow[x] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(res, res), _mm_packus_epi32(res, res)));
+    }
+  }
+}
+
+// Vertical variable-tap pass (fallback for genuine downscaling).
+void mksVerticalGeneral(const QImage &inter, QImage &dst,
+                         const std::vector<MksAxisTap> &taps,
+                         const std::vector<float> &weightPool, int H_src,
+                         int W_dst, int y_start, int y_end) {
+  // Reused across every output row in this thread's chunk instead of
+  // allocating a fresh vector per row: resize() below only grows capacity
+  // (never releases it), so once it reaches the widest tap count in the
+  // range, subsequent rows cost zero allocations.
+  std::vector<std::span<const uint32_t>> rows;
+  for (int y = y_start; y < y_end; ++y) {
+    const MksAxisTap &tap = taps[y];
+    auto dstRow = scanlineSpan(dst, y);
+
+    rows.resize(tap.count);
+    for (int t = 0; t < tap.count; ++t)
+      rows[t] = constScanlineSpan(inter, std::clamp(tap.left + t, 0, H_src - 1));
+
+    int x = 0;
+    for (; x + 1 < W_dst; x += 2) {
+      __m256 acc = _mm256_setzero_ps();
+      for (int t = 0; t < tap.count; ++t) {
+        uint32_t px0 = rows[t][x];
+        uint32_t px1 = rows[t][x + 1];
+        __m128i two = _mm_set_epi32(0, 0, px1, px0);
+        __m256 v_p = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(two));
+        acc = _mm256_fmadd_ps(v_p, _mm256_set1_ps(weightPool[tap.weightOffset + t]), acc);
+      }
+      acc = _mm256_add_ps(acc, _mm256_set1_ps(kRoundOffset));
+      acc = _mm256_min_ps(_mm256_max_ps(acc, _mm256_setzero_ps()), _mm256_set1_ps(kColorMax));
+      __m256i res_i = _mm256_cvtps_epi32(acc);
+
+      __m128i lo = _mm256_castsi256_si128(res_i);
+      __m128i hi = _mm256_extracti128_si256(res_i, 1);
+      dstRow[x]     = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(lo, lo), _mm_packus_epi32(lo, lo)));
+      dstRow[x + 1] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(hi, hi), _mm_packus_epi32(hi, hi)));
+    }
+    // Scalar/SSE tail for an odd trailing column
+    if (x < W_dst) {
+      __m128 acc = _mm_setzero_ps();
+      for (int t = 0; t < tap.count; ++t) {
+        __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(rows[t][x])));
+        acc = _mm_fmadd_ps(v_p, _mm_set1_ps(weightPool[tap.weightOffset + t]), acc);
+      }
+      acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
+      acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
+      __m128i res = _mm_cvtps_epi32(acc);
+      dstRow[x] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(res, res), _mm_packus_epi32(res, res)));
+    }
   }
 }
 
@@ -356,6 +613,14 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
 
   if (W_dst <= 0 || H_dst <= 0)
     return QImage();
+
+  // Degenerate case: requested size matches the source, so there is nothing
+  // to resample. Skip straight to the format conversion this function would
+  // have produced anyway.
+  if (W_dst == W_src && H_dst == H_src) {
+    return source->convertToFormat(source->hasAlphaChannel() ? QImage::Format_ARGB32
+                                                               : QImage::Format_RGB32);
+  }
 
   // Convert source to a 32-bit format we can interpolate directly.
   // All the weighted-sum math below (bicubic, Gaussian blur, unsharp mask)
@@ -883,6 +1148,15 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
   if (W_dst <= 0 || H_dst <= 0)
     return QImage();
 
+  // Degenerate case: no resampling to do at all. Skip straight to a format
+  // conversion matching this function's normal output contract (ARGB32 if
+  // the source has alpha, RGB32 otherwise) instead of running the taps
+  // through an identity resample.
+  if (W_dst == W_src && H_dst == H_src) {
+    return source->convertToFormat(source->hasAlphaChannel() ? QImage::Format_ARGB32
+                                                               : QImage::Format_RGB32);
+  }
+
   // Same premultiplied-alpha handling as scaled_Smart: avoids a dark/light
   // fringe from RGB baked into fully-transparent source texels.
   QImage srcImg = *source.get();
@@ -899,6 +1173,21 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
   std::vector<float> hWeightPool, vWeightPool;
   buildMksAxisTaps(W_src, W_dst, hTaps, hWeightPool);
   buildMksAxisTaps(H_src, H_dst, vTaps, vWeightPool);
+
+  // Per axis, use the AVX2 fixed-11-tap fast path whenever every tap in that
+  // axis actually fits (true for upscale / 1:1, per the invariant documented
+  // on kMksFixedTaps); fall back to the variable-tap path only where the
+  // widened downscale kernel genuinely needs more taps than that.
+  bool hUseFixed = std::ranges::all_of(
+      hTaps, [](const MksAxisTap &t) { return t.count <= kMksFixedTaps; });
+  bool vUseFixed = std::ranges::all_of(
+      vTaps, [](const MksAxisTap &t) { return t.count <= kMksFixedTaps; });
+
+  MksFixedTaps hFixedTaps, vFixedTaps;
+  if (hUseFixed)
+    hFixedTaps = convertToFixedTaps(hTaps, hWeightPool);
+  if (vUseFixed)
+    vFixedTaps = convertToFixedTaps(vTaps, vWeightPool);
 
   int numThreads = std::thread::hardware_concurrency();
   if (numThreads <= 0) numThreads = 4;
@@ -919,29 +1208,12 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
 
       numTasks++;
       pool->start(new ScalerTask([&srcImg, &interImg, &hTaps, &hWeightPool,
-                                   W_src, W_dst, y_start, y_end, &semaphore]() {
-        for (int y = y_start; y < y_end; ++y) {
-          auto srcRow = constScanlineSpan(srcImg, y);
-          auto interRow = scanlineSpan(interImg, y);
-
-          for (int x = 0; x < W_dst; ++x) {
-            const MksAxisTap &tap = hTaps[x];
-            __m128 acc = _mm_setzero_ps();
-            for (int t = 0; t < tap.count; ++t) {
-              int srcX = std::clamp(tap.left + t, 0, W_src - 1);
-              uint32_t px = srcRow[srcX];
-              __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(px)));
-              __m128 w = _mm_set1_ps(hWeightPool[tap.weightOffset + t]);
-              acc = _mm_fmadd_ps(v_p, w, acc);
-            }
-            acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
-            acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
-            __m128i res_i = _mm_cvtps_epi32(acc);
-            __m128i packed_16 = _mm_packus_epi32(res_i, res_i);
-            __m128i packed_8 = _mm_packus_epi16(packed_16, packed_16);
-            interRow[x] = _mm_cvtsi128_si32(packed_8);
-          }
-        }
+                                   &hFixedTaps, hUseFixed, W_src, W_dst,
+                                   y_start, y_end, &semaphore]() {
+        if (hUseFixed)
+          mksHorizontalFixed(srcImg, interImg, hFixedTaps, W_src, W_dst, y_start, y_end);
+        else
+          mksHorizontalGeneral(srcImg, interImg, hTaps, hWeightPool, W_src, W_dst, y_start, y_end);
         semaphore.release(1);
       }));
     }
@@ -963,35 +1235,12 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
 
       numTasks++;
       pool->start(new ScalerTask([&interImg, &destImg, &vTaps, &vWeightPool,
-                                   W_dst, H_src, y_start, y_end, &semaphore]() {
-        for (int y = y_start; y < y_end; ++y) {
-          const MksAxisTap &tap = vTaps[y];
-          auto dstRow = scanlineSpan(destImg, y);
-
-          // Cache the clamped source rows for this output row once, rather
-          // than re-clamping per column.
-          std::vector<std::span<const uint32_t>> rows(tap.count);
-          for (int t = 0; t < tap.count; ++t) {
-            int srcY = std::clamp(tap.left + t, 0, H_src - 1);
-            rows[t] = constScanlineSpan(interImg, srcY);
-          }
-
-          for (int x = 0; x < W_dst; ++x) {
-            __m128 acc = _mm_setzero_ps();
-            for (int t = 0; t < tap.count; ++t) {
-              uint32_t px = rows[t][x];
-              __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(px)));
-              __m128 w = _mm_set1_ps(vWeightPool[tap.weightOffset + t]);
-              acc = _mm_fmadd_ps(v_p, w, acc);
-            }
-            acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
-            acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
-            __m128i res_i = _mm_cvtps_epi32(acc);
-            __m128i packed_16 = _mm_packus_epi32(res_i, res_i);
-            __m128i packed_8 = _mm_packus_epi16(packed_16, packed_16);
-            dstRow[x] = _mm_cvtsi128_si32(packed_8);
-          }
-        }
+                                   &vFixedTaps, vUseFixed, W_dst, H_src,
+                                   y_start, y_end, &semaphore]() {
+        if (vUseFixed)
+          mksVerticalFixed(interImg, destImg, vFixedTaps, H_src, W_dst, y_start, y_end);
+        else
+          mksVerticalGeneral(interImg, destImg, vTaps, vWeightPool, H_src, W_dst, y_start, y_end);
         semaphore.release(1);
       }));
     }
