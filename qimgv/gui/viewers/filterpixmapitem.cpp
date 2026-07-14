@@ -95,10 +95,6 @@ void FilterPixmapItem::setScalingFilter(ScalingFilter filter) {
     update();
 }
 
-void FilterPixmapItem::setApplyFilterAt100(bool enabled) {
-    mApplyFilterAt100 = enabled;
-}
-
 void FilterPixmapItem::initShader() {
     if (mInitialized) return;
     initializeOpenGLFunctions();
@@ -145,9 +141,9 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     if (transScaleX < 0.001) transScaleX = 1.0;
     if (transScaleY < 0.001) transScaleY = 1.0;
     bool isOneToOne = (qAbs(transScaleX - 1.0) < 0.001 && qAbs(transScaleY - 1.0) < 0.001);
-    float activeCasSharpening = (isOneToOne && !mApplyFilterAt100) ? 0.0f : mCasSharpening;
+    float activeCasSharpening = isOneToOne ? 0.0f : mCasSharpening;
     bool activeSmartGpu = (mScalingFilter == QI_FILTER_SMART_GPU);
-    if (isOneToOne && !mApplyFilterAt100) {
+    if (isOneToOne) {
         activeSmartGpu = false;
     }
 

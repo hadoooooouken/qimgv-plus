@@ -535,7 +535,6 @@ void SettingsDialog::readSettings() {
   useThumbnailCacheCheckBox->setChecked(settings->useThumbnailCache());
   expandImageCheckBox->setChecked(settings->expandImage());
   expandImagesGroupContents->setEnabled(settings->expandImage());
-  applyFilterAt100CheckBox->setChecked(settings->applyFilterAt100());
   bgOpacitySlider->setValue(
       qRound(settings->backgroundOpacity() * 100.0));
   sortingComboBox->setCurrentIndex(settings->sortingMode());
@@ -785,7 +784,6 @@ void SettingsDialog::saveSettings() {
   settings->setUsePreloader(usePreloaderCheckBox->isChecked());
   settings->setUseThumbnailCache(useThumbnailCacheCheckBox->isChecked());
   settings->setExpandImage(expandImageCheckBox->isChecked());
-  settings->setApplyFilterAt100(applyFilterAt100CheckBox->isChecked());
 
   settings->setBackgroundOpacity(
       static_cast<qreal>(bgOpacitySlider->value()) / 100.0);
@@ -2455,18 +2453,9 @@ void SettingsDialog::setupUi() {
         widget_10->setAccessibleName(QString::fromUtf8("SLine"));
 #endif // QT_CONFIG(accessibility)
 
-        verticalLayout_24->addWidget(widget_10);
-
-        applyFilterAt100CheckBox = new QCheckBox(scalingGroup);
-        applyFilterAt100CheckBox->setObjectName("applyFilterAt100CheckBox");
         QSizePolicy sizePolicy9(QSizePolicy::Policy::MinimumExpanding, QSizePolicy::Policy::Minimum);
         sizePolicy9.setHorizontalStretch(0);
         sizePolicy9.setVerticalStretch(0);
-        sizePolicy9.setHeightForWidth(applyFilterAt100CheckBox->sizePolicy().hasHeightForWidth());
-        applyFilterAt100CheckBox->setSizePolicy(sizePolicy9);
-
-        verticalLayout_24->addWidget(applyFilterAt100CheckBox);
-
 
         verticalLayout_27->addWidget(scalingGroup);
 
@@ -3985,7 +3974,6 @@ void SettingsDialog::retranslateUi() {
 #if QT_CONFIG(tooltip)
         scalingQualityComboBox->setToolTip(QString());
 #endif // QT_CONFIG(tooltip)
-        applyFilterAt100CheckBox->setText(QCoreApplication::translate("SettingsDialog", "Also use filter for 100% scale", nullptr));
         label_45->setText(QCoreApplication::translate("SettingsDialog", "Theme", nullptr));
         loadPresetLabel->setText(QCoreApplication::translate("SettingsDialog", "Load preset:", nullptr));
         themeSelectorComboBox->setItemText(0, QCoreApplication::translate("SettingsDialog", "Black", nullptr));

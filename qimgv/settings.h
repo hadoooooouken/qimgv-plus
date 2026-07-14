@@ -263,8 +263,6 @@ public:
   void setUseFixedZoomLevels(bool mode);
   bool unlockMinZoom();
   void setUnlockMinZoom(bool mode);
-  bool applyFilterAt100();
-  void setApplyFilterAt100(bool mode);
   bool sortFolders();
   void setSortFolders(bool mode);
   bool trackpadDetection();

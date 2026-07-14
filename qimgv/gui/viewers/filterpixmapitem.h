@@ -26,7 +26,6 @@ public:
     void setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
     void setCasSettings(float sharpening, float contrast);
     void setScalingFilter(ScalingFilter filter);
-    void setApplyFilterAt100(bool enabled);
 
     QRectF boundingRect() const override;
 
@@ -47,7 +46,6 @@ private:
     float mCasSharpening = 0.0f;
     float mCasContrast = 0.0f;
     ScalingFilter mScalingFilter = QI_FILTER_BILINEAR;
-    bool mApplyFilterAt100 = false;
 
     bool mInitialized = false;
     bool mShaderFailed = false;

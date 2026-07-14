@@ -1450,14 +1450,6 @@ void Settings::setUnlockMinZoom(bool mode) {
   settings->settingsConf->setValue("unlockMinZoom", mode);
 }
 //------------------------------------------------------------------------------
-bool Settings::applyFilterAt100() {
-  return settings->settingsConf->value("applyFilterAt100", false).toBool();
-}
-
-void Settings::setApplyFilterAt100(bool mode) {
-  settings->settingsConf->setValue("applyFilterAt100", mode);
-}
-//------------------------------------------------------------------------------
 bool Settings::sortFolders() {
   return settings->settingsConf->value("sortFolders", true).toBool();
 }

@@ -188,7 +188,6 @@ private:
     ImageFitMode imageFitMode, imageFitModeDefault;
     ImageFocusPoint focusIn1to1;
     ScalingFilter mScalingFilter;
-    bool mApplyFilterAt100 = false;
     bool mUseUpscayl = false;
 
     QPixmap *checkboard;

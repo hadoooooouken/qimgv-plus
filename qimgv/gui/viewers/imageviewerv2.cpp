@@ -204,7 +204,6 @@ void ImageViewerV2::readSettings() {
   onFullscreenModeChanged(mIsFullscreen);
   updateMinScale();
   setScalingFilter(settings->scalingFilter());
-  mApplyFilterAt100 = settings->applyFilterAt100();
   mUseUpscayl = settings->useUpscayl();
   updateCasSettings();
   if (isDisplaying()) {
@@ -641,7 +640,7 @@ void ImageViewerV2::hide() {
 
 void ImageViewerV2::requestScaling() {
   bool isAt100 = std::abs(pixmapItem.scale() - 1.0) < 0.001;
-  if (mSvgMode || !image || (isAt100 && !mApplyFilterAt100) ||
+  if (mSvgMode || !image || isAt100 ||
       (mScalingFilter == QI_FILTER_CAS && !(mUseUpscayl && pixmapItem.scale() > 1.0)) ||
       (mScalingFilter == QI_FILTER_SMART_GPU && !(mUseUpscayl && pixmapItem.scale() > 1.0)) ||
       movie || (zoomTimeLine && zoomTimeLine->state() == QTimeLine::Running) ||
@@ -1410,9 +1409,6 @@ void ImageViewerV2::swapToOriginalImage() {
 }
 
 void ImageViewerV2::updateCasSettings() {
-  pixmapItem.setApplyFilterAt100(mApplyFilterAt100);
-  pixmapItemScaled.setApplyFilterAt100(mApplyFilterAt100);
-  pixmapItemCrop.setApplyFilterAt100(mApplyFilterAt100);
   pixmapItem.setScalingFilter(mScalingFilter);
   pixmapItemScaled.setScalingFilter(mScalingFilter);
   pixmapItemCrop.setScalingFilter(mScalingFilter);

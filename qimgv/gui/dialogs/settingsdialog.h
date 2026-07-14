@@ -242,7 +242,6 @@ private:
     QComboBox *scalingQualityComboBox;
     QSpacerItem *horizontalSpacer_29;
     QWidget *widget_10;
-    QCheckBox *applyFilterAt100CheckBox;
     QSpacerItem *verticalSpacer_7;
     QWidget *Theme;
     QVBoxLayout *verticalLayout;
