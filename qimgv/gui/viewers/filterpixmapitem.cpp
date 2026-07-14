@@ -40,6 +40,9 @@ FilterPixmapItem::~FilterPixmapItem() {
 void FilterPixmapItem::setImage(const QImage &image) {
     prepareGeometryChange();
     mImage = image;
+    mImagePremultiplied = mImage.hasAlphaChannel()
+                               ? mImage.convertToFormat(QImage::Format_ARGB32_Premultiplied)
+                               : QImage();
     if (mImage.isNull()) {
         releaseGlResources(false);
     }
@@ -150,8 +153,19 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     auto fallbackPaint = [this](QPainter *p) {
         bool oldSmooth = p->renderHints() & QPainter::SmoothPixmapTransform;
-        p->setRenderHint(QPainter::SmoothPixmapTransform, mTransformationMode == Qt::SmoothTransformation);
-        p->drawImage(mOffset, mImage);
+        bool smooth = mTransformationMode == Qt::SmoothTransformation;
+        p->setRenderHint(QPainter::SmoothPixmapTransform, smooth);
+        // QPainter's smooth-pixmap transform (same raster code as
+        // QImage::scaled(..., Qt::SmoothTransformation)) interpolates
+        // Format_ARGB32 as straight alpha: RGB baked into fully-transparent
+        // source pixels bleeds a dark/light fringe into opaque neighbors.
+        // Format_ARGB32_Premultiplied is interpolated correctly, so use the
+        // cached premultiplied copy whenever smoothing is actually active.
+        if (smooth && !mImagePremultiplied.isNull()) {
+            p->drawImage(mOffset, mImagePremultiplied);
+        } else {
+            p->drawImage(mOffset, mImage);
+        }
         p->setRenderHint(QPainter::SmoothPixmapTransform, oldSmooth);
     };
 
@@ -192,14 +206,19 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
                     mTexture->height() == mImage.height() &&
                     (!needMips || mTexture->mipLevels() > 1);
 
+    // mImagePremultiplied (kept in sync in setImage()) avoids feeding GL_LINEAR
+    // / mipmap filtering straight-alpha data, which would let RGB baked into
+    // fully-transparent texels bleed a fringe into opaque neighbors.
+    const QImage &texData = mImagePremultiplied.isNull() ? mImage : mImagePremultiplied;
+
     if (canReuse) {
         if (mLastImage.cacheKey() != mImage.cacheKey()) {
-            mTexture->setData(mImage, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
+            mTexture->setData(texData, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
             mLastImage = mImage;
         }
     } else {
         mTexture.reset();
-        mTexture = std::make_unique<QOpenGLTexture>(mImage, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
+        mTexture = std::make_unique<QOpenGLTexture>(texData, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
         mTexture->setWrapMode(QOpenGLTexture::ClampToEdge);
         mLastImage = mImage;
     }
@@ -220,7 +239,9 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     painter->beginNativePainting();
 
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // Premultiplied-alpha blend: the shader now outputs premultiplied color
+    // (see filter.frag), so the source factor is GL_ONE, not GL_SRC_ALPHA.
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     mProgram->bind();
     mTexture->bind();

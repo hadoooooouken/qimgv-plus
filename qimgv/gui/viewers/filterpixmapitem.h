@@ -55,6 +55,14 @@ private:
     std::unique_ptr<QOpenGLTexture> mTexture;
 
     QImage mImage;
+    // Premultiplied-alpha copy of mImage, kept in sync in setImage(). Both the
+    // GL texture upload and the CPU fallbackPaint() smooth draw use this
+    // instead of mImage directly: interpolating straight (non-premultiplied)
+    // alpha lets RGB baked into fully-transparent source pixels bleed a
+    // dark/light fringe into opaque neighbors, while premultiplied alpha
+    // makes those transparent pixels exactly (0,0,0,0). Left null for images
+    // with no alpha channel, where premultiplication is a no-op.
+    QImage mImagePremultiplied;
     QImage mLastImage;
     QPointF mOffset;
     Qt::TransformationMode mTransformationMode = Qt::SmoothTransformation;

@@ -232,8 +232,22 @@ QImage ImageLib::scaled_Qt(std::shared_ptr<const QImage> source,
   QImage dest;
   Qt::TransformationMode mode =
       smooth ? Qt::SmoothTransformation : Qt::FastTransformation;
-  dest = source->scaled(destSize.width(), destSize.height(),
-                        Qt::IgnoreAspectRatio, mode);
+
+  if (smooth && source->hasAlphaChannel()) {
+    // Qt::SmoothTransformation interpolates QImage::Format_ARGB32 as straight
+    // (non-premultiplied) alpha, so RGB baked into fully-transparent source
+    // pixels (e.g. black, as exported by most design tools) bleeds a dark/light
+    // fringe into neighboring opaque pixels. Converting to premultiplied alpha
+    // first makes the RGB of transparent pixels 0, so they contribute nothing
+    // to the blend regardless of what color was stored there.
+    QImage premult = source->convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    dest = premult.scaled(destSize.width(), destSize.height(),
+                          Qt::IgnoreAspectRatio, mode);
+    dest = dest.convertToFormat(QImage::Format_ARGB32);
+  } else {
+    dest = source->scaled(destSize.width(), destSize.height(),
+                          Qt::IgnoreAspectRatio, mode);
+  }
   return dest;
 }
 
@@ -252,10 +266,24 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
   if (W_dst <= 0 || H_dst <= 0)
     return QImage();
 
-  // Convert source to Format_ARGB32 or Format_RGB32 if it's not already 32-bit
+  // Convert source to a 32-bit format we can interpolate directly.
+  // All the weighted-sum math below (bicubic, Gaussian blur, unsharp mask)
+  // operates per-channel on raw R/G/B/A bytes, including alpha itself, with no
+  // knowledge of alpha weighting. If the image has an alpha channel we must
+  // work in *premultiplied* alpha (Format_ARGB32_Premultiplied) rather than
+  // straight alpha (Format_ARGB32): with straight alpha, a fully-transparent
+  // texel can still carry an arbitrary baked-in RGB color (most exporters
+  // render transparent regions on a black backdrop), and that color gets
+  // averaged into neighboring opaque pixels near an edge, producing a dark or
+  // light fringe. With premultiplied alpha, fully-transparent texels are
+  // exactly (0,0,0,0), so they contribute nothing to the weighted sum
+  // regardless of what was stored there, and the fringe disappears.
   QImage srcImg = *source.get();
-  if (srcImg.format() != QImage::Format_ARGB32 && srcImg.format() != QImage::Format_RGB32) {
-    srcImg = srcImg.convertToFormat(QImage::Format_ARGB32);
+  bool workingPremultiplied = srcImg.hasAlphaChannel();
+  QImage::Format workFmt = workingPremultiplied ? QImage::Format_ARGB32_Premultiplied
+                                                 : QImage::Format_RGB32;
+  if (srcImg.format() != workFmt) {
+    srcImg = srcImg.convertToFormat(workFmt);
   }
 
   bool isUpscaling = (W_dst > W_src) || (H_dst > H_src);
@@ -599,11 +627,14 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
       semaphore.acquire(numTasks);
     }
 
+    if (workingPremultiplied)
+      return destImg.convertToFormat(QImage::Format_ARGB32);
     return destImg;
 
   } else {
     // --- 2. Downscaling ---
-    // Base resize using Qt bilinear scaling
+    // Base resize using Qt bilinear scaling (srcImg is already premultiplied
+    // when it has alpha, so this inherits the same fringe-free interpolation)
     QImage scaledImg = srcImg.scaled(destSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
     QImage destImg(W_dst, H_dst, srcImg.format());
@@ -742,6 +773,8 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
       semaphore.acquire(numTasks);
     }
 
+    if (workingPremultiplied)
+      return destImg.convertToFormat(QImage::Format_ARGB32);
     return destImg;
   }
 }

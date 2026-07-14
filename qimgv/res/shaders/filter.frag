@@ -77,13 +77,27 @@ vec3 applySmartSharpenGPU(vec2 uv) {
 }
 
 void main() {
+    // The bound texture holds premultiplied alpha (RGB already scaled by A).
+    // Sampling/filtering (including the CAS and smart-sharpen taps above,
+    // which read several neighboring texels) works correctly in this space:
+    // a fully transparent texel is exactly (0,0,0,0), so it can no longer
+    // bleed an arbitrary baked-in color into an opaque neighbor during
+    // bilinear/mipmap filtering or sharpening.
     highp vec4 color = texture2D(tex, texCoord);
+    highp float a = color.a;
     highp vec3 rgb = color.rgb;
     if (sharpenMode == 3 && casSharpening > kAdjustEpsilon) {
         rgb = applyCAS(texCoord);
     } else if (sharpenMode == 4) {
         rgb = applySmartSharpenGPU(texCoord);
     }
-    rgb = clamp(colorMatrix * rgb + vec3(colorOffset), 0.0, 1.0);
-    gl_FragColor = vec4(rgb, color.a);
+
+    // colorMatrix/colorOffset (exposure, contrast, brightness, etc.) are
+    // defined in terms of straight color, so un-premultiply before applying
+    // them, then re-premultiply the result for premultiplied-alpha blending.
+    highp vec3 straightRgb = (a > 0.0001) ? rgb / a : rgb;
+    straightRgb = clamp(colorMatrix * straightRgb + vec3(colorOffset), 0.0, 1.0);
+    highp vec3 outRgb = straightRgb * a;
+
+    gl_FragColor = vec4(outRgb, a);
 }
