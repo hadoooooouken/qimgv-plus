@@ -33,6 +33,95 @@ constexpr float kGaussianWeights[kGaussianKernelSize] = {
   0.02763f, 0.06628f, 0.12384f, 0.18017f, 0.20416f, 0.18017f, 0.12384f, 0.06628f, 0.02763f
 };
 
+// --- Magic Kernel Sharp 2021 (a = 3, v = 3) ---
+// Reference: johncostella.com/magic. MKS2021 is defined as
+//   k(x) = sum_{s=-3}^{3} c_s * m3(x + s)
+// where m3 is the "Magic Kernel" for a = 3 (a piecewise-quadratic kernel with
+// support (-1.5, +1.5)) and c_s are the fixed "Magic Sharp" coefficients for
+// a = 3, v = 3. k(x) itself has support (-4.5, +4.5).
+constexpr double kMks3C0 = 17.0 / 12.0;
+constexpr double kMks3C1 = -35.0 / 144.0;
+constexpr double kMks3C2 = 1.0 / 24.0;
+constexpr double kMks3C3 = -1.0 / 144.0;
+constexpr double kMks2021Support = 4.5;
+
+// m3(x): the Magic Kernel for a = 3.
+inline double magicKernelA3(double x) {
+  if (x <= -1.5 || x >= 1.5)
+    return 0.0;
+  double x2 = x * x;
+  if (x <= -0.5)
+    return x2 / 2.0 + 1.5 * x + 9.0 / 8.0;
+  if (x <= 0.5)
+    return -x2 + 0.75;
+  return x2 / 2.0 - 1.5 * x + 9.0 / 8.0;
+}
+
+// k(x): the full Magic Kernel Sharp 2021 kernel.
+inline double mks2021Kernel(double x) {
+  if (x <= -kMks2021Support || x >= kMks2021Support)
+    return 0.0;
+  double sum = kMks3C0 * magicKernelA3(x);
+  sum += kMks3C1 * (magicKernelA3(x - 1.0) + magicKernelA3(x + 1.0));
+  sum += kMks3C2 * (magicKernelA3(x - 2.0) + magicKernelA3(x + 2.0));
+  sum += kMks3C3 * (magicKernelA3(x - 3.0) + magicKernelA3(x + 3.0));
+  return sum;
+}
+
+// One output sample's resampling taps: 'count' consecutive source indices
+// starting at 'left' (not yet clamped to the source range), with weights
+// stored in a shared pool at 'weightOffset'. Storing indices as a contiguous
+// run (rather than a full index list) keeps this cheap to build and cheap to
+// store, since MKS2021's support is contiguous in source space.
+struct MksAxisTap {
+  int left;
+  int count;
+  int weightOffset;
+};
+
+// Builds the per-output-sample resampling taps for one axis (horizontal or
+// vertical). When downscaling (nSrc > nDst) the kernel is widened by
+// 1 / scale and its output re-normalized by the same factor, which is the
+// standard way to turn an interpolation kernel into a (single-pass)
+// anti-aliasing minification filter.
+void buildMksAxisTaps(int nSrc, int nDst, std::vector<MksAxisTap> &taps,
+                       std::vector<float> &weightPool) {
+  taps.resize(nDst);
+  double scale = (double)nSrc / (double)nDst;
+  double filterScale = std::max(scale, 1.0);
+  double support = kMks2021Support * filterScale;
+
+  weightPool.clear();
+  weightPool.reserve((size_t)nDst * (size_t)(support * 2.0 + 2.0));
+
+  for (int x = 0; x < nDst; ++x) {
+    double u = (x + 0.5) * scale - 0.5;
+    int left = (int)std::floor(u - support);
+    int right = (int)std::ceil(u + support);
+    if (right < left)
+      right = left;
+
+    int weightOffset = (int)weightPool.size();
+    double sum = 0.0;
+    for (int i = left; i <= right; ++i) {
+      double w = mks2021Kernel((u - i) / filterScale) / filterScale;
+      weightPool.push_back((float)w);
+      sum += w;
+    }
+
+    // Re-normalize: guards against the tiny discretization error introduced
+    // by cutting the (theoretically infinite-precision) kernel off at
+    // integer 'left'/'right' bounds, so output brightness never drifts.
+    if (sum != 0.0) {
+      float invSum = (float)(1.0 / sum);
+      for (int i = weightOffset; i < (int)weightPool.size(); ++i)
+        weightPool[i] *= invSum;
+    }
+
+    taps[x] = { left, right - left + 1, weightOffset };
+  }
+}
+
 // Task runner helper
 class ScalerTask : public QRunnable {
     std::function<void()> m_func;
@@ -220,6 +309,8 @@ QImage ImageLib::scaled(std::shared_ptr<const QImage> source, QSize destSize,
     return scaled_Qt(scaleTarget, destSize, true);
   case QI_FILTER_SMART:
     return scaled_Smart(scaleTarget, destSize);
+  case QI_FILTER_MKS2021:
+    return scaled_MKS2021(scaleTarget, destSize);
   default:
     return scaled_Qt(scaleTarget, destSize, true);
   }
@@ -777,6 +868,139 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
       return destImg.convertToFormat(QImage::Format_ARGB32);
     return destImg;
   }
+}
+
+QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
+                                 QSize destSize) {
+  if (!source || source->isNull())
+    return QImage();
+
+  int W_src = source->width();
+  int H_src = source->height();
+  int W_dst = destSize.width();
+  int H_dst = destSize.height();
+
+  if (W_dst <= 0 || H_dst <= 0)
+    return QImage();
+
+  // Same premultiplied-alpha handling as scaled_Smart: avoids a dark/light
+  // fringe from RGB baked into fully-transparent source texels.
+  QImage srcImg = *source.get();
+  bool workingPremultiplied = srcImg.hasAlphaChannel();
+  QImage::Format workFmt = workingPremultiplied ? QImage::Format_ARGB32_Premultiplied
+                                                 : QImage::Format_RGB32;
+  if (srcImg.format() != workFmt) {
+    srcImg = srcImg.convertToFormat(workFmt);
+  }
+
+  // Build resampling taps once per axis; identical logic handles upscaling
+  // and downscaling (the kernel is simply widened for the latter).
+  std::vector<MksAxisTap> hTaps, vTaps;
+  std::vector<float> hWeightPool, vWeightPool;
+  buildMksAxisTaps(W_src, W_dst, hTaps, hWeightPool);
+  buildMksAxisTaps(H_src, H_dst, vTaps, vWeightPool);
+
+  int numThreads = std::thread::hardware_concurrency();
+  if (numThreads <= 0) numThreads = 4;
+  QThreadPool *pool = getScalingThreadPool();
+
+  // --- Horizontal pass: W_src x H_src -> W_dst x H_src ---
+  QImage interImg(W_dst, H_src, srcImg.format());
+  {
+    QSemaphore semaphore;
+    int rowsPerThread = H_src / numThreads;
+    if (rowsPerThread == 0) rowsPerThread = 1;
+
+    int numTasks = 0;
+    for (int i = 0; i < numThreads; ++i) {
+      int y_start = i * rowsPerThread;
+      int y_end = (i == numThreads - 1) ? H_src : (i + 1) * rowsPerThread;
+      if (y_start >= H_src) break;
+
+      numTasks++;
+      pool->start(new ScalerTask([&srcImg, &interImg, &hTaps, &hWeightPool,
+                                   W_src, W_dst, y_start, y_end, &semaphore]() {
+        for (int y = y_start; y < y_end; ++y) {
+          auto srcRow = constScanlineSpan(srcImg, y);
+          auto interRow = scanlineSpan(interImg, y);
+
+          for (int x = 0; x < W_dst; ++x) {
+            const MksAxisTap &tap = hTaps[x];
+            __m128 acc = _mm_setzero_ps();
+            for (int t = 0; t < tap.count; ++t) {
+              int srcX = std::clamp(tap.left + t, 0, W_src - 1);
+              uint32_t px = srcRow[srcX];
+              __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(px)));
+              __m128 w = _mm_set1_ps(hWeightPool[tap.weightOffset + t]);
+              acc = _mm_fmadd_ps(v_p, w, acc);
+            }
+            acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
+            acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
+            __m128i res_i = _mm_cvtps_epi32(acc);
+            __m128i packed_16 = _mm_packus_epi32(res_i, res_i);
+            __m128i packed_8 = _mm_packus_epi16(packed_16, packed_16);
+            interRow[x] = _mm_cvtsi128_si32(packed_8);
+          }
+        }
+        semaphore.release(1);
+      }));
+    }
+    semaphore.acquire(numTasks);
+  }
+
+  // --- Vertical pass: W_dst x H_src -> W_dst x H_dst ---
+  QImage destImg(W_dst, H_dst, srcImg.format());
+  {
+    QSemaphore semaphore;
+    int rowsPerThread = H_dst / numThreads;
+    if (rowsPerThread == 0) rowsPerThread = 1;
+
+    int numTasks = 0;
+    for (int i = 0; i < numThreads; ++i) {
+      int y_start = i * rowsPerThread;
+      int y_end = (i == numThreads - 1) ? H_dst : (i + 1) * rowsPerThread;
+      if (y_start >= H_dst) break;
+
+      numTasks++;
+      pool->start(new ScalerTask([&interImg, &destImg, &vTaps, &vWeightPool,
+                                   W_dst, H_src, y_start, y_end, &semaphore]() {
+        for (int y = y_start; y < y_end; ++y) {
+          const MksAxisTap &tap = vTaps[y];
+          auto dstRow = scanlineSpan(destImg, y);
+
+          // Cache the clamped source rows for this output row once, rather
+          // than re-clamping per column.
+          std::vector<std::span<const uint32_t>> rows(tap.count);
+          for (int t = 0; t < tap.count; ++t) {
+            int srcY = std::clamp(tap.left + t, 0, H_src - 1);
+            rows[t] = constScanlineSpan(interImg, srcY);
+          }
+
+          for (int x = 0; x < W_dst; ++x) {
+            __m128 acc = _mm_setzero_ps();
+            for (int t = 0; t < tap.count; ++t) {
+              uint32_t px = rows[t][x];
+              __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(px)));
+              __m128 w = _mm_set1_ps(vWeightPool[tap.weightOffset + t]);
+              acc = _mm_fmadd_ps(v_p, w, acc);
+            }
+            acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
+            acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
+            __m128i res_i = _mm_cvtps_epi32(acc);
+            __m128i packed_16 = _mm_packus_epi32(res_i, res_i);
+            __m128i packed_8 = _mm_packus_epi16(packed_16, packed_16);
+            dstRow[x] = _mm_cvtsi128_si32(packed_8);
+          }
+        }
+        semaphore.release(1);
+      }));
+    }
+    semaphore.acquire(numTasks);
+  }
+
+  if (workingPremultiplied)
+    return destImg.convertToFormat(QImage::Format_ARGB32);
+  return destImg;
 }
 
 ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {

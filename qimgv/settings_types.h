@@ -24,7 +24,8 @@ enum ScalingFilter {
   QI_FILTER_BILINEAR,
   QI_FILTER_SMART,
   QI_FILTER_CAS,
-  QI_FILTER_SMART_GPU
+  QI_FILTER_SMART_GPU,
+  QI_FILTER_MKS2021
 };
 
 enum ZoomIndicatorMode {

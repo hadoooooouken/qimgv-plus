@@ -632,6 +632,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     filterComboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
     filterComboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
     filterComboBox->addItem(tr("Smart sharpen"), QI_FILTER_SMART);
+    filterComboBox->addItem(tr("Magic Kernel Sharp 2021"), QI_FILTER_MKS2021);
     int smartIndex = filterComboBox->findData(QI_FILTER_SMART);
     filterComboBox->setCurrentIndex(smartIndex != -1 ? smartIndex : 1);
 

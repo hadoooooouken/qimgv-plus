@@ -103,6 +103,7 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
   comboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
   comboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
   comboBox->addItem(tr("Smart sharpen"), QI_FILTER_SMART);
+  comboBox->addItem(tr("Magic Kernel Sharp 2021"), QI_FILTER_MKS2021);
 
   int idx = comboBox->findData(QI_FILTER_SMART);
   if (idx != -1) {

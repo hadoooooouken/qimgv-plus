@@ -42,6 +42,12 @@ class ImageLib {
 
         static QImage scaled_Smart(std::shared_ptr<const QImage> source, QSize destSize);
 
+        // Magic Kernel Sharp 2021 (a = 3, v = 3), see johncostella.com/magic.
+        // Unlike scaled_Smart, this uses a single separable resampling kernel
+        // for both up- and downscaling (the kernel support is widened by
+        // 1 / scale when downscaling, which acts as the anti-aliasing step).
+        static QImage scaled_MKS2021(std::shared_ptr<const QImage> source, QSize destSize);
+
         static std::unique_ptr<const QImage> exifRotated(std::unique_ptr<const QImage> src, int orientation);
         static std::unique_ptr<QImage> exifRotated(std::unique_ptr<QImage> src, int orientation);
         static void recolor(QPixmap &pixmap, QColor color);

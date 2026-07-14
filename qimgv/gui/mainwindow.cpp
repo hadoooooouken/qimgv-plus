@@ -460,7 +460,7 @@ void MW::toggleScalingFilter() {
 void MW::cycleScalingFilter() {
     ScalingFilter currentFilter = viewerWidget->scalingFilter();
     int nextFilterInt = static_cast<int>(currentFilter) + 1;
-    if (nextFilterInt > static_cast<int>(QI_FILTER_SMART_GPU)) {
+    if (nextFilterInt > static_cast<int>(QI_FILTER_MKS2021)) {
         nextFilterInt = 0;
     }
     ScalingFilter nextFilter = static_cast<ScalingFilter>(nextFilterInt);
@@ -494,6 +494,9 @@ void MW::setFilter(ScalingFilter filter) {
             break;
         case QI_FILTER_SMART_GPU:
             filterName = tr("Smart sharpen (GPU)");
+            break;
+        case QI_FILTER_MKS2021:
+            filterName = tr("Magic Kernel Sharp 2021");
             break;
         default:
             filterName = tr("Configured ") + QString::number(static_cast<int>(filter));
