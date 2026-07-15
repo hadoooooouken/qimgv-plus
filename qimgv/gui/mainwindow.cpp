@@ -734,7 +734,14 @@ void MW::close() {
 
 void MW::closeEvent(QCloseEvent *event) {
     if (qGuiApp && qGuiApp->isSavingSession()) {
+        // Windows session end (shutdown/logoff/restart). quitOnLastWindowClosed
+        // is false (required for manual standby), so accepting the close alone
+        // would not quit the app, leaving the process alive until the OS kills
+        // it on the session-end timeout, skipping the normal exit path (WAL
+        // checkpoint of the thumbnail DB among other cleanup). Drive the same
+        // exit path used for a normal user-initiated exit instead.
         event->accept();
+        actionManager->invokeAction("exit");
     } else if (settings->standbyMode()) {
         event->ignore();
         emit suspendRequested();
