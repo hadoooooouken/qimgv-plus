@@ -13,6 +13,51 @@ vec3 applyCAS(vec2 uv) {
     vec2 offX = vec2(pixelSize.x, 0.0);
     vec2 offY = vec2(0.0, pixelSize.y);
 
+    // When downscaling, trilinear (mip) filtering has already suppressed high
+    // frequencies at the auto-selected mip level. A fixed 1-texel 3x3 window
+    // sampled at that level mostly picks up mip-blur/quantization noise rather
+    // than real detail, so CAS ends up sharpening artifacts instead of the
+    // image. To fix this we widen the sampling window (same 1.2 / 2.8 texel
+    // radii used by SmartSharpen's downscale path) and pull samples from a
+    // sharper mip level via an explicit LOD bias, while keeping CAS's own
+    // adaptive min/max/amp formula over the resulting 9 taps.
+    if (isDownscaling == 1) {
+        float bias = -0.7;
+
+        vec3 e = texture2D(tex, uv, bias).rgb;
+
+        vec3 b = texture2D(tex, uv - 1.2 * offY, bias).rgb;
+        vec3 d = texture2D(tex, uv - 1.2 * offX, bias).rgb;
+        vec3 f = texture2D(tex, uv + 1.2 * offX, bias).rgb;
+        vec3 h = texture2D(tex, uv + 1.2 * offY, bias).rgb;
+
+        vec3 a = texture2D(tex, uv - 2.8 * offX - 2.8 * offY, bias).rgb;
+        vec3 c = texture2D(tex, uv + 2.8 * offX - 2.8 * offY, bias).rgb;
+        vec3 g = texture2D(tex, uv - 2.8 * offX + 2.8 * offY, bias).rgb;
+        vec3 i = texture2D(tex, uv + 2.8 * offX + 2.8 * offY, bias).rgb;
+
+        vec3 mnRGB = min(min(min(d, e), min(f, b)), h);
+        vec3 mnRGB2 = min(mnRGB, min(min(a, c), min(g, i)));
+        mnRGB += mnRGB2;
+
+        vec3 mxRGB = max(max(max(d, e), max(f, b)), h);
+        vec3 mxRGB2 = max(mxRGB, max(max(a, c), max(g, i)));
+        mxRGB += mxRGB2;
+
+        vec3 rcpMRGB = 1.0 / mxRGB;
+        vec3 ampRGB = clamp(min(mnRGB, 2.0 - mxRGB) * rcpMRGB, 0.0, 1.0);
+        ampRGB = inversesqrt(ampRGB);
+
+        float peak = -3.0 * casContrast + 8.0;
+        vec3 wRGB = -1.0 / (ampRGB * peak);
+        vec3 rcpWeightRGB = 1.0 / (4.0 * wRGB + 1.0);
+
+        vec3 window = (b + d) + (f + h);
+        vec3 outColor = clamp((window * wRGB + e) * rcpWeightRGB, 0.0, 1.0);
+
+        return mix(e, outColor, casSharpening);
+    }
+
     vec3 e = texture2D(tex, uv).rgb;
     vec3 b = texture2D(tex, uv - offY).rgb;
     vec3 d = texture2D(tex, uv - offX).rgb;
