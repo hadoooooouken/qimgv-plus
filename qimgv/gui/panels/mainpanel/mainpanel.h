@@ -29,7 +29,7 @@ private:
     QVBoxLayout buttonsLayout;
     QWidget buttonsWidget;
     std::shared_ptr<ThumbnailStripProxy> thumbnailStrip;
-    ActionButton *openButton, *settingsButton, *exitButton, *folderViewButton, *pinButton;
+    ActionButton *settingsButton, *exitButton, *folderViewButton, *pinButton;
 
 protected:
     virtual void paintEvent(QPaintEvent* event);

@@ -4,9 +4,6 @@
 MainPanel::MainPanel(FloatingWidgetContainer *parent) : SlidePanel(parent) {
     // buttons stuff
     buttonsWidget.setAccessibleName("panelButtonsWidget");
-    openButton       = new ActionButton("open", ":/res/icons/common/buttons/panel/open20.png", 30, this);
-    openButton->setAccessibleName("ButtonSmall");
-    openButton->setTriggerMode(TriggerMode::PressTrigger);
     settingsButton   = new ActionButton("openSettings", ":/res/icons/common/buttons/panel/settings20.png", 30, this);
     settingsButton->setAccessibleName("ButtonSmall");
     settingsButton->setTriggerMode(TriggerMode::PressTrigger);
@@ -25,7 +22,6 @@ MainPanel::MainPanel(FloatingWidgetContainer *parent) : SlidePanel(parent) {
     buttonsLayout.setDirection(QBoxLayout::BottomToTop);
     buttonsLayout.setSpacing(0);
     buttonsLayout.addWidget(settingsButton);
-    buttonsLayout.addWidget(openButton);
     buttonsLayout.addStretch(0);
     buttonsLayout.addWidget(pinButton);
     buttonsLayout.addWidget(folderViewButton);
@@ -43,7 +39,6 @@ MainPanel::MainPanel(FloatingWidgetContainer *parent) : SlidePanel(parent) {
 }
 
 MainPanel::~MainPanel() {
-    delete openButton;
     delete settingsButton;
     delete exitButton;
     delete folderViewButton;
