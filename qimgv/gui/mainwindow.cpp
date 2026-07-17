@@ -1158,11 +1158,11 @@ void MW::showMessageDirectory(QString dirName) {
 }
 
 void MW::showMessageDirectoryEnd() {
-    activeFloatingMessage()->showMessage(tr("End of directory"), FloatingMessageIcon::NO_ICON, 600);
+    activeFloatingMessage()->showMessage(tr("End of directory"), FloatingMessageIcon::ICON_RIGHT_EDGE, 600);
 }
 
 void MW::showMessageDirectoryStart() {
-    activeFloatingMessage()->showMessage(tr("Start of directory"), FloatingMessageIcon::NO_ICON, 600);
+    activeFloatingMessage()->showMessage(tr("Start of directory"), FloatingMessageIcon::ICON_LEFT_EDGE, 600);
 }
 
 void MW::showMessageFitWindow() {
