@@ -23,7 +23,7 @@
 
 namespace {
 // upButton / settingsButton / exitButton (bottom toolbar row).
-constexpr int kToolbarIconSizePx = 16;
+constexpr int kToolbarIconSizePx = 20;
 // docViewButton / togglePlacesPanelButton (same row, larger design).
 constexpr int kLargeToolbarIconSizePx = 20;
 // newBookmarkButton / homeButton (bookmarks bar, smaller buttons).
@@ -107,7 +107,7 @@ FolderView::FolderView(QWidget *parent) :
     upButton->setIcon(FluentIcon::ArrowUp16, kToolbarIconSizePx);
     upButton->setTriggerMode(TriggerMode::ClickTrigger);
     settingsButton->setAction("openSettings");
-    settingsButton->setIcon(FluentIcon::Settings16, kToolbarIconSizePx);
+    settingsButton->setIcon(FluentIcon::Settings20, kToolbarIconSizePx);
     exitButton->setAction("exit");
     exitButton->setIcon(FluentIcon::ArrowExit20, kToolbarIconSizePx);
     docViewButton->setAction("documentView");
@@ -118,7 +118,7 @@ FolderView::FolderView(QWidget *parent) :
 
 
     sortingComboBox->setIcon(FluentIcon::ArrowSort16, kComboBoxIconSizePx);
-    folderSortingComboBox->setIcon(FluentIcon::Image, kComboBoxIconSizePx);
+    folderSortingComboBox->setIcon(FluentIcon::Image16, kComboBoxIconSizePx);
     formatFilterComboBox->setIcon(FluentIcon::ArrowSort16, kComboBoxIconSizePx);
 
     newBookmarkButton->setIcon(FluentIcon::Add12, kSmallButtonIconSizePx);

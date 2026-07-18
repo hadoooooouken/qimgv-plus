@@ -196,16 +196,16 @@ void ContextMenu::setupUi()
 
     addItem(m_colorAdjustments, "colorAdjustments", tr("Color adjustments"), FluentIcon::Color);
     addItem(m_panoramaMode,     "togglePanorama",     tr("Panorama mode"),      FluentIcon::ImageMultiple16);
-    addItem(m_casSettings,      "casSettings",        tr("CAS Settings"),       FluentIcon::Color);
+    addItem(m_casSettings,      "casSettings",        tr("CAS Settings"),       FluentIcon::Blur);
     m_casSettings->hide();
 
     addSeparator(actionsLayout, 4, 4);
 
-    addItem(m_print,            "print",              tr("Print"),              FluentIcon::DocumentPrint);
+    addItem(m_print,            "print",              tr("Print"),              FluentIcon::Print);
     addItem(m_copy,             "copyFile",           tr("Quick copy"),         FluentIcon::Copy);
     addItem(m_move,             "moveFile",           tr("Quick move"),         FluentIcon::FolderArrowRight);
-    addItem(m_rename,           "renameFile",         tr("Rename"),             FluentIcon::Edit16);
-    addItem(m_folderView,       "folderView",         tr("Folder View"),        FluentIcon::Grid16);
+    addItem(m_rename,           "renameFile",         tr("Rename"),             FluentIcon::Rename);
+    addItem(m_folderView,       "folderView",         tr("Folder View"),        FluentIcon::Grid20);
 
     // OpenWith is special – we will create it separately
     m_openWith = new ContextMenuItem();
@@ -217,7 +217,7 @@ void ContextMenu::setupUi()
 
     addItem(m_showLocation,     "showInDirectory",    tr("Show in folder"),     FluentIcon::Folder);
     addItem(m_setWallpaper,     "setWallpaper",       tr("Set as wallpaper"),   FluentIcon::Image);
-    addItem(m_settings,         "openSettings",       tr("Settings"),           FluentIcon::Settings16);
+    addItem(m_settings,         "openSettings",       tr("Settings"),           FluentIcon::Settings20);
 
     addSeparator(actionsLayout, 4, 4);
 
@@ -225,7 +225,7 @@ void ContextMenu::setupUi()
     m_trash->setTextColor(settings->colorScheme().trash);
     m_trash->setIconColor(settings->colorScheme().trash);
 
-    addItem(m_deletePermanently, "removeFile",        tr("Delete permanently"), FluentIcon::Dismiss16);
+    addItem(m_deletePermanently, "removeFile",        tr("Delete permanently"), FluentIcon::Dismiss20);
     m_deletePermanently->setTextColor(settings->colorScheme().danger);
     m_deletePermanently->setIconColor(settings->colorScheme().danger);
 
@@ -258,7 +258,7 @@ void ContextMenu::setupUi()
 
     m_scriptSetupButton = new ContextMenuItem();
     m_scriptSetupButton->setText(tr("Configure menu"));
-    m_scriptSetupButton->setIcon(FluentIcon::Settings16, kIconSizePx);
+    m_scriptSetupButton->setIcon(FluentIcon::Settings20, kIconSizePx);
     connect(m_scriptSetupButton, &ContextMenuItem::pressed, this, &ContextMenu::showScriptSettings);
     scriptsPageLayout->addWidget(m_scriptSetupButton);
 
