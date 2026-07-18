@@ -13,6 +13,7 @@ target_sources(qimgv-plus PRIVATE
     fileoperations.cpp
     colormanager.cpp
     pngwriter.cpp
+    iconfontmanager.cpp
 )
 
 target_sources(qimgv-plus PRIVATE

@@ -140,5 +140,6 @@
         <file>res/shaders/panorama.frag</file>
         <file>res/shaders/filter.vert</file>
         <file>res/shaders/filter.frag</file>
+        <file>res/fonts/FluentSystemIcons-Regular.ttf</file>
     </qresource>
 </RCC>

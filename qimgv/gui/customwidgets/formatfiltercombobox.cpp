@@ -141,7 +141,7 @@ void FormatFilterComboBox::updateDisplayLabel() {
     setProperty("active", active);
     style()->unpolish(this);
     style()->polish(this);
-    refreshIconColor();
+    refreshIcon();
 }
 
 void FormatFilterComboBox::paintEvent(QPaintEvent *e) {

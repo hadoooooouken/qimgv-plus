@@ -22,6 +22,20 @@ ActionButton::ActionButton(QString _actionName, QString _iconPath, int _size, QW
         setFixedSize(_size, _size);
 }
 
+ActionButton::ActionButton(QString _actionName, FluentIcon _icon, int _iconSizePx, QWidget *parent)
+    :  ActionButton(parent)
+{
+    setIcon(_icon, _iconSizePx);
+    setAction(_actionName);
+}
+
+ActionButton::ActionButton(QString _actionName, FluentIcon _icon, int _iconSizePx, int _size, QWidget *parent)
+    :  ActionButton(_actionName, _icon, _iconSizePx, parent)
+{
+    if(_size > 0)
+        setFixedSize(_size, _size);
+}
+
 void ActionButton::setAction(QString _actionName) {
     actionName = _actionName;
 }

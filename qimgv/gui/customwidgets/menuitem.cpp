@@ -49,6 +49,10 @@ void MenuItem::setIconPath(QString path) {
     mIconWidget.setIconPath(path);
 }
 
+void MenuItem::setIcon(FluentIcon icon, int sizePx) {
+    mIconWidget.setIcon(icon, sizePx);
+}
+
 void MenuItem::setPassthroughClicks(bool mode) {
     passthroughClicks = mode;
 }

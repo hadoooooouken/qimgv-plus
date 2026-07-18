@@ -23,10 +23,17 @@
 #include "sharedresources.h"
 #include "utils/actions.h"
 #include "utils/cmdoptionsrunner.h"
+#include "utils/iconfontmanager.h"
 #include "utils/inputmap.h"
 
 //------------------------------------------------------------------------------
 void initSingletons() {
+  // Must run before any IconWidget/StyledComboBox is constructed, since
+  // both resolve glyphs through IconFontManager::pixmap() during their
+  // first paint. Safe to call unconditionally: init() is idempotent and
+  // a failed font load just means glyph rendering will log a warning and
+  // return null pixmaps instead of crashing.
+  IconFontManager::init();
   inputMap = InputMap::getInstance();
   appActions = Actions::getInstance();
   settings = Settings::getInstance();

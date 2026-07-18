@@ -1,19 +1,30 @@
 #include "mainpanel.h"
 #include "settings.h"
+#include "utils/iconfontmanager.h"
+
+namespace {
+// settingsButton / folderViewButton / pinButton icons.
+constexpr int kPanelIconSizePx = 20;
+// exitButton was sourced from a differently-sized PNG (close16.png vs.
+// settings20/folderview20/pin-panel20.png) despite sharing the same
+// ButtonSmall style/box as the other three - kept as-is pending a decision
+// on whether that was intentional.
+constexpr int kPanelExitIconSizePx = 16;
+} // namespace
 
 MainPanel::MainPanel(FloatingWidgetContainer *parent) : SlidePanel(parent) {
     // buttons stuff
     buttonsWidget.setAccessibleName("panelButtonsWidget");
-    settingsButton   = new ActionButton("openSettings", ":/res/icons/common/buttons/panel/settings20.png", 30, this);
+    settingsButton   = new ActionButton("openSettings", FluentIcon::Settings20, kPanelIconSizePx, 30, this);
     settingsButton->setAccessibleName("ButtonSmall");
     settingsButton->setTriggerMode(TriggerMode::PressTrigger);
-    exitButton       = new ActionButton("exit", ":/res/icons/common/buttons/panel/close16.png", 30, this);
+    exitButton       = new ActionButton("exit", FluentIcon::Dismiss16, kPanelExitIconSizePx, 30, this);
     exitButton->setAccessibleName("ButtonSmall");
     exitButton->setTriggerMode(TriggerMode::PressTrigger);
-    folderViewButton = new ActionButton("folderView", ":/res/icons/common/buttons/panel/folderview20.png", 30, this);
+    folderViewButton = new ActionButton("folderView", FluentIcon::Grid20, kPanelIconSizePx, 30, this);
     folderViewButton->setAccessibleName("ButtonSmall");
     folderViewButton->setTriggerMode(TriggerMode::PressTrigger);
-    pinButton = new ActionButton("", ":/res/icons/common/buttons/panel/pin-panel20.png", 30, this);
+    pinButton = new ActionButton("", FluentIcon::Pin20, kPanelIconSizePx, 30, this);
     pinButton->setAccessibleName("ButtonSmall");
     pinButton->setTriggerMode(TriggerMode::PressTrigger);
     pinButton->setCheckable(true);

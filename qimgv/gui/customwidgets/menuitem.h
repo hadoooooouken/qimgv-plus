@@ -10,6 +10,7 @@
 #include <QColor>
 #include "gui/customwidgets/iconbutton.h"
 #include "components/actionmanager/actionmanager.h"
+#include "utils/iconfontmanager.h"
 
 class MenuItem : public QWidget {
     Q_OBJECT
@@ -20,6 +21,9 @@ public:
     void setShortcutText(QString mTextLabel);
     QString shortcut();
     void setIconPath(QString path);
+    // MenuItem icons are always constrained to 16x16 (see IconWidget's
+    // "MenuItemIcon" accessible-name check), so sizePx defaults to that.
+    void setIcon(FluentIcon icon, int sizePx = IconWidget::kMenuItemIconSizePx);
     void setPassthroughClicks(bool mode);
     void setTextColor(QColor color);
     void setIconColor(QColor color);

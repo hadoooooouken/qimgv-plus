@@ -2,6 +2,13 @@
 #include "settings.h"
 #include "gui/customwidgets/styledcombobox.h"
 #include "gui/customwidgets/pushbuttonfocusind.h"
+#include "utils/iconfontmanager.h"
+
+namespace {
+// ARcomboBox's dropdown chevron; matches the original dropDownArrow.png's
+// 10x10 logical size.
+constexpr int kDropdownIconSizePx = 10;
+} // namespace
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGroupBox>
@@ -20,9 +27,9 @@ CropPanel::CropPanel(CropOverlay *_overlay, QWidget *parent) :
     ARcomboBox->setItemDelegate(new QStyledItemDelegate(ARcomboBox));
     ARcomboBox->view()->setTextElideMode(Qt::ElideNone);
 
-    headerIcon->setIconPath(":/res/icons/common/other/image-crop48.png");
+    headerIcon->setIcon(FluentIcon::Crop48, 48);
 
-    ARcomboBox->setIconPath(":/res/icons/common/other/dropDownArrow.png");
+    ARcomboBox->setIcon(FluentIcon::ChevronDown12, kDropdownIconSizePx);
 
     hide();
 

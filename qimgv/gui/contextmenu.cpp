@@ -2,12 +2,20 @@
 #include "settings.h"
 #include "gui/customwidgets/actionbutton.h"
 #include "gui/customwidgets/contextmenuitem.h"
+#include "utils/iconfontmanager.h"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QSpacerItem>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QStyleOption>
+
+namespace {
+// All ContextMenu icons (zoom row, transform row, and the ContextMenuItem
+// list via addItem()) render at this glyph size. Change this one value
+// instead of every setIcon() call site.
+constexpr int kIconSizePx = 16;
+} // namespace
 
 ContextMenu::ContextMenu(QWidget *parent)
     : QWidget(parent)
@@ -52,42 +60,42 @@ void ContextMenu::setupUi()
     m_fitWindow = new ActionButton();
     m_fitWindow->setAccessibleName("ContextMenuButton");
     m_fitWindow->setAction("fitWindow");
-    m_fitWindow->setIconPath(":/res/icons/common/buttons/contextmenu/fit-window18.png");
+    m_fitWindow->setIcon(FluentIcon::ArrowMaximize, kIconSizePx);
     m_fitWindow->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_fitWindow);
 
     m_fitWidth = new ActionButton();
     m_fitWidth->setAccessibleName("ContextMenuButton");
     m_fitWidth->setAction("fitWidth");
-    m_fitWidth->setIconPath(":/res/icons/common/buttons/contextmenu/fit-width18.png");
+    m_fitWidth->setIcon(FluentIcon::ArrowAutofitWidth, kIconSizePx);
     m_fitWidth->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_fitWidth);
 
     m_fitWindowStretch = new ActionButton();
     m_fitWindowStretch->setAccessibleName("ContextMenuButton");
     m_fitWindowStretch->setAction("fitWindowStretch");
-    m_fitWindowStretch->setIconPath(":/res/icons/common/buttons/contextmenu/fit-height-stretch18.png");
+    m_fitWindowStretch->setIcon(FluentIcon::ArrowAutofitHeight, kIconSizePx);
     m_fitWindowStretch->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_fitWindowStretch);
 
     m_zoomOriginal = new ActionButton();
     m_zoomOriginal->setAccessibleName("ContextMenuButton");
     m_zoomOriginal->setAction("fitNormal");
-    m_zoomOriginal->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-original18.png");
+    m_zoomOriginal->setIcon(FluentIcon::ZoomOriginal, kIconSizePx);
     m_zoomOriginal->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_zoomOriginal);
 
     m_zoomIn = new ActionButton();
     m_zoomIn->setAccessibleName("ContextMenuButton");
     m_zoomIn->setAction("zoomIn");
-    m_zoomIn->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-in18.png");
+    m_zoomIn->setIcon(FluentIcon::ZoomIn, kIconSizePx);
     m_zoomIn->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_zoomIn);
 
     m_zoomOut = new ActionButton();
     m_zoomOut->setAccessibleName("ContextMenuButton");
     m_zoomOut->setAction("zoomOut");
-    m_zoomOut->setIconPath(":/res/icons/common/buttons/contextmenu/zoom-out18.png");
+    m_zoomOut->setIcon(FluentIcon::ZoomOut, kIconSizePx);
     m_zoomOut->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_zoomOut);
 
@@ -111,42 +119,42 @@ void ContextMenu::setupUi()
     m_rotateLeft = new ActionButton();
     m_rotateLeft->setAccessibleName("ContextMenuButton");
     m_rotateLeft->setAction("rotateLeft");
-    m_rotateLeft->setIconPath(":/res/icons/common/menuitem/rotate-left16.png");
+    m_rotateLeft->setIcon(FluentIcon::ArrowRotateCounterclockwise, kIconSizePx);
     m_rotateLeft->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_rotateLeft);
 
     m_rotateRight = new ActionButton();
     m_rotateRight->setAccessibleName("ContextMenuButton");
     m_rotateRight->setAction("rotateRight");
-    m_rotateRight->setIconPath(":/res/icons/common/menuitem/rotate-right16.png");
+    m_rotateRight->setIcon(FluentIcon::ArrowRotateClockwise, kIconSizePx);
     m_rotateRight->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_rotateRight);
 
     m_flipV = new ActionButton();
     m_flipV->setAccessibleName("ContextMenuButton");
     m_flipV->setAction("flipV");
-    m_flipV->setIconPath(":/res/icons/common/menuitem/flip-v16.png");
+    m_flipV->setIcon(FluentIcon::FlipVertical, kIconSizePx);
     m_flipV->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_flipV);
 
     m_flipH = new ActionButton();
     m_flipH->setAccessibleName("ContextMenuButton");
     m_flipH->setAction("flipH");
-    m_flipH->setIconPath(":/res/icons/common/menuitem/flip-h16.png");
+    m_flipH->setIcon(FluentIcon::FlipHorizontal, kIconSizePx);
     m_flipH->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_flipH);
 
     m_crop = new ActionButton();
     m_crop->setAccessibleName("ContextMenuButton");
     m_crop->setAction("crop");
-    m_crop->setIconPath(":/res/icons/common/menuitem/image-crop16.png");
+    m_crop->setIcon(FluentIcon::Crop16, kIconSizePx);
     m_crop->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_crop);
 
     m_resize = new ActionButton();
     m_resize->setAccessibleName("ContextMenuButton");
     m_resize->setAction("resize");
-    m_resize->setIconPath(":/res/icons/common/menuitem/resize16.png");
+    m_resize->setIcon(FluentIcon::Resize16, kIconSizePx);
     m_resize->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_resize);
 
@@ -167,11 +175,11 @@ void ContextMenu::setupUi()
     actionsLayout->setSpacing(0);
     actionsLayout->setContentsMargins(0, 0, 0, 0);
 
-    auto addItem = [&](ContextMenuItem *&item, const QString &action, const QString &text, const QString &icon) {
+    auto addItem = [&](ContextMenuItem *&item, const QString &action, const QString &text, FluentIcon icon) {
         item = new ContextMenuItem();
         item->setAction(action);
         item->setText(text);
-        item->setIconPath(icon);
+        item->setIcon(icon, kIconSizePx);
         actionsLayout->addWidget(item);
     };
 
@@ -186,38 +194,38 @@ void ContextMenu::setupUi()
         layout->addLayout(lineLayout);
     };
 
-    addItem(m_colorAdjustments, "colorAdjustments", tr("Color adjustments"), ":/res/icons/common/menuitem/appearance16.png");
-    addItem(m_panoramaMode,     "togglePanorama",     tr("Panorama mode"),      ":/res/icons/common/menuitem/view16.png");
-    addItem(m_casSettings,      "casSettings",        tr("CAS Settings"),       ":/res/icons/common/menuitem/appearance16.png");
+    addItem(m_colorAdjustments, "colorAdjustments", tr("Color adjustments"), FluentIcon::Color);
+    addItem(m_panoramaMode,     "togglePanorama",     tr("Panorama mode"),      FluentIcon::ImageMultiple16);
+    addItem(m_casSettings,      "casSettings",        tr("CAS Settings"),       FluentIcon::Color);
     m_casSettings->hide();
 
     addSeparator(actionsLayout, 4, 4);
 
-    addItem(m_print,            "print",              tr("Print"),              ":/res/icons/common/menuitem/print16.png");
-    addItem(m_copy,             "copyFile",           tr("Quick copy"),         ":/res/icons/common/menuitem/copy16.png");
-    addItem(m_move,             "moveFile",           tr("Quick move"),         ":/res/icons/common/menuitem/move16.png");
-    addItem(m_rename,           "renameFile",         tr("Rename"),             ":/res/icons/common/overlay/edit16.png");
-    addItem(m_folderView,       "folderView",         tr("Folder View"),        ":/res/icons/common/menuitem/folderview16.png");
+    addItem(m_print,            "print",              tr("Print"),              FluentIcon::DocumentPrint);
+    addItem(m_copy,             "copyFile",           tr("Quick copy"),         FluentIcon::Copy);
+    addItem(m_move,             "moveFile",           tr("Quick move"),         FluentIcon::FolderArrowRight);
+    addItem(m_rename,           "renameFile",         tr("Rename"),             FluentIcon::Edit16);
+    addItem(m_folderView,       "folderView",         tr("Folder View"),        FluentIcon::Grid16);
 
     // OpenWith is special – we will create it separately
     m_openWith = new ContextMenuItem();
     m_openWith->setText(tr("Open with..."));
-    m_openWith->setIconPath(":/res/icons/common/menuitem/run16.png");
+    m_openWith->setIcon(FluentIcon::Apps16, kIconSizePx);
     m_openWith->setPassthroughClicks(false);
     connect(m_openWith, &ContextMenuItem::pressed, this, &ContextMenu::switchToScriptsPage);
     actionsLayout->addWidget(m_openWith);
 
-    addItem(m_showLocation,     "showInDirectory",    tr("Show in folder"),     ":/res/icons/common/menuitem/folder16.png");
-    addItem(m_setWallpaper,     "setWallpaper",       tr("Set as wallpaper"),   ":/res/icons/common/menuitem/document-view16.png");
-    addItem(m_settings,         "openSettings",       tr("Settings"),           ":/res/icons/common/menuitem/settings16.png");
+    addItem(m_showLocation,     "showInDirectory",    tr("Show in folder"),     FluentIcon::Folder);
+    addItem(m_setWallpaper,     "setWallpaper",       tr("Set as wallpaper"),   FluentIcon::Image);
+    addItem(m_settings,         "openSettings",       tr("Settings"),           FluentIcon::Settings16);
 
     addSeparator(actionsLayout, 4, 4);
 
-    addItem(m_trash,            "moveToTrash",        tr("Move to trash"),      ":/res/icons/common/menuitem/trash16.png");
+    addItem(m_trash,            "moveToTrash",        tr("Move to trash"),      FluentIcon::Delete16);
     m_trash->setTextColor(settings->colorScheme().trash);
     m_trash->setIconColor(settings->colorScheme().trash);
 
-    addItem(m_deletePermanently, "removeFile",        tr("Delete permanently"), ":/res/icons/common/buttons/panel/close16.png");
+    addItem(m_deletePermanently, "removeFile",        tr("Delete permanently"), FluentIcon::Dismiss16);
     m_deletePermanently->setTextColor(settings->colorScheme().danger);
     m_deletePermanently->setIconColor(settings->colorScheme().danger);
 
@@ -240,7 +248,7 @@ void ContextMenu::setupUi()
 
     m_backButton = new ContextMenuItem();
     m_backButton->setText(tr("Back"));
-    m_backButton->setIconPath(":/res/icons/common/menuitem/back16.png");
+    m_backButton->setIcon(FluentIcon::ArrowLeft, kIconSizePx);
     m_backButton->setPassthroughClicks(false);
     connect(m_backButton, &ContextMenuItem::pressed, this, &ContextMenu::switchToMainPage);
     scriptsPageLayout->addWidget(m_backButton);
@@ -250,7 +258,7 @@ void ContextMenu::setupUi()
 
     m_scriptSetupButton = new ContextMenuItem();
     m_scriptSetupButton->setText(tr("Configure menu"));
-    m_scriptSetupButton->setIconPath(":/res/icons/common/menuitem/settings16.png");
+    m_scriptSetupButton->setIcon(FluentIcon::Settings16, kIconSizePx);
     connect(m_scriptSetupButton, &ContextMenuItem::pressed, this, &ContextMenu::showScriptSettings);
     scriptsPageLayout->addWidget(m_scriptSetupButton);
 
@@ -279,7 +287,7 @@ void ContextMenu::fillOpenWithMenu()
         if (!i.value().command.isEmpty()) {
             ContextMenuItem *btn = new ContextMenuItem();
             btn->setAction("s:" + i.key());
-            btn->setIconPath(":/res/icons/common/menuitem/open16.png");
+            btn->setIcon(FluentIcon::FolderOpen16, kIconSizePx);
             btn->setText(i.key());
             m_scriptsLayout->addWidget(btn);
         }

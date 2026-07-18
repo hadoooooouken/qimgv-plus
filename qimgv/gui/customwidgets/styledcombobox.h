@@ -5,13 +5,13 @@
 #include <QPainter>
 #include <QKeyEvent>
 #include <QColor>
-#include "utils/imagelib.h"
+#include "utils/iconfontmanager.h"
 
 class StyledComboBox : public QComboBox
 {
 public:
     StyledComboBox(QWidget *parent = nullptr);
-    void setIconPath(QString path);
+    void setIcon(FluentIcon icon, int sizePx);
 
     // Logical width reserved for the trailing dropdown icon, including the
     // gap between the icon and the widget's right edge. Single source of
@@ -28,21 +28,19 @@ protected:
     // color; subclasses override to force a specific color in specific
     // visual states (e.g. a highlighted/active state).
     virtual QColor iconColor() const;
-    // Re-applies iconColor() to the currently loaded icon pixmap.
-    void refreshIconColor();
+    // Re-renders the glyph with the current iconColor(). Also used to pick
+    // up a devicePixelRatio change at runtime.
+    void refreshIcon();
 
     // Gap between the icon and the widget's right edge, in logical pixels.
     static constexpr int kIconRightMargin = 8;
 
 private:
-    bool hiResPixmap;
     QPixmap downArrow;
-    qreal dpr, pixmapDrawScale;
-    // Original (non-@2x) icon path, kept so the icon can be reloaded at
-    // the correct resolution if the widget's devicePixelRatio changes at
-    // runtime (e.g. the window is moved to a monitor with a different
-    // system scale factor, or the system scale factor itself changes).
-    QString iconResourcePath;
+    qreal dpr;
+    FluentIcon iconGlyph = FluentIcon::ChevronDown12;
+    int iconSizePx = 0;
+    bool iconSet = false;
 };
 
 #endif // STYLEDCOMBOBOX_H

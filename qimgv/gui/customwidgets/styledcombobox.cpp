@@ -1,40 +1,26 @@
 #include "styledcombobox.h"
 #include "settings.h"
 
-StyledComboBox::StyledComboBox(QWidget *parent) : QComboBox(parent), hiResPixmap(false)
+StyledComboBox::StyledComboBox(QWidget *parent) : QComboBox(parent)
 {
     dpr = this->devicePixelRatioF();
     connect(settings, &Settings::settingsChanged, [this]() {
-        refreshIconColor();
+        refreshIcon();
     });
 }
 
-void StyledComboBox::setIconPath(QString path) {
-    iconResourcePath = path; // remembered so we can reload on DPI change
-
-    if(dpr >= (1.0 + 0.001)) {
-        path.replace(".", "@2x.");
-        hiResPixmap = true;
-        downArrow.load(path);
-        if(dpr >= (2.0 - 0.001))
-            pixmapDrawScale = dpr;
-        else
-            pixmapDrawScale = 2.0;
-        downArrow.setDevicePixelRatio(pixmapDrawScale);
-    } else {
-        hiResPixmap = false;
-        downArrow.load(path);
-        pixmapDrawScale = dpr;
-    }
-    refreshIconColor();
+void StyledComboBox::setIcon(FluentIcon icon, int sizePx) {
+    iconGlyph = icon;
+    iconSizePx = sizePx;
+    iconSet = true;
+    refreshIcon();
 }
 
 int StyledComboBox::iconAreaWidth() const {
     if (downArrow.isNull())
         return kIconRightMargin;
 
-    qreal logicalWidth = hiResPixmap ? downArrow.width() / pixmapDrawScale
-                                      : downArrow.width();
+    qreal logicalWidth = downArrow.width() / downArrow.devicePixelRatio();
     return kIconRightMargin + qRound(logicalWidth);
 }
 
@@ -42,25 +28,20 @@ QColor StyledComboBox::iconColor() const {
     return settings->colorScheme().icons;
 }
 
-void StyledComboBox::refreshIconColor() {
-    if(downArrow.isNull())
+void StyledComboBox::refreshIcon() {
+    if (!iconSet)
         return;
-    ImageLib::recolor(downArrow, iconColor());
+    downArrow = IconFontManager::pixmap(iconGlyph, iconSizePx, iconColor(), dpr);
     update();
 }
 
 void StyledComboBox::paintEvent(QPaintEvent *e) {
     QComboBox::paintEvent(e);
+    if (downArrow.isNull())
+        return;
     QPainter p(this);
-    QPointF pos(0,0);
-
-    if(hiResPixmap) {
-        pos = QPointF(width() - kIconRightMargin - downArrow.width() / pixmapDrawScale,
-                      height() / 2 - downArrow.height() / (2 * pixmapDrawScale));
-    } else {
-        pos = QPointF(width() - downArrow.width() - kIconRightMargin,
-                      (height() - downArrow.height()) / 2);
-    }
+    QPointF pos(width() - kIconRightMargin - downArrow.width() / downArrow.devicePixelRatio(),
+                height() / 2 - downArrow.height() / (2 * downArrow.devicePixelRatio()));
     p.drawPixmap(pos, downArrow);
 }
 
@@ -73,8 +54,7 @@ bool StyledComboBox::event(QEvent *e) {
         qreal newDpr = devicePixelRatioF();
         if (!qFuzzyCompare(newDpr, dpr)) {
             dpr = newDpr;
-            if (!iconResourcePath.isEmpty())
-                setIconPath(iconResourcePath); // re-pick @1x/@2x asset, recompute pixmapDrawScale
+            refreshIcon(); // re-render the glyph at the new physical resolution
         }
     }
     return QComboBox::event(e);

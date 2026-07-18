@@ -24,13 +24,30 @@ void IconWidget::onSettingsChanged() {
 }
 
 void IconWidget::setIconPath(QString path) {
-    if(iconPath == path)
+    if(!glyphMode && iconPath == path)
         return;
+    glyphMode = false;
     iconPath = path;
     loadIcon();
 }
 
+void IconWidget::setIcon(FluentIcon icon, int sizePx) {
+    if(glyphMode && glyphIcon == icon && glyphSizePx == sizePx)
+        return;
+    glyphMode = true;
+    glyphIcon = icon;
+    glyphSizePx = sizePx;
+    iconPath.clear();
+    loadIcon();
+}
+
 void IconWidget::loadIcon() {
+    if(glyphMode) {
+        renderGlyph();
+        update();
+        return;
+    }
+
     auto path = iconPath;
     if(pixmap)
         delete pixmap;
@@ -54,6 +71,14 @@ void IconWidget::loadIcon() {
         pixmap = nullptr;
     }
     update();
+}
+
+void IconWidget::renderGlyph() {
+    if(pixmap)
+        delete pixmap;
+    pixmapDrawScale = dpr;
+    QPixmap glyph = IconFontManager::pixmap(glyphIcon, glyphSizePx, color, dpr);
+    pixmap = glyph.isNull() ? nullptr : new QPixmap(glyph);
 }
 
 QSize IconWidget::minimumSizeHint() const {
@@ -88,6 +113,11 @@ void IconWidget::setColor(QColor _color) {
 }
 
 void IconWidget::applyColor() {
+    if(glyphMode) {
+        renderGlyph();
+        update();
+        return;
+    }
     if(!pixmap || pixmap->isNull() || colorMode == ICON_COLOR_SOURCE)
         return;
     ImageLib::recolor(*pixmap, color);
@@ -110,8 +140,8 @@ void IconWidget::paintEvent(QPaintEvent *event) {
         // If this is a menu item icon or overlay header icon, constrain it to 16x16. Otherwise, fit inside widget bounds.
         bool isMenuItemIcon = (accessibleName() == "MenuItemIcon");
         bool isHeaderIcon = (accessibleName() == "OverlayHeaderIcon");
-        double maxW = (isMenuItemIcon || isHeaderIcon) ? 16.0 : static_cast<double>(width());
-        double maxH = (isMenuItemIcon || isHeaderIcon) ? 16.0 : static_cast<double>(height());
+        double maxW = (isMenuItemIcon || isHeaderIcon) ? static_cast<double>(kMenuItemIconSizePx) : static_cast<double>(width());
+        double maxH = (isMenuItemIcon || isHeaderIcon) ? static_cast<double>(kMenuItemIconSizePx) : static_cast<double>(height());
         
         maxW = qMin(maxW, targetW);
         maxH = qMin(maxH, targetH);
