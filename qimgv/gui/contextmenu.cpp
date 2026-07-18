@@ -14,7 +14,7 @@ namespace {
 // All ContextMenu icons (zoom row, transform row, and the ContextMenuItem
 // list via addItem()) render at this glyph size. Change this one value
 // instead of every setIcon() call site.
-constexpr int kIconSizePx = 16;
+constexpr int kIconSizePx = 20;
 } // namespace
 
 ContextMenu::ContextMenu(QWidget *parent)

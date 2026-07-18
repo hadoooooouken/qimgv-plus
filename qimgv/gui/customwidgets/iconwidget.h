@@ -49,6 +49,13 @@ private:
     bool glyphMode = false;
     FluentIcon glyphIcon = FluentIcon::Folder;
     int glyphSizePx = 0;
+    // Display-size clamp used in paintEvent() for MenuItemIcon /
+    // OverlayHeaderIcon widgets. Defaults to kMenuItemIconSizePx so
+    // pixmap-path icons (setIconPath(), e.g. overlay header icons) keep
+    // their existing fixed 16px look. Glyph icons (setIcon()) override it
+    // with their own requested sizePx, so callers like MenuItem can resize
+    // list-item icons past 16px just by asking for a bigger sizePx.
+    int displayClampPx = kMenuItemIconSizePx;
     QColor color;
     IconColorMode colorMode = ICON_COLOR_THEME;
     bool hiResPixmap;

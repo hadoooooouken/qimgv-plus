@@ -10,10 +10,11 @@ MenuItem::MenuItem(QWidget *parent)
     this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     mTextLabel.setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mShortcutLabel.setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    mIconWidget.setMinimumSize(26, 26); // 5px padding from stylesheet
-
+    // Default box for the default 16px icon (16 + 5px padding * 2 = 26).
+    // Grows automatically in setIcon() if a larger sizePx is requested.
+    mIconWidget.setMinimumSize(IconWidget::kMenuItemIconSizePx + 2 * kIconPaddingPx,
+                                IconWidget::kMenuItemIconSizePx + 2 * kIconPaddingPx);
     mIconWidget.installEventFilter(this);
-
     spacer = new QSpacerItem(3, 1, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
     mIconWidget.setAttribute(Qt::WA_TransparentForMouseEvents, true);
     mIconWidget.setAccessibleName("MenuItemIcon");
@@ -51,6 +52,8 @@ void MenuItem::setIconPath(QString path) {
 
 void MenuItem::setIcon(FluentIcon icon, int sizePx) {
     mIconWidget.setIcon(icon, sizePx);
+    int box = sizePx + 2 * kIconPaddingPx;
+    mIconWidget.setMinimumSize(box, box);
 }
 
 void MenuItem::setPassthroughClicks(bool mode) {

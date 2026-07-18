@@ -32,6 +32,7 @@ void IconWidget::setIconPath(QString path) {
 }
 
 void IconWidget::setIcon(FluentIcon icon, int sizePx) {
+    displayClampPx = sizePx;
     if(glyphMode && glyphIcon == icon && glyphSizePx == sizePx)
         return;
     glyphMode = true;
@@ -140,8 +141,8 @@ void IconWidget::paintEvent(QPaintEvent *event) {
         // If this is a menu item icon or overlay header icon, constrain it to 16x16. Otherwise, fit inside widget bounds.
         bool isMenuItemIcon = (accessibleName() == "MenuItemIcon");
         bool isHeaderIcon = (accessibleName() == "OverlayHeaderIcon");
-        double maxW = (isMenuItemIcon || isHeaderIcon) ? static_cast<double>(kMenuItemIconSizePx) : static_cast<double>(width());
-        double maxH = (isMenuItemIcon || isHeaderIcon) ? static_cast<double>(kMenuItemIconSizePx) : static_cast<double>(height());
+        double maxW = (isMenuItemIcon || isHeaderIcon) ? static_cast<double>(displayClampPx) : static_cast<double>(width());
+        double maxH = (isMenuItemIcon || isHeaderIcon) ? static_cast<double>(displayClampPx) : static_cast<double>(height());
         
         maxW = qMin(maxW, targetW);
         maxH = qMin(maxH, targetH);

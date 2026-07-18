@@ -34,6 +34,13 @@ protected:
     QSpacerItem *spacer;
     QHBoxLayout mLayout;
     bool passthroughClicks = true;
+    // Padding around the icon inside mIconWidget's box (5px each side,
+    // matches the old stylesheet-driven 26 = 16 + 5*2). Box is resized to
+    // iconSizePx + 2*kIconPaddingPx on every setIcon() call, so it always
+    // fits the requested size. Expressed in logical px like the rest of Qt's
+    // widget geometry - HiDPI scaling (100%/200%/fractional) is handled
+    // automatically by Qt, no extra scale math needed here.
+    static constexpr int kIconPaddingPx = 5;
     void paintEvent(QPaintEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);

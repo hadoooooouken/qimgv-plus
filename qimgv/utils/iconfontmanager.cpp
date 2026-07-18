@@ -138,7 +138,7 @@ QPixmap IconFontManager::pixmap(FluentIcon icon, int sizePx, QColor color, qreal
     QString glyph = QString::fromUcs4(&codepoint, 1);
 
     QFont font(fontFamily);
-    font.setPixelSize(qRound(sizePx * kGlyphFontSizeFactor));
+    font.setPixelSize(qRound(sizePx * kGlyphFontSizeFactor));    
 
     QPainter painter(&result);
     painter.setRenderHint(QPainter::Antialiasing);
