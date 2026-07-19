@@ -11,10 +11,11 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.folderview = QColor(0xfff2f2f2);
     base.folderview_topbar = QColor(0xffffffff);
     base.thumbpanel = QColor(0xfff2f2f2);
-    base.icons = QColor(0xff656768);
+    base.icons = QColor(0xff000000);
+    base.folder_icons = QColor(0xff656768);
     base.overlay = QColor(0xff1a1a1a);
     base.overlay_text = QColor(0xffd2d2d2);
-    base.text = QColor(0xff353535);
+    base.text = QColor(0xff000000);
     base.scrollbar = QColor(0xffaaaaaa);
     base.widget = QColor(0xffffffff);
     base.widget_border = QColor(0xffc3c3c3);
@@ -27,8 +28,9 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
   case COLORS_DARK:
     base.background = QColor(0xff1f1f1f);
     base.background_fullscreen = QColor(0xff1a1a1a);
-    base.text = QColor(0xffb6b6b6);
-    base.icons = QColor(0xffa4a4a4);
+    base.text = QColor(0xffffffff);
+    base.icons = QColor(0xffffffff);
+    base.folder_icons = QColor(0xffa4a4a4);
     base.widget = QColor(0xff181818);
     base.widget_border = QColor(0xff2b2b2b);
     base.accent = p.highlight().color();
@@ -59,6 +61,7 @@ void ColorScheme::setBaseColors(BaseColorScheme base) {
   background_fullscreen = base.background_fullscreen;
   text = base.text;
   icons = base.icons;
+  folder_icons = base.folder_icons;
   widget = base.widget;
   widget_border = base.widget_border;
   accent = base.accent;

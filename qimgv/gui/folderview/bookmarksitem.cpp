@@ -16,6 +16,7 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
 
     folderIconWidget.setAttribute(Qt::WA_TransparentForMouseEvents, true);
     folderIconWidget.setIconPath(":/res/icons/common/menuitem/folder16.png");
+    folderIconWidget.setColorMode(ICON_COLOR_THEME_FOLDER);
     folderIconWidget.setMinimumSize(16, 16);
     folderIconWidget.installEventFilter(this);
 

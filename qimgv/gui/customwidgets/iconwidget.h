@@ -11,6 +11,7 @@
 enum IconColorMode {
     ICON_COLOR_CUSTOM,
     ICON_COLOR_THEME,
+    ICON_COLOR_THEME_FOLDER,
     ICON_COLOR_SOURCE
 };
 
@@ -44,6 +45,7 @@ private:
     void loadIcon();
     void applyColor();
     void renderGlyph();
+    QColor themeColor() const;
 
     QString iconPath;
     bool glyphMode = false;

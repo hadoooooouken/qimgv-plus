@@ -8,10 +8,10 @@ FileSystemModelCustom::FileSystemModelCustom(QObject *parent) : QFileSystemModel
     if(dpr >= (1.0 + 0.001))
         iconPath.replace(".", "@2x.");
     folderIcon.load(iconPath);
-    ImageLib::recolor(this->folderIcon, settings->colorScheme().icons);
+    ImageLib::recolor(this->folderIcon, settings->colorScheme().folder_icons);
 
     connect(settings, &Settings::settingsChanged, this, [this]() {
-        ImageLib::recolor(this->folderIcon, settings->colorScheme().icons);
+        ImageLib::recolor(this->folderIcon, settings->colorScheme().folder_icons);
     });
 
     connect(this, &QAbstractItemModel::rowsInserted, this, [this](const QModelIndex &parent, int first, int last) {

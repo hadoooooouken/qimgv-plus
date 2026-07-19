@@ -162,6 +162,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
               base.background_fullscreen = scheme.background_fullscreen;
               base.text = scheme.text;
               base.icons = scheme.icons;
+              base.folder_icons = scheme.folder_icons;
               base.widget = scheme.widget;
               base.widget_border = scheme.widget_border;
               base.folderview = scheme.folderview;
@@ -195,6 +196,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
             base.background_fullscreen = scheme.background_fullscreen;
             base.text = scheme.text;
             base.icons = scheme.icons;
+            base.folder_icons = scheme.folder_icons;
             base.widget = scheme.widget;
             base.widget_border = scheme.widget_border;
             base.folderview = scheme.folderview;
@@ -934,6 +936,7 @@ void SettingsDialog::saveColorScheme() {
   base.background_fullscreen = scheme.background_fullscreen;
   base.text = scheme.text;
   base.icons = scheme.icons;
+  base.folder_icons = scheme.folder_icons;
   base.widget = scheme.widget;
   base.widget_border = scheme.widget_border;
   base.folderview = scheme.folderview;

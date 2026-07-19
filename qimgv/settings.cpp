@@ -388,6 +388,7 @@ void Settings::loadTheme() {
   base.background_fullscreen = useBlackBackground() ? QColor("#000000") : baseScheme.background_fullscreen;
   base.text = baseScheme.text;
   base.icons = baseScheme.icons;
+  base.folder_icons = baseScheme.folder_icons;
   base.widget = baseScheme.widget;
   base.widget_border = baseScheme.widget_border;
   base.accent = customAccent.isValid() ? customAccent : baseScheme.accent;

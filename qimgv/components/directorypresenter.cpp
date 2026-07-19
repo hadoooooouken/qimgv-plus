@@ -297,7 +297,7 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
       svgRenderer.render(&pixPainter, renderedRect);
       pixPainter.end();
 
-      ImageLib::recolor(*pixmap, settings->colorScheme().icons);
+      ImageLib::recolor(*pixmap, settings->colorScheme().folder_icons);
 
       std::shared_ptr<Thumbnail> thumb(
           new Thumbnail(model->dirNameAt(i), tr("Folder"), size,
@@ -515,7 +515,7 @@ DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
     svgRenderer.render(&painter, renderedRect);
   } // painter scope ends here, so it's safe to recolor
 
-  ImageLib::recolor(*pixmap, settings->colorScheme().icons);
+  ImageLib::recolor(*pixmap, settings->colorScheme().folder_icons);
 
   // Draw the inner thumbnail
   QPainter painter(pixmap);

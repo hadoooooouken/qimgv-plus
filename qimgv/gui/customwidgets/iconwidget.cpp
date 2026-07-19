@@ -16,10 +16,18 @@ IconWidget::~IconWidget() {
         delete pixmap;
 }
 
+QColor IconWidget::themeColor() const {
+    return (colorMode == ICON_COLOR_THEME_FOLDER) ? settings->colorScheme().folder_icons
+                                                   : settings->colorScheme().icons;
+}
+
 void IconWidget::onSettingsChanged() {
-    if(colorMode == ICON_COLOR_THEME && color != settings->colorScheme().icons) {
-        color = settings->colorScheme().icons;
-        applyColor();
+    if(colorMode == ICON_COLOR_THEME || colorMode == ICON_COLOR_THEME_FOLDER) {
+        QColor newColor = themeColor();
+        if(color != newColor) {
+            color = newColor;
+            applyColor();
+        }
     }
 }
 
@@ -102,6 +110,8 @@ void IconWidget::setColorMode(IconColorMode _mode) {
         loadIcon();
     } else {
         colorMode = _mode;
+        if(colorMode == ICON_COLOR_THEME || colorMode == ICON_COLOR_THEME_FOLDER)
+            color = themeColor();
         applyColor();
     }
 }
