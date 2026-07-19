@@ -1147,22 +1147,18 @@ void ImageViewerV2::fitWidth() {
 void ImageViewerV2::fitWindow() {
   if (!image)
     return;
-  if (imageFits() && !expandImage) {
-    fitNormal();
+  if (currentScale() != fitWindowScale) {
+    swapToOriginalImage();
+    doZoom(fitWindowScale);
+  }
+  // There's either a qt bug or I am misusing something.
+  // First call to scrollbar->setValue() produces wrong results
+  // - unless when called from eventloop
+  if (scrollBarWorkaround) {
+    scrollBarWorkaround = false;
+    QTimer::singleShot(0, this, SLOT(centerOnPixmap()));
   } else {
-    if (currentScale() != fitWindowScale) {
-      swapToOriginalImage();
-      doZoom(fitWindowScale);
-    }
-    // There's either a qt bug or I am misusing something.
-    // First call to scrollbar->setValue() produces wrong results
-    // - unless when called from eventloop
-    if (scrollBarWorkaround) {
-      scrollBarWorkaround = false;
-      QTimer::singleShot(0, this, SLOT(centerOnPixmap()));
-    } else {
-      centerOnPixmap();
-    }
+    centerOnPixmap();
   }
 }
 
@@ -1221,7 +1217,13 @@ void ImageViewerV2::applyFitMode() {
     fitWidth();
     break;
   case FIT_WINDOW:
-    fitWindow();
+    // When auto-applying fit mode (e.g. on image load), don't upscale small
+    // images unless expandImage is enabled. The explicit fitWindow() action
+    // (button / context menu) calls fitWindow() directly and always fits.
+    if (imageFits() && !expandImage)
+      fitNormal();
+    else
+      fitWindow();
     break;
   case FIT_WINDOW_STRETCH:
     fitWindowStretch();
@@ -1252,7 +1254,11 @@ void ImageViewerV2::setFitWidth() {
 
 // public, sends scale request
 void ImageViewerV2::setFitWindow() {
-  setFitMode(FIT_WINDOW);
+  if (scaleTimer->isActive())
+    scaleTimer->stop();
+  stopPosAnimation();
+  imageFitMode = FIT_WINDOW;
+  fitWindow();
   requestScaling();
 }
 
