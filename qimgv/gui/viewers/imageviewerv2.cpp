@@ -1141,12 +1141,17 @@ void ImageViewerV2::fitWidth(bool force) {
     doZoom(targetScale);
   }
   centerIfNecessary();
-  // just center somewhere at the top then do snap
   if (scaledSizeR().height() > viewport()->height()) {
-    QPointF centerTarget =
-        mapToScene(viewport()->rect()).boundingRect().center();
-    centerTarget.setY(0);
-    centerOn(centerTarget);
+    if (focusIn1to1 == FOCUS_TOP) {
+      QPointF centerTarget =
+          mapToScene(viewport()->rect()).boundingRect().center();
+      centerTarget.setY(0);
+      centerOn(centerTarget);
+    } else if (focusIn1to1 == FOCUS_CURSOR) {
+      centerOn(mapToScene(mapFromGlobal(cursor().pos())));
+    } else if (focusIn1to1 == FOCUS_CENTER) {
+      centerOn(pixmapItem.sceneBoundingRect().center());
+    }
   }
   snapToEdges();
 }
@@ -1193,14 +1198,20 @@ void ImageViewerV2::fitHeight(bool force) {
     swapToOriginalImage();
     doZoom(targetScale);
   }
-
-  // Handle scrollbar workaround similar to fitWindow()
-  if (scrollBarWorkaround) {
-    scrollBarWorkaround = false;
-    QTimer::singleShot(0, this, SLOT(centerOnPixmap()));
-  } else {
-    centerOnPixmap();
+  centerIfNecessary();
+  if (scaledSizeR().width() > viewport()->width()) {
+    if (focusIn1to1 == FOCUS_TOP) {
+      QPointF centerTarget =
+          mapToScene(viewport()->rect()).boundingRect().center();
+      centerTarget.setX(0);
+      centerOn(centerTarget);
+    } else if (focusIn1to1 == FOCUS_CURSOR) {
+      centerOn(mapToScene(mapFromGlobal(cursor().pos())));
+    } else if (focusIn1to1 == FOCUS_CENTER) {
+      centerOn(pixmapItem.sceneBoundingRect().center());
+    }
   }
+  snapToEdges();
 }
 
 void ImageViewerV2::fitFree(float scale) {
