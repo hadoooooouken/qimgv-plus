@@ -175,6 +175,8 @@ SettingsDialog::SettingsDialog(QWidget *parent)
               base.status_error = scheme.status_error;
               base.status_processing = scheme.status_processing;
               base.status_success = scheme.status_success;
+              base.danger = scheme.danger;
+              base.trash = scheme.trash;
               base.tid = scheme.tid;
 
               settings->setColorScheme(ColorScheme(base));
@@ -209,6 +211,8 @@ SettingsDialog::SettingsDialog(QWidget *parent)
             base.status_error = scheme.status_error;
             base.status_processing = scheme.status_processing;
             base.status_success = scheme.status_success;
+            base.danger = scheme.danger;
+            base.trash = scheme.trash;
             base.tid = scheme.tid;
 
             settings->setHasCustomAccent(true);
@@ -949,6 +953,8 @@ void SettingsDialog::saveColorScheme() {
   base.status_error = scheme.status_error;
   base.status_processing = scheme.status_processing;
   base.status_success = scheme.status_success;
+  base.danger = scheme.danger;
+  base.trash = scheme.trash;
   base.tid = scheme.tid;
 
   if (customAccent) {

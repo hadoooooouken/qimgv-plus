@@ -29,6 +29,8 @@ struct BaseColorScheme {
     QColor status_error;
     QColor status_processing;
     QColor status_success;
+    QColor danger;
+    QColor trash;
 };
 
 class ColorScheme {
@@ -58,6 +60,8 @@ public:
     QColor status_error;
     QColor status_processing;
     QColor status_success;
+    QColor danger;
+    QColor trash;
     // extended
     QColor text_hc2;
     QColor text_hc;
@@ -77,8 +81,6 @@ public:
     QColor folderview_button_hover;
     QColor folderview_button_pressed;
     QColor input_field_focus;
-    QColor danger;
-    QColor trash;
 
 
 private:

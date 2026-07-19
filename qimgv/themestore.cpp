@@ -11,11 +11,11 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.folderview = QColor(0xfff2f2f2);
     base.folderview_topbar = QColor(0xffffffff);
     base.thumbpanel = QColor(0xfff2f2f2);
-    base.icons = QColor(0xff000000);
+    base.text = QColor(0xff303030);
+    base.icons = QColor(0xff1a1a1a);
     base.folder_icons = QColor(0xff656768);
     base.overlay = QColor(0xff1a1a1a);
     base.overlay_text = QColor(0xffd2d2d2);
-    base.text = QColor(0xff000000);
     base.scrollbar = QColor(0xffaaaaaa);
     base.widget = QColor(0xffffffff);
     base.widget_border = QColor(0xffc3c3c3);
@@ -23,13 +23,15 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.status_error = QColor(0xffd32f2f);   // Red suitable for light theme
     base.status_processing = QColor(0xff0066cc); // Blue suitable for light theme
     base.status_success = QColor(0xff2e7d32);    // Green suitable for light theme
+    base.danger = QColor(0xffd32f2f);
+    base.trash  = QColor(0xfff57c00);
     base.tid = static_cast<int>(name);
     break;
   case COLORS_DARK:
     base.background = QColor(0xff1f1f1f);
     base.background_fullscreen = QColor(0xff1a1a1a);
-    base.text = QColor(0xffffffff);
-    base.icons = QColor(0xffffffff);
+    base.text = QColor(0xffd2d2d2);
+    base.icons = QColor(0xffe8e8e8);
     base.folder_icons = QColor(0xffa4a4a4);
     base.widget = QColor(0xff181818);
     base.widget_border = QColor(0xff2b2b2b);
@@ -44,6 +46,8 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.status_error = QColor(0xffff3333);
     base.status_processing = QColor(0xff33aaff);
     base.status_success = QColor(0xff33cc33);
+    base.danger = QColor(0xfffb5555);
+    base.trash = QColor(0xffffb900);
     base.tid = static_cast<int>(name);
     break;
   }
@@ -75,9 +79,9 @@ void ColorScheme::setBaseColors(BaseColorScheme base) {
   status_error = base.status_error;
   status_processing = base.status_processing;
   status_success = base.status_success;
+  danger = base.danger;
+  trash = base.trash;
   tid = base.tid;
-  danger = QColor("#D15B5B");
-  trash = QColor("#B98B6A");
   createColorVariants();
 }
 

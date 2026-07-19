@@ -403,6 +403,8 @@ void Settings::loadTheme() {
   base.status_error = baseScheme.status_error;
   base.status_processing = baseScheme.status_processing;
   base.status_success = baseScheme.status_success;
+  base.danger = baseScheme.danger;
+  base.trash = baseScheme.trash;
   base.tid = baseScheme.tid;
 
   setColorScheme(ColorScheme(base));
