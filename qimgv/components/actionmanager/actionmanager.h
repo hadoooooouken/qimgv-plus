@@ -62,7 +62,7 @@ signals:
     void fitWindow();
     void fitWidth();
     void fitNormal();
-    void fitWindowStretch();
+    void fitHeight();
     void flipH();
     void flipV();
     void toggleFitMode();

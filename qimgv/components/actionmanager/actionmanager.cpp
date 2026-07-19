@@ -37,7 +37,7 @@ void ActionManager::initDefaults() {
   actionManager->defaults.insert("1", "fitWindow");
   actionManager->defaults.insert("2", "fitWidth");
   actionManager->defaults.insert("3", "fitNormal");
-  actionManager->defaults.insert("4", "fitWindowStretch");
+  actionManager->defaults.insert("4", "fitHeight");
   actionManager->defaults.insert("R", "resize");
   actionManager->defaults.insert("H", "flipH");
   actionManager->defaults.insert("V", "flipV");
@@ -191,9 +191,13 @@ const QList<QString> ActionManager::shortcutsForAction(QString action) {
 }
 //------------------------------------------------------------------------------
 bool ActionManager::invokeAction(const QString &actionName) {
-  ActionType type = validateAction(actionName);
+  QString name = actionName;
+  if (name == "fitWindowStretch") {
+    name = "fitHeight";
+  }
+  ActionType type = validateAction(name);
   if (type == ActionType::ACTION_NORMAL) {
-    QMetaObject::invokeMethod(this, actionName.toLatin1().constData(),
+    QMetaObject::invokeMethod(this, name.toLatin1().constData(),
                               Qt::DirectConnection);
     return true;
   } else if (type == ActionType::ACTION_SCRIPT) {
@@ -222,7 +226,11 @@ void ActionManager::validateShortcuts() {
 }
 //------------------------------------------------------------------------------
 inline ActionType ActionManager::validateAction(const QString &actionName) {
-  if (appActions->getMap().contains(actionName))
+  QString name = actionName;
+  if (name == "fitWindowStretch") {
+    name = "fitHeight";
+  }
+  if (appActions->getMap().contains(name))
     return ActionType::ACTION_NORMAL;
   if (actionName.startsWith("s:")) {
     QString scriptName = actionName;
@@ -235,6 +243,12 @@ inline ActionType ActionManager::validateAction(const QString &actionName) {
 //------------------------------------------------------------------------------
 void ActionManager::readShortcuts() {
   settings->readShortcuts(shortcuts);
+  // Migrate legacy "fitWindowStretch" shortcuts to "fitHeight"
+  for (auto i = shortcuts.begin(); i != shortcuts.end(); ++i) {
+    if (i.value() == "fitWindowStretch") {
+      i.value() = "fitHeight";
+    }
+  }
   if (shortcuts.isEmpty()) {
     resetDefaults();
   }

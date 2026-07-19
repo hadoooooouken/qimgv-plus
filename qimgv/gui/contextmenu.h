@@ -46,7 +46,7 @@ private:
     // Main page widgets
     ActionButton    *m_fitWindow;
     ActionButton    *m_fitWidth;
-    ActionButton    *m_fitWindowStretch;
+    ActionButton    *m_fitHeight;
     ActionButton    *m_zoomOriginal;
     ActionButton    *m_zoomIn;
     ActionButton    *m_zoomOut;

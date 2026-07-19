@@ -16,7 +16,7 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
       scrollBarWorkaround(true), useFixedZoomLevels(false),
       trackpadDetection(true),
       mouseInteraction(MouseInteractionState::MOUSE_NONE), minScale(0.01f),
-      maxScale(40.0f), fitWindowScale(0.125f), fitWindowStretchScale(0.125f),
+      maxScale(40.0f), fitWindowScale(0.125f), fitWidthScale(0.125f), fitHeightScale(0.125f),
       mViewLock(LOCK_NONE), imageFitMode(FIT_WINDOW),
       mScalingFilter(QI_FILTER_BILINEAR), imageFitModeDefault(FIT_WINDOW),
       scene(nullptr), zoomTimeLine(nullptr), zoomStartScale(1.0f),
@@ -639,7 +639,7 @@ void ImageViewerV2::hide() {
 }
 
 void ImageViewerV2::requestScaling() {
-  bool isAt100 = std::abs(pixmapItem.scale() - 1.0) < 0.001;
+  bool isAt100 = std::abs(pixmapItem.scale() - 1.0) < kScaleEpsilon;
   if (mSvgMode || !image || isAt100 ||
       (mScalingFilter == QI_FILTER_CAS && !(mUseUpscayl && pixmapItem.scale() > 1.0)) ||
       (mScalingFilter == QI_FILTER_SMART_GPU && !(mUseUpscayl && pixmapItem.scale() > 1.0)) ||
@@ -1069,8 +1069,10 @@ inline void ImageViewerV2::mouseMoveZoom(QMouseEvent *event) {
   snapToEdges();
   if (pixmapItem.scale() == fitWindowScale)
     imageFitMode = FIT_WINDOW;
-  else if (pixmapItem.scale() == fitWindowStretchScale)
-    imageFitMode = FIT_WINDOW_STRETCH;
+  else if (pixmapItem.scale() == fitWidthScale)
+    imageFitMode = FIT_WIDTH;
+  else if (pixmapItem.scale() == fitHeightScale)
+    imageFitMode = FIT_HEIGHT;
 }
 
 // scale at which current image fills the window
@@ -1086,26 +1088,31 @@ void ImageViewerV2::updateFitWindowScale() {
     fitWindowScale = expandLimit;
 }
 
-void ImageViewerV2::updateFitWindowStretchScale() {
+void ImageViewerV2::updateFitWidthScale() {
+  if (!image)
+    return;
+  fitWidthScale = (float)viewport()->width() * dpr / image->width();
+  if (expandImage && fitWidthScale > expandLimit)
+    fitWidthScale = expandLimit;
+}
+
+void ImageViewerV2::updateFitHeightScale() {
   if (!image)
     return;
 
   float scaleFitY = (float)viewport()->height() * dpr / image->height();
+  fitHeightScale = scaleFitY;
 
-  // For "Fit in window (stretch)", we always use height-based scaling
-  // This ensures the full image is always visible while stretching to fill the
-  // window height
-  fitWindowStretchScale = scaleFitY;
-
-  if (expandImage && fitWindowStretchScale > expandLimit)
-    fitWindowStretchScale = expandLimit;
+  if (expandImage && fitHeightScale > expandLimit)
+    fitHeightScale = expandLimit;
 }
 
 void ImageViewerV2::updateMinScale() {
   if (!image)
     return;
   updateFitWindowScale();
-  updateFitWindowStretchScale();
+  updateFitWidthScale();
+  updateFitHeightScale();
   if (settings->unlockMinZoom()) {
     if (!image->isNull())
       minScale = qMax(10. / image->width(), 10. / image->height());
@@ -1121,17 +1128,17 @@ void ImageViewerV2::updateMinScale() {
     minScale = lockedScale;
 }
 
-void ImageViewerV2::fitWidth() {
+void ImageViewerV2::fitWidth(bool force) {
   if (!image)
     return;
-  float scaleX = (float)viewport()->width() * dpr / image->width();
-  if (!expandImage && scaleX > 1.0f)
-    scaleX = 1.0f;
-  if (scaleX > expandLimit)
-    scaleX = expandLimit;
-  if (currentScale() != scaleX) {
+  updateFitWidthScale();
+  float targetScale = fitWidthScale;
+  if (force) {
+    targetScale = (float)viewport()->width() * dpr / image->width();
+  }
+  if (currentScale() != targetScale) {
     swapToOriginalImage();
-    doZoom(scaleX);
+    doZoom(targetScale);
   }
   centerIfNecessary();
   // just center somewhere at the top then do snap
@@ -1144,12 +1151,18 @@ void ImageViewerV2::fitWidth() {
   snapToEdges();
 }
 
-void ImageViewerV2::fitWindow() {
+void ImageViewerV2::fitWindow(bool force) {
   if (!image)
     return;
-  if (currentScale() != fitWindowScale) {
+  float targetScale = fitWindowScale;
+  if (force) {
+    float scaleFitX = (float)viewport()->width() * dpr / image->width();
+    float scaleFitY = (float)viewport()->height() * dpr / image->height();
+    targetScale = qMin(scaleFitX, scaleFitY);
+  }
+  if (currentScale() != targetScale) {
     swapToOriginalImage();
-    doZoom(fitWindowScale);
+    doZoom(targetScale);
   }
   // There's either a qt bug or I am misusing something.
   // First call to scrollbar->setValue() produces wrong results
@@ -1164,16 +1177,21 @@ void ImageViewerV2::fitWindow() {
 
 void ImageViewerV2::fitNormal() { fitFree(1.0f); }
 
-void ImageViewerV2::fitWindowStretch() {
+void ImageViewerV2::fitHeight(bool force) {
   if (!image)
     return;
 
   // Update the stretch scale calculation
-  updateFitWindowStretchScale();
+  updateFitHeightScale();
 
-  if (currentScale() != fitWindowStretchScale) {
+  float targetScale = fitHeightScale;
+  if (force) {
+    targetScale = (float)viewport()->height() * dpr / image->height();
+  }
+
+  if (currentScale() != targetScale) {
     swapToOriginalImage();
-    doZoom(fitWindowStretchScale);
+    doZoom(targetScale);
   }
 
   // Handle scrollbar workaround similar to fitWindow()
@@ -1214,7 +1232,15 @@ void ImageViewerV2::applyFitMode() {
     fitNormal();
     break;
   case FIT_WIDTH:
-    fitWidth();
+    // When auto-applying, don't upscale small images unless expandImage is on.
+    if (!expandImage) {
+      float scaleX = (float)viewport()->width() * dpr / image->width();
+      if (scaleX > 1.0f) {
+        fitNormal();
+        break;
+      }
+    }
+    fitWidth(false);
     break;
   case FIT_WINDOW:
     // When auto-applying fit mode (e.g. on image load), don't upscale small
@@ -1223,10 +1249,10 @@ void ImageViewerV2::applyFitMode() {
     if (imageFits() && !expandImage)
       fitNormal();
     else
-      fitWindow();
+      fitWindow(false);
     break;
-  case FIT_WINDOW_STRETCH:
-    fitWindowStretch();
+  case FIT_HEIGHT:
+    fitHeight(false);
     break;
   default:
     break;
@@ -1248,7 +1274,11 @@ void ImageViewerV2::setFitOriginal() { setFitMode(FIT_ORIGINAL); }
 
 // public, sends scale request
 void ImageViewerV2::setFitWidth() {
-  setFitMode(FIT_WIDTH);
+  if (scaleTimer->isActive())
+    scaleTimer->stop();
+  stopPosAnimation();
+  imageFitMode = FIT_WIDTH;
+  fitWidth(true);
   requestScaling();
 }
 
@@ -1258,13 +1288,17 @@ void ImageViewerV2::setFitWindow() {
     scaleTimer->stop();
   stopPosAnimation();
   imageFitMode = FIT_WINDOW;
-  fitWindow();
+  fitWindow(true);
   requestScaling();
 }
 
 // public, sends scale request
-void ImageViewerV2::setFitWindowStretch() {
-  setFitMode(FIT_WINDOW_STRETCH);
+void ImageViewerV2::setFitHeight() {
+  if (scaleTimer->isActive())
+    scaleTimer->stop();
+  stopPosAnimation();
+  imageFitMode = FIT_HEIGHT;
+  fitHeight(true);
   requestScaling();
 }
 
@@ -1503,8 +1537,10 @@ void ImageViewerV2::doZoomIn(bool atCursor) {
     imageFitMode = FIT_FREE;
     if (pixmapItem.scale() == fitWindowScale)
       imageFitMode = FIT_WINDOW;
-    else if (pixmapItem.scale() == fitWindowStretchScale)
-      imageFitMode = FIT_WINDOW_STRETCH;
+    else if (pixmapItem.scale() == fitWidthScale)
+      imageFitMode = FIT_WIDTH;
+    else if (pixmapItem.scale() == fitHeightScale)
+      imageFitMode = FIT_HEIGHT;
   }
 }
 
@@ -1557,8 +1593,10 @@ void ImageViewerV2::doZoomOut(bool atCursor) {
     imageFitMode = FIT_FREE;
     if (pixmapItem.scale() == fitWindowScale)
       imageFitMode = FIT_WINDOW;
-    else if (pixmapItem.scale() == fitWindowStretchScale)
-      imageFitMode = FIT_WINDOW_STRETCH;
+    else if (pixmapItem.scale() == fitWidthScale)
+      imageFitMode = FIT_WIDTH;
+    else if (pixmapItem.scale() == fitHeightScale)
+      imageFitMode = FIT_HEIGHT;
   }
 }
 
@@ -1851,10 +1889,12 @@ void ImageViewerV2::onZoomTimelineValueChanged(qreal value) {
   snapToEdges();
 
   imageFitMode = FIT_FREE;
-  if (std::abs(pixmapItem.scale() - fitWindowScale) < 0.001)
+  if (std::abs(pixmapItem.scale() - fitWindowScale) < kScaleEpsilon)
     imageFitMode = FIT_WINDOW;
-  else if (std::abs(pixmapItem.scale() - fitWindowStretchScale) < 0.001)
-    imageFitMode = FIT_WINDOW_STRETCH;
+  else if (std::abs(pixmapItem.scale() - fitWidthScale) < kScaleEpsilon)
+    imageFitMode = FIT_WIDTH;
+  else if (std::abs(pixmapItem.scale() - fitHeightScale) < kScaleEpsilon)
+    imageFitMode = FIT_HEIGHT;
 }
 
 QRect ImageViewerV2::visibleOriginalImageRect() const {

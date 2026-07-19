@@ -255,9 +255,9 @@ void MW::fitOriginal() {
     }
 }
 
-void MW::fitWindowStretch() {
+void MW::fitHeight() {
     if(viewerWidget->interactionEnabled()) {
-        viewerWidget->fitWindowStretch();
+        viewerWidget->fitHeight();
     } else {
         showMessage(tr("Zoom temporary disabled"));
     }

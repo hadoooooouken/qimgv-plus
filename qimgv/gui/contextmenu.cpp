@@ -71,12 +71,12 @@ void ContextMenu::setupUi()
     m_fitWidth->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_fitWidth);
 
-    m_fitWindowStretch = new ActionButton();
-    m_fitWindowStretch->setAccessibleName("ContextMenuButton");
-    m_fitWindowStretch->setAction("fitWindowStretch");
-    m_fitWindowStretch->setIcon(FluentIcon::ArrowAutofitHeight, kIconSizePx);
-    m_fitWindowStretch->setTriggerMode(TriggerMode::PressTrigger);
-    zoomLayout->addWidget(m_fitWindowStretch);
+    m_fitHeight = new ActionButton();
+    m_fitHeight->setAccessibleName("ContextMenuButton");
+    m_fitHeight->setAction("fitHeight");
+    m_fitHeight->setIcon(FluentIcon::ArrowAutofitHeight, kIconSizePx);
+    m_fitHeight->setTriggerMode(TriggerMode::PressTrigger);
+    zoomLayout->addWidget(m_fitHeight);
 
     m_zoomOriginal = new ActionButton();
     m_zoomOriginal->setAccessibleName("ContextMenuButton");

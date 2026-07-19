@@ -315,7 +315,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   fitModeGrp.addButton(fitModeWindow);
   fitModeGrp.addButton(fitModeWidth);
   fitModeGrp.addButton(fitMode1to1);
-  fitModeGrp.addButton(fitModeWindowStretch);
+  fitModeGrp.addButton(fitModeHeight);
   folderEndGrp.addButton(folderEndSwitchFolder);
   folderEndGrp.addButton(folderEndNoAction);
   folderEndGrp.addButton(folderEndLoop);
@@ -689,8 +689,8 @@ void SettingsDialog::readSettings() {
     fitModeWindow->setChecked(true);
   else if (settings->imageFitMode() == FIT_WIDTH)
     fitModeWidth->setChecked(true);
-  else if (settings->imageFitMode() == FIT_WINDOW_STRETCH)
-    fitModeWindowStretch->setChecked(true);
+  else if (settings->imageFitMode() == FIT_HEIGHT)
+    fitModeHeight->setChecked(true);
   else
     fitMode1to1->setChecked(true);
 
@@ -766,8 +766,8 @@ void SettingsDialog::saveSettings() {
     settings->setImageFitMode(FIT_WINDOW);
   else if (fitModeWidth->isChecked())
     settings->setImageFitMode(FIT_WIDTH);
-  else if (fitModeWindowStretch->isChecked())
-    settings->setImageFitMode(FIT_WINDOW_STRETCH);
+  else if (fitModeHeight->isChecked())
+    settings->setImageFitMode(FIT_HEIGHT);
   else
     settings->setImageFitMode(FIT_ORIGINAL);
 
@@ -2117,10 +2117,10 @@ void SettingsDialog::setupUi() {
 
         horizontalLayout_29->addWidget(fitMode1to1);
 
-        fitModeWindowStretch = new QRadioButton(displayGroup);
-        fitModeWindowStretch->setObjectName("fitModeWindowStretch");
+        fitModeHeight = new QRadioButton(displayGroup);
+        fitModeHeight->setObjectName("fitModeHeight");
 
-        horizontalLayout_29->addWidget(fitModeWindowStretch);
+        horizontalLayout_29->addWidget(fitModeHeight);
 
         horizontalSpacer_21 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
 
@@ -3945,7 +3945,7 @@ void SettingsDialog::retranslateUi() {
         fitModeWindow->setText(QCoreApplication::translate("SettingsDialog", "Fit to window", nullptr));
         fitModeWidth->setText(QCoreApplication::translate("SettingsDialog", "Fit to width", nullptr));
         fitMode1to1->setText(QCoreApplication::translate("SettingsDialog", "1:1", nullptr));
-        fitModeWindowStretch->setText(QCoreApplication::translate("SettingsDialog", "Fit to height", nullptr));
+        fitModeHeight->setText(QCoreApplication::translate("SettingsDialog", "Fit to height", nullptr));
         keepFitModeCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Keep fit mode when switching images", nullptr));
         label_26->setText(QCoreApplication::translate("SettingsDialog", "Focus in 1:1 mode:", nullptr));
         focus1to1Top->setText(QCoreApplication::translate("SettingsDialog", "Top", nullptr));

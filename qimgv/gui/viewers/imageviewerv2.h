@@ -92,7 +92,7 @@ public slots:
     virtual void setFitOriginal();
     virtual void setFitWidth();
     virtual void setFitWindow();
-    virtual void setFitWindowStretch();
+    virtual void setFitHeight();
     void switchFitMode();
     virtual void zoomIn();
     virtual void zoomOut();
@@ -169,6 +169,7 @@ private:
     const qreal TRACKPAD_SCROLL_MULTIPLIER = 0.7;
     const qreal WHEEL_SCROLL_MULTIPLIER = 2.0f;
     const int ANIMATION_SPEED = 150;
+    static constexpr float kScaleEpsilon = 0.001f;
     // how many px you can move while holding RMB until it counts as a zoom attempt
     int zoomThreshold = 4;
     int dragThreshold = 10;
@@ -177,7 +178,7 @@ private:
     bool dragsEnabled = true;
 
     float zoomStep = 0.1f, dpr;
-    float minScale, maxScale, fitWindowScale, fitWindowStretchScale, expandLimit, lockedScale;
+    float minScale, maxScale, fitWindowScale, fitWidthScale, fitHeightScale, expandLimit, lockedScale;
     QPointF savedViewportPos;
     ViewLockMode mViewLock;
 
@@ -194,9 +195,9 @@ private:
 
     void zoomAnchored(float newScale);
     void fitNormal();
-    void fitWidth();
-    void fitWindow();
-    void fitWindowStretch();
+    void fitWidth(bool force = false);
+    void fitWindow(bool force = false);
+    void fitHeight(bool force = false);
 
     void scroll(int dx, int dy, bool animated);
 
@@ -225,7 +226,8 @@ private:
     void scrollSmooth(int dx, int dy);
     void scrollPrecise(int dx, int dy);
     void updateFitWindowScale();
-    void updateFitWindowStretchScale();
+    void updateFitWidthScale();
+    void updateFitHeightScale();
     void updateMinScale();
     void fitFree(float scale);
     void applySavedViewportPos();

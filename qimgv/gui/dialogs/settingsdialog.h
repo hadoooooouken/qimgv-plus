@@ -192,7 +192,7 @@ private:
     QRadioButton *fitModeWindow;
     QRadioButton *fitModeWidth;
     QRadioButton *fitMode1to1;
-    QRadioButton *fitModeWindowStretch;
+    QRadioButton *fitModeHeight;
     QSpacerItem *horizontalSpacer_21;
     QCheckBox *keepFitModeCheckBox;
     QWidget *widget_3;

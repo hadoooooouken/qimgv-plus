@@ -244,7 +244,7 @@ public slots:
   void fitWindow();
   void fitWidth();
   void fitOriginal();
-  void fitWindowStretch();
+  void fitHeight();
   void switchFitMode();
   void closeImage();
   void showContextMenu();
