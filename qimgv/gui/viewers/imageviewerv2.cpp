@@ -1131,6 +1131,12 @@ void ImageViewerV2::updateMinScale() {
 void ImageViewerV2::fitWidth(bool force) {
   if (!image)
     return;
+  // Capture cursor position in scale-invariant pixmap coordinates BEFORE
+  // doZoom() changes the scale. Doing this after doZoom(), by remapping via
+  // mapToScene(), would mix the new scale with leftover scrollbar values
+  // from the previous fit mode, biasing the result (usually towards the top).
+  if (focusIn1to1 == FOCUS_CURSOR)
+    setZoomAnchor(mapFromGlobal(cursor().pos()));
   updateFitWidthScale();
   float targetScale = fitWidthScale;
   if (force) {
@@ -1148,7 +1154,7 @@ void ImageViewerV2::fitWidth(bool force) {
       centerTarget.setY(0);
       centerOn(centerTarget);
     } else if (focusIn1to1 == FOCUS_CURSOR) {
-      centerOn(mapToScene(mapFromGlobal(cursor().pos())));
+      centerOn(pixmapItem.mapToScene(zoomAnchor.first));
     } else if (focusIn1to1 == FOCUS_CENTER) {
       centerOn(pixmapItem.sceneBoundingRect().center());
     }
@@ -1186,6 +1192,10 @@ void ImageViewerV2::fitHeight(bool force) {
   if (!image)
     return;
 
+  // See fitWidth() for why this must happen before doZoom() changes the scale.
+  if (focusIn1to1 == FOCUS_CURSOR)
+    setZoomAnchor(mapFromGlobal(cursor().pos()));
+
   // Update the stretch scale calculation
   updateFitHeightScale();
 
@@ -1206,7 +1216,7 @@ void ImageViewerV2::fitHeight(bool force) {
       centerTarget.setX(0);
       centerOn(centerTarget);
     } else if (focusIn1to1 == FOCUS_CURSOR) {
-      centerOn(mapToScene(mapFromGlobal(cursor().pos())));
+      centerOn(pixmapItem.mapToScene(zoomAnchor.first));
     } else if (focusIn1to1 == FOCUS_CENTER) {
       centerOn(pixmapItem.sceneBoundingRect().center());
     }
