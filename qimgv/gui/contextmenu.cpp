@@ -60,42 +60,42 @@ void ContextMenu::setupUi()
     m_fitWindow = new ActionButton();
     m_fitWindow->setAccessibleName("ContextMenuButton");
     m_fitWindow->setAction("fitWindow");
-    m_fitWindow->setIcon(FluentIcon::ArrowMaximize, kIconSizePx);
+    m_fitWindow->setIcon(FluentIcon::ArrowExpand20, kIconSizePx);
     m_fitWindow->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_fitWindow);
 
     m_fitWidth = new ActionButton();
     m_fitWidth->setAccessibleName("ContextMenuButton");
     m_fitWidth->setAction("fitWidth");
-    m_fitWidth->setIcon(FluentIcon::ArrowAutofitWidth, kIconSizePx);
+    m_fitWidth->setIcon(FluentIcon::ArrowAutofitWidth20, kIconSizePx);
     m_fitWidth->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_fitWidth);
 
     m_fitHeight = new ActionButton();
     m_fitHeight->setAccessibleName("ContextMenuButton");
     m_fitHeight->setAction("fitHeight");
-    m_fitHeight->setIcon(FluentIcon::ArrowAutofitHeight, kIconSizePx);
+    m_fitHeight->setIcon(FluentIcon::ArrowAutofitHeight20, kIconSizePx);
     m_fitHeight->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_fitHeight);
 
     m_zoomOriginal = new ActionButton();
     m_zoomOriginal->setAccessibleName("ContextMenuButton");
     m_zoomOriginal->setAction("fitNormal");
-    m_zoomOriginal->setIcon(FluentIcon::ZoomOriginal, kIconSizePx);
+    m_zoomOriginal->setIcon(FluentIcon::ZoomOriginal20, kIconSizePx);
     m_zoomOriginal->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_zoomOriginal);
 
     m_zoomIn = new ActionButton();
     m_zoomIn->setAccessibleName("ContextMenuButton");
     m_zoomIn->setAction("zoomIn");
-    m_zoomIn->setIcon(FluentIcon::ZoomIn, kIconSizePx);
+    m_zoomIn->setIcon(FluentIcon::ZoomIn20, kIconSizePx);
     m_zoomIn->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_zoomIn);
 
     m_zoomOut = new ActionButton();
     m_zoomOut->setAccessibleName("ContextMenuButton");
     m_zoomOut->setAction("zoomOut");
-    m_zoomOut->setIcon(FluentIcon::ZoomOut, kIconSizePx);
+    m_zoomOut->setIcon(FluentIcon::ZoomOut20, kIconSizePx);
     m_zoomOut->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_zoomOut);
 
@@ -119,42 +119,42 @@ void ContextMenu::setupUi()
     m_rotateLeft = new ActionButton();
     m_rotateLeft->setAccessibleName("ContextMenuButton");
     m_rotateLeft->setAction("rotateLeft");
-    m_rotateLeft->setIcon(FluentIcon::ArrowRotateCounterclockwise, kIconSizePx);
+    m_rotateLeft->setIcon(FluentIcon::ArrowRotateCounterclockwise20, kIconSizePx);
     m_rotateLeft->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_rotateLeft);
 
     m_rotateRight = new ActionButton();
     m_rotateRight->setAccessibleName("ContextMenuButton");
     m_rotateRight->setAction("rotateRight");
-    m_rotateRight->setIcon(FluentIcon::ArrowRotateClockwise, kIconSizePx);
+    m_rotateRight->setIcon(FluentIcon::ArrowRotateClockwise20, kIconSizePx);
     m_rotateRight->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_rotateRight);
 
     m_flipV = new ActionButton();
     m_flipV->setAccessibleName("ContextMenuButton");
     m_flipV->setAction("flipV");
-    m_flipV->setIcon(FluentIcon::FlipVertical, kIconSizePx);
+    m_flipV->setIcon(FluentIcon::FlipVertical20, kIconSizePx);
     m_flipV->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_flipV);
 
     m_flipH = new ActionButton();
     m_flipH->setAccessibleName("ContextMenuButton");
     m_flipH->setAction("flipH");
-    m_flipH->setIcon(FluentIcon::FlipHorizontal, kIconSizePx);
+    m_flipH->setIcon(FluentIcon::FlipHorizontal20, kIconSizePx);
     m_flipH->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_flipH);
 
     m_crop = new ActionButton();
     m_crop->setAccessibleName("ContextMenuButton");
     m_crop->setAction("crop");
-    m_crop->setIcon(FluentIcon::Crop16, kIconSizePx);
+    m_crop->setIcon(FluentIcon::Crop20, kIconSizePx);
     m_crop->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_crop);
 
     m_resize = new ActionButton();
     m_resize->setAccessibleName("ContextMenuButton");
     m_resize->setAction("resize");
-    m_resize->setIcon(FluentIcon::Resize16, kIconSizePx);
+    m_resize->setIcon(FluentIcon::Resize20, kIconSizePx);
     m_resize->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_resize);
 
@@ -194,29 +194,29 @@ void ContextMenu::setupUi()
         layout->addLayout(lineLayout);
     };
 
-    addItem(m_colorAdjustments, "colorAdjustments", tr("Color adjustments"), FluentIcon::Color);
-    addItem(m_panoramaMode,     "togglePanorama",     tr("Panorama mode"),      FluentIcon::ImageMultiple16);
-    addItem(m_casSettings,      "casSettings",        tr("CAS Settings"),       FluentIcon::Blur);
+    addItem(m_colorAdjustments, "colorAdjustments", tr("Color adjustments"),    FluentIcon::Adjustments20);
+    addItem(m_panoramaMode,     "togglePanorama",     tr("Panorama mode"),      FluentIcon::Panorama20);
+    addItem(m_casSettings,      "casSettings",        tr("CAS Settings"),       FluentIcon::Blur20);
     m_casSettings->hide();
 
     addSeparator(actionsLayout, 4, 4);
 
-    addItem(m_print,            "print",              tr("Print"),              FluentIcon::Print);
-    addItem(m_copy,             "copyFile",           tr("Quick copy"),         FluentIcon::Copy);
-    addItem(m_move,             "moveFile",           tr("Quick move"),         FluentIcon::FolderArrowRight);
-    addItem(m_rename,           "renameFile",         tr("Rename"),             FluentIcon::Rename);
+    addItem(m_print,            "print",              tr("Print"),              FluentIcon::Print20);
+    addItem(m_copy,             "copyFile",           tr("Quick copy"),         FluentIcon::CopyAdd20);
+    addItem(m_move,             "moveFile",           tr("Quick move"),         FluentIcon::Move20);
+    addItem(m_rename,           "renameFile",         tr("Rename"),             FluentIcon::Rename20);
     addItem(m_folderView,       "folderView",         tr("Folder View"),        FluentIcon::Grid20);
 
     // OpenWith is special – we will create it separately
     m_openWith = new ContextMenuItem();
     m_openWith->setText(tr("Open with..."));
-    m_openWith->setIcon(FluentIcon::Apps16, kIconSizePx);
+    m_openWith->setIcon(FluentIcon::OpenWith20, kIconSizePx);
     m_openWith->setPassthroughClicks(false);
     connect(m_openWith, &ContextMenuItem::pressed, this, &ContextMenu::switchToScriptsPage);
     actionsLayout->addWidget(m_openWith);
 
-    addItem(m_showLocation,     "showInDirectory",    tr("Show in folder"),     FluentIcon::Folder);
-    addItem(m_setWallpaper,     "setWallpaper",       tr("Set as wallpaper"),   FluentIcon::Image);
+    addItem(m_showLocation,     "showInDirectory",    tr("Show in folder"),     FluentIcon::ShowInFolder20);
+    addItem(m_setWallpaper,     "setWallpaper",       tr("Set as wallpaper"),   FluentIcon::Wallpaper20);
     addItem(m_settings,         "openSettings",       tr("Settings"),           FluentIcon::Settings20);
 
     addSeparator(actionsLayout, 4, 4);
@@ -287,7 +287,7 @@ void ContextMenu::fillOpenWithMenu()
         if (!i.value().command.isEmpty()) {
             ContextMenuItem *btn = new ContextMenuItem();
             btn->setAction("s:" + i.key());
-            btn->setIcon(FluentIcon::FolderOpen16, kIconSizePx);
+            btn->setIcon(FluentIcon::ShowInFolder20, kIconSizePx);
             btn->setText(i.key());
             m_scriptsLayout->addWidget(btn);
         }

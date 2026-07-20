@@ -111,7 +111,7 @@ FolderView::FolderView(QWidget *parent) :
     exitButton->setAction("exit");
     exitButton->setIcon(FluentIcon::ArrowExit20, kToolbarIconSizePx);
     docViewButton->setAction("documentView");
-    docViewButton->setIcon(FluentIcon::Image, kLargeToolbarIconSizePx);
+    docViewButton->setIcon(FluentIcon::DocumentView20, kLargeToolbarIconSizePx);
     togglePlacesPanelButton->setCheckable(true);
     togglePlacesPanelButton->setIcon(FluentIcon::PanelLeft20, kLargeToolbarIconSizePx);
     togglePlacesPanelButton->setIconOffset(1, 0);

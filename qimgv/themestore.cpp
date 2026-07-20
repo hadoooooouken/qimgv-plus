@@ -24,7 +24,7 @@ ColorScheme ThemeStore::colorScheme(ColorSchemes name) {
     base.status_processing = QColor(0xff0066cc); // Blue suitable for light theme
     base.status_success = QColor(0xff2e7d32);    // Green suitable for light theme
     base.danger = QColor(0xffd32f2f);
-    base.trash  = QColor(0xfff57c00);
+    base.trash  = QColor(0xffdc6f00);
     base.tid = static_cast<int>(name);
     break;
   case COLORS_DARK:
