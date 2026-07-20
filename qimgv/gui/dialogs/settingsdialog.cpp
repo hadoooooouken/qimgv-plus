@@ -3779,7 +3779,6 @@ void SettingsDialog::setupUi() {
         aboutAppTextBrowser->setFrameShape(QFrame::Shape::NoFrame);
         aboutAppTextBrowser->setFrameShadow(QFrame::Shadow::Plain);
         aboutAppTextBrowser->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-        aboutAppTextBrowser->setAcceptRichText(true);
         aboutAppTextBrowser->setOpenExternalLinks(true);
 
         verticalLayout_32->addWidget(aboutAppTextBrowser);
@@ -4088,29 +4087,23 @@ void SettingsDialog::retranslateUi() {
         upscaylLimitCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Enable upscaling only when zoom exceeds:", nullptr));
         upscaylLimitValueLabel->setText(QCoreApplication::translate("SettingsDialog", "200%", nullptr));
         label_53->setText(QCoreApplication::translate("SettingsDialog", "About qimgv-plus", nullptr));
-        aboutAppTextBrowser->setHtml(QCoreApplication::translate("SettingsDialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt;\">This is a fast and easy to use image viewer</span></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Noto Sans'; font-size:11pt;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px"
-                        "; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600;\">Github page:</span><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt;\"> </span><a href=\"https://github.com/hadoooooouken/qimgv-plus\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt; text-decoration: underline; color:#007af4;\">https://github.com/hadoooooouken/qimgv-plus</span></a></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600;\">Original project:</span><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt;\"> </span><a href=\"https://github.com/easymodo/qimgv\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt; text-decoration: underline; color:#007af4;\">https://github.com/easymodo/qimgv</span></a></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px;"
-                        " margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Noto Sans'; font-size:11pt;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600;\">Plus version developer:</span><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt;\"> </span><a href=\"https://github.com/hadoooooouken\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt; text-decoration: underline; color:#007af4;\">hadooooouken</span></a></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600;\">Original developer:</span><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt;\"> </span><a href=\"https://github.com/easymodo\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt; text-decoration: underline;"
-                        " color:#007af4;\">easymodo</span></a></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><a href=\"https://github.com/hadoooooouken/qimgv-plus/graphs/contributors\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; text-decoration: underline; color:#007af4;\">Contributors</span></a></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:italic; text-decoration: underline; color:#007af4;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt;\">qimgv is licensed under </span><a href=\"https://www.gnu.org/licenses/gpl-3.0.en.html\"><span style=\" font-family:'Droid Sans'; font-size:10pt; text-decorat"
-                        "ion: underline; color:#007af4;\">GNU GPL Version 3</span></a></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:10pt;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'MS Shell Dlg 2'; font-size:10pt;\">Report any issues / request features </span><a href=\"https://github.com/hadoooooouken/qimgv-plus/issues\"><span style=\" font-family:'Droid Sans'; font-size:10pt; text-decoration: underline; color:#007af4;\">here</span></a></p></body></html>", nullptr));
+        aboutAppTextBrowser->setMarkdown(QCoreApplication::translate("SettingsDialog",
+        "This is a fast and easy to use image viewer\n"
+        "\n"
+        "**Github page:** [https://github.com/hadoooooouken/qimgv-plus](https://github.com/hadoooooouken/qimgv-plus)\n"
+        "\n"
+        "**Original project:** [https://github.com/easymodo/qimgv](https://github.com/easymodo/qimgv)\n"
+        "\n"
+        "**Plus version developer:** [hadooooouken](https://github.com/hadoooooouken)\n"
+        "\n"
+        "**Original developer:** [easymodo](https://github.com/easymodo)\n"
+        "\n"
+        "[**Contributors**](https://github.com/hadoooooouken/qimgv-plus/graphs/contributors)\n"
+        "\n"
+        "qimgv is licensed under [GNU GPL Version 3](https://www.gnu.org/licenses/gpl-3.0.en.html)\n"
+        "\n"
+        "Report any issues / request features [here](https://github.com/hadoooooouken/qimgv-plus/issues)\n",
+        nullptr));
         OK->setText(QCoreApplication::translate("SettingsDialog", "OK", nullptr));
         pushButton->setText(QCoreApplication::translate("SettingsDialog", "Apply", nullptr));
         Cancel->setText(QCoreApplication::translate("SettingsDialog", "Cancel", nullptr));
