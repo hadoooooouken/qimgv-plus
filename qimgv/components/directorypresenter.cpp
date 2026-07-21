@@ -529,8 +529,21 @@ DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
 
   // Maintain aspect ratio of the thumbnail inside the window
   // innerThumb already has its own dpr set, drawPixmap will handle it
-  QSize scaledSize = innerThumb.size() / innerThumb.devicePixelRatio();
-  scaledSize.scale(windowRect.size().toSize(), Qt::KeepAspectRatio);
+  qreal innerDpr = innerThumb.devicePixelRatioF();
+  if (innerDpr <= 0)
+    innerDpr = 1.0;
+
+  QSize scaledSize(qRound(innerThumb.width() / innerDpr),
+                   qRound(innerThumb.height() / innerDpr));
+  const QSize windowSize = windowRect.size().toSize();
+  // Keep tiny source images at their native logical size. Scaling them up
+  // here would bake the enlargement into the composed folder pixmap, so the
+  // no-upscale logic in ThumbnailWidget could no longer recover the original
+  // dimensions.
+  if (scaledSize.width() > windowSize.width() ||
+      scaledSize.height() > windowSize.height()) {
+    scaledSize.scale(windowSize, Qt::KeepAspectRatio);
+  }
 
   QRectF targetRect(0, 0, scaledSize.width(), scaledSize.height());
   targetRect.moveCenter(windowRect.center());
