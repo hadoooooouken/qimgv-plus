@@ -52,20 +52,16 @@ MW::MW(QWidget *parent)
     this->setAccessibleName("mainwindow");
     windowGeometryChangeTimer.setSingleShot(true);
     windowGeometryChangeTimer.setInterval(30);
-#ifdef USE_UPSCAYL
     // Debounce so the "Model: X" message stays readable instead of being
     // instantly overwritten by "AI Upscaling..." when the model reload
     // triggers a rescale; also coalesces rapid repeated key presses.
     upscaylModelSwitchTimer.setSingleShot(true);
     upscaylModelSwitchTimer.setInterval(1500);
-#endif
     setupUi();
 
     connect(settings, &Settings::settingsChanged, this, &MW::readSettings);
     connect(&windowGeometryChangeTimer, &QTimer::timeout, this, &MW::onWindowGeometryChanged);
-#ifdef USE_UPSCAYL
     connect(&upscaylModelSwitchTimer, &QTimer::timeout, this, &MW::onUpscaylModelSwitchTimeout);
-#endif
     connect(this, &MW::fullscreenStateChanged, this, &MW::adaptToWindowState);
 
     readSettings();
@@ -507,7 +503,6 @@ void MW::setFilter(ScalingFilter filter) {
     viewerWidget->setScalingFilter(filter);
 }
 
-#ifdef USE_UPSCAYL
 void MW::toggleUpscayl() {
     bool current = settings->useUpscayl();
     settings->setUseUpscayl(!current);
@@ -542,7 +537,6 @@ void MW::onUpscaylModelSwitchTimeout() {
     pendingUpscaylModelName.clear();
     settings->sendChangeNotification();
 }
-#endif
 
 bool MW::isCropPanelActive() {
     return (activeSidePanel == SIDEPANEL_CROP);

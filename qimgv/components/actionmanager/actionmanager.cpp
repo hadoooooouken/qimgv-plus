@@ -104,10 +104,8 @@ void ActionManager::initDefaults() {
   actionManager->defaults.insert(InputMap::keyNameShift() + "+N", "cycleScalingFilter");
   actionManager->defaults.insert(InputMap::keyNameShift() + "+P",
                                  "togglePanorama");
-#ifdef USE_UPSCAYL
   actionManager->defaults.insert(InputMap::keyNameAlt() + "+I", "toggleUpscayl");
   actionManager->defaults.insert(InputMap::keyNameAlt() + "+" + InputMap::keyNameShift() + "+I", "cycleUpscaylModel");
-#endif
 }
 //------------------------------------------------------------------------------
 void ActionManager::initShortcuts() {
@@ -284,7 +282,6 @@ void ActionManager::readShortcuts() {
     shortcuts.insert(".", "nextPage");
   }
 
-#ifdef USE_UPSCAYL
   // If the user doesn't have a shortcut for toggleUpscayl, and Alt+I is not bound to anything else,
   // we bind it to Alt+I by default.
   QString altI = InputMap::keyNameAlt() + "+I";
@@ -298,7 +295,6 @@ void ActionManager::readShortcuts() {
   if (shortcuts.key("cycleUpscaylModel", "").isEmpty() && !shortcuts.contains(altShiftI)) {
     shortcuts.insert(altShiftI, "cycleUpscaylModel");
   }
-#endif
 }
 //------------------------------------------------------------------------------
 bool ActionManager::processEvent(QInputEvent *event) {

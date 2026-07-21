@@ -11,10 +11,7 @@
 #include <QCoreApplication>
 #include <QThread>
 #include <cmath>
-
-#ifdef USE_UPSCAYL
 #include "components/upscaler/upscaler.h"
-#endif
 
 class BatchConverterRunnable : public QRunnable {
 public:
@@ -90,7 +87,6 @@ public:
                 notifyStopped();
                 return;
             }
-#ifdef USE_UPSCAYL
             if (!UpscaylScaler::getInstance()->init(QCoreApplication::applicationDirPath(), m_job.upscaylModel)) {
                 if (m_cancelFlag->load()) {
                     notifyStopped();
@@ -111,7 +107,6 @@ public:
                 return;
             }
             processedImg = upscaled;
-#endif
             if (m_job.doResize && processedImg.size() != targetSize) {
                 if (m_cancelFlag->load()) {
                     notifyStopped();

@@ -40,7 +40,6 @@ public:
   void setPanelPreviewsSize(int size);
   bool usePreloader();
   void setUsePreloader(bool mode);
-#ifdef USE_UPSCAYL
   bool useUpscayl();
   void setUseUpscayl(bool mode);
   bool preloadUpscayl();
@@ -55,7 +54,6 @@ public:
   void setResizeUseUpscayl(bool enabled);
   bool hasUpscaylModels();
   QStringList availableUpscaylModels();
-#endif
   bool fullscreenMode();
   void setFullscreenMode(bool mode);
   bool standbyMode();

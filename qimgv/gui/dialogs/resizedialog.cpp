@@ -112,7 +112,6 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
       comboBox->setCurrentIndex(3); // default to Magic Kernel Sharp 2021
   }
 
-#ifdef USE_UPSCAYL
   if (useUpscaylCheckBox) {
     if (settings->hasUpscaylModels()) {
       // Auto-scan models directory for compatible models
@@ -154,7 +153,6 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
       upscaylModelComboBox->setEnabled(false);
     }
   }
-#endif
 }
 
 ResizeDialog::~ResizeDialog() = default;
@@ -229,7 +227,6 @@ void ResizeDialog::setupUi() {
   filterGrid->addWidget(comboBox, 0, 1);
   leftColumn->addLayout(filterGrid);
 
-#ifdef USE_UPSCAYL
   useUpscaylCheckBox = new QCheckBox(tr("Use Upscayl"), this);
   leftColumn->addWidget(useUpscaylCheckBox);
 
@@ -241,7 +238,6 @@ void ResizeDialog::setupUi() {
   upscaylModelComboBox = new QComboBox(this);
   modelGrid->addWidget(upscaylModelComboBox, 0, 1);
   leftColumn->addLayout(modelGrid);
-#endif
 
   mainHorizontalLayout->addLayout(leftColumn);
 
@@ -299,7 +295,6 @@ void ResizeDialog::sizeSelect() {
         static_cast<ScalingFilter>(comboBox->currentData().toInt());
     bool useUpscayl = false;
     QString upscaylModel = "";
-#ifdef USE_UPSCAYL
     if (useUpscaylCheckBox) {
       useUpscayl = useUpscaylCheckBox->isChecked();
       upscaylModel = upscaylModelComboBox->currentText();
@@ -307,7 +302,6 @@ void ResizeDialog::sizeSelect() {
       settings->setUpscaylModel(upscaylModel);
       settings->sync();
     }
-#endif
     emit sizeSelected(targetSize, selectedFilter, useUpscayl, upscaylModel);
   }
   this->accept();

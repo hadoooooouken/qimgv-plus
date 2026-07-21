@@ -616,7 +616,6 @@ void Settings::setUsePreloader(bool mode) {
   settings->settingsConf->setValue("usePreloader", mode);
 }
 //------------------------------------------------------------------------------
-#ifdef USE_UPSCAYL
 bool Settings::useUpscayl() {
   return mCachedUseUpscayl.load(std::memory_order_relaxed);
 }
@@ -708,7 +707,7 @@ QStringList Settings::availableUpscaylModels() {
   return modelNames;
 }
 //------------------------------------------------------------------------------
-#endif
+
 bool Settings::keepFitMode() {
   return settings->settingsConf->value("keepFitMode", false).toBool();
 }

@@ -13,18 +13,12 @@
 #include <QTemporaryFile>
 #include <QCoreApplication>
 #include <QThreadPool>
-
-#ifdef USE_UPSCAYL
 #include "components/upscaler/upscaler.h"
 #include "components/upscaler/upscaylresizerunnable.h"
-#endif
-
 #include <QColorSpace>
-
 #include <tchar.h>
 #include <windows.h>
 #include <psapi.h>
-
 #include "utils/colormanager.h"
 #include <QGuiApplication>
 #include <QScreen>
@@ -60,7 +54,6 @@ Core::Core()
   preloadTimer.setSingleShot(true);
   connect(settings, &Settings::settingsChanged, this, &Core::readSettings);
 
-#ifdef USE_UPSCAYL
   upscaler = std::make_unique<Upscaler>(this);
   connect(upscaler.get(), &Upscaler::upscaleStarted, this, [this]() {
       mw->showMessage(tr("AI Upscaling..."), 3600000);
@@ -87,7 +80,6 @@ Core::Core()
       *currentScale = mw->currentScale();
       *dpr = mw->getDpr();
   });
-#endif
 
   QVersionNumber lastVersion = settings->lastVersion();
   if (settings->firstRun())
@@ -104,7 +96,6 @@ Core::~Core() {
 }
 
 void Core::readSettings() {
-#ifdef USE_UPSCAYL
   if (upscaler) {
       upscaler->readSettings();
       if (!settings->useUpscayl()) {
@@ -112,7 +103,6 @@ void Core::readSettings() {
           mw->hideUpscaledCrop();
       }
   }
-#endif
   loopSlideshow = settings->loopSlideshow();
   folderEndAction = settings->folderEndAction();
   slideshowTimer.setInterval(settings->slideshowInterval());
@@ -429,12 +419,10 @@ void Core::initActions() {
           &MW::toggleScalingFilter);
   connect(actionManager, &ActionManager::cycleScalingFilter, mw,
           &MW::cycleScalingFilter);
-#ifdef USE_UPSCAYL
   connect(actionManager, &ActionManager::toggleUpscayl, mw,
           &MW::toggleUpscayl);
   connect(actionManager, &ActionManager::cycleUpscaylModel, mw,
           &MW::cycleUpscaylModel);
-#endif
   connect(actionManager, &ActionManager::showInDirectory, this,
           &Core::showInDirectory);
   connect(actionManager, &ActionManager::createDirectory, this,
@@ -1453,7 +1441,6 @@ void Core::rotateByDegrees(int degrees) {
 }
 
 void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString upscaylModel) {
-#ifdef USE_UPSCAYL
   if (useUpscayl) {
     if (model->isEmpty())
       return;
@@ -1504,15 +1491,8 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
     QThreadPool::globalInstance()->start(task);
     return;
   }
-#else
-  Q_UNUSED(useUpscayl);
-  Q_UNUSED(upscaylModel);
-#endif
-
-  edit_template(false, tr("Resize"), {ImageLib::scaled}, size, filter);
 }
 
-#ifdef USE_UPSCAYL
 void Core::onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error) {
   if (generation != aiResizeGeneration)
     return;
@@ -1547,7 +1527,6 @@ void Core::onAiResizeFinished(int generation, QString path, QImage image, bool s
     mw->showMessageSuccess(tr("AI resize finished for %1.").arg(QFileInfo(path).fileName()));
   }
 }
-#endif
 
 void Core::crop(QRect rect) {
   if (mw->currentViewMode() == MODE_FOLDERVIEW)
@@ -1724,9 +1703,7 @@ void Core::setWallpaper() {
 
   QString appDir = QCoreApplication::applicationDirPath();
   QString modelName;
-#ifdef USE_UPSCAYL
   modelName = settings->upscaylModel();
-#endif
 
   mw->showMessage(tr("Setting wallpaper..."), 10000);
 
@@ -1784,7 +1761,6 @@ void Core::setWallpaper() {
     bool upscalingNeeded = (croppedImage.width() < monitorWidth || croppedImage.height() < monitorHeight);
     bool aiUpscaleSuccess = false;
 
-#ifdef USE_UPSCAYL
     if (upscalingNeeded) {
       QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
         mwPointer->showMessage(tr("AI upscaling..."), 60000);
@@ -1805,7 +1781,6 @@ void Core::setWallpaper() {
         }
       }
     }
-#endif
 
     if (!aiUpscaleSuccess) {
       if (croppedImage.size() == monitorSize) {
@@ -1892,7 +1867,6 @@ void Core::scalingRequest(QSize size, ScalingFilter filter) {
 void Core::onScalingFinished(QImage scaled, ScalerRequest req) {
   if (state.hasActiveImage && req.path == state.currentFilePath) {
     mw->onScalingFinished(scaled);
-#ifdef USE_UPSCAYL
     if (mw->panoramaMode()) {
       mw->hideUpscaledCrop();
       upscaler->reset();
@@ -1917,18 +1891,15 @@ void Core::onScalingFinished(QImage scaled, ScalerRequest req) {
     } else if (!settings->useUpscayl()) {
       mw->hideUpscaledCrop();
     }
-#endif
   }
 }
 
 
 // reset state; clear cache; etc
 void Core::reset() {
-#ifdef USE_UPSCAYL
   upscaler->reset();
   aiResizeActive = false;
   aiResizeGeneration++;
-#endif
   state.hasActiveImage = false;
   state.currentFilePath = "";
   state.directoryPath = "";
@@ -1939,9 +1910,7 @@ void Core::reset() {
 }
 
 bool Core::loadPath(QString path) {
-#ifdef USE_UPSCAYL
   upscaler->reset();
-#endif
   if (path.isEmpty())
     return false;
   if (path.startsWith("file://", Qt::CaseInsensitive))

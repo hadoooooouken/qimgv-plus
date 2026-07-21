@@ -14,9 +14,7 @@ SSideBar::SSideBar(QWidget *parent) : QWidget{parent} {
     addEntry(":/res/icons/common/settings/shortcuts32.png",  tr("Controls"));
     addEntry(":/res/icons/common/settings/terminal32.png",   tr("Scripts"));
     addEntry(":/res/icons/common/settings/advanced32.png",   tr("Advanced"));
-#ifdef USE_UPSCAYL
     addEntry(":/res/icons/common/settings/scale32.png", tr("AI Upscale"));
-#endif
     addEntry(":/res/icons/common/settings/about32.png",      tr("About"));
 }
 

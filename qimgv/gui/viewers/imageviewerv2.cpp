@@ -656,14 +656,12 @@ void ImageViewerV2::requestScaling() {
   qint64 maxPixels = 100000000; // 100 megapixels
   float maxScale = 4.0f;
 
-#ifdef USE_UPSCAYL
   if (mUseUpscayl) {
     maxScale = 40.0f; // allow extreme zoom with Upscayl (up to 4000%)
     if (currentScale() > maxScale) {
       return;
     }
   } else
-#endif
   {
     if (currentScale() > maxScale || targetSize.width() > maxDim ||
         targetSize.height() > maxDim ||

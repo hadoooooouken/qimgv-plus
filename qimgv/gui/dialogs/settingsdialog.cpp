@@ -16,58 +16,8 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent) {
   setupUi();
     retranslateUi();
-#ifndef USE_UPSCAYL
   stackedWidget->removeWidget(AIUpscale);
-#else
-  connect(useUpscaylCheckBox, &QCheckBox::toggled,
-          preloadUpscaylCheckBox, &QCheckBox::setEnabled);
-  connect(useUpscaylCheckBox, &QCheckBox::toggled, upscaylModelComboBox,
-          &QComboBox::setEnabled);
-  connect(useUpscaylCheckBox, &QCheckBox::toggled, label_upscaylModel,
-          &QLabel::setEnabled);
-  connect(useUpscaylCheckBox, &QCheckBox::toggled,
-          label_upscaylGetModels, &QLabel::setEnabled);
-  connect(useUpscaylCheckBox, &QCheckBox::toggled, upscaylLimitCheckBox,
-          &QCheckBox::setEnabled);
 
-  auto updateLimitControls = [this]() {
-    bool enabled = useUpscaylCheckBox->isChecked() &&
-                   upscaylLimitCheckBox->isChecked();
-    upscaylLimitSlider->setEnabled(enabled);
-    upscaylLimitValueLabel->setEnabled(enabled);
-  };
-  connect(useUpscaylCheckBox, &QCheckBox::toggled, this,
-          updateLimitControls);
-  connect(upscaylLimitCheckBox, &QCheckBox::toggled, this,
-          updateLimitControls);
-
-  connect(upscaylLimitSlider, &QSlider::valueChanged, this,
-          [this](int value) {
-            int snapped = ((value + 2) / 5) * 5;
-            if (snapped != value) {
-              upscaylLimitSlider->setValue(snapped);
-              return;
-            }
-            upscaylLimitValueLabel->setText(QString::number(snapped) + "%");
-          });
-
-  // Auto-scan models directory for compatible models
-  if (settings->hasUpscaylModels()) {
-    QDir modelsDir(qApp->applicationDirPath() + "/models");
-    QStringList filters;
-    filters << "*.param";
-    QStringList files = modelsDir.entryList(filters, QDir::Files);
-    QStringList modelNames;
-    for (const QString &file : files) {
-      QFileInfo fi(file);
-      QString modelName = fi.baseName();
-      if (modelsDir.exists(modelName + ".bin")) {
-        modelNames.append(modelName);
-      }
-    }
-    upscaylModelComboBox->addItems(modelNames);
-  }
-#endif
   panelSizeSlider->setMinimum(13);
   panelSizeSlider->setMaximum(32);
   panelSizeSlider->setSingleStep(1);
@@ -581,7 +531,6 @@ void SettingsDialog::readSettings() {
     thumbStyleExtended->setChecked(true);
   animatedJxlCheckBox->setChecked(settings->jxlAnimation());
   multiInstanceCheckBox->setChecked(settings->multiInstance());
-#ifdef USE_UPSCAYL
   if (settings->hasUpscaylModels()) {
     useUpscaylCheckBox->setChecked(settings->useUpscayl());
     preloadUpscaylCheckBox->setChecked(settings->preloadUpscayl());
@@ -625,7 +574,6 @@ void SettingsDialog::readSettings() {
     upscaylLimitSlider->setEnabled(false);
     upscaylLimitValueLabel->setEnabled(false);
   }
-#endif
 
   autoResizeWindowCheckBox->setChecked(settings->autoResizeWindow());
   panelCenterSelectionCheckBox->setChecked(
@@ -852,13 +800,11 @@ void SettingsDialog::saveSettings() {
     settings->setThumbPanelStyle(TH_PANEL_EXTENDED);
   settings->setJxlAnimation(animatedJxlCheckBox->isChecked());
   settings->setMultiInstance(multiInstanceCheckBox->isChecked());
-#ifdef USE_UPSCAYL
   settings->setUseUpscayl(useUpscaylCheckBox->isChecked());
   settings->setPreloadUpscayl(preloadUpscaylCheckBox->isChecked());
   settings->setUpscaylModel(upscaylModelComboBox->currentText());
   settings->setUpscaylLimitEnabled(upscaylLimitCheckBox->isChecked());
   settings->setUpscaylLimitValue(upscaylLimitSlider->value());
-#endif
 
   settings->setAutoResizeWindow(autoResizeWindowCheckBox->isChecked());
   settings->setPanelCenterSelection(

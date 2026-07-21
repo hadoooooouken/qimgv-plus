@@ -16,12 +16,10 @@ void ScalerRunnable::run() {
     //QElapsedTimer t;
     //t.start();
     QImage scaled;
-#ifdef USE_UPSCAYL
     if (settings->useUpscayl() && req.size.width() > req.image->width()) {
         // Skip CPU scaling when AI upscaling is active and we are zooming in
         scaled = QImage();
     } else
-#endif
     {
         if(req.filter == 0) {
             scaled = ImageLib::scaled(req.image->getImage(), req.size, QI_FILTER_NEAREST);

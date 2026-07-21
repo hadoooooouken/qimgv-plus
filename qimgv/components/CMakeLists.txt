@@ -32,14 +32,13 @@ target_sources(qimgv-plus PRIVATE
     comfymetadata/pngtextchunkreader.cpp
 )
 
-if(UPSCAYL_SUPPORT)
-    target_sources(qimgv-plus PRIVATE
-        upscaler/upscaler.cpp
-        upscaler/upscalerrunnable.cpp
-        upscaler/upscaylresizerunnable.cpp
-        upscaler/upscaylresizerunnable.h
-    )
-endif()
+# UPSCAYL SUPPORT
+target_sources(qimgv-plus PRIVATE
+    upscaler/upscaler.cpp
+    upscaler/upscalerrunnable.cpp
+    upscaler/upscaylresizerunnable.cpp
+    upscaler/upscaylresizerunnable.h
+)
 
 if(APPLE)
 

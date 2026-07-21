@@ -11,8 +11,6 @@
 #include <atomic>
 #include <QThreadPool>
 #include "sourcecontainers/image.h"
-
-#ifdef USE_UPSCAYL
 #include "realesrgan.h"
 
 class UpscaylScaler {
@@ -34,7 +32,6 @@ private:
     QString loadedModel;
     QMutex mutex;
 };
-#endif
 
 class Upscaler : public QObject {
     Q_OBJECT

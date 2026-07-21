@@ -121,10 +121,8 @@ signals:
     void togglePanorama();
     void colorAdjustments();
     void casSettings();
-#ifdef USE_UPSCAYL
     void toggleUpscayl();
     void cycleUpscaylModel();
-#endif
 };
 
 extern ActionManager *actionManager;

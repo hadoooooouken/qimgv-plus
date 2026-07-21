@@ -7,7 +7,6 @@ UpscaylResizeRunnable::UpscaylResizeRunnable(const UpscaylResizeRequest &request
     : m_request(request) {}
 
 void UpscaylResizeRunnable::run() {
-#ifdef USE_UPSCAYL
     if (!m_request.sourceImage || m_request.sourceImage->isNull()) {
         emit finished(m_request.generation, m_request.path, QImage(), false, tr("Source image is empty."));
         return;
@@ -36,7 +35,4 @@ void UpscaylResizeRunnable::run() {
     }
 
     emit finished(m_request.generation, m_request.path, upscaled, true, QString());
-#else
-    emit finished(m_request.generation, m_request.path, QImage(), false, tr("AI resize is disabled in this build."));
-#endif
 }

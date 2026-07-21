@@ -62,33 +62,31 @@ endif()
 ##############################################################
 
 # --- UPSCAYL NCNN INTEGRATION ---
-option(UPSCAYL_SUPPORT "Enable Upscayl NCNN integration" ON)
 
-if(UPSCAYL_SUPPORT)
-    # Default to VULKAN_SDK environment variable if defined, otherwise fallback to E:/VULKAN
-    if(DEFINED ENV{VULKAN_SDK})
-        set(VULKAN_SDK_DEFAULT "$ENV{VULKAN_SDK}")
-    else()
-        set(VULKAN_SDK_DEFAULT "E:/VULKAN")
-    endif()
-
-    set(VULKAN_SDK_PATH "${VULKAN_SDK_DEFAULT}" CACHE PATH "Path to Vulkan SDK")
-
-    message(STATUS "Configuring Upscayl NCNN library support using Vulkan SDK at ${VULKAN_SDK_PATH}")
-    list(APPEND CMAKE_PREFIX_PATH "${VULKAN_SDK_PATH}")
-
-    # Set ENV{VULKAN_SDK} locally if not already set, so subdirectories can locate the SDK
-    if(NOT DEFINED ENV{VULKAN_SDK})
-        set(ENV{VULKAN_SDK} "${VULKAN_SDK_PATH}")
-    endif()
-    
-    # Configure NCNN options for Vulkan support
-    set(NCNN_VULKAN ON CACHE BOOL "Build NCNN with Vulkan support")
-    set(NCNN_VULKAN_ONLINE_SPIRV ON CACHE BOOL "Build NCNN with Vulkan online SPIRV compilation support")
-    
-    add_subdirectory(upscayl-ncnn/src)
+if(DEFINED ENV{VULKAN_SDK})
+    set(VULKAN_SDK_PATH "$ENV{VULKAN_SDK}")
+else()
+    set(VULKAN_SDK_PATH "E:/VULKAN")
 endif()
+
+set(VULKAN_SDK_PATH "${VULKAN_SDK_PATH}" CACHE PATH "Path to Vulkan SDK")
+
+if(NOT EXISTS "${VULKAN_SDK_PATH}")
+    message(FATAL_ERROR "Vulkan SDK not found: ${VULKAN_SDK_PATH}")
+endif()
+
+message(STATUS "Configuring Upscayl NCNN with Vulkan SDK: ${VULKAN_SDK_PATH}")
+
+list(APPEND CMAKE_PREFIX_PATH "${VULKAN_SDK_PATH}")
+
+if(NOT DEFINED ENV{VULKAN_SDK})
+    set(ENV{VULKAN_SDK} "${VULKAN_SDK_PATH}")
+endif()
+
+set(NCNN_VULKAN ON CACHE BOOL "Build NCNN with Vulkan support")
+set(NCNN_VULKAN_ONLINE_SPIRV ON CACHE BOOL "Build NCNN with Vulkan online SPIRV compilation support")
+
+add_subdirectory(upscayl-ncnn/src)
 
 add_subdirectory(qimgv)
 add_subdirectory(shellex)
-

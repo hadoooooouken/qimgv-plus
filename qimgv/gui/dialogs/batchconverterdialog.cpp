@@ -17,10 +17,7 @@
 #include <QGroupBox>
 #include <QSpacerItem>
 #include <cmath>
-
-#ifdef USE_UPSCAYL
 #include "realesrgan.h"
-#endif
 
 // ==================== BatchItemWidget ====================
 
@@ -663,7 +660,6 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
 
     percent->setEnabled(false);
 
-#ifdef USE_UPSCAYL
     if (settings->hasUpscaylModels()) {
         QDir modelsDir(QCoreApplication::applicationDirPath() + "/models");
         QStringList filters; filters << "*.param";
@@ -687,11 +683,6 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
         useUpscaylCheckBox->setToolTip(tr("No AI models found in models/ directory."));
         upscaylModelComboBox->setEnabled(false);
     }
-#else
-    useUpscaylCheckBox->setEnabled(false);
-    useUpscaylCheckBox->setToolTip(tr("AI Upscaling is disabled in this build."));
-    upscaylModelComboBox->setEnabled(false);
-#endif
 
     connect(qualitySlider, &QSlider::valueChanged, this, &BatchConverterDialog::onQualitySliderChanged);
     connect(qualitySpinBox, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onQualitySpinBoxChanged);
@@ -933,12 +924,10 @@ void BatchConverterDialog::onConvertClicked() {
     if (resizeEnableCheckBox->isChecked()) {
         int maxDim = 12288;
         qint64 maxPixels = 100000000;
-#ifdef USE_UPSCAYL
         if (settings->useUpscayl() || useUpscaylCheckBox->isChecked()) {
             maxDim = 16384;
             maxPixels = 268435456;
         }
-#endif
         if (targetSize.width() > maxDim || targetSize.height() > maxDim ||
             (qint64)targetSize.width() * targetSize.height() > maxPixels) {
             double mpLimit = maxPixels / 1000000.0;
@@ -976,11 +965,9 @@ void BatchConverterDialog::startConversion() {
     job.useUpscayl = job.doResize && useUpscaylCheckBox->isChecked();
     job.upscaylModel = upscaylModelComboBox->currentText();
 
-#ifdef USE_UPSCAYL
     settings->setResizeUseUpscayl(useUpscaylCheckBox->isChecked());
     settings->setUpscaylModel(job.upscaylModel);
     settings->sync();
-#endif
 
     job.scalingFilter = filterComboBox->currentData().toInt();
     bool doColor = colorEnableCheckBox->isChecked();

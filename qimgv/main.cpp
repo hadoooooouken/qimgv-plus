@@ -102,9 +102,7 @@ int main(int argc, char *argv[]) {
   // use custom types in signals
   qRegisterMetaType<ScalerRequest>("ScalerRequest");
   qRegisterMetaType<Script>("Script");
-#ifdef USE_UPSCAYL
   qRegisterMetaType<QPixmap *>("QPixmap*");
-#endif
   qRegisterMetaType<std::shared_ptr<Image>>("std::shared_ptr<Image>");
   qRegisterMetaType<std::shared_ptr<Thumbnail>>("std::shared_ptr<Thumbnail>");
 
