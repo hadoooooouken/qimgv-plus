@@ -82,7 +82,8 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::ZoomIn20,                     0x0F8C4 }, // ic_fluent_zoom_in_20_regular               <- zoom-in18.png
         { FluentIcon::ZoomOriginal20,               0x0F70A }, // ic_fluent_ratio_one_to_one_20_regular      <- zoom-original18.png
         { FluentIcon::ZoomOut20,                    0x0F8C6 }, // ic_fluent_zoom_out_20_regular              <- zoom-out18.png
-        { FluentIcon::More20,                        0xE823 }, // ic_fluent_more_horizontal_20_regular       <- contextmenu.cpp more
+        { FluentIcon::ChevronDown20,                 0xF2A3 }, // ic_fluent_chevron_down_20_regular       <- contextmenu.cpp more
+        { FluentIcon::ChevronUp20,                   0xF2B6 }, // ic_fluent_chevron_up_20_regular            <- contextmenu.cpp more (expanded state)
         };
     return table;
 }

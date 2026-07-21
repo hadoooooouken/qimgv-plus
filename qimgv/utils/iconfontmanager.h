@@ -58,7 +58,7 @@ enum class FluentIcon {
     Info24,
     Keyboard24,
     Move20,
-    More20,
+    ChevronDown20,
     OpenWith20,
     PanelLeft20,
     Panorama20,
@@ -77,6 +77,7 @@ enum class FluentIcon {
     ZoomIn20,
     ZoomOriginal20,
     ZoomOut20,
+    ChevronUp20,
 };
 
 // Renders glyphs from the bundled Fluent System Icons font into QPixmap,

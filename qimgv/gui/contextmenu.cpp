@@ -48,6 +48,7 @@ void ContextMenu::setupUi()
 
     // -------------------- Main page --------------------
     QWidget *mainPage = new QWidget();
+    m_mainPage = mainPage;
     QVBoxLayout *mainPageLayout = new QVBoxLayout(mainPage);
     mainPageLayout->setSpacing(7);
     mainPageLayout->setContentsMargins(0, 0, 0, 0);
@@ -175,12 +176,12 @@ void ContextMenu::setupUi()
     actionsLayout->setSpacing(0);
     actionsLayout->setContentsMargins(0, 0, 0, 0);
 
-    auto addItem = [&](ContextMenuItem *&item, const QString &action, const QString &text, FluentIcon icon) {
+    auto addItem = [](ContextMenuItem *&item, QVBoxLayout *layout, const QString &action, const QString &text, FluentIcon icon) {
         item = new ContextMenuItem();
         item->setAction(action);
         item->setText(text);
         item->setIcon(icon, kIconSizePx);
-        actionsLayout->addWidget(item);
+        layout->addWidget(item);
     };
 
     auto addSeparator = [](QVBoxLayout *layout, int topMargin = 4, int bottomMargin = 4) {
@@ -194,18 +195,16 @@ void ContextMenu::setupUi()
         layout->addLayout(lineLayout);
     };
 
-    addItem(m_colorAdjustments, "colorAdjustments", tr("Color adjustments"),    FluentIcon::Adjustments20);
-    addItem(m_panoramaMode,     "togglePanorama",     tr("Panorama mode"),      FluentIcon::Panorama20);
-    addItem(m_casSettings,      "casSettings",        tr("CAS Settings"),       FluentIcon::Blur20);
+    addItem(m_colorAdjustments, actionsLayout, "colorAdjustments", tr("Color adjustments"),    FluentIcon::Adjustments20);
+    addItem(m_panoramaMode,     actionsLayout, "togglePanorama",     tr("Panorama mode"),      FluentIcon::Panorama20);
+    addItem(m_casSettings,      actionsLayout, "casSettings",        tr("CAS Settings"),       FluentIcon::Blur20);
     m_casSettings->hide();
 
     addSeparator(actionsLayout, 4, 4);
 
-    addItem(m_print,            "print",              tr("Print"),              FluentIcon::Print20);
-    addItem(m_copy,             "copyFile",           tr("Quick copy"),         FluentIcon::CopyAdd20);
-    addItem(m_move,             "moveFile",           tr("Quick move"),         FluentIcon::Move20);
-    addItem(m_rename,           "renameFile",         tr("Rename"),             FluentIcon::Rename20);
-    addItem(m_folderView,       "folderView",         tr("Folder View"),        FluentIcon::Grid20);
+    addItem(m_copy,             actionsLayout, "copyFile",           tr("Quick copy"),         FluentIcon::CopyAdd20);
+    addItem(m_move,             actionsLayout, "moveFile",           tr("Quick move"),         FluentIcon::Move20);
+    addItem(m_folderView,       actionsLayout, "folderView",         tr("Folder View"),        FluentIcon::Grid20);
 
     // OpenWith is special – we will create it separately
     m_openWith = new ContextMenuItem();
@@ -215,19 +214,40 @@ void ContextMenu::setupUi()
     connect(m_openWith, &ContextMenuItem::pressed, this, &ContextMenu::switchToScriptsPage);
     actionsLayout->addWidget(m_openWith);
 
-    addItem(m_showLocation,     "showInDirectory",    tr("Show in folder"),     FluentIcon::ShowInFolder20);
-    addItem(m_setWallpaper,     "setWallpaper",       tr("Set as wallpaper"),   FluentIcon::Wallpaper20);
-    addItem(m_settings,         "openSettings",       tr("Settings"),           FluentIcon::Settings20);
+    addItem(m_showLocation,     actionsLayout, "showInDirectory",    tr("Show in folder"),     FluentIcon::ShowInFolder20);
+    addItem(m_settings,         actionsLayout, "openSettings",       tr("Settings"),           FluentIcon::Settings20);
 
     addSeparator(actionsLayout, 4, 4);
 
-    addItem(m_trash,            "moveToTrash",        tr("Move to trash"),      FluentIcon::Delete16);
+    // "More" - toggles m_moreContainer in place, no ActionManager dispatch.
+    m_more = new ContextMenuItem();
+    m_more->setText(tr("More"));
+    m_more->setIcon(FluentIcon::ChevronDown20, kIconSizePx);
+    m_more->setPassthroughClicks(false);
+    connect(m_more, &ContextMenuItem::pressed, this, &ContextMenu::toggleMoreExpanded);
+    actionsLayout->addWidget(m_more);
+
+    m_moreContainer = new QWidget();
+    QVBoxLayout *moreLayout = new QVBoxLayout(m_moreContainer);
+    moreLayout->setSpacing(0);
+    moreLayout->setContentsMargins(0, 0, 0, 0);
+
+    addItem(m_print,            moreLayout, "print",              tr("Print"),              FluentIcon::Print20);
+    addItem(m_rename,           moreLayout, "renameFile",         tr("Rename"),             FluentIcon::Rename20);
+    addItem(m_setWallpaper,     moreLayout, "setWallpaper",       tr("Set as wallpaper"),   FluentIcon::Wallpaper20);
+
+    addSeparator(moreLayout, 4, 4);
+
+    addItem(m_trash,            moreLayout, "moveToTrash",        tr("Move to trash"),      FluentIcon::Delete16);
     m_trash->setTextColor(settings->colorScheme().trash);
     m_trash->setIconColor(settings->colorScheme().trash);
 
-    addItem(m_deletePermanently, "removeFile",        tr("Delete permanently"), FluentIcon::Dismiss20);
+    addItem(m_deletePermanently, moreLayout, "removeFile",        tr("Delete permanently"), FluentIcon::Dismiss20);
     m_deletePermanently->setTextColor(settings->colorScheme().danger);
     m_deletePermanently->setIconColor(settings->colorScheme().danger);
+
+    m_moreContainer->hide();
+    actionsLayout->addWidget(m_moreContainer);
 
     mainPageLayout->addLayout(actionsLayout);
     m_stackedWidget->addWidget(mainPage);
@@ -306,12 +326,34 @@ void ContextMenu::switchToScriptsPage()
     adjustSize();
 }
 
+void ContextMenu::toggleMoreExpanded()
+{
+    bool expanded = !m_moreContainer->isVisible();
+    m_moreContainer->setVisible(expanded);
+    m_more->setIcon(expanded ? FluentIcon::ChevronUp20 : FluentIcon::ChevronDown20, kIconSizePx);
+    // actionsLayout caches its sizeHint independently of mainPageLayout;
+    // hiding/showing m_moreContainer doesn't invalidate that nested cache
+    // on its own. activate() forces a full synchronous relayout of the
+    // current page before sizeHint()/adjustSize() are queried below.
+    m_stackedWidget->currentWidget()->layout()->activate();
+    adjustSize();
+}
+
 QSize ContextMenu::sizeHint() const
 {
     if (!m_stackedWidget || !m_stackedWidget->currentWidget()) {
         return QWidget::sizeHint();
     }
-    QSize size = m_stackedWidget->currentWidget()->sizeHint();
+    QWidget *current = m_stackedWidget->currentWidget();
+    QSize size = current->sizeHint();
+    if (current == m_mainPage) {
+        // m_moreContainer's own sizeHint() is unaffected by its hidden
+        // state (hidden-ness only matters when a widget is queried as an
+        // item of another layout, not when queried directly) - using it as
+        // a floor keeps the menu's width constant across expand/collapse
+        // instead of visibly growing/shrinking with the panel.
+        size.setWidth(qMax(size.width(), m_moreContainer->sizeHint().width()));
+    }
     size.setHeight(size.height() + layout()->contentsMargins().top() + layout()->contentsMargins().bottom());
     return size;
 }
@@ -346,6 +388,9 @@ void ContextMenu::showAt(QPoint pos)
 {
     fillOpenWithMenu();
     switchToMainPage();
+    m_moreContainer->hide();
+    m_more->setIcon(FluentIcon::ChevronDown20, kIconSizePx);
+    m_stackedWidget->currentWidget()->layout()->activate();
     show();
     adjustSize();
     QRect geom = geometry();

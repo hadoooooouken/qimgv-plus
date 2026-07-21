@@ -36,6 +36,7 @@ protected:
 private slots:
     void switchToMainPage();
     void switchToScriptsPage();
+    void toggleMoreExpanded();
 
 private:
     void setupUi();
@@ -73,6 +74,14 @@ private:
     ContextMenuItem *m_setWallpaper;
     ContextMenuItem *m_openWith;
     ContextMenuItem *m_showLocation;
+
+    // "More" inline expand toggle - not dispatched through ActionManager,
+    // purely local UI state. m_moreContainer holds the relocated items
+    // (print, rename, setWallpaper, trash, deletePermanently) and is
+    // hidden/shown in place; state resets to collapsed on every showAt().
+    ContextMenuItem *m_more;
+    QWidget         *m_moreContainer;
+    QWidget         *m_mainPage;
 
     // Scripts page widgets
     ContextMenuItem *m_backButton;
