@@ -29,6 +29,7 @@
 
 const qint64 MAX_THUMBNAIL_FILE_SIZE = 256 * 1024 * 1024; // 256 MB
 const int MAX_THUMBNAIL_DIMENSION = 16384; // 16384 pixels
+constexpr UINT MAX_REQUESTED_THUMBNAIL_EDGE = 1024;
 constexpr qint64 MAX_SVG_SOURCE_BYTES = 8 * 1024 * 1024;
 constexpr UINT MAX_SVG_THUMBNAIL_EDGE = 1024;
 constexpr qint64 MAX_SVG_THUMBNAIL_BYTES =
@@ -776,10 +777,12 @@ private:
 // IThumbnailProvider Methods
 IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
                                                     WTS_ALPHATYPE *pdwAlpha) {
-  if (!phbmp || !pdwAlpha)
+  if (!phbmp || !pdwAlpha || cx == 0)
     return E_INVALIDARG;
   *phbmp = nullptr;
   *pdwAlpha = WTSAT_UNKNOWN;
+
+  cx = std::min(cx, MAX_REQUESTED_THUMBNAIL_EDGE);
 
   if (m_szFilePath[0] == L'\0' && !m_pStream) {
     return E_FAIL;
