@@ -62,6 +62,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Home12,                       0x0E70E }, // ic_fluent_home_12_regular                  <- home12.png
         { FluentIcon::Wallpaper20,                   0xF359 }, // ic_fluent_desktop_20_regular               <- document-view16.png (2 of 3 call sites render at 20px; see Image16 for the 16px one)
         { FluentIcon::Image16,                      0x0F487 }, // ic_fluent_image_16_regular                 <- document-view16.png (16px sibling of Image, for the one call site rendered at 16px)
+        { FluentIcon::ImageInfo20,                   0xF4A3 }, // ic_fluent_info_20_regular                  <- contextmenu.cpp Image info
         { FluentIcon::Panorama20,                   0xF08F5 }, // ic_fluent_planet_20_regular                <- view16.png (Panorama mode) (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::Info16,                       0x0F4A2 }, // ic_fluent_info_16_regular                  <- info16.png
         { FluentIcon::Info24,                       0x0F4A4 }, // ic_fluent_info_24_regular                  <- about32.png

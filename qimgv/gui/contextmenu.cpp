@@ -197,6 +197,7 @@ void ContextMenu::setupUi()
 
     addItem(m_colorAdjustments, actionsLayout, "colorAdjustments", tr("Color adjustments"),    FluentIcon::Adjustments20);
     addItem(m_panoramaMode,     actionsLayout, "togglePanorama",     tr("Panorama mode"),      FluentIcon::Panorama20);
+    addItem(m_aiUpscale,        actionsLayout, "toggleUpscayl",      tr("AI Upscale"),         FluentIcon::AiUpscale20);
     addItem(m_casSettings,      actionsLayout, "casSettings",        tr("CAS Settings"),       FluentIcon::Blur20);
     m_casSettings->hide();
 
@@ -206,15 +207,8 @@ void ContextMenu::setupUi()
     addItem(m_move,             actionsLayout, "moveFile",           tr("Quick move"),         FluentIcon::Move20);
     addItem(m_folderView,       actionsLayout, "folderView",         tr("Folder View"),        FluentIcon::Grid20);
 
-    // OpenWith is special – we will create it separately
-    m_openWith = new ContextMenuItem();
-    m_openWith->setText(tr("Open with..."));
-    m_openWith->setIcon(FluentIcon::OpenWith20, kIconSizePx);
-    m_openWith->setPassthroughClicks(false);
-    connect(m_openWith, &ContextMenuItem::pressed, this, &ContextMenu::switchToScriptsPage);
-    actionsLayout->addWidget(m_openWith);
-
     addItem(m_showLocation,     actionsLayout, "showInDirectory",    tr("Show in folder"),     FluentIcon::ShowInFolder20);
+    addItem(m_imageInfo,        actionsLayout, "toggleImageInfo",    tr("Image info"),         FluentIcon::ImageInfo20);
     addItem(m_settings,         actionsLayout, "openSettings",       tr("Settings"),           FluentIcon::Settings20);
 
     addSeparator(actionsLayout, 4, 4);
@@ -232,9 +226,17 @@ void ContextMenu::setupUi()
     moreLayout->setSpacing(0);
     moreLayout->setContentsMargins(0, 0, 0, 0);
 
-    addItem(m_print,            moreLayout, "print",              tr("Print"),              FluentIcon::Print20);
+    // OpenWith is special – we will create it separately
+    m_openWith = new ContextMenuItem();
+    m_openWith->setText(tr("Open with..."));
+    m_openWith->setIcon(FluentIcon::OpenWith20, kIconSizePx);
+    m_openWith->setPassthroughClicks(false);
+    connect(m_openWith, &ContextMenuItem::pressed, this, &ContextMenu::switchToScriptsPage);
+    moreLayout->addWidget(m_openWith);
+
     addItem(m_rename,           moreLayout, "renameFile",         tr("Rename"),             FluentIcon::Rename20);
     addItem(m_setWallpaper,     moreLayout, "setWallpaper",       tr("Set as wallpaper"),   FluentIcon::Wallpaper20);
+    addItem(m_print,            moreLayout, "print",              tr("Print"),              FluentIcon::Print20);
 
     addSeparator(moreLayout, 4, 4);
 
@@ -375,7 +377,9 @@ void ContextMenu::setImageEntriesEnabled(bool mode)
     m_panoramaMode->setEnabled(mode);
     m_openWith->setEnabled(mode);
     m_showLocation->setEnabled(mode);
+    m_imageInfo->setEnabled(mode);
     m_setWallpaper->setEnabled(mode);
+    m_aiUpscale->setEnabled(mode);
 }
 
 void ContextMenu::setCasSettingsVisible(bool visible)

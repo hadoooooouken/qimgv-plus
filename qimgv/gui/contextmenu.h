@@ -74,6 +74,8 @@ private:
     ContextMenuItem *m_setWallpaper;
     ContextMenuItem *m_openWith;
     ContextMenuItem *m_showLocation;
+    ContextMenuItem *m_aiUpscale;
+    ContextMenuItem *m_imageInfo;
 
     // "More" inline expand toggle - not dispatched through ActionManager,
     // purely local UI state. m_moreContainer holds the relocated items

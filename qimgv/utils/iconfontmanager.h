@@ -54,6 +54,7 @@ enum class FluentIcon {
     Grid20,
     Home12,
     Image16,
+    ImageInfo20,
     Info16,
     Info24,
     Keyboard24,
