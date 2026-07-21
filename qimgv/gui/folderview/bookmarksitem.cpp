@@ -4,6 +4,12 @@
 #include "bookmarkswidget.h"
 #include <QFileInfo>
 
+namespace {
+
+constexpr int kFolderIconSizePx = 20;
+
+} // namespace
+
 BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent)
     : QWidget(parent), dirName(_dirName), dirPath(_dirPath), mHighlighted(false)
 {
@@ -15,12 +21,12 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
     spacer = new QSpacerItem(16, 1, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
 
     folderIconWidget.setAttribute(Qt::WA_TransparentForMouseEvents, true);
-    folderIconWidget.setIconPath(":/res/icons/common/menuitem/folder16.png");
+    folderIconWidget.setIcon(FluentIcon::Folder20, kFolderIconSizePx);
     folderIconWidget.setColorMode(ICON_COLOR_THEME_FOLDER);
-    folderIconWidget.setMinimumSize(16, 16);
+    folderIconWidget.setMinimumSize(kFolderIconSizePx, kFolderIconSizePx);
     folderIconWidget.installEventFilter(this);
 
-    removeItemButton.setIconPath(":/res/icons/common/buttons/panel-small/remove12.png");
+    removeItemButton.setIcon(FluentIcon::BookmarkRemove20, 16);
     removeItemButton.setMinimumSize(16, 16);
     removeItemButton.installEventFilter(this);
 

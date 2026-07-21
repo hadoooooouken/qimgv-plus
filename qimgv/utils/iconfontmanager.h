@@ -13,7 +13,7 @@
 // settings-adjacent enums and to avoid gratuitous diff noise when the table
 // is edited later.
 enum class FluentIcon {
-    Add12,
+    BookmarkAdd20,
     Adjustments20,
     AiUpscale20,
     AiUpscale24,
@@ -46,13 +46,13 @@ enum class FluentIcon {
     Eye24,
     FlipHorizontal20,
     FlipVertical20,
-    Folder,
+    Folder20,
     FolderAdd,
     FolderOpen16,
     FolderOpen20,
     Grid16,
     Grid20,
-    Home12,
+    Home20,
     Image16,
     ImageInfo20,
     Info16,
@@ -71,7 +71,7 @@ enum class FluentIcon {
     Settings20,
     Settings24,
     ShowInFolder20,
-    Subtract12,
+    BookmarkRemove20,
     Wallpaper20,
     WindowDevTools24,
     Wrench24,

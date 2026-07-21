@@ -49,7 +49,7 @@ private:
 
     QString iconPath;
     bool glyphMode = false;
-    FluentIcon glyphIcon = FluentIcon::Folder;
+    FluentIcon glyphIcon = FluentIcon::Folder20;
     int glyphSizePx = 0;
     // Display-size clamp used in paintEvent() for MenuItemIcon /
     // OverlayHeaderIcon widgets. Defaults to kMenuItemIconSizePx so

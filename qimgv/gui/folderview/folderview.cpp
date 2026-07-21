@@ -27,7 +27,7 @@ constexpr int kToolbarIconSizePx = 20;
 // docViewButton / togglePlacesPanelButton (same row, larger design).
 constexpr int kLargeToolbarIconSizePx = 20;
 // newBookmarkButton / homeButton (bookmarks bar, smaller buttons).
-constexpr int kSmallButtonIconSizePx = 12;
+constexpr int kSmallButtonIconSizePx = 20;
 // sortingComboBox / folderSortingComboBox / formatFilterComboBox (their own
 // StyledComboBox icon, not the dropdown chevron).
 constexpr int kComboBoxIconSizePx = 16;
@@ -121,8 +121,8 @@ FolderView::FolderView(QWidget *parent) :
     folderSortingComboBox->setIcon(FluentIcon::Image16, kComboBoxIconSizePx);
     formatFilterComboBox->setIcon(FluentIcon::ArrowSort16, kComboBoxIconSizePx);
 
-    newBookmarkButton->setIcon(FluentIcon::Add12, kSmallButtonIconSizePx);
-    homeButton->setIcon(FluentIcon::Home12, kSmallButtonIconSizePx);
+    newBookmarkButton->setIcon(FluentIcon::BookmarkAdd20, kSmallButtonIconSizePx);
+    homeButton->setIcon(FluentIcon::Home20, kSmallButtonIconSizePx);
 
     bookmarksLabel->setAcceptDrops(true);
     newBookmarkButton->setAcceptDrops(true);

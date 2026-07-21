@@ -456,11 +456,11 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
 
         bool hasSelection = !selection().isEmpty();
 
-        auto addCustomAction = [&](const QString &text, const QString &iconPath, const QString &shortcut = "") {
+        auto addCustomAction = [&](const QString &text, FluentIcon icon, const QString &shortcut = "") {
             QWidgetAction *wa = new QWidgetAction(&menu);
             ContextMenuItem *item = new ContextMenuItem(this);
             item->setText(text);
-            item->setIconPath(iconPath);
+            item->setIcon(icon);
             item->setMinimumWidth(212);
             if (!shortcut.isEmpty()) {
                 item->setShortcutText(shortcut);
@@ -470,34 +470,34 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
             return item;
         };
 
-        ContextMenuItem *itemOpen = addCustomAction(tr("Open only selected"), ":/res/icons/common/menuitem/document-view16.png");
+        ContextMenuItem *itemOpen = addCustomAction(tr("Open only selected"), FluentIcon::Image16);
         itemOpen->setEnabled(hasSelection);
         connect(itemOpen, &ContextMenuItem::pressed, this, [this, &menu]() {
             menu.close();
             QTimer::singleShot(0, this, [this]() { emit openSelectedRequested(); });
         });
 
-        ContextMenuItem *itemBatch = addCustomAction(tr("Batch convert"), ":/res/icons/common/menuitem/appearance16.png");
+        ContextMenuItem *itemBatch = addCustomAction(tr("Batch convert"), FluentIcon::Adjustments20);
         itemBatch->setEnabled(hasSelection);
         connect(itemBatch, &ContextMenuItem::pressed, this, [this, &menu]() {
             menu.close();
             emit batchRequested();
         });
 
-        ContextMenuItem *itemAddFolder = addCustomAction(tr("Add folder"), ":/res/icons/common/buttons/contextmenu/add-folder.png", actionManager->shortcutForAction("createDirectory"));
+        ContextMenuItem *itemAddFolder = addCustomAction(tr("Add folder"), FluentIcon::FolderAdd, actionManager->shortcutForAction("createDirectory"));
         connect(itemAddFolder, &ContextMenuItem::pressed, this, [this, &menu]() {
             menu.close();
             actionManager->invokeAction("createDirectory");
         });
 
-        ContextMenuItem *itemShowInFolder = addCustomAction(tr("Show in folder"), ":/res/icons/common/menuitem/folder16.png", actionManager->shortcutForAction("showInDirectory"));
+        ContextMenuItem *itemShowInFolder = addCustomAction(tr("Show in folder"), FluentIcon::ShowInFolder20, actionManager->shortcutForAction("showInDirectory"));
         itemShowInFolder->setEnabled(hasSelection);
         connect(itemShowInFolder, &ContextMenuItem::pressed, this, [this, &menu]() {
             menu.close();
             actionManager->invokeAction("showInDirectory");
         });
 
-        ContextMenuItem *itemRename = addCustomAction(tr("Rename"), ":/res/icons/common/overlay/edit16.png");
+        ContextMenuItem *itemRename = addCustomAction(tr("Rename"), FluentIcon::Rename20);
         itemRename->setEnabled(hasSelection);
         connect(itemRename, &ContextMenuItem::pressed, this, [this, &menu]() {
             menu.close();
@@ -506,7 +506,7 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
 
         menu.addSeparator();
 
-        ContextMenuItem *itemTrash = addCustomAction(tr("Move to trash"), ":/res/icons/common/menuitem/trash16.png");
+        ContextMenuItem *itemTrash = addCustomAction(tr("Move to trash"), FluentIcon::Delete16);
         itemTrash->setTextColor(settings->colorScheme().trash);
         itemTrash->setIconColor(settings->colorScheme().trash);
         itemTrash->setEnabled(hasSelection);
@@ -515,7 +515,7 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
             actionManager->invokeAction("moveToTrash");
         });
 
-        ContextMenuItem *itemDelete = addCustomAction(tr("Delete permanently"), ":/res/icons/common/buttons/panel/close16.png");
+        ContextMenuItem *itemDelete = addCustomAction(tr("Delete permanently"), FluentIcon::Dismiss16);
         itemDelete->setTextColor(settings->colorScheme().danger);
         itemDelete->setIconColor(settings->colorScheme().danger);
         itemDelete->setEnabled(hasSelection);

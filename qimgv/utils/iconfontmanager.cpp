@@ -19,7 +19,7 @@ namespace {
 // "move file", "panorama mode"). Expect this table to be edited.
 const QHash<FluentIcon, char32_t> &codepointTable() {
     static const QHash<FluentIcon, char32_t> table = {
-        { FluentIcon::Add12,                        0x0F107 }, // ic_fluent_add_12_regular                   <- add-new12.png
+        { FluentIcon::BookmarkAdd20,                 0xF1E8 }, // ic_fluent_bookmark_add_20_regular                  <- add-new12.png
         { FluentIcon::OpenWith20,                    0xF582 }, // ic_fluent_open_20_regular                  <- run16.png (Open with) (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::ArrowAutofitHeight20,         0x0E077 }, // ic_fluent_arrow_autofit_height_20_regular  <- fit-height-stretch18.png
         { FluentIcon::ArrowAutofitWidth20,          0x0E07C }, // ic_fluent_arrow_autofit_width_20_regular   <- fit-width18.png
@@ -51,7 +51,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Eye24,                        0x0E5F3 }, // ic_fluent_eye_24_regular                   <- view32.png
         { FluentIcon::FlipHorizontal20,             0xF02A1 }, // ic_fluent_arrow_bidirectional_left_right_20_regular      <- flip-h16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::FlipVertical20,                0xE084 }, // ic_fluent_arrow_bidirectional_up_down_20_regular         <- flip-v16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::Folder,                       0x0F418 }, // ic_fluent_folder_20_regular                <- folder16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
+        { FluentIcon::Folder20,                       0xF418 }, // ic_fluent_folder_20_regular                <- folder16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::ShowInFolder20,                0xF42E }, // ic_fluent_folder_open_20_regular           <- contextmenu.cpp Show in folder
         { FluentIcon::FolderAdd,                    0x0F41C }, // ic_fluent_folder_add_20_regular            <- add-folder.png
         { FluentIcon::Move20,                        0xE422 }, // ic_fluent_copy_arrow_right_20_regular    <- move16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
@@ -59,7 +59,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::FolderOpen20,                 0x0F42E }, // ic_fluent_folder_open_20_regular           <- open20.png
         { FluentIcon::Grid16,                        0xE6C3 }, // ic_fluent_grid_16_regular                  <- folderview16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::Grid20,                       0x0F462 }, // ic_fluent_grid_20_regular                  <- folderview20.png
-        { FluentIcon::Home12,                       0x0E70E }, // ic_fluent_home_12_regular                  <- home12.png
+        { FluentIcon::Home20,                        0xF480 }, // ic_fluent_home_20_regular                  <- home12.png
         { FluentIcon::Wallpaper20,                   0xF359 }, // ic_fluent_desktop_20_regular               <- document-view16.png (2 of 3 call sites render at 20px; see Image16 for the 16px one)
         { FluentIcon::Image16,                      0x0F487 }, // ic_fluent_image_16_regular                 <- document-view16.png (16px sibling of Image, for the one call site rendered at 16px)
         { FluentIcon::ImageInfo20,                   0xF4A3 }, // ic_fluent_info_20_regular                  <- contextmenu.cpp Image info
@@ -77,7 +77,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Settings16,                   0x0F6A8 }, // ic_fluent_settings_16_regular              <- settings16.png
         { FluentIcon::Settings20,                   0x0F6A9 }, // ic_fluent_settings_20_regular              <- settings20.png
         { FluentIcon::Settings24,                   0x0F6AA }, // ic_fluent_settings_24_regular              <- general32.png
-        { FluentIcon::Subtract12,                   0x0EBCE }, // ic_fluent_subtract_12_regular              <- remove12.png
+        { FluentIcon::BookmarkRemove20,              0xF368 }, // ic_fluent_dismiss_16_regular              <- remove16.png
         { FluentIcon::WindowDevTools24,             0x0F8B9 }, // ic_fluent_window_dev_tools_24_regular      <- terminal32.png (Scripts)
         { FluentIcon::Wrench24,                     0x0F8C1 }, // ic_fluent_wrench_24_regular                <- advanced32.png
         { FluentIcon::ZoomIn20,                     0x0F8C4 }, // ic_fluent_zoom_in_20_regular               <- zoom-in18.png
@@ -148,7 +148,7 @@ QPixmap IconFontManager::pixmap(FluentIcon icon, int sizePx, QColor color, qreal
     QString glyph = QString::fromUcs4(&codepoint, 1);
 
     QFont font(fontFamily);
-    font.setPixelSize(qRound(sizePx * kGlyphFontSizeFactor));    
+    font.setPixelSize(qRound(sizePx * kGlyphFontSizeFactor));
 
     QPainter painter(&result);
     painter.setRenderHint(QPainter::Antialiasing);
