@@ -823,15 +823,19 @@ void Core::enableFolderView() {
 void Core::enableDocumentView() {
   if (mw->currentViewMode() == MODE_DOCUMENT)
     return;
+  const auto selectedPaths = folderViewPresenter.selectedPaths();
   mw->enableDocumentView();
-  if (model && model->fileCount() && state.currentFilePath == "") {
-    auto selected = folderViewPresenter.selectedPaths().constFirst();
-    // if it is a directory - ignore and just open the first file
-    if (model->containsFile(selected))
-      loadPath(selected);
-    else
-      loadPath(model->firstFile());
-  }
+  if (!model || !model->fileCount())
+    return;
+
+  // Prefer the last selected file. A selected directory does not replace the
+  // current image; if no image has been opened yet, fall back to the first one.
+  const QString selected = selectedPaths.isEmpty() ? QString()
+                                                    : selectedPaths.constLast();
+  if (model->containsFile(selected))
+    loadPath(selected);
+  else if (state.currentFilePath.isEmpty())
+    loadPath(model->firstFile());
 }
 
 void Core::toggleFolderView() {
