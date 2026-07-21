@@ -17,6 +17,7 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
       trackpadDetection(true),
       mouseInteraction(MouseInteractionState::MOUSE_NONE), minScale(0.01f),
       maxScale(40.0f), fitWindowScale(0.125f), fitWidthScale(0.125f), fitHeightScale(0.125f),
+      expandLimit(40.0f),
       mViewLock(LOCK_NONE), imageFitMode(FIT_WINDOW),
       mScalingFilter(QI_FILTER_BILINEAR), imageFitModeDefault(FIT_WINDOW),
       scene(nullptr), zoomTimeLine(nullptr), zoomStartScale(1.0f),
@@ -181,7 +182,9 @@ void ImageViewerV2::onDPRChanged() {
 
 void ImageViewerV2::readSettings() {
   transparencyGrid = settings->transparencyGrid();
+  bool prevExpandImage = expandImage;
   expandImage = settings->expandImage();
+  float prevExpandLimit = expandLimit;
   expandLimit = static_cast<float>(settings->expandLimit());
   if (expandLimit < 1.0f)
     expandLimit = maxScale;
@@ -206,6 +209,9 @@ void ImageViewerV2::readSettings() {
   setScalingFilter(settings->scalingFilter());
   mUseUpscayl = settings->useUpscayl();
   updateCasSettings();
+  bool fitScaleSettingsChanged = defaultFitModeChanged ||
+                                 expandImage != prevExpandImage ||
+                                 expandLimit != prevExpandLimit;
   if (isDisplaying()) {
     if (imageFitMode == FIT_FREE) {
       if (currentScale() < minScale) {
@@ -213,14 +219,13 @@ void ImageViewerV2::readSettings() {
         centerIfNecessary();
         snapToEdges();
       }
-      requestScaling();
-    } else {
+    } else if (fitScaleSettingsChanged) {
       if (defaultFitModeChanged) {
         imageFitMode = imageFitModeDefault;
       }
       applyFitMode();
-      requestScaling();
     }
+    requestScaling();
   } else {
     setFitMode(imageFitModeDefault);
   }
