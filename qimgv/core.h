@@ -209,7 +209,7 @@ private slots:
     void modelDelayLoad();
     void preloadNeighbors();
 
-    private:
+private:
     std::unique_ptr<class Upscaler> upscaler;
     int aiResizeGeneration = 0;
     bool aiResizeActive = false;
@@ -217,7 +217,7 @@ private slots:
 private slots:
     void onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error);
 
-    private:
+private:
     // Guards Core::raiseWindow() against re-entrant invocation (e.g. if a
     // future code path ends up calling it from within its own call stack).
     // Sets the flag for the guard's lifetime; resets it on every exit path,

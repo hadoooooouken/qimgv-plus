@@ -3,8 +3,6 @@
 #include "components/cache/thumbnailcache.h"
 #include <QCheckBox>
 #include <QComboBox>
-#include <QDir>
-#include <QFileInfo>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -15,8 +13,42 @@
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent) {
   setupUi();
-    retranslateUi();
-  stackedWidget->removeWidget(AIUpscale);
+  retranslateUi();
+
+  connect(useUpscaylCheckBox, &QCheckBox::toggled,
+          preloadUpscaylCheckBox, &QCheckBox::setEnabled);
+  connect(useUpscaylCheckBox, &QCheckBox::toggled, upscaylModelComboBox,
+          &QComboBox::setEnabled);
+  connect(useUpscaylCheckBox, &QCheckBox::toggled, label_upscaylModel,
+          &QLabel::setEnabled);
+  connect(useUpscaylCheckBox, &QCheckBox::toggled,
+          label_upscaylGetModels, &QLabel::setEnabled);
+  connect(useUpscaylCheckBox, &QCheckBox::toggled, upscaylLimitCheckBox,
+          &QCheckBox::setEnabled);
+
+  const auto updateLimitControls = [this]() {
+    const bool enabled = useUpscaylCheckBox->isChecked() &&
+                         upscaylLimitCheckBox->isChecked();
+    upscaylLimitSlider->setEnabled(enabled);
+    upscaylLimitValueLabel->setEnabled(enabled);
+  };
+  connect(useUpscaylCheckBox, &QCheckBox::toggled, this,
+          updateLimitControls);
+  connect(upscaylLimitCheckBox, &QCheckBox::toggled, this,
+          updateLimitControls);
+
+  connect(upscaylLimitSlider, &QSlider::valueChanged, this,
+          [this](int value) {
+            const int step = upscaylLimitSlider->singleStep();
+            const int snapped = ((value + step / 2) / step) * step;
+            if (snapped != value) {
+              upscaylLimitSlider->setValue(snapped);
+              return;
+            }
+            upscaylLimitValueLabel->setText(QString::number(snapped) + "%");
+          });
+
+  upscaylModelComboBox->addItems(settings->availableUpscaylModels());
 
   panelSizeSlider->setMinimum(13);
   panelSizeSlider->setMaximum(32);
@@ -543,7 +575,8 @@ void SettingsDialog::readSettings() {
     if (modelIdx != -1) {
       upscaylModelComboBox->setCurrentIndex(modelIdx);
     } else {
-      int defaultIdx = upscaylModelComboBox->findText("4xLSDIRCompactC3");
+      int defaultIdx =
+          upscaylModelComboBox->findText(Settings::defaultUpscaylModel());
       if (defaultIdx != -1) {
         upscaylModelComboBox->setCurrentIndex(defaultIdx);
       } else if (upscaylModelComboBox->count() > 0) {

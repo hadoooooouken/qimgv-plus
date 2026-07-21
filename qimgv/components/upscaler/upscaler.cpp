@@ -1,7 +1,8 @@
 #include "upscaler.h"
 #include "upscalerrunnable.h"
 #include "settings.h"
-#include <QFile>
+#include <QDir>
+#include <QFileInfo>
 #include <QMutexLocker>
 #include <QPainter>
 #include <QThreadPool>
@@ -13,10 +14,23 @@ UpscaylScaler::UpscaylScaler() : realesrgan(nullptr) {}
 
 bool UpscaylScaler::init(const QString &appDir, const QString &requestedModelName) {
     QMutexLocker locker(&mutex);
-    QString modelName = requestedModelName.isEmpty() ? settings->upscaylModel() : requestedModelName;
+    const QString modelName = requestedModelName.trimmed().isEmpty()
+                                  ? settings->upscaylModel()
+                                  : requestedModelName.trimmed();
     if (realesrgan && loadedModel == modelName) {
         return true;
     }
+
+    const QDir modelsDir(appDir + "/models");
+    const QFileInfo paramFile(modelsDir.filePath(modelName + ".param"));
+    const QFileInfo binFile(modelsDir.filePath(modelName + ".bin"));
+    if (modelName.isEmpty() || !paramFile.isFile() || !paramFile.isReadable() ||
+        !binFile.isFile() || !binFile.isReadable()) {
+        qWarning() << "[Upscayl] Model files are missing or unreadable:"
+                   << paramFile.absoluteFilePath() << binFile.absoluteFilePath();
+        return false;
+    }
+
     if (realesrgan) {
         realesrgan.reset();
         loadedModel = "";
@@ -31,10 +45,8 @@ bool UpscaylScaler::init(const QString &appDir, const QString &requestedModelNam
         realesrgan->tilesize = autoTile;
     }
 
-    QString paramQStr = appDir + "/models/" + modelName + ".param";
-    QString binQStr = appDir + "/models/" + modelName + ".bin";
-
-    int res = realesrgan->load(paramQStr.toStdWString(), binQStr.toStdWString());
+    const int res = realesrgan->load(paramFile.absoluteFilePath().toStdWString(),
+                                     binFile.absoluteFilePath().toStdWString());
     if (res != 0) {
         qWarning() << "[Upscayl] Failed to load model, error code:" << res;
         realesrgan.reset();

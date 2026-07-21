@@ -44,6 +44,7 @@ public:
   void setUseUpscayl(bool mode);
   bool preloadUpscayl();
   void setPreloadUpscayl(bool mode);
+  static QString defaultUpscaylModel();
   QString upscaylModel();
   void setUpscaylModel(const QString &model);
   bool upscaylLimitEnabled();

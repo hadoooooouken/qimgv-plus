@@ -635,12 +635,22 @@ void Settings::setPreloadUpscayl(bool mode) {
 }
 
 QString Settings::upscaylModel() {
-  return settings->settingsConf->value("upscaylModel", "4xLSDIRCompactC3")
-      .toString();
+  const QString model = settings->settingsConf
+                            ->value("upscaylModel", defaultUpscaylModel())
+                            .toString()
+                            .trimmed();
+  return model.isEmpty() ? defaultUpscaylModel() : model;
 }
 
 void Settings::setUpscaylModel(const QString &model) {
-  settings->settingsConf->setValue("upscaylModel", model);
+  const QString normalizedModel = model.trimmed();
+  settings->settingsConf->setValue(
+      "upscaylModel", normalizedModel.isEmpty() ? defaultUpscaylModel()
+                                                 : normalizedModel);
+}
+
+QString Settings::defaultUpscaylModel() {
+  return QStringLiteral("4xLSDIRCompactC3");
 }
 
 bool Settings::upscaylLimitEnabled() {

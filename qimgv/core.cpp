@@ -1495,6 +1495,8 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
     QThreadPool::globalInstance()->start(task);
     return;
   }
+
+  edit_template(false, tr("Resize"), {ImageLib::scaled}, size, filter);
 }
 
 void Core::onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error) {
