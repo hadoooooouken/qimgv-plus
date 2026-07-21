@@ -460,6 +460,7 @@ Root: HKA; Subkey: "Software\Classes\CLSID\{#MyAppCLSID}\InprocServer32"; ValueT
 
 ; System File Associations (IThumbnailProvider GUID: {E357FCCD-A995-4576-B01F-234630154E96})
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.webp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.svg\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tiff\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tga\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails

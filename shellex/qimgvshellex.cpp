@@ -10,14 +10,37 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QHash>
 #include <QIODevice>
 #include <QImage>
 #include <QImageReader>
+#include <QPainter>
+#include <QRegularExpression>
+#include <QSet>
 #include <QTemporaryFile>
+#include <QVector>
+#include <QXmlStreamReader>
+#include <QtSvg/QSvgRenderer>
 #include <libraw/libraw.h>
+
+#include <algorithm>
+#include <cmath>
+#include <functional>
 
 const qint64 MAX_THUMBNAIL_FILE_SIZE = 256 * 1024 * 1024; // 256 MB
 const int MAX_THUMBNAIL_DIMENSION = 16384; // 16384 pixels
+constexpr qint64 MAX_SVG_SOURCE_BYTES = 8 * 1024 * 1024;
+constexpr UINT MAX_SVG_THUMBNAIL_EDGE = 1024;
+constexpr qint64 MAX_SVG_THUMBNAIL_BYTES =
+    qint64(MAX_SVG_THUMBNAIL_EDGE) * MAX_SVG_THUMBNAIL_EDGE * 4;
+constexpr int MAX_SVG_ELEMENT_COUNT = 10000;
+constexpr int MAX_SVG_ATTRIBUTE_COUNT = 50000;
+constexpr int MAX_SVG_XML_DEPTH = 64;
+constexpr int MAX_SVG_REFERENCE_NODE_COUNT = 4096;
+constexpr int MAX_SVG_REFERENCE_EDGE_COUNT = 16384;
+constexpr int MAX_SVG_REFERENCE_DEPTH = 64;
+constexpr double MAX_SVG_COORDINATE = 1000000.0;
+constexpr double MAX_SVG_ASPECT_RATIO = 10000.0;
 
 class QStreamDevice : public QIODevice {
 public:
@@ -135,8 +158,364 @@ static const ExtensionInfo g_extensionTable[] = {
   { L".jpc",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
 
   // HTJ2K / JPH
-  { L".jph",  nullptr, false, L"qimgvplus.AssocFile.jph" }
+  { L".jph",  nullptr, false, L"qimgvplus.AssocFile.jph" },
+
+  // SVG is rendered through the validated SVG-specific path below.
+  { L".svg",  nullptr, false, L"qimgvplus.AssocFile.svg" }
 };
+
+using SvgReferenceGraph = QHash<QString, QSet<QString>>;
+
+static bool isSvgExtension(const QString &ext) { return ext == u"svg"; }
+
+static bool parseSafeSvgNumber(const QString &value, double &number) {
+  bool ok = false;
+  const double parsed = value.trimmed().toDouble(&ok);
+  if (!ok || !std::isfinite(parsed) ||
+      std::abs(parsed) > MAX_SVG_COORDINATE)
+    return false;
+  number = parsed;
+  return true;
+}
+
+static bool parseSafeSvgLength(const QString &value, double &number) {
+  QString text = value.trimmed();
+  static const QStringList supportedUnits = {
+      QStringLiteral("px"), QStringLiteral("pt"), QStringLiteral("pc"),
+      QStringLiteral("mm"), QStringLiteral("cm"), QStringLiteral("in"),
+      QStringLiteral("em"), QStringLiteral("ex"), QStringLiteral("q"),
+      QStringLiteral("%")};
+  for (const QString &unit : supportedUnits) {
+    if (text.endsWith(unit, Qt::CaseInsensitive)) {
+      text.chop(unit.size());
+      break;
+    }
+  }
+  return parseSafeSvgNumber(text, number);
+}
+
+static bool hasSafeSvgAspectRatio(double width, double height) {
+  if (width <= 0.0 || height <= 0.0)
+    return false;
+  const double ratio = width / height;
+  return std::isfinite(ratio) && ratio >= 1.0 / MAX_SVG_ASPECT_RATIO &&
+         ratio <= MAX_SVG_ASPECT_RATIO;
+}
+
+static bool containsSvgWhitespace(const QString &value) {
+  return std::any_of(value.cbegin(), value.cend(),
+                     [](const QChar character) { return character.isSpace(); });
+}
+
+static bool addSvgReference(const QString &reference, QSet<QString> &references) {
+  const QString id = reference.trimmed();
+  if (id.isEmpty() || containsSvgWhitespace(id))
+    return false;
+  references.insert(id);
+  return true;
+}
+
+static bool collectSvgUrlReferences(const QString &value,
+                                    QSet<QString> &references) {
+  constexpr QChar closingParenthesis = u')';
+  constexpr QChar idPrefix = u'#';
+  constexpr QStringView urlPrefix = u"url(";
+
+  int searchOffset = 0;
+  while (true) {
+    const int urlOffset = value.indexOf(urlPrefix, searchOffset,
+                                        Qt::CaseInsensitive);
+    if (urlOffset < 0)
+      return true;
+
+    const int referenceStart = urlOffset + urlPrefix.size();
+    const int referenceEnd = value.indexOf(closingParenthesis, referenceStart);
+    if (referenceEnd < 0)
+      return false;
+
+    const QString reference =
+        value.mid(referenceStart, referenceEnd - referenceStart).trimmed();
+    if (!reference.startsWith(idPrefix) ||
+        !addSvgReference(reference.sliced(1), references))
+      return false;
+
+    searchOffset = referenceEnd + 1;
+  }
+}
+
+static bool validateSvgReferenceGraph(const SvgReferenceGraph &graph) {
+  enum class VisitState { NotVisited, Visiting, Visited };
+
+  QHash<QString, VisitState> states;
+  std::function<bool(const QString &, int)> visit =
+      [&](const QString &id, int depth) {
+        if (depth > MAX_SVG_REFERENCE_DEPTH)
+          return false;
+
+        const auto node = graph.constFind(id);
+        if (node == graph.cend())
+          return false;
+
+        const VisitState state = states.value(id, VisitState::NotVisited);
+        if (state == VisitState::Visiting)
+          return false;
+        if (state == VisitState::Visited)
+          return true;
+
+        states.insert(id, VisitState::Visiting);
+        for (const QString &reference : *node) {
+          if (!visit(reference, depth + 1))
+            return false;
+        }
+        states.insert(id, VisitState::Visited);
+        return true;
+      };
+
+  for (auto node = graph.cbegin(); node != graph.cend(); ++node) {
+    if (!visit(node.key(), 0))
+      return false;
+  }
+  return true;
+}
+
+static bool validateSvgViewBox(const QString &value) {
+  const QStringList values =
+      value.split(QRegularExpression(QStringLiteral("[\\s,]+")),
+                  Qt::SkipEmptyParts);
+  if (values.size() != 4)
+    return false;
+
+  double x = 0.0;
+  double y = 0.0;
+  double width = 0.0;
+  double height = 0.0;
+  return parseSafeSvgNumber(values[0], x) && parseSafeSvgNumber(values[1], y) &&
+         parseSafeSvgNumber(values[2], width) &&
+         parseSafeSvgNumber(values[3], height) &&
+         hasSafeSvgAspectRatio(width, height);
+}
+
+static bool validateSvgDocument(const QByteArray &svg) {
+  if (svg.isEmpty() || svg.size() > MAX_SVG_SOURCE_BYTES)
+    return false;
+
+  QXmlStreamReader xml(svg);
+  SvgReferenceGraph graph;
+  QVector<QString> activeIds;
+  QVector<QString> elementIds;
+  bool sawRoot = false;
+  bool sawRootEnd = false;
+  int depth = 0;
+  int elementCount = 0;
+  int attributeCount = 0;
+  int referenceEdgeCount = 0;
+  double rootWidth = 0.0;
+  double rootHeight = 0.0;
+  bool hasRootWidth = false;
+  bool hasRootHeight = false;
+
+  while (!xml.atEnd()) {
+    const QXmlStreamReader::TokenType token = xml.readNext();
+    if (token == QXmlStreamReader::DTD ||
+        token == QXmlStreamReader::EntityReference ||
+        token == QXmlStreamReader::ProcessingInstruction)
+      return false;
+
+    if (token == QXmlStreamReader::StartElement) {
+      ++depth;
+      if (depth > MAX_SVG_XML_DEPTH || ++elementCount > MAX_SVG_ELEMENT_COUNT)
+        return false;
+
+      const QString elementName = xml.name().toString().toLower();
+      if (!sawRoot) {
+        if (elementName != u"svg")
+          return false;
+        sawRoot = true;
+      }
+
+      if (elementName == u"script" || elementName == u"style" ||
+          elementName == u"foreignobject" || elementName == u"image" ||
+          elementName == u"filter" || elementName == u"animate" ||
+          elementName == u"animatemotion" || elementName == u"animatecolor" ||
+          elementName == u"animatetransform" || elementName == u"set" ||
+          elementName == u"audio" || elementName == u"video" ||
+          elementName == u"iframe" || elementName == u"object" ||
+          elementName == u"embed")
+        return false;
+
+      const QXmlStreamAttributes attributes = xml.attributes();
+      attributeCount += attributes.size();
+      if (attributeCount > MAX_SVG_ATTRIBUTE_COUNT)
+        return false;
+
+      QString elementId;
+      for (const QXmlStreamAttribute &attribute : attributes) {
+        if (attribute.name() == u"id") {
+          elementId = attribute.value().toString().trimmed();
+          break;
+        }
+      }
+
+      if (!elementId.isEmpty()) {
+        if (containsSvgWhitespace(elementId) || graph.contains(elementId) ||
+            graph.size() >= MAX_SVG_REFERENCE_NODE_COUNT)
+          return false;
+        graph.insert(elementId, {});
+        activeIds.append(elementId);
+      }
+      elementIds.append(elementId);
+
+      QSet<QString> references;
+      for (const QXmlStreamAttribute &attribute : attributes) {
+        const QString name = attribute.name().toString().toLower();
+        const QString value = attribute.value().toString().trimmed();
+        if (name.startsWith(u"on"))
+          return false;
+
+        if (name == u"href") {
+          if (!value.startsWith(u'#') ||
+              !addSvgReference(value.sliced(1), references))
+            return false;
+        }
+        if (!collectSvgUrlReferences(value, references))
+          return false;
+
+        if (name == u"viewbox" && !validateSvgViewBox(value))
+          return false;
+        if (name == u"width" || name == u"height") {
+          double dimension = 0.0;
+          if (!parseSafeSvgLength(value, dimension))
+            return false;
+          if (depth == 1 && name == u"width") {
+            if (dimension <= 0.0)
+              return false;
+            rootWidth = dimension;
+            hasRootWidth = true;
+          } else if (depth == 1 && name == u"height") {
+            if (dimension <= 0.0)
+              return false;
+            rootHeight = dimension;
+            hasRootHeight = true;
+          }
+        }
+      }
+
+      for (const QString &ownerId : activeIds) {
+        QSet<QString> &ownerReferences = graph[ownerId];
+        for (const QString &reference : references) {
+          if (!ownerReferences.contains(reference)) {
+            if (++referenceEdgeCount > MAX_SVG_REFERENCE_EDGE_COUNT)
+              return false;
+            ownerReferences.insert(reference);
+          }
+        }
+      }
+    } else if (token == QXmlStreamReader::EndElement) {
+      if (depth == 1)
+        sawRootEnd = true;
+      if (elementIds.isEmpty())
+        return false;
+      if (!elementIds.takeLast().isEmpty())
+        activeIds.removeLast();
+      if (--depth < 0)
+        return false;
+    }
+  }
+
+  return !xml.hasError() && sawRoot && sawRootEnd && depth == 0 &&
+         elementIds.isEmpty() && activeIds.isEmpty() &&
+         (!hasRootWidth || !hasRootHeight ||
+          hasSafeSvgAspectRatio(rootWidth, rootHeight)) &&
+         validateSvgReferenceGraph(graph);
+}
+
+static bool readSvgFile(const QString &path, QByteArray &svg) {
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly) || file.size() < 0 ||
+      file.size() > MAX_SVG_SOURCE_BYTES)
+    return false;
+  svg = file.read(MAX_SVG_SOURCE_BYTES + 1);
+  return svg.size() <= MAX_SVG_SOURCE_BYTES;
+}
+
+static bool readSvgStream(IStream *stream, QByteArray &svg) {
+  if (!stream)
+    return false;
+
+  LARGE_INTEGER streamStart = {};
+  if (FAILED(stream->Seek(streamStart, STREAM_SEEK_SET, nullptr)))
+    return false;
+
+  constexpr ULONG streamChunkSize = 64 * 1024;
+  char chunk[streamChunkSize];
+  bool complete = true;
+  while (complete) {
+    ULONG bytesRead = 0;
+    const HRESULT result = stream->Read(chunk, streamChunkSize, &bytesRead);
+    if (FAILED(result) ||
+        svg.size() > MAX_SVG_SOURCE_BYTES - static_cast<qint64>(bytesRead)) {
+      complete = false;
+      break;
+    }
+    svg.append(chunk, static_cast<qsizetype>(bytesRead));
+    if (bytesRead == 0)
+      break;
+  }
+
+  return SUCCEEDED(stream->Seek(streamStart, STREAM_SEEK_SET, nullptr)) &&
+         complete;
+}
+
+static HBITMAP renderSvgThumbnail(const QByteArray &svg, UINT requestedEdge) {
+  if (!validateSvgDocument(svg) || requestedEdge == 0)
+    return nullptr;
+
+  const UINT edge = std::min(requestedEdge, MAX_SVG_THUMBNAIL_EDGE);
+  QImage image(QSize(static_cast<int>(edge), static_cast<int>(edge)),
+               QImage::Format_ARGB32_Premultiplied);
+  if (image.isNull() || image.sizeInBytes() > MAX_SVG_THUMBNAIL_BYTES)
+    return nullptr;
+  image.fill(Qt::transparent);
+
+  QSvgRenderer renderer;
+  if (!renderer.load(svg) || !renderer.isValid())
+    return nullptr;
+
+  QPainter painter(&image);
+  if (!painter.isActive())
+    return nullptr;
+  renderer.render(&painter, QRectF(QPointF(0, 0), QSizeF(image.size())));
+  painter.end();
+
+  BITMAPV5HEADER header = {};
+  header.bV5Size = sizeof(header);
+  header.bV5Width = image.width();
+  header.bV5Height = -image.height();
+  header.bV5Planes = 1;
+  header.bV5BitCount = 32;
+  header.bV5Compression = BI_BITFIELDS;
+  header.bV5RedMask = 0x00FF0000;
+  header.bV5GreenMask = 0x0000FF00;
+  header.bV5BlueMask = 0x000000FF;
+  header.bV5AlphaMask = 0xFF000000;
+
+  void *bits = nullptr;
+  HDC desktopDc = GetDC(nullptr);
+  if (!desktopDc)
+    return nullptr;
+  HBITMAP bitmap = CreateDIBSection(desktopDc,
+                                    reinterpret_cast<BITMAPINFO *>(&header),
+                                    DIB_RGB_COLORS, &bits, nullptr, 0);
+  ReleaseDC(nullptr, desktopDc);
+  if (!bitmap || !bits) {
+    if (bitmap)
+      DeleteObject(bitmap);
+    return nullptr;
+  }
+
+  memcpy(bits, image.constBits(), static_cast<size_t>(image.sizeInBytes()));
+  return bitmap;
+}
 
 static bool isRawExtension(const QString &ext) {
   for (const auto &info : g_extensionTable) {
@@ -459,6 +838,20 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
         return E_FAIL;
       }
       ext = fileInfo.suffix().toLower();
+    }
+
+    if (isSvgExtension(ext)) {
+      QByteArray svg;
+      const bool readSucceeded =
+          m_pStream ? readSvgStream(m_pStream, svg)
+                    : readSvgFile(QString::fromWCharArray(m_szFilePath), svg);
+      HBITMAP bitmap = readSucceeded ? renderSvgThumbnail(svg, cx) : nullptr;
+      if (!bitmap)
+        return E_FAIL;
+
+      *phbmp = bitmap;
+      *pdwAlpha = WTSAT_ARGB;
+      return S_OK;
     }
 
   bool isRaw = isRawExtension(ext);
