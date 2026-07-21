@@ -27,6 +27,7 @@ test/
 INSTALL/
 upscayl-ncnn/
 DEVELOPMENT.md
+AGENTS.md
 *.cpp_temp
 .antigravity
 .agents/
