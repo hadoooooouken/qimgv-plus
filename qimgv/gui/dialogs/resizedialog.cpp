@@ -105,11 +105,11 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
   comboBox->addItem(tr("Smart sharpen"), QI_FILTER_SMART);
   comboBox->addItem(tr("Magic Kernel Sharp 2021"), QI_FILTER_MKS2021);
 
-  int idx = comboBox->findData(QI_FILTER_SMART);
+  int idx = comboBox->findData(QI_FILTER_MKS2021);
   if (idx != -1) {
-    comboBox->setCurrentIndex(idx);
+      comboBox->setCurrentIndex(idx);
   } else {
-    comboBox->setCurrentIndex(2); // default to Smart sharpen
+      comboBox->setCurrentIndex(3); // default to Magic Kernel Sharp 2021
   }
 
 #ifdef USE_UPSCAYL
