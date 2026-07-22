@@ -53,6 +53,9 @@ private slots:
     qreal opacity() const;
 
 protected:
+    static constexpr int kHeaderIconSizePx = 20;
+    static constexpr int kCloseIconSizePx = 16;
+
     virtual void recalculateGeometry();
     FloatingWidgetPosition position;
 };

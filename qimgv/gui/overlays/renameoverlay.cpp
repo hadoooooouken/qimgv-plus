@@ -15,8 +15,8 @@ RenameOverlay::RenameOverlay(FloatingWidgetContainer *parent) :
     connect(closeButton,  &IconButton::clicked,  this, &RenameOverlay::hide);
     connect(okButton,     &QPushButton::clicked, this, &RenameOverlay::rename);
     okButton->setHighlighted(true);
-    closeButton->setIconPath(":/res/icons/common/overlay/close-dim16.png");
-    headerIcon->setIconPath(":/res/icons/common/overlay/edit16.png");
+    closeButton->setIcon(FluentIcon::Dismiss16, kCloseIconSizePx);
+    headerIcon->setIcon(FluentIcon::Rename20, kHeaderIconSizePx);
     setPosition(FloatingWidgetPosition::CENTER);
     setAcceptKeyboardFocus(true);
 

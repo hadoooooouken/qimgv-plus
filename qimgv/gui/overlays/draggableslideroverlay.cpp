@@ -26,7 +26,7 @@ QWidget *DraggableSliderOverlay::createHeader(const QString &title)
 
     IconWidget *headerIcon = new IconWidget(headerWidget);
     headerIcon->setAccessibleName("OverlayHeaderIcon");
-    headerIcon->setIconPath(":/res/icons/common/settings/appearance32.png");
+    headerIcon->setIcon(FluentIcon::Adjustments20, kHeaderIconSizePx);
 
     QLabel *titleLabel = new QLabel(title, headerWidget);
     titleLabel->setAccessibleName("OverlayHeaderLabel");
@@ -34,7 +34,7 @@ QWidget *DraggableSliderOverlay::createHeader(const QString &title)
 
     IconButton *closeButton = new IconButton(headerWidget);
     closeButton->setAccessibleName("OverlayHeaderButton");
-    closeButton->setIconPath(":/res/icons/common/overlay/close-dim16.png");
+    closeButton->setIcon(FluentIcon::Dismiss16, kCloseIconSizePx);
     connect(closeButton, &IconButton::clicked, this, &DraggableSliderOverlay::hide);
 
     headerLayout->addWidget(headerIcon);

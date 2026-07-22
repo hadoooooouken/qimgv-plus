@@ -13,8 +13,8 @@ CopyOverlay::CopyOverlay(FloatingWidgetContainer *parent) :
     hide();
     setFadeEnabled(true);
 
-    closeButton->setIconPath(":/res/icons/common/overlay/close-dim16.png");
-    headerIcon->setIconPath(":/res/icons/common/overlay/copy16.png");
+    closeButton->setIcon(FluentIcon::Dismiss16, kCloseIconSizePx);
+    headerIcon->setIcon(FluentIcon::CopyAdd20, kHeaderIconSizePx);
     headerLabel->setText(tr("Copy to..."));
     mode = OVERLAY_COPY;
 
@@ -92,10 +92,10 @@ void CopyOverlay::hide() {
 void CopyOverlay::setDialogMode(CopyOverlayMode _mode) {
     mode = _mode;
     if(mode == OVERLAY_COPY) {
-        headerIcon->setIconPath(":/res/icons/common/overlay/copy16.png");
+        headerIcon->setIcon(FluentIcon::CopyAdd20, kHeaderIconSizePx);
         headerLabel->setText(tr("Copy to..."));
     } else {
-        headerIcon->setIconPath(":/res/icons/common/overlay/move16.png");
+        headerIcon->setIcon(FluentIcon::Move20, kHeaderIconSizePx);
         headerLabel->setText(tr("Move to..."));
     }
 }
