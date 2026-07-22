@@ -9,8 +9,6 @@ ClickZoneOverlay::ClickZoneOverlay(FloatingWidgetContainer *parent)
     setContainerSize(parent->size());
 
   dpr = this->devicePixelRatioF();
-  pixmapLeft = loadPixmap(":/res/icons/common/overlay/arrow_left_50.png");
-  pixmapRight = loadPixmap(":/res/icons/common/overlay/arrow_right_50.png");
 
   connect(settings, &Settings::settingsChanged, this,
           &ClickZoneOverlay::readSettings);
@@ -35,12 +33,7 @@ ClickZoneOverlay::ClickZoneOverlay(FloatingWidgetContainer *parent)
   this->show();
 }
 
-ClickZoneOverlay::~ClickZoneOverlay() {
-  delete pixmapLeft;
-  pixmapLeft = nullptr;
-  delete pixmapRight;
-  pixmapRight = nullptr;
-}
+ClickZoneOverlay::~ClickZoneOverlay() = default;
 
 void ClickZoneOverlay::readSettings() {
   bool newDrawZones = settings->clickableEdgesVisible();
@@ -54,29 +47,6 @@ void ClickZoneOverlay::readSettings() {
   mButtonColor = newButtonColor;
   recolorIcons();
   update();
-}
-
-QPixmap *ClickZoneOverlay::loadPixmap(QString path) {
-  QPixmap *pixmap;
-  if (dpr >= (1.0 + 0.001)) {
-    path.replace(".", "@2x.");
-    hiResPixmaps = true;
-    pixmap = new QPixmap(path);
-    if (dpr >= (2.0 - 0.001))
-      pixmapDrawScale = dpr;
-    else
-      pixmapDrawScale = 2.0;
-    pixmap->setDevicePixelRatio(pixmapDrawScale);
-  } else {
-    hiResPixmaps = false;
-    pixmap = new QPixmap(path);
-    pixmapDrawScale = dpr;
-  }
-  if (pixmap->isNull()) {
-    delete pixmap;
-    pixmap = new QPixmap();
-  }
-  return pixmap;
 }
 
 QRect ClickZoneOverlay::leftZone() { return mLeftZone; }
@@ -203,25 +173,18 @@ void ClickZoneOverlay::paintEvent(QPaintEvent *event) {
 }
 
 // Draws the arrow pixmap centered inside the visible button rect.
-void ClickZoneOverlay::drawPixmap(QPainter &p, QPixmap *pixmap, QRect buttonRect) {
-  p.setRenderHint(QPainter::SmoothPixmapTransform);
-  QPointF pos;
-  if (hiResPixmaps) {
-    pos = QPointF(buttonRect.left() + buttonRect.width()  / 2 -
-                      pixmap->width()  / (2 * pixmapDrawScale),
-                  buttonRect.top()  + buttonRect.height() / 2 -
-                      pixmap->height() / (2 * pixmapDrawScale));
-  } else {
-    pos = QPointF(buttonRect.left() + buttonRect.width()  / 2 - pixmap->width()  / 2,
-                  buttonRect.top()  + buttonRect.height() / 2 - pixmap->height() / 2);
-  }
-  p.drawPixmap(pos, *pixmap);
+void ClickZoneOverlay::drawPixmap(QPainter &p, const QPixmap &pixmap, QRect buttonRect) {
+  if (pixmap.isNull())
+    return;
+
+  const qreal pixmapWidth = pixmap.width() / pixmap.devicePixelRatio();
+  const qreal pixmapHeight = pixmap.height() / pixmap.devicePixelRatio();
+  const QPointF pos(buttonRect.left() + (buttonRect.width() - pixmapWidth) / 2,
+                    buttonRect.top() + (buttonRect.height() - pixmapHeight) / 2);
+  p.drawPixmap(pos, pixmap);
 }
 
 void ClickZoneOverlay::recolorIcons() {
-    if (!pixmapLeft || !pixmapRight)
-        return;
-
     QColor arrowColor;
     if (mButtonColor.lightnessF() > 0.5) {
         // Light theme
@@ -231,6 +194,8 @@ void ClickZoneOverlay::recolorIcons() {
         arrowColor = QColor(164, 164, 164);
     }
 
-    ImageLib::recolor(*pixmapLeft,  arrowColor);
-    ImageLib::recolor(*pixmapRight, arrowColor);
+    pixmapLeft = IconFontManager::pixmap(
+        FluentIcon::ChevronLeft48, kArrowIconSizePx, arrowColor, dpr);
+    pixmapRight = IconFontManager::pixmap(
+        FluentIcon::ChevronRight48, kArrowIconSizePx, arrowColor, dpr);
 }

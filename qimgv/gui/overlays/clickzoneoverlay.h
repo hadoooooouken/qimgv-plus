@@ -5,7 +5,7 @@
 #include <QEasingCurve>
 #include <QDebug>
 #include "gui/customwidgets/floatingwidget.h"
-#include "utils/imagelib.h"
+#include "utils/iconfontmanager.h"
 
 enum ActiveHighlightZone {
     HIGHLIGHT_NONE,
@@ -44,20 +44,20 @@ private:
     static constexpr int kButtonHeightDivisor = 3;  // visible height = window_h / 3
     static constexpr int kButtonMinHeight    = 80;  // safe minimum height
     static constexpr int kButtonRadius       = 8;   // rounded corner radius
+    static constexpr int kArrowIconSizePx    = 48;
 
     // Animation constants (matching SlidePanel style)
     static constexpr int kAnimationDuration  = 300; // milliseconds
     static constexpr int kSlideAmount        = 12;  // horizontal slide in pixels
 
-    QPixmap* loadPixmap(QString path);
-    QPixmap *pixmapLeft = nullptr, *pixmapRight = nullptr;
+    QPixmap pixmapLeft;
+    QPixmap pixmapRight;
     // Hit zones (full height, used for mouse detection)
     QRect mLeftZone, mRightZone;
     // Visible pill rects (subset of hit zones, used for painting)
     QRect mLeftButton, mRightButton;
     QColor mButtonColor;
-    qreal dpr, pixmapDrawScale;
-    bool hiResPixmaps = false;
+    qreal dpr;
     bool isPressed = false;
     bool leftHovered = false, rightHovered = false;
     bool drawZones = true;
@@ -69,7 +69,7 @@ private:
     bool mHiding = false;
     qreal mCurrentOpacity = 0.0;
     int mSlideOffset = 0;
-    void drawPixmap(QPainter &p, QPixmap *pixmap, QRect buttonRect);
+    void drawPixmap(QPainter &p, const QPixmap &pixmap, QRect buttonRect);
 
 protected:
     virtual void resizeEvent(QResizeEvent *event);
