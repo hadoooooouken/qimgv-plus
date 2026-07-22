@@ -21,9 +21,6 @@ public:
     ~SharedResources();
 
     QPixmap getPixmap(ShrIcon icon, qreal dpr);
-private:
-    QPixmap mLoadingIcon72;
-    QPixmap mLoadingErrorIcon72;
 };
 
 extern SharedResources *shrRes;

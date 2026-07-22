@@ -94,6 +94,8 @@ enum class FluentIcon {
     Info32,
     ChevronUp16,
     CheckmarkCircle20,
+    Clock24,
+    ClockDismiss24,
 };
 
 // Renders glyphs from the bundled Fluent System Icons font into QPixmap,

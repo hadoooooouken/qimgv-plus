@@ -100,6 +100,8 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Info32,                       0xF0059 }, // ic_fluent_info_32_regular                  <- about32.png
         { FluentIcon::ChevronUp16,                   0xF2B5 }, // ic_fluent_chevron_up_16_regular            <- up16.png
         { FluentIcon::CheckmarkCircle20,             0xF298 }, // ic_fluent_checkmark_circle_20_regular      <- floating message success
+        { FluentIcon::Clock24,                       0xF2DE }, // ic_fluent_clock_24_regular                 <- loading72.png
+        { FluentIcon::ClockDismiss24,                0xE373 }, // ic_fluent_clock_dismiss_24_regular         <- loading-error72.png
 
         };
     return table;
