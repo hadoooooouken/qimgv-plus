@@ -19,6 +19,9 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::ArrowAutofitWidth20, 0xE07C }, // ic_fluent_arrow_autofit_width_20_regular <- Context menu and Fit Width notification
         { FluentIcon::ArrowExpand20,       0xE0C5 }, // ic_fluent_arrow_expand_20_regular <- Context menu and Fit Window notification
         { FluentIcon::Blur20,              0xF8FA }, // ic_fluent_blur_20_regular <- Context menu and CAS overlay header
+        { FluentIcon::CheckboxChecked16,   0xF27C }, // ic_fluent_checkbox_checked_16_regular <- Checked checkbox indicator
+        { FluentIcon::CheckboxIndeterminate16, 0xE2FD }, // ic_fluent_checkbox_indeterminate_16_regular <- Partially checked checkbox indicator
+        { FluentIcon::CheckboxUnchecked16, 0xF290 }, // ic_fluent_square_16_regular <- Unchecked checkbox indicator
         { FluentIcon::CopyAdd20,           0xE41F }, // ic_fluent_copy_add_20_regular <- Context menu and copy overlay
         { FluentIcon::Delete16,            0xF34C }, // ic_fluent_delete_20_regular <- Trash actions in context and folder-view menus
         { FluentIcon::Dismiss16,           0xF368 }, // ic_fluent_dismiss_16_regular <- Overlay close buttons and viewer exit controls
@@ -27,6 +30,8 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Grid20,              0xF462 }, // ic_fluent_grid_20_regular <- Folder-view actions in context menu and viewer controls
         { FluentIcon::Info20,              0xF4A3 }, // ic_fluent_info_20_regular <- Image-info UI and informational notifications
         { FluentIcon::Move20,              0xE422 }, // ic_fluent_copy_arrow_right_20_regular <- Context menu and move overlay
+        { FluentIcon::RadioButton16,       0xF153 }, // ic_fluent_radio_button_16_regular <- Unchecked radio-button indicator
+        { FluentIcon::Record16,            0xF660 }, // ic_fluent_record_16_regular <- Checked radio-button indicator
         { FluentIcon::Rename20,            0xF0A39 }, // ic_fluent_rename_a_20_regular <- Context/folder menus and rename/save overlays
         { FluentIcon::Settings20,          0xF6A9 }, // ic_fluent_settings_20_regular <- Settings actions in context menu, toolbars, and panels
         { FluentIcon::ShowInFolder20,      0xF42E }, // ic_fluent_folder_open_20_regular <- Show-in-folder actions in context and folder-view menus

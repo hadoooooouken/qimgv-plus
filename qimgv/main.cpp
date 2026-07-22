@@ -27,7 +27,18 @@
 #include "utils/inputmap.h"
 
 //------------------------------------------------------------------------------
-void initSingletons() {
+ProxyStyleColors proxyStyleColors(const ColorScheme &colors) {
+  return {
+      .icons = colors.icons,
+      .control = colors.button,
+      .controlHover = colors.button_hover,
+      .controlPressed = colors.button_pressed,
+      .controlBorder = colors.widget_border,
+      .controlFocusBorder = colors.accent,
+  };
+}
+//------------------------------------------------------------------------------
+void initSingletons(ProxyStyle &proxyStyle) {
   // Must run before any IconWidget/StyledComboBox is constructed, since
   // both resolve glyphs through IconFontManager::pixmap() during their
   // first paint. Safe to call unconditionally: init() is idempotent and
@@ -37,6 +48,13 @@ void initSingletons() {
   inputMap = InputMap::getInstance();
   appActions = Actions::getInstance();
   settings = Settings::getInstance();
+  proxyStyle.setColors(proxyStyleColors(settings->colorScheme()));
+  Settings *appSettings = settings;
+  QObject::connect(appSettings, &Settings::settingsChanged, &proxyStyle,
+                   [appSettings, &proxyStyle]() {
+                     proxyStyle.setColors(
+                         proxyStyleColors(appSettings->colorScheme()));
+                   });
   scriptManager = ScriptManager::getInstance();
   actionManager = ActionManager::getInstance();
   shrRes = SharedResources::getInstance();
@@ -90,7 +108,8 @@ int main(int argc, char *argv[]) {
 
   // use some style workarounds with platform-independent Fusion base to prevent
   // uxtheme clashes in Windows 11
-  a.setStyle(new ProxyStyle(QStyleFactory::create("fusion")));
+  auto *proxyStyle = new ProxyStyle(QStyleFactory::create("fusion"));
+  a.setStyle(proxyStyle);
 
   QCoreApplication::setOrganizationName("qimgv-plus");
   QCoreApplication::setOrganizationDomain(
@@ -135,13 +154,13 @@ int main(int argc, char *argv[]) {
 
   int exitCode = 0;
   if (parser.isSet("build-options")) {
-    initSingletons();
+    initSingletons(*proxyStyle);
 
     CmdOptionsRunner r;
     QTimer::singleShot(0, &r, &CmdOptionsRunner::showBuildOptions);
     exitCode = a.exec();
   } else if (parser.isSet("gen-thumbs")) {
-    initSingletons();
+    initSingletons(*proxyStyle);
 
     int size = settings->folderViewIconSize();
     if (parser.isSet("gen-thumbs-size"))
@@ -197,7 +216,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Primary instance, initialize all singletons
-    initSingletons();
+    initSingletons(*proxyStyle);
 
     {
       QApplication::setQuitOnLastWindowClosed(false);

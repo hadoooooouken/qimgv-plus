@@ -81,6 +81,12 @@ void FormatFilterComboBox::setCheckedExtensions(QStringList extensions) {
     blockSignals(false);
 }
 
+QSize FormatFilterComboBox::minimumSizeHint() const {
+    QSize result = StyledComboBox::minimumSizeHint();
+    result.setWidth(qMax(result.width(), requiredControlWidth()));
+    return result;
+}
+
 bool FormatFilterComboBox::anyFormatChecked() const {
     for (int i = 1; i < model->rowCount(); i++) {
         if (model->item(i)->checkState() == Qt::Checked)
@@ -142,25 +148,54 @@ void FormatFilterComboBox::updateDisplayLabel() {
     style()->unpolish(this);
     style()->polish(this);
     refreshIcon();
+    updateGeometry();
 }
 
 void FormatFilterComboBox::paintEvent(QPaintEvent *e) {
     StyledComboBox::paintEvent(e);
 
     QPainter p(this);
-    QRect textRect = rect().adjusted(kTextLeftPadding, 0, -iconAreaWidth(), 0);
+    const int trailingWidth = iconAreaWidth() + kTextIconSpacingPx;
+    QRect textRect = rect().adjusted(kTextLeftPadding, 0, -trailingWidth, 0);
     p.setPen(palette().color(QPalette::ButtonText));
     p.drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft,
                fontMetrics().elidedText(mDisplayText, Qt::ElideRight, textRect.width()));
 }
 
+void FormatFilterComboBox::showPopup() {
+    mPressedIndex = QPersistentModelIndex();
+    const int popupFrameWidth = view()->frameWidth();
+    const int popupContentWidth = view()->sizeHintForColumn(modelColumn());
+    view()->setMinimumWidth(qMax(width(), popupContentWidth
+        + popupFrameWidth * 2));
+    StyledComboBox::showPopup();
+}
+
 bool FormatFilterComboBox::eventFilter(QObject *watched, QEvent *event) {
-    if (watched == view()->viewport() && event->type() == QEvent::MouseButtonRelease) {
+    if (watched == view()->viewport()
+        && event->type() == QEvent::MouseButtonPress) {
         auto *mouseEvent = static_cast<QMouseEvent*>(event);
-        QModelIndex index = view()->indexAt(mouseEvent->pos());
-        if (index.isValid()) {
-            toggleItem(index.row());
-            return true; // keep the popup open
+        if (mouseEvent->button() == Qt::LeftButton)
+            mPressedIndex = view()->indexAt(mouseEvent->position().toPoint());
+        else
+            mPressedIndex = QPersistentModelIndex();
+    } else if (watched == view()->viewport()
+               && event->type() == QEvent::MouseButtonRelease) {
+        auto *mouseEvent = static_cast<QMouseEvent*>(event);
+        const QModelIndex releasedIndex = view()->indexAt(
+            mouseEvent->position().toPoint());
+        const bool shouldToggle = mouseEvent->button() == Qt::LeftButton
+            && mPressedIndex.isValid()
+            && releasedIndex == mPressedIndex;
+        mPressedIndex = QPersistentModelIndex();
+
+        if (shouldToggle)
+            toggleItem(releasedIndex.row());
+
+        if (mouseEvent->button() == Qt::LeftButton) {
+            // Keep the popup open and swallow the release that originally
+            // opened it, since that release has no matching viewport press.
+            return true;
         }
     }
     return StyledComboBox::eventFilter(watched, event);
@@ -168,6 +203,25 @@ bool FormatFilterComboBox::eventFilter(QObject *watched, QEvent *event) {
 
 QColor FormatFilterComboBox::iconColor() const {
     if (property("active").toBool())
-        return QColor(Qt::white);
+        return applyEnabledState(QColor(Qt::white));
     return StyledComboBox::iconColor();
+}
+
+int FormatFilterComboBox::widestDisplayTextWidth() const {
+    int widestWidth = fontMetrics().horizontalAdvance(tr("Custom"));
+    for (int row = 0; row < model->rowCount(); ++row) {
+        const QStandardItem *item = model->item(row);
+        if (item) {
+            widestWidth = qMax(
+                widestWidth, fontMetrics().horizontalAdvance(item->text()));
+        }
+    }
+    return widestWidth;
+}
+
+int FormatFilterComboBox::requiredControlWidth() const {
+    const int frameWidth = style()->pixelMetric(
+        QStyle::PM_ComboBoxFrameWidth, nullptr, this);
+    return kTextLeftPadding + widestDisplayTextWidth() + kTextIconSpacingPx
+        + iconAreaWidth() + frameWidth * 2;
 }

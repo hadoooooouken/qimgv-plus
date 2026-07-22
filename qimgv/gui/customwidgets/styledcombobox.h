@@ -28,6 +28,7 @@ protected:
     // color; subclasses override to force a specific color in specific
     // visual states (e.g. a highlighted/active state).
     virtual QColor iconColor() const;
+    QColor applyEnabledState(const QColor &color) const;
     // Re-renders the glyph with the current iconColor(). Also used to pick
     // up a devicePixelRatio change at runtime.
     void refreshIcon();

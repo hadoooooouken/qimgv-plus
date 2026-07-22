@@ -1,4 +1,5 @@
 #include "styledcombobox.h"
+#include "proxystyle.h"
 #include "settings.h"
 
 StyledComboBox::StyledComboBox(QWidget *parent) : QComboBox(parent)
@@ -10,10 +11,12 @@ StyledComboBox::StyledComboBox(QWidget *parent) : QComboBox(parent)
 }
 
 void StyledComboBox::setIcon(FluentIcon icon, int sizePx) {
+    setProperty(ProxyStyle::kCustomComboBoxIndicatorProperty, true);
     iconGlyph = icon;
     iconSizePx = sizePx;
     iconSet = true;
     refreshIcon();
+    updateGeometry();
 }
 
 int StyledComboBox::iconAreaWidth() const {
@@ -25,7 +28,11 @@ int StyledComboBox::iconAreaWidth() const {
 }
 
 QColor StyledComboBox::iconColor() const {
-    return settings->colorScheme().icons;
+    return applyEnabledState(settings->colorScheme().icons);
+}
+
+QColor StyledComboBox::applyEnabledState(const QColor &color) const {
+    return ProxyStyle::iconColorForState(color, isEnabled());
 }
 
 void StyledComboBox::refreshIcon() {
@@ -56,6 +63,8 @@ bool StyledComboBox::event(QEvent *e) {
             dpr = newDpr;
             refreshIcon(); // re-render the glyph at the new physical resolution
         }
+    } else if (e->type() == QEvent::EnabledChange) {
+        refreshIcon();
     }
     return QComboBox::event(e);
 }
