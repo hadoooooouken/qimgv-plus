@@ -1,85 +1,5 @@
-<RCC>
+﻿<RCC>
     <qresource prefix="/">
-        <file>res/icons/common/buttons/contextmenu/add-folder.png</file>
-        <file>res/icons/common/buttons/contextmenu/add-folder@2x.png</file>
-        <file>res/icons/common/buttons/contextmenu/fit-width18.png</file>
-        <file>res/icons/common/buttons/contextmenu/fit-width18@2x.png</file>
-        <file>res/icons/common/buttons/contextmenu/fit-height-stretch18.png</file>
-        <file>res/icons/common/buttons/contextmenu/fit-height-stretch18@2x.png</file>
-        <file>res/icons/common/buttons/contextmenu/fit-window18.png</file>
-        <file>res/icons/common/buttons/contextmenu/fit-window18@2x.png</file>
-        <file>res/icons/common/buttons/contextmenu/zoom-in18.png</file>
-        <file>res/icons/common/buttons/contextmenu/zoom-in18@2x.png</file>
-        <file>res/icons/common/buttons/contextmenu/zoom-original18.png</file>
-        <file>res/icons/common/buttons/contextmenu/zoom-original18@2x.png</file>
-        <file>res/icons/common/buttons/contextmenu/zoom-out18.png</file>
-        <file>res/icons/common/buttons/contextmenu/zoom-out18@2x.png</file>
-        <file>res/icons/common/buttons/panel/close16.png</file>
-        <file>res/icons/common/buttons/panel/close16@2x.png</file>
-        <file>res/icons/common/buttons/panel/quit16.png</file>
-        <file>res/icons/common/buttons/panel/quit16@2x.png</file>
-        <file>res/icons/common/buttons/panel/folderview20.png</file>
-        <file>res/icons/common/buttons/panel/folderview20@2x.png</file>
-        <file>res/icons/common/buttons/panel/open20.png</file>
-        <file>res/icons/common/buttons/panel/open20@2x.png</file>
-        <file>res/icons/common/buttons/panel/settings16.png</file>
-        <file>res/icons/common/buttons/panel/settings16@2x.png</file>
-        <file>res/icons/common/buttons/panel/toggle-panel20.png</file>
-        <file>res/icons/common/buttons/panel/toggle-panel20@2x.png</file>
-        <file>res/icons/common/buttons/panel-small/add-new12.png</file>
-        <file>res/icons/common/buttons/panel-small/add-new12@2x.png</file>
-        <file>res/icons/common/buttons/panel-small/home12.png</file>
-        <file>res/icons/common/buttons/panel-small/home12@2x.png</file>
-        <file>res/icons/common/buttons/panel-small/remove12.png</file>
-        <file>res/icons/common/buttons/panel-small/remove12@2x.png</file>
-        <file>res/icons/common/menuitem/appearance16.png</file>
-        <file>res/icons/common/menuitem/appearance16@2x.png</file>
-        <file>res/icons/common/menuitem/copy16.png</file>
-        <file>res/icons/common/menuitem/copy16@2x.png</file>
-        <file>res/icons/common/menuitem/document-view16.png</file>
-        <file>res/icons/common/menuitem/document-view16@2x.png</file>
-        <file>res/icons/common/menuitem/flip-h16.png</file>
-        <file>res/icons/common/menuitem/flip-h16@2x.png</file>
-        <file>res/icons/common/menuitem/flip-v16.png</file>
-        <file>res/icons/common/menuitem/flip-v16@2x.png</file>
-        <file>res/icons/common/menuitem/folder16.png</file>
-        <file>res/icons/common/menuitem/folder16@2x.png</file>
-        <file>res/icons/common/menuitem/folderview16.png</file>
-        <file>res/icons/common/menuitem/folderview16@2x.png</file>
-        <file>res/icons/common/menuitem/image-crop16.png</file>
-        <file>res/icons/common/menuitem/image-crop16@2x.png</file>
-        <file>res/icons/common/menuitem/move16.png</file>
-        <file>res/icons/common/menuitem/move16@2x.png</file>
-        <file>res/icons/common/menuitem/open16.png</file>
-        <file>res/icons/common/menuitem/open16@2x.png</file>
-        <file>res/icons/common/menuitem/resize16.png</file>
-        <file>res/icons/common/menuitem/resize16@2x.png</file>
-        <file>res/icons/common/menuitem/rotate-left16.png</file>
-        <file>res/icons/common/menuitem/rotate-left16@2x.png</file>
-        <file>res/icons/common/menuitem/rotate-right16.png</file>
-        <file>res/icons/common/menuitem/rotate-right16@2x.png</file>
-        <file>res/icons/common/menuitem/settings16.png</file>
-        <file>res/icons/common/menuitem/settings16@2x.png</file>
-        <file>res/icons/common/notifications/dir_end20.png</file>
-        <file>res/icons/common/notifications/dir_end20@2x.png</file>
-        <file>res/icons/common/notifications/dir_start20.png</file>
-        <file>res/icons/common/notifications/dir_start20@2x.png</file>
-        <file>res/icons/common/notifications/success16.png</file>
-        <file>res/icons/common/notifications/success16@2x.png</file>
-        <file>res/icons/common/other/dropDownArrow.png</file>
-        <file>res/icons/common/other/dropDownArrow@2x.png</file>
-        <file>res/icons/common/other/image-crop48.png</file>
-        <file>res/icons/common/other/image-crop48@2x.png</file>
-        <file>res/icons/common/other/sorting-mode16.png</file>
-        <file>res/icons/common/other/sorting-mode16@2x.png</file>
-        <file>res/icons/common/overlay/close-dim16.png</file>
-        <file>res/icons/common/overlay/close-dim16@2x.png</file>
-        <file>res/icons/common/overlay/copy16.png</file>
-        <file>res/icons/common/overlay/copy16@2x.png</file>
-        <file>res/icons/common/overlay/edit16.png</file>
-        <file>res/icons/common/overlay/edit16@2x.png</file>
-        <file>res/icons/common/overlay/move16.png</file>
-        <file>res/icons/common/overlay/move16@2x.png</file>
         <file>res/icons/common/logo/3rdparty/qt.svg</file>
         <file>res/icons/common/logo/app/qimgv.svg</file>
         <file>res/icons/dark/other/collapsed.svg</file>
@@ -87,49 +7,7 @@
         <file>res/icons/light/other/collapsed.svg</file>
         <file>res/icons/light/other/expanded.svg</file>
         <file>res/styles/style-template.qss</file>
-        <file>res/icons/common/buttons/panel/settings20.png</file>
-        <file>res/icons/common/buttons/panel/settings20@2x.png</file>
-        <file>res/icons/common/buttons/panel/folder16.png</file>
-        <file>res/icons/common/buttons/panel/folder16@2x.png</file>
         <file>res/icons/common/other/folder32-scalable.svg</file>
-        <file>res/icons/common/buttons/panel/up16.png</file>
-        <file>res/icons/common/buttons/panel/up16@2x.png</file>
-        <file>res/icons/common/overlay/info16.png</file>
-        <file>res/icons/common/overlay/info16@2x.png</file>
-        <file>res/icons/common/menuitem/back16.png</file>
-        <file>res/icons/common/menuitem/print16.png</file>
-        <file>res/icons/common/menuitem/print16@2x.png</file>
-        <file>res/icons/common/menuitem/back16@2x.png</file>
-        <file>res/icons/common/menuitem/run16.png</file>
-        <file>res/icons/common/menuitem/run16@2x.png</file>
-        <file>res/icons/common/menuitem/trash16.png</file>
-        <file>res/icons/common/menuitem/trash16@2x.png</file>
-        <file>res/icons/common/menuitem/view16.png</file>
-        <file>res/icons/common/menuitem/view16@2x.png</file>
-        <file>res/icons/common/buttons/panel/document-view20.png</file>
-        <file>res/icons/common/buttons/panel/document-view20@2x.png</file>
-        <file>res/icons/common/buttons/panel/pin-panel20.png</file>
-        <file>res/icons/common/buttons/panel/pin-panel20@2x.png</file>
-        <file>res/icons/common/settings/about32.png</file>
-        <file>res/icons/common/settings/about32@2x.png</file>
-        <file>res/icons/common/settings/advanced32.png</file>
-        <file>res/icons/common/settings/advanced32@2x.png</file>
-        <file>res/icons/common/settings/appearance32.png</file>
-        <file>res/icons/common/settings/appearance32@2x.png</file>
-        <file>res/icons/common/settings/general32.png</file>
-        <file>res/icons/common/settings/general32@2x.png</file>
-        <file>res/icons/common/settings/scale32.png</file>
-        <file>res/icons/common/settings/scale32@2x.png</file>
-        <file>res/icons/common/settings/shortcuts32.png</file>
-        <file>res/icons/common/settings/shortcuts32@2x.png</file>
-        <file>res/icons/common/settings/terminal32.png</file>
-        <file>res/icons/common/settings/terminal32@2x.png</file>
-        <file>res/icons/common/settings/view32.png</file>
-        <file>res/icons/common/settings/view32@2x.png</file>
-        <file>res/icons/common/overlay/arrow_left_50.png</file>
-        <file>res/icons/common/overlay/arrow_right_50.png</file>
-        <file>res/icons/common/overlay/arrow_left_50@2x.png</file>
-        <file>res/icons/common/overlay/arrow_right_50@2x.png</file>
         <file>res/shaders/panorama.frag</file>
         <file>res/shaders/filter.vert</file>
         <file>res/shaders/filter.frag</file>
