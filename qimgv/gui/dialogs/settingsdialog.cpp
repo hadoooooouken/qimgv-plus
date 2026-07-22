@@ -61,9 +61,9 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   versionLabel->setText("" + QApplication::applicationVersion());
   qtVersionLabel->setText(qVersion());
   appIconLabel->setPixmap(
-      QIcon(":/res/icons/common/logo/app/22.png").pixmap(22, 22));
+      QIcon(":/res/icons/common/logo/app/qimgv.svg").pixmap(22, 22));
   qtIconLabel->setPixmap(
-      QIcon(":/res/icons/common/logo/3rdparty/qt22.png").pixmap(22, 16));
+      QIcon(":/res/icons/common/logo/3rdparty/qt.svg").pixmap(22, 16));
 
   // fake combobox that acts as a menu button
   // less code than using pushbutton with menu

@@ -84,10 +84,8 @@
         <file>res/icons/common/overlay/edit16@2x.png</file>
         <file>res/icons/common/overlay/move16.png</file>
         <file>res/icons/common/overlay/move16@2x.png</file>
-        <file>res/icons/common/logo/3rdparty/qt22.png</file>
-        <file>res/icons/common/logo/3rdparty/qt22@2x.png</file>
-        <file>res/icons/common/logo/app/22.png</file>
-        <file>res/icons/common/logo/app/22@2x.png</file>
+        <file>res/icons/common/logo/3rdparty/qt.svg</file>
+        <file>res/icons/common/logo/app/qimgv.svg</file>
         <file>res/icons/dark/other/collapsed.png</file>
         <file>res/icons/dark/other/expanded.png</file>
         <file>res/icons/light/other/collapsed.png</file>
