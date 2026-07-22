@@ -10,6 +10,7 @@
 #include <QLabel>
 #include "gui/customwidgets/iconbutton.h"
 #include "gui/customwidgets/clickablelabel.h"
+#include <QEnterEvent>
 #include <QMouseEvent>
 
 class BookmarksItem : public QWidget {
@@ -27,6 +28,8 @@ signals:
     void droppedIn(QList<QString> paths, QString dirPath);
 
 protected:
+    void enterEvent(QEnterEvent *event) override;
+    void leaveEvent(QEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

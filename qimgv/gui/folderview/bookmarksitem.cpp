@@ -29,6 +29,7 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
     removeItemButton.setIcon(FluentIcon::BookmarkRemove20, 16);
     removeItemButton.setMinimumSize(16, 16);
     removeItemButton.installEventFilter(this);
+    removeItemButton.hide();
 
     removeItemButton.setAccessibleName("BookmarksItemRemoveLabel");
 
@@ -46,6 +47,16 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
 
 QString BookmarksItem::path() {
     return dirPath;
+}
+
+void BookmarksItem::enterEvent(QEnterEvent *event) {
+    QWidget::enterEvent(event);
+    removeItemButton.show();
+}
+
+void BookmarksItem::leaveEvent(QEvent *event) {
+    QWidget::leaveEvent(event);
+    removeItemButton.hide();
 }
 
 void BookmarksItem::setHighlighted(bool mode) {
