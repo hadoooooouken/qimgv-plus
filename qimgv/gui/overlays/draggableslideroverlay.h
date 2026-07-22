@@ -8,6 +8,7 @@ class QFormLayout;
 class QSlider;
 class QLabel;
 class QHBoxLayout;
+enum class FluentIcon;
 
 class DraggableSliderOverlay : public OverlayWidget {
     Q_OBJECT
@@ -19,7 +20,7 @@ public:
     void setCustomPosition(const QPoint &globalPos);
 
 protected:
-    QWidget *createHeader(const QString &title);
+    QWidget *createHeader(const QString &title, FluentIcon icon);
     void addSliderRow(QFormLayout *formLayout,
                       const QString &labelText,
                       QSlider *&slider,

@@ -15,7 +15,7 @@ DraggableSliderOverlay::DraggableSliderOverlay(FloatingWidgetContainer *parent)
 
 DraggableSliderOverlay::~DraggableSliderOverlay() = default;
 
-QWidget *DraggableSliderOverlay::createHeader(const QString &title)
+QWidget *DraggableSliderOverlay::createHeader(const QString &title, FluentIcon icon)
 {
     QWidget *headerWidget = new QWidget(this);
     headerWidget->setAccessibleName("OverlayHeaderWidget");
@@ -26,7 +26,7 @@ QWidget *DraggableSliderOverlay::createHeader(const QString &title)
 
     IconWidget *headerIcon = new IconWidget(headerWidget);
     headerIcon->setAccessibleName("OverlayHeaderIcon");
-    headerIcon->setIcon(FluentIcon::Adjustments20, kHeaderIconSizePx);
+    headerIcon->setIcon(icon, kHeaderIconSizePx);
 
     QLabel *titleLabel = new QLabel(title, headerWidget);
     titleLabel->setAccessibleName("OverlayHeaderLabel");

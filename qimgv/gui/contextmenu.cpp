@@ -208,7 +208,7 @@ void ContextMenu::setupUi()
     addItem(m_folderView,       actionsLayout, "folderView",         tr("Folder View"),        FluentIcon::Grid20);
 
     addItem(m_showLocation,     actionsLayout, "showInDirectory",    tr("Show in folder"),     FluentIcon::ShowInFolder20);
-    addItem(m_imageInfo,        actionsLayout, "toggleImageInfo",    tr("Image info"),         FluentIcon::ImageInfo20);
+    addItem(m_imageInfo,        actionsLayout, "toggleImageInfo",    tr("Image info"),         FluentIcon::Info20);
     addItem(m_settings,         actionsLayout, "openSettings",       tr("Settings"),           FluentIcon::Settings20);
 
     addSeparator(actionsLayout, 4, 4);

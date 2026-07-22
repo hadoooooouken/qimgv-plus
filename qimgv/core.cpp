@@ -56,7 +56,7 @@ Core::Core()
 
   upscaler = std::make_unique<Upscaler>(this);
   connect(upscaler.get(), &Upscaler::upscaleStarted, this, [this]() {
-      mw->showMessage(tr("AI Upscaling..."), 3600000);
+      mw->showMessageAiUpscale(tr("AI Upscaling..."), 3600000);
   });
   connect(upscaler.get(), &Upscaler::upscaleFinished, this,
       [this](QImage cropImg, QRect origCrop, QString path, QSize) {
@@ -1450,7 +1450,7 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
       return;
 
     if (aiResizeActive) {
-      mw->showMessage(tr("AI resize is already running."));
+      mw->showMessageAiUpscale(tr("AI resize is already running."));
       return;
     }
 
@@ -1486,7 +1486,7 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
 
     aiResizeActive = true;
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    mw->showMessage(tr("AI resizing..."), 3600000);
+    mw->showMessageAiUpscale(tr("AI resizing..."), 3600000);
 
     auto task = new UpscaylResizeRunnable(request);
     task->setAutoDelete(false);
@@ -1769,7 +1769,7 @@ void Core::setWallpaper() {
 
     if (upscalingNeeded) {
       QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-        mwPointer->showMessage(tr("AI upscaling..."), 60000);
+        mwPointer->showMessageAiUpscale(tr("AI upscaling..."), 60000);
       }, Qt::QueuedConnection);
 
       if (UpscaylScaler::getInstance()->init(appDir, modelName)) {

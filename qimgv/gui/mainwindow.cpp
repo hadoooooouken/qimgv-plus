@@ -7,6 +7,7 @@
 namespace {
 constexpr int MIN_WINDOW_WIDTH = 256;
 constexpr int MIN_WINDOW_HEIGHT = 256;
+constexpr int kDefaultMessageDurationMs = 1500;
 }
 
 
@@ -507,7 +508,7 @@ void MW::toggleUpscayl() {
     bool current = settings->useUpscayl();
     settings->setUseUpscayl(!current);
     settings->sendChangeNotification();
-    showMessage(settings->useUpscayl() ? tr("Use Upscayl: ON") : tr("Use Upscayl: OFF"), 600);
+    showMessageAiUpscale(settings->useUpscayl() ? tr("Use Upscayl: ON") : tr("Use Upscayl: OFF"), 600);
     if (!settings->useUpscayl()) {
         hideUpscaledCrop();
     }
@@ -526,7 +527,7 @@ void MW::cycleUpscaylModel() {
     const QString nextModel = models.at(next);
     pendingUpscaylModelName = nextModel;
     settings->setUpscaylModel(nextModel);
-    showMessage(tr("Model: %1").arg(nextModel), 1500);
+    showMessageAiUpscale(tr("Model: %1").arg(nextModel));
     // Delay the actual reload/rescale: it triggers Upscaler::upscaleStarted,
     // which shows an "AI Upscaling..." message that would otherwise
     // immediately overwrite the "Model: X" message above.
@@ -1160,23 +1161,31 @@ void MW::showMessageDirectoryStart() {
 }
 
 void MW::showMessageFitWindow() {
-    activeFloatingMessage()->showMessage(tr("Fit Window"), FloatingMessageIcon::NO_ICON, 350);
+    activeFloatingMessage()->showMessage(tr("Fit Window"), FloatingMessageIcon::ICON_FIT_WINDOW, 350);
 }
 
 void MW::showMessageFitWidth() {
-    activeFloatingMessage()->showMessage(tr("Fit Width"), FloatingMessageIcon::NO_ICON, 350);
+    activeFloatingMessage()->showMessage(tr("Fit Width"), FloatingMessageIcon::ICON_FIT_WIDTH, 350);
 }
 
 void MW::showMessageFitOriginal() {
-    activeFloatingMessage()->showMessage(tr("Fit 1:1"), FloatingMessageIcon::NO_ICON, 350);
+    activeFloatingMessage()->showMessage(tr("Fit 1:1"), FloatingMessageIcon::ICON_FIT_ORIGINAL, 350);
 }
 
 void MW::showMessage(QString text) {
-    activeFloatingMessage()->showMessage(text,  FloatingMessageIcon::NO_ICON, 1500);
+    activeFloatingMessage()->showMessage(text, FloatingMessageIcon::ICON_INFO, kDefaultMessageDurationMs);
 }
 
 void MW::showMessage(QString text, int duration) {
-    activeFloatingMessage()->showMessage(text, FloatingMessageIcon::NO_ICON, duration);
+    activeFloatingMessage()->showMessage(text, FloatingMessageIcon::ICON_INFO, duration);
+}
+
+void MW::showMessageAiUpscale(QString text) {
+    showMessageAiUpscale(text, kDefaultMessageDurationMs);
+}
+
+void MW::showMessageAiUpscale(QString text, int duration) {
+    activeFloatingMessage()->showMessage(text, FloatingMessageIcon::ICON_AI_UPSCALE, duration);
 }
 
 void MW::hideMessage() {
@@ -1189,11 +1198,11 @@ void MW::hideMessage() {
 }
 
 void MW::showMessageSuccess(QString text) {
-    activeFloatingMessage()->showMessage(text,  FloatingMessageIcon::ICON_SUCCESS, 1500);
+    activeFloatingMessage()->showMessage(text,  FloatingMessageIcon::ICON_SUCCESS, kDefaultMessageDurationMs);
 }
 
 void MW::showWarning(QString text) {
-    activeFloatingMessage()->showMessage(text,  FloatingMessageIcon::ICON_WARNING, 1500);
+    activeFloatingMessage()->showMessage(text,  FloatingMessageIcon::ICON_WARNING, kDefaultMessageDurationMs);
 }
 
 void MW::showError(QString text) {

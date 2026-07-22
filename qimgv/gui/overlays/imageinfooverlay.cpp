@@ -18,7 +18,7 @@ ImageInfoOverlay::ImageInfoOverlay(FloatingWidgetContainer *parent) :
 {
     setupUi();
     closeButton->setIcon(FluentIcon::Dismiss16, kCloseIconSizePx);
-    headerIcon->setIcon(FluentIcon::ImageInfo20, kHeaderIconSizePx);
+    headerIcon->setIcon(FluentIcon::Info20, kHeaderIconSizePx);
     entryStub.setFixedSize(280, 48);
     entryStub.setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     connect(closeButton,  &IconButton::clicked, this, &ImageInfoOverlay::hide);

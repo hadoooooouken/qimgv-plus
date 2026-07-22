@@ -45,6 +45,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Dismiss16,                    0x0F368 }, // ic_fluent_dismiss_16_regular               <- close-dim16.png / close16.png
         { FluentIcon::Dismiss20,                    0x0F369 }, // ic_fluent_dismiss_20_regular               <- close-dim16.png / close16.png (20px sibling of Dismiss16, for call sites rendered at 20px)
         { FluentIcon::DocumentView20,                0xF488 }, // ic_fluent_image_20_regular                 <- folder view / document view / to image viewer
+        { FluentIcon::ErrorCircle20,                 0xF3F1 }, // ic_fluent_error_circle_20_regular          <- error floating message
         { FluentIcon::FlipHorizontal20,             0xF02A1 }, // ic_fluent_arrow_bidirectional_left_right_20_regular      <- flip-h16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::FlipVertical20,                0xE084 }, // ic_fluent_arrow_bidirectional_up_down_20_regular         <- flip-v16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::Folder16,                      0xE643 }, // ic_fluent_folder_16_regular                <- folderview - folder thumb
@@ -55,7 +56,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Grid20,                       0x0F462 }, // ic_fluent_grid_20_regular                  <- folderview20.png
         { FluentIcon::Home20,                        0xF480 }, // ic_fluent_home_20_regular                  <- home12.png
         { FluentIcon::Wallpaper20,                   0xF359 }, // ic_fluent_desktop_20_regular               <- document-view16.png
-        { FluentIcon::ImageInfo20,                   0xF4A3 }, // ic_fluent_info_20_regular                  <- contextmenu.cpp Image info
+        { FluentIcon::Info20,                        0xF4A3 }, // ic_fluent_info_20_regular                  <- image info / informational floating message
         { FluentIcon::Panorama20,                   0xF08F5 }, // ic_fluent_planet_20_regular                <- view16.png (Panorama mode) (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::OpenOnlySelected20,            0xF697 }, // ic_fluent_select_object_20_regular         <- folderview Open only selected
         { FluentIcon::PanelLeft20,                  0x0E8B0 }, // ic_fluent_panel_left_20_regular            <- toggle-panel20.png
@@ -66,6 +67,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::AiUpscale20,                  0xF0799 }, // ic_fluent_brain_sparkle_20_regular         <- contextmenu.cpp (AI Upscale)
         { FluentIcon::Settings20,                   0x0F6A9 }, // ic_fluent_settings_20_regular              <- settings20.png
         { FluentIcon::BookmarkRemove20,              0xF368 }, // ic_fluent_dismiss_16_regular               <- remove16.png
+        { FluentIcon::Warning20,                     0xF869 }, // ic_fluent_warning_20_regular               <- warning floating message
         { FluentIcon::ZoomIn20,                     0x0F8C4 }, // ic_fluent_zoom_in_20_regular               <- zoom-in18.png
         { FluentIcon::ZoomOriginal20,               0x0F70A }, // ic_fluent_ratio_one_to_one_20_regular      <- zoom-original18.png
         { FluentIcon::ZoomOut20,                    0x0F8C6 }, // ic_fluent_zoom_out_20_regular              <- zoom-out18.png

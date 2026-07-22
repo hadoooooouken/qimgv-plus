@@ -6,13 +6,17 @@
 class IconWidget;
 
 enum FloatingMessageIcon {
-    NO_ICON,
+    ICON_INFO,
     ICON_DIRECTORY,
     ICON_LEFT_EDGE,
     ICON_RIGHT_EDGE,
     ICON_SUCCESS,
     ICON_WARNING,
-    ICON_ERROR
+    ICON_ERROR,
+    ICON_AI_UPSCALE,
+    ICON_FIT_WINDOW,
+    ICON_FIT_WIDTH,
+    ICON_FIT_ORIGINAL
 };
 
 class FloatingMessage : public OverlayWidget {

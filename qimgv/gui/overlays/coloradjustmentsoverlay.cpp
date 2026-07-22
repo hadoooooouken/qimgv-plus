@@ -1,5 +1,6 @@
 #include "coloradjustmentsoverlay.h"
 #include "gui/customwidgets/iconbutton.h"
+#include "utils/iconfontmanager.h"
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -52,7 +53,7 @@ void ColorAdjustmentsOverlay::setupUi()
     mainLayout->setSpacing(0);
 
     // Header
-    mainLayout->addWidget(createHeader(tr("Color adjustments")));
+    mainLayout->addWidget(createHeader(tr("Color adjustments"), FluentIcon::Adjustments20));
 
     QVBoxLayout *contentLayout = new QVBoxLayout();
     contentLayout->setContentsMargins(12, 8, 12, 0);

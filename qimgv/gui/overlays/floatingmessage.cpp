@@ -20,7 +20,7 @@ FloatingMessage::FloatingMessage(FloatingWidgetContainer *parent) :
     setFadeEnabled(true);
     setFadeDuration(300);
 
-    setIcon(FloatingMessageIcon::NO_ICON);
+    setIcon(FloatingMessageIcon::ICON_INFO);
 
     this->setAccessibleName("FloatingMessage");
     connect(&visibilityTimer, &QTimer::timeout, this, &FloatingMessage::hideAnimated);
@@ -88,27 +88,41 @@ void FloatingMessage::setText(QString text) {
 }
 
 void FloatingMessage::setIcon(FloatingMessageIcon icon) {
+    iconLabel->show();
+
     switch (icon) {
-        case FloatingMessageIcon::NO_ICON:
-        case FloatingMessageIcon::ICON_WARNING:
-        case FloatingMessageIcon::ICON_ERROR:
-            iconLabel->hide();
+        case FloatingMessageIcon::ICON_INFO:
+            iconLabel->setIcon(FluentIcon::Info20, kMessageIconSizePx);
             break;
         case FloatingMessageIcon::ICON_DIRECTORY:
-            iconLabel->show();
             iconLabel->setIcon(FluentIcon::Folder20, kMessageIconSizePx);
             break;
         case FloatingMessageIcon::ICON_LEFT_EDGE:
-            iconLabel->show();
             iconLabel->setIcon(FluentIcon::ArrowPrevious20, kMessageIconSizePx);
             break;
         case FloatingMessageIcon::ICON_RIGHT_EDGE:
-            iconLabel->show();
             iconLabel->setIcon(FluentIcon::ArrowNext20, kMessageIconSizePx);
             break;
         case FloatingMessageIcon::ICON_SUCCESS:
-            iconLabel->show();
             iconLabel->setIcon(FluentIcon::CheckmarkCircle20, kMessageIconSizePx);
+            break;
+        case FloatingMessageIcon::ICON_WARNING:
+            iconLabel->setIcon(FluentIcon::Warning20, kMessageIconSizePx);
+            break;
+        case FloatingMessageIcon::ICON_ERROR:
+            iconLabel->setIcon(FluentIcon::ErrorCircle20, kMessageIconSizePx);
+            break;
+        case FloatingMessageIcon::ICON_AI_UPSCALE:
+            iconLabel->setIcon(FluentIcon::AiUpscale20, kMessageIconSizePx);
+            break;
+        case FloatingMessageIcon::ICON_FIT_WINDOW:
+            iconLabel->setIcon(FluentIcon::ArrowExpand20, kMessageIconSizePx);
+            break;
+        case FloatingMessageIcon::ICON_FIT_WIDTH:
+            iconLabel->setIcon(FluentIcon::ArrowAutofitWidth20, kMessageIconSizePx);
+            break;
+        case FloatingMessageIcon::ICON_FIT_ORIGINAL:
+            iconLabel->setIcon(FluentIcon::ZoomOriginal20, kMessageIconSizePx);
             break;
     }
 }

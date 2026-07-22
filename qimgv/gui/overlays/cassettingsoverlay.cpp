@@ -1,5 +1,6 @@
 #include "cassettingsoverlay.h"
 #include "settings.h"
+#include "utils/iconfontmanager.h"
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -42,7 +43,7 @@ void CasSettingsOverlay::setupUi()
     mainLayout->setSpacing(0);
 
     // Header
-    mainLayout->addWidget(createHeader(tr("CAS Settings")));
+    mainLayout->addWidget(createHeader(tr("CAS Settings"), FluentIcon::Blur20));
 
     QVBoxLayout *contentLayout = new QVBoxLayout();
     contentLayout->setContentsMargins(12, 8, 12, 0);

@@ -226,6 +226,8 @@ public slots:
   void copyViewportToClipboard();
   void showMessage(QString text);
   void showMessage(QString text, int duration);
+  void showMessageAiUpscale(QString text);
+  void showMessageAiUpscale(QString text, int duration);
   void hideMessage();
   void showMessageSuccess(QString text);
   void showWarning(QString text);
