@@ -82,10 +82,10 @@
         <file>res/icons/common/overlay/move16@2x.png</file>
         <file>res/icons/common/logo/3rdparty/qt.svg</file>
         <file>res/icons/common/logo/app/qimgv.svg</file>
-        <file>res/icons/dark/other/collapsed.png</file>
-        <file>res/icons/dark/other/expanded.png</file>
-        <file>res/icons/light/other/collapsed.png</file>
-        <file>res/icons/light/other/expanded.png</file>
+        <file>res/icons/dark/other/collapsed.svg</file>
+        <file>res/icons/dark/other/expanded.svg</file>
+        <file>res/icons/light/other/collapsed.svg</file>
+        <file>res/icons/light/other/expanded.svg</file>
         <file>res/styles/style-template.qss</file>
         <file>res/icons/common/buttons/panel/settings20.png</file>
         <file>res/icons/common/buttons/panel/settings20@2x.png</file>

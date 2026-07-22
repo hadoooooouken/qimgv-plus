@@ -834,13 +834,13 @@ QTreeView::branch:!has-children:!hover:adjoins-item:!selected {
 QTreeView::branch:has-children:!has-siblings:closed,
 QTreeView::branch:closed:has-children:has-siblings {
         border-image: none;
-        image: url(:/res/icons/%icontheme%/other/collapsed.png)
+        image: url(:/res/icons/%icontheme%/other/collapsed.svg)
 }
 
 QTreeView::branch:open:has-children:!has-siblings,
 QTreeView::branch:open:has-children:has-siblings {
         border-image: none;
-        image: url(:/res/icons/%icontheme%/other/expanded.png)
+        image: url(:/res/icons/%icontheme%/other/expanded.svg)
 }
 
 /*----------------------------------------------------------------------------*/
