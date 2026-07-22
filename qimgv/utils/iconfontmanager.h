@@ -84,6 +84,15 @@ enum class FluentIcon {
     ZoomOriginal20,
     ZoomOut20,
     ChevronUp20,
+    Settings32,
+    Eye32,
+    ColorFill32,
+    Controls32,
+    Scripts32,
+    WrenchScrewdriver32,
+    BrainSparkle32,
+    Info32,
+    ChevronUp16,
 };
 
 // Renders glyphs from the bundled Fluent System Icons font into QPixmap,

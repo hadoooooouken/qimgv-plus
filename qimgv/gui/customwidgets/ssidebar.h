@@ -14,7 +14,7 @@ class SSideBar : public QWidget {
     Q_OBJECT
 public:
     explicit SSideBar(QWidget *parent = nullptr);
-    void addEntry(QString icon, QString name);
+    void addEntry(FluentIcon icon, const QString &name);
     void selectEntry(int idx);
 
 private:
@@ -36,7 +36,7 @@ protected:
 class SSideBarItem : public QWidget {
     Q_OBJECT
 public:
-    explicit SSideBarItem(QString icon, QString name, QWidget *parent = nullptr);
+    explicit SSideBarItem(FluentIcon icon, const QString &name, QWidget *parent = nullptr);
     void setHighlighted(bool mode);
     bool highlighted();
 

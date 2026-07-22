@@ -22,8 +22,9 @@
 #include "utils/imagelib.h"
 
 namespace {
-// upButton / settingsButton / exitButton (bottom toolbar row).
+// settingsButton / exitButton (bottom toolbar row).
 constexpr int kToolbarIconSizePx = 20;
+constexpr int kUpButtonIconSizePx = 16;
 // docViewButton / togglePlacesPanelButton (same row, larger design).
 constexpr int kLargeToolbarIconSizePx = 20;
 // newBookmarkButton / homeButton (bookmarks bar, smaller buttons).
@@ -104,7 +105,7 @@ FolderView::FolderView(QWidget *parent) :
         });
     // -------------------------------
     upButton->setAction("goUp");
-    upButton->setIcon(FluentIcon::ArrowUp16, kToolbarIconSizePx);
+    upButton->setIcon(FluentIcon::ChevronUp16, kUpButtonIconSizePx);
     upButton->setTriggerMode(TriggerMode::ClickTrigger);
     settingsButton->setAction("openSettings");
     settingsButton->setIcon(FluentIcon::Settings20, kToolbarIconSizePx);

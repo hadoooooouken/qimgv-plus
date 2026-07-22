@@ -2,23 +2,27 @@
 #include "settings.h"
 #include <utility>
 
+namespace {
+constexpr int kSidebarIconSizePx = 32;
+}
+
 SSideBar::SSideBar(QWidget *parent) : QWidget{parent} {
     layout = new QBoxLayout(QBoxLayout::TopToBottom);
     layout->setSpacing(0);
     layout->setContentsMargins(8,8,9,9);
     layout->addStretch();
     setLayout(layout);
-    addEntry(":/res/icons/common/settings/general32.png",    tr("General"));
-    addEntry(":/res/icons/common/settings/view32.png",       tr("View"));
-    addEntry(":/res/icons/common/settings/appearance32.png", tr("Theme"));
-    addEntry(":/res/icons/common/settings/shortcuts32.png",  tr("Controls"));
-    addEntry(":/res/icons/common/settings/terminal32.png",   tr("Scripts"));
-    addEntry(":/res/icons/common/settings/advanced32.png",   tr("Advanced"));
-    addEntry(":/res/icons/common/settings/scale32.png", tr("AI Upscale"));
-    addEntry(":/res/icons/common/settings/about32.png",      tr("About"));
+    addEntry(FluentIcon::Settings32,          tr("General"));
+    addEntry(FluentIcon::Eye32,               tr("View"));
+    addEntry(FluentIcon::ColorFill32,         tr("Theme"));
+    addEntry(FluentIcon::Controls32,               tr("Controls"));
+    addEntry(FluentIcon::Scripts32,         tr("Scripts"));
+    addEntry(FluentIcon::WrenchScrewdriver32, tr("Advanced"));
+    addEntry(FluentIcon::BrainSparkle32,      tr("AI Upscale"));
+    addEntry(FluentIcon::Info32,              tr("About"));
 }
 
-void SSideBar::addEntry(QString icon, QString name) {
+void SSideBar::addEntry(FluentIcon icon, const QString &name) {
     SSideBarItem *entry = new SSideBarItem(icon, name);
     layout->insertWidget(entries.count(), entry);
     entries.append(entry);
@@ -72,13 +76,13 @@ void SSideBar::paintEvent(QPaintEvent *event) {
 
 // -------------------------------------------------------------------
 
-SSideBarItem::SSideBarItem(QString icon, QString name, QWidget *parent) : QWidget{parent} {
+SSideBarItem::SSideBarItem(FluentIcon icon, const QString &name, QWidget *parent) : QWidget{parent} {
     QPalette p;
     if(p.base().color().valueF() <= 0.45f)
         iconWidget.setColor(QColor(184,184,185));
     else
         iconWidget.setColor(QColor(70,70,70));
-    iconWidget.setIconPath(icon);
+    iconWidget.setIcon(icon, kSidebarIconSizePx);
     textLabel.setText(name);
     layout = new QBoxLayout(QBoxLayout::LeftToRight);
     layout->setContentsMargins(6,4,6,4);

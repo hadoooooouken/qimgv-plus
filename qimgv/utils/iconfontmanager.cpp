@@ -19,7 +19,7 @@ namespace {
 // "move file", "panorama mode"). Expect this table to be edited.
 const QHash<FluentIcon, char32_t> &codepointTable() {
     static const QHash<FluentIcon, char32_t> table = {
-        { FluentIcon::BookmarkAdd20,                 0xF1E8 }, // ic_fluent_bookmark_add_20_regular                  <- add-new12.png
+        { FluentIcon::BookmarkAdd20,                 0xF1E8 }, // ic_fluent_bookmark_add_20_regular          <- add-new12.png
         { FluentIcon::OpenWith20,                    0xF582 }, // ic_fluent_open_20_regular                  <- run16.png (Open with) (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::ArrowAutofitHeight20,         0x0E077 }, // ic_fluent_arrow_autofit_height_20_regular  <- fit-height-stretch18.png
         { FluentIcon::ArrowAutofitWidth20,          0x0E07C }, // ic_fluent_arrow_autofit_width_20_regular   <- fit-width18.png
@@ -90,6 +90,15 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::ChevronUp20,                   0xF2B6 }, // ic_fluent_chevron_up_20_regular            <- contextmenu.cpp more (expanded state)
         { FluentIcon::BatchConvert16,               0xF0BB7 }, // ic_fluent_stack_vertical_16_regular        <- folderview button
         { FluentIcon::BatchConvert20,               0xF00FF }, // ic_fluent_stack_vertical_20_regular        <- folderview menu
+        { FluentIcon::Settings32,                    0xEA94 }, // ic_fluent_settings_32_regular              <- general32.png
+        { FluentIcon::Eye32,                         0xEFC9 }, // ic_fluent_eye_32_regular                   <- view32.png
+        { FluentIcon::ColorFill32,                  0xF0BCB }, // ic_fluent_color_fill_32_regular            <- appearance32.png
+        { FluentIcon::Controls32,                    0xE74A }, // ic_fluent_keyboard_16_regular              <- shortcuts32.png
+        { FluentIcon::Scripts32,                     0xF339 }, // ic_fluent_code_16_regular                  <- terminal32.png
+        { FluentIcon::WrenchScrewdriver32,          0xF0461 }, // ic_fluent_wrench_screwdriver_32_regular    <- advanced32.png
+        { FluentIcon::BrainSparkle32,               0xF0B3A }, // ic_fluent_brain_sparkle_32_regular         <- scale32.png
+        { FluentIcon::Info32,                       0xF0059 }, // ic_fluent_info_32_regular                  <- about32.png
+        { FluentIcon::ChevronUp16,                   0xF2B5 }, // ic_fluent_chevron_up_16_regular            <- up16.png
 
         };
     return table;
