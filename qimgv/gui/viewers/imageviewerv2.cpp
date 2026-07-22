@@ -9,6 +9,35 @@
 #include <QScreen>
 #include <QCoreApplication>
 
+namespace {
+constexpr int kCheckerboardTileSizePx = 16;
+constexpr int kCheckerboardCellsPerAxis = 2;
+constexpr qreal kMinimumDevicePixelRatio = 1.0;
+constexpr QRgb kCheckerboardLightRgb = 0xFF999999;
+constexpr QRgb kCheckerboardDarkRgb = 0xFF666666;
+
+QPixmap createTransparencyCheckerboard(qreal dpr) {
+  const qreal effectiveDpr = qMax(dpr, kMinimumDevicePixelRatio);
+  const int physicalTileSize =
+      qRound(kCheckerboardTileSizePx * effectiveDpr);
+  const int firstCellSize = physicalTileSize / kCheckerboardCellsPerAxis;
+  const int secondCellSize = physicalTileSize - firstCellSize;
+
+  QPixmap checkerboard(physicalTileSize, physicalTileSize);
+  checkerboard.fill(QColor::fromRgba(kCheckerboardLightRgb));
+
+  QPainter painter(&checkerboard);
+  painter.fillRect(firstCellSize, 0, secondCellSize, firstCellSize,
+                   QColor::fromRgba(kCheckerboardDarkRgb));
+  painter.fillRect(0, firstCellSize, firstCellSize, secondCellSize,
+                   QColor::fromRgba(kCheckerboardDarkRgb));
+  painter.end();
+
+  checkerboard.setDevicePixelRatio(effectiveDpr);
+  return checkerboard;
+}
+} // namespace
+
 ImageViewerV2::ImageViewerV2(QWidget *parent)
     : QGraphicsView(parent), image(nullptr),
       movie(nullptr), transparencyGrid(false), expandImage(false),
@@ -62,7 +91,7 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   scaleTimer->setSingleShot(true);
   scaleTimer->setInterval(80);
 
-  checkboard = new QPixmap(":/res/icons/common/other/checkerboard.png");
+  checkerboard = createTransparencyCheckerboard(dpr);
 
   lastTouchpadScroll.start();
   zoomThreshold = static_cast<int>(dpr * 4.);
@@ -164,6 +193,7 @@ void ImageViewerV2::onDPRChanged() {
     return;
   qDebug() << "DPR CHANGED " << dpr << " >> " << this->devicePixelRatioF();
   dpr = this->devicePixelRatioF();
+  checkerboard = createTransparencyCheckerboard(dpr);
   zoomThreshold = static_cast<int>(dpr * 4.);
   gestureThreshold = static_cast<int>(dpr * 40.);
   if (image) {
@@ -1027,7 +1057,7 @@ void ImageViewerV2::drawBackground(QPainter *painter, const QRectF &rect) {
   QGraphicsView::drawBackground(painter, rect);
   if (!isDisplaying() || !transparencyGrid || !image->hasAlphaChannel())
     return;
-  painter->drawTiledPixmap(pixmapItem.sceneBoundingRect(), *checkboard);
+  painter->drawTiledPixmap(pixmapItem.sceneBoundingRect(), checkerboard);
 }
 
 // simple pan behavior (cursor stops at the screen edges)

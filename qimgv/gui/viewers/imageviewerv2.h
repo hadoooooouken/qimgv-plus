@@ -191,7 +191,7 @@ private:
     ScalingFilter mScalingFilter;
     bool mUseUpscayl = false;
 
-    QPixmap *checkboard;
+    QPixmap checkerboard;
 
     void zoomAnchored(float newScale);
     void fitNormal();
