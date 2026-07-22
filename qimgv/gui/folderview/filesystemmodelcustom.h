@@ -6,6 +6,7 @@
 #include <QPainter>
 #include <QHash>
 #include <QString>
+#include "gui/uimetrics.h"
 #include "utils/iconfontmanager.h"
 
 class FileSystemModelCustom : public QFileSystemModel
@@ -20,7 +21,7 @@ public:
 protected:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 private:
-    static constexpr int kFolderIconSizePx = 16;
+    static constexpr int kFolderIconSizePx = UiMetrics::kCompactIconSizePx;
 
     void updateFolderIcon();
 

@@ -1,10 +1,11 @@
 #include "floatingmessage.h"
 #include "settings.h"
 #include "gui/customwidgets/iconwidget.h"
+#include "gui/uimetrics.h"
 #include <QHBoxLayout>
 
 namespace {
-constexpr int kMessageIconSizePx = 20;
+constexpr int kMessageIconSizePx = UiMetrics::kStandardIconSizePx;
 }
 
 FloatingMessage::FloatingMessage(FloatingWidgetContainer *parent) :

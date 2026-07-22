@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QDebug>
 #include <QMouseEvent>
+#include "gui/uimetrics.h"
 #include "utils/iconfontmanager.h"
 #include "utils/imagelib.h"
 
@@ -33,7 +34,7 @@ public:
 
     // Size menu-item and overlay-header icons are constrained to (see
     // paintEvent()). MenuItem::setIcon()'s default sizePx mirrors this.
-    static constexpr int kMenuItemIconSizePx = 16;
+    static constexpr int kMenuItemIconSizePx = UiMetrics::kCompactIconSizePx;
 
 protected:
     void paintEvent(QPaintEvent *event);

@@ -2,6 +2,7 @@
 #include "settings.h"
 #include "utils/imagelib.h"
 #include "gui/customwidgets/contextmenuitem.h"
+#include "gui/uimetrics.h"
 #include <QMenu>
 #include <QAction>
 #include <QWidgetAction>
@@ -10,7 +11,7 @@
 #include <QCursor>
 
 namespace {
-constexpr int kContextMenuIconSizePx = 20;
+constexpr int kContextMenuIconSizePx = UiMetrics::kStandardIconSizePx;
 }
 
 FolderGridView::FolderGridView(QWidget *parent)

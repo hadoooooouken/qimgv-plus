@@ -2,6 +2,7 @@
 #include "settings.h"
 #include "gui/customwidgets/actionbutton.h"
 #include "gui/customwidgets/contextmenuitem.h"
+#include "gui/uimetrics.h"
 #include "utils/iconfontmanager.h"
 #include <QHBoxLayout>
 #include <QLabel>
@@ -14,7 +15,7 @@ namespace {
 // All ContextMenu icons (zoom row, transform row, and the ContextMenuItem
 // list via addItem()) render at this glyph size. Change this one value
 // instead of every setIcon() call site.
-constexpr int kIconSizePx = 20;
+constexpr int kIconSizePx = UiMetrics::kStandardIconSizePx;
 } // namespace
 
 ContextMenu::ContextMenu(QWidget *parent)

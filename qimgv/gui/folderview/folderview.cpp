@@ -18,20 +18,14 @@
 #include "gui/customwidgets/clickablelabel.h"
 #include "gui/folderview/treeviewcustom.h"
 #include "gui/customwidgets/iconbutton.h"
+#include "gui/uimetrics.h"
 #include "utils/iconfontmanager.h"
 
 namespace {
-// settingsButton / exitButton (bottom toolbar row).
-constexpr int kToolbarIconSizePx = 20;
-constexpr int kUpButtonIconSizePx = 16;
-// docViewButton / togglePlacesPanelButton (same row, larger design).
-constexpr int kLargeToolbarIconSizePx = 20;
-// newBookmarkButton / homeButton (bookmarks bar, smaller buttons).
-constexpr int kSmallButtonIconSizePx = 20;
+constexpr int kActionIconSizePx = UiMetrics::kStandardIconSizePx;
 // sortingComboBox / folderSortingComboBox / formatFilterComboBox (their own
 // StyledComboBox icon, not the dropdown chevron).
-constexpr int kComboBoxIconSizePx = 16;
-constexpr int kBatchConvertButtonIconSizePx = 16;
+constexpr int kCompactIconSizePx = UiMetrics::kCompactIconSizePx;
 } // namespace
 
 class BatchConvertButton : public QPushButton {
@@ -50,7 +44,7 @@ public:
     void updateIcon() {
         iconPixmap = IconFontManager::pixmap(
             FluentIcon::BatchConvert16,
-            kBatchConvertButtonIconSizePx,
+            kCompactIconSizePx,
             settings->colorScheme().icons,
             devicePixelRatioF());
     }
@@ -97,25 +91,25 @@ FolderView::FolderView(QWidget *parent) :
         });
     // -------------------------------
     upButton->setAction("goUp");
-    upButton->setIcon(FluentIcon::ChevronUp16, kUpButtonIconSizePx);
+    upButton->setIcon(FluentIcon::ChevronUp16, kCompactIconSizePx);
     upButton->setTriggerMode(TriggerMode::ClickTrigger);
     settingsButton->setAction("openSettings");
-    settingsButton->setIcon(FluentIcon::Settings20, kToolbarIconSizePx);
+    settingsButton->setIcon(FluentIcon::Settings20, kActionIconSizePx);
     exitButton->setAction("exit");
-    exitButton->setIcon(FluentIcon::ArrowExit20, kToolbarIconSizePx);
+    exitButton->setIcon(FluentIcon::ArrowExit20, kActionIconSizePx);
     docViewButton->setAction("documentView");
-    docViewButton->setIcon(FluentIcon::DocumentView20, kLargeToolbarIconSizePx);
+    docViewButton->setIcon(FluentIcon::DocumentView20, kActionIconSizePx);
     togglePlacesPanelButton->setCheckable(true);
-    togglePlacesPanelButton->setIcon(FluentIcon::PanelLeft20, kLargeToolbarIconSizePx);
+    togglePlacesPanelButton->setIcon(FluentIcon::PanelLeft20, kActionIconSizePx);
     togglePlacesPanelButton->setIconOffset(1, 0);
 
 
-    sortingComboBox->setIcon(FluentIcon::ArrowSort16, kComboBoxIconSizePx);
-    folderSortingComboBox->setIcon(FluentIcon::Folder16, kComboBoxIconSizePx);
-    formatFilterComboBox->setIcon(FluentIcon::Checkmark16, kComboBoxIconSizePx);
+    sortingComboBox->setIcon(FluentIcon::ArrowSort16, kCompactIconSizePx);
+    folderSortingComboBox->setIcon(FluentIcon::Folder16, kCompactIconSizePx);
+    formatFilterComboBox->setIcon(FluentIcon::Checkmark16, kCompactIconSizePx);
 
-    newBookmarkButton->setIcon(FluentIcon::BookmarkAdd20, kSmallButtonIconSizePx);
-    homeButton->setIcon(FluentIcon::Home20, kSmallButtonIconSizePx);
+    newBookmarkButton->setIcon(FluentIcon::BookmarkAdd20, kActionIconSizePx);
+    homeButton->setIcon(FluentIcon::Home20, kActionIconSizePx);
 
     bookmarksLabel->setAcceptDrops(true);
     newBookmarkButton->setAcceptDrops(true);

@@ -1,15 +1,16 @@
 #include "mainpanel.h"
 #include "settings.h"
+#include "gui/uimetrics.h"
 #include "utils/iconfontmanager.h"
 
 namespace {
 // settingsButton / folderViewButton / pinButton icons.
-constexpr int kPanelIconSizePx = 20;
+constexpr int kPanelIconSizePx = UiMetrics::kStandardIconSizePx;
 // exitButton was sourced from a differently-sized PNG (close16.png vs.
 // settings20/folderview20/pin-panel20.png) despite sharing the same
 // ButtonSmall style/box as the other three - kept as-is pending a decision
 // on whether that was intentional.
-constexpr int kPanelExitIconSizePx = 16;
+constexpr int kPanelExitIconSizePx = UiMetrics::kCompactIconSizePx;
 } // namespace
 
 MainPanel::MainPanel(FloatingWidgetContainer *parent) : SlidePanel(parent) {

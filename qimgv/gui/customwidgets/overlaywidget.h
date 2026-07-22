@@ -5,6 +5,7 @@
 #pragma once
 
 #include "gui/customwidgets/floatingwidget.h"
+#include "gui/uimetrics.h"
 #include <QTimeLine>
 #include <QGraphicsOpacityEffect>
 #include <QPropertyAnimation>
@@ -53,8 +54,8 @@ private slots:
     qreal opacity() const;
 
 protected:
-    static constexpr int kHeaderIconSizePx = 20;
-    static constexpr int kCloseIconSizePx = 16;
+    static constexpr int kHeaderIconSizePx = UiMetrics::kStandardIconSizePx;
+    static constexpr int kCloseIconSizePx = UiMetrics::kCompactIconSizePx;
 
     virtual void recalculateGeometry();
     FloatingWidgetPosition position;

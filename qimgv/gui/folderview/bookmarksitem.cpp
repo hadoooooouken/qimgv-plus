@@ -2,11 +2,12 @@
 #include <QDrag>
 #include <QApplication>
 #include "bookmarkswidget.h"
+#include "gui/uimetrics.h"
 #include <QFileInfo>
 
 namespace {
 
-constexpr int kFolderIconSizePx = 16;
+constexpr int kFolderIconSizePx = UiMetrics::kCompactIconSizePx;
 
 } // namespace
 
@@ -26,8 +27,9 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
     folderIconWidget.setMinimumSize(kFolderIconSizePx, kFolderIconSizePx);
     folderIconWidget.installEventFilter(this);
 
-    removeItemButton.setIcon(FluentIcon::BookmarkRemove20, 16);
-    removeItemButton.setMinimumSize(16, 16);
+    removeItemButton.setIcon(FluentIcon::BookmarkRemove20, UiMetrics::kCompactIconSizePx);
+    removeItemButton.setMinimumSize(UiMetrics::kCompactIconSizePx,
+                                    UiMetrics::kCompactIconSizePx);
     removeItemButton.installEventFilter(this);
     removeItemButton.hide();
 
