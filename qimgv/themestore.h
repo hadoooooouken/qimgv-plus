@@ -16,6 +16,7 @@ struct BaseColorScheme {
     QColor text;
     QColor icons;
     QColor folder_icons;
+    QColor thumbnail_folder_icons;
     QColor widget;
     QColor widget_border;
     QColor accent;
@@ -46,6 +47,7 @@ public:
     QColor text;
     QColor icons;
     QColor folder_icons;
+    QColor thumbnail_folder_icons;
     QColor widget;
     QColor widget_border;
     QColor accent;

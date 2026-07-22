@@ -389,6 +389,7 @@ void Settings::loadTheme() {
   base.text = baseScheme.text;
   base.icons = baseScheme.icons;
   base.folder_icons = baseScheme.folder_icons;
+  base.thumbnail_folder_icons = baseScheme.thumbnail_folder_icons;
   base.widget = baseScheme.widget;
   base.widget_border = baseScheme.widget_border;
   base.accent = customAccent.isValid() ? customAccent : baseScheme.accent;

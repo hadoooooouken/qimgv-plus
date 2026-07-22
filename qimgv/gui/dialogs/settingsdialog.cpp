@@ -145,6 +145,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
               base.text = scheme.text;
               base.icons = scheme.icons;
               base.folder_icons = scheme.folder_icons;
+              base.thumbnail_folder_icons = scheme.thumbnail_folder_icons;
               base.widget = scheme.widget;
               base.widget_border = scheme.widget_border;
               base.folderview = scheme.folderview;
@@ -181,6 +182,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
             base.text = scheme.text;
             base.icons = scheme.icons;
             base.folder_icons = scheme.folder_icons;
+            base.thumbnail_folder_icons = scheme.thumbnail_folder_icons;
             base.widget = scheme.widget;
             base.widget_border = scheme.widget_border;
             base.folderview = scheme.folderview;
@@ -920,6 +922,7 @@ void SettingsDialog::saveColorScheme() {
   base.text = scheme.text;
   base.icons = scheme.icons;
   base.folder_icons = scheme.folder_icons;
+  base.thumbnail_folder_icons = scheme.thumbnail_folder_icons;
   base.widget = scheme.widget;
   base.widget_border = scheme.widget_border;
   base.folderview = scheme.folderview;

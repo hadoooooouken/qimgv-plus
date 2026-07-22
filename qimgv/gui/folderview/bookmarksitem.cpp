@@ -6,7 +6,7 @@
 
 namespace {
 
-constexpr int kFolderIconSizePx = 20;
+constexpr int kFolderIconSizePx = 16;
 
 } // namespace
 
@@ -21,7 +21,7 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
     spacer = new QSpacerItem(16, 1, QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
 
     folderIconWidget.setAttribute(Qt::WA_TransparentForMouseEvents, true);
-    folderIconWidget.setIcon(FluentIcon::Folder20, kFolderIconSizePx);
+    folderIconWidget.setIcon(FluentIcon::Folder16, kFolderIconSizePx);
     folderIconWidget.setColorMode(ICON_COLOR_THEME_FOLDER);
     folderIconWidget.setMinimumSize(kFolderIconSizePx, kFolderIconSizePx);
     folderIconWidget.installEventFilter(this);
