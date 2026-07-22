@@ -235,8 +235,13 @@ static bool collectSvgUrlReferences(const QString &value,
     if (referenceEnd < 0)
       return false;
 
-    const QString reference =
+    QString reference =
         value.mid(referenceStart, referenceEnd - referenceStart).trimmed();
+    if (reference.size() >= 2 &&
+        ((reference.front() == u'\'' && reference.back() == u'\'') ||
+         (reference.front() == u'"' && reference.back() == u'"'))) {
+      reference = reference.sliced(1, reference.size() - 2).trimmed();
+    }
     if (!reference.startsWith(idPrefix) ||
         !addSvgReference(reference.sliced(1), references))
       return false;
@@ -307,10 +312,14 @@ static bool validateSvgDocument(const QByteArray &svg) {
   QVector<QString> elementIds;
   bool sawRoot = false;
   bool sawRootEnd = false;
+  bool sawDoctype = false;
   int depth = 0;
   int elementCount = 0;
   int attributeCount = 0;
   int referenceEdgeCount = 0;
+  int styleDepth = 0;
+  QString styleText;
+  QSet<QString> styleReferences;
   double rootWidth = 0.0;
   double rootHeight = 0.0;
   bool hasRootWidth = false;
@@ -318,9 +327,20 @@ static bool validateSvgDocument(const QByteArray &svg) {
 
   while (!xml.atEnd()) {
     const QXmlStreamReader::TokenType token = xml.readNext();
-    if (token == QXmlStreamReader::DTD ||
-        token == QXmlStreamReader::EntityReference ||
-        token == QXmlStreamReader::ProcessingInstruction)
+    if (token == QXmlStreamReader::DTD) {
+      if (sawDoctype || sawRoot ||
+          xml.dtdName().compare(u"svg", Qt::CaseInsensitive) != 0 ||
+          !xml.entityDeclarations().isEmpty() ||
+          !xml.notationDeclarations().isEmpty())
+        return false;
+      sawDoctype = true;
+      continue;
+    }
+    if (token == QXmlStreamReader::EntityReference)
+      return false;
+    if (token == QXmlStreamReader::ProcessingInstruction &&
+        xml.processingInstructionTarget().compare(
+            u"xml-stylesheet", Qt::CaseInsensitive) == 0)
       return false;
 
     if (token == QXmlStreamReader::StartElement) {
@@ -335,15 +355,21 @@ static bool validateSvgDocument(const QByteArray &svg) {
         sawRoot = true;
       }
 
-      if (elementName == u"script" || elementName == u"style" ||
-          elementName == u"foreignobject" || elementName == u"image" ||
-          elementName == u"filter" || elementName == u"animate" ||
+      if (elementName == u"script" || elementName == u"foreignobject" ||
+          elementName == u"image" || elementName == u"animate" ||
           elementName == u"animatemotion" || elementName == u"animatecolor" ||
           elementName == u"animatetransform" || elementName == u"set" ||
           elementName == u"audio" || elementName == u"video" ||
           elementName == u"iframe" || elementName == u"object" ||
           elementName == u"embed")
         return false;
+
+      if (elementName == u"style") {
+        if (styleDepth != 0)
+          return false;
+        styleDepth = depth;
+        styleText.clear();
+      }
 
       const QXmlStreamAttributes attributes = xml.attributes();
       attributeCount += attributes.size();
@@ -412,7 +438,16 @@ static bool validateSvgDocument(const QByteArray &svg) {
           }
         }
       }
+    } else if (token == QXmlStreamReader::Characters && styleDepth != 0) {
+      styleText.append(xml.text());
     } else if (token == QXmlStreamReader::EndElement) {
+      if (depth == styleDepth) {
+        if (styleText.contains(u"@import", Qt::CaseInsensitive) ||
+            !collectSvgUrlReferences(styleText, styleReferences))
+          return false;
+        styleDepth = 0;
+        styleText.clear();
+      }
       if (depth == 1)
         sawRootEnd = true;
       if (elementIds.isEmpty())
@@ -424,8 +459,13 @@ static bool validateSvgDocument(const QByteArray &svg) {
     }
   }
 
+  for (const QString &reference : styleReferences) {
+    if (!graph.contains(reference))
+      return false;
+  }
+
   return !xml.hasError() && sawRoot && sawRootEnd && depth == 0 &&
-         elementIds.isEmpty() && activeIds.isEmpty() &&
+         styleDepth == 0 && elementIds.isEmpty() && activeIds.isEmpty() &&
          (!hasRootWidth || !hasRootHeight ||
           hasSafeSvgAspectRatio(rootWidth, rootHeight)) &&
          validateSvgReferenceGraph(graph);
@@ -473,16 +513,28 @@ static HBITMAP renderSvgThumbnail(const QByteArray &svg, UINT requestedEdge) {
     return nullptr;
 
   const UINT edge = std::min(requestedEdge, MAX_SVG_THUMBNAIL_EDGE);
-  QImage image(QSize(static_cast<int>(edge), static_cast<int>(edge)),
-               QImage::Format_ARGB32_Premultiplied);
-  if (image.isNull() || image.sizeInBytes() > MAX_SVG_THUMBNAIL_BYTES)
-    return nullptr;
-  image.fill(Qt::transparent);
-
   QSvgRenderer renderer;
   if (!renderer.load(svg) || !renderer.isValid())
     return nullptr;
 
+  QSizeF sourceSize(renderer.defaultSize());
+  if (sourceSize.isEmpty())
+    sourceSize = renderer.viewBoxF().size();
+  if (sourceSize.isEmpty() ||
+      !hasSafeSvgAspectRatio(sourceSize.width(), sourceSize.height()))
+    return nullptr;
+
+  const double scale = static_cast<double>(edge) /
+                       std::max(sourceSize.width(), sourceSize.height());
+  const QSize thumbnailSize(
+      std::max(1, qRound(sourceSize.width() * scale)),
+      std::max(1, qRound(sourceSize.height() * scale)));
+  QImage image(thumbnailSize, QImage::Format_ARGB32_Premultiplied);
+  if (image.isNull() || image.sizeInBytes() > MAX_SVG_THUMBNAIL_BYTES)
+    return nullptr;
+  image.fill(Qt::transparent);
+
+  renderer.setAspectRatioMode(Qt::KeepAspectRatio);
   QPainter painter(&image);
   if (!painter.isActive())
     return nullptr;
@@ -841,18 +893,20 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
       ext = fileInfo.suffix().toLower();
     }
 
-    if (isSvgExtension(ext)) {
+    const bool knownSvg = isSvgExtension(ext);
+    if (knownSvg || (ext.isEmpty() && m_pStream)) {
       QByteArray svg;
       const bool readSucceeded =
           m_pStream ? readSvgStream(m_pStream, svg)
                     : readSvgFile(QString::fromWCharArray(m_szFilePath), svg);
       HBITMAP bitmap = readSucceeded ? renderSvgThumbnail(svg, cx) : nullptr;
-      if (!bitmap)
+      if (!bitmap && knownSvg)
         return E_FAIL;
-
-      *phbmp = bitmap;
-      *pdwAlpha = WTSAT_ARGB;
-      return S_OK;
+      if (bitmap) {
+        *phbmp = bitmap;
+        *pdwAlpha = WTSAT_ARGB;
+        return S_OK;
+      }
     }
 
   bool isRaw = isRawExtension(ext);
