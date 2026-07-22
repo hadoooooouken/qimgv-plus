@@ -9,86 +9,91 @@
 namespace {
 
 // Codepoints from microsoft/fluentui-system-icons, Regular weight
-// (fonts/FluentSystemIcons-Regular.json @ main). Each entry names the
-// upstream icon id it was picked from and the PNG file it replaces, so the
-// mapping can be re-pointed to a different glyph without re-deriving the
-// codepoint from scratch.
-//
-// NOTE: this is a draft mapping - semantically "close enough" picks were
-// made for concepts without an exact Fluent equivalent (e.g. "fit window",
-// "move file", "panorama mode"). Expect this table to be edited.
+// (fonts/FluentSystemIcons-Regular.json). Entries are grouped by their
+// current UI consumers and sorted alphabetically within each group.
 const QHash<FluentIcon, char32_t> &codepointTable() {
     static const QHash<FluentIcon, char32_t> table = {
-        { FluentIcon::BookmarkAdd20,                 0xF1E8 }, // ic_fluent_bookmark_add_20_regular          <- add-new12.png
-        { FluentIcon::OpenWith20,                    0xF582 }, // ic_fluent_open_20_regular                  <- run16.png (Open with) (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::ArrowAutofitHeight20,         0x0E077 }, // ic_fluent_arrow_autofit_height_20_regular  <- fit-height-stretch18.png
-        { FluentIcon::ArrowAutofitWidth20,          0x0E07C }, // ic_fluent_arrow_autofit_width_20_regular   <- fit-width18.png
-        { FluentIcon::ArrowExit20,                  0x0E0C4 }, // ic_fluent_arrow_exit_20_regular            <- quit16.png
-        { FluentIcon::ArrowLeft,                    0x0F15B }, // ic_fluent_arrow_left_20_regular            <- back16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::ArrowExpand20,                 0xE0C5 }, // ic_fluent_arrow_expand_20_regular          <- fit-window18.png
-        { FluentIcon::ArrowNext20,                  0x0F16A }, // ic_fluent_arrow_next_20_regular            <- dir_end20.png
-        { FluentIcon::ArrowPrevious20,              0x0F16C }, // ic_fluent_arrow_previous_20_regular        <- dir_start20.png
-        { FluentIcon::ArrowRotateClockwise20,       0x0F185 }, // ic_fluent_arrow_rotate_clockwise_20_regular <- rotate-right16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::ArrowRotateCounterclockwise20,0x0F187 }, // ic_fluent_arrow_rotate_counterclockwise_20_regular <- rotate-left16.png
-        { FluentIcon::ArrowSort16,                  0x0F1AB }, // ic_fluent_arrow_sort_16_regular            <- sorting-mode16.png
-        { FluentIcon::Blur20,                        0xF8FA }, // ic_fluent_blur_20_regular                  <- cas settings
-        { FluentIcon::Checkmark16,                   0xE305 }, // ic_fluent_checkmark_16_regular             <- folderview image formats
-        { FluentIcon::ChevronDown12,                0x0F2A1 }, // ic_fluent_chevron_down_12_regular          <- dropDownArrow.png
-        { FluentIcon::ChevronLeft48,                0x0F2AD }, // ic_fluent_chevron_left_48_regular          <- arrow_left_50.png
-        { FluentIcon::ChevronRight48,               0x0F2B3 }, // ic_fluent_chevron_right_48_regular         <- arrow_right_50.png
-        { FluentIcon::Adjustments20,                 0xE00B }, // ic_fluent_dark_theme_20_regular  0xE452    <- appearance16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-                                                               // ic_fluent_add_subtract_circle_20_regular 0xE00B
-        { FluentIcon::CopyAdd20,                     0xE41F }, // ic_fluent_copy_add_20_regular              <- copy16.png (menuitem + overlay) (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::Crop20,                       0x0E42B }, // ic_fluent_crop_20_regular                  <- image-crop16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::Crop48,                       0x0F02F }, // ic_fluent_crop_48_regular                  <- image-crop48.png
-        { FluentIcon::Delete16,                     0x0F34C }, // ic_fluent_delete_20_regular                <- trash16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::Dismiss16,                    0x0F368 }, // ic_fluent_dismiss_16_regular               <- close-dim16.png / close16.png
-        { FluentIcon::Dismiss20,                    0x0F369 }, // ic_fluent_dismiss_20_regular               <- close-dim16.png / close16.png (20px sibling of Dismiss16, for call sites rendered at 20px)
-        { FluentIcon::DocumentView20,                0xF488 }, // ic_fluent_image_20_regular                 <- folder view / document view / to image viewer
-        { FluentIcon::ErrorCircle20,                 0xF3F1 }, // ic_fluent_error_circle_20_regular          <- error floating message
-        { FluentIcon::FlipHorizontal20,             0xF02A1 }, // ic_fluent_arrow_bidirectional_left_right_20_regular      <- flip-h16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::FlipVertical20,                0xE084 }, // ic_fluent_arrow_bidirectional_up_down_20_regular         <- flip-v16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::Folder16,                      0xE643 }, // ic_fluent_folder_16_regular                <- folderview - folder thumb
-        { FluentIcon::Folder20,                      0xF418 }, // ic_fluent_folder_20_regular                <- folder16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::ShowInFolder20,                0xF42E }, // ic_fluent_folder_open_20_regular           <- contextmenu.cpp Show in folder
-        { FluentIcon::FolderAdd,                    0x0F41C }, // ic_fluent_folder_add_20_regular            <- add-folder.png
-        { FluentIcon::Move20,                        0xE422 }, // ic_fluent_copy_arrow_right_20_regular    <- move16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::Grid20,                       0x0F462 }, // ic_fluent_grid_20_regular                  <- folderview20.png
-        { FluentIcon::Home20,                        0xF480 }, // ic_fluent_home_20_regular                  <- home12.png
-        { FluentIcon::Wallpaper20,                   0xF359 }, // ic_fluent_desktop_20_regular               <- document-view16.png
-        { FluentIcon::Info20,                        0xF4A3 }, // ic_fluent_info_20_regular                  <- image info / informational floating message
-        { FluentIcon::Panorama20,                   0xF08F5 }, // ic_fluent_planet_20_regular                <- view16.png (Panorama mode) (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::OpenOnlySelected20,            0xF697 }, // ic_fluent_select_object_20_regular         <- folderview Open only selected
-        { FluentIcon::PanelLeft20,                  0x0E8B0 }, // ic_fluent_panel_left_20_regular            <- toggle-panel20.png
-        { FluentIcon::Pin20,                        0x0F601 }, // ic_fluent_pin_20_regular                   <- pin-panel20.png
-        { FluentIcon::Print20,                       0xF62A }, // ic_fluent_print_20_regular                 <- print16.png
-        { FluentIcon::Rename20,                     0xF0A39 }, // ic_fluent_rename_a_20_regular              <- edit16.png (rename) (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::Resize20,                      0xF66C }, // ic_fluent_resize_20_regular                <- resize16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::AiUpscale20,                  0xF0799 }, // ic_fluent_brain_sparkle_20_regular         <- contextmenu.cpp (AI Upscale)
-        { FluentIcon::Settings20,                   0x0F6A9 }, // ic_fluent_settings_20_regular              <- settings20.png
-        { FluentIcon::BookmarkRemove20,              0xF368 }, // ic_fluent_dismiss_16_regular               <- remove16.png
-        { FluentIcon::Warning20,                     0xF869 }, // ic_fluent_warning_20_regular               <- warning floating message
-        { FluentIcon::ZoomIn20,                     0x0F8C4 }, // ic_fluent_zoom_in_20_regular               <- zoom-in18.png
-        { FluentIcon::ZoomOriginal20,               0x0F70A }, // ic_fluent_ratio_one_to_one_20_regular      <- zoom-original18.png
-        { FluentIcon::ZoomOut20,                    0x0F8C6 }, // ic_fluent_zoom_out_20_regular              <- zoom-out18.png
-        { FluentIcon::ChevronDown20,                 0xF2A3 }, // ic_fluent_chevron_down_20_regular          <- contextmenu.cpp more
-        { FluentIcon::ChevronUp20,                   0xF2B6 }, // ic_fluent_chevron_up_20_regular            <- contextmenu.cpp more (expanded state)
-        { FluentIcon::BatchConvert16,               0xF018D }, // ic_fluent_image_stack_16_regular           <- folderview button
-        { FluentIcon::BatchConvert20,               0xF018E }, // ic_fluent_image_stack_20_regular           <- folderview menu
-        { FluentIcon::Settings32,                    0xEA94 }, // ic_fluent_settings_32_regular              <- general32.png
-        { FluentIcon::Eye32,                         0xEFC9 }, // ic_fluent_eye_32_regular                   <- view32.png
-        { FluentIcon::ColorFill32,                  0xF0BCB }, // ic_fluent_color_fill_32_regular            <- appearance32.png
-        { FluentIcon::Controls32,                    0xE74A }, // ic_fluent_keyboard_16_regular              <- shortcuts32.png
-        { FluentIcon::Scripts32,                     0xF339 }, // ic_fluent_code_16_regular                  <- terminal32.png
-        { FluentIcon::WrenchScrewdriver32,          0xF0461 }, // ic_fluent_wrench_screwdriver_32_regular    <- advanced32.png
-        { FluentIcon::BrainSparkle32,               0xF0B3A }, // ic_fluent_brain_sparkle_32_regular         <- scale32.png
-        { FluentIcon::Info32,                       0xF0059 }, // ic_fluent_info_32_regular                  <- about32.png
-        { FluentIcon::ChevronUp16,                   0xF2B5 }, // ic_fluent_chevron_up_16_regular            <- up16.png
-        { FluentIcon::CheckmarkCircle20,             0xF298 }, // ic_fluent_checkmark_circle_20_regular      <- floating message success
-        { FluentIcon::Clock24,                       0xF2DE }, // ic_fluent_clock_24_regular                 <- loading72.png
-        { FluentIcon::ClockDismiss24,                0xE373 }, // ic_fluent_clock_dismiss_24_regular         <- loading-error72.png
+        // Used across multiple UI areas
+        { FluentIcon::Adjustments20,       0xE00B }, // ic_fluent_add_subtract_circle_20_regular <- Context menu and color-adjustments overlay header
+        { FluentIcon::AiUpscale20,         0xF0799 }, // ic_fluent_brain_sparkle_20_regular <- Context menu and AI-upscale notifications
+        { FluentIcon::ArrowAutofitWidth20, 0xE07C }, // ic_fluent_arrow_autofit_width_20_regular <- Context menu and Fit Width notification
+        { FluentIcon::ArrowExpand20,       0xE0C5 }, // ic_fluent_arrow_expand_20_regular <- Context menu and Fit Window notification
+        { FluentIcon::Blur20,              0xF8FA }, // ic_fluent_blur_20_regular <- Context menu and CAS overlay header
+        { FluentIcon::CopyAdd20,           0xE41F }, // ic_fluent_copy_add_20_regular <- Context menu and copy overlay
+        { FluentIcon::Delete16,            0xF34C }, // ic_fluent_delete_20_regular <- Trash actions in context and folder-view menus
+        { FluentIcon::Dismiss16,           0xF368 }, // ic_fluent_dismiss_16_regular <- Overlay close buttons and viewer exit controls
+        { FluentIcon::Dismiss20,           0xF369 }, // ic_fluent_dismiss_20_regular <- Permanent-delete actions in context and folder-view menus
+        { FluentIcon::Folder20,            0xF418 }, // ic_fluent_folder_20_regular <- Path selector and directory notifications
+        { FluentIcon::Grid20,              0xF462 }, // ic_fluent_grid_20_regular <- Folder-view actions in context menu and viewer controls
+        { FluentIcon::Info20,              0xF4A3 }, // ic_fluent_info_20_regular <- Image-info UI and informational notifications
+        { FluentIcon::Move20,              0xE422 }, // ic_fluent_copy_arrow_right_20_regular <- Context menu and move overlay
+        { FluentIcon::Rename20,            0xF0A39 }, // ic_fluent_rename_a_20_regular <- Context/folder menus and rename/save overlays
+        { FluentIcon::Settings20,          0xF6A9 }, // ic_fluent_settings_20_regular <- Settings actions in context menu, toolbars, and panels
+        { FluentIcon::ShowInFolder20,      0xF42E }, // ic_fluent_folder_open_20_regular <- Show-in-folder actions in context and folder-view menus
+        { FluentIcon::ZoomOriginal20,      0xF70A }, // ic_fluent_ratio_one_to_one_20_regular <- Context menu and Fit 1:1 notification
 
-        };
+        // Context menu
+        { FluentIcon::ArrowAutofitHeight20,          0xE077 }, // ic_fluent_arrow_autofit_height_20_regular <- Fit Height
+        { FluentIcon::ArrowLeft,                     0xF15B }, // ic_fluent_arrow_left_20_regular <- Back from the Open With page
+        { FluentIcon::ArrowRotateClockwise20,        0xF185 }, // ic_fluent_arrow_rotate_clockwise_20_regular <- Rotate clockwise
+        { FluentIcon::ArrowRotateCounterclockwise20, 0xF187 }, // ic_fluent_arrow_rotate_counterclockwise_20_regular <- Rotate counterclockwise
+        { FluentIcon::ChevronDown20,                 0xF2A3 }, // ic_fluent_chevron_down_20_regular <- Expand More actions
+        { FluentIcon::ChevronUp20,                   0xF2B6 }, // ic_fluent_chevron_up_20_regular <- Collapse More actions
+        { FluentIcon::Crop20,                        0xE42B }, // ic_fluent_crop_20_regular <- Crop action
+        { FluentIcon::FlipHorizontal20,              0xF02A1 }, // ic_fluent_arrow_bidirectional_left_right_20_regular <- Flip horizontally
+        { FluentIcon::FlipVertical20,                0xE084 }, // ic_fluent_arrow_bidirectional_up_down_20_regular <- Flip vertically
+        { FluentIcon::OpenWith20,                    0xF582 }, // ic_fluent_open_20_regular <- Open With action
+        { FluentIcon::Panorama20,                    0xF08F5 }, // ic_fluent_planet_20_regular <- Panorama mode
+        { FluentIcon::Print20,                       0xF62A }, // ic_fluent_print_20_regular <- Print action
+        { FluentIcon::Resize20,                      0xF66C }, // ic_fluent_resize_20_regular <- Resize action
+        { FluentIcon::Wallpaper20,                   0xF359 }, // ic_fluent_desktop_20_regular <- Set as wallpaper
+        { FluentIcon::ZoomIn20,                      0xF8C4 }, // ic_fluent_zoom_in_20_regular <- Zoom in
+        { FluentIcon::ZoomOut20,                     0xF8C6 }, // ic_fluent_zoom_out_20_regular <- Zoom out
+
+        // Folder view
+        { FluentIcon::ArrowExit20,        0xE0C4 }, // ic_fluent_arrow_exit_20_regular <- Exit folder view
+        { FluentIcon::ArrowSort16,        0xF1AB }, // ic_fluent_arrow_sort_16_regular <- File sorting selector
+        { FluentIcon::BatchConvert16,     0xF018D }, // ic_fluent_image_stack_16_regular <- Batch-convert toolbar button
+        { FluentIcon::BatchConvert20,     0xF018E }, // ic_fluent_image_stack_20_regular <- Batch-convert menu action
+        { FluentIcon::BookmarkAdd20,      0xF1E8 }, // ic_fluent_bookmark_add_20_regular <- Add bookmark
+        { FluentIcon::BookmarkRemove20,   0xF368 }, // ic_fluent_dismiss_16_regular <- Remove bookmark
+        { FluentIcon::Checkmark16,        0xE305 }, // ic_fluent_checkmark_16_regular <- Image-format filter
+        { FluentIcon::ChevronUp16,        0xF2B5 }, // ic_fluent_chevron_up_16_regular <- Navigate to parent folder
+        { FluentIcon::DocumentView20,     0xF488 }, // ic_fluent_image_20_regular <- Switch to document view
+        { FluentIcon::Folder16,           0xE643 }, // ic_fluent_folder_16_regular <- Folder thumbnails and sorting
+        { FluentIcon::FolderAdd,          0xF41C }, // ic_fluent_folder_add_20_regular <- Create folder
+        { FluentIcon::Home20,             0xF480 }, // ic_fluent_home_20_regular <- Navigate home
+        { FluentIcon::OpenOnlySelected20, 0xF697 }, // ic_fluent_select_object_20_regular <- Open only selected files
+        { FluentIcon::PanelLeft20,        0xE8B0 }, // ic_fluent_panel_left_20_regular <- Toggle places panel
+
+        // Floating notifications
+        { FluentIcon::ArrowNext20,       0xF16A }, // ic_fluent_arrow_next_20_regular <- End-of-directory notification
+        { FluentIcon::ArrowPrevious20,   0xF16C }, // ic_fluent_arrow_previous_20_regular <- Start-of-directory notification
+        { FluentIcon::CheckmarkCircle20, 0xF298 }, // ic_fluent_checkmark_circle_20_regular <- Success notification
+        { FluentIcon::ErrorCircle20,     0xF3F1 }, // ic_fluent_error_circle_20_regular <- Error notification
+        { FluentIcon::Warning20,         0xF869 }, // ic_fluent_warning_20_regular <- Warning notification
+
+        // Viewer overlays and panels
+        { FluentIcon::ChevronDown12,  0xF2A1 }, // ic_fluent_chevron_down_12_regular <- Styled combo boxes and crop aspect-ratio selector
+        { FluentIcon::ChevronLeft48,  0xF2AD }, // ic_fluent_chevron_left_48_regular <- Previous-image click zone
+        { FluentIcon::ChevronRight48, 0xF2B3 }, // ic_fluent_chevron_right_48_regular <- Next-image click zone
+        { FluentIcon::Crop48,         0xF02F }, // ic_fluent_crop_48_regular <- Crop panel header
+        { FluentIcon::Pin20,          0xF601 }, // ic_fluent_pin_20_regular <- Pin main panel
+
+        // Settings sidebar
+        { FluentIcon::BrainSparkle32,      0xF0B3A }, // ic_fluent_brain_sparkle_32_regular <- AI Upscale page
+        { FluentIcon::ColorFill32,         0xF0BCB }, // ic_fluent_color_fill_32_regular <- Theme page
+        { FluentIcon::Controls32,          0xE74A }, // ic_fluent_keyboard_16_regular <- Controls page
+        { FluentIcon::Eye32,               0xEFC9 }, // ic_fluent_eye_32_regular <- View page
+        { FluentIcon::Info32,              0xF0059 }, // ic_fluent_info_32_regular <- About page
+        { FluentIcon::Scripts32,           0xF339 }, // ic_fluent_code_16_regular <- Scripts page
+        { FluentIcon::Settings32,          0xEA94 }, // ic_fluent_settings_32_regular <- General page
+        { FluentIcon::WrenchScrewdriver32, 0xF0461 }, // ic_fluent_wrench_screwdriver_32_regular <- Advanced page
+
+        // Shared loading resources
+        { FluentIcon::Clock24,        0xF2DE }, // ic_fluent_clock_24_regular <- Loading indicator
+        { FluentIcon::ClockDismiss24, 0xE373 }, // ic_fluent_clock_dismiss_24_regular <- Loading-error indicator
+    };
     return table;
 }
 
