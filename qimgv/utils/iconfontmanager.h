@@ -93,6 +93,7 @@ enum class FluentIcon {
     BrainSparkle32,
     Info32,
     ChevronUp16,
+    CheckmarkCircle20,
 };
 
 // Renders glyphs from the bundled Fluent System Icons font into QPixmap,

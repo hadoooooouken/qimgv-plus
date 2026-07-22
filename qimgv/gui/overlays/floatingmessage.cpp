@@ -3,6 +3,10 @@
 #include "gui/customwidgets/iconwidget.h"
 #include <QHBoxLayout>
 
+namespace {
+constexpr int kMessageIconSizePx = 20;
+}
+
 FloatingMessage::FloatingMessage(FloatingWidgetContainer *parent) :
     OverlayWidget(parent),
     preferredPosition(FloatingWidgetPosition::BOTTOM)
@@ -88,24 +92,23 @@ void FloatingMessage::setIcon(FloatingMessageIcon icon) {
         case FloatingMessageIcon::NO_ICON:
         case FloatingMessageIcon::ICON_WARNING:
         case FloatingMessageIcon::ICON_ERROR:
-            //iconLabel->setIconPath(":/res/icons/common/notifications/error16.png");
             iconLabel->hide();
             break;
         case FloatingMessageIcon::ICON_DIRECTORY:
             iconLabel->show();
-            iconLabel->setIconPath(":/res/icons/common/buttons/panel/folder16.png");
+            iconLabel->setIcon(FluentIcon::Folder20, kMessageIconSizePx);
             break;
         case FloatingMessageIcon::ICON_LEFT_EDGE:
             iconLabel->show();
-            iconLabel->setIconPath(":/res/icons/common/notifications/dir_start20.png");
+            iconLabel->setIcon(FluentIcon::ArrowPrevious20, kMessageIconSizePx);
             break;
         case FloatingMessageIcon::ICON_RIGHT_EDGE:
             iconLabel->show();
-            iconLabel->setIconPath(":/res/icons/common/notifications/dir_end20.png");
+            iconLabel->setIcon(FluentIcon::ArrowNext20, kMessageIconSizePx);
             break;
         case FloatingMessageIcon::ICON_SUCCESS:
             iconLabel->show();
-            iconLabel->setIconPath(":/res/icons/common/notifications/success16.png");
+            iconLabel->setIcon(FluentIcon::CheckmarkCircle20, kMessageIconSizePx);
             break;
     }
 }

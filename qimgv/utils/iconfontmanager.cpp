@@ -99,6 +99,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::BrainSparkle32,               0xF0B3A }, // ic_fluent_brain_sparkle_32_regular         <- scale32.png
         { FluentIcon::Info32,                       0xF0059 }, // ic_fluent_info_32_regular                  <- about32.png
         { FluentIcon::ChevronUp16,                   0xF2B5 }, // ic_fluent_chevron_up_16_regular            <- up16.png
+        { FluentIcon::CheckmarkCircle20,             0xF298 }, // ic_fluent_checkmark_circle_20_regular      <- floating message success
 
         };
     return table;
