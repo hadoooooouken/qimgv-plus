@@ -34,6 +34,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::ArrowSort16,                  0x0F1AB }, // ic_fluent_arrow_sort_16_regular            <- sorting-mode16.png
         { FluentIcon::ArrowUp16,                    0x0F1B4 }, // ic_fluent_arrow_up_16_regular              <- up16.png
         { FluentIcon::Blur20,                        0xF8FA }, // ic_fluent_blur_20_regular                  <- cas settings
+        { FluentIcon::Checkmark16,                   0xE305 }, // ic_fluent_checkmark_16_regular             <- folderview image formats
         { FluentIcon::CheckmarkCircle16,            0x0F297 }, // ic_fluent_checkmark_circle_16_regular      <- success16.png
         { FluentIcon::ChevronDown12,                0x0F2A1 }, // ic_fluent_chevron_down_12_regular          <- dropDownArrow.png
         { FluentIcon::ChevronLeft48,                0x0F2AD }, // ic_fluent_chevron_left_48_regular          <- arrow_left_50.png
@@ -47,11 +48,12 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Delete16,                     0x0F34C }, // ic_fluent_delete_20_regular                <- trash16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::Dismiss16,                    0x0F368 }, // ic_fluent_dismiss_16_regular               <- close-dim16.png / close16.png
         { FluentIcon::Dismiss20,                    0x0F369 }, // ic_fluent_dismiss_20_regular               <- close-dim16.png / close16.png (20px sibling of Dismiss16, for call sites rendered at 20px)
-        { FluentIcon::DocumentView20,                0xE720 }, // ic_fluent_image_arrow_forward_20_regular   <- folder view / document view / to image viewer
+        { FluentIcon::DocumentView20,                0xF488 }, // ic_fluent_image_20_regular                 <- folder view / document view / to image viewer
         { FluentIcon::Eye24,                        0x0E5F3 }, // ic_fluent_eye_24_regular                   <- view32.png
         { FluentIcon::FlipHorizontal20,             0xF02A1 }, // ic_fluent_arrow_bidirectional_left_right_20_regular      <- flip-h16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::FlipVertical20,                0xE084 }, // ic_fluent_arrow_bidirectional_up_down_20_regular         <- flip-v16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
-        { FluentIcon::Folder20,                       0xF418 }, // ic_fluent_folder_20_regular                <- folder16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
+        { FluentIcon::Folder16,                      0xE643 }, // ic_fluent_folder_16_regular                <- folderview - folder thumb
+        { FluentIcon::Folder20,                      0xF418 }, // ic_fluent_folder_20_regular                <- folder16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
         { FluentIcon::ShowInFolder20,                0xF42E }, // ic_fluent_folder_open_20_regular           <- contextmenu.cpp Show in folder
         { FluentIcon::FolderAdd,                    0x0F41C }, // ic_fluent_folder_add_20_regular            <- add-folder.png
         { FluentIcon::Move20,                        0xE422 }, // ic_fluent_copy_arrow_right_20_regular    <- move16.png (bumped 16->20, only used at 20px in contextmenu.cpp)
@@ -67,6 +69,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Info16,                       0x0F4A2 }, // ic_fluent_info_16_regular                  <- info16.png
         { FluentIcon::Info24,                       0x0F4A4 }, // ic_fluent_info_24_regular                  <- about32.png
         { FluentIcon::Keyboard24,                   0x0F4B9 }, // ic_fluent_keyboard_24_regular              <- shortcuts32.png
+        { FluentIcon::OpenOnlySelected20,            0xF697 }, // ic_fluent_select_object_20_regular         <- folderview Open only selected
         { FluentIcon::PanelLeft20,                  0x0E8B0 }, // ic_fluent_panel_left_20_regular            <- toggle-panel20.png
         { FluentIcon::Pin20,                        0x0F601 }, // ic_fluent_pin_20_regular                   <- pin-panel20.png
         { FluentIcon::Print20,                       0xF62A }, // ic_fluent_print_20_regular                 <- print16.png
@@ -77,14 +80,17 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Settings16,                   0x0F6A8 }, // ic_fluent_settings_16_regular              <- settings16.png
         { FluentIcon::Settings20,                   0x0F6A9 }, // ic_fluent_settings_20_regular              <- settings20.png
         { FluentIcon::Settings24,                   0x0F6AA }, // ic_fluent_settings_24_regular              <- general32.png
-        { FluentIcon::BookmarkRemove20,              0xF368 }, // ic_fluent_dismiss_16_regular              <- remove16.png
+        { FluentIcon::BookmarkRemove20,              0xF368 }, // ic_fluent_dismiss_16_regular               <- remove16.png
         { FluentIcon::WindowDevTools24,             0x0F8B9 }, // ic_fluent_window_dev_tools_24_regular      <- terminal32.png (Scripts)
         { FluentIcon::Wrench24,                     0x0F8C1 }, // ic_fluent_wrench_24_regular                <- advanced32.png
         { FluentIcon::ZoomIn20,                     0x0F8C4 }, // ic_fluent_zoom_in_20_regular               <- zoom-in18.png
         { FluentIcon::ZoomOriginal20,               0x0F70A }, // ic_fluent_ratio_one_to_one_20_regular      <- zoom-original18.png
         { FluentIcon::ZoomOut20,                    0x0F8C6 }, // ic_fluent_zoom_out_20_regular              <- zoom-out18.png
-        { FluentIcon::ChevronDown20,                 0xF2A3 }, // ic_fluent_chevron_down_20_regular       <- contextmenu.cpp more
+        { FluentIcon::ChevronDown20,                 0xF2A3 }, // ic_fluent_chevron_down_20_regular          <- contextmenu.cpp more
         { FluentIcon::ChevronUp20,                   0xF2B6 }, // ic_fluent_chevron_up_20_regular            <- contextmenu.cpp more (expanded state)
+        { FluentIcon::BatchConvert16,               0xF0BB7 }, // ic_fluent_stack_vertical_16_regular        <- folderview button
+        { FluentIcon::BatchConvert20,               0xF00FF }, // ic_fluent_stack_vertical_20_regular        <- folderview menu
+
         };
     return table;
 }

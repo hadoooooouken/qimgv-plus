@@ -9,6 +9,10 @@
 #include <QIcon>
 #include <QCursor>
 
+namespace {
+constexpr int kContextMenuIconSizePx = 20;
+}
+
 FolderGridView::FolderGridView(QWidget *parent)
     : ThumbnailView(Qt::Vertical, parent),
       shiftedCol(-1)
@@ -460,7 +464,7 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
             QWidgetAction *wa = new QWidgetAction(&menu);
             ContextMenuItem *item = new ContextMenuItem(this);
             item->setText(text);
-            item->setIcon(icon);
+            item->setIcon(icon, kContextMenuIconSizePx);
             item->setMinimumWidth(212);
             if (!shortcut.isEmpty()) {
                 item->setShortcutText(shortcut);
@@ -470,14 +474,14 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
             return item;
         };
 
-        ContextMenuItem *itemOpen = addCustomAction(tr("Open only selected"), FluentIcon::Image16);
+        ContextMenuItem *itemOpen = addCustomAction(tr("Open only selected"), FluentIcon::OpenOnlySelected20);
         itemOpen->setEnabled(hasSelection);
         connect(itemOpen, &ContextMenuItem::pressed, this, [this, &menu]() {
             menu.close();
             QTimer::singleShot(0, this, [this]() { emit openSelectedRequested(); });
         });
 
-        ContextMenuItem *itemBatch = addCustomAction(tr("Batch convert"), FluentIcon::Adjustments20);
+        ContextMenuItem *itemBatch = addCustomAction(tr("Batch convert"), FluentIcon::BatchConvert20);
         itemBatch->setEnabled(hasSelection);
         connect(itemBatch, &ContextMenuItem::pressed, this, [this, &menu]() {
             menu.close();
@@ -515,7 +519,7 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
             actionManager->invokeAction("moveToTrash");
         });
 
-        ContextMenuItem *itemDelete = addCustomAction(tr("Delete permanently"), FluentIcon::Dismiss16);
+        ContextMenuItem *itemDelete = addCustomAction(tr("Delete permanently"), FluentIcon::Dismiss20);
         itemDelete->setTextColor(settings->colorScheme().danger);
         itemDelete->setIconColor(settings->colorScheme().danger);
         itemDelete->setEnabled(hasSelection);

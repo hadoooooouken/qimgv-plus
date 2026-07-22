@@ -118,8 +118,8 @@ FolderView::FolderView(QWidget *parent) :
 
 
     sortingComboBox->setIcon(FluentIcon::ArrowSort16, kComboBoxIconSizePx);
-    folderSortingComboBox->setIcon(FluentIcon::Image16, kComboBoxIconSizePx);
-    formatFilterComboBox->setIcon(FluentIcon::ArrowSort16, kComboBoxIconSizePx);
+    folderSortingComboBox->setIcon(FluentIcon::Folder16, kComboBoxIconSizePx);
+    formatFilterComboBox->setIcon(FluentIcon::Checkmark16, kComboBoxIconSizePx);
 
     newBookmarkButton->setIcon(FluentIcon::BookmarkAdd20, kSmallButtonIconSizePx);
     homeButton->setIcon(FluentIcon::Home20, kSmallButtonIconSizePx);
