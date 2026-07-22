@@ -3,15 +3,10 @@
 #include <QDirIterator>
 
 FileSystemModelCustom::FileSystemModelCustom(QObject *parent) : QFileSystemModel(parent) {
-    qreal dpr = qApp->devicePixelRatio();
-    QString iconPath = ":/res/icons/common/menuitem/folder16.png";
-    if(dpr >= (1.0 + 0.001))
-        iconPath.replace(".", "@2x.");
-    folderIcon.load(iconPath);
-    ImageLib::recolor(this->folderIcon, settings->colorScheme().folder_icons);
+    updateFolderIcon();
 
     connect(settings, &Settings::settingsChanged, this, [this]() {
-        ImageLib::recolor(this->folderIcon, settings->colorScheme().folder_icons);
+        updateFolderIcon();
     });
 
     connect(this, &QAbstractItemModel::rowsInserted, this, [this](const QModelIndex &parent, int first, int last) {
@@ -34,6 +29,14 @@ FileSystemModelCustom::FileSystemModelCustom(QObject *parent) : QFileSystemModel
 
 FileSystemModelCustom::~FileSystemModelCustom() {
     setRootPath("");
+}
+
+void FileSystemModelCustom::updateFolderIcon() {
+    folderIcon = IconFontManager::pixmap(
+        FluentIcon::Folder16,
+        kFolderIconSizePx,
+        settings->colorScheme().folder_icons,
+        qApp->devicePixelRatio());
 }
 
 QVariant FileSystemModelCustom::data( const QModelIndex& index, int role ) const {

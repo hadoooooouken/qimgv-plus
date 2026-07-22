@@ -19,7 +19,6 @@
 #include "gui/folderview/treeviewcustom.h"
 #include "gui/customwidgets/iconbutton.h"
 #include "utils/iconfontmanager.h"
-#include "utils/imagelib.h"
 
 namespace {
 // settingsButton / exitButton (bottom toolbar row).
@@ -32,35 +31,28 @@ constexpr int kSmallButtonIconSizePx = 20;
 // sortingComboBox / folderSortingComboBox / formatFilterComboBox (their own
 // StyledComboBox icon, not the dropdown chevron).
 constexpr int kComboBoxIconSizePx = 16;
+constexpr int kBatchConvertButtonIconSizePx = 16;
 } // namespace
 
 class BatchConvertButton : public QPushButton {
 public:
     QPixmap iconPixmap;
-    qreal dpr;
     BatchConvertButton(const QString& text, QWidget* parent = nullptr) : QPushButton(text, parent) {
-        dpr = this->devicePixelRatioF();
-        QString path = ":/res/icons/common/menuitem/appearance16.png";
-        if (dpr >= 1.001) {
-            path.replace(".", "@2x.");
-            iconPixmap.load(path);
-            iconPixmap.setDevicePixelRatio(dpr >= 1.999 ? dpr : 2.0);
-        } else {
-            iconPixmap.load(path);
-            iconPixmap.setDevicePixelRatio(dpr);
-        }
-        ImageLib::recolor(iconPixmap, settings->colorScheme().icons);
+        updateIcon();
         setStyleSheet("text-align: left; padding-left: 8px; padding-right: 38px;");
         
         connect(settings, &Settings::settingsChanged, this, [this]() {
-            QString path = ":/res/icons/common/menuitem/appearance16.png";
-            if (this->dpr >= 1.001) path.replace(".", "@2x.");
-            this->iconPixmap.load(path);
-            if (this->dpr >= 1.001) this->iconPixmap.setDevicePixelRatio(this->dpr >= 1.999 ? this->dpr : 2.0);
-            else this->iconPixmap.setDevicePixelRatio(this->dpr);
-            ImageLib::recolor(this->iconPixmap, settings->colorScheme().icons);
-            this->update();
+            updateIcon();
+            update();
         });
+    }
+
+    void updateIcon() {
+        iconPixmap = IconFontManager::pixmap(
+            FluentIcon::BatchConvert16,
+            kBatchConvertButtonIconSizePx,
+            settings->colorScheme().icons,
+            devicePixelRatioF());
     }
 
     void paintEvent(QPaintEvent* e) override {

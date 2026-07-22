@@ -88,8 +88,8 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::ZoomOut20,                    0x0F8C6 }, // ic_fluent_zoom_out_20_regular              <- zoom-out18.png
         { FluentIcon::ChevronDown20,                 0xF2A3 }, // ic_fluent_chevron_down_20_regular          <- contextmenu.cpp more
         { FluentIcon::ChevronUp20,                   0xF2B6 }, // ic_fluent_chevron_up_20_regular            <- contextmenu.cpp more (expanded state)
-        { FluentIcon::BatchConvert16,               0xF0BB7 }, // ic_fluent_stack_vertical_16_regular        <- folderview button
-        { FluentIcon::BatchConvert20,               0xF00FF }, // ic_fluent_stack_vertical_20_regular        <- folderview menu
+        { FluentIcon::BatchConvert16,               0xF018D }, // ic_fluent_image_stack_16_regular           <- folderview button
+        { FluentIcon::BatchConvert20,               0xF018E }, // ic_fluent_image_stack_20_regular           <- folderview menu
         { FluentIcon::Settings32,                    0xEA94 }, // ic_fluent_settings_32_regular              <- general32.png
         { FluentIcon::Eye32,                         0xEFC9 }, // ic_fluent_eye_32_regular                   <- view32.png
         { FluentIcon::ColorFill32,                  0xF0BCB }, // ic_fluent_color_fill_32_regular            <- appearance32.png
