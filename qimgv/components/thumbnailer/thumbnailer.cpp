@@ -74,6 +74,9 @@ void Thumbnailer::onTaskStart(QString filePath, int size) {
 }
 
 void Thumbnailer::onTaskEnd(std::shared_ptr<Thumbnail> thumbnail, QString filePath) {
+    if (thumbnail) {
+        thumbnail->pixmap();
+    }
     int size = thumbnail->size();
     runningTasks.remove(filePath, size);
 

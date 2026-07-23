@@ -144,19 +144,17 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
     painter.end();
     *image = opaqueImg;
   }
-  auto pixmapPtr = std::make_shared<QPixmap>(image->size());
-  *pixmapPtr = QPixmap::fromImage(ColorManager::applyColorManagement(*image));
-  pixmapPtr->setDevicePixelRatio(qApp->devicePixelRatio());
+  QImage colorManaged = ColorManager::applyColorManagement(*image);
 
   QString label;
-  if (pixmapPtr->width() == 0) {
+  if (colorManaged.width() == 0) {
     label = QStringLiteral("error");
   } else {
     // put info into Thumbnail object
     label = image->text(QStringLiteral("originalWidth")) + QLatin1Char('x') + image->text(QStringLiteral("originalHeight")) +
             image->text(QStringLiteral("label"));
   }
-  return std::make_shared<Thumbnail>(imgInfo.fileName(), label, size, pixmapPtr);
+  return std::make_shared<Thumbnail>(imgInfo.fileName(), label, size, colorManaged);
 }
 
 ThumbnailerRunnable::~ThumbnailerRunnable() {}
