@@ -22,6 +22,7 @@ public:
     QScopedPointer<WatcherWorker> worker;
     QScopedPointer<QThread> workerThread;
     QString currentDirectory;
+    bool pendingRestart = false;
 
 private:
     Q_DECLARE_PUBLIC(DirectoryWatcher)

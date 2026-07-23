@@ -39,17 +39,22 @@ QString DirectoryWatcher::watchPath() const {
 void DirectoryWatcher::observe()
 {
     Q_D(DirectoryWatcher);
-    if(!isObserving()) {
-        // Reuse worker instance
+    if(!d->workerThread->isRunning()) {
+        d->pendingRestart = false;
         d->worker->setRunning(true);
         d->workerThread->start();
+    } else if(!d->worker->isWorkerRunning()) {
+        // Thread is currently shutting down from a previous stop request.
+        // Queue restart when worker finishes exiting.
+        d->pendingRestart = true;
+        d->worker->setRunning(true);
     }
-    //qDebug() << TAG << "Observing path:" << d->currentDirectory;
 }
 
 void DirectoryWatcher::stopObserving()
 {
     Q_D(DirectoryWatcher);
+    d->pendingRestart = false;
     d->worker->setRunning(false);
 }
 

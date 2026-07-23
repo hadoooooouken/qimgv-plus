@@ -9,6 +9,7 @@ class WatcherWorker : public QObject
 public:
     WatcherWorker();
     virtual void run() = 0;
+    bool isWorkerRunning() const;
 
 public slots:
     virtual void setRunning(bool running);
