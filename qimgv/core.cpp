@@ -1146,6 +1146,43 @@ void Core::createDirectory() {
   }
 }
 
+namespace {
+bool isDestinationInsideSource(const QString &srcPath, const QString &destDirectory) {
+  QFileInfo srcFi(srcPath);
+  if (!srcFi.isDir()) {
+    return false;
+  }
+
+  QString cleanSrc = srcFi.canonicalFilePath();
+  if (cleanSrc.isEmpty()) {
+    cleanSrc = QDir::cleanPath(srcFi.absoluteFilePath());
+  }
+
+  QFileInfo dstFi(destDirectory);
+  QString cleanDst = dstFi.canonicalFilePath();
+  if (cleanDst.isEmpty()) {
+    cleanDst = QDir::cleanPath(dstFi.absoluteFilePath());
+  }
+
+  cleanSrc = QDir::cleanPath(cleanSrc);
+  cleanDst = QDir::cleanPath(cleanDst);
+
+  if (cleanSrc.isEmpty() || cleanDst.isEmpty()) {
+    return false;
+  }
+
+  if (QString::compare(cleanSrc, cleanDst, Qt::CaseInsensitive) == 0) {
+    return true;
+  }
+
+  if (!cleanSrc.endsWith(u'/')) {
+    cleanSrc.append(u'/');
+  }
+
+  return cleanDst.startsWith(cleanSrc, Qt::CaseInsensitive);
+}
+} // namespace
+
 void Core::interactiveCopy(QList<QString> paths, QString destDirectory) {
   DialogResult overwriteFiles;
   for (const auto &path : std::as_const(paths)) {
@@ -1158,6 +1195,10 @@ void Core::interactiveCopy(QList<QString> paths, QString destDirectory) {
 void Core::doInteractiveCopy(QString path, QString destDirectory,
                              DialogResult &overwriteFiles) {
   QFileInfo srcFi(path);
+  if (srcFi.isDir() && isDestinationInsideSource(path, destDirectory)) {
+    mw->showError(tr("Cannot copy a directory into itself or a subdirectory of itself."));
+    return;
+  }
   // SINGLE FILE COPY
   // ===========================================================================
   if (!srcFi.isDir()) {
@@ -1185,7 +1226,7 @@ void Core::doInteractiveCopy(QString path, QString destDirectory,
   // DIR COPY (RECURSIVE)
   // =======================================================================
   QDir srcDir(srcFi.absoluteFilePath());
-  QFileInfo dstFi(destDirectory + "/" + srcFi.baseName());
+  QFileInfo dstFi(destDirectory + "/" + srcFi.fileName());
   QDir dstDir(dstFi.absoluteFilePath());
   if (dstFi.exists() && !dstFi.isDir()) { // overwriting file with a folder
     if (!overwriteFiles && !overwriteFiles.all) {
@@ -1236,6 +1277,10 @@ void Core::interactiveMove(QList<QString> paths, QString destDirectory) {
 void Core::doInteractiveMove(QString path, QString destDirectory,
                              DialogResult &overwriteFiles) {
   QFileInfo srcFi(path);
+  if (srcFi.isDir() && isDestinationInsideSource(path, destDirectory)) {
+    mw->showError(tr("Cannot move a directory into itself or a subdirectory of itself."));
+    return;
+  }
   // SINGLE FILE MOVE
   // ===========================================================================
   if (!srcFi.isDir()) {
@@ -1263,7 +1308,7 @@ void Core::doInteractiveMove(QString path, QString destDirectory,
   // DIR MOVE (RECURSIVE)
   // =======================================================================
   QDir srcDir(srcFi.absoluteFilePath());
-  QFileInfo dstFi(destDirectory + "/" + srcFi.baseName());
+  QFileInfo dstFi(destDirectory + "/" + srcFi.fileName());
   QDir dstDir(dstFi.absoluteFilePath());
   if (dstFi.exists() && !dstFi.isDir()) { // overwriting file with a folder
     if (!overwriteFiles && !overwriteFiles.all) {
