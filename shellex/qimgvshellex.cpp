@@ -622,24 +622,31 @@ createQImageFromLibRawImage(const libraw_processed_image_t *processedImage) {
   return img.copy();
 }
 
-static bool tryLibRawThumbnail(const QByteArray &rawBuffer, UINT cx,
+static bool tryLibRawThumbnail(const std::wstring &filePath,
+                               const QByteArray &rawBuffer,
                                QImage &outImg) {
-  if (rawBuffer.isEmpty())
-    return false;
-
   LibRaw raw;
-  if (raw.open_buffer(rawBuffer.constData(), rawBuffer.size()) !=
-      LIBRAW_SUCCESS)
+  int openResult = -1;
+
+  if (!filePath.empty()) {
+    openResult = raw.open_file(filePath.c_str());
+  }
+
+  if (openResult != LIBRAW_SUCCESS && !rawBuffer.isEmpty()) {
+    openResult = raw.open_buffer(rawBuffer.constData(), rawBuffer.size());
+  }
+
+  if (openResult != LIBRAW_SUCCESS)
     return false;
 
-  // 1) Try embedded JPEG preview first
+  // 1) Prefer embedded preview thumbnail first
   if (raw.unpack_thumb() == LIBRAW_SUCCESS) {
     std::unique_ptr<libraw_processed_image_t,
                     decltype(&LibRaw::dcraw_clear_mem)>
         thumb(raw.dcraw_make_mem_thumb(), LibRaw::dcraw_clear_mem);
     if (thumb) {
       QImage img = createQImageFromLibRawImage(thumb.get());
-      if (!img.isNull() && img.width() >= (int)cx) {
+      if (!img.isNull()) {
         outImg = std::move(img);
         raw.recycle();
         return true;
@@ -647,7 +654,7 @@ static bool tryLibRawThumbnail(const QByteArray &rawBuffer, UINT cx,
     }
   }
 
-  // 2) Half-size raw render for better quality than most embedded previews
+  // 2) Half-size raw render fallback only if no embedded thumbnail is available
   raw.imgdata.params.half_size = 1;
   raw.imgdata.params.use_camera_wb = 1;
   raw.imgdata.params.output_color = 1;
@@ -913,55 +920,63 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
   QByteArray rawBuffer;
 
   if (isRaw) {
-    if (m_pStream) {
-      QStreamDevice device(m_pStream);
-      if (device.seek(0)) {
-        rawBuffer = device.readAll();
+    QImage rawImg;
+    bool success = false;
+
+    if (!m_szFilePath.empty()) {
+      success = tryLibRawThumbnail(m_szFilePath, QByteArray(), rawImg);
+    }
+
+    if (!success) {
+      if (m_pStream) {
+        QStreamDevice device(m_pStream);
+        if (device.seek(0)) {
+          rawBuffer = device.readAll();
+        }
+      } else if (!m_szFilePath.empty()) {
+        QFile file(QString::fromStdWString(m_szFilePath));
+        if (file.open(QIODevice::ReadOnly)) {
+          rawBuffer = file.readAll();
+        }
       }
-    } else {
-      QFile file(QString::fromStdWString(m_szFilePath));
-      if (file.open(QIODevice::ReadOnly)) {
-        rawBuffer = file.readAll();
+
+      if (!rawBuffer.isEmpty()) {
+        success = tryLibRawThumbnail(std::wstring(), rawBuffer, rawImg);
       }
     }
 
-    if (!rawBuffer.isEmpty()) {
-      QImage rawImg;
-      if (tryLibRawThumbnail(rawBuffer, cx, rawImg)) {
-        if (!rawImg.isNull()) {
-          if (rawImg.width() > (int)cx || rawImg.height() > (int)cx) {
-            rawImg = rawImg.scaled(cx, cx, Qt::KeepAspectRatio,
-                                   Qt::SmoothTransformation);
-          }
-          if (rawImg.format() != QImage::Format_ARGB32_Premultiplied) {
-            rawImg = rawImg.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-          }
+    if (success && !rawImg.isNull()) {
+      if (rawImg.width() > (int)cx || rawImg.height() > (int)cx) {
+        rawImg = rawImg.scaled(cx, cx, Qt::KeepAspectRatio,
+                               Qt::SmoothTransformation);
+      }
+      if (rawImg.format() != QImage::Format_ARGB32_Premultiplied) {
+        rawImg = rawImg.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+      }
 
-          BITMAPV5HEADER bi;
-          ZeroMemory(&bi, sizeof(bi));
-          bi.bV5Size = sizeof(bi);
-          bi.bV5Width = rawImg.width();
-          bi.bV5Height = -rawImg.height(); // Top-down
-          bi.bV5Planes = 1;
-          bi.bV5BitCount = 32;
-          bi.bV5Compression = BI_BITFIELDS;
-          bi.bV5RedMask = 0x00FF0000;
-          bi.bV5GreenMask = 0x0000FF00;
-          bi.bV5BlueMask = 0x000000FF;
-          bi.bV5AlphaMask = 0xFF000000;
+      BITMAPV5HEADER bi;
+      ZeroMemory(&bi, sizeof(bi));
+      bi.bV5Size = sizeof(bi);
+      bi.bV5Width = rawImg.width();
+      bi.bV5Height = -rawImg.height(); // Top-down
+      bi.bV5Planes = 1;
+      bi.bV5BitCount = 32;
+      bi.bV5Compression = BI_BITFIELDS;
+      bi.bV5RedMask = 0x00FF0000;
+      bi.bV5GreenMask = 0x0000FF00;
+      bi.bV5BlueMask = 0x000000FF;
+      bi.bV5AlphaMask = 0xFF000000;
 
-          void *pBits = nullptr;
-          HDC hdc = GetDC(nullptr);
-          HBITMAP hbmp = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
-                                          &pBits, nullptr, 0);
-          ReleaseDC(nullptr, hdc);
-          if (hbmp && pBits) {
-            memcpy(pBits, rawImg.constBits(), rawImg.sizeInBytes());
-            *phbmp = hbmp;
-            *pdwAlpha = WTSAT_ARGB;
-            return S_OK;
-          }
-        }
+      void *pBits = nullptr;
+      HDC hdc = GetDC(nullptr);
+      HBITMAP hbmp = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
+                                      &pBits, nullptr, 0);
+      ReleaseDC(nullptr, hdc);
+      if (hbmp && pBits) {
+        memcpy(pBits, rawImg.constBits(), rawImg.sizeInBytes());
+        *phbmp = hbmp;
+        *pdwAlpha = WTSAT_ARGB;
+        return S_OK;
       }
     }
   }
