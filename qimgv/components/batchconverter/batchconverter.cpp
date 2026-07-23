@@ -230,11 +230,13 @@ void BatchConverter::start(const QStringList &allPaths, const QList<int> &select
 
     QString finalOutDir = job.outputDir;
     if (job.createSubfolder) {
-        QString subfolderName = "Batch_" + QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
-        QDir baseDir(job.outputDir);
-        if (baseDir.mkdir(subfolderName)) {
-            finalOutDir = job.outputDir + "/" + subfolderName;
+        const QString subfolderPath = createUniqueSubfolder(job.outputDir);
+        if (subfolderPath.isEmpty()) {
+            m_isConverting = false;
+            emit startFailed(tr("Could not create a unique batch subfolder in \"%1\". The batch was aborted.").arg(job.outputDir));
+            return;
         }
+        finalOutDir = subfolderPath;
     }
 
     if (job.useUpscayl) {
@@ -389,6 +391,30 @@ QString BatchConverter::buildDestPath(const QString &srcPath, const QString &pat
     }
 
     return full;
+}
+
+QString BatchConverter::createUniqueSubfolder(const QString &baseDir) const {
+    constexpr int kMaxSubfolderAttempts = 1000;
+
+    QDir dir(baseDir);
+    const QString baseName = "Batch_" + QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss");
+
+    for (int attempt = 0; attempt < kMaxSubfolderAttempts; ++attempt) {
+        const QString candidateName = (attempt == 0) ? baseName : baseName + "_" + QString::number(attempt);
+
+        if (dir.mkdir(candidateName)) {
+            return baseDir + "/" + candidateName;
+        }
+
+        if (!QFileInfo::exists(baseDir + "/" + candidateName)) {
+            // mkdir failed for a reason other than the name being taken
+            // (permissions, invalid path, read-only filesystem, etc.) - not retryable.
+            return QString();
+        }
+        // Name collision with a previous batch - try the next suffixed candidate.
+    }
+
+    return QString();
 }
 
 QString BatchConverter::makeUniqueDestPath(const QString &destPath, QSet<QString> &reservedPaths, bool overwrite) const {

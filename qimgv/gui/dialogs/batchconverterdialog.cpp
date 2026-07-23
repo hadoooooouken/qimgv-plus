@@ -573,6 +573,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     connect(m_converter, &BatchConverter::progressUpdated, this, &BatchConverterDialog::onProgressUpdated);
     connect(m_converter, &BatchConverter::finished, this, &BatchConverterDialog::onFinished);
     connect(m_converter, &BatchConverter::cancelled, this, &BatchConverterDialog::onCancelled);
+    connect(m_converter, &BatchConverter::startFailed, this, &BatchConverterDialog::onStartFailed);
 
     formatComboBox->addItem("JPEG (*.jpg *.jpeg *.jpe *.jfif)", "jpg");
     formatComboBox->addItem("PNG (*.png)", "png");
@@ -1039,6 +1040,13 @@ void BatchConverterDialog::onCancelled(int successCount, int failedCount, int to
     isCancelling = false;
     updateUiState();
     statusLabel->setText(tr("Stopped by user. Success: %1, Failed: %2").arg(successCount).arg(failedCount));
+}
+
+void BatchConverterDialog::onStartFailed(const QString &reason) {
+    isConverting = false;
+    updateUiState();
+    statusLabel->setText(tr("Batch aborted."));
+    QMessageBox::warning(this, tr("Batch Conversion Failed"), reason);
 }
 
 void BatchConverterDialog::collectResizeWidgets() {

@@ -96,6 +96,7 @@ public slots:
     void onProgressUpdated(int index, QString status, QString details, bool success);
     void onFinished(int successCount, int failedCount, int totalCount);
     void onCancelled(int successCount, int failedCount, int totalCount);
+    void onStartFailed(const QString &reason);
 
 private slots:
     void onQualitySliderChanged(int value);

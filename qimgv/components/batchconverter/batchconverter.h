@@ -56,6 +56,7 @@ signals:
     void progressUpdated(int index, QString status, QString details, bool success);
     void finished(int successCount, int failedCount, int totalCount);
     void cancelled(int successCount, int failedCount, int totalCount);
+    void startFailed(const QString &reason);
 
 private slots:
     void onTaskFinished(int index, QString status, QString details, bool success);
@@ -64,6 +65,7 @@ private slots:
 private:
     QString buildDestPath(const QString &srcPath, const QString &pattern, int index, const QString &formatExt, const QString &finalOutDir) const;
     QString makeUniqueDestPath(const QString &destPath, QSet<QString> &reservedPaths, bool overwrite) const;
+    QString createUniqueSubfolder(const QString &baseDir) const;
 
     QThreadPool m_threadPool;
     std::atomic<bool> m_isConverting{false};
