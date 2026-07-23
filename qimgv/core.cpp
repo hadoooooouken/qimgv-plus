@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <QRegularExpression>
 #include <QTemporaryFile>
+#include <QUuid>
 #include <QCoreApplication>
 #include <QThreadPool>
 #include "components/upscaler/upscaler.h"
@@ -974,13 +975,19 @@ void Core::onDraggedOut(QList<QString> paths) {
 
 class TempFileCleaner : public QObject {
 public:
-  TempFileCleaner(const QString &filePath, QObject *parent = nullptr)
-      : QObject(parent), m_filePath(filePath) {}
+  TempFileCleaner(const QString &filePath, const QString &dirPath = QString(), QObject *parent = nullptr)
+      : QObject(parent), m_filePath(filePath), m_dirPath(dirPath) {}
   ~TempFileCleaner() {
-    QFile::remove(m_filePath);
+    if (!m_filePath.isEmpty()) {
+      QFile::remove(m_filePath);
+    }
+    if (!m_dirPath.isEmpty()) {
+      QDir(m_dirPath).rmdir(m_dirPath);
+    }
   }
 private:
   QString m_filePath;
+  QString m_dirPath;
 };
 
 QMimeData *Core::getMimeDataForImage(std::shared_ptr<Image> img,
@@ -991,25 +998,26 @@ QMimeData *Core::getMimeDataForImage(std::shared_ptr<Image> img,
   QString path = img->filePath();
   if (img->type() == STATIC) {
     if (img->isEdited()) {
-      QString instanceTempDir = settings->tmpDir() + "temp_" + QString::number(QCoreApplication::applicationPid()) + "/";
-      QDir().mkpath(instanceTempDir);
-      path = instanceTempDir + img->baseName() + ".png";
+      path.clear();
+      QString uniqueId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+      QString instanceTempDir = settings->tmpDir() + "payload_" + QString::number(QCoreApplication::applicationPid()) + "_" + uniqueId + "/";
+      if (QDir().mkpath(instanceTempDir)) {
+        QString tempPath = instanceTempDir + img->baseName() + ".png";
 
-      // use faster compression for drag'n'drop
-      int pngQuality = (target == TARGET_DROP) ? 80 : 30;
-      if (img->getImage()->save(path, "PNG", pngQuality)) {
-        new TempFileCleaner(path, mimeData);
-      } else {
-        // Fallback in case temporary directory creation or save fails
-        path = settings->tmpDir() + "image.png";
-        img->getImage()->save(path, nullptr, pngQuality);
+        // use faster compression for drag'n'drop
+        int pngQuality = (target == TARGET_DROP) ? 80 : 30;
+        if (img->getImage()->save(tempPath, "PNG", pngQuality)) {
+          path = tempPath;
+          new TempFileCleaner(path, instanceTempDir, mimeData);
+        }
       }
     }
   }
   
   if (target == TARGET_CLIPBOARD)
     mimeData->setImageData(*img->getImage().get());
-  mimeData->setUrls({QUrl::fromLocalFile(path)});
+  if (!path.isEmpty())
+    mimeData->setUrls({QUrl::fromLocalFile(path)});
   return mimeData;
 }
 
