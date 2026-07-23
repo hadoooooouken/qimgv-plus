@@ -91,6 +91,8 @@ public:
   void setThumbnailResolution(int size);
   int thumbnailerThreadCount();
   void setThumbnailerThreadCount(int count);
+  int thumbnailCacheMaxSizeMB();
+  void setThumbnailCacheMaxSizeMB(int mb);
 
   void setExpandImage(bool mode);
   bool expandImage();

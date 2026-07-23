@@ -663,6 +663,8 @@ void SettingsDialog::readSettings() {
   thumbnailResolutionSlider->setValue(settings->thumbnailResolution());
   onThumbnailResolutionSliderChanged(thumbnailResolutionSlider->value());
 
+  thumbnailCacheQuotaSpinBox->setValue(settings->thumbnailCacheMaxSizeMB());
+
   memoryLimitSpinBox->setValue(settings->memoryAllocationLimit());
   excludedCachePathsLineEdit->setText(settings->excludedCachePaths());
 
@@ -772,6 +774,7 @@ void SettingsDialog::saveSettings() {
   settings->setEnableSmoothZoom(enableSmoothZoomCheckBox->isChecked());
   settings->setUsePreloader(usePreloaderCheckBox->isChecked());
   settings->setUseThumbnailCache(useThumbnailCacheCheckBox->isChecked());
+  settings->setThumbnailCacheMaxSizeMB(thumbnailCacheQuotaSpinBox->value());
   settings->setExpandImage(expandImageCheckBox->isChecked());
 
   settings->setBackgroundOpacity(
@@ -3400,6 +3403,38 @@ void SettingsDialog::setupUi() {
 
         verticalLayout_34->addLayout(horizontalLayout_thumbRes);
 
+        horizontalLayout_thumbCacheQuota = new QHBoxLayout();
+        horizontalLayout_thumbCacheQuota->setObjectName("horizontalLayout_thumbCacheQuota");
+        horizontalLayout_thumbCacheQuota->setContentsMargins(0, 0, 0, 0);
+        thumbnailCacheQuotaLabel = new QLabel(advancedGroup);
+        thumbnailCacheQuotaLabel->setObjectName("thumbnailCacheQuotaLabel");
+
+        horizontalLayout_thumbCacheQuota->addWidget(thumbnailCacheQuotaLabel);
+
+        thumbnailCacheQuotaSpinBox = new QSpinBox(advancedGroup);
+        thumbnailCacheQuotaSpinBox->setObjectName("thumbnailCacheQuotaSpinBox");
+        QSizePolicy sizePolicy_thumbCacheQuota(QSizePolicy::Policy::Fixed, QSizePolicy::Policy::Minimum);
+        sizePolicy_thumbCacheQuota.setHorizontalStretch(0);
+        sizePolicy_thumbCacheQuota.setVerticalStretch(0);
+        sizePolicy_thumbCacheQuota.setHeightForWidth(thumbnailCacheQuotaSpinBox->sizePolicy().hasHeightForWidth());
+        thumbnailCacheQuotaSpinBox->setSizePolicy(sizePolicy_thumbCacheQuota);
+        thumbnailCacheQuotaSpinBox->setMinimumSize(QSize(110, 24));
+        thumbnailCacheQuotaSpinBox->setMinimum(0);
+        thumbnailCacheQuotaSpinBox->setMaximum(102400);
+        thumbnailCacheQuotaSpinBox->setSingleStep(128);
+        thumbnailCacheQuotaSpinBox->setValue(512);
+        thumbnailCacheQuotaSpinBox->setSuffix(" MB");
+        thumbnailCacheQuotaSpinBox->setSpecialValueText(QCoreApplication::translate("SettingsDialog", "Unlimited", nullptr));
+
+        horizontalLayout_thumbCacheQuota->addWidget(thumbnailCacheQuotaSpinBox);
+
+        horizontalSpacer_thumbCacheQuota = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        horizontalLayout_thumbCacheQuota->addItem(horizontalSpacer_thumbCacheQuota);
+
+
+        verticalLayout_34->addLayout(horizontalLayout_thumbCacheQuota);
+
         labelExcludedCachePaths = new QLabel(advancedGroup);
         labelExcludedCachePaths->setObjectName("labelExcludedCachePaths");
 
@@ -4046,6 +4081,7 @@ void SettingsDialog::retranslateUi() {
         useThumbnailCacheCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Use thumbnail cache (recommended)", nullptr));
         thumbnailResolutionLabel->setText(QCoreApplication::translate("SettingsDialog", "Thumbnail cache resolution:", nullptr));
         thumbnailResolutionValueLabel->setText(QCoreApplication::translate("SettingsDialog", "256 px", nullptr));
+        thumbnailCacheQuotaLabel->setText(QCoreApplication::translate("SettingsDialog", "Thumbnail cache size limit:", nullptr));
         labelExcludedCachePaths->setText(QCoreApplication::translate("SettingsDialog", "Exclude paths from caching (separated by semicolon ';'):", nullptr));
 #if QT_CONFIG(tooltip)
         excludedCachePathsLineEdit->setToolTip(QCoreApplication::translate("SettingsDialog", "Paths to folders that should not be cached, separated by ';'.\n"

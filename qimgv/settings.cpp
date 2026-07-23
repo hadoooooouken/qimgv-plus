@@ -122,6 +122,17 @@ void Settings::setThumbnailResolution(int size) {
   mCachedThumbnailResolution.store(size, std::memory_order_relaxed);
 }
 //------------------------------------------------------------------------------
+// Maximum on-disk size of the persistent thumbnail database, in megabytes.
+// Used by ThumbnailCache to opportunistically evict the least-recently-used
+// entries once the cache grows past this quota.
+int Settings::thumbnailCacheMaxSizeMB() {
+  return settings->settingsConf->value("thumbnailCacheMaxSizeMB", 512).toInt();
+}
+
+void Settings::setThumbnailCacheMaxSizeMB(int mb) {
+  settings->settingsConf->setValue("thumbnailCacheMaxSizeMB", qMax(0, mb));
+}
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 QString Settings::tmpDir() { return mTmpDir->path() + "/"; }
 //------------------------------------------------------------------------------

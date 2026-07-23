@@ -93,7 +93,7 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
 
       if (activeCache) {
         if (originalSize.width() > settings->thumbnailResolution() || originalSize.height() > settings->thumbnailResolution())
-          activeCache->saveThumbnail(image.get(), thumbnailId);
+          activeCache->saveThumbnail(image.get(), thumbnailId, path);
       }
     }
   }

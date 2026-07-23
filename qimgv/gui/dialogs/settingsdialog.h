@@ -380,6 +380,10 @@ private:
     QSlider *thumbnailResolutionSlider;
     QLabel *thumbnailResolutionValueLabel;
     QSpacerItem *horizontalSpacer_thumbRes;
+    QHBoxLayout *horizontalLayout_thumbCacheQuota;
+    QLabel *thumbnailCacheQuotaLabel;
+    QSpinBox *thumbnailCacheQuotaSpinBox;
+    QSpacerItem *horizontalSpacer_thumbCacheQuota;
     QLabel *labelExcludedCachePaths;
     QLineEdit *excludedCachePathsLineEdit;
     QCheckBox *unloadThumbsCheckBox;
