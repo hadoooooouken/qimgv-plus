@@ -12,6 +12,7 @@
 #include <shlobj.h>
 #include <thumbcache.h>
 #include <shlwapi.h>
+#include <string>
 
 // Unique CLSID for QImgvThumbnailProvider COM object
 // CLSID: {978A692C-CD23-4A59-8664-98F1E1B9200B}
@@ -40,7 +41,7 @@ protected:
 
 private:
     long m_cRef;
-    wchar_t m_szFilePath[MAX_PATH];
+    std::wstring m_szFilePath;
     IStream* m_pStream;
 };
 

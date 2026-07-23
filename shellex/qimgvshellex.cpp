@@ -729,7 +729,7 @@ HRESULT DeleteRegistryKey(HKEY hKeyParent, LPCWSTR pszSubKey) {
 QImgvThumbnailProvider::QImgvThumbnailProvider()
     : m_cRef(1), m_pStream(nullptr) {
   InterlockedIncrement(&g_cDllRef);
-  m_szFilePath[0] = L'\0';
+  m_szFilePath.clear();
 }
 
 QImgvThumbnailProvider::~QImgvThumbnailProvider() {
@@ -766,13 +766,13 @@ IFACEMETHODIMP_(ULONG) QImgvThumbnailProvider::Release() {
 // IInitializeWithFile Methods
 IFACEMETHODIMP QImgvThumbnailProvider::Initialize(LPCWSTR pszFilePath,
                                                   DWORD grfMode) {
-  if (!pszFilePath)
+  if (!pszFilePath || *pszFilePath == L'\0')
     return E_INVALIDARG;
   if (m_pStream) {
     m_pStream->Release();
     m_pStream = nullptr;
   }
-  wcscpy_s(m_szFilePath, MAX_PATH, pszFilePath);
+  m_szFilePath = pszFilePath;
   return S_OK;
 }
 
@@ -787,7 +787,7 @@ IFACEMETHODIMP QImgvThumbnailProvider::Initialize(IStream *pStream,
   }
   m_pStream = pStream;
   m_pStream->AddRef();
-  m_szFilePath[0] = L'\0';
+  m_szFilePath.clear();
   return S_OK;
 }
 
@@ -837,7 +837,7 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
 
   cx = std::min(cx, MAX_REQUESTED_THUMBNAIL_EDGE);
 
-  if (m_szFilePath[0] == L'\0' && !m_pStream) {
+  if (m_szFilePath.empty() && !m_pStream) {
     return E_FAIL;
   }
 
@@ -886,7 +886,7 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
         }
       }
     } else {
-      QFileInfo fileInfo(QString::fromWCharArray(m_szFilePath));
+      QFileInfo fileInfo(QString::fromStdWString(m_szFilePath));
       if (fileInfo.size() > MAX_THUMBNAIL_FILE_SIZE) {
         return E_FAIL;
       }
@@ -898,7 +898,7 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
       QByteArray svg;
       const bool readSucceeded =
           m_pStream ? readSvgStream(m_pStream, svg)
-                    : readSvgFile(QString::fromWCharArray(m_szFilePath), svg);
+                    : readSvgFile(QString::fromStdWString(m_szFilePath), svg);
       HBITMAP bitmap = readSucceeded ? renderSvgThumbnail(svg, cx) : nullptr;
       if (!bitmap && knownSvg)
         return E_FAIL;
@@ -919,7 +919,7 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
         rawBuffer = device.readAll();
       }
     } else {
-      QFile file(QString::fromWCharArray(m_szFilePath));
+      QFile file(QString::fromStdWString(m_szFilePath));
       if (file.open(QIODevice::ReadOnly)) {
         rawBuffer = file.readAll();
       }
@@ -1017,7 +1017,7 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
     streamDevice = std::make_unique<QStreamDevice>(m_pStream);
     reader.setDevice(streamDevice.get());
   } else {
-    QString filePath = QString::fromWCharArray(m_szFilePath);
+    QString filePath = QString::fromStdWString(m_szFilePath);
     reader.setFileName(filePath);
   }
 
