@@ -255,19 +255,10 @@ void DocumentInfo::loadExifTags() {
 
 #ifdef USE_EXIV2
     try {
-        QFile f(fileInfo.filePath());
-        if (!f.open(QFile::ReadOnly)) {
-            qWarning() << "DocumentInfo: failed to open file for EXIF read:" << fileInfo.filePath();
+        std::unique_ptr<Exiv2::Image> image = Exiv2::ImageFactory::open(fileInfo.filePath().toLocal8Bit().constData());
+        if (!image)
             return;
-        }
-        const QByteArray fileData = f.readAll();
-        f.close();
 
-        std::unique_ptr<Exiv2::Image> image;
-        image = Exiv2::ImageFactory::open(
-            reinterpret_cast<const Exiv2::byte*>(fileData.constData()),
-            static_cast<size_t>(fileData.size()));
-        assert(image.get() != 0);
         image->readMetadata();
         Exiv2::ExifData &exifData = image->exifData();
         if (exifData.empty())
