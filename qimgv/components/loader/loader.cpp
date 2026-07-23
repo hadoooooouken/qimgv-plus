@@ -57,7 +57,7 @@ void Loader::doLoadAsync(QString path, int priority) {
 void Loader::onLoadFinished(std::shared_ptr<Image> image, const QString &path) {
     auto task = tasks.take(path);
     delete task;
-    if(!image)
+    if(!image || !image->isLoaded())
         emit loadFailed(path);
     else
         emit loadFinished(image, path);

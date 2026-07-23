@@ -2302,7 +2302,12 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
   }
   DocumentType type = img->type();
   if (type == STATIC) {
-    mw->showImage(img->getDisplayImage(), img->filePath());
+    auto displayImage = img->getDisplayImage();
+    if (!displayImage) {
+      mw->showMessage(tr("Error: could not load image."));
+      return;
+    }
+    mw->showImage(displayImage, img->filePath());
   } else if (type == ANIMATED) {
     mw->showAnimation(img->filePath(), img->format(), img->size());
   }

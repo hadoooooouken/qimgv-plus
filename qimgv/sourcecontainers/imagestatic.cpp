@@ -93,8 +93,10 @@ void ImageStatic::loadICO() {
   if (!loaded.isNull()) {
     image = std::make_shared<const QImage>(std::move(loaded));
     imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+    mLoaded = true;
+  } else {
+    qWarning() << "ImageStatic: failed to load ico" << mPath;
   }
-  mLoaded = true;
 }
 
 void ImageStatic::loadPdf() {
@@ -203,15 +205,18 @@ std::shared_ptr<const QImage> ImageStatic::getImage() {
 }
 
 int ImageStatic::height() {
-  return isEdited() ? imageEdited->height() : image->height();
+  const QImage *img = (isEdited() ? imageEdited : image).get();
+  return img ? img->height() : 0;
 }
 
 int ImageStatic::width() {
-  return isEdited() ? imageEdited->width() : image->width();
+  const QImage *img = (isEdited() ? imageEdited : image).get();
+  return img ? img->width() : 0;
 }
 
 QSize ImageStatic::size() {
-  return isEdited() ? imageEdited->size() : image->size();
+  const QImage *img = (isEdited() ? imageEdited : image).get();
+  return img ? img->size() : QSize();
 }
 
 bool ImageStatic::setEditedImage(std::unique_ptr<const QImage> imageEditedNew) {

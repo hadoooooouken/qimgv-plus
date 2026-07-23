@@ -301,7 +301,7 @@ void MW::preShowResize(QSize sz) {
 }
 
 void MW::showImage(std::shared_ptr<const QImage> image, QString filePath) {
-    if(settings->autoResizeWindow())
+    if(settings->autoResizeWindow() && image)
         preShowResize(image->size());
     viewerWidget->showImage(image, filePath);
     updateCropPanelData();

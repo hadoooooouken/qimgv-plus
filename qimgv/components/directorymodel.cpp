@@ -377,7 +377,7 @@ void DirectoryModel::load(QString filePath, bool asyncHint) {
             loader.loadAsyncPriority(filePath);
         } else {
             auto img = loader.load(filePath);
-            if(img) {
+            if(img && img->isLoaded()) {
                 cache.insert(img);
                 emit imageReady(img, filePath);
             } else {
