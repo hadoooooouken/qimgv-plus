@@ -24,6 +24,8 @@ public:
     QImage upscale(const QImage &inputImage, const std::atomic<bool> *abortFlag = nullptr);
     void destroy();
 
+    static qint64 getMaxOutputPixelsBudget();
+
     ~UpscaylScaler() = default;
 
 private:

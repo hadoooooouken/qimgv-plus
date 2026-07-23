@@ -8,6 +8,7 @@
 #include <QThreadPool>
 #include <QCoreApplication>
 #include <QDebug>
+#include <windows.h>
 
 
 UpscaylScaler::UpscaylScaler() : realesrgan(nullptr) {}
@@ -57,6 +58,24 @@ bool UpscaylScaler::init(const QString &appDir, const QString &requestedModelNam
     return true;
 }
 
+qint64 UpscaylScaler::getMaxOutputPixelsBudget() {
+    MEMORYSTATUSEX memStatus;
+    memStatus.dwLength = sizeof(memStatus);
+    if (GlobalMemoryStatusEx(&memStatus)) {
+        qint64 ramGB = static_cast<qint64>(memStatus.ullTotalPhys / (1024ULL * 1024 * 1024));
+        if (ramGB >= 60) {
+            return 512LL * 1024 * 1024; // 512 Mpx for 64GB+ RAM (~8.2 GB process memory budget)
+        }
+        if (ramGB >= 28) {
+            return 256LL * 1024 * 1024; // 256 Mpx for 32GB RAM (~4.1 GB process memory budget)
+        }
+        if (ramGB >= 14) {
+            return 64LL * 1024 * 1024;  // 64 Mpx for 16GB RAM (~1.1 GB process memory budget)
+        }
+    }
+    return 36LL * 1024 * 1024; // 36 Mpx fallback for < 16GB RAM (~0.6 GB process memory budget)
+}
+
 QImage UpscaylScaler::upscale(const QImage &inputImage, const std::atomic<bool> *abortFlag) {
     QMutexLocker locker(&mutex);
     if (!realesrgan) {
@@ -68,16 +87,10 @@ QImage UpscaylScaler::upscale(const QImage &inputImage, const std::atomic<bool> 
         return QImage();
     }
 
-    QImage imgRgba = inputImage;
-    if (imgRgba.format() != QImage::Format_ARGB32 && imgRgba.format() != QImage::Format_RGB32) {
-        imgRgba = imgRgba.convertToFormat(QImage::Format_ARGB32);
-    }
-    qint64 inW = imgRgba.width();
-    qint64 inH = imgRgba.height();
-
-    constexpr qint64 kMaxUpscalePixels = 64LL * 1024 * 1024;
-    if (inW <= 0 || inH <= 0 || (inW * inH) > kMaxUpscalePixels) {
-        qWarning() << "[Upscayl] upscale() image too large or invalid size:" << inW << "x" << inH;
+    qint64 inW = inputImage.width();
+    qint64 inH = inputImage.height();
+    if (inW <= 0 || inH <= 0) {
+        qWarning() << "[Upscayl] upscale() image invalid size:" << inW << "x" << inH;
         return QImage();
     }
 
@@ -93,6 +106,19 @@ QImage UpscaylScaler::upscale(const QImage &inputImage, const std::atomic<bool> 
     if (outW > kMaxIntVal || outH > kMaxIntVal) {
         qWarning() << "[Upscayl] upscale() output size exceeds max integer:" << outW << "x" << outH;
         return QImage();
+    }
+
+    qint64 outPixels = outW * outH;
+    qint64 maxOutputPixels = getMaxOutputPixelsBudget();
+    if (outPixels <= 0 || outPixels > maxOutputPixels) {
+        qWarning() << "[Upscayl] upscale() output size exceeds memory budget limit:"
+                   << outW << "x" << outH << "(" << outPixels << "pixels, max allowed:" << maxOutputPixels << ")";
+        return QImage();
+    }
+
+    QImage imgRgba = inputImage;
+    if (imgRgba.format() != QImage::Format_ARGB32 && imgRgba.format() != QImage::Format_RGB32) {
+        imgRgba = imgRgba.convertToFormat(QImage::Format_ARGB32);
     }
 
     QImage outImg(static_cast<int>(outW), static_cast<int>(outH), QImage::Format_ARGB32);
