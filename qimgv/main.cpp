@@ -233,8 +233,11 @@ int main(int argc, char *argv[]) {
               QObject::connect(clientSocket, &QLocalSocket::readyRead,
                                [clientSocket, &core]() {
                                  QDataStream in(clientSocket);
+                                 in.startTransaction();
                                  QString pathReceived;
                                  in >> pathReceived;
+                                 if (!in.commitTransaction())
+                                   return;
                                  core.raiseWindow(pathReceived);
                                });
             });
