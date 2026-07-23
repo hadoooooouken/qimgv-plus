@@ -302,38 +302,69 @@ bool FileOperations::saveImage(const QImage &image, const QString &destPath, int
         qWarning() << "FileOperations::saveImage() - Source image is null.";
         return false;
     }
-    QString tmpPath = destPath + "_" + generateHash(destPath);
+    if (destPath.isEmpty()) {
+        qWarning() << "FileOperations::saveImage() - Destination path is empty.";
+        return false;
+    }
+
     QFileInfo fi(destPath);
     QString ext = fi.suffix();
+    QString hashStr = generateHash(destPath);
+    QString tmpWritePath = destPath + ".qimgv_tmp_" + hashStr;
+    QString backupPath = destPath + ".qimgv_bak_" + hashStr;
 
-    bool backupExists = false, success = false, originalExists = false;
+    // Clean up any stale temporary file from a previous interrupted save
+    if (QFile::exists(tmpWritePath)) {
+        QFile::remove(tmpWritePath);
+    }
 
-    if (QFile::exists(destPath))
-        originalExists = true;
+    // Save image to temporary path first so original destination is never corrupted during encoding
+    bool saved = image.save(tmpWritePath, ext.toStdString().c_str(), quality);
+    if (!saved) {
+        qWarning() << "FileOperations::saveImage() - Failed to save image to temporary path:" << tmpWritePath;
+        QFile::remove(tmpWritePath);
+        return false;
+    }
 
-    // backup the original file if possible
+    bool originalExists = QFile::exists(destPath);
+
+    // Create backup of original destination file if it exists
     if (originalExists) {
-        QFile::remove(tmpPath);
-        if (!QFile::copy(destPath, tmpPath)) {
-            qWarning() << "FileOperations::saveImage() - Could not create file backup.";
+        if (QFile::exists(backupPath)) {
+            QFile::remove(backupPath);
+        }
+        if (!QFile::copy(destPath, backupPath)) {
+            qWarning() << "FileOperations::saveImage() - Could not create backup of destination file:" << backupPath;
+            QFile::remove(tmpWritePath);
             return false;
         }
-        backupExists = true;
     }
 
-    // save file
-    success = image.save(destPath, ext.toStdString().c_str(), quality);
+    // Replace original destination file with temporary save file
+    if (originalExists) {
+        QFile::remove(destPath);
+    }
 
-    if (backupExists) {
-        if (success) {
-            // everything ok - remove the backup
-            QFile::remove(tmpPath);
-        } else if (originalExists) {
-            // revert on fail
-            QFile::remove(destPath);
-            QFile::copy(tmpPath, destPath);
-            QFile::remove(tmpPath);
+    bool committed = QFile::rename(tmpWritePath, destPath);
+    if (committed) {
+        if (originalExists) {
+            QFile::remove(backupPath);
+        }
+        return true;
+    }
+
+    // Failed to commit: clean up temp file and attempt rollback from backup
+    qWarning() << "FileOperations::saveImage() - Failed to rename temporary file to destination path:" << destPath;
+    QFile::remove(tmpWritePath);
+
+    if (originalExists) {
+        bool restored = QFile::copy(backupPath, destPath);
+        if (restored) {
+            QFile::remove(backupPath);
+        } else {
+            qCritical() << "FileOperations::saveImage() - CRITICAL: Rollback failed! Original backup retained at:" << backupPath;
         }
     }
-    return success;
+
+    return false;
 }
