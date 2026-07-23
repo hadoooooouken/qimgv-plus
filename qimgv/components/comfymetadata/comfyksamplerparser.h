@@ -39,16 +39,17 @@ private:
     // the originating CLIPTextEncode node(s) and return their text. Follows
     // simple pass-through nodes (ControlNetApply, ConditioningSetArea, etc.)
     // and merges both branches of ConditioningCombine.
-    static QString resolveConditioningText(const QJsonObject &prompt,
-                                            const QJsonValue &conditioningInput,
-                                            QSet<QString> visited = {});
+    static std::expected<QString, QString>
+        resolveConditioningText(const QJsonObject &prompt,
+                                const QJsonValue &conditioningInput);
     // Resolves a text-producing input that may be a literal string or a link
     // into a node that builds the string dynamically (concatenation,
     // find/replace, etc.). Collects every string value reachable from the
     // node.
-    static QString resolveTextLink(const QJsonObject &prompt, const QJsonValue &v,
-                                    QSet<QString> &visited);
-    static QJsonObject findMainKSamplerNode(const QJsonObject &prompt, QString &outId);
+    static std::expected<QString, QString>
+        resolveTextLink(const QJsonObject &prompt, const QJsonValue &v);
+    static std::expected<QJsonObject, QString>
+        findMainKSamplerNode(const QJsonObject &prompt, QString &outId);
     static QString resolveModelChain(const QJsonObject &prompt, const QJsonValue &modelInput,
                                       QStringList &loraNames);
     static QString findLoaderValue(const QJsonObject &prompt,
@@ -74,5 +75,6 @@ private:
     // node - that would require running the graph, not just reading it.
     static QJsonValue pickPassThroughLink(const QJsonObject &srcInputs,
                                            const QString &preferredKey);
+    static std::expected<void, QString> validatePromptGraph(const QJsonObject &prompt);
     static bool isLink(const QJsonValue &v);
 };

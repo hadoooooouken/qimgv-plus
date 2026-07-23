@@ -1,16 +1,204 @@
 #include "comfyksamplerparser.h"
+#include "comfymetadatalimits.h"
 #include "pngtextchunkreader.h"
 
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonValue>
+#include <QHash>
+#include <QQueue>
 #include <QSet>
-#include <functional>
+#include <QVector>
+
+namespace {
+constexpr qsizetype kTextSeparatorCharacters = 1;
+
+std::expected<void, QString> validateJsonNesting(const QByteArray &json)
+{
+    qsizetype nestingDepth = 0;
+    bool insideString = false;
+    bool escaped = false;
+
+    for (const char byte : json) {
+        if (insideString) {
+            if (escaped) {
+                escaped = false;
+            } else if (byte == '\\') {
+                escaped = true;
+            } else if (byte == '"') {
+                insideString = false;
+            }
+            continue;
+        }
+
+        if (byte == '"') {
+            insideString = true;
+        } else if (byte == '{' || byte == '[') {
+            ++nestingDepth;
+            if (nestingDepth > ComfyMetadataLimits::kMaxJsonNestingDepth) {
+                return std::unexpected(
+                    QStringLiteral("ComfyUI JSON exceeds the maximum nesting depth of %1")
+                        .arg(ComfyMetadataLimits::kMaxJsonNestingDepth));
+            }
+        } else if ((byte == '}' || byte == ']') && nestingDepth > 0) {
+            --nestingDepth;
+        }
+    }
+
+    return {};
+}
+
+std::expected<void, QString> validateJsonValueCount(const QJsonObject &root)
+{
+    QVector<QJsonValue> pending;
+    pending.append(QJsonValue(root));
+    qsizetype valueCount = 0;
+
+    while (!pending.isEmpty()) {
+        const QJsonValue value = pending.takeLast();
+        ++valueCount;
+        if (valueCount > ComfyMetadataLimits::kMaxJsonValueCount) {
+            return std::unexpected(
+                QStringLiteral("ComfyUI JSON exceeds the maximum value count of %1")
+                    .arg(ComfyMetadataLimits::kMaxJsonValueCount));
+        }
+
+        if (value.isObject()) {
+            const QJsonObject object = value.toObject();
+            for (auto it = object.constBegin(); it != object.constEnd(); ++it)
+                pending.append(it.value());
+        } else if (value.isArray()) {
+            const QJsonArray array = value.toArray();
+            for (const QJsonValue &entry : array)
+                pending.append(entry);
+        }
+    }
+
+    return {};
+}
+
+class BoundedTextCollector
+{
+public:
+    std::expected<void, QString> append(const QString &text)
+    {
+        if (text.isEmpty())
+            return {};
+
+        const qsizetype separatorCharacters = mParts.isEmpty() ? 0 : kTextSeparatorCharacters;
+        const qsizetype remainingCharacters =
+            ComfyMetadataLimits::kMaxResolvedTextCharacters - mCharacterCount;
+        if (separatorCharacters > remainingCharacters ||
+            text.size() > remainingCharacters - separatorCharacters) {
+            return std::unexpected(
+                QStringLiteral("Resolved ComfyUI prompt text exceeds the %1-character limit")
+                    .arg(ComfyMetadataLimits::kMaxResolvedTextCharacters));
+        }
+
+        mCharacterCount += separatorCharacters + text.size();
+        mParts.append(text);
+        return {};
+    }
+
+    QString joined() const
+    {
+        return mParts.join(QStringLiteral(" "));
+    }
+
+private:
+    QStringList mParts;
+    qsizetype mCharacterCount = 0;
+};
+}
 
 bool ComfyKSamplerParser::isLink(const QJsonValue &v)
 {
     // A link to another node in the ComfyUI JSON looks like ["12", 0]
     return v.isArray() && v.toArray().size() == 2 && v.toArray().at(1).isDouble();
+}
+
+std::expected<void, QString>
+ComfyKSamplerParser::validatePromptGraph(const QJsonObject &prompt)
+{
+    if (prompt.size() > ComfyMetadataLimits::kMaxGraphNodeCount) {
+        return std::unexpected(
+            QStringLiteral("ComfyUI graph exceeds the maximum node count of %1")
+                .arg(ComfyMetadataLimits::kMaxGraphNodeCount));
+    }
+
+    QHash<QString, QVector<QString>> dependencies;
+    QHash<QString, qsizetype> incomingEdgeCounts;
+    QHash<QString, qsizetype> graphDepths;
+    qsizetype edgeCount = 0;
+
+    for (auto it = prompt.constBegin(); it != prompt.constEnd(); ++it) {
+        dependencies.insert(it.key(), {});
+        incomingEdgeCounts.insert(it.key(), 0);
+        graphDepths.insert(it.key(), 1);
+    }
+
+    for (auto nodeIt = prompt.constBegin(); nodeIt != prompt.constEnd(); ++nodeIt) {
+        const QJsonObject inputs = nodeIt.value().toObject().value("inputs").toObject();
+        QVector<QString> &nodeDependencies = dependencies[nodeIt.key()];
+
+        for (auto inputIt = inputs.constBegin(); inputIt != inputs.constEnd(); ++inputIt) {
+            if (!isLink(inputIt.value()))
+                continue;
+
+            const QString sourceId =
+                inputIt.value().toArray().at(0).toVariant().toString();
+            if (!prompt.contains(sourceId))
+                continue;
+
+            ++edgeCount;
+            if (edgeCount > ComfyMetadataLimits::kMaxGraphEdgeCount) {
+                return std::unexpected(
+                    QStringLiteral("ComfyUI graph exceeds the maximum edge count of %1")
+                        .arg(ComfyMetadataLimits::kMaxGraphEdgeCount));
+            }
+
+            nodeDependencies.append(sourceId);
+            incomingEdgeCounts[sourceId] = incomingEdgeCounts.value(sourceId) + 1;
+        }
+    }
+
+    QQueue<QString> readyNodes;
+    for (auto it = incomingEdgeCounts.constBegin(); it != incomingEdgeCounts.constEnd(); ++it) {
+        if (it.value() == 0)
+            readyNodes.enqueue(it.key());
+    }
+
+    qsizetype processedNodeCount = 0;
+    while (!readyNodes.isEmpty()) {
+        const QString nodeId = readyNodes.dequeue();
+        ++processedNodeCount;
+
+        const qsizetype nodeDepth = graphDepths.value(nodeId);
+        if (nodeDepth > ComfyMetadataLimits::kMaxGraphDepth) {
+            return std::unexpected(
+                QStringLiteral("ComfyUI graph exceeds the maximum depth of %1")
+                    .arg(ComfyMetadataLimits::kMaxGraphDepth));
+        }
+
+        const QVector<QString> &nodeDependencies = dependencies.value(nodeId);
+        for (const QString &sourceId : nodeDependencies) {
+            graphDepths[sourceId] =
+                qMax(graphDepths.value(sourceId), nodeDepth + 1);
+
+            const qsizetype remainingIncomingEdges =
+                incomingEdgeCounts.value(sourceId) - 1;
+            incomingEdgeCounts[sourceId] = remainingIncomingEdges;
+            if (remainingIncomingEdges == 0)
+                readyNodes.enqueue(sourceId);
+        }
+    }
+
+    if (processedNodeCount != prompt.size()) {
+        return std::unexpected(
+            QStringLiteral("ComfyUI graph contains a dependency cycle"));
+    }
+
+    return {};
 }
 
 std::expected<KSamplerInfo, QString> ComfyKSamplerParser::parseFromPng(const QString &pngPath)
@@ -222,88 +410,111 @@ double ComfyKSamplerParser::resolveSeedValue(const QJsonObject &prompt,
     return 0;
 }
 
-QString ComfyKSamplerParser::resolveConditioningText(const QJsonObject &prompt,
-                                                       const QJsonValue &conditioningInput,
-                                                       QSet<QString> visited)
+std::expected<QString, QString>
+ComfyKSamplerParser::resolveConditioningText(const QJsonObject &prompt,
+                                              const QJsonValue &conditioningInput)
 {
-    if (!isLink(conditioningInput))
-        return {};
+    QVector<QJsonValue> pending;
+    pending.append(conditioningInput);
+    QSet<QString> visited;
+    BoundedTextCollector textCollector;
 
-    QJsonArray link = conditioningInput.toArray();
-    QString srcId = link.at(0).toVariant().toString();
+    while (!pending.isEmpty()) {
+        const QJsonValue currentInput = pending.takeLast();
+        if (!isLink(currentInput))
+            continue;
 
-    if (!prompt.contains(srcId) || visited.contains(srcId))
-        return {};
-    visited.insert(srcId);
+        const QString sourceId =
+            currentInput.toArray().at(0).toVariant().toString();
+        if (!prompt.contains(sourceId) || visited.contains(sourceId))
+            continue;
+        visited.insert(sourceId);
 
-    QJsonObject srcNode = prompt.value(srcId).toObject();
-    QString classType = srcNode.value("class_type").toString();
-    QJsonObject srcInputs = srcNode.value("inputs").toObject();
+        const QJsonObject sourceNode = prompt.value(sourceId).toObject();
+        const QString classType = sourceNode.value("class_type").toString();
+        const QJsonObject sourceInputs = sourceNode.value("inputs").toObject();
 
-    // The actual prompt text lives on the CLIPTextEncode node(s). Covers the
-    // plain CLIPTextEncode as well as SDXL's text_g/text_l variant.
-    if (classType.contains("CLIPTextEncode", Qt::CaseInsensitive)) {
-        QStringList parts;
-        for (const char *key : { "text", "text_g", "text_l" }) {
-            QSet<QString> textVisited;
-            QString text = resolveTextLink(prompt, srcInputs.value(key), textVisited);
-            if (!text.isEmpty())
-                parts << text;
+        // The actual prompt text lives on the CLIPTextEncode node(s). Covers the
+        // plain CLIPTextEncode as well as SDXL's text_g/text_l variant.
+        if (classType.contains("CLIPTextEncode", Qt::CaseInsensitive)) {
+            for (const char *key : { "text", "text_g", "text_l" }) {
+                auto text = resolveTextLink(prompt, sourceInputs.value(key));
+                if (!text)
+                    return std::unexpected(text.error());
+
+                auto appendResult = textCollector.append(*text);
+                if (!appendResult)
+                    return std::unexpected(appendResult.error());
+            }
+            continue;
         }
-        return parts.join(QStringLiteral(" "));
+
+        // ConditioningCombine merges two branches and is expanded through the
+        // bounded worklist in the same order as the previous recursive walk.
+        if (classType.contains("ConditioningCombine", Qt::CaseInsensitive)) {
+            pending.append(sourceInputs.value("conditioning_2"));
+            pending.append(sourceInputs.value("conditioning_1"));
+            continue;
+        }
+
+        // Other pass-through nodes (ControlNetApply, ConditioningSetArea,
+        // ConditioningZeroOut, Switch/Mux nodes, etc.) carry the chain forward
+        // through a single conditioning-shaped input.
+        const QJsonValue nextLink =
+            pickPassThroughLink(sourceInputs, QStringLiteral("conditioning"));
+        if (isLink(nextLink))
+            pending.append(nextLink);
     }
 
-    // ConditioningCombine merges two branches — resolve and join both.
-    if (classType.contains("ConditioningCombine", Qt::CaseInsensitive)) {
-        QString a = resolveConditioningText(prompt, srcInputs.value("conditioning_1"), visited);
-        QString b = resolveConditioningText(prompt, srcInputs.value("conditioning_2"), visited);
-        if (!a.isEmpty() && !b.isEmpty())
-            return a + QStringLiteral(" ") + b;
-        return a.isEmpty() ? b : a;
-    }
-
-    // Other pass-through nodes (ControlNetApply, ConditioningSetArea,
-    // ConditioningZeroOut, Switch/Mux nodes, etc.) carry the chain forward
-    // through a single conditioning-shaped input.
-    QJsonValue nextLink = pickPassThroughLink(srcInputs, QStringLiteral("conditioning"));
-    if (isLink(nextLink))
-        return resolveConditioningText(prompt, nextLink, visited);
-
-    return {};
+    return textCollector.joined();
 }
 
-QString ComfyKSamplerParser::resolveTextLink(const QJsonObject &prompt,
-                                              const QJsonValue &v,
-                                              QSet<QString> &visited)
+std::expected<QString, QString>
+ComfyKSamplerParser::resolveTextLink(const QJsonObject &prompt,
+                                     const QJsonValue &v)
 {
-    if (v.isString())
-        return v.toString();
+    QVector<QJsonValue> pending;
+    pending.append(v);
+    QSet<QString> visited;
+    BoundedTextCollector textCollector;
 
-    if (!isLink(v))
-        return {};
-
-    QJsonArray link = v.toArray();
-    QString srcId = link.at(0).toVariant().toString();
-    if (!prompt.contains(srcId) || visited.contains(srcId))
-        return {};
-    visited.insert(srcId);
-
-    QJsonObject srcInputs = prompt.value(srcId).toObject().value("inputs").toObject();
-
-    QStringList parts;
-    for (auto it = srcInputs.constBegin(); it != srcInputs.constEnd(); ++it) {
-        if (it.value().isString() && !it.value().toString().isEmpty()) {
-            parts << it.value().toString();
-        } else if (isLink(it.value())) {
-            QString sub = resolveTextLink(prompt, it.value(), visited);
-            if (!sub.isEmpty())
-                parts << sub;
+    while (!pending.isEmpty()) {
+        const QJsonValue currentValue = pending.takeLast();
+        if (currentValue.isString()) {
+            auto appendResult = textCollector.append(currentValue.toString());
+            if (!appendResult)
+                return std::unexpected(appendResult.error());
+            continue;
         }
+
+        if (!isLink(currentValue))
+            continue;
+
+        const QString sourceId =
+            currentValue.toArray().at(0).toVariant().toString();
+        if (!prompt.contains(sourceId) || visited.contains(sourceId))
+            continue;
+        visited.insert(sourceId);
+
+        const QJsonObject sourceInputs =
+            prompt.value(sourceId).toObject().value("inputs").toObject();
+        QVector<QJsonValue> inputValues;
+        for (auto it = sourceInputs.constBegin(); it != sourceInputs.constEnd(); ++it) {
+            if ((it.value().isString() && !it.value().toString().isEmpty()) ||
+                isLink(it.value())) {
+                inputValues.append(it.value());
+            }
+        }
+
+        for (auto it = inputValues.crbegin(); it != inputValues.crend(); ++it)
+            pending.append(*it);
     }
-    return parts.join(QStringLiteral(" "));
+
+    return textCollector.joined();
 }
 
-QJsonObject ComfyKSamplerParser::findMainKSamplerNode(const QJsonObject &prompt, QString &outId)
+std::expected<QJsonObject, QString>
+ComfyKSamplerParser::findMainKSamplerNode(const QJsonObject &prompt, QString &outId)
 {
     // Collect all candidates for the role of KSampler.
     QStringList candidateIds;
@@ -325,41 +536,58 @@ QJsonObject ComfyKSamplerParser::findMainKSamplerNode(const QJsonObject &prompt,
 
     // Multiple KSamplers (e.g. a hires-fix chain): the "main" one is
     // considered to be whichever is NOT an ancestor of another candidate —
-    // i.e. the last one in the chain. Ancestors are searched recursively
+    // i.e. the last one in the chain. Ancestors are searched iteratively
     // across ALL of a node's input links (not just latent_image), because
     // intermediate nodes (LatentUpscale, VAEEncode/VAEDecode, etc.) often sit
     // between two KSamplers, so a direct latent_image->latent_image link may
     // not exist. A KSampler can never appear on a "foreign" path (via
     // model/positive/negative) since it doesn't produce MODEL/CONDITIONING
     // outputs — so traversing all links is safe and produces no false positives.
-    std::function<void(const QJsonObject &, QSet<QString> &, QSet<QString> &)> collectAncestors =
-        [&](const QJsonObject &nodeInputs, QSet<QString> &visited, QSet<QString> &found) {
-            for (auto it = nodeInputs.constBegin(); it != nodeInputs.constEnd(); ++it) {
-                if (!isLink(it.value()))
-                    continue;
-                QString srcId = it.value().toArray().at(0).toVariant().toString();
-                if (visited.contains(srcId))
-                    continue;
-                visited.insert(srcId);
-
-                if (candidateIds.contains(srcId)) {
-                    found.insert(srcId);
-                    continue; // don't recurse past a KSampler ancestor, not needed here
-                }
-                if (!prompt.contains(srcId))
-                    continue;
-                QJsonObject srcNode = prompt.value(srcId).toObject();
-                collectAncestors(srcNode.value("inputs").toObject(), visited, found);
-            }
-        };
-
+    QSet<QString> candidateIdSet;
+    for (const QString &id : candidateIds)
+        candidateIdSet.insert(id);
     QSet<QString> usedAsInputBySomeoneElse;
+    qsizetype traversalSteps = 0;
+
     for (const QString &id : candidateIds) {
-        QJsonObject inputs = prompt.value(id).toObject().value("inputs").toObject();
+        const QJsonObject inputs =
+            prompt.value(id).toObject().value("inputs").toObject();
+        QVector<QString> pendingNodeIds;
+        for (auto it = inputs.constBegin(); it != inputs.constEnd(); ++it) {
+            if (isLink(it.value()))
+                pendingNodeIds.append(it.value().toArray().at(0).toVariant().toString());
+        }
+
         QSet<QString> visited;
-        QSet<QString> ancestors;
-        collectAncestors(inputs, visited, ancestors);
-        usedAsInputBySomeoneElse.unite(ancestors);
+        while (!pendingNodeIds.isEmpty()) {
+            ++traversalSteps;
+            if (traversalSteps > ComfyMetadataLimits::kMaxGraphTraversalSteps) {
+                return std::unexpected(
+                    QStringLiteral("ComfyUI graph traversal exceeds the %1-step limit")
+                        .arg(ComfyMetadataLimits::kMaxGraphTraversalSteps));
+            }
+
+            const QString sourceId = pendingNodeIds.takeLast();
+            if (visited.contains(sourceId))
+                continue;
+            visited.insert(sourceId);
+
+            if (candidateIdSet.contains(sourceId)) {
+                usedAsInputBySomeoneElse.insert(sourceId);
+                continue;
+            }
+            if (!prompt.contains(sourceId))
+                continue;
+
+            const QJsonObject sourceInputs =
+                prompt.value(sourceId).toObject().value("inputs").toObject();
+            for (auto it = sourceInputs.constBegin(); it != sourceInputs.constEnd(); ++it) {
+                if (isLink(it.value())) {
+                    pendingNodeIds.append(
+                        it.value().toArray().at(0).toVariant().toString());
+                }
+            }
+        }
     }
 
     for (const QString &id : candidateIds) {
@@ -375,6 +603,16 @@ QJsonObject ComfyKSamplerParser::findMainKSamplerNode(const QJsonObject &prompt,
 
 std::expected<KSamplerInfo, QString> ComfyKSamplerParser::parseFromJson(const QByteArray &promptJson)
 {
+    if (promptJson.size() > ComfyMetadataLimits::kMaxMetadataBytes) {
+        return std::unexpected(
+            QStringLiteral("ComfyUI JSON exceeds the %1-byte limit")
+                .arg(ComfyMetadataLimits::kMaxMetadataBytes));
+    }
+
+    auto nestingValidation = validateJsonNesting(promptJson);
+    if (!nestingValidation)
+        return std::unexpected(nestingValidation.error());
+
     QJsonParseError err{};
     QJsonDocument doc = QJsonDocument::fromJson(promptJson, &err);
     if (err.error != QJsonParseError::NoError || !doc.isObject())
@@ -384,13 +622,22 @@ std::expected<KSamplerInfo, QString> ComfyKSamplerParser::parseFromJson(const QB
                 .arg(err.offset));
 
     QJsonObject prompt = doc.object();
+    auto valueCountValidation = validateJsonValueCount(prompt);
+    if (!valueCountValidation)
+        return std::unexpected(valueCountValidation.error());
+
+    auto graphValidation = validatePromptGraph(prompt);
+    if (!graphValidation)
+        return std::unexpected(graphValidation.error());
 
     QString mainId;
-    QJsonObject ks = findMainKSamplerNode(prompt, mainId);
-    if (ks.isEmpty())
+    auto ks = findMainKSamplerNode(prompt, mainId);
+    if (!ks)
+        return std::unexpected(ks.error());
+    if (ks->isEmpty())
         return std::unexpected(QStringLiteral("No KSampler/KSamplerAdvanced node found in the graph"));
 
-    QJsonObject inputs = ks.value("inputs").toObject();
+    QJsonObject inputs = ks->value("inputs").toObject();
 
     KSamplerInfo info;
     info.sourceNodeId = mainId;
@@ -424,7 +671,10 @@ std::expected<KSamplerInfo, QString> ComfyKSamplerParser::parseFromJson(const QB
                                     { "VAELoader" },
                                     { "vae_name" });
     // Positive prompt – walk up the conditioning links
-    info.positivePrompt = resolveConditioningText(prompt, inputs.value("positive"));
+    auto positivePrompt = resolveConditioningText(prompt, inputs.value("positive"));
+    if (!positivePrompt)
+        return std::unexpected(positivePrompt.error());
+    info.positivePrompt = *positivePrompt;
 
     return info;
 }

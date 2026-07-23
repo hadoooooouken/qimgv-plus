@@ -12,12 +12,13 @@ class PngTextChunkReader
 {
 public:
     // Returns a map: keyword -> text (already decoded if the chunk was zTXt),
-    // or an error with a description of the cause (file failed to open / not a PNG).
+    // or an error for invalid input, I/O failure, or a metadata budget violation.
     // stopAtIDAT: stop parsing as soon as the first IDAT chunk is reached
     // (comfy's text chunks always come before IDAT, so this is a safe optimization).
     static std::expected<QMap<QString, QByteArray>, QString>
         readTextChunks(const QString &pngPath, bool stopAtIDAT = true);
 
 private:
-    static QByteArray zlibInflate(const QByteArray &compressed);
+    static std::expected<QByteArray, QString>
+        zlibInflate(const QByteArray &compressed, qsizetype maxOutputBytes);
 };
