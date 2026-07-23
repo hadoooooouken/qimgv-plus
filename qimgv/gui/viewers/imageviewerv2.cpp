@@ -236,26 +236,40 @@ void ImageViewerV2::readSettings() {
   // set bg color
   onFullscreenModeChanged(mIsFullscreen);
   updateMinScale();
+  ScalingFilter prevScalingFilter = mScalingFilter;
   setScalingFilter(settings->scalingFilter());
+  bool prevUseUpscayl = mUseUpscayl;
   mUseUpscayl = settings->useUpscayl();
   updateCasSettings();
   bool fitScaleSettingsChanged = defaultFitModeChanged ||
                                  expandImage != prevExpandImage ||
                                  expandLimit != prevExpandLimit;
+  // Whether anything that affects the *currently displayed* scale/crop
+  // changed. Settings notifications fire for a lot of unrelated changes
+  // (theme, accent color, panel sizes, etc); without this check, any of
+  // those would re-trigger a rescale (and, while zoomed past 100% with AI
+  // upscaling on, a full "AI Upscaling..." re-run) even though nothing
+  // about the image display actually changed.
+  bool scalingRelevantChanged = fitScaleSettingsChanged ||
+                                mScalingFilter != prevScalingFilter ||
+                                mUseUpscayl != prevUseUpscayl;
   if (isDisplaying()) {
     if (imageFitMode == FIT_FREE) {
       if (currentScale() < minScale) {
         doZoom(minScale);
         centerIfNecessary();
         snapToEdges();
+        requestScaling();
       }
     } else if (fitScaleSettingsChanged) {
       if (defaultFitModeChanged) {
         imageFitMode = imageFitModeDefault;
       }
       applyFitMode();
+      requestScaling();
+    } else if (scalingRelevantChanged) {
+      requestScaling();
     }
-    requestScaling();
   } else {
     setFitMode(imageFitModeDefault);
   }
