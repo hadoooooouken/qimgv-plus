@@ -6,6 +6,7 @@
 #include <QSize>
 #include <QThreadPool>
 #include <QList>
+#include <QSet>
 #include <atomic>
 #include <memory>
 
@@ -62,6 +63,7 @@ private slots:
 
 private:
     QString buildDestPath(const QString &srcPath, const QString &pattern, int index, const QString &formatExt, const QString &finalOutDir) const;
+    QString makeUniqueDestPath(const QString &destPath, QSet<QString> &reservedPaths, bool overwrite) const;
 
     QThreadPool m_threadPool;
     std::atomic<bool> m_isConverting{false};

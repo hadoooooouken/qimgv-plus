@@ -10,6 +10,9 @@
 #include <QRunnable>
 #include <QCoreApplication>
 #include <QThread>
+#include <QFile>
+#include <QRandomGenerator>
+#include <QSet>
 #include <cmath>
 #include "components/upscaler/upscaler.h"
 
@@ -126,28 +129,62 @@ public:
             notifyStopped();
             return;
         }
+
+        QFileInfo destFi(m_destPath);
+        QString tempPath = destFi.absolutePath() + "/.qimgv_tmp_"
+                           + QString::number(QCoreApplication::applicationPid()) + "_"
+                           + QString::number(m_index) + "_"
+                           + QString::number(QRandomGenerator::global()->generate());
+
         QByteArray formatBa = m_job.format.toLatin1();
         bool saved = false;
         if (formatBa.toUpper() == "PNG") {
             int level = (m_job.quality == 0) ? 0 : qBound(1, (m_job.quality * 12) / 9, 12);
-            saved = savePngWithLibdeflate(processedImg, m_destPath, level);
+            saved = savePngWithLibdeflate(processedImg, tempPath, level);
             if (!saved) {
-                saved = processedImg.save(m_destPath, formatBa.constData(), m_job.quality);
+                saved = processedImg.save(tempPath, formatBa.constData(), m_job.quality);
             }
         } else {
-            saved = processedImg.save(m_destPath, formatBa.constData(), m_job.quality);
+            saved = processedImg.save(tempPath, formatBa.constData(), m_job.quality);
         }
+
+        if (m_cancelFlag->load()) {
+            QFile::remove(tempPath);
+            notifyStopped();
+            return;
+        }
+
+        if (!saved) {
+            QFile::remove(tempPath);
+            notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                           QCoreApplication::translate("BatchConverter", "Save Error"), false);
+            return;
+        }
+
+        if (!m_job.overwrite && QFileInfo::exists(m_destPath)) {
+            QFile::remove(tempPath);
+            notifyFinished(QCoreApplication::translate("BatchConverter", "Done"),
+                           QCoreApplication::translate("BatchConverter", "Skipped (Exists)"), true);
+            return;
+        }
+
+        if (QFile::exists(m_destPath)) {
+            QFile::remove(m_destPath);
+        }
+
+        bool committed = QFile::rename(tempPath, m_destPath);
+        if (!committed) {
+            QFile::remove(tempPath);
+            notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                           QCoreApplication::translate("BatchConverter", "Commit Error"), false);
+            return;
+        }
+
         QString detailsStr = QString("%1 \u2022 %2x%3")
                                 .arg(m_job.format.toUpper())
                                 .arg(processedImg.width())
                                 .arg(processedImg.height());
-
-        if (saved) {
-            notifyFinished(QCoreApplication::translate("BatchConverter", "Done"), detailsStr, true);
-        } else {
-            notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
-                           QCoreApplication::translate("BatchConverter", "Save Error"), false);
-        }
+        notifyFinished(QCoreApplication::translate("BatchConverter", "Done"), detailsStr, true);
     }
 
 private:
@@ -206,24 +243,33 @@ void BatchConverter::start(const QStringList &allPaths, const QList<int> &select
         m_threadPool.setMaxThreadCount(QThread::idealThreadCount());
     }
 
+    QSet<QString> reservedDestinations;
     int activeIndex = 0;
     for (int i : selectedIndices) {
         if (i < 0 || i >= allPaths.size()) continue;
 
         QString srcPath = allPaths[i];
-        QFileInfo srcFi(srcPath);
 
-        QString destPath = buildDestPath(srcPath, job.pattern, activeIndex + 1, job.format, finalOutDir);
+        QString rawDestPath = buildDestPath(srcPath, job.pattern, activeIndex + 1, job.format, finalOutDir);
 
-        if (destPath.isEmpty()) {
+        if (rawDestPath.isEmpty()) {
             onTaskFinished(i, tr("Failed"), tr("Invalid destination path"), false);
             continue;
         }
+
+        if (!job.overwrite && QFileInfo::exists(rawDestPath) && !reservedDestinations.contains(rawDestPath)) {
+            onTaskFinished(i, tr("Done"), tr("Skipped (Exists)"), true);
+            continue;
+        }
+
+        QString destPath = makeUniqueDestPath(rawDestPath, reservedDestinations, job.overwrite);
 
         if (!job.overwrite && QFileInfo::exists(destPath)) {
             onTaskFinished(i, tr("Done"), tr("Skipped (Exists)"), true);
             continue;
         }
+
+        reservedDestinations.insert(destPath);
 
         emit progressUpdated(i, tr("Processing..."), "", true);
 
@@ -343,4 +389,36 @@ QString BatchConverter::buildDestPath(const QString &srcPath, const QString &pat
     }
 
     return full;
+}
+
+QString BatchConverter::makeUniqueDestPath(const QString &destPath, QSet<QString> &reservedPaths, bool overwrite) const {
+    if (destPath.isEmpty()) {
+        return QString();
+    }
+
+    if (!reservedPaths.contains(destPath)) {
+        if (overwrite || !QFileInfo::exists(destPath)) {
+            return destPath;
+        }
+    }
+
+    QFileInfo fi(destPath);
+    QString dir = fi.absolutePath();
+    QString baseName = fi.completeBaseName();
+    QString suffix = fi.suffix();
+    if (!suffix.isEmpty()) {
+        suffix = "." + suffix;
+    }
+
+    constexpr int kMaxDisambiguationAttempts = 10000;
+    for (int counter = 1; counter < kMaxDisambiguationAttempts; ++counter) {
+        QString candidate = QDir::cleanPath(dir + "/" + baseName + "_" + QString::number(counter) + suffix);
+        if (!reservedPaths.contains(candidate)) {
+            if (overwrite || !QFileInfo::exists(candidate)) {
+                return candidate;
+            }
+        }
+    }
+
+    return destPath;
 }
