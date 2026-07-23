@@ -26,11 +26,21 @@ ScriptManager *ScriptManager::getInstance() {
 void ScriptManager::runScript(const QString &scriptName, std::shared_ptr<Image> img) {
     if(scripts.contains(scriptName)) {
         Script script = scripts.value(scriptName);
-        if(script.command.isEmpty())
+        if(script.command.trimmed().isEmpty()) {
+            QString errorString = "Error: script \"" + scriptName + "\" has an empty command.";
+            qWarning() << "[ScriptManager]" << errorString;
+            emit error(errorString);
             return;
+        }
         QProcess exec(this);
 
         auto arguments = splitCommandLine(script.command);
+        if(arguments.isEmpty()) {
+            QString errorString = "Error: script \"" + scriptName + "\" could not be parsed into a valid command.";
+            qWarning() << "[ScriptManager]" << errorString;
+            emit error(errorString);
+            return;
+        }
         processArguments(arguments, img);
         QString program = arguments.takeAt(0);
 
@@ -61,8 +71,12 @@ void ScriptManager::runScript(const QString &scriptName, std::shared_ptr<Image> 
 }
 
 QString ScriptManager::runCommand(QString cmd) {
-    QProcess exec;
     QStringList cmdSplit = ScriptManager::splitCommandLine(cmd);
+    if(cmdSplit.isEmpty()) {
+        qWarning() << "[ScriptManager] runCommand() called with an empty or unparseable command.";
+        return QString();
+    }
+    QProcess exec;
     exec.start(cmdSplit.takeAt(0), cmdSplit);
     if(!exec.waitForFinished(2000)) {
         exec.kill();
@@ -73,6 +87,10 @@ QString ScriptManager::runCommand(QString cmd) {
 
 void ScriptManager::runCommandDetached(QString cmd) {
     QStringList cmdSplit = ScriptManager::splitCommandLine(cmd);
+    if(cmdSplit.isEmpty()) {
+        qWarning() << "[ScriptManager] runCommandDetached() called with an empty or unparseable command.";
+        return;
+    }
     QProcess::startDetached(cmdSplit.takeAt(0), cmdSplit);
 }
 
