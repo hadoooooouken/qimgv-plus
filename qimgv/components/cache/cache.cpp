@@ -4,10 +4,12 @@ Cache::Cache() {
 }
 
 bool Cache::contains(QString path) const {
+    QMutexLocker locker(&mutex);
     return items.contains(path);
 }
 
 bool Cache::insert(std::shared_ptr<Image> img) {
+    QMutexLocker locker(&mutex);
     if(img) {
         if(items.contains(img->filePath())) {
             return false;
@@ -20,6 +22,7 @@ bool Cache::insert(std::shared_ptr<Image> img) {
 }
 
 void Cache::remove(QString path) {
+    QMutexLocker locker(&mutex);
     if(items.contains(path)) {
         items[path]->lock();
         items.remove(path);
@@ -27,10 +30,12 @@ void Cache::remove(QString path) {
 }
 
 void Cache::clear() {
+    QMutexLocker locker(&mutex);
     items.clear();
 }
 
 std::shared_ptr<Image> Cache::get(QString path) {
+    QMutexLocker locker(&mutex);
     if(items.contains(path)) {
         auto item = items.value(path);
         return item->getContents();
@@ -39,6 +44,7 @@ std::shared_ptr<Image> Cache::get(QString path) {
 }
 
 bool Cache::reserve(QString path) {
+    QMutexLocker locker(&mutex);
     if(items.contains(path)) {
         items[path]->lock();
         return true;
@@ -47,6 +53,7 @@ bool Cache::reserve(QString path) {
 }
 
 bool Cache::release(QString path) {
+    QMutexLocker locker(&mutex);
     if(items.contains(path)) {
         items[path]->unlock();
         return true;
@@ -56,6 +63,7 @@ bool Cache::release(QString path) {
 
 // removes all items except the ones in list
 void Cache::trimTo(QStringList pathList) {
+    QMutexLocker locker(&mutex);
     const auto keys = items.keys();
     for(const auto &path : keys) {
         if(!pathList.contains(path)) {
@@ -66,5 +74,6 @@ void Cache::trimTo(QStringList pathList) {
 }
 
 const QList<QString> Cache::keys() const {
+    QMutexLocker locker(&mutex);
     return items.keys();
 }
