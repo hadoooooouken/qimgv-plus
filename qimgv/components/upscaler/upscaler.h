@@ -20,7 +20,10 @@ public:
         return &instance;
     }
 
-    bool init(const QString &appDir, const QString &modelName = QString());
+    // didLoad (if provided) is set to true only when this call actually loaded
+    // a model (i.e. it wasn't already loaded), so callers can skip redundant
+    // warm-up work when the model was already resident.
+    bool init(const QString &appDir, const QString &modelName = QString(), bool *didLoad = nullptr);
     QImage upscale(const QImage &inputImage, const std::atomic<bool> *abortFlag = nullptr);
     void destroy();
 
@@ -71,6 +74,19 @@ private:
     QTimer upscaylTimer;
     bool upscaylActive = false;
     bool upscaylPendingRun = false;
+
+    // Cached copy of the settings that actually affect preload/init, so
+    // readSettings() can ignore notifications that don't change any of them.
+    bool preloadSettingsBaselineValid = false;
+    bool lastUseUpscayl = false;
+    bool lastPreloadUpscayl = false;
+    QString lastUpscaylModel;
+
+    // Guards against queueing more than one preload/destroy task at a time.
+    // Held via shared_ptr so the background task can safely clear it even if
+    // this Upscaler is destroyed before the task (queued on the global pool)
+    // finishes.
+    std::shared_ptr<std::atomic<bool>> preloadTaskBusy;
 
     // pending request state
     std::shared_ptr<Image> pendingUpscaylImage;

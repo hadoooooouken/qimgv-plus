@@ -13,7 +13,10 @@
 
 UpscaylScaler::UpscaylScaler() : realesrgan(nullptr) {}
 
-bool UpscaylScaler::init(const QString &appDir, const QString &requestedModelName) {
+bool UpscaylScaler::init(const QString &appDir, const QString &requestedModelName, bool *didLoad) {
+    if (didLoad)
+        *didLoad = false;
+
     QMutexLocker locker(&mutex);
     const QString modelName = requestedModelName.trimmed().isEmpty()
                                   ? settings->upscaylModel()
@@ -55,6 +58,8 @@ bool UpscaylScaler::init(const QString &appDir, const QString &requestedModelNam
         return false;
     }
     loadedModel = modelName;
+    if (didLoad)
+        *didLoad = true;
     return true;
 }
 
@@ -149,21 +154,44 @@ void UpscaylScaler::destroy() {
 
 class UpscaylPreloadTask : public QRunnable {
 public:
+    explicit UpscaylPreloadTask(std::shared_ptr<std::atomic<bool>> busyFlag)
+        : busy(std::move(busyFlag)) {}
+
     void run() override {
         QString appDir = QCoreApplication::applicationDirPath();
-        if (UpscaylScaler::getInstance()->init(appDir)) {
-            QImage dummy(512, 512, QImage::Format_ARGB32);
-            dummy.fill(Qt::black);
-            QImage warmed = UpscaylScaler::getInstance()->upscale(dummy);
+        bool didLoad = false;
+        if (UpscaylScaler::getInstance()->init(appDir, QString(), &didLoad)) {
+            // Only pay for the warm-up upscale when a model was actually
+            // (re)loaded by this call. If it was already resident, the
+            // model is already warm and re-running the 512->2048 upscale
+            // would just waste GPU time.
+            if (didLoad) {
+                QImage dummy(512, 512, QImage::Format_ARGB32);
+                dummy.fill(Qt::black);
+                QImage warmed = UpscaylScaler::getInstance()->upscale(dummy);
+            }
         }
+        if (busy)
+            busy->store(false, std::memory_order_release);
     }
+
+private:
+    std::shared_ptr<std::atomic<bool>> busy;
 };
 
 class UpscaylDestroyTask : public QRunnable {
 public:
+    explicit UpscaylDestroyTask(std::shared_ptr<std::atomic<bool>> busyFlag)
+        : busy(std::move(busyFlag)) {}
+
     void run() override {
         UpscaylScaler::getInstance()->destroy();
+        if (busy)
+            busy->store(false, std::memory_order_release);
     }
+
+private:
+    std::shared_ptr<std::atomic<bool>> busy;
 };
 
 
@@ -173,6 +201,7 @@ Upscaler::Upscaler(QObject *parent) : QObject(parent) {
     upscaylTimer.setSingleShot(true);
     upscaylTimer.setInterval(kDebounceIntervalMs);
     connect(&upscaylTimer, &QTimer::timeout, this, &Upscaler::onUpscaylTimerTimeout);
+    preloadTaskBusy = std::make_shared<std::atomic<bool>>(false);
 }
 
 Upscaler::~Upscaler() {
@@ -201,10 +230,36 @@ void Upscaler::requestUpscale(std::shared_ptr<Image> image, QSize targetSize, QS
 }
 
 void Upscaler::readSettings() {
-    if (!settings->useUpscayl() || !settings->preloadUpscayl()) {
-        QThreadPool::globalInstance()->start(new UpscaylDestroyTask());
+    const bool useUpscayl = settings->useUpscayl();
+    const bool preloadUpscayl = settings->preloadUpscayl();
+    const QString model = settings->upscaylModel();
+
+    // Settings notifications fire for a lot of unrelated changes (theme,
+    // accent color, panel sizes, etc). Only react when something that
+    // actually affects the upscaler's init/preload state has changed.
+    if (preloadSettingsBaselineValid &&
+        useUpscayl == lastUseUpscayl &&
+        preloadUpscayl == lastPreloadUpscayl &&
+        model == lastUpscaylModel) {
+        return;
+    }
+    preloadSettingsBaselineValid = true;
+    lastUseUpscayl = useUpscayl;
+    lastPreloadUpscayl = preloadUpscayl;
+    lastUpscaylModel = model;
+
+    // Coalesce: if a preload/destroy task is already queued or running,
+    // don't pile another one on top of it. The task always reads current
+    // settings when it runs, and any real upscale request lazily
+    // (re)initializes the model on its own, so it's safe to simply drop a
+    // request that arrives while one is already in flight.
+    if (preloadTaskBusy->exchange(true, std::memory_order_acq_rel))
+        return;
+
+    if (!useUpscayl || !preloadUpscayl) {
+        QThreadPool::globalInstance()->start(new UpscaylDestroyTask(preloadTaskBusy));
     } else {
-        QThreadPool::globalInstance()->start(new UpscaylPreloadTask());
+        QThreadPool::globalInstance()->start(new UpscaylPreloadTask(preloadTaskBusy));
     }
 }
 
@@ -223,7 +278,8 @@ void Upscaler::reset() {
     upscaylPendingRun = false;
     emit upscaleAborted();
     if (!settings->preloadUpscayl()) {
-        QThreadPool::globalInstance()->start(new UpscaylDestroyTask());
+        if (!preloadTaskBusy->exchange(true, std::memory_order_acq_rel))
+            QThreadPool::globalInstance()->start(new UpscaylDestroyTask(preloadTaskBusy));
     }
 }
 
