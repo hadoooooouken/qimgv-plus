@@ -4,6 +4,8 @@
 #include <QList>
 #include <memory>
 
+#include <QDropEvent>
+
 class Thumbnail;
 class QString;
 class QMimeData;
@@ -32,7 +34,7 @@ public:
     virtual void draggedOut() = 0;
     virtual void draggedToBookmarks(QList<int>) = 0;
     virtual void draggedOver(int) = 0;
-    virtual void droppedInto(const QMimeData*, QObject*, int) = 0;
+    virtual void droppedInto(const QMimeData*, QObject*, int, Qt::DropAction) = 0;
     virtual void backRequested() = 0;
     virtual void forwardRequested() = 0;
     virtual void openSelectedRequested() {}

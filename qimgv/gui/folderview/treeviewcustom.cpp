@@ -26,7 +26,7 @@ void TreeViewCustom::dropEvent(QDropEvent *event) {
         const auto urls = event->mimeData()->urls();
         for(const auto &url : urls)
             paths << url.toLocalFile();
-        emit droppedIn(paths, dropIndex);
+        emit droppedIn(paths, dropIndex, event->dropAction());
     }
 }
 

@@ -159,7 +159,7 @@ FolderView::FolderView(QWidget *parent) :
 
     connect(dirTreeView, &TreeViewCustom::droppedIn, this, &FolderView::onDroppedInByIndex);
     connect(dirTreeView, &TreeViewCustom::tabbedOut, this, &FolderView::onTreeViewTabOut);
-    connect(bookmarksWidget, &BookmarksWidget::droppedIn, this, &FolderView::moveUrlsRequested); // ask what to do via popup? copy or move
+    connect(bookmarksWidget, &BookmarksWidget::droppedIn, this, &FolderView::onBookmarkDroppedIn);
 
     sortingComboBox->setItemDelegate(new QStyledItemDelegate(sortingComboBox));
     sortingComboBox->view()->setTextElideMode(Qt::ElideNone);
@@ -496,8 +496,21 @@ void FolderView::onTreeViewTabOut() {
     thumbnailGrid->setFocus();
 }
 
-void FolderView::onDroppedInByIndex(QList<QString> paths, QModelIndex index) {
-    emit moveUrlsRequested(paths, dirModel->filePath(index));
+void FolderView::onDroppedInByIndex(QList<QString> paths, QModelIndex index, Qt::DropAction action) {
+    QString destDir = dirModel->filePath(index);
+    if (action == Qt::CopyAction) {
+        emit copyUrlsRequested(paths, destDir);
+    } else if (action == Qt::MoveAction) {
+        emit moveUrlsRequested(paths, destDir);
+    }
+}
+
+void FolderView::onBookmarkDroppedIn(QList<QString> paths, QString dirPath, Qt::DropAction action) {
+    if (action == Qt::CopyAction) {
+        emit copyUrlsRequested(paths, dirPath);
+    } else if (action == Qt::MoveAction) {
+        emit moveUrlsRequested(paths, dirPath);
+    }
 }
 
 

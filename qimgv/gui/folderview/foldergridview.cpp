@@ -47,7 +47,7 @@ void FolderGridView::dropEvent(QDropEvent *event) {
         index = thumbnails.indexOf(item);
         item->setDropHovered(false);
     }
-    emit droppedInto(event->mimeData(), event->source(), index);
+    emit droppedInto(event->mimeData(), event->source(), index, event->dropAction());
 }
 
 void FolderGridView::dragEnterEvent(QDragEnterEvent *event) {

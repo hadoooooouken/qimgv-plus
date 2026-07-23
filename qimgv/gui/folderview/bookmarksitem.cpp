@@ -141,7 +141,7 @@ void BookmarksItem::dropEvent(QDropEvent *event) {
     }
 
     if(!files.isEmpty()) {
-        emit droppedIn(files, dirPath);
+        emit droppedIn(files, dirPath, event->dropAction());
     }
 
     setProperty("hover", false);

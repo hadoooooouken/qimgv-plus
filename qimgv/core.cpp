@@ -232,7 +232,7 @@ void Core::connectComponents() {
           qOverload<QList<QString>>(&Core::onDraggedOut));
 
   connect(&folderViewPresenter, &DirectoryPresenter::droppedInto, this,
-          qOverload<QList<QString>, QString>(&Core::movePathsTo));
+          &Core::onDirectoryPresenterDroppedInto);
 
   connect(scriptManager, &ScriptManager::error, mw, &MW::showError);
 
@@ -1310,6 +1310,14 @@ void Core::copyPathsTo(QList<QString> paths, QString destDirectory) {
 
 void Core::movePathsTo(QList<QString> paths, QString destDirectory) {
   interactiveMove(paths, destDirectory);
+}
+
+void Core::onDirectoryPresenterDroppedInto(QList<QString> paths, QString destDirectory, Qt::DropAction action) {
+  if (action == Qt::CopyAction) {
+    copyPathsTo(paths, destDirectory);
+  } else if (action == Qt::MoveAction) {
+    movePathsTo(paths, destDirectory);
+  }
 }
 
 void Core::moveCurrentFile(QString destDirectory) {

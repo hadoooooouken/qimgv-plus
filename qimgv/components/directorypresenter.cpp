@@ -69,8 +69,8 @@ void DirectoryPresenter::setView(std::shared_ptr<IDirectoryView> _view) {
   connect(dynamic_cast<QObject *>(view.get()), SIGNAL(openSelectedRequested()), this,
           SLOT(onOpenSelectedRequested()));
   connect(dynamic_cast<QObject *>(view.get()),
-          SIGNAL(droppedInto(const QMimeData *, QObject *, int)), this,
-          SLOT(onDroppedInto(const QMimeData *, QObject *, int)));
+          SIGNAL(droppedInto(const QMimeData *, QObject *, int, Qt::DropAction)), this,
+          SLOT(onDroppedInto(const QMimeData *, QObject *, int, Qt::DropAction)));
   connect(dynamic_cast<QObject *>(view.get()), SIGNAL(backRequested()), this,
           SIGNAL(backRequested()));
   connect(dynamic_cast<QObject *>(view.get()), SIGNAL(forwardRequested()), this,
@@ -432,7 +432,7 @@ void DirectoryPresenter::onDraggedOver(int index) {
 }
 
 void DirectoryPresenter::onDroppedInto(const QMimeData *data, QObject *source,
-                                       int targetIndex) {
+                                       int targetIndex, Qt::DropAction action) {
   if (!data->hasUrls() || model->source() != SOURCE_DIRECTORY)
     return;
 
@@ -459,7 +459,7 @@ void DirectoryPresenter::onDroppedInto(const QMimeData *data, QObject *source,
   pathList.removeAll(destDir); // remove target dir from source list
 
   // pass to core
-  emit droppedInto(pathList, destDir);
+  emit droppedInto(pathList, destDir, action);
 }
 
 void DirectoryPresenter::selectAndFocus(QString path) {

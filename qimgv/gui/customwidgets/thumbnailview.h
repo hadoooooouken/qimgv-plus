@@ -79,7 +79,7 @@ signals:
     void draggedOut() override;
     void draggedToBookmarks(QList<int>) override;
     void draggedOver(int) override;
-    void droppedInto(const QMimeData*, QObject*, int) override;
+    void droppedInto(const QMimeData*, QObject*, int, Qt::DropAction) override;
     void backRequested() override;
     void forwardRequested() override;
     void openSelectedRequested() override;

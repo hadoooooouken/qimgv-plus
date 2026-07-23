@@ -60,7 +60,7 @@ signals:
     void filesActivated(QList<QString> filePaths, QString activePath);
     void dirActivated(QString dirPath);
     void draggedOut(QList<QString>);
-    void droppedInto(QList<QString>, QString);
+    void droppedInto(QList<QString>, QString, Qt::DropAction);
     void backRequested();
     void forwardRequested();
 
@@ -78,7 +78,7 @@ private slots:
     void onDraggedOut();
     void onDraggedOver(int index);
 
-    void onDroppedInto(const QMimeData *data, QObject *source, int targetIndex);
+    void onDroppedInto(const QMimeData *data, QObject *source, int targetIndex, Qt::DropAction action);
 private:
     std::shared_ptr<IDirectoryView> view = nullptr;
     std::shared_ptr<DirectoryModel> model = nullptr;

@@ -14,7 +14,7 @@ public:
     virtual QSize minimumSizeHint() const override;
 
 signals:
-    void droppedIn(QList<QString>, QModelIndex);
+    void droppedIn(QList<QString>, QModelIndex, Qt::DropAction);
     void tabbedOut();
 
 protected:

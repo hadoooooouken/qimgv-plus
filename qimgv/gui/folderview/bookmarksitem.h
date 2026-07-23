@@ -25,7 +25,7 @@ public slots:
 signals:
     void clicked(QString dirPath);
     void removeClicked(QString dirPath);
-    void droppedIn(QList<QString> paths, QString dirPath);
+    void droppedIn(QList<QString> paths, QString dirPath, Qt::DropAction action);
 
 protected:
     void enterEvent(QEnterEvent *event) override;
