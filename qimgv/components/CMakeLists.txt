@@ -28,6 +28,8 @@ target_sources(qimgv-plus PRIVATE
 
     batchconverter/batchconverter.cpp
 
+    wallpaper/wallpapercontroller.cpp
+
     comfymetadata/comfyksamplerparser.cpp
     comfymetadata/pngtextchunkreader.cpp
 )

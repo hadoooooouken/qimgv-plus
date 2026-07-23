@@ -211,6 +211,7 @@ private slots:
 
 private:
     std::unique_ptr<class Upscaler> upscaler;
+    std::unique_ptr<class WallpaperController> wallpaperController;
     int aiResizeGeneration = 0;
     bool aiResizeActive = false;
 

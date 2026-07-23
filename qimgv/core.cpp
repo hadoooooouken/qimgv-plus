@@ -15,6 +15,7 @@
 #include <QThreadPool>
 #include "components/upscaler/upscaler.h"
 #include "components/upscaler/upscaylresizerunnable.h"
+#include "components/wallpaper/wallpapercontroller.h"
 #include <QColorSpace>
 #include <tchar.h>
 #include <windows.h>
@@ -55,6 +56,7 @@ Core::Core()
   connect(settings, &Settings::settingsChanged, this, &Core::readSettings);
 
   upscaler = std::make_unique<Upscaler>(this);
+  wallpaperController = std::make_unique<WallpaperController>(this);
   connect(upscaler.get(), &Upscaler::upscaleStarted, this, [this]() {
       mw->showMessageAiUpscale(tr("AI Upscaling..."), 3600000);
   });
@@ -1699,145 +1701,7 @@ void Core::setWallpaper() {
     return;
   }
 
-  QScreen *screen = QGuiApplication::primaryScreen();
-  if (!screen) {
-    mw->showMessage(tr("Set wallpaper: screen not found"));
-    return;
-  }
-  QSize monitorSize = screen->size();
-  QString wallpaperPath = settings->tmpDir() + "qimgv_wallpaper.png";
-
-  QString appDir = QCoreApplication::applicationDirPath();
-  QString modelName;
-  modelName = settings->upscaylModel();
-
-  mw->showMessage(tr("Setting wallpaper..."), 10000);
-
-  auto *mwPointer = this->mw;
-
-  QThread *thread = QThread::create([sourceImage, monitorSize, wallpaperPath, mwPointer, appDir, modelName]() {
-    int monitorWidth = monitorSize.width();
-    int monitorHeight = monitorSize.height();
-
-    if (monitorWidth <= 0 || monitorHeight <= 0) {
-      QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-        mwPointer->showMessage(tr("Set wallpaper: invalid monitor size"));
-      }, Qt::QueuedConnection);
-      return;
-    }
-
-    int imageWidth = sourceImage->width();
-    int imageHeight = sourceImage->height();
-
-    double mAR = (double)monitorWidth / monitorHeight;
-    double iAR = (double)imageWidth / imageHeight;
-
-    QImage croppedImage;
-    if (std::abs(iAR - mAR) < 0.001) {
-      croppedImage = *sourceImage;
-    } else {
-      int cropW = imageWidth;
-      int cropH = imageHeight;
-
-      if (iAR > mAR) {
-        cropW = qRound(imageHeight * mAR);
-      } else {
-        cropH = qRound(imageWidth / mAR);
-      }
-
-      int cropX = (imageWidth - cropW) / 2;
-      int cropY = (imageHeight - cropH) / 2;
-
-      cropX = std::clamp(cropX, 0, imageWidth - 1);
-      cropY = std::clamp(cropY, 0, imageHeight - 1);
-      cropW = std::clamp(cropW, 1, imageWidth - cropX);
-      cropH = std::clamp(cropH, 1, imageHeight - cropY);
-
-      croppedImage = sourceImage->copy(cropX, cropY, cropW, cropH);
-    }
-
-    if (croppedImage.isNull()) {
-      QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-        mwPointer->showMessage(tr("Set wallpaper: cropping failed"));
-      }, Qt::QueuedConnection);
-      return;
-    }
-
-    QImage scaledImg;
-    bool upscalingNeeded = (croppedImage.width() < monitorWidth || croppedImage.height() < monitorHeight);
-    bool aiUpscaleSuccess = false;
-
-    if (upscalingNeeded) {
-      QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-        mwPointer->showMessageAiUpscale(tr("AI upscaling..."), 60000);
-      }, Qt::QueuedConnection);
-
-      if (UpscaylScaler::getInstance()->init(appDir, modelName)) {
-        QImage upscaled = UpscaylScaler::getInstance()->upscale(croppedImage);
-        if (!upscaled.isNull()) {
-          if (upscaled.size() == monitorSize) {
-            scaledImg = upscaled;
-          } else {
-            auto upscaledShared = std::make_shared<const QImage>(upscaled);
-            scaledImg = ImageLib::scaled_MKS2021(upscaledShared, monitorSize);
-          }
-          if (!scaledImg.isNull()) {
-            aiUpscaleSuccess = true;
-          }
-        }
-      }
-    }
-
-    if (!aiUpscaleSuccess) {
-      if (croppedImage.size() == monitorSize) {
-        scaledImg = croppedImage;
-      } else {
-        auto croppedShared = std::make_shared<const QImage>(croppedImage);
-        scaledImg = ImageLib::scaled_MKS2021(croppedShared, monitorSize);
-      }
-    }
-
-    if (scaledImg.isNull()) {
-      QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-        mwPointer->showMessage(tr("Set wallpaper: scaling failed"));
-      }, Qt::QueuedConnection);
-      return;
-    }
-
-    if (!scaledImg.save(wallpaperPath, "PNG")) {
-      QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-        mwPointer->showMessage(tr("Set wallpaper: failed to save PNG"));
-      }, Qt::QueuedConnection);
-      return;
-    }
-
-    // set fit mode (registry) to fit:center
-    HKEY hKey;
-    LONG status = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0,
-                              KEY_WRITE, &hKey);
-    if ((status == ERROR_SUCCESS) && (hKey != nullptr)) {
-      LPCTSTR valueStyle = TEXT("WallpaperStyle");
-      LPCTSTR dataStyle = TEXT("0"); // Center
-      RegSetValueEx(hKey, valueStyle, 0, REG_SZ, (LPBYTE)dataStyle, static_cast<DWORD>((_tcslen(dataStyle) + 1) * sizeof(TCHAR)));
-
-      LPCTSTR valueTile = TEXT("TileWallpaper");
-      LPCTSTR dataTile = TEXT("0"); // No Tile
-      RegSetValueEx(hKey, valueTile, 0, REG_SZ, (LPBYTE)dataTile, static_cast<DWORD>((_tcslen(dataTile) + 1) * sizeof(TCHAR)));
-
-      RegCloseKey(hKey);
-    }
-    // set wallpaper path
-    SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0,
-                          (char *)(wallpaperPath.toStdWString().c_str()),
-                          SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-
-    QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-      mwPointer->showMessageSuccess(tr("Wallpaper set"));
-    }, Qt::QueuedConnection);
-  });
-
-  connect(thread, &QThread::finished, thread, &QObject::deleteLater);
-  thread->start();
+  wallpaperController->setWallpaper(sourceImage, mw);
 }
 
 void Core::print() {
