@@ -6,7 +6,10 @@
 #include "components/thumbnailer/thumbnailer.h"
 #include "directorymodel.h"
 #include "sharedresources.h"
+#include "directoryexpandworker.h"
 #include <QMimeData>
+#include <QPointer>
+#include <QThread>
 
 //tmp
 #include <QtSvg/QSvgRenderer>
@@ -18,6 +21,7 @@ class DirectoryPresenter : public QObject {
     Q_OBJECT
 public:
     explicit DirectoryPresenter(QObject *parent = nullptr);
+    ~DirectoryPresenter() override;
 
     void setView(std::shared_ptr<IDirectoryView>);
     void setModel(std::shared_ptr<DirectoryModel> newModel);
@@ -79,6 +83,11 @@ private slots:
     void onDraggedOver(int index);
 
     void onDroppedInto(const QMimeData *data, QObject *source, int targetIndex, Qt::DropAction action);
+
+    // Delivered from the background DirectoryExpandWorker thread (queued
+    // connection) - see startExpandedPathsScan()/launchExpandScan() below.
+    void onExpandBatchReady(QList<QString> paths);
+    void onExpandScanFinished();
 private:
     std::shared_ptr<IDirectoryView> view = nullptr;
     std::shared_ptr<DirectoryModel> model = nullptr;
@@ -94,4 +103,54 @@ private:
     // to read list.first() - see composeFolderThumbnail() call site.
     QString findFolderCoverImage(const QString &dirPath, const QStringList &filters,
                                   SortingMode mode) const;
+
+    // ---- asynchronous, cancellable selection expansion ----
+    // Backs onItemActivated()/onOpenSelectedRequested() with a background
+    // DirectoryExpandWorker (see directoryexpandworker.h) instead of the
+    // fully synchronous QDirIterator scan expandedSelectedPaths() still
+    // does inline, so activating a multi-selection containing large
+    // directory trees no longer freezes the UI thread. expandedSelectedPaths()
+    // itself is left untouched for its one remaining synchronous caller
+    // (Core::showBatchConverter).
+
+    // Distinguishes which call site requested the scan, so
+    // onExpandScanFinished() knows how to turn the resulting file list
+    // back into the same signal that call site used to emit inline.
+    enum class ExpandPurpose {
+        ItemActivation, // from onItemActivated(): may fall back to a single fileActivated/dirActivated
+        OpenSelected    // from onOpenSelectedRequested(): always emits filesActivated(), or nothing
+    };
+
+    struct PendingExpandContext {
+        ExpandPurpose purpose = ExpandPurpose::OpenSelected;
+        int fallbackAbsoluteIndex = -1;
+        QString fallbackActivePath;
+    };
+
+    // Starts a scan, or - if one is already running - cancels it and
+    // queues this request to start once the previous one has actually
+    // stopped (see onExpandScanFinished()).
+    void startExpandedPathsScan(ExpandPurpose purpose, int fallbackAbsoluteIndex,
+                                 const QString &fallbackActivePath);
+    void launchExpandScan(const PendingExpandContext &ctx);
+    // Requests cancellation of any scan in progress and drops any queued
+    // restart; safe to call unconditionally (destructor, unsetModel()).
+    void cancelExpandedPathsScan();
+
+    QPointer<QThread> expandThread;
+    QPointer<DirectoryExpandWorker> expandWorker;
+    QList<QString> expandAccumulatedPaths;
+    PendingExpandContext expandContext;
+    bool expandRestartPending = false;
+    PendingExpandContext expandNextContext;
+
+    // Bumped only by a "hard" cancel (destructor, unsetModel()) - never by
+    // the ordinary supersede-with-a-newer-request path in
+    // startExpandedPathsScan(). onExpandScanFinished() compares the epoch
+    // it was launched under against the current one and silently discards
+    // the result on a mismatch, so a worker that's still unwinding after
+    // model/view teardown can never emit a signal or dereference model
+    // against whatever gets attached next.
+    quint64 expandEpoch = 0;
+    quint64 expandLaunchEpoch = 0;
 };

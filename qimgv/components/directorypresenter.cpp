@@ -6,6 +6,7 @@
 #include <QSet>
 #include <QRegularExpression>
 #include <QCollator>
+#include <QDebug>
 #include "settings.h"
 
 DirectoryPresenter::DirectoryPresenter(QObject *parent)
@@ -21,6 +22,10 @@ DirectoryPresenter::DirectoryPresenter(QObject *parent)
           &DirectoryPresenter::onSettingsChanged);
 }
 
+DirectoryPresenter::~DirectoryPresenter() {
+  cancelExpandedPathsScan();
+}
+
 void DirectoryPresenter::setThumbnailer(std::shared_ptr<Thumbnailer> newThumbnailer) {
   if (!newThumbnailer || newThumbnailer == thumbnailer)
     return;
@@ -32,6 +37,7 @@ void DirectoryPresenter::setThumbnailer(std::shared_ptr<Thumbnailer> newThumbnai
 }
 
 void DirectoryPresenter::unsetModel() {
+  cancelExpandedPathsScan();
   disconnect(model.get(), &DirectoryModel::fileRemoved, this,
              &DirectoryPresenter::onFileRemoved);
   disconnect(model.get(), &DirectoryModel::fileAdded, this,
@@ -393,12 +399,14 @@ void DirectoryPresenter::onItemActivated(int absoluteIndex) {
       else
           activePath = model->filePathAt(mShowDirs ? absoluteIndex - model->dirCount() : absoluteIndex);
       
-      QList<QString> filePaths = expandedSelectedPaths();
-      
-      if (filePaths.count() > 1) {
-          emit filesActivated(filePaths, filePaths.contains(activePath) ? activePath : filePaths.first());
-          return;
-      }
+      // expandedSelectedPaths() (further down) does a fully synchronous,
+      // uncancellable recursive scan of every selected directory - fine
+      // for a couple of images, but it freezes the UI thread for as long
+      // as a large subtree takes to walk. Do the scan on a background
+      // thread instead; onExpandScanFinished() emits the same signal this
+      // branch used to emit inline once the (cancellable) scan completes.
+      startExpandedPathsScan(ExpandPurpose::ItemActivation, absoluteIndex, activePath);
+      return;
   }
 
   if (!mShowDirs) {
@@ -415,11 +423,9 @@ void DirectoryPresenter::onOpenSelectedRequested() {
   if (!model)
     return;
 
-  QList<QString> filePaths = expandedSelectedPaths();
-
-  if (!filePaths.isEmpty()) {
-      emit filesActivated(filePaths, filePaths.first());
-  }
+  // See the comment in onItemActivated(): run the recursive expansion on
+  // a background thread instead of blocking here.
+  startExpandedPathsScan(ExpandPurpose::OpenSelected, -1, QString());
 }
 
 QList<QString> DirectoryPresenter::expandedSelectedPaths() const {
@@ -451,6 +457,131 @@ QList<QString> DirectoryPresenter::expandedSelectedPaths() const {
     }
   }
   return filePaths;
+}
+
+void DirectoryPresenter::startExpandedPathsScan(ExpandPurpose purpose, int fallbackAbsoluteIndex,
+                                                const QString &fallbackActivePath) {
+  if (!model)
+    return;
+
+  PendingExpandContext ctx;
+  ctx.purpose = purpose;
+  ctx.fallbackAbsoluteIndex = fallbackAbsoluteIndex;
+  ctx.fallbackActivePath = fallbackActivePath;
+
+  if (expandWorker) {
+    // A scan is already running - cancel it and remember this request.
+    // onExpandScanFinished() launches it once the in-flight worker has
+    // actually stopped, so two QDirIterator scans never race against
+    // each other over the same presenter/model state.
+    expandNextContext = ctx;
+    expandRestartPending = true;
+    expandWorker->requestStop();
+    return;
+  }
+
+  launchExpandScan(ctx);
+}
+
+void DirectoryPresenter::launchExpandScan(const PendingExpandContext &ctx) {
+  expandContext = ctx;
+  expandLaunchEpoch = expandEpoch;
+  expandAccumulatedPaths.clear();
+
+  // Classify each selected path as a file or a directory here, on the UI
+  // thread, using cheap in-memory DirectoryModel lookups - the worker
+  // itself never touches the model, since it lives on a background thread.
+  QList<DirectoryExpandWorker::SelectedEntry> entries;
+  entries.reserve(selectedPaths().size());
+  for (const QString &path : selectedPaths()) {
+    DirectoryExpandWorker::SelectedEntry entry;
+    entry.path = path;
+    if (model->containsFile(path)) {
+      entry.isDirectory = false;
+    } else if (model->containsDir(path)) {
+      entry.isDirectory = true;
+    } else {
+      // Neither a known file nor a known directory any more (e.g. removed
+      // from under the selection between the click and this scan
+      // starting) - drop it, same as the old synchronous scan implicitly did.
+      continue;
+    }
+    entries << entry;
+  }
+
+  auto *thread = new QThread();
+  auto *worker = new DirectoryExpandWorker(entries, settings->supportedFormatsRegex());
+  worker->moveToThread(thread);
+
+  connect(thread, &QThread::started, worker, &DirectoryExpandWorker::run);
+  connect(worker, &DirectoryExpandWorker::pathsReady, this, &DirectoryPresenter::onExpandBatchReady);
+  connect(worker, &DirectoryExpandWorker::error, this, [](const QString &message) {
+    qWarning() << "[DirectoryPresenter]" << message;
+  });
+  connect(worker, &DirectoryExpandWorker::finished, thread, &QThread::quit);
+  connect(worker, &DirectoryExpandWorker::finished, this, &DirectoryPresenter::onExpandScanFinished);
+  connect(worker, &DirectoryExpandWorker::finished, worker, &QObject::deleteLater);
+  connect(thread, &QThread::finished, thread, &QObject::deleteLater);
+
+  expandWorker = worker;
+  expandThread = thread;
+  thread->start();
+}
+
+void DirectoryPresenter::cancelExpandedPathsScan() {
+  if (expandWorker)
+    expandWorker->requestStop();
+  expandRestartPending = false;
+  ++expandEpoch;
+}
+
+void DirectoryPresenter::onExpandBatchReady(QList<QString> paths) {
+  expandAccumulatedPaths << paths;
+}
+
+void DirectoryPresenter::onExpandScanFinished() {
+  PendingExpandContext finishedCtx = expandContext;
+  QList<QString> filePaths = expandAccumulatedPaths;
+
+  expandWorker = nullptr;
+  expandThread = nullptr;
+
+  if (expandRestartPending) {
+    expandRestartPending = false;
+    launchExpandScan(expandNextContext);
+    return; // superseded request - this (possibly partial, cancelled) scan's results are discarded
+  }
+
+  if (!model)
+    return;
+
+  switch (finishedCtx.purpose) {
+    case ExpandPurpose::OpenSelected:
+      if (!filePaths.isEmpty())
+        emit filesActivated(filePaths, filePaths.first());
+      break;
+
+    case ExpandPurpose::ItemActivation: {
+      if (filePaths.count() > 1) {
+        emit filesActivated(filePaths, filePaths.contains(finishedCtx.fallbackActivePath)
+                                            ? finishedCtx.fallbackActivePath
+                                            : filePaths.first());
+        break;
+      }
+      // 0 or 1 matching files after expansion: fall back to activating
+      // the originally-clicked item directly, exactly like the pre-scan
+      // synchronous code path used to when selection.count() <= 1.
+      int absoluteIndex = finishedCtx.fallbackAbsoluteIndex;
+      if (!mShowDirs) {
+        emit fileActivated(model->filePathAt(absoluteIndex));
+      } else if (absoluteIndex < model->dirCount()) {
+        emit dirActivated(model->dirPathAt(absoluteIndex));
+      } else {
+        emit fileActivated(model->filePathAt(absoluteIndex - model->dirCount()));
+      }
+      break;
+    }
+  }
 }
 
 QString DirectoryPresenter::firstSelectedDirectoryPath() const {
