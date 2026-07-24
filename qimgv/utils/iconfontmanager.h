@@ -39,6 +39,7 @@ enum class FluentIcon {
     Dismiss20,
     DocumentView20,
     ErrorCircle20,
+    Edit20,
     FlipHorizontal20,
     FlipVertical20,
     Folder16,

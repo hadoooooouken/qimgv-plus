@@ -32,7 +32,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Move20,              0xE422 }, // ic_fluent_copy_arrow_right_20_regular <- Context menu and move overlay
         { FluentIcon::RadioButton16,       0xF153 }, // ic_fluent_radio_button_16_regular <- Unchecked radio-button indicator
         { FluentIcon::Record16,            0xF660 }, // ic_fluent_record_16_regular <- Checked radio-button indicator
-        { FluentIcon::Rename20,            0xF0A39 }, // ic_fluent_rename_a_20_regular <- Context/folder menus and rename/save overlays
+        { FluentIcon::Rename20,            0xF0A39 }, // ic_fluent_rename_a_20_regular <- Context/folder menus and rename
         { FluentIcon::Settings20,          0xF6A9 }, // ic_fluent_settings_20_regular <- Settings actions in context menu, toolbars, and panels
         { FluentIcon::ShowInFolder20,      0xF42E }, // ic_fluent_folder_open_20_regular <- Show-in-folder actions in context and folder-view menus
         { FluentIcon::ZoomOriginal20,      0xF70A }, // ic_fluent_ratio_one_to_one_20_regular <- Context menu and Fit 1:1 notification
@@ -84,6 +84,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::ChevronRight48, 0xF2B3 }, // ic_fluent_chevron_right_48_regular <- Next-image click zone
         { FluentIcon::Crop48,         0xF02F }, // ic_fluent_crop_48_regular <- Crop panel header
         { FluentIcon::Pin20,          0xF601 }, // ic_fluent_pin_20_regular <- Pin main panel
+        { FluentIcon::Edit20,         0xF493 }, // ic_fluent_image_edit_20_regular <- Unsaved edits
 
         // Settings sidebar
         { FluentIcon::BrainSparkle32,      0xF0B3A }, // ic_fluent_brain_sparkle_32_regular <- AI Upscale page
