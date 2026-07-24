@@ -169,7 +169,19 @@ QPixmap IconFontManager::pixmap(FluentIcon icon, int sizePx, QColor color, qreal
     painter.setRenderHint(QPainter::TextAntialiasing);
     painter.setFont(font);
     painter.setPen(color);
-    painter.drawText(QRectF(0, 0, sizePx, sizePx), Qt::AlignCenter, glyph);
+
+    // Qt::AlignCenter (previously used with drawText(QRectF, flags, text))
+    // centers the glyph's font *advance box*, not its visible ink. Fluent
+    // glyphs can have asymmetric left/right side bearings within that
+    // advance box (chevrons in particular), so advance-box centering left
+    // the visible arrow shifted off to one side inside the button. Centering
+    // the glyph's tight ink bounding rect instead fixes this regardless of
+    // bearing asymmetry.
+    QFontMetricsF metrics(font);
+    const QRectF inkRect = metrics.tightBoundingRect(glyph);
+    const qreal drawX = (sizePx - inkRect.width()) / 2.0 - inkRect.left();
+    const qreal drawY = (sizePx - inkRect.height()) / 2.0 - inkRect.top();
+    painter.drawText(QPointF(drawX, drawY), glyph);
     painter.end();
 
     QPixmapCache::insert(cacheKey, result);
