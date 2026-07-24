@@ -85,7 +85,16 @@ public:
             }
         }
 
-        if (m_job.useUpscayl) {
+        // "Use Upscayl" only makes sense when the target is actually larger
+        // than this source image. A stale/persisted checkbox state must not
+        // force every file in a downscale batch through the (much slower,
+        // single-threaded) AI path - fall through to the regular resize
+        // below instead.
+        bool wantsUpscayl = m_job.useUpscayl &&
+                             (targetSize.width() > srcImg.width() ||
+                              targetSize.height() > srcImg.height());
+
+        if (wantsUpscayl) {
             if (m_cancelFlag->load()) {
                 notifyStopped();
                 return;
@@ -239,11 +248,15 @@ void BatchConverter::start(const QStringList &allPaths, const QList<int> &select
         finalOutDir = subfolderPath;
     }
 
-    if (job.useUpscayl) {
-        m_threadPool.setMaxThreadCount(1);
-    } else {
-        m_threadPool.setMaxThreadCount(QThread::idealThreadCount());
-    }
+    // The AI model runs single-threaded, so the pool is capped to 1 thread
+    // whenever Upscayl might actually run for some file in this batch. But a
+    // percent-mode job at <=100% is guaranteed to be a downscale/no-op for
+    // every file (same ratio applied to every source image), so Upscayl can
+    // never trigger there - keep full parallelism in that case instead of
+    // serializing the whole batch because of a stale checkbox state.
+    bool upscaylMayRun = job.useUpscayl && job.doResize &&
+                          !(job.resizeByPercent && job.resizePercent <= 100.0);
+    m_threadPool.setMaxThreadCount(upscaylMayRun ? 1 : QThread::idealThreadCount());
 
     QSet<QString> reservedDestinations;
     int activeIndex = 0;

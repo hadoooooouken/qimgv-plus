@@ -122,6 +122,8 @@ private slots:
     void onColorEnabledChanged(bool enabled);
 
 private:
+    void updateUpscaylAvailability();
+    bool targetIsUpscale() const;
     void setupUi();
     void setupLeftPanel(QBoxLayout *mainLayout);
     void setupRightPanel(QBoxLayout *mainLayout);

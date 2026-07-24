@@ -684,6 +684,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
         useUpscaylCheckBox->setToolTip(tr("No AI models found in models/ directory."));
         upscaylModelComboBox->setEnabled(false);
     }
+    updateUpscaylAvailability();
 
     connect(qualitySlider, &QSlider::valueChanged, this, &BatchConverterDialog::onQualitySliderChanged);
     connect(qualitySpinBox, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onQualitySpinBoxChanged);
@@ -754,6 +755,7 @@ void BatchConverterDialog::onPercentChanged(double val) {
     targetSize.setWidth(originalSize.width() * scale);
     targetSize.setHeight(originalSize.height() * scale);
     updateToTargetValues();
+    updateUpscaylAvailability();
 }
 
 void BatchConverterDialog::onWidthChanged(int val) {
@@ -764,6 +766,7 @@ void BatchConverterDialog::onWidthChanged(int val) {
         targetSize.setHeight(static_cast<int>(originalSize.height() * factor));
     }
     updateToTargetValues();
+    updateUpscaylAvailability();
 }
 
 void BatchConverterDialog::onHeightChanged(int val) {
@@ -774,6 +777,7 @@ void BatchConverterDialog::onHeightChanged(int val) {
         targetSize.setWidth(static_cast<int>(originalSize.width() * factor));
     }
     updateToTargetValues();
+    updateUpscaylAvailability();
 }
 
 void BatchConverterDialog::updateToTargetValues() {
@@ -793,6 +797,7 @@ void BatchConverterDialog::onCommonResolutionChanged(int index) {
     // Set the bounding box directly; keepAspectRatio is applied per-file during conversion
     targetSize = data.isValid() ? data.toSize() : originalSize;
     updateToTargetValues();
+    updateUpscaylAvailability();
 }
 
 void BatchConverterDialog::onResetSizes() {
@@ -804,10 +809,41 @@ void BatchConverterDialog::onResetSizes() {
     percent->blockSignals(false);
     targetSize = originalSize;
     updateToTargetValues();
+    updateUpscaylAvailability();
 }
 
 void BatchConverterDialog::onUseUpscaylToggled(bool checked) {
-    upscaylModelComboBox->setEnabled(settings->hasUpscaylModels() && checked);
+    upscaylModelComboBox->setEnabled(settings->hasUpscaylModels() && checked && targetIsUpscale());
+}
+
+bool BatchConverterDialog::targetIsUpscale() const {
+    return targetSize.width() > originalSize.width() ||
+           targetSize.height() > originalSize.height();
+}
+
+// Keeps "Use Upscayl" honest about whether it will actually do anything for
+// the current target size: the checked state is a saved preference and can
+// stay checked from a previous (upscale) session, but AI upscaling only
+// ever makes sense when the target is larger than the source, so the
+// control is disabled - with an explanatory tooltip - whenever it wouldn't
+// apply, instead of silently being ignored at conversion time.
+void BatchConverterDialog::updateUpscaylAvailability() {
+    if (!settings->hasUpscaylModels())
+        return; // already disabled with its own tooltip
+
+    bool resizeEnabled = resizeEnableCheckBox->isChecked();
+    bool isUpscale = targetIsUpscale();
+    bool available = resizeEnabled && isUpscale;
+
+    useUpscaylCheckBox->setEnabled(available);
+    if (resizeEnabled && !isUpscale) {
+        useUpscaylCheckBox->setToolTip(
+            tr("Use Upscayl only applies when the target size is larger than "
+               "the original; it has no effect at this size and will be skipped."));
+    } else {
+        useUpscaylCheckBox->setToolTip(QString());
+    }
+    upscaylModelComboBox->setEnabled(available && useUpscaylCheckBox->isChecked());
 }
 
 void BatchConverterDialog::onSelectAll() {
@@ -925,7 +961,7 @@ void BatchConverterDialog::onConvertClicked() {
     if (resizeEnableCheckBox->isChecked()) {
         int maxDim = 12288;
         qint64 maxPixels = 100000000;
-        if (settings->useUpscayl() || useUpscaylCheckBox->isChecked()) {
+        if (useUpscaylCheckBox->isChecked() && targetIsUpscale()) {
             maxDim = 16384;
             maxPixels = 268435456;
         }
@@ -963,7 +999,13 @@ void BatchConverterDialog::startConversion() {
     job.resizePercent = percent->value();
     job.targetSize = targetSize;
     job.keepAspectRatio = keepAspectRatio->isChecked();
-    job.useUpscayl = job.doResize && useUpscaylCheckBox->isChecked();
+    // A saved/checked "Use Upscayl" preference must not silently force every
+    // file in this batch through the AI (single-threaded, much slower) path
+    // when the requested size isn't actually larger than the source - e.g.
+    // it was left checked from an earlier upscale session and this job is a
+    // plain downscale. Per-file safety net for absolute-size batches with
+    // mixed source resolutions lives in BatchConverter itself.
+    job.useUpscayl = job.doResize && useUpscaylCheckBox->isChecked() && targetIsUpscale();
     job.upscaylModel = upscaylModelComboBox->currentText();
 
     settings->setResizeUseUpscayl(useUpscaylCheckBox->isChecked());
@@ -1083,8 +1125,8 @@ void BatchConverterDialog::onResizeEnabledChanged(bool enabled) {
     setResizeWidgetsEnabled(enabled);
     if (enabled) {
         onResizeRadioToggled();
-        upscaylModelComboBox->setEnabled(settings->hasUpscaylModels() && useUpscaylCheckBox->isChecked());
     }
+    updateUpscaylAvailability();
 }
 
 void BatchConverterDialog::onColorEnabledChanged(bool enabled) {

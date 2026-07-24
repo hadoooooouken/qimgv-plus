@@ -65,6 +65,8 @@ private:
     void updateToTargetValues();
     int lastEdited; // 0 - width, 1 - height
     void resetResCheckBox();
+    void updateUpscaylAvailability();
+    bool targetIsUpscale() const;
 
 private slots:
     void widthChanged(int);

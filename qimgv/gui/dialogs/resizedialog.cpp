@@ -150,6 +150,7 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
       upscaylModelLabel->setEnabled(false);
       upscaylModelComboBox->setEnabled(false);
     }
+    updateUpscaylAvailability();
   }
 }
 
@@ -294,7 +295,10 @@ void ResizeDialog::sizeSelect() {
     bool useUpscayl = false;
     QString upscaylModel = "";
     if (useUpscaylCheckBox) {
-      useUpscayl = useUpscaylCheckBox->isChecked();
+      // A checked "Use Upscayl" box is a saved preference restored on open;
+      // it must not trigger the (much slower) AI path unless this request
+      // is an actual upscale.
+      useUpscayl = useUpscaylCheckBox->isChecked() && targetIsUpscale();
       upscaylModel = upscaylModelComboBox->currentText();
       settings->setResizeUseUpscayl(useUpscayl);
       settings->setUpscaylModel(upscaylModel);
@@ -303,6 +307,33 @@ void ResizeDialog::sizeSelect() {
     emit sizeSelected(targetSize, selectedFilter, useUpscayl, upscaylModel);
   }
   this->accept();
+}
+
+bool ResizeDialog::targetIsUpscale() const {
+  return targetSize.width() > originalSize.width() ||
+         targetSize.height() > originalSize.height();
+}
+
+// Keeps "Use Upscayl" honest about whether it will actually do anything for
+// the current target size: it's a saved preference and can stay checked
+// from an earlier (upscale) session, but AI upscaling only makes sense when
+// the target is larger than the source, so the control is disabled - with
+// an explanatory tooltip - whenever it wouldn't apply.
+void ResizeDialog::updateUpscaylAvailability() {
+  if (!useUpscaylCheckBox || !settings->hasUpscaylModels())
+    return;
+
+  bool isUpscale = targetIsUpscale();
+  useUpscaylCheckBox->setEnabled(isUpscale);
+  if (!isUpscale) {
+    useUpscaylCheckBox->setToolTip(
+        tr("Use Upscayl only applies when the target size is larger than "
+           "the original; it has no effect at this size and will be skipped."));
+  } else {
+    useUpscaylCheckBox->setToolTip(QString());
+  }
+  upscaylModelLabel->setEnabled(isUpscale && useUpscaylCheckBox->isChecked());
+  upscaylModelComboBox->setEnabled(isUpscale && useUpscaylCheckBox->isChecked());
 }
 
 void ResizeDialog::setCommonResolution(int index) {
@@ -316,6 +347,7 @@ void ResizeDialog::setCommonResolution(int index) {
   else
     targetSize = originalSize.scaled(res, Qt::IgnoreAspectRatio);
   updateToTargetValues();
+  updateUpscaylAvailability();
 }
 
 QSize ResizeDialog::newSize() { return targetSize; }
@@ -328,6 +360,7 @@ void ResizeDialog::widthChanged(int newWidth) {
     targetSize.setHeight(static_cast<int>(originalSize.height() * factor));
   }
   updateToTargetValues();
+  updateUpscaylAvailability();
 }
 
 void ResizeDialog::heightChanged(int newHeight) {
@@ -338,6 +371,7 @@ void ResizeDialog::heightChanged(int newHeight) {
     targetSize.setWidth(static_cast<int>(originalSize.width() * factor));
   }
   updateToTargetValues();
+  updateUpscaylAvailability();
 }
 
 void ResizeDialog::updateToTargetValues() {
@@ -353,12 +387,14 @@ void ResizeDialog::fitDesktop() {
   byAbsoluteSize->setChecked(true);
   targetSize = originalSize.scaled(desktopSize, Qt::KeepAspectRatio);
   updateToTargetValues();
+  updateUpscaylAvailability();
 }
 
 void ResizeDialog::fillDesktop() {
   byAbsoluteSize->setChecked(true);
   targetSize = originalSize.scaled(desktopSize, Qt::KeepAspectRatioByExpanding);
   updateToTargetValues();
+  updateUpscaylAvailability();
 }
 
 void ResizeDialog::onAspectRatioCheckbox() {
@@ -415,6 +451,7 @@ void ResizeDialog::percentChanged(double newPercent) {
   targetSize.setHeight(originalSize.height() * scale);
 
   updateToTargetValues();
+  updateUpscaylAvailability();
 }
 
 void ResizeDialog::keyPressEvent(QKeyEvent *event) {
@@ -431,6 +468,7 @@ void ResizeDialog::reset() {
   resetResCheckBox();
   targetSize = originalSize;
   updateToTargetValues();
+  updateUpscaylAvailability();
 }
 
 int ResizeDialog::exec() {

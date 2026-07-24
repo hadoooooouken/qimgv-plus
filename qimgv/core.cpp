@@ -1539,6 +1539,16 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
       return;
     }
 
+    // Final safety net: AI upscaling only makes sense when the target is
+    // actually larger than the source in some dimension. A caller might
+    // still pass useUpscayl=true here from a stale/persisted checkbox state
+    // for a same-size or downscale request - don't pay for a full AI model
+    // pass in that case, just do the regular (much cheaper) CPU resize.
+    if (size.width() <= source->width() && size.height() <= source->height()) {
+      edit_template(false, tr("Resize"), {ImageLib::scaled}, size, filter);
+      return;
+    }
+
     UpscaylResizeRequest request;
     request.path = path;
     request.targetSize = size;
