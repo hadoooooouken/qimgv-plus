@@ -235,6 +235,9 @@ void Core::connectComponents() {
   connect(&folderViewPresenter, &DirectoryPresenter::droppedInto, this,
           &Core::onDirectoryPresenterDroppedInto);
 
+  connect(&folderViewPresenter, &DirectoryPresenter::expandedSelectedPathsReady, this,
+          &Core::onBatchConverterPathsReady);
+
   connect(scriptManager, &ScriptManager::error, mw, &MW::showError);
 
   connect(mw, &MW::opened, this, &Core::loadPath);
@@ -1443,16 +1446,27 @@ void Core::showResizeDialog() {
 }
 
 void Core::showBatchConverter() {
-  QList<QString> filePaths = folderViewPresenter.expandedSelectedPaths();
-  QString defaultOutputDir = folderViewPresenter.firstSelectedDirectoryPath();
+  // expandedSelectedPaths() used to run its recursive QDirIterator walk
+  // synchronously right here, freezing the UI thread for as long as the
+  // selected directories took to walk - the same freeze
+  // DirectoryPresenter::onItemActivated()/onOpenSelectedRequested() had
+  // before being moved onto DirectoryExpandWorker. Ask the presenter to
+  // do the same background scan here instead of blocking; onBatchConverterPathsReady()
+  // opens the dialog once expandedSelectedPathsReady() arrives.
+  folderViewPresenter.requestExpandedSelectedPathsAsync();
+}
 
-  if (!filePaths.isEmpty()) {
-    QString currentDirPath = model->directoryPath();
-    BatchConverterDialog dialog(filePaths, mw, defaultOutputDir);
-    dialog.exec();
-    if (dialog.conversionWasStarted() && !currentDirPath.isEmpty()) {
-      model->setDirectory(currentDirPath);
-    }
+void Core::onBatchConverterPathsReady(QList<QString> filePaths, QString defaultOutputDir) {
+  // Mirrors the old synchronous showBatchConverter()'s guard: do nothing
+  // if the selection expanded to no matching files.
+  if (filePaths.isEmpty())
+    return;
+
+  QString currentDirPath = model->directoryPath();
+  BatchConverterDialog dialog(filePaths, mw, defaultOutputDir);
+  dialog.exec();
+  if (dialog.conversionWasStarted() && !currentDirPath.isEmpty()) {
+    model->setDirectory(currentDirPath);
   }
 }
 

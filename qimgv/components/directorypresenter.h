@@ -54,9 +54,21 @@ public:
     void setShowDirs(bool mode);
 
     QList<QString> selectedPaths() const;
-    QList<QString> expandedSelectedPaths() const;
     QString firstSelectedDirectoryPath() const;
     int upArrowCount() const;
+
+    // Asynchronous counterpart of the old (now removed) synchronous
+    // expandedSelectedPaths(): expands the current selection into the full
+    // list of matching files on the same background DirectoryExpandWorker
+    // used by onItemActivated()/onOpenSelectedRequested() (see the
+    // ExpandPurpose comment below), instead of walking the selected
+    // directories synchronously on the UI thread. For
+    // Core::showBatchConverter(), which needs the complete file list up
+    // front rather than the activation-signal semantics the other two
+    // call sites use. Emits expandedSelectedPathsReady() once the scan
+    // completes; emits nothing if the expansion is empty, matching what
+    // the old synchronous helper implicitly did for its one caller.
+    void requestExpandedSelectedPathsAsync();
 
 
 signals:
@@ -67,6 +79,10 @@ signals:
     void droppedInto(QList<QString>, QString, Qt::DropAction);
     void backRequested();
     void forwardRequested();
+    // Delivered from onExpandScanFinished() once a
+    // requestExpandedSelectedPathsAsync() scan completes with a non-empty
+    // result (see the BatchConvert case in ExpandPurpose below).
+    void expandedSelectedPathsReady(QList<QString> filePaths, QString defaultOutputDir);
 
 public slots:
     void disconnectView();
@@ -105,26 +121,28 @@ private:
                                   SortingMode mode) const;
 
     // ---- asynchronous, cancellable selection expansion ----
-    // Backs onItemActivated()/onOpenSelectedRequested() with a background
-    // DirectoryExpandWorker (see directoryexpandworker.h) instead of the
-    // fully synchronous QDirIterator scan expandedSelectedPaths() still
-    // does inline, so activating a multi-selection containing large
-    // directory trees no longer freezes the UI thread. expandedSelectedPaths()
-    // itself is left untouched for its one remaining synchronous caller
-    // (Core::showBatchConverter).
+    // Backs onItemActivated()/onOpenSelectedRequested()/
+    // requestExpandedSelectedPathsAsync() with a background
+    // DirectoryExpandWorker (see directoryexpandworker.h) instead of a
+    // synchronous QDirIterator scan on the UI thread, so activating a
+    // multi-selection (or opening the batch converter) on a large
+    // directory tree no longer freezes the UI thread.
 
     // Distinguishes which call site requested the scan, so
     // onExpandScanFinished() knows how to turn the resulting file list
     // back into the same signal that call site used to emit inline.
     enum class ExpandPurpose {
         ItemActivation, // from onItemActivated(): may fall back to a single fileActivated/dirActivated
-        OpenSelected    // from onOpenSelectedRequested(): always emits filesActivated(), or nothing
+        OpenSelected,   // from onOpenSelectedRequested(): always emits filesActivated(), or nothing
+        BatchConvert    // from requestExpandedSelectedPathsAsync(): emits expandedSelectedPathsReady(), or nothing
     };
 
     struct PendingExpandContext {
         ExpandPurpose purpose = ExpandPurpose::OpenSelected;
         int fallbackAbsoluteIndex = -1;
         QString fallbackActivePath;
+        // Only populated (in launchExpandScan()) when purpose == BatchConvert.
+        QString batchConvertDefaultOutputDir;
     };
 
     // Starts a scan, or - if one is already running - cancels it and

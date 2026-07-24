@@ -399,12 +399,12 @@ void DirectoryPresenter::onItemActivated(int absoluteIndex) {
       else
           activePath = model->filePathAt(mShowDirs ? absoluteIndex - model->dirCount() : absoluteIndex);
       
-      // expandedSelectedPaths() (further down) does a fully synchronous,
-      // uncancellable recursive scan of every selected directory - fine
-      // for a couple of images, but it freezes the UI thread for as long
-      // as a large subtree takes to walk. Do the scan on a background
-      // thread instead; onExpandScanFinished() emits the same signal this
-      // branch used to emit inline once the (cancellable) scan completes.
+      // A recursive scan of every selected directory here (as this branch
+      // used to do inline) is fine for a couple of images, but freezes the
+      // UI thread for as long as a large subtree takes to walk. Do the
+      // scan on a background thread instead; onExpandScanFinished() emits
+      // the same signal this branch used to emit inline once the
+      // (cancellable) scan completes.
       startExpandedPathsScan(ExpandPurpose::ItemActivation, absoluteIndex, activePath);
       return;
   }
@@ -428,35 +428,12 @@ void DirectoryPresenter::onOpenSelectedRequested() {
   startExpandedPathsScan(ExpandPurpose::OpenSelected, -1, QString());
 }
 
-QList<QString> DirectoryPresenter::expandedSelectedPaths() const {
-  QList<QString> filePaths;
-  if (!model)
-      return filePaths;
-
-  QSet<QString> visited;
-  QRegularExpression regex(settings->supportedFormatsRegex(), QRegularExpression::CaseInsensitiveOption);
-
-  for (const QString &path : selectedPaths()) {
-    if (model->containsFile(path)) {
-      if (!visited.contains(path)) {
-        visited.insert(path);
-        filePaths << path;
-      }
-    } else if (model->containsDir(path)) {
-      QDirIterator it(path, QDir::Files, QDirIterator::Subdirectories);
-      while (it.hasNext()) {
-        QString filePath = QDir::fromNativeSeparators(it.next());
-        QString fileName = it.fileName();
-        if (regex.match(fileName).hasMatch()) {
-          if (!visited.contains(filePath)) {
-            visited.insert(filePath);
-            filePaths << filePath;
-          }
-        }
-      }
-    }
-  }
-  return filePaths;
+void DirectoryPresenter::requestExpandedSelectedPathsAsync() {
+  // Same background-worker path as onItemActivated()/
+  // onOpenSelectedRequested() below - see the ExpandPurpose comment in
+  // the header. No fallback index/path: BatchConvert either emits the
+  // full expanded list or nothing (see onExpandScanFinished()).
+  startExpandedPathsScan(ExpandPurpose::BatchConvert, -1, QString());
 }
 
 void DirectoryPresenter::startExpandedPathsScan(ExpandPurpose purpose, int fallbackAbsoluteIndex,
@@ -487,6 +464,13 @@ void DirectoryPresenter::launchExpandScan(const PendingExpandContext &ctx) {
   expandContext = ctx;
   expandLaunchEpoch = expandEpoch;
   expandAccumulatedPaths.clear();
+
+  // Computed here rather than passed in via ctx, so it reflects the same
+  // selection the entries below are built from (matters if this launch
+  // was deferred - see startExpandedPathsScan() - and the selection
+  // changed while an earlier scan was still winding down).
+  if (expandContext.purpose == ExpandPurpose::BatchConvert)
+    expandContext.batchConvertDefaultOutputDir = firstSelectedDirectoryPath();
 
   // Classify each selected path as a file or a directory here, on the UI
   // thread, using cheap in-memory DirectoryModel lookups - the worker
@@ -581,6 +565,14 @@ void DirectoryPresenter::onExpandScanFinished() {
       }
       break;
     }
+
+    case ExpandPurpose::BatchConvert:
+      // Mirrors the old synchronous helper's implicit behavior: do
+      // nothing on an empty expansion instead of opening an empty batch
+      // converter (see Core::onBatchConverterPathsReady()).
+      if (!filePaths.isEmpty())
+        emit expandedSelectedPathsReady(filePaths, finishedCtx.batchConvertDefaultOutputDir);
+      break;
   }
 }
 

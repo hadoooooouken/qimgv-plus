@@ -192,6 +192,11 @@ private slots:
     void createDirectory();
     void onDirectoryViewFileActivated(QString filePath);
     void onDirectoryViewFilesActivated(QList<QString> filePaths, QString activePath);
+    // Opens the batch converter dialog once folderViewPresenter's background
+    // scan (kicked off by showBatchConverter()) has expanded the current
+    // selection into a concrete file list; see DirectoryPresenter::
+    // requestExpandedSelectedPathsAsync().
+    void onBatchConverterPathsReady(QList<QString> filePaths, QString defaultOutputDir);
     bool loadFileList(const QList<QString> &filePaths, QString activePath = "");
     bool loadFileIndex(int index, bool async, bool preload);
     void enableDocumentView();
