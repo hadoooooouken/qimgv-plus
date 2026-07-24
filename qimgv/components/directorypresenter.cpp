@@ -5,6 +5,7 @@
 #include <QFileInfo>
 #include <QSet>
 #include <QRegularExpression>
+#include <QCollator>
 #include "settings.h"
 
 DirectoryPresenter::DirectoryPresenter(QObject *parent)
@@ -240,39 +241,18 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
   for (int i : indexes) {
     if (i < model->dirCount()) {
       QString dirPath = model->dirPathAt(i);
-      QDir dir(dirPath);
       QStringList filters;
       for (auto &format : QImageReader::supportedImageFormats())
         filters << "*." + QString::fromLatin1(format);
       filters << "*.jfif" << "*.tga" << "*.webp";
 
-      QDir::SortFlags sortFlags = QDir::Time;
       SortingMode folderIconSort = settings->folderIconSortingMode();
-      switch (folderIconSort) {
-        case SORT_NAME:
-          sortFlags = QDir::Name | QDir::IgnoreCase | QDir::LocaleAware;
-          break;
-        case SORT_NAME_DESC:
-          sortFlags = QDir::Name | QDir::IgnoreCase | QDir::LocaleAware | QDir::Reversed;
-          break;
-        case SORT_SIZE:
-          sortFlags = QDir::Size | QDir::Reversed; // smallest first
-          break;
-        case SORT_SIZE_DESC:
-          sortFlags = QDir::Size; // largest first
-          break;
-        case SORT_TIME:
-          sortFlags = QDir::Time | QDir::Reversed; // oldest first
-          break;
-        case SORT_TIME_DESC:
-        default:
-          sortFlags = QDir::Time; // newest first
-          break;
-      }
-
-      QFileInfoList list = dir.entryInfoList(filters, QDir::Files, sortFlags);
-      if (!list.isEmpty()) {
-        QString latestImage = QDir::fromNativeSeparators(list.first().absoluteFilePath());
+      // Single linear pass instead of entryInfoList()+sort - avoids
+      // materializing and sorting the whole directory just to read
+      // first(). See findFolderCoverImage() for details.
+      QString latestImage = findFolderCoverImage(dirPath, filters, folderIconSort);
+      if (!latestImage.isEmpty()) {
+        latestImage = QDir::fromNativeSeparators(latestImage);
         dirThumbnailTasks.insert(latestImage, i);
         thumbnailer->getThumbnailAsync(latestImage, size, false, false);
       }
@@ -308,6 +288,71 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
       thumbnailer->getThumbnailAsync(path, size, crop, force);
     }
   }
+}
+
+// Finds the folder-cover candidate with a single linear pass, tracking only
+// the current best-so-far entry per the active sort mode. Replaces the old
+// dir.entryInfoList(filters, QDir::Files, sortFlags) + list.first() pattern,
+// which had to materialize and fully sort every matching file in the folder
+// just to read one entry. This runs on every call to generateThumbnails(),
+// which fires on every folder-view scroll tick (ThumbnailView::
+// loadVisibleThumbnails()) - so the sort cost was being paid repeatedly on
+// the same folders as they scrolled in and out of the preload zone.
+//
+// Note: for SORT_TIME*/SORT_SIZE* this still stat()s every file, since that
+// IO is inherent to "newest/oldest/largest/smallest" semantics - only the
+// O(n log n) comparison + full-list allocation is removed. If folders can
+// live on slow/network drives, consider also moving this call off the GUI
+// thread (e.g. QtConcurrent::run, mirroring ThumbnailerRunnable).
+QString DirectoryPresenter::findFolderCoverImage(const QString &dirPath,
+                                                  const QStringList &filters,
+                                                  SortingMode mode) const {
+  QDirIterator it(dirPath, filters, QDir::Files);
+  QString bestPath;
+  QDateTime bestTime;
+  qint64 bestSize = -1;
+  QCollator collator;
+  collator.setCaseSensitivity(Qt::CaseInsensitive);
+
+  while (it.hasNext()) {
+    it.next();
+    QFileInfo info = it.fileInfo();
+    switch (mode) {
+      case SORT_NAME:
+      case SORT_NAME_DESC: {
+        bool better = bestPath.isEmpty();
+        if (!better) {
+          bool less = collator.compare(info.fileName(), QFileInfo(bestPath).fileName()) < 0;
+          better = (mode == SORT_NAME) ? less : !less;
+        }
+        if (better)
+          bestPath = info.absoluteFilePath();
+        break;
+      }
+      case SORT_SIZE:
+      case SORT_SIZE_DESC: {
+        qint64 sz = info.size();
+        bool better = bestSize < 0 || (mode == SORT_SIZE ? sz < bestSize : sz > bestSize);
+        if (better) {
+          bestSize = sz;
+          bestPath = info.absoluteFilePath();
+        }
+        break;
+      }
+      case SORT_TIME:
+      case SORT_TIME_DESC:
+      default: {
+        QDateTime t = info.lastModified();
+        bool better = !bestTime.isValid() || (mode == SORT_TIME ? t < bestTime : t > bestTime);
+        if (better) {
+          bestTime = t;
+          bestPath = info.absoluteFilePath();
+        }
+        break;
+      }
+    }
+  }
+  return bestPath;
 }
 
 void DirectoryPresenter::onThumbnailReady(std::shared_ptr<Thumbnail> thumb,

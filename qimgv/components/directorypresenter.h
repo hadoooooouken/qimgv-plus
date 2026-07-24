@@ -88,4 +88,10 @@ private:
 
     std::shared_ptr<Thumbnail> composeFolderThumbnail(int size, const QString &dirName, const QPixmap &innerThumb);
     std::shared_ptr<Thumbnail> composeUpArrowThumbnail(int size);
+
+    // Picks the folder-cover candidate file with a single linear pass
+    // instead of materializing and sorting the full entryInfoList() just
+    // to read list.first() - see composeFolderThumbnail() call site.
+    QString findFolderCoverImage(const QString &dirPath, const QStringList &filters,
+                                  SortingMode mode) const;
 };
