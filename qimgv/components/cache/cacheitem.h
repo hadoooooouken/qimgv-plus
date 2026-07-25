@@ -1,21 +1,24 @@
 #pragma once
 
-#include <QSemaphore>
+#include <QtTypes>
+#include <memory>
 #include "sourcecontainers/image.h"
 
 class CacheItem {
 public:
-    CacheItem();
-    CacheItem(std::shared_ptr<Image> _contents);
+    explicit CacheItem(std::shared_ptr<Image> contents);
 
-    std::shared_ptr<Image> getContents();
+    std::shared_ptr<Image> contents() const;
 
-    void lock();
-    void unlock();
+    bool tryReserve();
+    bool release();
+    bool isReserved() const;
 
-    int lockStatus();
+    void markForRemoval();
+
 private:
-    std::shared_ptr<Image> contents;
-    QSemaphore sem{1};
+    std::shared_ptr<Image> image;
+    qsizetype reservationCount = 0;
+    bool removalPending = false;
 };
 

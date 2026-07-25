@@ -4,6 +4,7 @@
 #include <QThreadPool>
 #include <QThread>
 #include <QMutex>
+#include <QSemaphore>
 #include <QSet>
 #include <QString>
 #include <memory>

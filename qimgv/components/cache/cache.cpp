@@ -1,5 +1,8 @@
 #include "cache.h"
 
+#include <QMutexLocker>
+#include <QSet>
+
 Cache::Cache() {
 }
 
@@ -22,23 +25,22 @@ bool Cache::insert(std::shared_ptr<Image> img) {
 }
 
 void Cache::remove(QString path) {
-    QMutexLocker locker(&mutex);
-    if(items.contains(path)) {
-        items[path]->lock();
-        items.remove(path);
-    }
+    removeMatching([&path](const QString &itemPath) {
+        return itemPath == path;
+    });
 }
 
 void Cache::clear() {
-    QMutexLocker locker(&mutex);
-    items.clear();
+    removeMatching([](const QString &) {
+        return true;
+    });
 }
 
 std::shared_ptr<Image> Cache::get(QString path) {
     QMutexLocker locker(&mutex);
     if(items.contains(path)) {
         auto item = items.value(path);
-        return item->getContents();
+        return item->contents();
     }
     return nullptr;
 }
@@ -46,8 +48,7 @@ std::shared_ptr<Image> Cache::get(QString path) {
 bool Cache::reserve(QString path) {
     QMutexLocker locker(&mutex);
     if(items.contains(path)) {
-        items[path]->lock();
-        return true;
+        return items.value(path)->tryReserve();
     }
     return false;
 }
@@ -55,7 +56,13 @@ bool Cache::reserve(QString path) {
 bool Cache::release(QString path) {
     QMutexLocker locker(&mutex);
     if(items.contains(path)) {
-        items[path]->unlock();
+        const auto item = items.value(path);
+        if(!item->release()) {
+            return false;
+        }
+        if(!item->isReserved()) {
+            reservationsReleased.wakeAll();
+        }
         return true;
     }
     return false;
@@ -63,12 +70,41 @@ bool Cache::release(QString path) {
 
 // removes all items except the ones in list
 void Cache::trimTo(QStringList pathList) {
+    const QSet<QString> retainedPaths(pathList.cbegin(), pathList.cend());
+    removeMatching([&retainedPaths](const QString &path) {
+        return !retainedPaths.contains(path);
+    });
+}
+
+void Cache::removeMatching(const RemovalPredicate &shouldRemove) {
     QMutexLocker locker(&mutex);
-    const auto keys = items.keys();
-    for(const auto &path : keys) {
-        if(!pathList.contains(path)) {
-            items[path]->lock();
-            items.remove(path);
+    QList<QPair<QString, std::shared_ptr<CacheItem>>> targets;
+
+    for(auto it = items.cbegin(); it != items.cend(); ++it) {
+        if(shouldRemove(it.key())) {
+            it.value()->markForRemoval();
+            targets.append(qMakePair(it.key(), it.value()));
+        }
+    }
+
+    bool hasReservations = true;
+    while(hasReservations) {
+        hasReservations = false;
+        for(const auto &target : targets) {
+            if(target.second->isReserved()) {
+                hasReservations = true;
+                break;
+            }
+        }
+        if(hasReservations) {
+            reservationsReleased.wait(&mutex);
+        }
+    }
+
+    for(const auto &target : targets) {
+        auto current = items.find(target.first);
+        if(current != items.end() && current.value() == target.second) {
+            items.erase(current);
         }
     }
 }

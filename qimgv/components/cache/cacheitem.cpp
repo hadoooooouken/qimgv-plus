@@ -1,23 +1,35 @@
 #include "cacheitem.h"
 
-CacheItem::CacheItem() {
+#include <utility>
+
+CacheItem::CacheItem(std::shared_ptr<Image> contents)
+    : image(std::move(contents)) {
 }
 
-CacheItem::CacheItem(std::shared_ptr<Image> _contents) : contents(_contents) {
+std::shared_ptr<Image> CacheItem::contents() const {
+    return image;
 }
 
-std::shared_ptr<Image> CacheItem::getContents() {
-    return contents;
+bool CacheItem::tryReserve() {
+    if(removalPending) {
+        return false;
+    }
+    ++reservationCount;
+    return true;
 }
 
-void CacheItem::lock() {
-    sem.acquire(1);
+bool CacheItem::release() {
+    if(reservationCount == 0) {
+        return false;
+    }
+    --reservationCount;
+    return true;
 }
 
-void CacheItem::unlock() {
-    sem.release(1);
+bool CacheItem::isReserved() const {
+    return reservationCount != 0;
 }
 
-int CacheItem::lockStatus() {
-    return sem.available();
+void CacheItem::markForRemoval() {
+    removalPending = true;
 }
