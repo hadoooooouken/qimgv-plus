@@ -105,8 +105,7 @@ void WallpaperController::cancelActiveTask() {
         m_workerThread->requestInterruption();
         m_workerThread->quit();
         m_workerThread->wait();
-        delete m_workerThread;
-        m_workerThread = nullptr;
+        m_workerThread.reset();
     }
     cleanupFile(m_currentWallpaperPath);
     m_currentWallpaperPath.clear();
@@ -154,7 +153,7 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
     QPointer<MW> mwPointer = mw;
     auto cancelToken = m_cancelToken;
 
-    m_workerThread = QThread::create([this, sourceImage, monitorSize, wallpaperPath, mwPointer, appDir, modelName, cancelToken]() {
+    m_workerThread.reset(QThread::create([this, sourceImage, monitorSize, wallpaperPath, mwPointer, appDir, modelName, cancelToken]() {
         if (cancelToken->load()) return;
 
         int monitorWidth = monitorSize.width();
@@ -279,7 +278,7 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
         if (cancelToken->load()) return;
 
         emit wallpaperApplyFinished(applyResult);
-    });
+    }));
 
     m_workerThread->start();
 }

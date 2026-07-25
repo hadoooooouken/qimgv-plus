@@ -46,7 +46,7 @@ signals:
     void wallpaperApplyFinished(WallpaperApplyResult result);
 
 private:
-    QThread *m_workerThread = nullptr;
+    std::unique_ptr<QThread> m_workerThread;
     std::shared_ptr<std::atomic<bool>> m_cancelToken;
     QString m_currentWallpaperPath;
 
