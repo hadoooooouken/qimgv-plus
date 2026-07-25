@@ -94,10 +94,10 @@ signals:
     void scalingFinished(QImage result, ScalerRequest req);
 
 private:
-    std::unique_ptr<Scaler> scaler;
     DirectoryManager dirManager;
     Loader loader;
     Cache cache;
+    std::unique_ptr<Scaler> scaler;
     FileListSource fileListSource;
 
     // Loads filePath from disk unconditionally, bypassing the cache-hit
