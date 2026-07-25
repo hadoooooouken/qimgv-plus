@@ -3,7 +3,7 @@
 #include <QPixmap>
 #include <QString>
 
-// Identifiers for glyphs used from res/fonts/FluentSystemIcons-Regular.ttf.
+// Identifiers for glyphs used from res/fonts/FluentSystemIcons-Custom.ttf.
 // Only Regular weight is supported for now.
 //
 // The enum is not persisted; keep it limited to glyphs used by the UI.

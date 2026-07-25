@@ -119,9 +119,9 @@ bool IconFontManager::init() {
         return !fontFamily.isEmpty();
 
     initialized = true;
-    int fontId = QFontDatabase::addApplicationFont(":/res/fonts/FluentSystemIcons-Regular.ttf");
+    int fontId = QFontDatabase::addApplicationFont(":/res/fonts/FluentSystemIcons-Custom.ttf");
     if (fontId == -1) {
-        qWarning() << "IconFontManager: failed to load FluentSystemIcons-Regular.ttf from resources";
+        qWarning() << "IconFontManager: failed to load FluentSystemIcons-Custom.ttf from resources";
         return false;
     }
     QStringList families = QFontDatabase::applicationFontFamilies(fontId);
