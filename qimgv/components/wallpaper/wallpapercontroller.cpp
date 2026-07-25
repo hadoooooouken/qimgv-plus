@@ -10,12 +10,87 @@
 #include <QFile>
 #include <QDateTime>
 #include <windows.h>
-#include <tchar.h>
 #include <cmath>
 #include <algorithm>
+#include <cstddef>
+#include <string>
+
+namespace {
+constexpr wchar_t DesktopRegistryPath[] = L"Control Panel\\Desktop";
+constexpr wchar_t WallpaperStyleValueName[] = L"WallpaperStyle";
+constexpr wchar_t CenteredWallpaperStyle[] = L"0";
+constexpr wchar_t TileWallpaperValueName[] = L"TileWallpaper";
+constexpr wchar_t TileWallpaperDisabled[] = L"0";
+
+template<std::size_t Size>
+constexpr DWORD registryStringSize(const wchar_t (&)[Size]) noexcept {
+    return static_cast<DWORD>(Size * sizeof(wchar_t));
+}
+
+WallpaperApplyResult applyDesktopWallpaper(const QString &wallpaperPath) {
+    HKEY registryKey = nullptr;
+    const LONG openStatus = RegOpenKeyExW(HKEY_CURRENT_USER,
+                                          DesktopRegistryPath,
+                                          0,
+                                          KEY_SET_VALUE,
+                                          &registryKey);
+    if (openStatus != ERROR_SUCCESS) {
+        return {WallpaperApplyError::RegistryOpenFailed,
+                static_cast<quint32>(openStatus)};
+    }
+    if (registryKey == nullptr) {
+        return {WallpaperApplyError::RegistryOpenFailed,
+                static_cast<quint32>(ERROR_INVALID_HANDLE)};
+    }
+
+    const LONG styleStatus = RegSetValueExW(
+        registryKey,
+        WallpaperStyleValueName,
+        0,
+        REG_SZ,
+        reinterpret_cast<const BYTE *>(CenteredWallpaperStyle),
+        registryStringSize(CenteredWallpaperStyle));
+    const LONG tileStatus = RegSetValueExW(
+        registryKey,
+        TileWallpaperValueName,
+        0,
+        REG_SZ,
+        reinterpret_cast<const BYTE *>(TileWallpaperDisabled),
+        registryStringSize(TileWallpaperDisabled));
+    const LONG closeStatus = RegCloseKey(registryKey);
+
+    if (styleStatus != ERROR_SUCCESS) {
+        return {WallpaperApplyError::WallpaperStyleWriteFailed,
+                static_cast<quint32>(styleStatus)};
+    }
+    if (tileStatus != ERROR_SUCCESS) {
+        return {WallpaperApplyError::TileWallpaperWriteFailed,
+                static_cast<quint32>(tileStatus)};
+    }
+    if (closeStatus != ERROR_SUCCESS) {
+        return {WallpaperApplyError::RegistryCloseFailed,
+                static_cast<quint32>(closeStatus)};
+    }
+
+    std::wstring nativeWallpaperPath = wallpaperPath.toStdWString();
+    SetLastError(ERROR_SUCCESS);
+    const BOOL applyStatus = SystemParametersInfoW(
+        SPI_SETDESKWALLPAPER,
+        0,
+        nativeWallpaperPath.data(),
+        SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
+    if (applyStatus == FALSE) {
+        return {WallpaperApplyError::SystemParametersInfoFailed,
+                static_cast<quint32>(GetLastError())};
+    }
+
+    return {};
+}
+}
 
 WallpaperController::WallpaperController(QObject *parent)
     : QObject(parent) {
+    qRegisterMetaType<WallpaperApplyResult>();
 }
 
 WallpaperController::~WallpaperController() {
@@ -79,7 +154,7 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
     QPointer<MW> mwPointer = mw;
     auto cancelToken = m_cancelToken;
 
-    m_workerThread = QThread::create([sourceImage, monitorSize, wallpaperPath, mwPointer, appDir, modelName, cancelToken]() {
+    m_workerThread = QThread::create([this, sourceImage, monitorSize, wallpaperPath, mwPointer, appDir, modelName, cancelToken]() {
         if (cancelToken->load()) return;
 
         int monitorWidth = monitorSize.width();
@@ -199,44 +274,11 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
 
         if (cancelToken->load()) return;
 
-        // Set registry settings for desktop wallpaper (center fit)
-        HKEY hKey = nullptr;
-        LONG status = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_WRITE, &hKey);
-        bool regOk = (status == ERROR_SUCCESS) && (hKey != nullptr);
-        if (regOk) {
-            LPCTSTR valueStyle = TEXT("WallpaperStyle");
-            LPCTSTR dataStyle = TEXT("0"); // Center
-            RegSetValueEx(hKey, valueStyle, 0, REG_SZ, (LPBYTE)dataStyle, static_cast<DWORD>((_tcslen(dataStyle) + 1) * sizeof(TCHAR)));
-
-            LPCTSTR valueTile = TEXT("TileWallpaper");
-            LPCTSTR dataTile = TEXT("0"); // No Tile
-            RegSetValueEx(hKey, valueTile, 0, REG_SZ, (LPBYTE)dataTile, static_cast<DWORD>((_tcslen(dataTile) + 1) * sizeof(TCHAR)));
-
-            RegCloseKey(hKey);
-        }
+        const WallpaperApplyResult applyResult = applyDesktopWallpaper(wallpaperPath);
 
         if (cancelToken->load()) return;
 
-        std::wstring wWallpaperPath = wallpaperPath.toStdWString();
-        BOOL spiResult = SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0,
-                                               (PVOID)wWallpaperPath.c_str(),
-                                               SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-
-        if (cancelToken->load()) return;
-
-        if (spiResult) {
-            QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-                if (mwPointer) {
-                    mwPointer->showMessageSuccess(tr("Wallpaper set"));
-                }
-            }, Qt::QueuedConnection);
-        } else {
-            QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-                if (mwPointer) {
-                    mwPointer->showMessage(tr("Set wallpaper: Windows API call failed"));
-                }
-            }, Qt::QueuedConnection);
-        }
+        emit wallpaperApplyFinished(applyResult);
     });
 
     m_workerThread->start();

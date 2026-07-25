@@ -30,6 +30,41 @@
 namespace {
 constexpr int PreloadDebounceDelayMs = 200;
 constexpr int PageChangeMessageDurationMs = 900;
+
+QString wallpaperApplyFailureMessage(const WallpaperApplyResult &result) {
+  const QString nativeError = QString::number(result.nativeError);
+  switch (result.error) {
+  case WallpaperApplyError::RegistryOpenFailed:
+    return QCoreApplication::translate(
+               "Core",
+               "Set wallpaper: failed to open desktop settings (Windows error %1)")
+        .arg(nativeError);
+  case WallpaperApplyError::WallpaperStyleWriteFailed:
+    return QCoreApplication::translate(
+               "Core",
+               "Set wallpaper: failed to write wallpaper style (Windows error %1)")
+        .arg(nativeError);
+  case WallpaperApplyError::TileWallpaperWriteFailed:
+    return QCoreApplication::translate(
+               "Core",
+               "Set wallpaper: failed to write wallpaper tiling (Windows error %1)")
+        .arg(nativeError);
+  case WallpaperApplyError::RegistryCloseFailed:
+    return QCoreApplication::translate(
+               "Core",
+               "Set wallpaper: failed to close desktop settings (Windows error %1)")
+        .arg(nativeError);
+  case WallpaperApplyError::SystemParametersInfoFailed:
+    return QCoreApplication::translate(
+               "Core",
+               "Set wallpaper: Windows wallpaper update failed (Windows error %1)")
+        .arg(nativeError);
+  case WallpaperApplyError::None:
+    return {};
+  }
+
+  return QCoreApplication::translate("Core", "Set wallpaper: unknown error");
+}
 }
 
 Core::Core()
@@ -58,6 +93,18 @@ Core::Core()
 
   upscaler = std::make_unique<Upscaler>(this);
   wallpaperController = std::make_unique<WallpaperController>(this);
+  connect(wallpaperController.get(),
+          &WallpaperController::wallpaperApplyFinished,
+          this,
+          [this](const WallpaperApplyResult &result) {
+            if (result.succeeded()) {
+              mw->showMessageSuccess(tr("Wallpaper set"));
+              return;
+            }
+
+            mw->showError(wallpaperApplyFailureMessage(result));
+          },
+          Qt::QueuedConnection);
   connect(upscaler.get(), &Upscaler::upscaleStarted, this, [this]() {
       mw->showMessageAiUpscale(tr("AI Upscaling..."), 3600000);
   });
