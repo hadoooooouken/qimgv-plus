@@ -14,7 +14,38 @@
 #include <QRandomGenerator>
 #include <QSet>
 #include <cmath>
+#include <string>
+#include <windows.h>
 #include "components/upscaler/upscaler.h"
+
+namespace {
+
+constexpr DWORD kReplaceFileFlags = 0;
+
+bool commitTemporaryOutput(const QString &tempPath, const QString &destPath, bool overwrite) {
+    const std::wstring nativeTempPath = QDir::toNativeSeparators(tempPath).toStdWString();
+    const std::wstring nativeDestPath = QDir::toNativeSeparators(destPath).toStdWString();
+
+    if (!overwrite) {
+        return MoveFileExW(nativeTempPath.c_str(), nativeDestPath.c_str(), MOVEFILE_WRITE_THROUGH);
+    }
+
+    if (ReplaceFileW(nativeDestPath.c_str(), nativeTempPath.c_str(), nullptr,
+                     kReplaceFileFlags, nullptr, nullptr)) {
+        return true;
+    }
+
+    if (GetLastError() != ERROR_FILE_NOT_FOUND) {
+        return false;
+    }
+
+    // ReplaceFileW requires an existing destination. The temporary output is
+    // in the destination directory, so this fallback remains a same-volume
+    // atomic rename and refuses to overwrite a file created during the race.
+    return MoveFileExW(nativeTempPath.c_str(), nativeDestPath.c_str(), MOVEFILE_WRITE_THROUGH);
+}
+
+} // namespace
 
 class BatchConverterRunnable : public QRunnable {
 public:
@@ -177,11 +208,7 @@ public:
             return;
         }
 
-        if (QFile::exists(m_destPath)) {
-            QFile::remove(m_destPath);
-        }
-
-        bool committed = QFile::rename(tempPath, m_destPath);
+        const bool committed = commitTemporaryOutput(tempPath, m_destPath, m_job.overwrite);
         if (!committed) {
             QFile::remove(tempPath);
             notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
