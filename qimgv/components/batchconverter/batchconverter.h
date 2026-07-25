@@ -64,7 +64,9 @@ private slots:
 
 private:
     QString buildDestPath(const QString &srcPath, const QString &pattern, int index, const QString &formatExt, const QString &finalOutDir) const;
-    QString makeUniqueDestPath(const QString &destPath, QSet<QString> &reservedPaths, bool overwrite) const;
+    QString makeUniqueDestPath(const QString &destPath,
+                               const QSet<QString> &reservedDestinationKeys,
+                               bool overwrite) const;
     QString createUniqueSubfolder(const QString &baseDir) const;
 
     QThreadPool m_threadPool;

@@ -45,6 +45,16 @@ bool commitTemporaryOutput(const QString &tempPath, const QString &destPath, boo
     return MoveFileExW(nativeTempPath.c_str(), nativeDestPath.c_str(), MOVEFILE_WRITE_THROUGH);
 }
 
+QString destinationReservationKey(const QString &path) {
+    if (path.isEmpty()) {
+        return QString();
+    }
+
+    const QString absolutePath = QFileInfo(path).absoluteFilePath();
+    const QString normalizedPath = QDir::cleanPath(QDir::fromNativeSeparators(absolutePath));
+    return normalizedPath.toCaseFolded();
+}
+
 } // namespace
 
 class BatchConverterRunnable : public QRunnable {
@@ -285,7 +295,7 @@ void BatchConverter::start(const QStringList &allPaths, const QList<int> &select
                           !(job.resizeByPercent && job.resizePercent <= 100.0);
     m_threadPool.setMaxThreadCount(upscaylMayRun ? 1 : QThread::idealThreadCount());
 
-    QSet<QString> reservedDestinations;
+    QSet<QString> reservedDestinationKeys;
     int activeIndex = 0;
     for (int i : selectedIndices) {
         if (i < 0 || i >= allPaths.size()) continue;
@@ -299,19 +309,36 @@ void BatchConverter::start(const QStringList &allPaths, const QList<int> &select
             continue;
         }
 
-        if (!job.overwrite && QFileInfo::exists(rawDestPath) && !reservedDestinations.contains(rawDestPath)) {
+        const QString rawDestinationKey = destinationReservationKey(rawDestPath);
+        if (rawDestinationKey.isEmpty()) {
+            onTaskFinished(i, tr("Failed"), tr("Destination planning failed: invalid reservation key"), false);
+            continue;
+        }
+
+        if (!job.overwrite && QFileInfo::exists(rawDestPath)
+            && !reservedDestinationKeys.contains(rawDestinationKey)) {
             onTaskFinished(i, tr("Done"), tr("Skipped (Exists)"), true);
             continue;
         }
 
-        QString destPath = makeUniqueDestPath(rawDestPath, reservedDestinations, job.overwrite);
+        const QString destPath = makeUniqueDestPath(rawDestPath, reservedDestinationKeys, job.overwrite);
+        if (destPath.isEmpty()) {
+            onTaskFinished(i, tr("Failed"),
+                           tr("Destination planning failed: no unique output path is available"), false);
+            continue;
+        }
 
         if (!job.overwrite && QFileInfo::exists(destPath)) {
             onTaskFinished(i, tr("Done"), tr("Skipped (Exists)"), true);
             continue;
         }
 
-        reservedDestinations.insert(destPath);
+        const QString destinationKey = destinationReservationKey(destPath);
+        if (destinationKey.isEmpty()) {
+            onTaskFinished(i, tr("Failed"), tr("Destination planning failed: invalid reservation key"), false);
+            continue;
+        }
+        reservedDestinationKeys.insert(destinationKey);
 
         emit progressUpdated(i, tr("Processing..."), "", true);
 
@@ -457,12 +484,19 @@ QString BatchConverter::createUniqueSubfolder(const QString &baseDir) const {
     return QString();
 }
 
-QString BatchConverter::makeUniqueDestPath(const QString &destPath, QSet<QString> &reservedPaths, bool overwrite) const {
+QString BatchConverter::makeUniqueDestPath(const QString &destPath,
+                                           const QSet<QString> &reservedDestinationKeys,
+                                           bool overwrite) const {
     if (destPath.isEmpty()) {
         return QString();
     }
 
-    if (!reservedPaths.contains(destPath)) {
+    const QString destinationKey = destinationReservationKey(destPath);
+    if (destinationKey.isEmpty()) {
+        return QString();
+    }
+
+    if (!reservedDestinationKeys.contains(destinationKey)) {
         if (overwrite || !QFileInfo::exists(destPath)) {
             return destPath;
         }
@@ -478,13 +512,14 @@ QString BatchConverter::makeUniqueDestPath(const QString &destPath, QSet<QString
 
     constexpr int kMaxDisambiguationAttempts = 10000;
     for (int counter = 1; counter < kMaxDisambiguationAttempts; ++counter) {
-        QString candidate = QDir::cleanPath(dir + "/" + baseName + "_" + QString::number(counter) + suffix);
-        if (!reservedPaths.contains(candidate)) {
+        const QString candidate = QDir::cleanPath(dir + "/" + baseName + "_" + QString::number(counter) + suffix);
+        const QString candidateKey = destinationReservationKey(candidate);
+        if (!candidateKey.isEmpty() && !reservedDestinationKeys.contains(candidateKey)) {
             if (overwrite || !QFileInfo::exists(candidate)) {
                 return candidate;
             }
         }
     }
 
-    return destPath;
+    return QString();
 }
