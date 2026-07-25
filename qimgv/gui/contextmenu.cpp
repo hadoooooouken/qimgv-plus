@@ -65,6 +65,7 @@ void ContextMenu::setupUi()
     m_fitWindow->setAccessibleName("ContextMenuButton");
     m_fitWindow->setAction("fitWindow");
     m_fitWindow->setIcon(FluentIcon::ArrowExpand20, kIconSizePx);
+    m_fitWindow->setToolTip(tr("Fit to window"));
     m_fitWindow->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_fitWindow);
 
@@ -72,6 +73,7 @@ void ContextMenu::setupUi()
     m_fitWidth->setAccessibleName("ContextMenuButton");
     m_fitWidth->setAction("fitWidth");
     m_fitWidth->setIcon(FluentIcon::ArrowAutofitWidth20, kIconSizePx);
+    m_fitWidth->setToolTip(tr("Fit to width"));
     m_fitWidth->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_fitWidth);
 
@@ -79,6 +81,7 @@ void ContextMenu::setupUi()
     m_fitHeight->setAccessibleName("ContextMenuButton");
     m_fitHeight->setAction("fitHeight");
     m_fitHeight->setIcon(FluentIcon::ArrowAutofitHeight20, kIconSizePx);
+    m_fitHeight->setToolTip(tr("Fit to height"));
     m_fitHeight->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_fitHeight);
 
@@ -86,6 +89,7 @@ void ContextMenu::setupUi()
     m_zoomOriginal->setAccessibleName("ContextMenuButton");
     m_zoomOriginal->setAction("fitNormal");
     m_zoomOriginal->setIcon(FluentIcon::ZoomOriginal20, kIconSizePx);
+    m_zoomOriginal->setToolTip(tr("Original size"));
     m_zoomOriginal->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_zoomOriginal);
 
@@ -93,6 +97,7 @@ void ContextMenu::setupUi()
     m_zoomIn->setAccessibleName("ContextMenuButton");
     m_zoomIn->setAction("zoomIn");
     m_zoomIn->setIcon(FluentIcon::ZoomIn20, kIconSizePx);
+    m_zoomIn->setToolTip(tr("Zoom in"));
     m_zoomIn->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_zoomIn);
 
@@ -100,6 +105,7 @@ void ContextMenu::setupUi()
     m_zoomOut->setAccessibleName("ContextMenuButton");
     m_zoomOut->setAction("zoomOut");
     m_zoomOut->setIcon(FluentIcon::ZoomOut20, kIconSizePx);
+    m_zoomOut->setToolTip(tr("Zoom out"));
     m_zoomOut->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_zoomOut);
 
@@ -125,6 +131,7 @@ void ContextMenu::setupUi()
     m_rotateLeft->setAccessibleName("ContextMenuButton");
     m_rotateLeft->setAction("rotateLeft");
     m_rotateLeft->setIcon(FluentIcon::ArrowRotateCounterclockwise20, kIconSizePx);
+    m_rotateLeft->setToolTip(tr("Rotate left"));
     m_rotateLeft->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_rotateLeft);
 
@@ -132,6 +139,7 @@ void ContextMenu::setupUi()
     m_rotateRight->setAccessibleName("ContextMenuButton");
     m_rotateRight->setAction("rotateRight");
     m_rotateRight->setIcon(FluentIcon::ArrowRotateClockwise20, kIconSizePx);
+    m_rotateRight->setToolTip(tr("Rotate right"));
     m_rotateRight->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_rotateRight);
 
@@ -139,6 +147,7 @@ void ContextMenu::setupUi()
     m_flipV->setAccessibleName("ContextMenuButton");
     m_flipV->setAction("flipV");
     m_flipV->setIcon(FluentIcon::FlipVertical20, kIconSizePx);
+    m_flipV->setToolTip(tr("Flip vertical"));
     m_flipV->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_flipV);
 
@@ -146,6 +155,7 @@ void ContextMenu::setupUi()
     m_flipH->setAccessibleName("ContextMenuButton");
     m_flipH->setAction("flipH");
     m_flipH->setIcon(FluentIcon::FlipHorizontal20, kIconSizePx);
+    m_flipH->setToolTip(tr("Flip horizontal"));
     m_flipH->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_flipH);
 
@@ -153,6 +163,7 @@ void ContextMenu::setupUi()
     m_crop->setAccessibleName("ContextMenuButton");
     m_crop->setAction("crop");
     m_crop->setIcon(FluentIcon::Crop20, kIconSizePx);
+    m_crop->setToolTip(tr("Crop"));
     m_crop->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_crop);
 
@@ -160,6 +171,7 @@ void ContextMenu::setupUi()
     m_resize->setAccessibleName("ContextMenuButton");
     m_resize->setAction("resize");
     m_resize->setIcon(FluentIcon::Resize20, kIconSizePx);
+    m_resize->setToolTip(tr("Resize"));
     m_resize->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_resize);
 
