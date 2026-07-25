@@ -12,6 +12,8 @@
 
 namespace {
 constexpr int kContextMenuIconSizePx = UiMetrics::kStandardIconSizePx;
+constexpr int kContextMenuWidthPx = 212;
+constexpr int kContextMenuHorizontalPaddingPx = 3;
 }
 
 FolderGridView::FolderGridView(QWidget *parent)
@@ -446,7 +448,7 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
             " background-color: %1;"
             " border: 1px solid %2;"
             " border-radius: 8px;"
-            " padding: 4px 0px;"
+            " padding: 4px %3px;"
             "}"
             "QMenu::separator {"
             " height: 1px;"
@@ -456,7 +458,8 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
         auto scheme = settings->colorScheme();
         stylesheet = stylesheet.arg(
             scheme.widget.name(),
-            scheme.widget_border.name());
+            scheme.widget_border.name())
+            .arg(kContextMenuHorizontalPaddingPx);
         menu.setStyleSheet(stylesheet);
 
         bool hasSelection = !selection().isEmpty();
@@ -466,7 +469,7 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
             ContextMenuItem *item = new ContextMenuItem(this);
             item->setText(text);
             item->setIcon(icon, kContextMenuIconSizePx);
-            item->setMinimumWidth(212);
+            item->setMinimumWidth(kContextMenuWidthPx - 2 * kContextMenuHorizontalPaddingPx);
             if (!shortcut.isEmpty()) {
                 item->setShortcutText(shortcut);
             }

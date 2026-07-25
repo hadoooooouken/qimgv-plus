@@ -16,6 +16,8 @@ namespace {
 // list via addItem()) render at this glyph size. Change this one value
 // instead of every setIcon() call site.
 constexpr int kIconSizePx = UiMetrics::kStandardIconSizePx;
+constexpr int kMenuItemHorizontalInsetPx = 3;
+constexpr int kSeparatorHorizontalMarginPx = 11;
 } // namespace
 
 ContextMenu::ContextMenu(QWidget *parent)
@@ -109,7 +111,8 @@ void ContextMenu::setupUi()
     editLine->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
     editLine->setAccessibleName("HLineSeparator");
     QVBoxLayout *lineEditLayout = new QVBoxLayout();
-    lineEditLayout->setContentsMargins(11, 0, 11, 0);
+    lineEditLayout->setContentsMargins(kSeparatorHorizontalMarginPx, 0,
+                                       kSeparatorHorizontalMarginPx, 0);
     lineEditLayout->addWidget(editLine);
     mainPageLayout->addLayout(lineEditLayout);
 
@@ -168,14 +171,16 @@ void ContextMenu::setupUi()
     bottomLine->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
     bottomLine->setAccessibleName("HLineSeparator");
     QVBoxLayout *lineBottomLayout = new QVBoxLayout();
-    lineBottomLayout->setContentsMargins(11, 0, 11, 0);
+    lineBottomLayout->setContentsMargins(kSeparatorHorizontalMarginPx, 0,
+                                         kSeparatorHorizontalMarginPx, 0);
     lineBottomLayout->addWidget(bottomLine);
     mainPageLayout->addLayout(lineBottomLayout);
 
     // --- Action items (ContextMenuItem list) ---
     QVBoxLayout *actionsLayout = new QVBoxLayout();
     actionsLayout->setSpacing(0);
-    actionsLayout->setContentsMargins(0, 0, 0, 0);
+    actionsLayout->setContentsMargins(kMenuItemHorizontalInsetPx, 0,
+                                      kMenuItemHorizontalInsetPx, 0);
 
     auto addItem = [](ContextMenuItem *&item, QVBoxLayout *layout, const QString &action, const QString &text, FluentIcon icon) {
         item = new ContextMenuItem();
@@ -191,7 +196,10 @@ void ContextMenu::setupUi()
         line->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
         line->setAccessibleName("HLineSeparator");
         QVBoxLayout *lineLayout = new QVBoxLayout();
-        lineLayout->setContentsMargins(11, topMargin, 11, bottomMargin);
+        constexpr int nestedSeparatorMarginPx =
+            kSeparatorHorizontalMarginPx - kMenuItemHorizontalInsetPx;
+        lineLayout->setContentsMargins(nestedSeparatorMarginPx, topMargin,
+                                       nestedSeparatorMarginPx, bottomMargin);
         lineLayout->addWidget(line);
         layout->addLayout(lineLayout);
     };
@@ -261,7 +269,8 @@ void ContextMenu::setupUi()
     QWidget *scriptsPage = new QWidget();
     QVBoxLayout *scriptsPageLayout = new QVBoxLayout(scriptsPage);
     scriptsPageLayout->setSpacing(0);
-    scriptsPageLayout->setContentsMargins(0, 0, 0, 0);
+    scriptsPageLayout->setContentsMargins(kMenuItemHorizontalInsetPx, 0,
+                                          kMenuItemHorizontalInsetPx, 0);
 
     m_scriptsLayout = new QVBoxLayout();
     m_scriptsLayout->setSpacing(0);

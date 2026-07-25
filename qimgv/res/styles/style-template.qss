@@ -687,6 +687,7 @@ ContextMenu QLabel {
 /*----------------------------------------------------------------------------*/
 [accessibleName="MenuItem"]:hover {
     background-color: %accent_hover_rgba%;
+    border-radius: 6px;
 }
 
 [accessibleName="MenuItem"] QLabel {
