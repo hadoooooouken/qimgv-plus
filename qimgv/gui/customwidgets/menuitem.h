@@ -47,4 +47,10 @@ protected:
 
     virtual void onClick();
     virtual void onPress();
+
+private:
+    // Vertically nudges the icon glyph so it lands on mTextLabel's optical
+    // (cap-height) center instead of the label's geometric center. See the
+    // implementation in menuitem.cpp for the rationale.
+    void alignIconToTextBaseline();
 };

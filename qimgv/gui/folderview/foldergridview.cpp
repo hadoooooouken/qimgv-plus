@@ -511,7 +511,7 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
 
         menu.addSeparator();
 
-        ContextMenuItem *itemTrash = addCustomAction(tr("Move to trash"), FluentIcon::Delete16);
+        ContextMenuItem *itemTrash = addCustomAction(tr("Move to trash"), FluentIcon::Delete20);
         itemTrash->setTextColor(settings->colorScheme().trash);
         itemTrash->setIconColor(settings->colorScheme().trash);
         itemTrash->setEnabled(hasSelection);

@@ -241,7 +241,7 @@ void ContextMenu::setupUi()
 
     addSeparator(moreLayout, 4, 4);
 
-    addItem(m_trash,            moreLayout, "moveToTrash",        tr("Move to trash"),      FluentIcon::Delete16);
+    addItem(m_trash,            moreLayout, "moveToTrash",        tr("Move to trash"),      FluentIcon::Delete20);
     m_trash->setTextColor(settings->colorScheme().trash);
     m_trash->setIconColor(settings->colorScheme().trash);
 

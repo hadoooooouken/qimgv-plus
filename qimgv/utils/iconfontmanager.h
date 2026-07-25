@@ -34,7 +34,7 @@ enum class FluentIcon {
     CopyAdd20,
     Crop20,
     Crop48,
-    Delete16,
+    Delete20,
     Dismiss16,
     Dismiss20,
     DocumentView20,

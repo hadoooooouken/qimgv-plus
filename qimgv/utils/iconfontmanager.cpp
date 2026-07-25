@@ -23,7 +23,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::CheckboxIndeterminate16, 0xE2FD }, // ic_fluent_checkbox_indeterminate_16_regular <- Partially checked checkbox indicator
         { FluentIcon::CheckboxUnchecked16, 0xF290 }, // ic_fluent_square_16_regular <- Unchecked checkbox indicator
         { FluentIcon::CopyAdd20,           0xE41F }, // ic_fluent_copy_add_20_regular <- Context menu and copy overlay
-        { FluentIcon::Delete16,            0xF34C }, // ic_fluent_delete_20_regular <- Trash actions in context and folder-view menus
+        { FluentIcon::Delete20,            0xF34C }, // ic_fluent_delete_20_regular <- Trash actions in context and folder-view menus
         { FluentIcon::Dismiss16,           0xF368 }, // ic_fluent_dismiss_16_regular <- Overlay close buttons and viewer exit controls
         { FluentIcon::Dismiss20,           0xF369 }, // ic_fluent_dismiss_20_regular <- Permanent-delete actions in context and folder-view menus
         { FluentIcon::Folder20,            0xF418 }, // ic_fluent_folder_20_regular <- Path selector and directory notifications
