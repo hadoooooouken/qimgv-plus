@@ -59,6 +59,8 @@ void SaveConfirmOverlay::setupUi() {
     label->setTextInteractionFlags(Qt::NoTextInteraction);
     headerLayout->addWidget(label);
 
+    alignHeaderIconToLabel(headerIcon, label);
+
     closeButton = new IconButton(header);
     closeButton->setAccessibleName("OverlayHeaderButton");
     headerLayout->addWidget(closeButton);

@@ -80,6 +80,8 @@ void RenameOverlay::setupUi() {
     headerLabel->setAccessibleName("OverlayHeaderLabel");
     headerLayout->addWidget(headerLabel);
 
+    alignHeaderIconToLabel(headerIcon, headerLabel);
+
     closeButton = new IconButton(headerWidget);
     closeButton->setFocusPolicy(Qt::NoFocus);
     closeButton->setAccessibleName("OverlayHeaderButton");

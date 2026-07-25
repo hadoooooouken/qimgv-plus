@@ -32,6 +32,8 @@ QWidget *DraggableSliderOverlay::createHeader(const QString &title, FluentIcon i
     titleLabel->setAccessibleName("OverlayHeaderLabel");
     titleLabel->setStyleSheet("font-weight: bold;");
 
+    alignHeaderIconToLabel(headerIcon, titleLabel);
+
     IconButton *closeButton = new IconButton(headerWidget);
     closeButton->setAccessibleName("OverlayHeaderButton");
     closeButton->setIcon(FluentIcon::Dismiss16, kCloseIconSizePx);

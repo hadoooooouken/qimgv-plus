@@ -66,6 +66,8 @@ void CopyOverlay::setupUi() {
     headerLabel->setContentsMargins(0, 0, 0, 0);
     headerLayout->addWidget(headerLabel);
 
+    alignHeaderIconToLabel(headerIcon, headerLabel);
+
     closeButton = new IconButton(headerWidget);
     closeButton->setAccessibleName("OverlayHeaderButton");
     headerLayout->addWidget(closeButton);

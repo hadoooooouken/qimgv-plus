@@ -11,6 +11,9 @@
 #include <QPropertyAnimation>
 #include <QDebug>
 
+class IconWidget;
+class QLabel;
+
 enum FloatingWidgetPosition {
     LEFT,
     RIGHT,
@@ -56,6 +59,16 @@ private slots:
 protected:
     static constexpr int kHeaderIconSizePx = UiMetrics::kStandardIconSizePx;
     static constexpr int kCloseIconSizePx = UiMetrics::kCompactIconSizePx;
+
+    // Nudges a header icon vertically so it lands on the neighboring title
+    // label's optical (cap-height) center instead of the label's full
+    // ascent/descent geometric center - same rationale and formula as
+    // MenuItem::alignIconToTextBaseline(), reused here so every overlay
+    // header (rename, copy, image info, save confirm, color adjustments,
+    // CAS settings...) gets the same icon/text alignment as context menu
+    // items. Call once, right after both widgets are created and the
+    // label's final font is set.
+    static void alignHeaderIconToLabel(IconWidget *icon, QLabel *label);
 
     virtual void recalculateGeometry();
     FloatingWidgetPosition position;

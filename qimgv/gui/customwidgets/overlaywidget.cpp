@@ -1,4 +1,21 @@
 #include "overlaywidget.h"
+#include "gui/customwidgets/iconwidget.h"
+#include <QLabel>
+#include <QFontMetricsF>
+
+// See MenuItem::alignIconToTextBaseline() for the full rationale: a glyph
+// icon is centered on its true geometric center, while QLabel centers text
+// using the font's full ascent/descent box, which reserves more headroom
+// above cap-height than below the baseline. That leaves the icon reading as
+// slightly high next to the label unless nudged down by that same
+// imbalance. Kept as a separate copy (rather than sharing code with
+// MenuItem) since overlay headers and menu items are unrelated widget
+// hierarchies with no common base to hang a shared helper off of.
+void OverlayWidget::alignHeaderIconToLabel(IconWidget *icon, QLabel *label) {
+    const QFontMetricsF fm(label->font());
+    const qreal capHeightImbalance = (fm.ascent() - fm.descent() - fm.capHeight()) / 2.0;
+    icon->setIconOffset(0, qRound(capHeightImbalance));
+}
 
 OverlayWidget::OverlayWidget(FloatingWidgetContainer *parent)
     : FloatingWidget(parent),

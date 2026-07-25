@@ -63,6 +63,8 @@ void ImageInfoOverlay::setupUi() {
     label->setSizePolicy(labelPolicy);
     horizontalLayout->addWidget(label);
 
+    alignHeaderIconToLabel(headerIcon, label);
+
     closeButton = new IconButton(header);
     closeButton->setAccessibleName("OverlayHeaderButton");
     horizontalLayout->addWidget(closeButton);
