@@ -65,6 +65,7 @@ void ContextMenu::setupUi()
     m_fitWindow->setAccessibleName("ContextMenuButton");
     m_fitWindow->setAction("fitWindow");
     m_fitWindow->setIcon(FluentIcon::ArrowExpand20, kIconSizePx);
+    m_fitWindow->setIconOffset(-2, 0);
     m_fitWindow->setToolTip(tr("Fit to window"));
     m_fitWindow->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_fitWindow);
@@ -89,6 +90,7 @@ void ContextMenu::setupUi()
     m_zoomOriginal->setAccessibleName("ContextMenuButton");
     m_zoomOriginal->setAction("fitNormal");
     m_zoomOriginal->setIcon(FluentIcon::ZoomOriginal20, kIconSizePx);
+    m_zoomOriginal->setIconOffset(0, 1);
     m_zoomOriginal->setToolTip(tr("Original size"));
     m_zoomOriginal->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_zoomOriginal);
@@ -131,6 +133,7 @@ void ContextMenu::setupUi()
     m_rotateLeft->setAccessibleName("ContextMenuButton");
     m_rotateLeft->setAction("rotateLeft");
     m_rotateLeft->setIcon(FluentIcon::ArrowRotateCounterclockwise20, kIconSizePx);
+    m_rotateLeft->setIconOffset(-2, 0);
     m_rotateLeft->setToolTip(tr("Rotate left"));
     m_rotateLeft->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_rotateLeft);
@@ -147,6 +150,7 @@ void ContextMenu::setupUi()
     m_flipV->setAccessibleName("ContextMenuButton");
     m_flipV->setAction("flipV");
     m_flipV->setIcon(FluentIcon::FlipVertical20, kIconSizePx);
+    m_flipV->setIconOffset(-3, 0);
     m_flipV->setToolTip(tr("Flip vertical"));
     m_flipV->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_flipV);
@@ -155,6 +159,7 @@ void ContextMenu::setupUi()
     m_flipH->setAccessibleName("ContextMenuButton");
     m_flipH->setAction("flipH");
     m_flipH->setIcon(FluentIcon::FlipHorizontal20, kIconSizePx);
+    m_flipH->setIconOffset(-1, 2);
     m_flipH->setToolTip(tr("Flip horizontal"));
     m_flipH->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_flipH);
