@@ -2195,130 +2195,130 @@ Total files: %3</source>
 <context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="127"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="128"/>
         <source>Use custom accent</source>
         <translation>Использовать собственный цвет акцента</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3892"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3891"/>
         <source>Preferences</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3894"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3893"/>
         <source>SettingsDialog</source>
         <translation>Диалог настроек</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3900"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3899"/>
         <source>General</source>
         <translation>Общие</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3901"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3900"/>
         <source>Language:</source>
         <translation>Язык:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3902"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3901"/>
         <source>Requires application restart</source>
         <translation>Требуется перезапуск приложения</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3903"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3902"/>
         <source>Open in fullscreen</source>
         <translation>Открывать во весь экран</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3904"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3903"/>
         <source>Start in folder view by default</source>
         <translation>Запускавать в режиме галереи по умолчанию</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3910"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3909"/>
         <source>User interface</source>
         <translation>Интерфейс пользователя</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3911"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3910"/>
         <source>Image info in window title</source>
         <translation>Информация о картинке в заголовке окна</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3913"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3912"/>
         <source>Auto-hide cursor</source>
         <translation>Автоматически скрывать курсор</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3915"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3914"/>
         <source>Turn this off if you are using a touchpad with libinput driver.</source>
         <translation>Отключите, если используете тачпад с драйвером libinput.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3917"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3916"/>
         <source>Smooth thumbnail scrolling</source>
         <translation>Плавная прокрутка эскизов</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3918"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3917"/>
         <source>Smooth zooming</source>
         <translation>Плавное масштабирование</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3912"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3911"/>
         <source>Fullscreen info bar</source>
         <translation>Полноэкранная панель информации</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3919"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3918"/>
         <source>Zoom indicator:</source>
         <translation>Индикатор масштаба:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3920"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3919"/>
         <source>On</source>
         <translation>Вкл</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3921"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3920"/>
         <source>Off</source>
         <translation>Выкл</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3922"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3921"/>
         <source>Auto</source>
         <translation>Авто</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3923"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3922"/>
         <source>Automatic window resize</source>
         <translation>Автоматический размер окна</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3924"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3923"/>
         <source>Match displayed content</source>
         <translation>Подгонять под размер содержимого</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3925"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3924"/>
         <source>Screen area limit for auto resize:</source>
         <translation>Лимит размера экрана для авторазмера:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3926"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3982"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3925"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3981"/>
         <source>xx</source>
         <translation>xx</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="237"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3930"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4034"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="238"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3929"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4033"/>
         <source>Thumbnail panel</source>
         <translation>Панель миниатюр</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="248"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="249"/>
         <source>Smart sharpen (GPU)</source>
         <translation>Умная резкость (GPU)</translation>
     </message>
@@ -2328,730 +2328,730 @@ Total files: %3</source>
         <translation>Модели ИИ не найдены в папке models/.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3931"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3930"/>
         <source>Crop previews</source>
         <translation>Обрезать эскизы</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3932"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3931"/>
         <source>Pinned</source>
         <translation>Закреплена</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3933"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3932"/>
         <source>Disable in windowed mode</source>
         <translation>Отключить в оконном режиме</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3934"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3933"/>
         <source>Center selected image</source>
         <translation>Центрировать выбранное изображение</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3935"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3934"/>
         <source>Show subfolders</source>
         <translation>Показывать подпапки</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3936"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3935"/>
         <source>Extended</source>
         <translation>Расширенный</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3937"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3936"/>
         <source>Previews only</source>
         <translation>Только миниатюры</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3938"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3937"/>
         <source>Display style:</source>
         <translation>Стиль отображения:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3939"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3938"/>
         <source>Show filename and resolution</source>
         <translation>Показывать имя файла и разрешение</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3940"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3939"/>
         <source>Simple</source>
         <translation>Простой</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3941"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3940"/>
         <source>Preview size:</source>
         <translation>Размер миниатюр:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3942"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3941"/>
         <source>Position:</source>
         <translation>Положение:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3943"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3976"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3942"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3975"/>
         <source>Top</source>
         <translation>Вверху</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3944"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3943"/>
         <source>Bottom</source>
         <translation>Внизу</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3945"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3944"/>
         <source>Left</source>
         <translation>Слева</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3946"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3945"/>
         <source>Right</source>
         <translation>Справа</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3948"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3947"/>
         <source>Folder navigation</source>
         <translation>Навигация по папкам</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3949"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3948"/>
         <source>Stop</source>
         <translation>Стоп</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3950"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3949"/>
         <source>Loop folder</source>
         <translation>Зациклить папку</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3951"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3950"/>
         <source>Go to the next folder</source>
         <translation>Перейти к следующей папке</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3952"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3951"/>
         <source>After reaching the end:</source>
         <translation>После достижения конца:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3953"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3952"/>
         <source>Default sorting mode:</source>
         <translation>Сортировка по умолчанию:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3954"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3953"/>
         <source>A - Z</source>
         <translation>A - Z</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3955"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3954"/>
         <source>Z - A</source>
         <translation>Z - A</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3956"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3955"/>
         <source>Size</source>
         <translation>Размер</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3957"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3956"/>
         <source>Size (desc)</source>
         <translation>Размер (убыв.)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3958"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3957"/>
         <source>Oldest</source>
         <translation>Старые</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3959"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3958"/>
         <source>Newest</source>
         <translation>Новые</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3961"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3960"/>
         <source>Apply sorting to folders</source>
         <translation>Применять сортировку к папкам</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3962"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3961"/>
         <source>Show hidden files</source>
         <translation>Показывать скрытые файлы</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3963"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3962"/>
         <source>Slideshow</source>
         <translation>Слайд-шоу</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3964"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3963"/>
         <source>Switch interval:</source>
         <translation>Интервал переключения:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3965"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3964"/>
         <source>ms</source>
         <translation>мс</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3966"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3965"/>
         <source>Loop slideshow</source>
         <translation>Зациклить слайд-шоу</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3967"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3966"/>
         <source>View</source>
         <translation>Просмотр</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3968"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3967"/>
         <source>Display options</source>
         <translation>Параметры отображения</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3969"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3968"/>
         <source>Image fit:</source>
         <translation>Масштабирование изображений:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3972"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3971"/>
         <source>1:1</source>
         <translation>1:1</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3974"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3973"/>
         <source>Keep fit mode when switching images</source>
         <translation>Сохранять режим масштабирования при смене картинок</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3975"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3974"/>
         <source>Focus in 1:1 mode:</source>
         <translation>Фокус в масштабе 1:1:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3977"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3976"/>
         <source>Center</source>
         <translation>По центру</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3978"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3977"/>
         <source>At cursor</source>
         <translation>К курсору</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3979"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3978"/>
         <source>Part of image that&apos;s focused after switching to 1:1</source>
         <translation>Часть изображения, на которую фокусироваться после переключения на 1:1</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3980"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3979"/>
         <source>Grid background on images with transparency</source>
         <translation>Сетка на прозрачных изображениях</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3981"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3980"/>
         <source>Expand images, up to:</source>
         <translation>Увеличивать изображения до:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3983"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3982"/>
         <source>Images smaller than window will be zoomed in</source>
         <translation>Изображения меньше окна будут увеличиваться</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3984"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3983"/>
         <source>Zoom options</source>
         <translation>Настройки масштаба</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3985"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3984"/>
         <source>Unlock minimum zoom</source>
         <translation>Разблокировать минимальный зум</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3986"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3985"/>
         <source>Always allow zooming below 100%</source>
         <translation>Всегда разрешать уменьшение менее 100%</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3987"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3986"/>
         <source>Zoom step:</source>
         <translation>Шаг масштаба:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3988"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3987"/>
         <source>[step]</source>
         <translation>[шаг]</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3989"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3988"/>
         <source>Use fixed zoom levels:</source>
         <translation>Использовать фиксированные уровни зума:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3990"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3989"/>
         <source>Load defaults</source>
         <translation>Сбросить</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3991"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3990"/>
         <source>Scaling quality</source>
         <translation>Качество масштабирования</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3995"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3994"/>
         <source>Scaling filter:</source>
         <translation>Фильтр масштабирования:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3996"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3995"/>
         <source>Nearest neighbor</source>
         <translation>Ближайший сосед</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="242"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3997"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="243"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3996"/>
         <source>Bilinear</source>
         <translation>Билинейная</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4002"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4001"/>
         <source>Theme</source>
         <translation>Тема</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4003"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4002"/>
         <source>Load preset:</source>
         <translation>Загрузить пресет:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4004"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4009"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4003"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4008"/>
         <source>Black</source>
         <translation>Черный</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="75"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4005"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="76"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4004"/>
         <source>Dark</source>
         <translation>Темная</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4006"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4005"/>
         <source>Dark Blue</source>
         <translation>Темно-синяя</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="76"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4007"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="77"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4006"/>
         <source>Light</source>
         <translation>Светлая</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4010"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4009"/>
         <source>Use system colors</source>
         <translation>Использовать системные цвета</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4011"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4010"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot;text-decoration: underline;&quot;&gt;modify&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot;text-decoration: underline;&quot;&gt;изменить&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4014"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4013"/>
         <source>Accent</source>
         <translation>Акцент</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4015"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4014"/>
         <source>Background</source>
         <translation>Фон</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4016"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4015"/>
         <source>Background (fullscreen mode)</source>
         <translation>Фон (полноэкранный режим)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4018"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4017"/>
         <source>Text</source>
         <translation>Текст</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4019"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4018"/>
         <source>Icons</source>
         <translation>Значки</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="234"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4023"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="235"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4022"/>
         <source>Overlay background</source>
         <translation>Фон оверлеев</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="232"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4025"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="233"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4024"/>
         <source>Widget background</source>
         <translation>Фон виджетов</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4026"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4025"/>
         <source>Folder view top panel</source>
         <translation>Верхняя панель галереи</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="233"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4027"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="234"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4026"/>
         <source>Widget border</source>
         <translation>Границы виджетов</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="235"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4030"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="236"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4029"/>
         <source>Overlay text</source>
         <translation>Текст оверлеев</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="236"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4032"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="237"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4031"/>
         <source>Scrollbars</source>
         <translation>Полосы прокрутки</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4035"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4034"/>
         <source>Folder view background</source>
         <translation>Фон галереи</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4036"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4035"/>
         <source>Other window tweaks</source>
         <translation>Другие настройки окна</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4037"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4036"/>
         <source>Window opacity:</source>
         <translation>Непрозрачность окна:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4039"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4038"/>
         <source>Thumbnail bar opacity:</source>
         <translation>Непрозрачность панели миниатюр:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4041"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4040"/>
         <source>Use black for background and thumbnail bar</source>
         <translation>Использовать черный цвет для фона и панели миниатюр</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4038"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4040"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4037"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4039"/>
         <source>%</source>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="246"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="247"/>
         <source>Magic Kernel Sharp 2021</source>
         <translation>Magic Kernel Sharp 2021</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3427"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3426"/>
         <source>Unlimited</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3905"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3904"/>
         <source>Enable standby mode on close</source>
         <translation>Режим ожидания при закрытии</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3907"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3906"/>
         <source>Keeps the application running in the background when closed. Subsequent launches will be instant.</source>
         <translation>Сохраняет приложение работающим в фоновом режиме после закрытия. Последующие запуски будут мгновенными.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3909"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3908"/>
         <source>Remember last opened folder</source>
         <translation>Запоминать последнюю открытую папку</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3969"/>
         <source>Fit to window</source>
         <translation>По размеру окна</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3971"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
         <source>Fit to width</source>
         <translation>По ширине</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3973"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3972"/>
         <source>Fit to height</source>
         <translation>По высоте</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4042"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4041"/>
         <source>Controls</source>
         <translation>Управление</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4043"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4066"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4042"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4065"/>
         <source>Add</source>
         <translation>Добавить</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4044"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4067"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4043"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4066"/>
         <source>Edit</source>
         <translation>Изменить</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4045"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4068"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4044"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4067"/>
         <source>Remove</source>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4046"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4045"/>
         <source>Reset to defaults</source>
         <translation>Сбросить к умолчанию</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4048"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4047"/>
         <source>Action</source>
         <translation>Действие</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4050"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4049"/>
         <source>Shortcut</source>
         <translation>Сочетание</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4051"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4050"/>
         <source>Switch image by clicking window edges</source>
         <translation>Переключать картинки кликом по краям окна</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4052"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4051"/>
         <source>Visible edges</source>
         <translation>Видимые края</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4053"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4052"/>
         <source>Scroll image with:</source>
         <translation>Прокручивать изображение с помощью:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4054"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4053"/>
         <source>None</source>
         <translation>Ничего</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4055"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4054"/>
         <source>Touchpad</source>
         <translation>Тачпад</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4056"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4055"/>
         <source>Touchpad &amp; Mouse Wheel</source>
         <translation>Тачпад и колесо мыши</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4058"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4057"/>
         <source>Note: you can also zoom by holding RMB and moving the mouse</source>
         <translation>Прим.: также можно масштабировать, зажав ПКМ и двигая мышь</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4059"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4058"/>
         <source>Mouse scrolling speed:</source>
         <translation>Скорость прокрутки мыши:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4060"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4059"/>
         <source>[x]</source>
         <translation>[x]</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4061"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4060"/>
         <source>Trackpad detection</source>
         <translation>Обнаружение тачпада</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4062"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4061"/>
         <source>Disable if you have issues with mouse scrolling</source>
         <translation>Отключите, если есть проблемы с прокруткой мыши</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4063"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4062"/>
         <source>Scripts</source>
         <translation>Скрипты</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4064"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4063"/>
         <source>Note: these will appear in &quot;Open with&quot; menu.</source>
         <translation>Примечание: они появятся в меню «Открыть с помощью».</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4065"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4064"/>
         <source>Also, you can assign shortcuts to scripts (in &quot;Controls&quot; section).</source>
         <translation>Также вы можете назначить горячие клавиши для скриптов (в разделе «Управление»).</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4069"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4068"/>
         <source>Advanced</source>
         <translation>Дополнительно</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4071"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4070"/>
         <source>Preload the next/previous image.
 Results in a much faster image switching (at the expense of wasting more RAM).</source>
         <translation>Предзагрузка следующей/предыдущей картинки.
 Обеспечивает гораздо более быстрое переключение (ценой большего расхода ОЗУ).</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4074"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4073"/>
         <source>Use preloader (recommended)</source>
         <translation>Использовать предзагрузчик (рекомендуется)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4075"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4074"/>
         <source>Load adjacent images in background</source>
         <translation>Загружать соседние изображения в фоне</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4076"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4075"/>
         <source>Thumbnailer thread count:</source>
         <translation>Количество потоков миниатюр:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4077"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4076"/>
         <source>2</source>
         <translation>2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4081"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4080"/>
         <source>Use thumbnail cache (recommended)</source>
         <translation>Использовать кэш эскизов (рекомендуется)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4082"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4081"/>
         <source>Thumbnail cache resolution:</source>
         <translation>Разрешение кэша эскизов:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4083"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4082"/>
         <source>256 px</source>
         <translation>256 px</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4084"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4083"/>
         <source>Thumbnail cache size limit:</source>
-        <translation type="unfinished"></translation>
+        <translation>Ограничение размера кэша миниатюр</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4085"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4084"/>
         <source>Exclude paths from caching (separated by semicolon &apos;;&apos;):</source>
         <translation>Исключить пути из кэширования (через точку с запятой «;»):</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4087"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4086"/>
         <source>Paths to folders that should not be cached, separated by &apos;;&apos;.
 Example: D:\Downloads; E:\Pictures</source>
         <translation>Пути к папкам, которые не нужно кэшировать, через &apos;;&apos;.
 Пример: D:\Downloads; E:\Pictures</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4090"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4089"/>
         <source>Unload off-screen thumbnails</source>
         <translation>Выгружать внеэкранные миниатюры</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4091"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4090"/>
         <source>Dynamically unload items to save memory</source>
         <translation>Динамически выгружать элементы для экономии памяти</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4092"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4091"/>
         <source>Show save overlay when editing images</source>
         <translation>Показывать оверлей сохранения при изменении картинок</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4093"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4092"/>
         <source>JPEG save quality:</source>
         <translation>Качество сохранения JPEG:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4094"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4093"/>
         <source>q</source>
         <translation>q</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4095"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4094"/>
         <source>Confirm moving to trash</source>
         <translation>Подтверждать перемещение в корзину</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4096"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4095"/>
         <source>Confirm file delete (!)</source>
         <translation>Подтверждать удаление файлов (!)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4097"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4096"/>
         <source>JXL animation support (experimental)</source>
         <translation>Поддержка анимации JXL (экспериментально)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4098"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4097"/>
         <source>Allow multiple instances</source>
         <translation>Разрешить несколько окон</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4099"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4098"/>
         <source>Memory allocation limit per image, MB:</source>
         <translation>Лимит памяти на изображение, МБ:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4100"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4099"/>
         <source>AI Upscale</source>
         <translation>Масштабирование ИИ</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4101"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4100"/>
         <source>Use Upscayl</source>
         <translation>Использовать Upscayl</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4102"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4101"/>
         <source>Model:</source>
         <translation>Модель:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4103"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4102"/>
         <source>&lt;a href=&quot;https://github.com/upscayl/custom-models/tree/main/models&quot;&gt;&lt;span style=&quot;text-decoration: underline; color:#007af4;&quot;&gt;Get more models&lt;/span&gt;&lt;/a&gt;</source>
         <translation>&lt;a href=&quot;https://github.com/upscayl/custom-models/tree/main/models&quot;&gt;&lt;span style=&quot;text-decoration: underline; color:#007af4;&quot;&gt;Скачать больше моделей&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4104"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4103"/>
         <source>Load engine at startup and keep ready in video memory</source>
         <translation>Загружать движок при запуске и держать готовым в видеопамяти</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4105"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4104"/>
         <source>Enable upscaling only when zoom exceeds:</source>
         <translation>Включать масштабирование ИИ только при зуме более:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4106"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4105"/>
         <source>200%</source>
         <translation>200%</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4107"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4106"/>
         <source>About qimgv-plus</source>
         <translation>О qimgv-plus</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4108"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4107"/>
         <source>This is a fast and easy to use image viewer
 
 **Github page:** [https://github.com/hadoooooouken/qimgv-plus](https://github.com/hadoooooouken/qimgv-plus)
@@ -3086,197 +3086,197 @@ qimgv распространяется под лицензией [GNU GPL вер
 </translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4125"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4124"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4126"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4125"/>
         <source>Apply</source>
         <translation>Применить</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4127"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4126"/>
         <source>Cancel</source>
         <translation>Отмена</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="56"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="57"/>
         <source>Preferences — </source>
         <translation>Настройки — </translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="72"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="73"/>
         <source>Theme mode:</source>
         <translation>Режим темы:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="74"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="75"/>
         <source>System Default (Auto)</source>
         <translation>Системная (авто)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="226"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="227"/>
         <source>Accent color</source>
         <translation>Цвет акцента</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="227"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="228"/>
         <source>Windowed mode background</source>
         <translation>Фон во оконном режиме</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="228"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="229"/>
         <source>Fullscreen mode background</source>
         <translation>Фон в полноэкранном режиме</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="229"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="230"/>
         <source>FolderView background</source>
         <translation>Фон галереи</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="230"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="231"/>
         <source>FolderView top panel</source>
         <translation>Верхняя панель галереи</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="231"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="232"/>
         <source>Text color</source>
         <translation>Цвет текста</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="241"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="242"/>
         <source>Nearest</source>
         <translation>Ближайший сосед</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="244"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="245"/>
         <source>Smart sharpen</source>
         <translation>Умная резкость</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="247"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="248"/>
         <source>FidelityFX-CAS (GPU)</source>
         <translation>FidelityFX-CAS (GPU)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="255"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="256"/>
         <source>Sharpness:</source>
         <translation>Резкость:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="262"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="263"/>
         <source>Contrast:</source>
         <translation>Контраст:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="339"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="340"/>
         <source>Modern formats quality (WebP, JXL, AVIF):</source>
         <translation>Качество современных форматов (WebP, JXL, AVIF):</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="359"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="360"/>
         <source>PNG compression level:</source>
         <translation>Уровень сжатия PNG:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="395"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="396"/>
         <source>Color Management</source>
         <translation>Управление цветом</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="400"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="401"/>
         <source>Enable color management</source>
         <translation>Включить управление цветом</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="405"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="406"/>
         <source>Monitor profile:</source>
         <translation>Профиль монитора:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="407"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="408"/>
         <source>System / Auto (Recommended)</source>
         <translation>Системный / Авто (рекомендуется)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="408"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="409"/>
         <source>sRGB</source>
         <translation>sRGB</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="409"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="410"/>
         <source>Display P3</source>
         <translation>Display P3</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="410"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="411"/>
         <source>Adobe RGB</source>
         <translation>Adobe RGB</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="411"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="412"/>
         <source>Rec. 2020</source>
         <translation>Rec. 2020</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="412"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="413"/>
         <source>ProPhoto RGB</source>
         <translation>ProPhoto RGB</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="413"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="414"/>
         <source>Linear sRGB</source>
         <translation>Линейный sRGB</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="414"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="415"/>
         <source>Custom Profile (.icc/.icm)...</source>
         <translation>Пользовательский профиль (.icc/.icm)...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="427"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="428"/>
         <source>Profile file:</source>
         <translation>Файл профиля:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="430"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="431"/>
         <source>Browse...</source>
         <translation>Обзор...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="462"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="463"/>
         <source>Select Monitor Color Profile</source>
         <translation>Выберите цветовой профиль монитора</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="463"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="464"/>
         <source>Color Profiles (*.icc *.icm)</source>
         <translation>Цветовые профили (*.icc *.icm)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1079"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1078"/>
         <source>Edit shortcut</source>
         <translation>Редактировать сочетание клавиш</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1142"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1141"/>
         <source>None (Uncompressed)</source>
         <translation>Без сжатия</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1144"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1143"/>
         <source>Fast</source>
         <translation>Быстрое</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1146"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1145"/>
         <source>Balanced</source>
         <translation>Сбалансированное</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1148"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1147"/>
         <source>Maximum</source>
         <translation>Максимальное</translation>
     </message>
