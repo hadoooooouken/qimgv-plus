@@ -11,10 +11,16 @@
 // imbalance. Kept as a separate copy (rather than sharing code with
 // MenuItem) since overlay headers and menu items are unrelated widget
 // hierarchies with no common base to hang a shared helper off of.
-void OverlayWidget::alignHeaderIconToLabel(IconWidget *icon, QLabel *label) {
+void OverlayWidget::alignHeaderIconToLabel(IconWidget *icon, QLabel *label, QPoint extraOffset) {
     const QFontMetricsF fm(label->font());
     const qreal capHeightImbalance = (fm.ascent() - fm.descent() - fm.capHeight()) / 2.0;
-    icon->setIconOffset(0, qRound(capHeightImbalance));
+    icon->setIconOffset(extraOffset.x(), extraOffset.y() + qRound(capHeightImbalance));
+}
+
+void OverlayWidget::alignCloseIcon(IconWidget &icon) {
+    constexpr int kHorizontalOffsetPx = -1;
+    constexpr int kVerticalOffsetPx = 1;
+    icon.setIconOffset(kHorizontalOffsetPx, kVerticalOffsetPx);
 }
 
 OverlayWidget::OverlayWidget(FloatingWidgetContainer *parent)

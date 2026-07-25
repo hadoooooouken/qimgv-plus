@@ -218,6 +218,7 @@ void ContextMenu::setupUi()
     m_more = new ContextMenuItem();
     m_more->setText(tr("More"));
     m_more->setIcon(FluentIcon::ChevronDown20, kIconSizePx);
+    m_more->setIconOffset(0, 2);
     m_more->setPassthroughClicks(false);
     connect(m_more, &ContextMenuItem::pressed, this, &ContextMenu::toggleMoreExpanded);
     actionsLayout->addWidget(m_more);
@@ -246,6 +247,7 @@ void ContextMenu::setupUi()
     m_trash->setIconColor(settings->colorScheme().trash);
 
     addItem(m_deletePermanently, moreLayout, "removeFile",        tr("Delete permanently"), FluentIcon::Dismiss20);
+    m_deletePermanently->setIconOffset(0, 1);
     m_deletePermanently->setTextColor(settings->colorScheme().danger);
     m_deletePermanently->setIconColor(settings->colorScheme().danger);
 

@@ -66,7 +66,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::ChevronUp16,        0xF2B5 }, // ic_fluent_chevron_up_16_regular <- Navigate to parent folder
         { FluentIcon::DocumentView20,     0xF488 }, // ic_fluent_image_20_regular <- Switch to document view
         { FluentIcon::Folder16,           0xE643 }, // ic_fluent_folder_16_regular <- Folder thumbnails and sorting
-        { FluentIcon::FolderAdd,          0xF41C }, // ic_fluent_folder_add_20_regular <- Create folder
+        { FluentIcon::FolderAdd20,          0xF41C }, // ic_fluent_folder_add_20_regular <- Create folder
         { FluentIcon::Home20,             0xF480 }, // ic_fluent_home_20_regular <- Navigate home
         { FluentIcon::OpenOnlySelected20, 0xF697 }, // ic_fluent_select_object_20_regular <- Open only selected files
         { FluentIcon::PanelLeft20,        0xE8B0 }, // ic_fluent_panel_left_20_regular <- Toggle places panel

@@ -54,7 +54,18 @@ MenuItem::MenuItem(QWidget *parent)
 void MenuItem::alignIconToTextBaseline() {
     const QFontMetricsF fm(mTextLabel.font());
     const qreal capHeightImbalance = (fm.ascent() - fm.descent() - fm.capHeight()) / 2.0;
-    mIconWidget.setIconOffset(0, qRound(capHeightImbalance));
+    mBaselineIconOffset = QPoint(0, qRound(capHeightImbalance));
+    applyIconOffset();
+}
+
+void MenuItem::applyIconOffset() {
+    mIconWidget.setIconOffset(mBaselineIconOffset.x() + mManualIconOffset.x(),
+                               mBaselineIconOffset.y() + mManualIconOffset.y());
+}
+
+void MenuItem::setIconOffset(int dx, int dy) {
+    mManualIconOffset = QPoint(dx, dy);
+    applyIconOffset();
 }
 
 void MenuItem::setText(QString text) {

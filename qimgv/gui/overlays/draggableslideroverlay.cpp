@@ -37,6 +37,7 @@ QWidget *DraggableSliderOverlay::createHeader(const QString &title, FluentIcon i
     IconButton *closeButton = new IconButton(headerWidget);
     closeButton->setAccessibleName("OverlayHeaderButton");
     closeButton->setIcon(FluentIcon::Dismiss16, kCloseIconSizePx);
+    alignCloseIcon(*closeButton);
     connect(closeButton, &IconButton::clicked, this, &DraggableSliderOverlay::hide);
 
     headerLayout->addWidget(headerIcon);

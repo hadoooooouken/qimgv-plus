@@ -14,6 +14,7 @@ CopyOverlay::CopyOverlay(FloatingWidgetContainer *parent) :
     setFadeEnabled(true);
 
     closeButton->setIcon(FluentIcon::Dismiss16, kCloseIconSizePx);
+    alignCloseIcon(*closeButton);
     headerIcon->setIcon(FluentIcon::CopyAdd20, kHeaderIconSizePx);
     headerLabel->setText(tr("Copy to..."));
     mode = OVERLAY_COPY;

@@ -10,6 +10,7 @@
 #include <QGraphicsOpacityEffect>
 #include <QPropertyAnimation>
 #include <QDebug>
+#include <QPoint>
 
 class IconWidget;
 class QLabel;
@@ -68,7 +69,9 @@ protected:
     // CAS settings...) gets the same icon/text alignment as context menu
     // items. Call once, right after both widgets are created and the
     // label's final font is set.
-    static void alignHeaderIconToLabel(IconWidget *icon, QLabel *label);
+    static void alignHeaderIconToLabel(IconWidget *icon, QLabel *label,
+                                        QPoint extraOffset = QPoint(0, 0));
+    static void alignCloseIcon(IconWidget &icon);
 
     virtual void recalculateGeometry();
     FloatingWidgetPosition position;

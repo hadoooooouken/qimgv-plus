@@ -22,6 +22,7 @@ SaveConfirmOverlay::SaveConfirmOverlay(FloatingWidgetContainer *parent) :
     connect(discardButton, &QPushButton::clicked, this, &SaveConfirmOverlay::discardClicked);
     this->setFocusPolicy(Qt::NoFocus);
     closeButton->setIcon(FluentIcon::Dismiss16, kCloseIconSizePx);
+    alignCloseIcon(*closeButton);
     headerIcon->setIcon(FluentIcon::Edit20, kHeaderIconSizePx);
     readSettings();
     connect(settings, &Settings::settingsChanged, this, &SaveConfirmOverlay::readSettings);

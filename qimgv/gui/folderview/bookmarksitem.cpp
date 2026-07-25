@@ -8,6 +8,7 @@
 namespace {
 
 constexpr int kFolderIconSizePx = UiMetrics::kCompactIconSizePx;
+constexpr int kRemoveIconVerticalOffsetPx = 1;
 
 } // namespace
 
@@ -28,6 +29,7 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
     folderIconWidget.installEventFilter(this);
 
     removeItemButton.setIcon(FluentIcon::BookmarkRemove20, UiMetrics::kCompactIconSizePx);
+    removeItemButton.setIconOffset(0, kRemoveIconVerticalOffsetPx);
     removeItemButton.setMinimumSize(UiMetrics::kCompactIconSizePx,
                                     UiMetrics::kCompactIconSizePx);
     removeItemButton.installEventFilter(this);

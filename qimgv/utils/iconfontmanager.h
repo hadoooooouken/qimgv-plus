@@ -44,7 +44,7 @@ enum class FluentIcon {
     FlipVertical20,
     Folder16,
     Folder20,
-    FolderAdd,
+    FolderAdd20,
     Grid20,
     Home20,
     Info20,

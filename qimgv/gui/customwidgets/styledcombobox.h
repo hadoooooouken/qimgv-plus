@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QKeyEvent>
 #include <QColor>
+#include <QPoint>
 #include "utils/iconfontmanager.h"
 
 class StyledComboBox : public QComboBox
@@ -12,6 +13,7 @@ class StyledComboBox : public QComboBox
 public:
     StyledComboBox(QWidget *parent = nullptr);
     void setIcon(FluentIcon icon, int sizePx);
+    void setIconOffset(const QPoint &offset);
 
     // Logical width reserved for the trailing dropdown icon, including the
     // gap between the icon and the widget's right edge. Single source of
@@ -42,6 +44,7 @@ private:
     FluentIcon iconGlyph = FluentIcon::ChevronDown12;
     int iconSizePx = 0;
     bool iconSet = false;
+    QPoint iconOffset;
 };
 
 #endif // STYLEDCOMBOBOX_H

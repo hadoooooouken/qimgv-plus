@@ -489,7 +489,8 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
             emit batchRequested();
         });
 
-        ContextMenuItem *itemAddFolder = addCustomAction(tr("Add folder"), FluentIcon::FolderAdd, actionManager->shortcutForAction("createDirectory"));
+        ContextMenuItem *itemAddFolder = addCustomAction(tr("Add folder"), FluentIcon::FolderAdd20, actionManager->shortcutForAction("createDirectory"));
+        itemAddFolder->setIconOffset(0, -1);
         connect(itemAddFolder, &ContextMenuItem::pressed, this, [this, &menu]() {
             menu.close();
             actionManager->invokeAction("createDirectory");
@@ -521,6 +522,7 @@ void FolderGridView::mouseReleaseEvent(QMouseEvent *event) {
         });
 
         ContextMenuItem *itemDelete = addCustomAction(tr("Delete permanently"), FluentIcon::Dismiss20);
+        itemDelete->setIconOffset(0, 1);
         itemDelete->setTextColor(settings->colorScheme().danger);
         itemDelete->setIconColor(settings->colorScheme().danger);
         itemDelete->setEnabled(hasSelection);

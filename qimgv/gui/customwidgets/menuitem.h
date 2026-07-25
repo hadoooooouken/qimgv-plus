@@ -8,6 +8,7 @@
 #include <QHBoxLayout>
 #include <QSpacerItem>
 #include <QColor>
+#include <QPoint>
 #include "gui/customwidgets/iconbutton.h"
 #include "components/actionmanager/actionmanager.h"
 #include "utils/iconfontmanager.h"
@@ -24,6 +25,7 @@ public:
     // MenuItem icons are always constrained to 16x16 (see IconWidget's
     // "MenuItemIcon" accessible-name check), so sizePx defaults to that.
     void setIcon(FluentIcon icon, int sizePx = IconWidget::kMenuItemIconSizePx);
+    void setIconOffset(int dx, int dy);
     void setPassthroughClicks(bool mode);
     void setTextColor(QColor color);
     void setIconColor(QColor color);
@@ -53,4 +55,8 @@ private:
     // (cap-height) center instead of the label's geometric center. See the
     // implementation in menuitem.cpp for the rationale.
     void alignIconToTextBaseline();
+    void applyIconOffset();
+
+    QPoint mBaselineIconOffset;
+    QPoint mManualIconOffset;
 };

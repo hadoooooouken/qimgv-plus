@@ -19,6 +19,14 @@ void StyledComboBox::setIcon(FluentIcon icon, int sizePx) {
     updateGeometry();
 }
 
+void StyledComboBox::setIconOffset(const QPoint &offset) {
+    if (iconOffset == offset)
+        return;
+
+    iconOffset = offset;
+    update();
+}
+
 int StyledComboBox::iconAreaWidth() const {
     if (downArrow.isNull())
         return kIconRightMargin;
@@ -49,6 +57,7 @@ void StyledComboBox::paintEvent(QPaintEvent *e) {
     QPainter p(this);
     QPointF pos(width() - kIconRightMargin - downArrow.width() / downArrow.devicePixelRatio(),
                 height() / 2 - downArrow.height() / (2 * downArrow.devicePixelRatio()));
+    pos += QPointF(iconOffset);
     p.drawPixmap(pos, downArrow);
 }
 

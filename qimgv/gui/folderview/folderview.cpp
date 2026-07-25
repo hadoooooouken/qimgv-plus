@@ -23,6 +23,10 @@
 
 namespace {
 constexpr int kActionIconSizePx = UiMetrics::kStandardIconSizePx;
+constexpr int kCaptionControlSpacingPx = 8;
+constexpr int kComboBoxIconVerticalOffsetPx = 1;
+constexpr int kFormatFilterIconVerticalOffsetPx = 2;
+constexpr int kTopBarRightMarginPx = 6;
 // sortingComboBox / folderSortingComboBox / formatFilterComboBox (their own
 // StyledComboBox icon, not the dropdown chevron).
 constexpr int kCompactIconSizePx = UiMetrics::kCompactIconSizePx;
@@ -92,6 +96,7 @@ FolderView::FolderView(QWidget *parent) :
     // -------------------------------
     upButton->setAction("goUp");
     upButton->setIcon(FluentIcon::ChevronUp16, kCompactIconSizePx);
+    upButton->setIconOffset(0, 2);
     upButton->setTriggerMode(TriggerMode::ClickTrigger);
     settingsButton->setAction("openSettings");
     settingsButton->setIcon(FluentIcon::Settings20, kActionIconSizePx);
@@ -107,6 +112,10 @@ FolderView::FolderView(QWidget *parent) :
     sortingComboBox->setIcon(FluentIcon::ArrowSort16, kCompactIconSizePx);
     folderSortingComboBox->setIcon(FluentIcon::Folder16, kCompactIconSizePx);
     formatFilterComboBox->setIcon(FluentIcon::Checkmark16, kCompactIconSizePx);
+    const QPoint comboBoxIconOffset(0, kComboBoxIconVerticalOffsetPx);
+    sortingComboBox->setIconOffset(comboBoxIconOffset);
+    folderSortingComboBox->setIconOffset(comboBoxIconOffset);
+    formatFilterComboBox->setIconOffset(QPoint(0, kFormatFilterIconVerticalOffsetPx));
 
     newBookmarkButton->setIcon(FluentIcon::BookmarkAdd20, kActionIconSizePx);
     homeButton->setIcon(FluentIcon::Home20, kActionIconSizePx);
@@ -200,7 +209,7 @@ void FolderView::setupUi() {
     
     QHBoxLayout *horizontalLayout_5 = new QHBoxLayout(topBar);
     horizontalLayout_5->setSpacing(0);
-    horizontalLayout_5->setContentsMargins(0, 0, 0, 0);
+    horizontalLayout_5->setContentsMargins(0, 0, kTopBarRightMarginPx, 0);
     
     togglePlacesPanelButton = new ActionButton(topBar);
     togglePlacesPanelButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
@@ -303,6 +312,7 @@ void FolderView::setupUi() {
     docViewButton->setAccessibleName("PanelButton");
     docViewButton->setToolTip(tr("Viewer"));
     horizontalLayout_5->addWidget(docViewButton);
+    horizontalLayout_5->addSpacing(kCaptionControlSpacingPx);
     
     settingsButton = new ActionButton(topBar);
     settingsButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
@@ -312,7 +322,8 @@ void FolderView::setupUi() {
     settingsButton->setToolTip(tr("Settings"));
     horizontalLayout_5->addWidget(settingsButton);
     
-    panelRightEdgeSpacer = new QSpacerItem(2, 20, QSizePolicy::Fixed, QSizePolicy::Minimum);
+    panelRightEdgeSpacer = new QSpacerItem(
+        kCaptionControlSpacingPx, 20, QSizePolicy::Fixed, QSizePolicy::Minimum);
     horizontalLayout_5->addSpacerItem(panelRightEdgeSpacer);
     
     exitButton = new ActionButton(topBar);
@@ -585,10 +596,11 @@ void FolderView::hide() {
 }
 
 void FolderView::onFullscreenModeChanged(bool mode) {
-    if(mode) // hide 2px spacer
+    if(mode) // hide caption-control spacing
         panelRightEdgeSpacer->changeSize(0, 20, QSizePolicy::Fixed, QSizePolicy::Fixed);
-    else // show spacer
-        panelRightEdgeSpacer->changeSize(2, 20, QSizePolicy::Fixed, QSizePolicy::Fixed);
+    else // restore caption-control spacing
+        panelRightEdgeSpacer->changeSize(
+            kCaptionControlSpacingPx, 20, QSizePolicy::Fixed, QSizePolicy::Fixed);
     topBar->layout()->invalidate();
 }
 
