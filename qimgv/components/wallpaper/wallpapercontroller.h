@@ -15,6 +15,7 @@ class MW;
 
 enum class WallpaperApplyError {
     None,
+    StorageDirectoryCreationFailed,
     RegistryOpenFailed,
     WallpaperStyleWriteFailed,
     TileWallpaperWriteFailed,
@@ -44,11 +45,16 @@ public:
 
 signals:
     void wallpaperApplyFinished(WallpaperApplyResult result);
+    void wallpaperFileCleanupFailed(QString path);
 
 private:
-    std::unique_ptr<QThread> m_workerThread;
-    std::shared_ptr<std::atomic<bool>> m_cancelToken;
-    QString m_currentWallpaperPath;
+    struct WallpaperRequestState;
 
-    void cleanupFile(const QString &path);
+    std::unique_ptr<QThread> m_workerThread;
+    std::shared_ptr<WallpaperRequestState> m_activeRequest;
+
+    void stopActiveTask(bool reportCleanupFailure);
+    bool finalizeRequest(const std::shared_ptr<WallpaperRequestState> &request,
+                         bool reportCleanupFailure);
+    bool cleanupFile(const QString &path, bool reportCleanupFailure);
 };

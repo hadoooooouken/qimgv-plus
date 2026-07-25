@@ -7,6 +7,7 @@
 
 #include "core.h"
 #include "settings.h"
+#include <QDir>
 #include <QInputDialog>
 #include <algorithm>
 #include <QRegularExpression>
@@ -34,6 +35,9 @@ constexpr int PageChangeMessageDurationMs = 900;
 QString wallpaperApplyFailureMessage(const WallpaperApplyResult &result) {
   const QString nativeError = QString::number(result.nativeError);
   switch (result.error) {
+  case WallpaperApplyError::StorageDirectoryCreationFailed:
+    return QCoreApplication::translate(
+        "Core", "Set wallpaper: failed to create application data directory");
   case WallpaperApplyError::RegistryOpenFailed:
     return QCoreApplication::translate(
                "Core",
@@ -103,6 +107,15 @@ Core::Core()
             }
 
             mw->showError(wallpaperApplyFailureMessage(result));
+          },
+          Qt::QueuedConnection);
+  connect(wallpaperController.get(),
+          &WallpaperController::wallpaperFileCleanupFailed,
+          this,
+          [this](const QString &path) {
+            mw->showError(
+                tr("Set wallpaper: failed to clean up wallpaper file: %1")
+                    .arg(QDir::toNativeSeparators(path)));
           },
           Qt::QueuedConnection);
   connect(upscaler.get(), &Upscaler::upscaleStarted, this, [this]() {

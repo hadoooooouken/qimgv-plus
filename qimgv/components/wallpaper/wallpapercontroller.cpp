@@ -7,12 +7,18 @@
 #include <QGuiApplication>
 #include <QScreen>
 #include <QCoreApplication>
+#include <QDebug>
+#include <QDir>
 #include <QFile>
-#include <QDateTime>
+#include <QFileInfo>
+#include <QStandardPaths>
+#include <QUuid>
 #include <windows.h>
+#include <array>
 #include <cmath>
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 #include <string>
 
 namespace {
@@ -21,6 +27,23 @@ constexpr wchar_t WallpaperStyleValueName[] = L"WallpaperStyle";
 constexpr wchar_t CenteredWallpaperStyle[] = L"0";
 constexpr wchar_t TileWallpaperValueName[] = L"TileWallpaper";
 constexpr wchar_t TileWallpaperDisabled[] = L"0";
+constexpr double AspectRatioComparisonTolerance = 0.001;
+constexpr int WallpaperProgressMessageDurationMs = 10'000;
+constexpr int AiUpscaleProgressMessageDurationMs = 60'000;
+const QString WallpaperDirectoryName = QStringLiteral("wallpapers");
+const QString WallpaperFilePrefix = QStringLiteral("qimgv_wallpaper_");
+const QString WallpaperFileSuffix = QStringLiteral(".png");
+constexpr char WallpaperImageFormat[] = "PNG";
+
+struct WallpaperStoragePreparation {
+    QString requestPath;
+    QString supersededPath;
+    WallpaperApplyResult result;
+
+    [[nodiscard]] bool succeeded() const noexcept {
+        return result.succeeded();
+    }
+};
 
 template<std::size_t Size>
 constexpr DWORD registryStringSize(const wchar_t (&)[Size]) noexcept {
@@ -86,7 +109,85 @@ WallpaperApplyResult applyDesktopWallpaper(const QString &wallpaperPath) {
 
     return {};
 }
+
+QString configuredDesktopWallpaperPath() {
+    std::array<wchar_t, MAX_PATH> wallpaperPath{};
+    SetLastError(ERROR_SUCCESS);
+    const BOOL queryStatus = SystemParametersInfoW(
+        SPI_GETDESKWALLPAPER,
+        static_cast<UINT>(wallpaperPath.size()),
+        wallpaperPath.data(),
+        0);
+    if (queryStatus == FALSE) {
+        qWarning() << "Failed to query the configured wallpaper path. Windows error:"
+                   << GetLastError();
+        return {};
+    }
+
+    return QString::fromWCharArray(wallpaperPath.data());
 }
+
+bool isManagedWallpaperPath(const QString &path,
+                            const QString &wallpaperDirectoryPath) {
+    if (path.isEmpty()) {
+        return false;
+    }
+
+    const QFileInfo fileInfo(path);
+    if (!fileInfo.isAbsolute()) {
+        return false;
+    }
+
+    const bool isInWallpaperDirectory =
+        QDir::cleanPath(fileInfo.absolutePath()).compare(
+            QDir::cleanPath(wallpaperDirectoryPath),
+            Qt::CaseInsensitive) == 0;
+    const QString fileName = fileInfo.fileName();
+    return isInWallpaperDirectory
+        && fileName.startsWith(WallpaperFilePrefix, Qt::CaseInsensitive)
+        && fileName.endsWith(WallpaperFileSuffix, Qt::CaseInsensitive);
+}
+
+WallpaperStoragePreparation prepareWallpaperStorage() {
+    const QString appDataPath =
+        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    if (appDataPath.isEmpty()) {
+        return {{},
+                {},
+                {WallpaperApplyError::StorageDirectoryCreationFailed, 0}};
+    }
+
+    QDir appDataDirectory(appDataPath);
+    if (!appDataDirectory.mkpath(WallpaperDirectoryName)) {
+        return {{},
+                {},
+                {WallpaperApplyError::StorageDirectoryCreationFailed, 0}};
+    }
+
+    const QString wallpaperDirectoryPath =
+        appDataDirectory.filePath(WallpaperDirectoryName);
+    const QString requestFileName =
+        WallpaperFilePrefix
+        + QUuid::createUuid().toString(QUuid::WithoutBraces)
+        + WallpaperFileSuffix;
+    const QString configuredWallpaperPath = configuredDesktopWallpaperPath();
+    const QString supersededPath =
+        isManagedWallpaperPath(configuredWallpaperPath, wallpaperDirectoryPath)
+        ? configuredWallpaperPath
+        : QString{};
+
+    return {QDir(wallpaperDirectoryPath).filePath(requestFileName),
+            supersededPath,
+            {}};
+}
+}
+
+struct WallpaperController::WallpaperRequestState {
+    QString wallpaperPath;
+    QString supersededWallpaperPath;
+    std::atomic<bool> cancelRequested{false};
+    std::atomic<bool> committed{false};
+};
 
 WallpaperController::WallpaperController(QObject *parent)
     : QObject(parent) {
@@ -94,12 +195,17 @@ WallpaperController::WallpaperController(QObject *parent)
 }
 
 WallpaperController::~WallpaperController() {
-    cancelActiveTask();
+    stopActiveTask(false);
 }
 
 void WallpaperController::cancelActiveTask() {
-    if (m_cancelToken) {
-        m_cancelToken->store(true);
+    stopActiveTask(true);
+}
+
+void WallpaperController::stopActiveTask(bool reportCleanupFailure) {
+    const std::shared_ptr<WallpaperRequestState> request = m_activeRequest;
+    if (request) {
+        request->cancelRequested.store(true, std::memory_order_relaxed);
     }
     if (m_workerThread) {
         m_workerThread->requestInterruption();
@@ -107,14 +213,42 @@ void WallpaperController::cancelActiveTask() {
         m_workerThread->wait();
         m_workerThread.reset();
     }
-    cleanupFile(m_currentWallpaperPath);
-    m_currentWallpaperPath.clear();
+    if (request) {
+        finalizeRequest(request, reportCleanupFailure);
+    }
 }
 
-void WallpaperController::cleanupFile(const QString &path) {
-    if (!path.isEmpty() && QFile::exists(path)) {
-        QFile::remove(path);
+bool WallpaperController::finalizeRequest(
+    const std::shared_ptr<WallpaperRequestState> &request,
+    bool reportCleanupFailure) {
+    if (!request || m_activeRequest != request) {
+        return false;
     }
+
+    const bool committed =
+        request->committed.load(std::memory_order_acquire);
+    const QString cleanupPath = committed
+        ? request->supersededWallpaperPath
+        : request->wallpaperPath;
+    cleanupFile(cleanupPath, reportCleanupFailure);
+    m_activeRequest.reset();
+    return true;
+}
+
+bool WallpaperController::cleanupFile(const QString &path,
+                                      bool reportCleanupFailure) {
+    if (path.isEmpty() || !QFile::exists(path)) {
+        return true;
+    }
+    if (QFile::remove(path)) {
+        return true;
+    }
+
+    qWarning() << "Failed to clean up wallpaper file:" << path;
+    if (reportCleanupFailure) {
+        emit wallpaperFileCleanupFailed(path);
+    }
+    return false;
 }
 
 void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage, MW *mw) {
@@ -131,30 +265,58 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
         return;
     }
 
-    // Cancel any previous active task safely before starting a new one
     cancelActiveTask();
 
-    QSize monitorSize = screen->size();
-    static std::atomic<uint64_t> taskIdCounter{0};
-    uint64_t taskId = ++taskIdCounter;
+    const WallpaperStoragePreparation storage = prepareWallpaperStorage();
+    if (!storage.succeeded()) {
+        emit wallpaperApplyFinished(storage.result);
+        return;
+    }
 
-    QString wallpaperPath = settings->tmpDir() + QString("qimgv_wallpaper_%1_%2.png")
-                                                    .arg(QCoreApplication::applicationPid())
-                                                    .arg(taskId);
+    auto request = std::make_shared<WallpaperRequestState>();
+    request->wallpaperPath = storage.requestPath;
+    request->supersededWallpaperPath = storage.supersededPath;
+    m_activeRequest = request;
 
-    m_currentWallpaperPath = wallpaperPath;
-    m_cancelToken = std::make_shared<std::atomic<bool>>(false);
+    const QSize monitorSize = screen->size();
+    const QString appDir = QCoreApplication::applicationDirPath();
+    const QString modelName = settings->upscaylModel();
 
-    QString appDir = QCoreApplication::applicationDirPath();
-    QString modelName = settings->upscaylModel();
-
-    mw->showMessage(tr("Setting wallpaper..."), 10000);
+    mw->showMessage(tr("Setting wallpaper..."),
+                    WallpaperProgressMessageDurationMs);
 
     QPointer<MW> mwPointer = mw;
-    auto cancelToken = m_cancelToken;
 
-    m_workerThread.reset(QThread::create([this, sourceImage, monitorSize, wallpaperPath, mwPointer, appDir, modelName, cancelToken]() {
-        if (cancelToken->load()) return;
+    m_workerThread.reset(QThread::create([this,
+                                          sourceImage,
+                                          monitorSize,
+                                          mwPointer,
+                                          appDir,
+                                          modelName,
+                                          request]() {
+        const auto finishRequest =
+            [this, request](
+                const std::optional<WallpaperApplyResult> &applyResult) {
+                const bool queued = QMetaObject::invokeMethod(
+                    this,
+                    [this, request, applyResult]() {
+                        if (!finalizeRequest(request, true)) {
+                            return;
+                        }
+                        if (applyResult.has_value()) {
+                            emit wallpaperApplyFinished(*applyResult);
+                        }
+                    },
+                    Qt::QueuedConnection);
+                if (!queued) {
+                    qWarning() << "Failed to queue wallpaper request completion";
+                }
+            };
+
+        if (request->cancelRequested.load(std::memory_order_relaxed)) {
+            finishRequest(std::nullopt);
+            return;
+        }
 
         int monitorWidth = monitorSize.width();
         int monitorHeight = monitorSize.height();
@@ -165,6 +327,7 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
                     mwPointer->showMessage(tr("Set wallpaper: invalid monitor size"));
                 }
             }, Qt::QueuedConnection);
+            finishRequest(std::nullopt);
             return;
         }
 
@@ -175,7 +338,7 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
         double iAR = (double)imageWidth / imageHeight;
 
         QImage croppedImage;
-        if (std::abs(iAR - mAR) < 0.001) {
+        if (std::abs(iAR - mAR) < AspectRatioComparisonTolerance) {
             croppedImage = *sourceImage;
         } else {
             int cropW = imageWidth;
@@ -198,7 +361,10 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
             croppedImage = sourceImage->copy(cropX, cropY, cropW, cropH);
         }
 
-        if (cancelToken->load()) return;
+        if (request->cancelRequested.load(std::memory_order_relaxed)) {
+            finishRequest(std::nullopt);
+            return;
+        }
 
         if (croppedImage.isNull()) {
             QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
@@ -206,6 +372,7 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
                     mwPointer->showMessage(tr("Set wallpaper: cropping failed"));
                 }
             }, Qt::QueuedConnection);
+            finishRequest(std::nullopt);
             return;
         }
 
@@ -214,17 +381,28 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
         bool aiUpscaleSuccess = false;
 
         if (upscalingNeeded) {
-            if (cancelToken->load()) return;
+            if (request->cancelRequested.load(std::memory_order_relaxed)) {
+                finishRequest(std::nullopt);
+                return;
+            }
 
             QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
                 if (mwPointer) {
-                    mwPointer->showMessageAiUpscale(tr("AI upscaling..."), 60000);
+                    mwPointer->showMessageAiUpscale(
+                        tr("AI upscaling..."),
+                        AiUpscaleProgressMessageDurationMs);
                 }
             }, Qt::QueuedConnection);
 
-            if (UpscaylScaler::getInstance()->init(appDir, modelName)) {
-                QImage upscaled = UpscaylScaler::getInstance()->upscale(croppedImage, cancelToken.get());
-                if (cancelToken->load()) return;
+            UpscaylScaler *upscaler = UpscaylScaler::getInstance();
+            if (upscaler && upscaler->init(appDir, modelName)) {
+                QImage upscaled =
+                    upscaler->upscale(croppedImage,
+                                      &request->cancelRequested);
+                if (request->cancelRequested.load(std::memory_order_relaxed)) {
+                    finishRequest(std::nullopt);
+                    return;
+                }
 
                 if (!upscaled.isNull()) {
                     if (upscaled.size() == monitorSize) {
@@ -240,7 +418,10 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
             }
         }
 
-        if (cancelToken->load()) return;
+        if (request->cancelRequested.load(std::memory_order_relaxed)) {
+            finishRequest(std::nullopt);
+            return;
+        }
 
         if (!aiUpscaleSuccess) {
             if (croppedImage.size() == monitorSize) {
@@ -251,7 +432,10 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
             }
         }
 
-        if (cancelToken->load()) return;
+        if (request->cancelRequested.load(std::memory_order_relaxed)) {
+            finishRequest(std::nullopt);
+            return;
+        }
 
         if (scaledImg.isNull()) {
             QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
@@ -259,25 +443,37 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
                     mwPointer->showMessage(tr("Set wallpaper: scaling failed"));
                 }
             }, Qt::QueuedConnection);
+            finishRequest(std::nullopt);
             return;
         }
 
-        if (!scaledImg.save(wallpaperPath, "PNG")) {
+        if (!scaledImg.save(request->wallpaperPath, WallpaperImageFormat)) {
             QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
                 if (mwPointer) {
                     mwPointer->showMessage(tr("Set wallpaper: failed to save PNG"));
                 }
             }, Qt::QueuedConnection);
+            finishRequest(std::nullopt);
             return;
         }
 
-        if (cancelToken->load()) return;
+        if (request->cancelRequested.load(std::memory_order_relaxed)) {
+            finishRequest(std::nullopt);
+            return;
+        }
 
-        const WallpaperApplyResult applyResult = applyDesktopWallpaper(wallpaperPath);
+        const WallpaperApplyResult applyResult =
+            applyDesktopWallpaper(request->wallpaperPath);
+        if (applyResult.succeeded()) {
+            request->committed.store(true, std::memory_order_release);
+        }
 
-        if (cancelToken->load()) return;
+        if (request->cancelRequested.load(std::memory_order_relaxed)) {
+            finishRequest(std::nullopt);
+            return;
+        }
 
-        emit wallpaperApplyFinished(applyResult);
+        finishRequest(applyResult);
     }));
 
     m_workerThread->start();
