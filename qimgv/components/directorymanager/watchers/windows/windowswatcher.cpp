@@ -100,7 +100,7 @@ WindowsWatcher::WindowsWatcher()
     connect(windowsWorker, &WindowsWorker::started, this, &WindowsWatcher::observingStarted);
     connect(windowsWorker, &WindowsWorker::finished, this, &WindowsWatcher::observingStopped);
 
-    connect(windowsWorker, &WindowsWorker::finished, this, [this, d]() {
+    connect(d->workerThread.data(), &QThread::finished, this, [this, d]() {
         if (d->pendingRestart) {
             d->pendingRestart = false;
             if (!d->currentDirectory.isEmpty()) {

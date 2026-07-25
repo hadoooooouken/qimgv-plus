@@ -45,7 +45,7 @@ void DirectoryWatcher::observe()
         d->workerThread->start();
     } else if(!d->worker->isWorkerRunning()) {
         // Thread is currently shutting down from a previous stop request.
-        // Queue restart when worker finishes exiting.
+        // Queue restart after the thread has fully stopped.
         d->pendingRestart = true;
         d->worker->setRunning(true);
     }
