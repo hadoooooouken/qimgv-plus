@@ -8,14 +8,13 @@
 // Cancellable, off-UI-thread expansion of a directory-view selection into
 // the full list of matching files.
 //
-// Mirrors the run()-on-its-own-QThread + std::atomic<bool> pattern already
-// used by WatcherWorker (components/directorymanager/watchers/watcherworker.h):
-// this is a plain QObject meant to be moveToThread()'d, driven by run(), and
-// stoppable at any point via requestStop(). Matches are streamed back to the
-// caller in bounded batches through pathsReady() rather than accumulated
-// into a single QList<QString> and returned only once the whole subtree has
-// been walked, so a directory containing a huge number of files never
-// forces one unbounded, uninterruptible pass over the filesystem.
+// This is a plain QObject meant to be moveToThread()'d, driven by run(), and
+// stoppable at any point via requestStop(). Execution lifecycle and cancellation
+// are tracked independently so a stop requested before run() cannot be lost.
+// Matches are streamed back to the caller in bounded batches through pathsReady()
+// rather than accumulated into a single QList<QString> and returned only once
+// the whole subtree has been walked, so a directory containing a huge number of
+// files never forces one unbounded, uninterruptible pass over the filesystem.
 class DirectoryExpandWorker : public QObject {
     Q_OBJECT
 public:
@@ -52,7 +51,11 @@ signals:
     void error(QString errorMessage);
 
 private:
+    bool isCancellationRequested() const;
+
     QList<SelectedEntry> entries;
     QString formatsRegex;
     std::atomic<bool> isRunning{false};
+    // Monotonic per worker instance: requestStop() is the only writer.
+    std::atomic<bool> cancellationRequested{false};
 };
