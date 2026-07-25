@@ -55,6 +55,16 @@ SSideBarItem[checked="true"] {
 }
 
 /*----------------------------------------------------------------------------*/
+/* Tooltips */
+
+QToolTip {
+    color: %text_hc%;
+    background-color: %widget%;
+    border: %tooltip_border_width% solid %widget_border%;
+    border-radius: %tooltip_border_radius%;
+}
+
+/*----------------------------------------------------------------------------*/
 /* Buttons */
 
 QPushButton, [accessibleName="Button"], [accessibleName="ButtonSetLeft"], [accessibleName="ButtonSetRight"]

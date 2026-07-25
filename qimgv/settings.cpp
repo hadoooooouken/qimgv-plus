@@ -175,8 +175,8 @@ void Settings::loadStylesheet() {
       darkPalette.setColor(QPalette::WindowText, QColor(220, 220, 220));
       darkPalette.setColor(QPalette::Base, QColor(55, 55, 55));
       darkPalette.setColor(QPalette::AlternateBase, QColor(45, 45, 45));
-      darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
-      darkPalette.setColor(QPalette::ToolTipText, Qt::white);
+      darkPalette.setColor(QPalette::ToolTipBase, colors.widget);
+      darkPalette.setColor(QPalette::ToolTipText, colors.text_hc);
       darkPalette.setColor(QPalette::Text, QColor(220, 220, 220));
       darkPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(100, 100, 100));
       darkPalette.setColor(QPalette::Button, QColor(45, 45, 45));
@@ -196,8 +196,8 @@ void Settings::loadStylesheet() {
       lightPalette.setColor(QPalette::WindowText, QColor(30, 30, 30));
       lightPalette.setColor(QPalette::Base, QColor(255, 255, 255));
       lightPalette.setColor(QPalette::AlternateBase, QColor(240, 240, 240));
-      lightPalette.setColor(QPalette::ToolTipBase, QColor(30, 30, 30));
-      lightPalette.setColor(QPalette::ToolTipText, Qt::white);
+      lightPalette.setColor(QPalette::ToolTipBase, colors.widget);
+      lightPalette.setColor(QPalette::ToolTipText, colors.text_hc);
       lightPalette.setColor(QPalette::Text, QColor(30, 30, 30));
       lightPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(150, 150, 150));
       lightPalette.setColor(QPalette::Button, QColor(240, 240, 240));
@@ -268,6 +268,8 @@ void Settings::loadStylesheet() {
     int context_menu_width = 212 * pDpr;
     int context_menu_button_height = 32 * pDpr;
     int rename_overlay_width = 380 * pDpr;
+    constexpr int tooltip_border_width = 1;
+    constexpr int tooltip_border_radius = 6;
 
     // qDebug()<< "dpr=" << qApp->devicePixelRatio() << "pDpr=" << pDpr;
 
@@ -286,6 +288,10 @@ void Settings::loadStylesheet() {
                        QString::number(context_menu_button_height) + "px");
     styleSheet.replace("%rename_overlay_width%",
                        QString::number(rename_overlay_width) + "px");
+    styleSheet.replace("%tooltip_border_width%",
+                       QString::number(tooltip_border_width) + "px");
+    styleSheet.replace("%tooltip_border_radius%",
+                       QString::number(tooltip_border_radius) + "px");
 
     styleSheet.replace("%icontheme%", isDark ? "light" : "dark");
     styleSheet.replace("%contextmenu_border_radius%", "8px");
