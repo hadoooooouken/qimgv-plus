@@ -14,6 +14,7 @@ public:
     StyledComboBox(QWidget *parent = nullptr);
     void setIcon(FluentIcon icon, int sizePx);
     void setIconOffset(const QPoint &offset);
+    void setContextMenuPopupStyle(bool enabled);
 
     // Logical width reserved for the trailing dropdown icon, including the
     // gap between the icon and the widget's right edge. Single source of
@@ -24,6 +25,7 @@ public:
 protected:
     void paintEvent(QPaintEvent *e) override;
     void keyPressEvent(QKeyEvent *event) override;
+    void showPopup() override;
     bool event(QEvent *e) override;
 
     // Color applied to the dropdown icon. Defaults to the theme's icon
@@ -44,6 +46,7 @@ private:
     FluentIcon iconGlyph = FluentIcon::ChevronDown12;
     int iconSizePx = 0;
     bool iconSet = false;
+    bool contextMenuPopupStyle = false;
     QPoint iconOffset;
 };
 

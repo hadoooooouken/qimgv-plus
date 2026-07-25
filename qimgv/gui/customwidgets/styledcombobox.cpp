@@ -1,6 +1,19 @@
 #include "styledcombobox.h"
+
+#include <QAbstractItemView>
+#include <QDebug>
+
 #include "proxystyle.h"
 #include "settings.h"
+
+namespace {
+constexpr auto kContextMenuPopupProperty = "qimgvContextMenuPopup";
+constexpr auto kContextMenuPopupStyleSheet =
+    "[qimgvContextMenuPopup=\"true\"] {"
+    " background-color: transparent;"
+    " border: none;"
+    "}";
+} // namespace
 
 StyledComboBox::StyledComboBox(QWidget *parent) : QComboBox(parent)
 {
@@ -25,6 +38,10 @@ void StyledComboBox::setIconOffset(const QPoint &offset) {
 
     iconOffset = offset;
     update();
+}
+
+void StyledComboBox::setContextMenuPopupStyle(bool enabled) {
+    contextMenuPopupStyle = enabled;
 }
 
 int StyledComboBox::iconAreaWidth() const {
@@ -63,6 +80,27 @@ void StyledComboBox::paintEvent(QPaintEvent *e) {
 
 void StyledComboBox::keyPressEvent(QKeyEvent *event) {
     event->ignore();
+}
+
+void StyledComboBox::showPopup() {
+    if (contextMenuPopupStyle) {
+        QAbstractItemView *popupView = view();
+        QWidget *popupWindow = popupView ? popupView->window() : nullptr;
+        if (!popupWindow) {
+            qWarning() << "StyledComboBox could not prepare its popup window";
+        } else {
+            popupWindow->setWindowFlags(
+                popupWindow->windowFlags()
+                | Qt::FramelessWindowHint
+                | Qt::NoDropShadowWindowHint);
+            popupWindow->setAttribute(Qt::WA_TranslucentBackground, true);
+            popupWindow->setProperty(kContextMenuPopupProperty, true);
+            popupWindow->setStyleSheet(
+                QString::fromLatin1(kContextMenuPopupStyleSheet));
+        }
+    }
+
+    QComboBox::showPopup();
 }
 
 bool StyledComboBox::event(QEvent *e) {

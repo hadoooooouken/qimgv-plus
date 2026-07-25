@@ -218,10 +218,11 @@ QComboBox QAbstractItemView {
     padding: 5px 5px 5px 5px;
     background-color: %widget%;
     border: 1px solid %widget_border%;
+    border-radius: %contextmenu_border_radius%;
 }
 
 [accessibleName="PanelComboBox"] QAbstractItemView::item {
-    border-radius: 1px;
+    border-radius: 6px;
     padding: 4px 5px;
     color: %text_hc%;
     min-height: 22px;

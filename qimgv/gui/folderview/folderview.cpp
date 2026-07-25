@@ -277,6 +277,7 @@ void FolderView::setupUi() {
     folderSortingComboBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
     folderSortingComboBox->setContextMenuPolicy(Qt::NoContextMenu);
     folderSortingComboBox->setAccessibleName("PanelComboBox");
+    folderSortingComboBox->setContextMenuPopupStyle(true);
     folderSortingComboBox->addItems({tr("A - Z"), tr("Z - A"), tr("Size"), tr("Size (desc)"), tr("Oldest"), tr("Newest")});
     folderSortingComboBox->setToolTip(tr("Folder icon sorting"));
     horizontalLayout_5->addWidget(folderSortingComboBox);
@@ -288,6 +289,7 @@ void FolderView::setupUi() {
     sortingComboBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
     sortingComboBox->setContextMenuPolicy(Qt::NoContextMenu);
     sortingComboBox->setAccessibleName("PanelComboBox");
+    sortingComboBox->setContextMenuPopupStyle(true);
     sortingComboBox->addItems({tr("A - Z"), tr("Z - A"), tr("Size"), tr("Size (desc)"), tr("Oldest"), tr("Newest")});
     sortingComboBox->setToolTip(tr("Sort folders and images"));
     horizontalLayout_5->addWidget(sortingComboBox);
@@ -299,6 +301,7 @@ void FolderView::setupUi() {
     formatFilterComboBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
     formatFilterComboBox->setContextMenuPolicy(Qt::NoContextMenu);
     formatFilterComboBox->setAccessibleName("PanelComboBox");
+    formatFilterComboBox->setContextMenuPopupStyle(true);
     formatFilterComboBox->setToolTip(tr("Filter by file format"));
     horizontalLayout_5->addWidget(formatFilterComboBox);
     
