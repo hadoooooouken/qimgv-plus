@@ -634,8 +634,11 @@ void Core::nextPage() {
   if (cur + 1 >= count)
     return;
   ImageStatic::pageOverride[path] = cur + 1;
-  model->reload(path);
-  showPageChangeMessage(path);
+  if (model->reload(path)) {
+    showPageChangeMessage(path);
+  } else {
+    ImageStatic::pageOverride[path] = cur;
+  }
 }
 
 void Core::prevPage() {
@@ -646,8 +649,11 @@ void Core::prevPage() {
   if (cur <= 0)
     return;
   ImageStatic::pageOverride[path] = cur - 1;
-  model->reload(path);
-  showPageChangeMessage(path);
+  if (model->reload(path)) {
+    showPageChangeMessage(path);
+  } else {
+    ImageStatic::pageOverride[path] = cur;
+  }
 }
 
 void Core::removePermanent() {
@@ -2295,12 +2301,15 @@ void Core::maybeShowPageHint(const std::shared_ptr<Image> &img) {
 }
 
 // Shows "Page N/M" for `path` right after an explicit page-turn hotkey.
-// DirectoryModel::reload() performs its load synchronously and emits
-// imageReady() through a same-thread direct connection, so by the time
-// model->reload(path) returns above in nextPage()/prevPage(), state.currentImg
-// already reflects the freshly reloaded page. This lets us report the result
-// directly instead of correlating it via a shared flag across two events,
-// which sidesteps any risk of that flag being consumed by an unrelated event.
+// Callers only reach this after DirectoryModel::reload() has returned true,
+// confirming a fresh image was actually loaded -- not just that the target
+// page number was written to ImageStatic::pageOverride. DirectoryModel::reload()
+// performs its load synchronously and emits imageReady() through a same-thread
+// direct connection, so by the time reload(path) returns in nextPage()/prevPage(),
+// state.currentImg already reflects the freshly reloaded page. This lets us
+// report the result directly instead of correlating it via a shared flag
+// across two events, which sidesteps any risk of that flag being consumed
+// by an unrelated event.
 // NOTE: this relies on reload() staying synchronous; if it's ever made
 // asynchronous, this call must move to a completion callback instead.
 void Core::showPageChangeMessage(const QString &path) {

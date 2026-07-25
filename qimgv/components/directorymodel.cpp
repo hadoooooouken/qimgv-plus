@@ -373,28 +373,40 @@ void DirectoryModel::load(QString filePath, bool asyncHint) {
     if(!containsFile(filePath) || loader.isLoading(filePath))
         return;
     if(!cache.contains(filePath)) {
-        if(asyncHint) {
-            loader.loadAsyncPriority(filePath);
-        } else {
-            auto img = loader.load(filePath);
-            if(img && img->isLoaded()) {
-                cache.insert(img);
-                emit imageReady(img, filePath);
-            } else {
-                emit loadFailed(filePath);
-            }
-        }
+        forceLoad(filePath, asyncHint);
     } else {
         emit imageReady(cache.get(filePath), filePath);
     }
 }
 
-void DirectoryModel::reload(QString filePath) {
-    if(cache.contains(filePath)) {
-        cache.remove(filePath);
-        dirManager.updateFileEntry(filePath);
-        load(filePath, false);
+bool DirectoryModel::forceLoad(QString filePath, bool asyncHint) {
+    if(asyncHint) {
+        loader.loadAsyncPriority(filePath);
+        return true;
     }
+    auto img = loader.load(filePath);
+    if(img && img->isLoaded()) {
+        cache.insert(img);
+        emit imageReady(img, filePath);
+        return true;
+    }
+    emit loadFailed(filePath);
+    return false;
+}
+
+// Forces a synchronous re-read of filePath from disk, e.g. after
+// ImageStatic::pageOverride changes for a multi-page document. Always
+// goes through forceLoad() instead of load(), because load() re-emits
+// an already-cached Image unchanged when one is present -- which would
+// silently turn a page-turn reload into a no-op. Returns true only if a
+// fresh image was actually produced; callers that report the reload
+// result to the user must gate that feedback on this return value.
+bool DirectoryModel::reload(QString filePath) {
+    if(!containsFile(filePath) || loader.isLoading(filePath))
+        return false;
+    cache.remove(filePath);
+    dirManager.updateFileEntry(filePath);
+    return forceLoad(filePath, false);
 }
 
 void DirectoryModel::preload(QString filePath) {

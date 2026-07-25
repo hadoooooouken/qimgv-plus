@@ -61,7 +61,7 @@ public:
     void unload(QString filePath);
     bool isLoaded(int index) const;
     bool isLoaded(QString filePath) const;
-    void reload(QString filePath);
+    bool reload(QString filePath);
     QString filePathAt(int index) const;
     void unloadExcept(QString filePath, bool keepNearby);
     const FSEntry &fileEntryAt(int index) const;
@@ -99,6 +99,12 @@ private:
     Loader loader;
     Cache cache;
     FileListSource fileListSource;
+
+    // Loads filePath from disk unconditionally, bypassing the cache-hit
+    // check in load(). Callers must ensure any stale cache entry for
+    // filePath is already removed. Returns true if the image was loaded
+    // (synchronous path) or the async task was scheduled successfully.
+    bool forceLoad(QString filePath, bool asyncHint);
 
 private slots:
     void onImageReady(std::shared_ptr<Image> img, const QString &path);
