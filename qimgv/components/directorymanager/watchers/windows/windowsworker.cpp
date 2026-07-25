@@ -1,5 +1,7 @@
 #include "windowsworker.h"
 
+#include <memory>
+
 WindowsWorker::WindowsWorker() : WatcherWorker() {
     // Created once, lives for the whole lifetime of the worker object —
     // independent of which directory is currently being watched, and
@@ -222,7 +224,10 @@ void WindowsWorker::run() {
             if (key == KEY_SWITCH) {
                 // A switchTo() request we posted to ourselves but never got
                 // to process because KEY_QUIT arrived first.
-                delete reinterpret_cast<DirWatchCtx*>(pOvl);
+                std::unique_ptr<DirWatchCtx> pendingCtx(reinterpret_cast<DirWatchCtx*>(pOvl));
+                if (pendingCtx->hDir != INVALID_HANDLE_VALUE && !CloseHandle(pendingCtx->hDir)) {
+                    qWarning() << "[WindowsWorker] CloseHandle(pending switch) failed:" << GetLastError();
+                }
                 continue;
             }
 
