@@ -4,57 +4,72 @@
 <context>
     <name>BatchConverter</name>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="38"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="41"/>
         <source>Stopped</source>
         <translation>Detenido</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="52"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="95"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="105"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="148"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="219"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="55"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="107"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="117"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="168"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="187"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="271"/>
         <source>Failed</source>
         <translation>Fallido</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="53"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="56"/>
         <source>Load Error</source>
         <translation>Error de carga</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="96"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="108"/>
         <source>AI Model Error</source>
         <translation>Error del modelo de IA</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="106"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="118"/>
         <source>AI Upscaling Failed</source>
         <translation>Error de escalado por IA</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="146"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="224"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="175"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="196"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="276"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="283"/>
         <source>Done</source>
         <translation>Hecho</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="149"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="169"/>
         <source>Save Error</source>
         <translation>Error al guardar</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="219"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="188"/>
+        <source>Commit Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="245"/>
+        <source>Could not create a unique batch subfolder in &quot;%1&quot;. The batch was aborted.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="271"/>
         <source>Invalid destination path</source>
         <translation>Ruta de destino no válida</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="224"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="176"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="276"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="283"/>
         <source>Skipped (Exists)</source>
         <translation>Omitido (Ya existe)</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="228"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="289"/>
         <source>Processing...</source>
         <translation>Procesando...</translation>
     </message>
@@ -223,7 +238,7 @@
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="521"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="894"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="931"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
@@ -243,110 +258,115 @@
         <translation>Alto máx.:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="629"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="630"/>
         <source>Nearest</source>
         <translation>Vecino más cercano</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="630"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="631"/>
         <source>Bilinear</source>
         <translation>Bilineal</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="631"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="632"/>
         <source>Smart sharpen</source>
         <translation>Enfoque inteligente</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="632"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="633"/>
         <source>Magic Kernel Sharp 2021</source>
         <translation>Magic Kernel Sharp 2021</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="636"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="637"/>
         <source>Original size</source>
         <translation>Tamaño original</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="659"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="660"/>
         <source>Reset: %1 x %2</source>
         <translation>Restablecer: %1 x %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="683"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="684"/>
         <source>No AI models found in models/ directory.</source>
         <translation>No se encontraron modelos de IA en el directorio models/.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="838"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="841"/>
+        <source>Use Upscayl only applies when the target size is larger than the original; it has no effect at this size and will be skipped.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="875"/>
         <source>%1 files selected (%2 MB)</source>
         <translation>%1 archivos seleccionados (%2 MB)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="842"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="879"/>
         <source>Select Output Directory</source>
         <translation>Seleccionar directorio de salida</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="859"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="860"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="896"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="897"/>
         <source>PNG Compression level (0 - none, 9 - max)</source>
         <translation>Nivel de compresión PNG (0 - ninguna, 9 - máx.)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="875"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="876"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="912"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="913"/>
         <source>Quality (1 - lowest, 100 - highest)</source>
         <translation>Calidad (1 - más baja, 100 - más alta)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="891"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1028"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="928"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1071"/>
         <source>Stopping...</source>
         <translation>Deteniendo...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="894"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="931"/>
         <source>Stop</source>
         <translation>Detener</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="904"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="941"/>
         <source>Invalid Directory</source>
         <translation>Directorio no válido</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="904"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="941"/>
         <source>Please select a valid output directory.</source>
         <translation>Por favor, seleccione un directorio de salida válido.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="910"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="947"/>
         <source>Invalid Pattern</source>
         <translation>Patrón no válido</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="910"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="947"/>
         <source>Filename pattern cannot contain path traversal sequences (..) or absolute paths.</source>
         <translation>El patrón del nombre de archivo no puede contener secuencias de recorrido de ruta (..) o rutas absolutas.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="920"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="957"/>
         <source>No files</source>
         <translation>Sin archivos</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="920"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="957"/>
         <source>No files selected in the queue. Please check at least one file.</source>
         <translation>No hay archivos seleccionados en la cola. Por favor, marque al menos un archivo.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="934"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="971"/>
         <source>Resolution Limit Exceeded</source>
         <translation>Límite de resolución excedido</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="935"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="972"/>
         <source>Target resolution (%1x%2) exceeds safety limits.
 
 Maximum allowed dimension: %3 px
@@ -361,38 +381,48 @@ Cantidad máxima de píxeles permitida: %4 MP
 Por favor, reduzca el porcentaje o el tamaño absoluto.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="951"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1006"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="988"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1049"/>
         <source>Processing...</source>
         <translation>Procesando...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1041"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1084"/>
         <source>Stopped by user. Success: %1, Failed: %2</source>
         <translation>Detenido por el usuario. Éxito: %1, Error: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="993"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1090"/>
+        <source>Batch aborted.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1091"/>
+        <source>Batch Conversion Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1036"/>
         <source>Pending</source>
         <translation>Pendiente</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1009"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1052"/>
         <source>Processed %1 / %2 files.</source>
         <translation>Procesados %1 / %2 archivos.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1016"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1059"/>
         <source>Finished. Success: %1, Failed: %2</source>
         <translation>Finalizado. Éxito: %1, Error: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1017"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1060"/>
         <source>Batch Conversion Complete</source>
         <translation>Conversión por lotes completa</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1018"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1061"/>
         <source>Batch process complete.
 
 Successfully converted: %1
@@ -619,416 +649,420 @@ Archivos totales: %3</translation>
 <context>
     <name>Core</name>
     <message>
-        <location filename="../../core.cpp" line="493"/>
+        <location filename="../../core.cpp" line="499"/>
         <source>Updated: </source>
         <translation>Actualizado: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="501"/>
+        <location filename="../../core.cpp" line="507"/>
         <source>Welcome to </source>
         <translation>Bienvenido a </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="502"/>
+        <location filename="../../core.cpp" line="508"/>
         <source> version </source>
         <translation> versión </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="520"/>
+        <location filename="../../core.cpp" line="526"/>
         <source>Shuffle mode: OFF</source>
         <translation>Modo aleatorio: Apagado</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="523"/>
+        <location filename="../../core.cpp" line="529"/>
         <source>Shuffle mode: ON</source>
         <translation>Modo aleatorio: Encendido</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="532"/>
+        <location filename="../../core.cpp" line="538"/>
         <source>Slideshow: OFF</source>
         <translation>Diapositivas: Apagado</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="536"/>
+        <location filename="../../core.cpp" line="542"/>
         <source>Slideshow: ON</source>
         <translation>Diapositivas: Encendido</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="666"/>
-        <location filename="../../core.cpp" line="669"/>
-        <location filename="../../core.cpp" line="672"/>
+        <location filename="../../core.cpp" line="678"/>
+        <location filename="../../core.cpp" line="681"/>
+        <location filename="../../core.cpp" line="684"/>
         <source>Delete </source>
         <translation>Eliminar </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="667"/>
+        <location filename="../../core.cpp" line="679"/>
         <source> folders permanently?</source>
         <translation> carpetas permanentemente?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="670"/>
+        <location filename="../../core.cpp" line="682"/>
         <source> files permanently?</source>
         <translation> archivos permanentemente?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="673"/>
+        <location filename="../../core.cpp" line="685"/>
         <source> items permanently?</source>
         <translation> ítems permanentemente?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="681"/>
+        <location filename="../../core.cpp" line="693"/>
         <source>Delete permanently</source>
         <translation>Eliminar permanentemente</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="703"/>
+        <location filename="../../core.cpp" line="715"/>
         <source>File removed</source>
         <translation>Archivo eliminado</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="709"/>
-        <location filename="../../core.cpp" line="712"/>
-        <location filename="../../core.cpp" line="715"/>
+        <location filename="../../core.cpp" line="721"/>
+        <location filename="../../core.cpp" line="724"/>
+        <location filename="../../core.cpp" line="727"/>
         <source>Removed: </source>
         <translation>Eliminado: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="713"/>
-        <location filename="../../core.cpp" line="784"/>
+        <location filename="../../core.cpp" line="725"/>
+        <location filename="../../core.cpp" line="796"/>
         <source> files</source>
         <translation> archivos</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="740"/>
-        <location filename="../../core.cpp" line="742"/>
-        <location filename="../../core.cpp" line="744"/>
+        <location filename="../../core.cpp" line="752"/>
+        <location filename="../../core.cpp" line="754"/>
+        <location filename="../../core.cpp" line="756"/>
         <source>Move </source>
         <translation>Mover </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="744"/>
+        <location filename="../../core.cpp" line="756"/>
         <source> items to trash?</source>
         <translation> ítems a la papelera?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="752"/>
+        <location filename="../../core.cpp" line="764"/>
         <source>Move to trash</source>
         <translation>Mover a la papelera</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="772"/>
+        <location filename="../../core.cpp" line="784"/>
         <source>Folder moved to trash</source>
         <translation>Carpeta movida a la papelera</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="774"/>
+        <location filename="../../core.cpp" line="786"/>
         <source>Moved to trash</source>
         <translation>Movido a la papelera</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="780"/>
-        <location filename="../../core.cpp" line="783"/>
-        <location filename="../../core.cpp" line="786"/>
+        <location filename="../../core.cpp" line="792"/>
+        <location filename="../../core.cpp" line="795"/>
+        <location filename="../../core.cpp" line="798"/>
         <source>Moved to trash: </source>
         <translation>Movido a la papelera: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="861"/>
+        <location filename="../../core.cpp" line="873"/>
         <source>File copied</source>
         <translation>Archivo copiado</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="868"/>
+        <location filename="../../core.cpp" line="880"/>
         <source>Path copied</source>
         <translation>Ruta copiada</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1029"/>
-        <location filename="../../core.cpp" line="1325"/>
-        <location filename="../../core.cpp" line="1347"/>
+        <location filename="../../core.cpp" line="1048"/>
+        <location filename="../../core.cpp" line="1397"/>
+        <location filename="../../core.cpp" line="1419"/>
         <source>File exists</source>
         <translation>Archivo existente</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1029"/>
+        <location filename="../../core.cpp" line="1048"/>
         <source>Overwrite file?</source>
         <translation>Sobre escribir archivo?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1124"/>
+        <location filename="../../core.cpp" line="1143"/>
         <source>Add folder</source>
         <translation>Añadir carpeta</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1125"/>
+        <location filename="../../core.cpp" line="1144"/>
         <source>Folder name:</source>
         <translation>Nombre de la carpeta:</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1132"/>
+        <location filename="../../core.cpp" line="1151"/>
         <source>Folder already exists</source>
         <translation>La carpeta ya existe</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1143"/>
+        <location filename="../../core.cpp" line="1162"/>
         <source>Failed to create folder</source>
         <translation>Error al crear la carpeta</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1207"/>
-        <location filename="../../core.cpp" line="1285"/>
+        <location filename="../../core.cpp" line="1216"/>
+        <source>Cannot copy a directory into itself or a subdirectory of itself.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../core.cpp" line="1267"/>
+        <location filename="../../core.cpp" line="1349"/>
         <source>Could not create directory </source>
         <translation>No se pudo crear la carpeta </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1323"/>
+        <location filename="../../core.cpp" line="1298"/>
+        <source>Cannot move a directory into itself or a subdirectory of itself.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../core.cpp" line="1395"/>
         <source>File moved.</source>
         <translation>Archivo movido.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1326"/>
-        <location filename="../../core.cpp" line="1348"/>
+        <location filename="../../core.cpp" line="1398"/>
+        <location filename="../../core.cpp" line="1420"/>
         <source>Destination file exists. Overwrite?</source>
         <translation>El archivo de destino existe. Sobre escribe?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1345"/>
+        <location filename="../../core.cpp" line="1417"/>
         <source>File copied.</source>
         <translation>Archivo copiado.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1412"/>
+        <location filename="../../core.cpp" line="1495"/>
         <source>Perform action &quot;</source>
         <translation>Ejecutar acción &quot;</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1413"/>
+        <location filename="../../core.cpp" line="1496"/>
         <source>Changes will be saved immediately.</source>
         <translation>Los cambios serán guardados inmediatamente.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1434"/>
+        <location filename="../../core.cpp" line="1517"/>
         <source>Flip horizontal</source>
         <translation>Voltear horizontalmente</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1438"/>
+        <location filename="../../core.cpp" line="1521"/>
         <source>Flip vertical</source>
         <translation>Voltear verticalmente</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1443"/>
+        <location filename="../../core.cpp" line="1526"/>
         <source>Rotate</source>
         <translation>Rotar</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1499"/>
+        <location filename="../../core.cpp" line="1568"/>
+        <location filename="../../core.cpp" line="1592"/>
         <source>Resize</source>
         <translation>Cambiar tamaño</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1540"/>
-        <location filename="../../core.cpp" line="1546"/>
+        <location filename="../../core.cpp" line="1633"/>
+        <location filename="../../core.cpp" line="1639"/>
         <source>Crop</source>
         <translation>Recortar</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1605"/>
+        <location filename="../../core.cpp" line="1698"/>
         <source>File saved</source>
         <translation>Archivo grabado</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1608"/>
+        <location filename="../../core.cpp" line="1701"/>
         <source>Could not save file</source>
         <translation>No se pudo grabar el archivo</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1686"/>
-        <location filename="../../core.cpp" line="1692"/>
+        <location filename="../../core.cpp" line="1779"/>
+        <location filename="../../core.cpp" line="1785"/>
         <source>Set wallpaper: file not supported</source>
         <translation>Establecer fondo: archivo no compatible</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1849"/>
+        <location filename="../../core.cpp" line="1804"/>
         <source>Could not open image</source>
         <translation>No se pudo abrir la imágen</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1853"/>
+        <location filename="../../core.cpp" line="1808"/>
         <source>Can only print static images</source>
         <translation>Solo se pueden imprimir imágenes estáticas</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="59"/>
+        <location filename="../../core.cpp" line="62"/>
         <source>AI Upscaling...</source>
         <translation>Escalando por IA...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="677"/>
+        <location filename="../../core.cpp" line="689"/>
         <source>Delete folder permanently?</source>
         <translation>¿Eliminar carpeta permanentemente?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="679"/>
+        <location filename="../../core.cpp" line="691"/>
         <source>Delete file permanently?</source>
         <translation>¿Eliminar archivo permanentemente?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="701"/>
+        <location filename="../../core.cpp" line="713"/>
         <source>Folder removed</source>
         <translation>Carpeta eliminada</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="710"/>
-        <location filename="../../core.cpp" line="781"/>
+        <location filename="../../core.cpp" line="722"/>
+        <location filename="../../core.cpp" line="793"/>
         <source> folders</source>
         <translation> carpetas</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="716"/>
-        <location filename="../../core.cpp" line="787"/>
+        <location filename="../../core.cpp" line="728"/>
+        <location filename="../../core.cpp" line="799"/>
         <source> items</source>
         <translation> elementos</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="740"/>
+        <location filename="../../core.cpp" line="752"/>
         <source> folders to trash?</source>
         <translation> carpetas a la papelera?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="742"/>
+        <location filename="../../core.cpp" line="754"/>
         <source> files to trash?</source>
         <translation> archivos a la papelera?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="748"/>
+        <location filename="../../core.cpp" line="760"/>
         <source>Move folder to trash?</source>
         <translation>¿Mover carpeta a la papelera?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="750"/>
+        <location filename="../../core.cpp" line="762"/>
         <source>Move file to trash?</source>
         <translation>¿Mover archivo a la papelera?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1453"/>
+        <location filename="../../core.cpp" line="1536"/>
         <source>AI resize is already running.</source>
         <translation>El cambio de tamaño por IA ya se está ejecutando.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1462"/>
+        <location filename="../../core.cpp" line="1545"/>
         <source>AI resize supports one image at a time.</source>
         <translation>El cambio de tamaño por IA solo admite una imagen a la vez.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1469"/>
-        <location filename="../../core.cpp" line="1475"/>
+        <location filename="../../core.cpp" line="1552"/>
+        <location filename="../../core.cpp" line="1558"/>
         <source>Could not resize image.</source>
         <translation>No se pudo cambiar el tamaño de la imagen.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1489"/>
+        <location filename="../../core.cpp" line="1582"/>
         <source>AI resizing...</source>
         <translation>Cambiando tamaño por IA...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1511"/>
+        <location filename="../../core.cpp" line="1604"/>
         <source>AI resize failed.</source>
         <translation>Error de cambio de tamaño por IA.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1516"/>
+        <location filename="../../core.cpp" line="1609"/>
         <source>AI resize finished, but the image is no longer in the list.</source>
         <translation>Cambio de tamaño por IA terminado, pero la imagen ya no está en la lista.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1522"/>
+        <location filename="../../core.cpp" line="1615"/>
         <source>Could not apply AI resize.</source>
         <translation>No se pudo aplicar el cambio de tamaño por IA.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1531"/>
+        <location filename="../../core.cpp" line="1624"/>
         <source>AI resize finished.</source>
         <translation>Cambio de tamaño por IA finalizado.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1533"/>
+        <location filename="../../core.cpp" line="1626"/>
         <source>AI resize finished for %1.</source>
         <translation>Cambio de tamaño por IA finalizado para %1.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1698"/>
+        <location filename="../../core.cpp" line="1791"/>
         <source>Set wallpaper: failed to get image</source>
         <translation>Establecer fondo: error al obtener la imagen</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1704"/>
         <source>Set wallpaper: screen not found</source>
-        <translation>Establecer fondo: pantalla no encontrada</translation>
+        <translation type="vanished">Establecer fondo: pantalla no encontrada</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1714"/>
         <source>Setting wallpaper...</source>
-        <translation>Estableciendo fondo de pantalla...</translation>
+        <translation type="vanished">Estableciendo fondo de pantalla...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1724"/>
         <source>Set wallpaper: invalid monitor size</source>
-        <translation>Establecer fondo: tamaño de monitor no válido</translation>
+        <translation type="vanished">Establecer fondo: tamaño de monitor no válido</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1761"/>
         <source>Set wallpaper: cropping failed</source>
-        <translation>Establecer fondo: error al recortar</translation>
+        <translation type="vanished">Establecer fondo: error al recortar</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1772"/>
         <source>AI upscaling...</source>
-        <translation>Escalando por IA...</translation>
+        <translation type="vanished">Escalando por IA...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1802"/>
         <source>Set wallpaper: scaling failed</source>
-        <translation>Establecer fondo: error de escalado</translation>
+        <translation type="vanished">Establecer fondo: error de escalado</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1809"/>
         <source>Set wallpaper: failed to save PNG</source>
-        <translation>Establecer fondo: error al guardar el PNG</translation>
+        <translation type="vanished">Establecer fondo: error al guardar el PNG</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1835"/>
         <source>Wallpaper set</source>
-        <translation>Fondo de pantalla establecido</translation>
+        <translation type="vanished">Fondo de pantalla establecido</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1938"/>
+        <location filename="../../core.cpp" line="1893"/>
         <source>Could not open path: </source>
         <translation>No se pudo abrir la ruta: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2003"/>
+        <location filename="../../core.cpp" line="1958"/>
         <source>Could not load folder: </source>
         <translation>No se pudo cargar la carpeta: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2197"/>
+        <location filename="../../core.cpp" line="2152"/>
         <source>End of directory.</source>
         <translation>Fin de la carpeta.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2231"/>
+        <location filename="../../core.cpp" line="2186"/>
         <source>Load failed: </source>
         <translation>Carga fallida: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2300"/>
+        <location filename="../../core.cpp" line="2255"/>
+        <location filename="../../core.cpp" line="2262"/>
         <source>Error: could not load image.</source>
         <translation>Error: no se pudo cargar la imagen.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2339"/>
-        <location filename="../../core.cpp" line="2359"/>
+        <location filename="../../core.cpp" line="2299"/>
+        <location filename="../../core.cpp" line="2322"/>
         <source>Page %1/%2</source>
         <translation>Página %1/%2</translation>
     </message>
@@ -1139,10 +1173,10 @@ Archivos totales: %3</translation>
 <context>
     <name>DirectoryPresenter</name>
     <message>
-        <location filename="../../components/directorypresenter.cpp" line="303"/>
-        <location filename="../../components/directorypresenter.cpp" line="494"/>
-        <location filename="../../components/directorypresenter.cpp" line="501"/>
-        <location filename="../../components/directorypresenter.cpp" line="559"/>
+        <location filename="../../components/directorypresenter.cpp" line="289"/>
+        <location filename="../../components/directorypresenter.cpp" line="662"/>
+        <location filename="../../components/directorypresenter.cpp" line="669"/>
+        <location filename="../../components/directorypresenter.cpp" line="727"/>
         <source>Folder</source>
         <translation>Carpeta</translation>
     </message>
@@ -1388,12 +1422,12 @@ Archivos totales: %3</translation>
         <translation>Inicio</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="767"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="780"/>
         <source>1 image selected</source>
         <translation>1 imagen seleccionada</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/folderview.cpp" line="769"/>
+        <location filename="../../gui/folderview/folderview.cpp" line="782"/>
         <source>%1 images selected</source>
         <translation>%1 imágenes seleccionadas</translation>
     </message>
@@ -1707,114 +1741,114 @@ Archivos totales: %3</translation>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="290"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="281"/>
         <source>Make</source>
         <translation>Capturar</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="294"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="285"/>
         <source>Model</source>
         <translation>Modelo</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="298"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="289"/>
         <source>Date/Time</source>
         <translation>Fecha/Hora</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="305"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="308"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="296"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="299"/>
         <source>ExposureTime</source>
         <translation>Tiempo de exposición</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="305"/>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="308"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="296"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="299"/>
         <source> sec</source>
         <translation> seg</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="316"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="307"/>
         <source>F Number</source>
         <translation>Número F</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="321"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="312"/>
         <source>ISO Speed ratings</source>
         <translation>Rangos de velocidad ISO</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="325"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="316"/>
         <source>Flash</source>
         <translation>Flash</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="331"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="322"/>
         <source>Focal Length</source>
         <translation>Longitud focal</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="331"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="322"/>
         <source> mm</source>
         <translation> mm</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="339"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="330"/>
         <source>UserComment</source>
         <translation>Comentarios</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="382"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="373"/>
         <source>Checkpoint</source>
         <translation>Checkpoint</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="384"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="375"/>
         <source>CLIP</source>
         <translation>CLIP</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="386"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="377"/>
         <source>VAE</source>
         <translation>VAE</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="388"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="379"/>
         <source>Sampler</source>
         <translation>Sampler</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="390"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="381"/>
         <source>Scheduler</source>
         <translation>Scheduler</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="391"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="382"/>
         <source>Seed</source>
         <translation>Seed</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="392"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="383"/>
         <source>CFG</source>
         <translation>CFG</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="393"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="384"/>
         <source>Denoise</source>
         <translation>Denoise</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="394"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="385"/>
         <source>Steps</source>
         <translation>Steps</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="396"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="387"/>
         <source>LoRA</source>
         <translation>LoRA</translation>
     </message>
     <message>
-        <location filename="../../sourcecontainers/documentinfo.cpp" line="398"/>
+        <location filename="../../sourcecontainers/documentinfo.cpp" line="389"/>
         <source>Prompt</source>
         <translation>Prompt</translation>
     </message>
@@ -1891,22 +1925,22 @@ Archivos totales: %3</translation>
 <context>
     <name>ResizeDialog</name>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="159"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="160"/>
         <source>Resize</source>
         <translation>Cambiar tamaño</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="170"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="171"/>
         <source>By Percent:</source>
         <translation>Por porcentaje:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="188"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="189"/>
         <source>By Absolute Size:</source>
         <translation>Por tamaño absoluto:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="175"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="176"/>
         <source>Percent:</source>
         <translation>Porcentaje:</translation>
     </message>
@@ -1916,27 +1950,27 @@ Archivos totales: %3</translation>
         <translation>No se encontraron modelos de IA en el directorio models/.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="192"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="193"/>
         <source>Width:</source>
         <translation>Ancho:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="203"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="204"/>
         <source>Height:</source>
         <translation>Altura:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="215"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="216"/>
         <source>Keep aspect ratio</source>
         <translation>Mantener relacion de aspecto</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="228"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="229"/>
         <source>Use Upscayl</source>
         <translation>Usar Upscayl</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="220"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="221"/>
         <source>Filter:</source>
         <translation>Filtro:</translation>
     </message>
@@ -1946,44 +1980,49 @@ Archivos totales: %3</translation>
         <translation>Magic Kernel Sharp 2021</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="232"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="233"/>
         <source>Model:</source>
         <translation>Modelo:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="245"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="246"/>
         <source>Common sizes:</source>
         <translation>Tamaños comunes:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="249"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="250"/>
         <source>Select:</source>
         <translation>Seleccionar:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="264"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="265"/>
         <source>Fit to desktop</source>
         <translation>Encajar al escritorio</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="267"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="268"/>
         <source>Fill desktop (expanding)</source>
         <translation>Rellenar escritorio (expandiendo)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="270"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="271"/>
         <source>Reset</source>
         <translation>Resetear</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="281"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="282"/>
         <source>OK</source>
         <translation>Confirmar</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/resizedialog.cpp" line="284"/>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="285"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/resizedialog.cpp" line="330"/>
+        <source>Use Upscayl only applies when the target size is larger than the original; it has no effect at this size and will be skipped.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/resizedialog.cpp" line="70"/>
@@ -2161,125 +2200,125 @@ Archivos totales: %3</translation>
         <translation>Usar color de acento personalizado</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4067"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4103"/>
         <source>&lt;a href=&quot;https://github.com/upscayl/custom-models/tree/main/models&quot;&gt;&lt;span style=&quot;text-decoration: underline; color:#007af4;&quot;&gt;Get more models&lt;/span&gt;&lt;/a&gt;</source>
         <translation>&lt;a href=&quot;https://github.com/upscayl/custom-models/tree/main/models&quot;&gt;&lt;span style=&quot;text-decoration: underline; color:#007af4;&quot;&gt;Obtener más modelos&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3857"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3892"/>
         <source>Preferences</source>
         <translation>Preferencias</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3859"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3894"/>
         <source>SettingsDialog</source>
         <translation>Ventana de configuracion</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3865"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3900"/>
         <source>General</source>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3866"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3901"/>
         <source>Language:</source>
         <translation>Idioma:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3867"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3902"/>
         <source>Requires application restart</source>
         <translation>Requiere reiniciar</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3868"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3903"/>
         <source>Open in fullscreen</source>
         <translation>Abrir en pantalla completa</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3869"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3904"/>
         <source>Start in folder view by default</source>
         <translation>Abrir por defecto en vista de carpetas</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3875"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3910"/>
         <source>User interface</source>
         <translation>Interfaz de usuario</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3876"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3911"/>
         <source>Image info in window title</source>
         <translation>Informacion de la imagen en barra de titulos</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3878"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3913"/>
         <source>Auto-hide cursor</source>
         <translation>Ocultar cursor automaticamente</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3880"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3915"/>
         <source>Turn this off if you are using a touchpad with libinput driver.</source>
         <translation>Desactivar si esta utilizando un panel táctil con el controlador de libimput.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3882"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3917"/>
         <source>Smooth thumbnail scrolling</source>
         <translation>Usar desplazamiento suave de miniaturas</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3883"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3918"/>
         <source>Smooth zooming</source>
         <translation>Zoom suave</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3877"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3912"/>
         <source>Fullscreen info bar</source>
         <translation>Barra de información en pantalla completa</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3884"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3919"/>
         <source>Zoom indicator:</source>
         <translation>Indicador de zoom:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3885"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3920"/>
         <source>On</source>
         <translation>Encendido</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3886"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3921"/>
         <source>Off</source>
         <translation>Apagado</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3887"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3922"/>
         <source>Auto</source>
         <translation>Automático</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3888"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3923"/>
         <source>Automatic window resize</source>
         <translation>Redimensionar la ventana automáticamente</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3889"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3924"/>
         <source>Match displayed content</source>
         <translation>Ajustar al contenido mostrado</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3890"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3925"/>
         <source>Screen area limit for auto resize:</source>
         <translation>límite de pantalla para auto dimensionado:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3891"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3947"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3926"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3982"/>
         <source>xx</source>
         <translation>xx</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="237"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3895"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3999"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3930"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4034"/>
         <source>Thumbnail panel</source>
         <translation>Panel de miniaturas</translation>
     </message>
@@ -2299,183 +2338,193 @@ Archivos totales: %3</translation>
         <translation>No se encontraron modelos de IA en el directorio models/.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3870"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3427"/>
+        <source>Unlimited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3905"/>
         <source>Enable standby mode on close</source>
         <translation>Activar modo de espera al cerrar</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3872"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3907"/>
         <source>Keeps the application running in the background when closed. Subsequent launches will be instant.</source>
         <translation>Mantiene la aplicación ejecutándose en segundo plano al cerrarla. Los lanzamientos posteriores serán instantáneos.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3874"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3909"/>
         <source>Remember last opened folder</source>
         <translation>Recordar la última carpeta abierta</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3896"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3931"/>
         <source>Crop previews</source>
         <translation>Recortar miniaturas</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3897"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3932"/>
         <source>Pinned</source>
         <translation>Fijo</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3898"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3933"/>
         <source>Disable in windowed mode</source>
         <translation>Desactivar en modo ventana</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3899"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3934"/>
         <source>Center selected image</source>
         <translation>Centrar la imagen seleccionada</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3900"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3935"/>
         <source>Show subfolders</source>
         <translation>Mostrar subcarpetas</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3901"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3936"/>
         <source>Extended</source>
         <translation>Extendido</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3902"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3937"/>
         <source>Previews only</source>
         <translation>Solo vistas previas</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3903"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3938"/>
         <source>Display style:</source>
         <translation>Estilo de visualización:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3904"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3939"/>
         <source>Show filename and resolution</source>
         <translation>Mostrar nombre y resolución</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3905"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3940"/>
         <source>Simple</source>
         <translation>Sencillo</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3906"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3941"/>
         <source>Preview size:</source>
         <translation>Tamaño de previsualización:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3907"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3942"/>
         <source>Position:</source>
         <translation>Ubicación:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3908"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3941"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3943"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3976"/>
         <source>Top</source>
         <translation>Arriba</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3909"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3944"/>
         <source>Bottom</source>
         <translation>Abajo</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3910"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3945"/>
         <source>Left</source>
         <translation>Izquierda</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3911"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3946"/>
         <source>Right</source>
         <translation>Derecha</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3913"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3948"/>
         <source>Folder navigation</source>
         <translation>Navegador de carpetas</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3914"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3949"/>
         <source>Stop</source>
         <translation>Detener</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3915"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3950"/>
         <source>Loop folder</source>
         <translation>Carpetas en bucle</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3916"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3951"/>
         <source>Go to the next folder</source>
         <translation>Ir a la siguiente carpeta</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3917"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3952"/>
         <source>After reaching the end:</source>
         <translation>Despues de alcanzar el final:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3918"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3953"/>
         <source>Default sorting mode:</source>
         <translation>Ordenamiento por defecto:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3919"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3954"/>
         <source>A - Z</source>
         <translation>A - Z</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3920"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3955"/>
         <source>Z - A</source>
         <translation>Z - A</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3921"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3956"/>
         <source>Size</source>
         <translation>Tamaño</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3922"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3957"/>
         <source>Size (desc)</source>
         <translation>Tamaño (descendiente)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3923"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3958"/>
         <source>Oldest</source>
         <translation>Más antiguo</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3924"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3959"/>
         <source>Newest</source>
         <translation>Más reciente</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3926"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3961"/>
         <source>Apply sorting to folders</source>
         <translation>Aplicar ordenamiento a carpetar</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3935"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
         <source>Fit to window</source>
         <translation>Ajustar a la ventana</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3936"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3971"/>
         <source>Fit to width</source>
         <translation>Ajustar al ancho</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3938"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3973"/>
         <source>Fit to height</source>
         <translation>Ajustar al alto</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4072"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4084"/>
+        <source>Thumbnail cache size limit:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4108"/>
         <source>This is a fast and easy to use image viewer
 
 **Github page:** [https://github.com/hadoooooouken/qimgv-plus](https://github.com/hadoooooouken/qimgv-plus)
@@ -2510,539 +2559,539 @@ Informa de errores / solicita funciones [aquí](https://github.com/hadoooooouken
 </translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4004"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4039"/>
         <source>Thumbnail bar opacity:</source>
         <translation>Opacidad de la barra de miniaturas:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4006"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4041"/>
         <source>Use black for background and thumbnail bar</source>
         <translation>Usar negro para el fondo y la barra de miniaturas</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4064"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4100"/>
         <source>AI Upscale</source>
         <translation>Escalar por IA</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4065"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4101"/>
         <source>Use Upscayl</source>
         <translation>Usar Upscayl</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4066"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4102"/>
         <source>Model:</source>
         <translation>Modelo:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4068"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4104"/>
         <source>Load engine at startup and keep ready in video memory</source>
         <translation>Cargar el motor al inicio y mantenerlo listo en la memoria de video</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4069"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4105"/>
         <source>Enable upscaling only when zoom exceeds:</source>
         <translation>Habilitar el escalado solo cuando el zoom supere:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4070"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4106"/>
         <source>200%</source>
         <translation>200%</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4071"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4107"/>
         <source>About qimgv-plus</source>
         <translation>Acerca de qimgv-plus</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3927"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3962"/>
         <source>Show hidden files</source>
         <translation>Mostrar archivos ocultos</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3928"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3963"/>
         <source>Slideshow</source>
         <translation>Diapositivas</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3929"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3964"/>
         <source>Switch interval:</source>
         <translation>Intervalo entre diapositivas:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3930"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3965"/>
         <source>ms</source>
         <translation>ms</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3931"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3966"/>
         <source>Loop slideshow</source>
         <translation>Diapositivas en bucle</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3932"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3967"/>
         <source>View</source>
         <translation>Ver</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3933"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3968"/>
         <source>Display options</source>
         <translation>Opciones de visualización</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3934"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3969"/>
         <source>Image fit:</source>
         <translation>Encajar imagen:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3937"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3972"/>
         <source>1:1</source>
         <translation>1:1</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3939"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3974"/>
         <source>Keep fit mode when switching images</source>
         <translation>Mantener modo de encaje al cambiar de imagen</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3940"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3975"/>
         <source>Focus in 1:1 mode:</source>
         <translation>Enfoque en modo 1:1:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3942"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3977"/>
         <source>Center</source>
         <translation>Centrar</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3943"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3978"/>
         <source>At cursor</source>
         <translation>Sobre el cursor</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3944"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3979"/>
         <source>Part of image that&apos;s focused after switching to 1:1</source>
         <translation>Parte de la imagen enfocada tras cambiar a 1:1</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3945"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3980"/>
         <source>Grid background on images with transparency</source>
         <translation>Fondo de cuadrícula en imágenes con transparencia</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3946"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3981"/>
         <source>Expand images, up to:</source>
         <translation>Ampliar imágenes, hasta:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3948"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3983"/>
         <source>Images smaller than window will be zoomed in</source>
         <translation>Las imágenes más pequeñas que la ventana se ampliarán</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3949"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3984"/>
         <source>Zoom options</source>
         <translation>Opciones de zoom</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3950"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3985"/>
         <source>Unlock minimum zoom</source>
         <translation>Desbloquear zoom mínimo</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3951"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3986"/>
         <source>Always allow zooming below 100%</source>
         <translation>Permitir siempre hacer zoom por debajo del 100%</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3952"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3987"/>
         <source>Zoom step:</source>
         <translation>Paso de zoom:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3953"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3988"/>
         <source>[step]</source>
         <translation>[salto]</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3954"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3989"/>
         <source>Use fixed zoom levels:</source>
         <translation>Usar niveles de zoom fijos:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3955"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3990"/>
         <source>Load defaults</source>
         <translation>Cargar opciones por defecto</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3956"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3991"/>
         <source>Scaling quality</source>
         <translation>Calidad de escala</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3960"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3995"/>
         <source>Scaling filter:</source>
         <translation>Filtro de escala:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3961"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3996"/>
         <source>Nearest neighbor</source>
         <translation>Más cercano</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="242"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3962"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3997"/>
         <source>Bilinear</source>
         <translation>Bilinear</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3967"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4002"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3968"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4003"/>
         <source>Load preset:</source>
         <translation>Cargar preajuste:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3969"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3974"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4004"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4009"/>
         <source>Black</source>
         <translation>Negro</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="75"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4005"/>
         <source>Dark</source>
         <translation>Oscuro</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3971"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4006"/>
         <source>Dark Blue</source>
         <translation>Azul oscuro</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="76"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3972"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4007"/>
         <source>Light</source>
         <translation>Ligero</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3975"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4010"/>
         <source>Use system colors</source>
         <translation>Usar colores del sistema</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3979"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4014"/>
         <source>Accent</source>
         <translation>Primer plano</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3980"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4015"/>
         <source>Background</source>
         <translation>Fondo</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3981"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4016"/>
         <source>Background (fullscreen mode)</source>
         <translation>Fondo (modo de pantalla completa)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3983"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4018"/>
         <source>Text</source>
         <translation>Texto</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3984"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4019"/>
         <source>Icons</source>
         <translation>Iconos</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="234"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3988"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4023"/>
         <source>Overlay background</source>
         <translation>Fondo superpuesto</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="232"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3990"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4025"/>
         <source>Widget background</source>
         <translation>Fondo de widgets</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3991"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4026"/>
         <source>Folder view top panel</source>
         <translation>Panel superior de vista de carpetas</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="233"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3992"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4027"/>
         <source>Widget border</source>
         <translation>Borde del widget</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="235"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3995"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4030"/>
         <source>Overlay text</source>
         <translation>Texto superpuesto</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="236"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3997"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4032"/>
         <source>Scrollbars</source>
         <translation>Barras de desplazamiento</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4000"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4035"/>
         <source>Folder view background</source>
         <translation>Fondo de vista de carpeta</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4001"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4036"/>
         <source>Other window tweaks</source>
         <translation>Otros ajustes de ventana</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4002"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4037"/>
         <source>Window opacity:</source>
         <translation>Opacidad de la ventana:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4003"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4005"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4038"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4040"/>
         <source>%</source>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4007"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4042"/>
         <source>Controls</source>
         <translation>Controles</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4008"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4031"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4043"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4066"/>
         <source>Add</source>
         <translation>Agregar</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4009"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4032"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4044"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4067"/>
         <source>Edit</source>
         <translation>Editar</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4010"/>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4033"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4045"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4068"/>
         <source>Remove</source>
         <translation>Eliminar</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4011"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4046"/>
         <source>Reset to defaults</source>
         <translation>Restablecer valores predeterminados</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4013"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4048"/>
         <source>Action</source>
         <translation>Acción</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4015"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4050"/>
         <source>Shortcut</source>
         <translation>Atajo</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4016"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4051"/>
         <source>Switch image by clicking window edges</source>
         <translation>Cambiar de imagen al hacer clic en los bordes de la ventana</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4017"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4052"/>
         <source>Visible edges</source>
         <translation>Bordes visibles</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4018"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4053"/>
         <source>Scroll image with:</source>
         <translation>Desplazar la imagen con:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4019"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4054"/>
         <source>None</source>
         <translation>Ninguno</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4020"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4055"/>
         <source>Touchpad</source>
         <translation>Panel táctil</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4021"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4056"/>
         <source>Touchpad &amp; Mouse Wheel</source>
         <translation>Panel táctil y rueda del ratón</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4023"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4058"/>
         <source>Note: you can also zoom by holding RMB and moving the mouse</source>
         <translation>Nota: también puedes hacer zoom manteniendo presionado el botón derecho y moviendo el ratón</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4024"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4059"/>
         <source>Mouse scrolling speed:</source>
         <translation>Velocidad de desplazamiento del ratón:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4025"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4060"/>
         <source>[x]</source>
         <translation>[x]</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4026"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4061"/>
         <source>Trackpad detection</source>
         <translation>Detección de panel táctil</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4027"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4062"/>
         <source>Disable if you have issues with mouse scrolling</source>
         <translation>Desactívelo si tiene problemas con el desplazamiento del ratón</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4028"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4063"/>
         <source>Scripts</source>
         <translation>Scripts</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4029"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4064"/>
         <source>Note: these will appear in &quot;Open with&quot; menu.</source>
         <translation>Nota: aparecerán en el menú &quot;Abrir con&quot;.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4030"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4065"/>
         <source>Also, you can assign shortcuts to scripts (in &quot;Controls&quot; section).</source>
         <translation>Además, puede asignar atajos a scripts (en la sección &quot;Controles&quot;).</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4034"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4069"/>
         <source>Advanced</source>
         <translation>Avanzado</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4039"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4074"/>
         <source>Use preloader (recommended)</source>
         <translation>Usar precargador (recomendado)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4040"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4075"/>
         <source>Load adjacent images in background</source>
         <translation>Cargar imágenes adyacentes en segundo plano</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4041"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4076"/>
         <source>Thumbnailer thread count:</source>
         <translation>Número de hilos del generador de miniaturas:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4047"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4082"/>
         <source>Thumbnail cache resolution:</source>
         <translation>Resolución de caché de miniaturas:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4042"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4077"/>
         <source>2</source>
         <translation>2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="3976"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4011"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot;text-decoration: underline;&quot;&gt;modify&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot;text-decoration: underline;&quot;&gt;modificar&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4036"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4071"/>
         <source>Preload the next/previous image.
 Results in a much faster image switching (at the expense of wasting more RAM).</source>
         <translation>Precargar la imagen siguiente/anterior.
 Permite cambiar de imagen mucho más rápido (a costa de consumir más RAM).</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4046"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4081"/>
         <source>Use thumbnail cache (recommended)</source>
         <translation>Usar caché de miniaturas (recomendado)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4048"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4083"/>
         <source>256 px</source>
         <translation>256 px</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4051"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4087"/>
         <source>Paths to folders that should not be cached, separated by &apos;;&apos;.
 Example: D:\Downloads; E:\Pictures</source>
         <translation>Rutas a carpetas que no deben ser almacenadas en caché, separadas por &apos;;&apos;.
 Ejemplo: D:\Downloads; E:\Pictures</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4054"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4090"/>
         <source>Unload off-screen thumbnails</source>
         <translation>Descargar miniaturas fuera de pantalla</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4055"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4091"/>
         <source>Dynamically unload items to save memory</source>
         <translation>Descargue elementos dinámicamente para ahorrar memoria</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4056"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4092"/>
         <source>Show save overlay when editing images</source>
         <translation>Mostrar superposición de guardado al editar imágenes</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4057"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4093"/>
         <source>JPEG save quality:</source>
         <translation>Calidad de guardado JPEG:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4058"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4094"/>
         <source>q</source>
         <translation>q</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4059"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4095"/>
         <source>Confirm moving to trash</source>
         <translation>Confirmar mover a la papelera</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4060"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4096"/>
         <source>Confirm file delete (!)</source>
         <translation>Confirmar eliminación del archivo (!)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4061"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4097"/>
         <source>JXL animation support (experimental)</source>
         <translation>Soporte de animación JXL (experimental)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4062"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4098"/>
         <source>Allow multiple instances</source>
         <translation>Permitir múltiples instancias</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4063"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4099"/>
         <source>Memory allocation limit per image, MB:</source>
         <translation>Límite de asignación de memoria por imagen, MB:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4089"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4125"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4090"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4126"/>
         <source>Apply</source>
         <translation>Aplicar</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4091"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4127"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
@@ -3202,32 +3251,32 @@ Ejemplo: D:\Downloads; E:\Pictures</translation>
         <translation>Perfiles de color (*.icc *.icm)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1076"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1079"/>
         <source>Edit shortcut</source>
         <translation>Editar atajo</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1139"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1142"/>
         <source>None (Uncompressed)</source>
         <translation>Ninguno (Sin comprimir)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1141"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1144"/>
         <source>Fast</source>
         <translation>Rápido</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1143"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1146"/>
         <source>Balanced</source>
         <translation>Equilibrado</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1145"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="1148"/>
         <source>Maximum</source>
         <translation>Máximo</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4049"/>
+        <location filename="../../gui/dialogs/settingsdialog.cpp" line="4085"/>
         <source>Exclude paths from caching (separated by semicolon &apos;;&apos;):</source>
         <translation>Excluir rutas del almacenamiento en caché (separadas por punto y coma &apos;;&apos;):</translation>
     </message>
@@ -3296,6 +3345,59 @@ Ejemplo: D:\Downloads; E:\Pictures</translation>
         <location filename="../../components/upscaler/upscaylresizerunnable.cpp" line="33"/>
         <source>Final resize failed.</source>
         <translation>Error al redimensionar final.</translation>
+    </message>
+</context>
+<context>
+    <name>WallpaperController</name>
+    <message>
+        <location filename="../../components/wallpaper/wallpapercontroller.cpp" line="49"/>
+        <source>Set wallpaper: failed to get image</source>
+        <translation type="unfinished">Establecer fondo: error al obtener la imagen</translation>
+    </message>
+    <message>
+        <location filename="../../components/wallpaper/wallpapercontroller.cpp" line="56"/>
+        <source>Set wallpaper: screen not found</source>
+        <translation type="unfinished">Establecer fondo: pantalla no encontrada</translation>
+    </message>
+    <message>
+        <location filename="../../components/wallpaper/wallpapercontroller.cpp" line="77"/>
+        <source>Setting wallpaper...</source>
+        <translation type="unfinished">Estableciendo fondo de pantalla...</translation>
+    </message>
+    <message>
+        <location filename="../../components/wallpaper/wallpapercontroller.cpp" line="91"/>
+        <source>Set wallpaper: invalid monitor size</source>
+        <translation type="unfinished">Establecer fondo: tamaño de monitor no válido</translation>
+    </message>
+    <message>
+        <location filename="../../components/wallpaper/wallpapercontroller.cpp" line="132"/>
+        <source>Set wallpaper: cropping failed</source>
+        <translation type="unfinished">Establecer fondo: error al recortar</translation>
+    </message>
+    <message>
+        <location filename="../../components/wallpaper/wallpapercontroller.cpp" line="147"/>
+        <source>AI upscaling...</source>
+        <translation type="unfinished">Escalando por IA...</translation>
+    </message>
+    <message>
+        <location filename="../../components/wallpaper/wallpapercontroller.cpp" line="185"/>
+        <source>Set wallpaper: scaling failed</source>
+        <translation type="unfinished">Establecer fondo: error de escalado</translation>
+    </message>
+    <message>
+        <location filename="../../components/wallpaper/wallpapercontroller.cpp" line="194"/>
+        <source>Set wallpaper: failed to save PNG</source>
+        <translation type="unfinished">Establecer fondo: error al guardar el PNG</translation>
+    </message>
+    <message>
+        <location filename="../../components/wallpaper/wallpapercontroller.cpp" line="230"/>
+        <source>Wallpaper set</source>
+        <translation type="unfinished">Fondo de pantalla establecido</translation>
+    </message>
+    <message>
+        <location filename="../../components/wallpaper/wallpapercontroller.cpp" line="236"/>
+        <source>Set wallpaper: Windows API call failed</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -1,4 +1,4 @@
-﻿<RCC>
+<RCC>
     <qresource prefix="/">
         <file>res/icons/common/logo/3rdparty/qt.svg</file>
         <file>res/icons/common/logo/app/qimgv.svg</file>

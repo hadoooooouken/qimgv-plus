@@ -21,8 +21,9 @@ SettingsDialog::SettingsDialog(QWidget *parent)
           &QComboBox::setEnabled);
   connect(useUpscaylCheckBox, &QCheckBox::toggled, label_upscaylModel,
           &QLabel::setEnabled);
-  connect(useUpscaylCheckBox, &QCheckBox::toggled,
-          label_upscaylGetModels, &QLabel::setEnabled);
+  // label_upscaylGetModels is intentionally not tied to useUpscayl state:
+  // it is a plain external link and must stay clickable even when
+  // upscaling is disabled (e.g. when no models are installed yet).
   connect(useUpscaylCheckBox, &QCheckBox::toggled, upscaylLimitCheckBox,
           &QCheckBox::setEnabled);
 
@@ -571,7 +572,6 @@ void SettingsDialog::readSettings() {
     preloadUpscaylCheckBox->setEnabled(settings->useUpscayl());
     upscaylModelComboBox->setEnabled(settings->useUpscayl());
     label_upscaylModel->setEnabled(settings->useUpscayl());
-    label_upscaylGetModels->setEnabled(settings->useUpscayl());
 
     int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
     if (modelIdx != -1) {
@@ -603,7 +603,6 @@ void SettingsDialog::readSettings() {
     preloadUpscaylCheckBox->setEnabled(false);
     upscaylModelComboBox->setEnabled(false);
     label_upscaylModel->setEnabled(false);
-    label_upscaylGetModels->setEnabled(false);
     upscaylLimitCheckBox->setChecked(false);
     upscaylLimitCheckBox->setEnabled(false);
     upscaylLimitSlider->setEnabled(false);
