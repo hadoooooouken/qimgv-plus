@@ -23,10 +23,10 @@
 
 namespace {
 constexpr int kActionIconSizePx = UiMetrics::kStandardIconSizePx;
-constexpr int kCaptionControlSpacingPx = 8;
+constexpr int kCaptionControlSpacingPx = 7;
 constexpr int kComboBoxIconVerticalOffsetPx = 1;
 constexpr int kFormatFilterIconVerticalOffsetPx = 2;
-constexpr int kTopBarRightMarginPx = 6;
+constexpr int kTopBarRightMarginPx = 5;
 // sortingComboBox / folderSortingComboBox / formatFilterComboBox (their own
 // StyledComboBox icon, not the dropdown chevron).
 constexpr int kCompactIconSizePx = UiMetrics::kCompactIconSizePx;

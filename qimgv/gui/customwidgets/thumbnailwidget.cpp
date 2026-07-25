@@ -291,16 +291,23 @@ void ThumbnailWidget::drawHoverHighlight(QPainter *painter) {
 
 void ThumbnailWidget::drawLabel(QPainter *painter) {
     if(thumbnail) {
+        const ColorScheme &colors = settings->colorScheme();
+
         // Determine current background color under the text
-        QColor currentBg = mUseThumbPanelColors ? settings->colorScheme().thumbpanel : settings->colorScheme().folderview;
-        if(isHighlighted()) {
-            currentBg = settings->colorScheme().accent;
-        } else if(isHovered()) {
-            currentBg = mUseThumbPanelColors ? settings->colorScheme().thumbpanel_hc : settings->colorScheme().folderview_hc;
+        QColor currentBg =
+            mUseThumbPanelColors ? colors.thumbpanel : colors.folderview;
+        if(!isHighlighted() && isHovered()) {
+            currentBg =
+                mUseThumbPanelColors ? colors.thumbpanel_hc : colors.folderview_hc;
         }
 
-        // Contrast text against current background
-        QColor textColor = (qGray(currentBg.rgb()) > 128) ? QColor(0, 0, 0) : QColor(255, 255, 255);
+        // The selection accent is translucent, so use the corresponding
+        // panel theme's high-contrast text instead of the raw accent.
+        const QColor selectedTextColor =
+            mUseThumbPanelColors ? colors.thumbpanel_text : colors.text_hc2;
+        const QColor textColor = isHighlighted()
+            ? selectedTextColor
+            : ((qGray(currentBg.rgb()) > 128) ? Qt::black : Qt::white);
 
         drawSingleLineText(painter, nameRect, thumbnail->name(), textColor);
         auto op = painter->opacity();
