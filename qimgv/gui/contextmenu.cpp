@@ -124,7 +124,7 @@ void ContextMenu::setupUi()
     m_rotateLeft->setAccessibleName("ContextMenuButton");
     m_rotateLeft->setAction("rotateLeft");
     m_rotateLeft->setIcon(FluentIcon::ArrowRotateCounterclockwise20, kIconSizePx);
-    m_rotateLeft->setIconOffset(-2, 0);
+    m_rotateLeft->setIconOffset(-1, 0);
     m_rotateLeft->setToolTip(tr("Rotate left"));
     m_rotateLeft->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_rotateLeft);
@@ -150,7 +150,7 @@ void ContextMenu::setupUi()
     m_flipH->setAccessibleName("ContextMenuButton");
     m_flipH->setAction("flipH");
     m_flipH->setIcon(FluentIcon::FlipHorizontal20, kIconSizePx);
-    m_flipH->setIconOffset(-1, 2);
+    m_flipH->setIconOffset(-1, 3);
     m_flipH->setToolTip(tr("Flip horizontal"));
     m_flipH->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_flipH);
