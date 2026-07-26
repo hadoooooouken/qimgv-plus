@@ -7,11 +7,14 @@
 #include <QSize>
 #include <QTimer>
 #include <QMutex>
+#include <cstdint>
 #include <memory>
 #include <atomic>
 #include <QThreadPool>
 #include "sourcecontainers/image.h"
 #include "realesrgan.h"
+
+class UpscalerPreloadState;
 
 class UpscaylScaler {
 public:
@@ -62,11 +65,11 @@ private slots:
 
 private:
     void triggerUpscaylProcessing(QRect visibleRect, double currentScale, double dpr);
+    void reconcilePreloadState(bool forceReapply);
 
     // Constant parameters to avoid magic numbers
     static constexpr int kDebounceIntervalMs = 100;
     static constexpr int kMaxCropDimension = 1280;
-    static constexpr int kDummyTileSize = 512;
     static constexpr qint64 kMaxUpscalePixels = 64LL * 1024 * 1024;
     static constexpr int kDefaultScale = 4;
     static constexpr int kPrePadding = 10;
@@ -75,18 +78,9 @@ private:
     bool upscaylActive = false;
     bool upscaylPendingRun = false;
 
-    // Cached copy of the settings that actually affect preload/init, so
-    // readSettings() can ignore notifications that don't change any of them.
-    bool preloadSettingsBaselineValid = false;
-    bool lastUseUpscayl = false;
-    bool lastPreloadUpscayl = false;
-    QString lastUpscaylModel;
-
-    // Guards against queueing more than one preload/destroy task at a time.
-    // Held via shared_ptr so the background task can safely clear it even if
-    // this Upscaler is destroyed before the task (queued on the global pool)
-    // finishes.
-    std::shared_ptr<std::atomic<bool>> preloadTaskBusy;
+    // Shared with the global-pool worker so it can converge on the latest
+    // immutable desired configuration even if this component is destroyed.
+    std::shared_ptr<UpscalerPreloadState> preloadState;
 
     // pending request state
     std::shared_ptr<Image> pendingUpscaylImage;

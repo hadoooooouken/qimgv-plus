@@ -152,47 +152,96 @@ void UpscaylScaler::destroy() {
     }
 }
 
-class UpscaylPreloadTask : public QRunnable {
+class UpscalerPreloadState final {
 public:
-    explicit UpscaylPreloadTask(std::shared_ptr<std::atomic<bool>> busyFlag)
-        : busy(std::move(busyFlag)) {}
+    struct Options final {
+        bool upscalerEnabled = false;
+        bool preloadEnabled = false;
+        QString model;
+
+        bool operator==(const Options &) const = default;
+
+        [[nodiscard]] bool shouldPreload() const noexcept {
+            return upscalerEnabled && preloadEnabled;
+        }
+    };
+
+    struct Configuration final {
+        Options options;
+        uint64_t generation = 0;
+    };
+
+    QMutex mutex;
+    std::shared_ptr<const Configuration> desiredConfiguration;
+    uint64_t nextGeneration = 0;
+    bool workerBusy = false;
+};
+
+namespace {
+
+constexpr int kPreloadWarmupDimension = 512;
+
+void applyPreloadConfiguration(const UpscalerPreloadState::Configuration &configuration) {
+    if (!configuration.options.shouldPreload()) {
+        UpscaylScaler::getInstance()->destroy();
+        return;
+    }
+
+    const QString appDir = QCoreApplication::applicationDirPath();
+    bool didLoad = false;
+    if (UpscaylScaler::getInstance()->init(appDir, configuration.options.model, &didLoad) && didLoad) {
+        QImage dummy(kPreloadWarmupDimension,
+                     kPreloadWarmupDimension,
+                     QImage::Format_ARGB32);
+        dummy.fill(Qt::black);
+        const QImage warmed = UpscaylScaler::getInstance()->upscale(dummy);
+        Q_UNUSED(warmed);
+    }
+}
+
+class UpscaylPreloadTask final : public QRunnable {
+public:
+    explicit UpscaylPreloadTask(std::shared_ptr<UpscalerPreloadState> preloadState)
+        : state(std::move(preloadState)) {}
 
     void run() override {
-        QString appDir = QCoreApplication::applicationDirPath();
-        bool didLoad = false;
-        if (UpscaylScaler::getInstance()->init(appDir, QString(), &didLoad)) {
-            // Only pay for the warm-up upscale when a model was actually
-            // (re)loaded by this call. If it was already resident, the
-            // model is already warm and re-running the 512->2048 upscale
-            // would just waste GPU time.
-            if (didLoad) {
-                QImage dummy(512, 512, QImage::Format_ARGB32);
-                dummy.fill(Qt::black);
-                QImage warmed = UpscaylScaler::getInstance()->upscale(dummy);
+        if (!state) {
+            qWarning() << "[Upscayl] Preload worker started without shared state";
+            return;
+        }
+
+        while (true) {
+            std::shared_ptr<const UpscalerPreloadState::Configuration> configuration;
+            {
+                QMutexLocker locker(&state->mutex);
+                configuration = state->desiredConfiguration;
+                if (!configuration) {
+                    state->workerBusy = false;
+                    qWarning() << "[Upscayl] Preload worker has no desired configuration";
+                    return;
+                }
+            }
+
+            applyPreloadConfiguration(*configuration);
+
+            QMutexLocker locker(&state->mutex);
+            if (!state->desiredConfiguration) {
+                state->workerBusy = false;
+                qWarning() << "[Upscayl] Desired preload configuration disappeared";
+                return;
+            }
+            if (state->desiredConfiguration->generation == configuration->generation) {
+                state->workerBusy = false;
+                return;
             }
         }
-        if (busy)
-            busy->store(false, std::memory_order_release);
     }
 
 private:
-    std::shared_ptr<std::atomic<bool>> busy;
+    std::shared_ptr<UpscalerPreloadState> state;
 };
 
-class UpscaylDestroyTask : public QRunnable {
-public:
-    explicit UpscaylDestroyTask(std::shared_ptr<std::atomic<bool>> busyFlag)
-        : busy(std::move(busyFlag)) {}
-
-    void run() override {
-        UpscaylScaler::getInstance()->destroy();
-        if (busy)
-            busy->store(false, std::memory_order_release);
-    }
-
-private:
-    std::shared_ptr<std::atomic<bool>> busy;
-};
+} // namespace
 
 
 Upscaler::Upscaler(QObject *parent) : QObject(parent) {
@@ -201,7 +250,7 @@ Upscaler::Upscaler(QObject *parent) : QObject(parent) {
     upscaylTimer.setSingleShot(true);
     upscaylTimer.setInterval(kDebounceIntervalMs);
     connect(&upscaylTimer, &QTimer::timeout, this, &Upscaler::onUpscaylTimerTimeout);
-    preloadTaskBusy = std::make_shared<std::atomic<bool>>(false);
+    preloadState = std::make_shared<UpscalerPreloadState>();
 }
 
 Upscaler::~Upscaler() {
@@ -230,36 +279,43 @@ void Upscaler::requestUpscale(std::shared_ptr<Image> image, QSize targetSize, QS
 }
 
 void Upscaler::readSettings() {
-    const bool useUpscayl = settings->useUpscayl();
-    const bool preloadUpscayl = settings->preloadUpscayl();
-    const QString model = settings->upscaylModel();
+    reconcilePreloadState(false);
+}
 
-    // Settings notifications fire for a lot of unrelated changes (theme,
-    // accent color, panel sizes, etc). Only react when something that
-    // actually affects the upscaler's init/preload state has changed.
-    if (preloadSettingsBaselineValid &&
-        useUpscayl == lastUseUpscayl &&
-        preloadUpscayl == lastPreloadUpscayl &&
-        model == lastUpscaylModel) {
+void Upscaler::reconcilePreloadState(bool forceReapply) {
+    if (!preloadState) {
+        qWarning() << "[Upscayl] Cannot reconcile preload state without shared state";
         return;
     }
-    preloadSettingsBaselineValid = true;
-    lastUseUpscayl = useUpscayl;
-    lastPreloadUpscayl = preloadUpscayl;
-    lastUpscaylModel = model;
 
-    // Coalesce: if a preload/destroy task is already queued or running,
-    // don't pile another one on top of it. The task always reads current
-    // settings when it runs, and any real upscale request lazily
-    // (re)initializes the model on its own, so it's safe to simply drop a
-    // request that arrives while one is already in flight.
-    if (preloadTaskBusy->exchange(true, std::memory_order_acq_rel))
-        return;
+    const UpscalerPreloadState::Options desiredOptions{
+        settings->useUpscayl(),
+        settings->preloadUpscayl(),
+        settings->upscaylModel()
+    };
 
-    if (!useUpscayl || !preloadUpscayl) {
-        QThreadPool::globalInstance()->start(new UpscaylDestroyTask(preloadTaskBusy));
-    } else {
-        QThreadPool::globalInstance()->start(new UpscaylPreloadTask(preloadTaskBusy));
+    bool startWorker = false;
+    {
+        QMutexLocker locker(&preloadState->mutex);
+        if (!forceReapply &&
+            preloadState->desiredConfiguration &&
+            preloadState->desiredConfiguration->options == desiredOptions) {
+            return;
+        }
+
+        const uint64_t generation = ++preloadState->nextGeneration;
+        preloadState->desiredConfiguration =
+            std::make_shared<const UpscalerPreloadState::Configuration>(
+                UpscalerPreloadState::Configuration{desiredOptions, generation});
+
+        if (!preloadState->workerBusy) {
+            preloadState->workerBusy = true;
+            startWorker = true;
+        }
+    }
+
+    if (startWorker) {
+        QThreadPool::globalInstance()->start(new UpscaylPreloadTask(preloadState));
     }
 }
 
@@ -278,8 +334,7 @@ void Upscaler::reset() {
     upscaylPendingRun = false;
     emit upscaleAborted();
     if (!settings->preloadUpscayl()) {
-        if (!preloadTaskBusy->exchange(true, std::memory_order_acq_rel))
-            QThreadPool::globalInstance()->start(new UpscaylDestroyTask(preloadTaskBusy));
+        reconcilePreloadState(true);
     }
 }
 
