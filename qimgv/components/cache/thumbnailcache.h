@@ -1,15 +1,15 @@
 #pragma once
 
+#include "thumbnailcachemaintenance.h"
+
+#include <QImage>
 #include <QObject>
-#include <memory>
-#include <QDir>
-#include <QDebug>
 #include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QSqlError>
 #include <QThreadStorage>
 #include <atomic>
-#include "sourcecontainers/thumbnail.h"
+#include <memory>
+#include <mutex>
+#include <utility>
 
 class ThumbnailCache : public QObject
 {
@@ -17,60 +17,67 @@ class ThumbnailCache : public QObject
 public:
     explicit ThumbnailCache();
 
-    // sourcePath is the original image path the thumbnail was generated from;
-    // it is stored alongside the (hashed) cache key so stale entries whose
-    // source file no longer exists can be identified later.
-    void saveThumbnail(const QImage *image, QString id, const QString &sourcePath = QString());
+    [[nodiscard]] bool saveThumbnail(const QImage *image, QString id,
+                                     const QString &sourcePath = QString());
+    [[nodiscard]] bool performStartupMaintenance();
     std::unique_ptr<QImage> readThumbnail(QString id);
     QString thumbnailPath(QString id);
     bool exists(QString id);
     void clear();
 
-    // Deletes least-recently-used entries until the database's total BLOB
-    // size is at or under maxBytes. No-op if maxBytes <= 0 or already under
-    // quota.
-    void enforceQuota(qint64 maxBytes);
-
-    // Checks up to maxChecks entries (oldest-accessed first) for a source
-    // path that no longer exists on disk, and deletes those rows. Returns
-    // the number of entries removed.
-    int cleanupStalePaths(int maxChecks = 200);
-
-signals:
-
-public slots:
-
 private:
-    // Owns exactly one SQLite connection for the thread that created it.
-    // QThreadStorage guarantees this destructor runs on the owning thread
-    // itself (on thread exit, or when setLocalData() replaces the entry),
-    // never from a foreign thread, satisfying QSqlDatabase's thread-affinity
-    // requirement.
     class ThreadLocalConnection {
     public:
-        ThreadLocalConnection(QSqlDatabase database, QString name)
-            : db(std::move(database)), connectionName(std::move(name)) {}
+        ThreadLocalConnection(QSqlDatabase database, QString name,
+                              bool schemaInitialized)
+            : db(std::move(database)),
+              connectionName(std::move(name)),
+              schemaReady(schemaInitialized)
+        {
+        }
 
-        ~ThreadLocalConnection() {
+        ~ThreadLocalConnection()
+        {
             if (db.isOpen())
                 db.close();
-            db = QSqlDatabase(); // drop the handle before removeDatabase()
+            db = QSqlDatabase();
             QSqlDatabase::removeDatabase(connectionName);
         }
 
         QSqlDatabase db;
         QString connectionName;
+        bool schemaReady = false;
     };
 
-    QSqlDatabase getDatabaseConnection();
+    static constexpr qint64 kBytesPerMegabyte = 1024 * 1024;
+    static constexpr qint64 kMaintenanceGrowthBytes = 8 * kBytesPerMegabyte;
+    static constexpr qint64 kAccessTouchIntervalSeconds = 60 * 60;
+    static constexpr int kDatabaseBusyTimeoutMilliseconds = 2000;
+    static constexpr int kWalAutoCheckpointPages = 256;
+    static constexpr int kThumbnailEncodingEffort = 2;
+    static constexpr int kThumbnailEncodingQuality = 85;
+    static constexpr char kThumbnailEncodingFormat[] = "JXL";
 
-    // Runs enforceQuota() + cleanupStalePaths() every kMaintenanceInterval
-    // saves, instead of on every single save, so normal browsing doesn't pay
-    // for a SUM(LENGTH(data)) scan on each new thumbnail.
-    void maybeRunMaintenance();
-    static constexpr int kMaintenanceInterval = 100;
+    [[nodiscard]] QSqlDatabase getDatabaseConnection();
+    [[nodiscard]] bool initializeDatabase(QSqlDatabase &db);
+    [[nodiscard]] bool ensureStartupMaintenance(QSqlDatabase &db);
+    [[nodiscard]] bool executeSchemaStatement(QSqlDatabase &db,
+                                              const QString &statement,
+                                              const QString &operation);
+    [[nodiscard]] ThumbnailCacheMaintenance::Quota currentQuota() const;
+    [[nodiscard]] bool removeEntry(QSqlDatabase &db, const QString &id,
+                                   const QString &reason);
+    [[nodiscard]] bool runMaintenanceLocked(
+        QSqlDatabase &db,
+        const ThumbnailCacheMaintenance::Request &request);
+    [[nodiscard]] bool maintenanceGrowthLimitReached(qint64 encodedBytes);
+
+    static std::mutex sDatabaseAccessMutex;
 
     QThreadStorage<ThreadLocalConnection *> threadConnections;
-    QString cacheDirPath;
-    std::atomic<int> mSaveCounter{0};
+    QString databasePath;
+    ThumbnailCacheMaintenance maintenance;
+    std::mutex startupMaintenanceMutex;
+    std::atomic<bool> startupMaintenanceComplete{false};
+    qint64 bytesSinceMaintenance = 0;
 };

@@ -29,6 +29,8 @@ class Settings : public QObject {
 public:
   static constexpr int MinThumbnailerThreads = 1;
   static constexpr int MaxThumbnailerThreads = 32;
+  static constexpr int DefaultThumbnailCacheMaxSizeMB = 512;
+  static constexpr qint64 DefaultThumbnailCacheMaxEntries = 100'000;
 
   static Settings *getInstance();
   ~Settings();
@@ -93,6 +95,7 @@ public:
   void setThumbnailerThreadCount(int count);
   int thumbnailCacheMaxSizeMB();
   void setThumbnailCacheMaxSizeMB(int mb);
+  qint64 thumbnailCacheMaxEntries();
 
   void setExpandImage(bool mode);
   bool expandImage();
@@ -316,6 +319,10 @@ private:
   std::atomic<int> mCachedUpscaylLimitValue{200};
   std::atomic<int> mCachedMemoryAllocationLimit{2048};
   std::atomic<int> mCachedThumbnailResolution{256};
+  std::atomic<int> mCachedThumbnailCacheMaxSizeMB{
+      DefaultThumbnailCacheMaxSizeMB};
+  std::atomic<qint64> mCachedThumbnailCacheMaxEntries{
+      DefaultThumbnailCacheMaxEntries};
   std::atomic<bool> mCachedColorManagementEnabled{false};
   std::atomic<bool> mCachedJxlAnimation{false};
   std::atomic<int> mCachedPngSaveQuality{3};

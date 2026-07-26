@@ -1,5 +1,6 @@
 #include "thumbnailer.h"
 #include "settings.h"
+#include <QDebug>
 
 Thumbnailer::Thumbnailer() {
     cache = std::make_unique<ThumbnailCache>();
@@ -9,6 +10,15 @@ Thumbnailer::Thumbnailer() {
     if(threads > globalThreads)
         threads = globalThreads;
     pool->setMaxThreadCount(threads);
+
+    if (settings->useThumbnailCache()) {
+        ThumbnailCache *cacheForMaintenance = cache.get();
+        pool->start([cacheForMaintenance]() {
+            if (!cacheForMaintenance->performStartupMaintenance()) {
+                qWarning() << "Thumbnail cache startup maintenance failed";
+            }
+        });
+    }
 }
 
 Thumbnailer::~Thumbnailer() {

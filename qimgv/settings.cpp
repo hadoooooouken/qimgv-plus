@@ -52,6 +52,19 @@ void Settings::initCache() {
   mCachedMemoryAllocationLimit.store(limit, std::memory_order_relaxed);
 
   mCachedThumbnailResolution.store(settingsConf->value("thumbnailResolution", 256).toInt(), std::memory_order_relaxed);
+  mCachedThumbnailCacheMaxSizeMB.store(
+      qMax(0, settingsConf
+                  ->value("thumbnailCacheMaxSizeMB",
+                          DefaultThumbnailCacheMaxSizeMB)
+                  .toInt()),
+      std::memory_order_relaxed);
+  mCachedThumbnailCacheMaxEntries.store(
+      qMax<qint64>(
+          1, settingsConf
+                 ->value("thumbnailCacheMaxEntries",
+                         DefaultThumbnailCacheMaxEntries)
+                 .toLongLong()),
+      std::memory_order_relaxed);
   mCachedColorManagementEnabled.store(settingsConf->value("colorManagementEnabled", false).toBool(), std::memory_order_relaxed);
   mCachedJxlAnimation.store(settingsConf->value("jxlAnimation", false).toBool(), std::memory_order_relaxed);
 
@@ -122,15 +135,22 @@ void Settings::setThumbnailResolution(int size) {
   mCachedThumbnailResolution.store(size, std::memory_order_relaxed);
 }
 //------------------------------------------------------------------------------
-// Maximum on-disk size of the persistent thumbnail database, in megabytes.
-// Used by ThumbnailCache to opportunistically evict the least-recently-used
-// entries once the cache grows past this quota.
+// Maximum aggregate size of the thumbnail database, WAL and shared-memory
+// files, in megabytes. ThumbnailCache enforces this together with the
+// independent entry-count limit.
 int Settings::thumbnailCacheMaxSizeMB() {
-  return settings->settingsConf->value("thumbnailCacheMaxSizeMB", 512).toInt();
+  return mCachedThumbnailCacheMaxSizeMB.load(std::memory_order_relaxed);
 }
 
 void Settings::setThumbnailCacheMaxSizeMB(int mb) {
-  settings->settingsConf->setValue("thumbnailCacheMaxSizeMB", qMax(0, mb));
+  const int boundedSize = qMax(0, mb);
+  settings->settingsConf->setValue("thumbnailCacheMaxSizeMB", boundedSize);
+  mCachedThumbnailCacheMaxSizeMB.store(boundedSize,
+                                      std::memory_order_relaxed);
+}
+
+qint64 Settings::thumbnailCacheMaxEntries() {
+  return mCachedThumbnailCacheMaxEntries.load(std::memory_order_relaxed);
 }
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------

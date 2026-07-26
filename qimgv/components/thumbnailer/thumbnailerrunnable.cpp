@@ -3,6 +3,7 @@
 #include "utils/colormanager.h"
 #include "utils/imagelib.h"
 #include <QPainter>
+#include <QDebug>
 #include <memory>
 
 #include <QColorSpace>
@@ -92,8 +93,12 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
         image->setText(QStringLiteral("label"), QStringLiteral(" [a]"));
 
       if (activeCache) {
-        if (originalSize.width() > settings->thumbnailResolution() || originalSize.height() > settings->thumbnailResolution())
-          activeCache->saveThumbnail(image.get(), thumbnailId, path);
+        if (originalSize.width() > settings->thumbnailResolution() ||
+            originalSize.height() > settings->thumbnailResolution()) {
+          if (!activeCache->saveThumbnail(image.get(), thumbnailId, path)) {
+            qWarning() << "Thumbnail cache write failed for" << path;
+          }
+        }
       }
     }
   }

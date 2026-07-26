@@ -11,6 +11,7 @@ target_sources(qimgv-plus PRIVATE
     cache/cache.cpp
     cache/cacheitem.cpp
     cache/thumbnailcache.cpp
+    cache/thumbnailcachemaintenance.cpp
 
     loader/loader.cpp
     loader/loaderrunnable.cpp
