@@ -101,9 +101,10 @@ private slots:
     void onDroppedInto(const QMimeData *data, QObject *source, int targetIndex, Qt::DropAction action);
 
     // Delivered from the background DirectoryExpandWorker thread (queued
-    // connection) - see startExpandedPathsScan()/launchExpandScan() below.
-    void onExpandBatchReady(QList<QString> paths);
-    void onExpandScanFinished();
+    // connection) with the immutable generation captured for that launch.
+    // See startExpandedPathsScan()/launchExpandScan() below.
+    void onExpandBatchReady(quint64 generation, QList<QString> paths);
+    void onExpandScanFinished(quint64 generation);
 private:
     std::shared_ptr<IDirectoryView> view = nullptr;
     std::shared_ptr<DirectoryModel> model = nullptr;
@@ -143,6 +144,9 @@ private:
         QString fallbackActivePath;
         // Only populated (in launchExpandScan()) when purpose == BatchConvert.
         QString batchConvertDefaultOutputDir;
+        // Assigned once when the request is made. Every queued worker callback
+        // carries this value so it cannot be mistaken for a later request.
+        quint64 generation = {};
     };
 
     // Starts a scan, or - if one is already running - cancels it and
@@ -162,13 +166,8 @@ private:
     bool expandRestartPending = false;
     PendingExpandContext expandNextContext;
 
-    // Bumped only by a "hard" cancel (destructor, unsetModel()) - never by
-    // the ordinary supersede-with-a-newer-request path in
-    // startExpandedPathsScan(). onExpandScanFinished() compares the epoch
-    // it was launched under against the current one and silently discards
-    // the result on a mismatch, so a worker that's still unwinding after
-    // model/view teardown can never emit a signal or dereference model
-    // against whatever gets attached next.
-    quint64 expandEpoch = 0;
-    quint64 expandLaunchEpoch = 0;
+    // Incremented for every request and hard cancellation. The current value
+    // identifies the only request allowed to append batches or consume a
+    // completion, so callbacks queued before model replacement are harmless.
+    quint64 expandEpoch = {};
 };

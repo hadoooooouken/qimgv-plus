@@ -445,6 +445,7 @@ void DirectoryPresenter::startExpandedPathsScan(ExpandPurpose purpose, int fallb
   ctx.purpose = purpose;
   ctx.fallbackAbsoluteIndex = fallbackAbsoluteIndex;
   ctx.fallbackActivePath = fallbackActivePath;
+  ctx.generation = ++expandEpoch;
 
   if (expandWorker) {
     // A scan is already running - cancel it and remember this request.
@@ -457,12 +458,16 @@ void DirectoryPresenter::startExpandedPathsScan(ExpandPurpose purpose, int fallb
     return;
   }
 
+  // A worker can be deleted before its queued completion is delivered, which
+  // clears the QPointer above. This direct launch is the newest request and
+  // therefore supersedes any deferred context left by that stale completion.
+  expandRestartPending = false;
+  expandNextContext = PendingExpandContext{};
   launchExpandScan(ctx);
 }
 
 void DirectoryPresenter::launchExpandScan(const PendingExpandContext &ctx) {
   expandContext = ctx;
-  expandLaunchEpoch = expandEpoch;
   expandAccumulatedPaths.clear();
 
   // Computed here rather than passed in via ctx, so it reflects the same
@@ -498,12 +503,18 @@ void DirectoryPresenter::launchExpandScan(const PendingExpandContext &ctx) {
   worker->moveToThread(thread);
 
   connect(thread, &QThread::started, worker, &DirectoryExpandWorker::run);
-  connect(worker, &DirectoryExpandWorker::pathsReady, this, &DirectoryPresenter::onExpandBatchReady);
+  const quint64 launchGeneration = expandContext.generation;
+  connect(worker, &DirectoryExpandWorker::pathsReady, this,
+          [this, launchGeneration](QList<QString> paths) {
+            onExpandBatchReady(launchGeneration, paths);
+          });
   connect(worker, &DirectoryExpandWorker::error, this, [](const QString &message) {
     qWarning() << "[DirectoryPresenter]" << message;
   });
   connect(worker, &DirectoryExpandWorker::finished, thread, &QThread::quit);
-  connect(worker, &DirectoryExpandWorker::finished, this, &DirectoryPresenter::onExpandScanFinished);
+  connect(worker, &DirectoryExpandWorker::finished, this, [this, launchGeneration]() {
+    onExpandScanFinished(launchGeneration);
+  });
   connect(worker, &DirectoryExpandWorker::finished, worker, &QObject::deleteLater);
   connect(thread, &QThread::finished, thread, &QObject::deleteLater);
 
@@ -516,27 +527,41 @@ void DirectoryPresenter::cancelExpandedPathsScan() {
   if (expandWorker)
     expandWorker->requestStop();
   expandRestartPending = false;
+  expandNextContext = PendingExpandContext{};
   ++expandEpoch;
 }
 
-void DirectoryPresenter::onExpandBatchReady(QList<QString> paths) {
+void DirectoryPresenter::onExpandBatchReady(quint64 generation, QList<QString> paths) {
+  if (generation != expandEpoch || generation != expandContext.generation)
+    return;
+
   expandAccumulatedPaths << paths;
 }
 
-void DirectoryPresenter::onExpandScanFinished() {
+void DirectoryPresenter::onExpandScanFinished(quint64 generation) {
+  // A newer worker may already have been launched if this worker was deleted
+  // before its queued completion reached the presenter. Never let the stale
+  // completion reset that newer worker's state.
+  if (generation != expandContext.generation)
+    return;
+
   PendingExpandContext finishedCtx = expandContext;
   QList<QString> filePaths = expandAccumulatedPaths;
 
   expandWorker = nullptr;
   expandThread = nullptr;
+  expandContext = PendingExpandContext{};
+  expandAccumulatedPaths.clear();
 
   if (expandRestartPending) {
+    PendingExpandContext nextCtx = expandNextContext;
     expandRestartPending = false;
-    launchExpandScan(expandNextContext);
+    expandNextContext = PendingExpandContext{};
+    launchExpandScan(nextCtx);
     return; // superseded request - this (possibly partial, cancelled) scan's results are discarded
   }
 
-  if (!model)
+  if (generation != expandEpoch || !model)
     return;
 
   switch (finishedCtx.purpose) {
