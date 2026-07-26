@@ -2,6 +2,8 @@
 #include "settings.h"
 #include "components/comfymetadata/comfyksamplerparser.h"
 
+#include <utility>
+
 DocumentInfo::DocumentInfo(QString path)
     : mDocumentType(DocumentType::NONE),
       mOrientation(0),
@@ -255,9 +257,37 @@ void DocumentInfo::loadExifTags() {
 
 #ifdef USE_EXIV2
     try {
-        std::unique_ptr<Exiv2::Image> image = Exiv2::ImageFactory::open(fileInfo.filePath().toLocal8Bit().constData());
-        if (!image)
+        QFile exifFile(fileInfo.filePath());
+        if (!exifFile.open(QFile::ReadOnly)) {
+            qWarning() << "DocumentInfo: failed to open file for EXIF read:"
+                       << fileInfo.filePath() << exifFile.errorString();
             return;
+        }
+
+        const qint64 fileSize = exifFile.size();
+        if (fileSize <= 0) {
+            qWarning() << "DocumentInfo: cannot read EXIF from an empty file:"
+                       << fileInfo.filePath();
+            return;
+        }
+
+        const uchar *mappedFile = exifFile.map(0, fileSize);
+        if (!mappedFile) {
+            qWarning() << "DocumentInfo: failed to map file for EXIF read:"
+                       << fileInfo.filePath() << exifFile.errorString();
+            return;
+        }
+
+        // MemIo keeps a non-owning view, so exifFile must outlive the Exiv2 image.
+        Exiv2::BasicIo::UniquePtr exifIo = std::make_unique<Exiv2::MemIo>(
+            reinterpret_cast<const Exiv2::byte*>(mappedFile),
+            static_cast<size_t>(fileSize));
+        std::unique_ptr<Exiv2::Image> image = Exiv2::ImageFactory::open(std::move(exifIo));
+        if (!image) {
+            qWarning() << "DocumentInfo: Exiv2 could not identify the file:"
+                       << fileInfo.filePath();
+            return;
+        }
 
         image->readMetadata();
         Exiv2::ExifData &exifData = image->exifData();
