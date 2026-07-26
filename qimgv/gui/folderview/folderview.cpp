@@ -24,8 +24,6 @@
 namespace {
 constexpr int kActionIconSizePx = UiMetrics::kStandardIconSizePx;
 constexpr int kCaptionControlSpacingPx = 7;
-constexpr int kComboBoxIconVerticalOffsetPx = 1;
-constexpr int kFormatFilterIconVerticalOffsetPx = 2;
 constexpr int kTopBarRightMarginPx = 5;
 // sortingComboBox / folderSortingComboBox / formatFilterComboBox (their own
 // StyledComboBox icon, not the dropdown chevron).
@@ -112,10 +110,10 @@ FolderView::FolderView(QWidget *parent) :
     sortingComboBox->setIcon(FluentIcon::ArrowSort16, kCompactIconSizePx);
     folderSortingComboBox->setIcon(FluentIcon::Folder16, kCompactIconSizePx);
     formatFilterComboBox->setIcon(FluentIcon::Checkmark16, kCompactIconSizePx);
-    const QPoint comboBoxIconOffset(0, kComboBoxIconVerticalOffsetPx);
+    const QPoint comboBoxIconOffset(0, 1);
     sortingComboBox->setIconOffset(comboBoxIconOffset);
     folderSortingComboBox->setIconOffset(comboBoxIconOffset);
-    formatFilterComboBox->setIconOffset(QPoint(0, kFormatFilterIconVerticalOffsetPx));
+    formatFilterComboBox->setIconOffset(QPoint(0, 2));
 
     newBookmarkButton->setIcon(FluentIcon::BookmarkAdd20, kActionIconSizePx);
     homeButton->setIcon(FluentIcon::Home20, kActionIconSizePx);

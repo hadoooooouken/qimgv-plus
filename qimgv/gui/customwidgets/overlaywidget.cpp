@@ -18,9 +18,7 @@ void OverlayWidget::alignHeaderIconToLabel(IconWidget *icon, QLabel *label, QPoi
 }
 
 void OverlayWidget::alignCloseIcon(IconWidget &icon) {
-    constexpr int kHorizontalOffsetPx = -1;
-    constexpr int kVerticalOffsetPx = 1;
-    icon.setIconOffset(kHorizontalOffsetPx, kVerticalOffsetPx);
+    icon.setIconOffset(-1, 1);
 }
 
 OverlayWidget::OverlayWidget(FloatingWidgetContainer *parent)
