@@ -432,7 +432,8 @@ void DirectoryPresenter::requestExpandedSelectedPathsAsync() {
   // Same background-worker path as onItemActivated()/
   // onOpenSelectedRequested() below - see the ExpandPurpose comment in
   // the header. No fallback index/path: BatchConvert either emits the
-  // full expanded list or nothing (see onExpandScanFinished()).
+  // bounded complete result, reports a failure, or emits nothing
+  // (see onExpandScanFinished()).
   startExpandedPathsScan(ExpandPurpose::BatchConvert, -1, QString());
 }
 
@@ -480,9 +481,10 @@ void DirectoryPresenter::launchExpandScan(const PendingExpandContext &ctx) {
   // Classify each selected path as a file or a directory here, on the UI
   // thread, using cheap in-memory DirectoryModel lookups - the worker
   // itself never touches the model, since it lives on a background thread.
+  const QList<QString> selected = selectedPaths();
   QList<DirectoryExpandWorker::SelectedEntry> entries;
-  entries.reserve(selectedPaths().size());
-  for (const QString &path : selectedPaths()) {
+  entries.reserve(selected.size());
+  for (const QString &path : selected) {
     DirectoryExpandWorker::SelectedEntry entry;
     entry.path = path;
     if (model->containsFile(path)) {
@@ -499,17 +501,27 @@ void DirectoryPresenter::launchExpandScan(const PendingExpandContext &ctx) {
   }
 
   auto *thread = new QThread();
-  auto *worker = new DirectoryExpandWorker(entries, settings->supportedFormatsRegex());
+  auto *worker =
+      new DirectoryExpandWorker(std::move(entries), settings->supportedFormatsRegex());
   worker->moveToThread(thread);
 
   connect(thread, &QThread::started, worker, &DirectoryExpandWorker::run);
   const quint64 launchGeneration = expandContext.generation;
   connect(worker, &DirectoryExpandWorker::pathsReady, this,
           [this, launchGeneration](QList<QString> paths) {
-            onExpandBatchReady(launchGeneration, paths);
+            onExpandBatchReady(launchGeneration, std::move(paths));
           });
-  connect(worker, &DirectoryExpandWorker::error, this, [](const QString &message) {
-    qWarning() << "[DirectoryPresenter]" << message;
+  connect(worker, &DirectoryExpandWorker::resultLimitExceeded, this,
+          [this, launchGeneration](int resultLimit) {
+            onExpandScanFailed(
+                {launchGeneration, expandResultLimitErrorMessage(resultLimit)});
+          });
+  connect(worker, &DirectoryExpandWorker::error, this,
+          [this, launchGeneration](const QString &message) {
+            onExpandScanFailed({
+                launchGeneration,
+                tr("Directory expansion failed: %1").arg(message),
+            });
   });
   connect(worker, &DirectoryExpandWorker::finished, thread, &QThread::quit);
   connect(worker, &DirectoryExpandWorker::finished, this, [this, launchGeneration]() {
@@ -532,10 +544,39 @@ void DirectoryPresenter::cancelExpandedPathsScan() {
 }
 
 void DirectoryPresenter::onExpandBatchReady(quint64 generation, QList<QString> paths) {
-  if (generation != expandEpoch || generation != expandContext.generation)
+  if (generation != expandEpoch || generation != expandContext.generation ||
+      !expandContext.failureMessage.isEmpty())
     return;
 
-  expandAccumulatedPaths << paths;
+  const qsizetype remainingCapacity =
+      DirectoryExpandWorker::MAX_RESULT_COUNT - expandAccumulatedPaths.size();
+  if (paths.size() > remainingCapacity) {
+    onExpandScanFailed({
+        generation,
+        expandResultLimitErrorMessage(DirectoryExpandWorker::MAX_RESULT_COUNT),
+    });
+    if (expandWorker)
+      expandWorker->requestStop();
+    return;
+  }
+
+  expandAccumulatedPaths.append(std::move(paths));
+}
+
+QString DirectoryPresenter::expandResultLimitErrorMessage(int resultLimit) const {
+  return tr("Directory expansion stopped because the selection contains more than "
+            "%1 supported files. Narrow the selection and try again.")
+      .arg(resultLimit);
+}
+
+void DirectoryPresenter::onExpandScanFailed(ExpandFailure failure) {
+  if (failure.generation != expandEpoch ||
+      failure.generation != expandContext.generation)
+    return;
+
+  qWarning() << "[DirectoryPresenter]" << failure.errorMessage;
+  expandContext.failureMessage = std::move(failure.errorMessage);
+  expandAccumulatedPaths.clear();
 }
 
 void DirectoryPresenter::onExpandScanFinished(quint64 generation) {
@@ -545,8 +586,8 @@ void DirectoryPresenter::onExpandScanFinished(quint64 generation) {
   if (generation != expandContext.generation)
     return;
 
-  PendingExpandContext finishedCtx = expandContext;
-  QList<QString> filePaths = expandAccumulatedPaths;
+  PendingExpandContext finishedCtx = std::move(expandContext);
+  QList<QString> filePaths = std::move(expandAccumulatedPaths);
 
   expandWorker = nullptr;
   expandThread = nullptr;
@@ -564,17 +605,25 @@ void DirectoryPresenter::onExpandScanFinished(quint64 generation) {
   if (generation != expandEpoch || !model)
     return;
 
+  if (!finishedCtx.failureMessage.isEmpty()) {
+    emit selectionExpansionFailed(std::move(finishedCtx.failureMessage));
+    return;
+  }
+
   switch (finishedCtx.purpose) {
     case ExpandPurpose::OpenSelected:
-      if (!filePaths.isEmpty())
-        emit filesActivated(filePaths, filePaths.first());
+      if (!filePaths.isEmpty()) {
+        QString activePath = filePaths.first();
+        emit filesActivated(std::move(filePaths), std::move(activePath));
+      }
       break;
 
     case ExpandPurpose::ItemActivation: {
       if (filePaths.count() > 1) {
-        emit filesActivated(filePaths, filePaths.contains(finishedCtx.fallbackActivePath)
-                                            ? finishedCtx.fallbackActivePath
-                                            : filePaths.first());
+        QString activePath = filePaths.contains(finishedCtx.fallbackActivePath)
+                                 ? std::move(finishedCtx.fallbackActivePath)
+                                 : filePaths.first();
+        emit filesActivated(std::move(filePaths), std::move(activePath));
         break;
       }
       // 0 or 1 matching files after expansion: fall back to activating
@@ -596,7 +645,8 @@ void DirectoryPresenter::onExpandScanFinished(quint64 generation) {
       // nothing on an empty expansion instead of opening an empty batch
       // converter (see Core::onBatchConverterPathsReady()).
       if (!filePaths.isEmpty())
-        emit expandedSelectedPathsReady(filePaths, finishedCtx.batchConvertDefaultOutputDir);
+        emit expandedSelectedPathsReady(
+            std::move(filePaths), std::move(finishedCtx.batchConvertDefaultOutputDir));
       break;
   }
 }

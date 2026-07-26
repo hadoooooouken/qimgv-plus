@@ -48,26 +48,34 @@ void DirectoryExpandWorker::run() {
 
     auto flushBatch = [this, &batch]() {
         if (!batch.isEmpty()) {
-            emit pathsReady(batch);
+            QList<QString> readyPaths = std::move(batch);
             batch.clear();
+            batch.reserve(MAX_BATCH_SIZE);
+            emit pathsReady(std::move(readyPaths));
         }
     };
 
-    auto tryAdd = [&visited, &batch, &flushBatch](const QString &filePath) {
+    auto tryAdd = [this, &visited, &batch, &flushBatch](const QString &filePath) {
         if (visited.contains(filePath))
-            return;
+            return true;
+        if (visited.size() >= MAX_RESULT_COUNT) {
+            emit resultLimitExceeded(MAX_RESULT_COUNT);
+            return false;
+        }
         visited.insert(filePath);
         batch << filePath;
         if (batch.size() >= MAX_BATCH_SIZE)
             flushBatch();
+        return true;
     };
 
+    bool limitWasExceeded = false;
     for (const SelectedEntry &entry : std::as_const(entries)) {
-        if (isCancellationRequested())
+        if (isCancellationRequested() || limitWasExceeded)
             break;
 
         if (!entry.isDirectory) {
-            tryAdd(entry.path);
+            limitWasExceeded = !tryAdd(entry.path);
             continue;
         }
 
@@ -76,11 +84,14 @@ void DirectoryExpandWorker::run() {
             if (isCancellationRequested())
                 break;
             QString filePath = QDir::fromNativeSeparators(it.next());
-            if (regex.match(it.fileName()).hasMatch())
-                tryAdd(filePath);
+            if (regex.match(it.fileName()).hasMatch() && !tryAdd(filePath)) {
+                limitWasExceeded = true;
+                break;
+            }
         }
     }
 
-    flushBatch();
+    if (!limitWasExceeded)
+        flushBatch();
     finish();
 }

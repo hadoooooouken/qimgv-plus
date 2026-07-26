@@ -58,16 +58,17 @@ public:
     int upArrowCount() const;
 
     // Asynchronous counterpart of the old (now removed) synchronous
-    // expandedSelectedPaths(): expands the current selection into the full
+    // expandedSelectedPaths(): expands the current selection into a bounded
     // list of matching files on the same background DirectoryExpandWorker
     // used by onItemActivated()/onOpenSelectedRequested() (see the
     // ExpandPurpose comment below), instead of walking the selected
     // directories synchronously on the UI thread. For
     // Core::showBatchConverter(), which needs the complete file list up
     // front rather than the activation-signal semantics the other two
-    // call sites use. Emits expandedSelectedPathsReady() once the scan
-    // completes; emits nothing if the expansion is empty, matching what
-    // the old synchronous helper implicitly did for its one caller.
+    // call sites use. Emits expandedSelectedPathsReady() once a scan within
+    // DirectoryExpandWorker::MAX_RESULT_COUNT completes; emits
+    // selectionExpansionFailed() instead of returning a partial list if the
+    // limit is exceeded.
     void requestExpandedSelectedPathsAsync();
 
 
@@ -83,6 +84,9 @@ signals:
     // requestExpandedSelectedPathsAsync() scan completes with a non-empty
     // result (see the BatchConvert case in ExpandPurpose below).
     void expandedSelectedPathsReady(QList<QString> filePaths, QString defaultOutputDir);
+    // A user-facing failure for the current expansion. Partial paths are
+    // discarded before this is emitted.
+    void selectionExpansionFailed(QString errorMessage);
 
 public slots:
     void disconnectView();
@@ -134,8 +138,8 @@ private:
     // back into the same signal that call site used to emit inline.
     enum class ExpandPurpose {
         ItemActivation, // from onItemActivated(): may fall back to a single fileActivated/dirActivated
-        OpenSelected,   // from onOpenSelectedRequested(): always emits filesActivated(), or nothing
-        BatchConvert    // from requestExpandedSelectedPathsAsync(): emits expandedSelectedPathsReady(), or nothing
+        OpenSelected,   // from onOpenSelectedRequested(): emits filesActivated(), nothing, or a failure
+        BatchConvert    // from requestExpandedSelectedPathsAsync(): emits ready, nothing, or a failure
     };
 
     struct PendingExpandContext {
@@ -147,6 +151,14 @@ private:
         // Assigned once when the request is made. Every queued worker callback
         // carries this value so it cannot be mistaken for a later request.
         quint64 generation = {};
+        // Non-empty only when the worker rejected the scan. A failed scan
+        // never exposes its partial aggregate to activation or batch conversion.
+        QString failureMessage;
+    };
+
+    struct ExpandFailure {
+        quint64 generation = {};
+        QString errorMessage;
     };
 
     // Starts a scan, or - if one is already running - cancels it and
@@ -155,6 +167,8 @@ private:
     void startExpandedPathsScan(ExpandPurpose purpose, int fallbackAbsoluteIndex,
                                  const QString &fallbackActivePath);
     void launchExpandScan(const PendingExpandContext &ctx);
+    QString expandResultLimitErrorMessage(int resultLimit) const;
+    void onExpandScanFailed(ExpandFailure failure);
     // Requests cancellation of any scan in progress and drops any queued
     // restart; safe to call unconditionally (destructor, unsetModel()).
     void cancelExpandedPathsScan();

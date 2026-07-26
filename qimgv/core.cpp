@@ -276,6 +276,8 @@ void Core::connectComponents() {
           &Core::historyBack);
   connect(&thumbPanelPresenter, &DirectoryPresenter::forwardRequested, this,
           &Core::historyForward);
+  connect(&thumbPanelPresenter, &DirectoryPresenter::selectionExpansionFailed, mw,
+          &MW::showError);
 
   folderViewPresenter.setView(mw->getFolderView());
   connect(&folderViewPresenter, &DirectoryPresenter::fileActivated, this,
@@ -297,6 +299,8 @@ void Core::connectComponents() {
 
   connect(&folderViewPresenter, &DirectoryPresenter::expandedSelectedPathsReady, this,
           &Core::onBatchConverterPathsReady);
+  connect(&folderViewPresenter, &DirectoryPresenter::selectionExpansionFailed, mw,
+          &MW::showError);
 
   connect(scriptManager, &ScriptManager::error, mw, &MW::showError);
 
