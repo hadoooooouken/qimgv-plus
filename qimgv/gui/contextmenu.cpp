@@ -24,6 +24,8 @@ ContextMenu::ContextMenu(QWidget *parent)
     : QWidget(parent)
 {
     setupUi();
+    connect(settings, &Settings::settingsChanged,
+            this, &ContextMenu::updateDestructiveActionColors);
     qApp->installEventFilter(this);
     hide();
 }
@@ -112,17 +114,6 @@ void ContextMenu::setupUi()
     zoomLayout->addWidget(m_zoomOut);
 
     mainPageLayout->addLayout(zoomLayout);
-
-    // --- Separator line between zoom and transform buttons ---
-    QWidget *editLine = new QWidget();
-    editLine->setFixedHeight(1);
-    editLine->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
-    editLine->setAccessibleName("HLineSeparator");
-    QVBoxLayout *lineEditLayout = new QVBoxLayout();
-    lineEditLayout->setContentsMargins(kSeparatorHorizontalMarginPx, 0,
-                                       kSeparatorHorizontalMarginPx, 0);
-    lineEditLayout->addWidget(editLine);
-    mainPageLayout->addLayout(lineEditLayout);
 
     // --- Transform buttons row ---
     QHBoxLayout *transformLayout = new QHBoxLayout();
@@ -268,13 +259,10 @@ void ContextMenu::setupUi()
     addSeparator(moreLayout, 4, 4);
 
     addItem(m_trash,            moreLayout, "moveToTrash",        tr("Move to trash"),      FluentIcon::Delete20);
-    m_trash->setTextColor(settings->colorScheme().trash);
-    m_trash->setIconColor(settings->colorScheme().trash);
 
     addItem(m_deletePermanently, moreLayout, "removeFile",        tr("Delete permanently"), FluentIcon::Dismiss20);
     m_deletePermanently->setIconOffset(0, 1);
-    m_deletePermanently->setTextColor(settings->colorScheme().danger);
-    m_deletePermanently->setIconColor(settings->colorScheme().danger);
+    updateDestructiveActionColors();
 
     m_moreContainer->hide();
     actionsLayout->addWidget(m_moreContainer);
@@ -345,6 +333,15 @@ void ContextMenu::fillOpenWithMenu()
     }
 }
 
+void ContextMenu::updateDestructiveActionColors()
+{
+    const ColorScheme &colors = settings->colorScheme();
+    m_trash->setTextColor(colors.trash);
+    m_trash->setIconColor(colors.trash);
+    m_deletePermanently->setTextColor(colors.danger);
+    m_deletePermanently->setIconColor(colors.danger);
+}
+
 void ContextMenu::switchToMainPage()
 {
     m_stackedWidget->setCurrentIndex(0);
@@ -380,10 +377,12 @@ QSize ContextMenu::sizeHint() const
     if (current == m_mainPage) {
         // m_moreContainer's own sizeHint() is unaffected by its hidden
         // state (hidden-ness only matters when a widget is queried as an
-        // item of another layout, not when queried directly) - using it as
-        // a floor keeps the menu's width constant across expand/collapse
-        // instead of visibly growing/shrinking with the panel.
-        size.setWidth(qMax(size.width(), m_moreContainer->sizeHint().width()));
+        // item of another layout, not when queried directly). Include the
+        // parent actions layout's horizontal insets so the collapsed width
+        // already matches the width required after expansion.
+        const int expandedWidth = m_moreContainer->sizeHint().width()
+                                  + 2 * kMenuItemHorizontalInsetPx;
+        size.setWidth(qMax(size.width(), expandedWidth));
     }
     size.setHeight(size.height() + layout()->contentsMargins().top() + layout()->contentsMargins().bottom());
     return size;

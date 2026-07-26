@@ -41,6 +41,7 @@ private slots:
 private:
     void setupUi();
     void fillOpenWithMenu();
+    void updateDestructiveActionColors();
 
     QStackedWidget *m_stackedWidget;
 
