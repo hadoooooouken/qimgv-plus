@@ -166,7 +166,7 @@ void ProxyStyle::drawComplexControl(QStyle::ComplexControl control,
     const QColor color = indicatorColor(mColors.icons, comboBoxOption);
     const qreal dpr = targetDevicePixelRatio(painter, widget);
     if (drawCenteredIcon(painter, arrowRect, FluentIcon::ChevronDown12,
-                         kComboBoxChevronSizePx, QRectF(arrowRect).center().y(),
+                         kComboBoxChevronSizePx, QRectF(arrowRect).center().y() + 1.0,
                          color, dpr)) {
         return;
     }
@@ -222,7 +222,7 @@ void ProxyStyle::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOpt
             return;
         icon = FluentIcon::ChevronDown12;
         sizePx = kComboBoxChevronSizePx;
-        centerY = QRectF(option->rect).center().y();
+        centerY = QRectF(option->rect).center().y() + 1.0;
         break;
     }
     default:

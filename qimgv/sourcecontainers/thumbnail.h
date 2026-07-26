@@ -13,11 +13,13 @@ public:
     QString info();
     int size();
     bool hasAlphaChannel();
+    QSize sourceSize() const;
     std::shared_ptr<QPixmap> pixmap();
 private:
     QString mName, mInfo;
     std::shared_ptr<QPixmap> mPixmap;
     QImage mImage;
+    QSize mSourceSize;
     int mSize;
     bool mHasAlphaChannel = false;
 };

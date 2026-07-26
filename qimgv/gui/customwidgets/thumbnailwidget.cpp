@@ -435,20 +435,32 @@ void ThumbnailWidget::updateThumbnailDrawPosition() {
         qreal h = mThumbnailSize * 0.75;
 
         const QPixmap *pixmap = thumbnail->pixmap().get();
-        qreal pixmapDpr = pixmap->devicePixelRatioF();
-        if (pixmapDpr <= 0)
-            pixmapDpr = 1.0;
-        // Logical (device-independent) size of the source pixmap - the
-        // largest size it can be drawn at without upscaling.
-        QSize nativeSize(qRound(pixmap->width()  / pixmapDpr),
-                         qRound(pixmap->height() / pixmapDpr));
+        QSize pixmapSize =
+            pixmap->size().scaled(mThumbnailSize, qRound(h),
+                                  Qt::KeepAspectRatio);
 
-        // Always scale DOWN to fit the current cell dimensions, but never
-        // scale UP past the pixmap's own resolution - avoids blurry enlarged
-        // thumbnails for source images smaller than the grid cell.
-        QSize pixmapSize = nativeSize;
-        if (nativeSize.width() > mThumbnailSize || nativeSize.height() > h)
-            pixmapSize = nativeSize.scaled(mThumbnailSize, h, Qt::KeepAspectRatio);
+        // A cached thumbnail may be smaller than its cell even though the
+        // source image is large enough to fill it. Limit enlargement by the
+        // source resolution, not by the cache copy's resolution.
+        QSize sourceSize = thumbnail->sourceSize();
+        const bool sourceIsLandscape =
+            sourceSize.width() > sourceSize.height();
+        const bool thumbnailIsLandscape =
+            pixmap->width() > pixmap->height();
+        if (sourceIsLandscape != thumbnailIsLandscape)
+            sourceSize.transpose();
+
+        const qreal effectiveDpr = qMax(dpr, qreal(1.0));
+        const QSize maximumLogicalSize(
+            qRound(sourceSize.width() / effectiveDpr),
+            qRound(sourceSize.height() / effectiveDpr));
+        if (maximumLogicalSize.isValid() &&
+            !maximumLogicalSize.isEmpty() &&
+            (pixmapSize.width() > maximumLogicalSize.width() ||
+             pixmapSize.height() > maximumLogicalSize.height())) {
+            pixmapSize =
+                pixmapSize.scaled(maximumLogicalSize, Qt::KeepAspectRatio);
+        }
 
         topLeft.setX((width()  - pixmapSize.width())  / 2.0);
         if(thumbStyle == THUMB_SIMPLE)

@@ -19,6 +19,12 @@
 #include <cmath>
 #include "realesrgan.h"
 
+namespace {
+constexpr int kBatchThumbnailExtent = 48;
+constexpr int kBatchThumbnailCornerRadius = 6;
+constexpr qreal kMinimumDevicePixelRatio = 1.0;
+}
+
 // ==================== BatchItemWidget ====================
 
 BatchItemWidget::BatchItemWidget(const QString &filePath, QWidget *parent)
@@ -37,12 +43,13 @@ BatchItemWidget::BatchItemWidget(const QString &filePath, QWidget *parent)
     mainLayout->addWidget(checkBox);
 
     thumbLabel = new QLabel(this);
-    thumbLabel->setFixedSize(48, 48);
+    thumbLabel->setFixedSize(kBatchThumbnailExtent, kBatchThumbnailExtent);
     thumbLabel->setAlignment(Qt::AlignCenter);
     thumbLabel->setStyleSheet(
-        QString("border: 1px solid %1; background-color: %2; border-radius: 6px;")
+        QString("border: 1px solid %1; background-color: %2; border-radius: %3px;")
             .arg(colors.widget_border.name())
-            .arg(colors.widget.name()));
+            .arg(colors.widget.name())
+            .arg(kBatchThumbnailCornerRadius));
     mainLayout->addWidget(thumbLabel);
 
     QVBoxLayout *leftInfo = new QVBoxLayout();
@@ -105,19 +112,30 @@ BatchItemWidget::BatchItemWidget(const QString &filePath, QWidget *parent)
 
 void BatchItemWidget::setThumbnail(std::shared_ptr<Thumbnail> thumb) {
     if (thumb && thumb->pixmap() && !thumb->pixmap()->isNull()) {
+        const qreal dpr =
+            qMax(thumbLabel->devicePixelRatioF(), kMinimumDevicePixelRatio);
+        const QSize physicalTargetSize(
+            qRound(thumbLabel->width() * dpr),
+            qRound(thumbLabel->height() * dpr));
         QPixmap scaledThumb = thumb->pixmap()->scaled(
-            thumbLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            physicalTargetSize, Qt::KeepAspectRatio,
+            Qt::SmoothTransformation);
+        scaledThumb.setDevicePixelRatio(dpr);
 
         // Clip the thumbnail with a rounded rectangle
         QPixmap roundedThumb(scaledThumb.size());
+        roundedThumb.setDevicePixelRatio(dpr);
         roundedThumb.fill(Qt::transparent);
         QPainter painter(&roundedThumb);
         painter.setRenderHint(QPainter::Antialiasing);
         painter.setRenderHint(QPainter::SmoothPixmapTransform);
+        const QRectF logicalThumbRect(
+            QPointF(), scaledThumb.deviceIndependentSize());
         QPainterPath path;
-        path.addRoundedRect(QRectF(scaledThumb.rect()), 6.0, 6.0);
+        path.addRoundedRect(logicalThumbRect, kBatchThumbnailCornerRadius,
+                            kBatchThumbnailCornerRadius);
         painter.setClipPath(path);
-        painter.drawPixmap(0, 0, scaledThumb);
+        painter.drawPixmap(logicalThumbRect.topLeft(), scaledThumb);
         painter.end();
 
         thumbLabel->setPixmap(roundedThumb);
@@ -608,7 +626,11 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
         fileListWidget->setItemWidget(item, widget);
         m_itemWidgets.append(widget);
         connect(widget, &BatchItemWidget::checkedStateChanged, this, &BatchConverterDialog::onCheckedStateChanged);
-        thumbnailer->getThumbnailAsync(path, 48, true, false);
+        const qreal thumbnailDpr =
+            qMax(widget->devicePixelRatioF(), kMinimumDevicePixelRatio);
+        const int thumbnailExtent =
+            qRound(kBatchThumbnailExtent * thumbnailDpr);
+        thumbnailer->getThumbnailAsync(path, thumbnailExtent, true, false);
     }
     totalFiles = filePaths.size();
     updateSelectedCount();

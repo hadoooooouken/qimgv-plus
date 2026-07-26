@@ -35,6 +35,9 @@ protected:
 
 private:
     static constexpr float kDownscaleThreshold = 0.999f;
+    static constexpr double kMinimumTransformScale = 0.001;
+    static constexpr double kOneToOneScaleTolerance = 0.001;
+    static constexpr qreal kMinimumDevicePixelRatio = 1.0;
 
     float mExposure = 0.0f;    // -3.0f to 3.0f
     float mContrast = 1.0f;   // 0.0f to 3.0f

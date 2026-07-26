@@ -135,12 +135,25 @@ void FilterPixmapItem::initShader() {
 }
 
 void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    QTransform transform = painter->combinedTransform();
-    double transScaleX = std::sqrt(transform.m11() * transform.m11() + transform.m12() * transform.m12());
-    double transScaleY = std::sqrt(transform.m21() * transform.m21() + transform.m22() * transform.m22());
-    if (transScaleX < 0.001) transScaleX = 1.0;
-    if (transScaleY < 0.001) transScaleY = 1.0;
-    bool isOneToOne = (qAbs(transScaleX - 1.0) < 0.001 && qAbs(transScaleY - 1.0) < 0.001);
+    // Native OpenGL operates in physical framebuffer pixels. Using the logical
+    // combined transform here offsets and scales the quad incorrectly on HiDPI
+    // screens, while also making 1:1 zoom look like device-scale magnification.
+    const QTransform deviceTransform = painter->deviceTransform();
+    const double deviceScaleX =
+        std::hypot(deviceTransform.m11(), deviceTransform.m12());
+    const double deviceScaleY =
+        std::hypot(deviceTransform.m21(), deviceTransform.m22());
+    const qreal imageDpr =
+        qMax(mImage.devicePixelRatio(), kMinimumDevicePixelRatio);
+    double sourceToDeviceScaleX = deviceScaleX / imageDpr;
+    double sourceToDeviceScaleY = deviceScaleY / imageDpr;
+    if (sourceToDeviceScaleX < kMinimumTransformScale)
+        sourceToDeviceScaleX = 1.0;
+    if (sourceToDeviceScaleY < kMinimumTransformScale)
+        sourceToDeviceScaleY = 1.0;
+    const bool isOneToOne =
+        qAbs(sourceToDeviceScaleX - 1.0) < kOneToOneScaleTolerance &&
+        qAbs(sourceToDeviceScaleY - 1.0) < kOneToOneScaleTolerance;
     float activeCasSharpening = isOneToOne ? 0.0f : mCasSharpening;
     bool activeSmartGpu = (mScalingFilter == QI_FILTER_SMART_GPU);
     if (isOneToOne) {
@@ -196,7 +209,9 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         return;
     }
 
-    bool needMips = (transScaleX < kDownscaleThreshold || transScaleY < kDownscaleThreshold || activeSmartGpu);
+    bool needMips = (sourceToDeviceScaleX < kDownscaleThreshold ||
+                     sourceToDeviceScaleY < kDownscaleThreshold ||
+                     activeSmartGpu);
     bool canReuse = mTexture &&
                     mTexture->width() == mImage.width() &&
                     mTexture->height() == mImage.height() &&
@@ -227,7 +242,9 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     // Use trilinear filtering (MipMapLinear) for downscaling or active GPU Smart Sharpen
     QOpenGLTexture::Filter minFilter = filter;
-    if (filter == QOpenGLTexture::Linear && (transScaleX < kDownscaleThreshold || transScaleY < kDownscaleThreshold || activeSmartGpu)) {
+    if (filter == QOpenGLTexture::Linear &&
+        (sourceToDeviceScaleX < kDownscaleThreshold ||
+         sourceToDeviceScaleY < kDownscaleThreshold || activeSmartGpu)) {
         minFilter = QOpenGLTexture::LinearMipMapLinear;
     }
     mTexture->setMinificationFilter(minFilter);
@@ -242,15 +259,17 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     mProgram->bind();
     mTexture->bind();
 
-    QMatrix4x4 modelview(painter->combinedTransform());
+    QMatrix4x4 modelview(deviceTransform);
     QMatrix4x4 projection;
-    projection.ortho(0, glWidget->width(), glWidget->height(), 0, -1.0, 1.0);
+    const qreal viewportDpr = glWidget->devicePixelRatioF();
+    const QSizeF framebufferSize =
+        QSizeF(glWidget->size()) * viewportDpr;
+    projection.ortho(0, framebufferSize.width(), framebufferSize.height(), 0,
+                     -1.0, 1.0);
     QMatrix4x4 matrix = projection * modelview;
 
-    qreal dpr = mImage.devicePixelRatio();
-    if (dpr <= 0.0) dpr = 1.0;
-    qreal logicalWidth = mImage.width() / dpr;
-    qreal logicalHeight = mImage.height() / dpr;
+    const qreal logicalWidth = mImage.width() / imageDpr;
+    const qreal logicalHeight = mImage.height() / imageDpr;
 
     mProgram->setUniformValue("matrix", matrix);
     mProgram->setUniformValue("tex", 0);
@@ -264,11 +283,16 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     mProgram->setUniformValue("colorMatrix", colorMatrix);
     mProgram->setUniformValue("colorOffset", cm.offset);
-    mProgram->setUniformValue("pixelSize", QVector2D(1.0f / (logicalWidth * transScaleX), 1.0f / (logicalHeight * transScaleY)));
+    mProgram->setUniformValue(
+        "pixelSize",
+        QVector2D(1.0f / (mImage.width() * sourceToDeviceScaleX),
+                  1.0f / (mImage.height() * sourceToDeviceScaleY)));
     mProgram->setUniformValue("casContrast", mCasContrast);
     mProgram->setUniformValue("casSharpening", activeCasSharpening);
     mProgram->setUniformValue("sharpenMode", activeSmartGpu ? (int)QI_FILTER_SMART_GPU : (int)mScalingFilter);
-    mProgram->setUniformValue("isDownscaling", (transScaleX < kDownscaleThreshold) ? 1 : 0);
+    mProgram->setUniformValue(
+        "isDownscaling",
+        (sourceToDeviceScaleX < kDownscaleThreshold) ? 1 : 0);
 
     float x1 = offset().x();
     float y1 = offset().y();

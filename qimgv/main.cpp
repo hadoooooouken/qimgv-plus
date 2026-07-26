@@ -91,15 +91,6 @@ int main(int argc, char *argv[]) {
   // force some env variables
   qputenv("QT_PLUGIN_PATH", "");
 
-  // do we still need this?
-  qputenv("QT_AUTO_SCREEN_SCALE_FACTOR", "0");
-
-  // Qt6 hidpi rendering on windows still has artifacts
-  // This disables it for scale factors < 1.75
-  // In this case only fonts are scaled
-  QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
-      Qt::HighDpiScaleFactorRoundingPolicy::RoundPreferFloor);
-
   QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 
   QApplication a(argc, argv);
