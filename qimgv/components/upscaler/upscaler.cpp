@@ -8,7 +8,191 @@
 #include <QThreadPool>
 #include <QCoreApplication>
 #include <QDebug>
+#include <algorithm>
+#include <initializer_list>
+#include <limits>
+#include <optional>
 #include <windows.h>
+
+namespace {
+
+constexpr quint64 kBytesPerMebibyte = 1024ULL * 1024ULL;
+constexpr quint64 kMinimumCpuReserveBytes = 512ULL * kBytesPerMebibyte;
+constexpr quint64 kMinimumDeviceReserveBytes = 256ULL * kBytesPerMebibyte;
+constexpr quint64 kRgbaBytesPerPixel = 4;
+constexpr quint64 kCpuReserveDivisor = 4;
+constexpr quint64 kDeviceReserveDivisor = 5;
+constexpr quint64 kFallbackDeviceReserveDivisor = 2;
+constexpr quint64 kMaximumReserveDivisor = 2;
+constexpr int kModelScale = 4;
+constexpr int kModelPrepadding = 10;
+
+struct CpuMemoryBudget final {
+    quint64 availablePhysicalBytes = 0;
+    quint64 availableCommitBytes = 0;
+    quint64 usableBytes = 0;
+};
+
+struct DeviceMemoryBudget final {
+    quint64 budgetBytes = 0;
+    quint64 usageBytes = 0;
+    quint64 usableBytes = 0;
+    bool usageKnown = false;
+    bool sharesSystemMemory = false;
+};
+
+struct UpscaleMemoryEstimate final {
+    quint64 conversionBytes = 0;
+    quint64 outputImageBytes = 0;
+    quint64 backendCpuBytes = 0;
+    quint64 totalCpuBytes = 0;
+    quint64 deviceBytes = 0;
+};
+
+bool hasPackedRgbaStorage(const QImage &image) {
+    const bool compatibleFormat =
+        image.format() == QImage::Format_ARGB32 ||
+        image.format() == QImage::Format_RGB32;
+    const qsizetype packedBytesPerLine =
+        static_cast<qsizetype>(image.width()) *
+        static_cast<qsizetype>(kRgbaBytesPerPixel);
+    return compatibleFormat && image.bytesPerLine() == packedBytesPerLine;
+}
+
+std::optional<quint64>
+checkedProduct(std::initializer_list<quint64> factors) {
+    quint64 product = 1;
+    for (const quint64 factor : factors) {
+        if (factor != 0 &&
+            product > (std::numeric_limits<quint64>::max)() / factor) {
+            return std::nullopt;
+        }
+        product *= factor;
+    }
+    return product;
+}
+
+std::optional<quint64>
+checkedSum(std::initializer_list<quint64> terms) {
+    quint64 sum = 0;
+    for (const quint64 term : terms) {
+        if (sum > (std::numeric_limits<quint64>::max)() - term) {
+            return std::nullopt;
+        }
+        sum += term;
+    }
+    return sum;
+}
+
+quint64 calculateUsableBudget(quint64 availableBytes,
+                              quint64 minimumReserveBytes,
+                              quint64 reserveDivisor) {
+    if (availableBytes == 0 || reserveDivisor == 0) {
+        return 0;
+    }
+
+    const quint64 desiredReserve =
+        (std::max)(minimumReserveBytes, availableBytes / reserveDivisor);
+    const quint64 reserve =
+        (std::min)(desiredReserve,
+                   availableBytes / kMaximumReserveDivisor);
+    return availableBytes - reserve;
+}
+
+std::optional<CpuMemoryBudget> queryCpuMemoryBudget() {
+    MEMORYSTATUSEX memoryStatus = {};
+    memoryStatus.dwLength =
+        static_cast<DWORD>(sizeof(MEMORYSTATUSEX));
+    if (!GlobalMemoryStatusEx(&memoryStatus)) {
+        return std::nullopt;
+    }
+
+    CpuMemoryBudget budget;
+    budget.availablePhysicalBytes = memoryStatus.ullAvailPhys;
+    budget.availableCommitBytes = memoryStatus.ullAvailPageFile;
+    const quint64 availableBytes =
+        (std::min)(budget.availablePhysicalBytes,
+                   budget.availableCommitBytes);
+    budget.usableBytes =
+        calculateUsableBudget(availableBytes, kMinimumCpuReserveBytes,
+                              kCpuReserveDivisor);
+    return budget;
+}
+
+std::optional<DeviceMemoryBudget>
+makeDeviceMemoryBudget(const RealESRGAN::DeviceMemorySnapshot &snapshot) {
+    if (!snapshot.valid || snapshot.budgetBytes == 0) {
+        return std::nullopt;
+    }
+
+    DeviceMemoryBudget budget;
+    budget.budgetBytes = snapshot.budgetBytes;
+    budget.usageBytes = snapshot.usageBytes;
+    budget.usageKnown = snapshot.usageKnown;
+    budget.sharesSystemMemory = snapshot.sharesSystemMemory;
+
+    const quint64 availableBytes =
+        snapshot.usageKnown
+            ? snapshot.usageBytes < snapshot.budgetBytes
+                  ? snapshot.budgetBytes - snapshot.usageBytes
+                  : 0
+            : snapshot.budgetBytes;
+    const quint64 reserveDivisor =
+        snapshot.usageKnown ? kDeviceReserveDivisor
+                            : kFallbackDeviceReserveDivisor;
+    budget.usableBytes =
+        calculateUsableBudget(availableBytes, kMinimumDeviceReserveBytes,
+                              reserveDivisor);
+    return budget;
+}
+
+std::optional<UpscaleMemoryEstimate>
+estimateUpscaleMemory(const QImage &inputImage, quint64 outputWidth,
+                      quint64 outputHeight, const RealESRGAN &backend) {
+    const quint64 inputWidth = static_cast<quint64>(inputImage.width());
+    const quint64 inputHeight = static_cast<quint64>(inputImage.height());
+    const bool inputBufferRequired = !hasPackedRgbaStorage(inputImage);
+
+    const auto inputImageBytes =
+        checkedProduct({inputWidth, inputHeight, kRgbaBytesPerPixel});
+    const auto outputImageBytes =
+        checkedProduct({outputWidth, outputHeight, kRgbaBytesPerPixel});
+    if (!inputImageBytes || !outputImageBytes) {
+        return std::nullopt;
+    }
+    constexpr quint64 kMaximumQImageByteCount =
+        static_cast<quint64>((std::numeric_limits<qsizetype>::max)());
+    if (*outputImageBytes > kMaximumQImageByteCount) {
+        return std::nullopt;
+    }
+
+    const RealESRGAN::ResourceEstimate backendEstimate =
+        backend.estimateResources(
+            RealESRGAN::ResourceRequest{inputImage.width(),
+                                        inputImage.height()});
+    if (!backendEstimate.valid) {
+        return std::nullopt;
+    }
+
+    const quint64 conversionBytes =
+        inputBufferRequired ? *inputImageBytes : 0;
+    const auto totalCpuBytes =
+        checkedSum({conversionBytes, *outputImageBytes,
+                    backendEstimate.cpuWorkingBytes});
+    if (!totalCpuBytes) {
+        return std::nullopt;
+    }
+
+    UpscaleMemoryEstimate estimate;
+    estimate.conversionBytes = conversionBytes;
+    estimate.outputImageBytes = *outputImageBytes;
+    estimate.backendCpuBytes = backendEstimate.cpuWorkingBytes;
+    estimate.totalCpuBytes = *totalCpuBytes;
+    estimate.deviceBytes = backendEstimate.deviceWorkingBytes;
+    return estimate;
+}
+
+} // namespace
 
 
 UpscaylScaler::UpscaylScaler() : realesrgan(nullptr) {}
@@ -41,8 +225,8 @@ bool UpscaylScaler::init(const QString &appDir, const QString &requestedModelNam
     }
 
     realesrgan = std::make_unique<RealESRGAN>(-1, false);
-    realesrgan->scale = 4;
-    realesrgan->prepadding = 10;
+    realesrgan->scale = kModelScale;
+    realesrgan->prepadding = kModelPrepadding;
 
     {
         int autoTile = realesrgan->autoTilesize();
@@ -63,24 +247,6 @@ bool UpscaylScaler::init(const QString &appDir, const QString &requestedModelNam
     return true;
 }
 
-qint64 UpscaylScaler::getMaxOutputPixelsBudget() {
-    MEMORYSTATUSEX memStatus;
-    memStatus.dwLength = sizeof(memStatus);
-    if (GlobalMemoryStatusEx(&memStatus)) {
-        qint64 ramGB = static_cast<qint64>(memStatus.ullTotalPhys / (1024ULL * 1024 * 1024));
-        if (ramGB >= 60) {
-            return 512LL * 1024 * 1024; // 512 Mpx for 64GB+ RAM (~8.2 GB process memory budget)
-        }
-        if (ramGB >= 28) {
-            return 256LL * 1024 * 1024; // 256 Mpx for 32GB RAM (~4.1 GB process memory budget)
-        }
-        if (ramGB >= 14) {
-            return 64LL * 1024 * 1024;  // 64 Mpx for 16GB RAM (~1.1 GB process memory budget)
-        }
-    }
-    return 36LL * 1024 * 1024; // 36 Mpx fallback for < 16GB RAM (~0.6 GB process memory budget)
-}
-
 QImage UpscaylScaler::upscale(const QImage &inputImage, const std::atomic<bool> *abortFlag) {
     QMutexLocker locker(&mutex);
     if (!realesrgan) {
@@ -92,49 +258,132 @@ QImage UpscaylScaler::upscale(const QImage &inputImage, const std::atomic<bool> 
         return QImage();
     }
 
-    qint64 inW = inputImage.width();
-    qint64 inH = inputImage.height();
+    const int inW = inputImage.width();
+    const int inH = inputImage.height();
     if (inW <= 0 || inH <= 0) {
         qWarning() << "[Upscayl] upscale() image invalid size:" << inW << "x" << inH;
         return QImage();
     }
 
-    int scale = realesrgan->scale;
+    const int scale = realesrgan->scale;
     if (scale <= 0) {
-        scale = 4;
-    }
-
-    qint64 outW = inW * scale;
-    qint64 outH = inH * scale;
-
-    constexpr qint64 kMaxIntVal = 2147483647; // std::numeric_limits<int>::max()
-    if (outW > kMaxIntVal || outH > kMaxIntVal) {
-        qWarning() << "[Upscayl] upscale() output size exceeds max integer:" << outW << "x" << outH;
+        qWarning() << "[Upscayl] upscale() invalid model scale:" << scale;
         return QImage();
     }
 
-    qint64 outPixels = outW * outH;
-    qint64 maxOutputPixels = getMaxOutputPixelsBudget();
-    if (outPixels <= 0 || outPixels > maxOutputPixels) {
-        qWarning() << "[Upscayl] upscale() output size exceeds memory budget limit:"
-                   << outW << "x" << outH << "(" << outPixels << "pixels, max allowed:" << maxOutputPixels << ")";
+    const auto outW =
+        checkedProduct({static_cast<quint64>(inW),
+                        static_cast<quint64>(scale)});
+    const auto outH =
+        checkedProduct({static_cast<quint64>(inH),
+                        static_cast<quint64>(scale)});
+    constexpr quint64 kMaximumImageDimension =
+        static_cast<quint64>((std::numeric_limits<int>::max)());
+    if (!outW || !outH || *outW > kMaximumImageDimension ||
+        *outH > kMaximumImageDimension) {
+        qWarning() << "[Upscayl] upscale() output dimensions overflow:"
+                   << inW << "x" << inH << "scale:" << scale;
+        return QImage();
+    }
+
+    const auto memoryEstimate =
+        estimateUpscaleMemory(inputImage, *outW, *outH, *realesrgan);
+    if (!memoryEstimate) {
+        qWarning() << "[Upscayl] upscale() resource estimate overflowed or is unavailable for:"
+                   << inW << "x" << inH;
+        return QImage();
+    }
+
+    const auto cpuBudget = queryCpuMemoryBudget();
+    if (!cpuBudget) {
+        qWarning() << "[Upscayl] upscale() could not query available system memory";
+        return QImage();
+    }
+
+    const RealESRGAN::DeviceMemorySnapshot deviceSnapshot =
+        realesrgan->getDeviceMemorySnapshot();
+    const auto deviceBudget = makeDeviceMemoryBudget(deviceSnapshot);
+    if (!deviceBudget) {
+        qWarning() << "[Upscayl] upscale() could not query a Vulkan device memory budget";
+        return QImage();
+    }
+
+    auto requiredCpuBytes =
+        std::optional<quint64>(memoryEstimate->totalCpuBytes);
+    if (deviceBudget->sharesSystemMemory) {
+        requiredCpuBytes =
+            checkedSum({*requiredCpuBytes, memoryEstimate->deviceBytes});
+    }
+    if (!requiredCpuBytes) {
+        qWarning() << "[Upscayl] upscale() shared CPU/device memory estimate overflowed";
+        return QImage();
+    }
+    if (*requiredCpuBytes > cpuBudget->usableBytes) {
+        qWarning() << "[Upscayl] upscale() CPU memory budget exceeded:"
+                   << "required bytes:" << *requiredCpuBytes
+                   << "usable bytes:" << cpuBudget->usableBytes
+                   << "available physical bytes:"
+                   << cpuBudget->availablePhysicalBytes
+                   << "available commit bytes:"
+                   << cpuBudget->availableCommitBytes
+                   << "conversion bytes:" << memoryEstimate->conversionBytes
+                   << "output bytes:" << memoryEstimate->outputImageBytes
+                   << "backend working bytes:"
+                   << memoryEstimate->backendCpuBytes
+                   << "shared device bytes:"
+                   << (deviceBudget->sharesSystemMemory
+                           ? memoryEstimate->deviceBytes
+                           : 0);
+        return QImage();
+    }
+
+    if (memoryEstimate->deviceBytes > deviceBudget->usableBytes) {
+        qWarning() << "[Upscayl] upscale() device memory budget exceeded:"
+                   << "required bytes:" << memoryEstimate->deviceBytes
+                   << "usable bytes:" << deviceBudget->usableBytes
+                   << "heap budget bytes:" << deviceBudget->budgetBytes
+                   << "heap usage bytes:" << deviceBudget->usageBytes
+                   << "usage known:" << deviceBudget->usageKnown
+                   << "shares system memory:"
+                   << deviceBudget->sharesSystemMemory;
+        return QImage();
+    }
+
+    if (abortFlag && abortFlag->load(std::memory_order_relaxed)) {
         return QImage();
     }
 
     QImage imgRgba = inputImage;
-    if (imgRgba.format() != QImage::Format_ARGB32 && imgRgba.format() != QImage::Format_RGB32) {
+    if (imgRgba.format() != QImage::Format_ARGB32 &&
+        imgRgba.format() != QImage::Format_RGB32) {
         imgRgba = imgRgba.convertToFormat(QImage::Format_ARGB32);
+    } else if (!hasPackedRgbaStorage(imgRgba)) {
+        imgRgba = imgRgba.copy();
     }
-
-    QImage outImg(static_cast<int>(outW), static_cast<int>(outH), QImage::Format_ARGB32);
-    if (outImg.isNull()) {
-        qWarning() << "[Upscayl] upscale() failed to allocate output QImage of size:" << outW << "x" << outH;
+    if (imgRgba.isNull() || !hasPackedRgbaStorage(imgRgba)) {
+        qWarning() << "[Upscayl] upscale() failed to allocate a packed RGBA input buffer";
         return QImage();
     }
 
-    int ret = realesrgan->processPixels(imgRgba.constBits(), static_cast<int>(inW), static_cast<int>(inH),
-                                        outImg.bits(), static_cast<int>(outW), static_cast<int>(outH),
-                                        abortFlag);
+    QImage outImg(static_cast<int>(*outW), static_cast<int>(*outH),
+                  QImage::Format_ARGB32);
+    if (outImg.isNull() || !hasPackedRgbaStorage(outImg)) {
+        qWarning() << "[Upscayl] upscale() failed to allocate output QImage of size:"
+                   << *outW << "x" << *outH;
+        return QImage();
+    }
+
+    const uchar *inputPixels = imgRgba.constBits();
+    uchar *outputPixels = outImg.bits();
+    if (!inputPixels || !outputPixels) {
+        qWarning() << "[Upscayl] upscale() image storage is unavailable after allocation";
+        return QImage();
+    }
+
+    const int ret =
+        realesrgan->processPixels(inputPixels, inW, inH, outputPixels,
+                                  static_cast<int>(*outW),
+                                  static_cast<int>(*outH), abortFlag);
 
     if (ret != 0) {
         qWarning() << "[Upscayl] processPixels failed or aborted, code:" << ret;

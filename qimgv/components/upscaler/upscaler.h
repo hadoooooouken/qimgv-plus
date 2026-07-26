@@ -30,8 +30,6 @@ public:
     QImage upscale(const QImage &inputImage, const std::atomic<bool> *abortFlag = nullptr);
     void destroy();
 
-    static qint64 getMaxOutputPixelsBudget();
-
     ~UpscaylScaler() = default;
 
 private:
@@ -70,9 +68,6 @@ private:
     // Constant parameters to avoid magic numbers
     static constexpr int kDebounceIntervalMs = 100;
     static constexpr int kMaxCropDimension = 1280;
-    static constexpr qint64 kMaxUpscalePixels = 64LL * 1024 * 1024;
-    static constexpr int kDefaultScale = 4;
-    static constexpr int kPrePadding = 10;
 
     QTimer upscaylTimer;
     bool upscaylActive = false;
