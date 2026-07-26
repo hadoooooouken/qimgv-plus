@@ -31,6 +31,8 @@
 const qint64 MAX_THUMBNAIL_FILE_SIZE = 256 * 1024 * 1024; // 256 MB
 const int MAX_THUMBNAIL_DIMENSION = 16384; // 16384 pixels
 constexpr UINT MAX_REQUESTED_THUMBNAIL_EDGE = 1024;
+constexpr qint64 MAX_RAW_PREVIEW_SOURCE_BYTES = 32 * 1024 * 1024;
+constexpr qint64 MAX_RAW_PREVIEW_BITMAP_BYTES = 64 * 1024 * 1024;
 constexpr qint64 MAX_SVG_SOURCE_BYTES = 8 * 1024 * 1024;
 constexpr UINT MAX_SVG_THUMBNAIL_EDGE = 1024;
 constexpr qint64 MAX_SVG_THUMBNAIL_BYTES =
@@ -583,7 +585,8 @@ static bool isRawExtension(const QString &ext) {
 }
 
 static QImage
-createQImageFromLibRawImage(const libraw_processed_image_t *processedImage) {
+createQImageFromLibRawImage(const libraw_processed_image_t *processedImage,
+                            UINT requestedEdge) {
   if (!processedImage || !processedImage->data ||
       processedImage->data_size == 0)
     return QImage();
@@ -593,12 +596,37 @@ createQImageFromLibRawImage(const libraw_processed_image_t *processedImage) {
     return QImage();
 
   if (processedImage->type == LIBRAW_IMAGE_JPEG) {
-    return QImage::fromData(
-        reinterpret_cast<const uchar *>(processedImage->data),
-        processedImage->data_size, "JPEG");
+    if (qint64(processedImage->data_size) > MAX_RAW_PREVIEW_SOURCE_BYTES)
+      return QImage();
+
+    QByteArray previewData = QByteArray::fromRawData(
+        reinterpret_cast<const char *>(processedImage->data),
+        qsizetype(processedImage->data_size));
+    QBuffer previewBuffer(&previewData);
+    if (!previewBuffer.open(QIODevice::ReadOnly))
+      return QImage();
+
+    QImageReader previewReader(&previewBuffer, "JPEG");
+    QSize previewSize = previewReader.size();
+    if (!previewSize.isValid() ||
+        previewSize.width() > MAX_THUMBNAIL_DIMENSION ||
+        previewSize.height() > MAX_THUMBNAIL_DIMENSION)
+      return QImage();
+
+    previewSize.scale(int(requestedEdge), int(requestedEdge),
+                      Qt::KeepAspectRatio);
+    previewReader.setScaledSize(previewSize);
+
+    QImage image;
+    if (!previewReader.read(&image))
+      return QImage();
+    return image;
   }
 
   if (processedImage->type != LIBRAW_IMAGE_BITMAP || processedImage->bits != 8)
+    return QImage();
+
+  if (qint64(processedImage->data_size) > MAX_RAW_PREVIEW_BITMAP_BYTES)
     return QImage();
 
   QImage::Format format = QImage::Format_Invalid;
@@ -619,52 +647,37 @@ createQImageFromLibRawImage(const libraw_processed_image_t *processedImage) {
   QImage img(reinterpret_cast<const uchar *>(processedImage->data),
              processedImage->width, processedImage->height, bytesPerLine,
              format);
+  if (img.width() > int(requestedEdge) ||
+      img.height() > int(requestedEdge)) {
+    return img.scaled(int(requestedEdge), int(requestedEdge),
+                      Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  }
   return img.copy();
 }
 
-static bool tryLibRawThumbnail(const std::wstring &filePath,
-                               const QByteArray &rawBuffer,
-                               QImage &outImg) {
-  LibRaw raw;
-  int openResult = -1;
-
-  if (!filePath.empty()) {
-    openResult = raw.open_file(filePath.c_str());
-  }
-
-  if (openResult != LIBRAW_SUCCESS && !rawBuffer.isEmpty()) {
-    openResult = raw.open_buffer(rawBuffer.constData(), rawBuffer.size());
-  }
-
-  if (openResult != LIBRAW_SUCCESS)
+static bool tryLibRawEmbeddedPreview(const std::wstring &filePath,
+                                     UINT requestedEdge,
+                                     QImage &outImg) {
+  if (filePath.empty())
     return false;
 
-  // 1) Prefer embedded preview thumbnail first
+  LibRaw raw;
+  if (raw.open_file(filePath.c_str()) != LIBRAW_SUCCESS)
+    return false;
+
+  if (qint64(raw.imgdata.thumbnail.tlength) >
+      MAX_RAW_PREVIEW_SOURCE_BYTES) {
+    raw.recycle();
+    return false;
+  }
+
   if (raw.unpack_thumb() == LIBRAW_SUCCESS) {
     std::unique_ptr<libraw_processed_image_t,
                     decltype(&LibRaw::dcraw_clear_mem)>
         thumb(raw.dcraw_make_mem_thumb(), LibRaw::dcraw_clear_mem);
     if (thumb) {
-      QImage img = createQImageFromLibRawImage(thumb.get());
-      if (!img.isNull()) {
-        outImg = std::move(img);
-        raw.recycle();
-        return true;
-      }
-    }
-  }
-
-  // 2) Half-size raw render fallback only if no embedded thumbnail is available
-  raw.imgdata.params.half_size = 1;
-  raw.imgdata.params.use_camera_wb = 1;
-  raw.imgdata.params.output_color = 1;
-
-  if (raw.unpack() == LIBRAW_SUCCESS && raw.dcraw_process() == LIBRAW_SUCCESS) {
-    std::unique_ptr<libraw_processed_image_t,
-                    decltype(&LibRaw::dcraw_clear_mem)>
-        processed(raw.dcraw_make_mem_image(), LibRaw::dcraw_clear_mem);
-    if (processed) {
-      QImage img = createQImageFromLibRawImage(processed.get());
+      QImage img =
+          createQImageFromLibRawImage(thumb.get(), requestedEdge);
       if (!img.isNull()) {
         outImg = std::move(img);
         raw.recycle();
@@ -916,74 +929,59 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
       }
     }
 
-  bool isRaw = isRawExtension(ext);
-  QByteArray rawBuffer;
+    // Avoid content-based selection of the installed RAW image plugin when a
+    // stream does not expose a file name.
+    if (ext.isEmpty())
+      return E_FAIL;
 
-  if (isRaw) {
+  if (isRawExtension(ext)) {
+    if (m_szFilePath.empty())
+      return E_FAIL;
+
     QImage rawImg;
-    bool success = false;
+    if (!tryLibRawEmbeddedPreview(m_szFilePath, cx, rawImg) || rawImg.isNull())
+      return E_FAIL;
 
-    if (!m_szFilePath.empty()) {
-      success = tryLibRawThumbnail(m_szFilePath, QByteArray(), rawImg);
+    if (rawImg.width() > (int)cx || rawImg.height() > (int)cx) {
+      rawImg = rawImg.scaled(cx, cx, Qt::KeepAspectRatio,
+                             Qt::SmoothTransformation);
+    }
+    if (rawImg.format() != QImage::Format_ARGB32_Premultiplied) {
+      rawImg = rawImg.convertToFormat(QImage::Format_ARGB32_Premultiplied);
     }
 
-    if (!success) {
-      if (m_pStream) {
-        QStreamDevice device(m_pStream);
-        if (device.seek(0)) {
-          rawBuffer = device.readAll();
-        }
-      } else if (!m_szFilePath.empty()) {
-        QFile file(QString::fromStdWString(m_szFilePath));
-        if (file.open(QIODevice::ReadOnly)) {
-          rawBuffer = file.readAll();
-        }
-      }
+    BITMAPV5HEADER bi;
+    ZeroMemory(&bi, sizeof(bi));
+    bi.bV5Size = sizeof(bi);
+    bi.bV5Width = rawImg.width();
+    bi.bV5Height = -rawImg.height(); // Top-down
+    bi.bV5Planes = 1;
+    bi.bV5BitCount = 32;
+    bi.bV5Compression = BI_BITFIELDS;
+    bi.bV5RedMask = 0x00FF0000;
+    bi.bV5GreenMask = 0x0000FF00;
+    bi.bV5BlueMask = 0x000000FF;
+    bi.bV5AlphaMask = 0xFF000000;
 
-      if (!rawBuffer.isEmpty()) {
-        success = tryLibRawThumbnail(std::wstring(), rawBuffer, rawImg);
-      }
+    void *pBits = nullptr;
+    HDC hdc = GetDC(nullptr);
+    HBITMAP hbmp = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
+                                    &pBits, nullptr, 0);
+    ReleaseDC(nullptr, hdc);
+    if (hbmp && pBits) {
+      memcpy(pBits, rawImg.constBits(), rawImg.sizeInBytes());
+      *phbmp = hbmp;
+      *pdwAlpha = WTSAT_ARGB;
+      return S_OK;
     }
 
-    if (success && !rawImg.isNull()) {
-      if (rawImg.width() > (int)cx || rawImg.height() > (int)cx) {
-        rawImg = rawImg.scaled(cx, cx, Qt::KeepAspectRatio,
-                               Qt::SmoothTransformation);
-      }
-      if (rawImg.format() != QImage::Format_ARGB32_Premultiplied) {
-        rawImg = rawImg.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-      }
-
-      BITMAPV5HEADER bi;
-      ZeroMemory(&bi, sizeof(bi));
-      bi.bV5Size = sizeof(bi);
-      bi.bV5Width = rawImg.width();
-      bi.bV5Height = -rawImg.height(); // Top-down
-      bi.bV5Planes = 1;
-      bi.bV5BitCount = 32;
-      bi.bV5Compression = BI_BITFIELDS;
-      bi.bV5RedMask = 0x00FF0000;
-      bi.bV5GreenMask = 0x0000FF00;
-      bi.bV5BlueMask = 0x000000FF;
-      bi.bV5AlphaMask = 0xFF000000;
-
-      void *pBits = nullptr;
-      HDC hdc = GetDC(nullptr);
-      HBITMAP hbmp = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
-                                      &pBits, nullptr, 0);
-      ReleaseDC(nullptr, hdc);
-      if (hbmp && pBits) {
-        memcpy(pBits, rawImg.constBits(), rawImg.sizeInBytes());
-        *phbmp = hbmp;
-        *pdwAlpha = WTSAT_ARGB;
-        return S_OK;
-      }
-    }
+    if (hbmp)
+      DeleteObject(hbmp);
+    return E_FAIL;
   }
 
   // Fallback / standard path: set up QImageReader
   std::unique_ptr<QStreamDevice> streamDevice;
-  std::unique_ptr<QBuffer> memoryDevice;
   QImageReader reader;
   QByteArray format;
 
@@ -1011,11 +1009,7 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
   bool seekable = false;
   LARGE_INTEGER savedPos = {0};
 
-  if (isRaw && !rawBuffer.isEmpty()) {
-    memoryDevice = std::make_unique<QBuffer>(&rawBuffer);
-    memoryDevice->open(QIODevice::ReadOnly);
-    reader.setDevice(memoryDevice.get());
-  } else if (m_pStream) {
+  if (m_pStream) {
     // Determine stream size using end seek
     LARGE_INTEGER zero = {0};
     if (SUCCEEDED(m_pStream->Seek(zero, STREAM_SEEK_CUR,
@@ -1075,7 +1069,7 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
 
   QImage img;
   if (!reader.read(&img)) {
-    if (m_pStream && !isRaw) {
+    if (m_pStream) {
       // Fallback for stream: try memory buffer if small, otherwise temporary file
       if (seekable && streamSize > 0 &&
           streamSize <= 1024 * 1024) { // up to 1 MB in memory
