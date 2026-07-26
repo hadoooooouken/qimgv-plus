@@ -1644,21 +1644,6 @@ Total files: %3</source>
         <source>Start of directory</source>
         <translation>Початок папки</translation>
     </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1164"/>
-        <source>Fit Window</source>
-        <translation>Вписати у вікно</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1168"/>
-        <source>Fit Width</source>
-        <translation>Розтягнути по ширині</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1172"/>
-        <source>Fit 1:1</source>
-        <translation>Режим 1:1</translation>
-    </message>
 </context>
 <context>
     <name>PrintDialog</name>

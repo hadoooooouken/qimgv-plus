@@ -1644,21 +1644,6 @@ Toplam dosya: %3</translation>
         <source>Start of directory</source>
         <translation>Dizinin başlangıcı</translation>
     </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1164"/>
-        <source>Fit Window</source>
-        <translation>Pencereye sığdır</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1168"/>
-        <source>Fit Width</source>
-        <translation>Genişliğe sığdır</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1172"/>
-        <source>Fit 1:1</source>
-        <translation>Gerçek boyutta göster 1:1</translation>
-    </message>
 </context>
 <context>
     <name>PrintDialog</name>

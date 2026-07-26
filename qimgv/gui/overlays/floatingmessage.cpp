@@ -120,15 +120,6 @@ void FloatingMessage::setIcon(FloatingMessageIcon icon) {
         case FloatingMessageIcon::ICON_AI_UPSCALE:
             iconLabel->setIcon(FluentIcon::AiUpscale20, kMessageIconSizePx);
             break;
-        case FloatingMessageIcon::ICON_FIT_WINDOW:
-            iconLabel->setIcon(FluentIcon::ArrowExpand20, kMessageIconSizePx);
-            break;
-        case FloatingMessageIcon::ICON_FIT_WIDTH:
-            iconLabel->setIcon(FluentIcon::ArrowAutofitWidth20, kMessageIconSizePx);
-            break;
-        case FloatingMessageIcon::ICON_FIT_ORIGINAL:
-            iconLabel->setIcon(FluentIcon::ZoomOriginal20, kMessageIconSizePx);
-            break;
     }
 }
 

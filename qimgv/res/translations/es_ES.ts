@@ -1644,21 +1644,6 @@ Archivos totales: %3</translation>
         <source>Start of directory</source>
         <translation>Inicio del directorio</translation>
     </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1164"/>
-        <source>Fit Window</source>
-        <translation>Encajar en la ventana</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1168"/>
-        <source>Fit Width</source>
-        <translation>Encajar ancho</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1172"/>
-        <source>Fit 1:1</source>
-        <translation>Proporción 1:1</translation>
-    </message>
 </context>
 <context>
     <name>PrintDialog</name>

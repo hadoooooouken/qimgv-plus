@@ -1644,21 +1644,6 @@ Total files: %3</source>
         <source>Start of directory</source>
         <translation>ディレクトリの先頭</translation>
     </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1164"/>
-        <source>Fit Window</source>
-        <translation>ウィンドウに合わせる</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1168"/>
-        <source>Fit Width</source>
-        <translation>幅に合わせる</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1172"/>
-        <source>Fit 1:1</source>
-        <translation>1:1表示</translation>
-    </message>
 </context>
 <context>
     <name>PrintDialog</name>

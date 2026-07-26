@@ -16,8 +16,8 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         // Used across multiple UI areas
         { FluentIcon::Adjustments20,       0xE00B }, // ic_fluent_add_subtract_circle_20_regular <- Context menu and color-adjustments overlay header
         { FluentIcon::AiUpscale20,        0xF0799 }, // ic_fluent_brain_sparkle_20_regular <- Context menu and AI-upscale notifications
-        { FluentIcon::ArrowAutofitWidth20, 0xE07C }, // ic_fluent_arrow_autofit_width_20_regular <- Context menu and Fit Width notification
-        { FluentIcon::ArrowExpand20,       0xE0C5 }, // ic_fluent_arrow_expand_20_regular <- Context menu and Fit Window notification
+        { FluentIcon::ArrowAutofitWidth20, 0xE07C }, // ic_fluent_arrow_autofit_width_20_regular <- Context menu
+        { FluentIcon::ArrowExpand20,       0xE0C5 }, // ic_fluent_arrow_expand_20_regular <- Context menu
         { FluentIcon::Blur20,              0xF8FA }, // ic_fluent_blur_20_regular <- Context menu and CAS overlay header
         { FluentIcon::CheckboxChecked16,   0xF27C }, // ic_fluent_checkbox_checked_16_regular <- Checked checkbox indicator
         { FluentIcon::CheckboxIndeterminate16, 0xE2FD }, // ic_fluent_checkbox_indeterminate_16_regular <- Partially checked checkbox indicator
@@ -35,7 +35,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Rename20,           0xF0A39 }, // ic_fluent_rename_a_20_regular <- Context/folder menus and rename
         { FluentIcon::Settings20,          0xF6A9 }, // ic_fluent_settings_20_regular <- Settings actions in context menu, toolbars, and panels
         { FluentIcon::ShowInFolder20,      0xF42E }, // ic_fluent_folder_open_20_regular <- Show-in-folder actions in context and folder-view menus
-        { FluentIcon::ZoomOriginal20,      0xF70A }, // ic_fluent_ratio_one_to_one_20_regular <- Context menu and Fit 1:1 notification
+        { FluentIcon::ZoomOriginal20,      0xF70A }, // ic_fluent_ratio_one_to_one_20_regular <- Context menu
 
         // Context menu
         { FluentIcon::ArrowAutofitHeight20,          0xE077 }, // ic_fluent_arrow_autofit_height_20_regular <- Fit Height

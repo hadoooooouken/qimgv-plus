@@ -1160,18 +1160,6 @@ void MW::showMessageDirectoryStart() {
     activeFloatingMessage()->showMessage(tr("Start of directory"), FloatingMessageIcon::ICON_LEFT_EDGE, 600);
 }
 
-void MW::showMessageFitWindow() {
-    activeFloatingMessage()->showMessage(tr("Fit Window"), FloatingMessageIcon::ICON_FIT_WINDOW, 350);
-}
-
-void MW::showMessageFitWidth() {
-    activeFloatingMessage()->showMessage(tr("Fit Width"), FloatingMessageIcon::ICON_FIT_WIDTH, 350);
-}
-
-void MW::showMessageFitOriginal() {
-    activeFloatingMessage()->showMessage(tr("Fit 1:1"), FloatingMessageIcon::ICON_FIT_ORIGINAL, 350);
-}
-
 void MW::showMessage(QString text) {
     activeFloatingMessage()->showMessage(text, FloatingMessageIcon::ICON_INFO, kDefaultMessageDurationMs);
 }

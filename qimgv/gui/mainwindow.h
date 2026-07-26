@@ -217,9 +217,6 @@ public slots:
   void showMessageDirectory(QString dirName);
   void showMessageDirectoryEnd();
   void showMessageDirectoryStart();
-  void showMessageFitWindow();
-  void showMessageFitWidth();
-  void showMessageFitOriginal();
   void showFullScreen();
   void showWindowed();
   void triggerCopyOverlay();

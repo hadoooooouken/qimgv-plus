@@ -1644,21 +1644,6 @@ Total des fichiers : %3</translation>
         <source>Start of directory</source>
         <translation>Début du dossier</translation>
     </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1164"/>
-        <source>Fit Window</source>
-        <translation>Ajuster fenêtre</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1168"/>
-        <source>Fit Width</source>
-        <translation>Ajuster largeur</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="1172"/>
-        <source>Fit 1:1</source>
-        <translation>Ajuster 1:1</translation>
-    </message>
 </context>
 <context>
     <name>PrintDialog</name>

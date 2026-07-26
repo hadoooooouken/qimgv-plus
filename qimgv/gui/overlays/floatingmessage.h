@@ -13,10 +13,7 @@ enum FloatingMessageIcon {
     ICON_SUCCESS,
     ICON_WARNING,
     ICON_ERROR,
-    ICON_AI_UPSCALE,
-    ICON_FIT_WINDOW,
-    ICON_FIT_WIDTH,
-    ICON_FIT_ORIGINAL
+    ICON_AI_UPSCALE
 };
 
 class FloatingMessage : public OverlayWidget {
