@@ -259,15 +259,15 @@ void ImageViewerV2::readSettings() {
         doZoom(minScale);
         centerIfNecessary();
         snapToEdges();
-        requestScaling();
       }
     } else if (fitScaleSettingsChanged) {
       if (defaultFitModeChanged) {
         imageFitMode = imageFitModeDefault;
       }
       applyFitMode();
-      requestScaling();
-    } else if (scalingRelevantChanged) {
+    }
+
+    if (scalingRelevantChanged) {
       requestScaling();
     }
   } else {
