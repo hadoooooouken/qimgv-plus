@@ -15,7 +15,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
     static const QHash<FluentIcon, char32_t> table = {
         // Used across multiple UI areas
         { FluentIcon::Adjustments20,       0xE00B }, // ic_fluent_add_subtract_circle_20_regular <- Context menu and color-adjustments overlay header
-        { FluentIcon::AiUpscale20,         0xF0799 }, // ic_fluent_brain_sparkle_20_regular <- Context menu and AI-upscale notifications
+        { FluentIcon::AiUpscale20,        0xF0799 }, // ic_fluent_brain_sparkle_20_regular <- Context menu and AI-upscale notifications
         { FluentIcon::ArrowAutofitWidth20, 0xE07C }, // ic_fluent_arrow_autofit_width_20_regular <- Context menu and Fit Width notification
         { FluentIcon::ArrowExpand20,       0xE0C5 }, // ic_fluent_arrow_expand_20_regular <- Context menu and Fit Window notification
         { FluentIcon::Blur20,              0xF8FA }, // ic_fluent_blur_20_regular <- Context menu and CAS overlay header
@@ -32,7 +32,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::Move20,              0xE422 }, // ic_fluent_copy_arrow_right_20_regular <- Context menu and move overlay
         { FluentIcon::RadioButton16,       0xF153 }, // ic_fluent_radio_button_16_regular <- Unchecked radio-button indicator
         { FluentIcon::Record16,            0xF660 }, // ic_fluent_record_16_regular <- Checked radio-button indicator
-        { FluentIcon::Rename20,            0xF0A39 }, // ic_fluent_rename_a_20_regular <- Context/folder menus and rename
+        { FluentIcon::Rename20,           0xF0A39 }, // ic_fluent_rename_a_20_regular <- Context/folder menus and rename
         { FluentIcon::Settings20,          0xF6A9 }, // ic_fluent_settings_20_regular <- Settings actions in context menu, toolbars, and panels
         { FluentIcon::ShowInFolder20,      0xF42E }, // ic_fluent_folder_open_20_regular <- Show-in-folder actions in context and folder-view menus
         { FluentIcon::ZoomOriginal20,      0xF70A }, // ic_fluent_ratio_one_to_one_20_regular <- Context menu and Fit 1:1 notification
@@ -45,10 +45,10 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::ChevronDown20,                 0xF2A3 }, // ic_fluent_chevron_down_20_regular <- Expand More actions
         { FluentIcon::ChevronUp20,                   0xF2B6 }, // ic_fluent_chevron_up_20_regular <- Collapse More actions
         { FluentIcon::Crop20,                        0xE42B }, // ic_fluent_crop_20_regular <- Crop action
-        { FluentIcon::FlipHorizontal20,              0xF02A1 }, // ic_fluent_arrow_bidirectional_left_right_20_regular <- Flip horizontally
+        { FluentIcon::FlipHorizontal20,             0xF02A1 }, // ic_fluent_arrow_bidirectional_left_right_20_regular <- Flip horizontally
         { FluentIcon::FlipVertical20,                0xE084 }, // ic_fluent_arrow_bidirectional_up_down_20_regular <- Flip vertically
         { FluentIcon::OpenWith20,                    0xF582 }, // ic_fluent_open_20_regular <- Open With action
-        { FluentIcon::Panorama20,                    0xF08F5 }, // ic_fluent_planet_20_regular <- Panorama mode
+        { FluentIcon::Panorama20,                   0xF08F5 }, // ic_fluent_planet_20_regular <- Panorama mode
         { FluentIcon::Print20,                       0xF62A }, // ic_fluent_print_20_regular <- Print action
         { FluentIcon::Resize20,                      0xF66C }, // ic_fluent_resize_20_regular <- Resize action
         { FluentIcon::Wallpaper20,                   0xF359 }, // ic_fluent_desktop_20_regular <- Set as wallpaper
@@ -66,7 +66,7 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         { FluentIcon::ChevronUp16,        0xF2B5 }, // ic_fluent_chevron_up_16_regular <- Navigate to parent folder
         { FluentIcon::DocumentView20,     0xF488 }, // ic_fluent_image_20_regular <- Switch to document view
         { FluentIcon::Folder16,           0xE643 }, // ic_fluent_folder_16_regular <- Folder thumbnails and sorting
-        { FluentIcon::FolderAdd20,          0xF41C }, // ic_fluent_folder_add_20_regular <- Create folder
+        { FluentIcon::FolderAdd20,        0xF41C }, // ic_fluent_folder_add_20_regular <- Create folder
         { FluentIcon::Home20,             0xF480 }, // ic_fluent_home_20_regular <- Navigate home
         { FluentIcon::OpenOnlySelected20, 0xF697 }, // ic_fluent_select_object_20_regular <- Open only selected files
         { FluentIcon::PanelLeft20,        0xE8B0 }, // ic_fluent_panel_left_20_regular <- Toggle places panel
@@ -89,11 +89,11 @@ const QHash<FluentIcon, char32_t> &codepointTable() {
         // Settings sidebar
         { FluentIcon::BrainSparkle32,      0xF0B3A }, // ic_fluent_brain_sparkle_32_regular <- AI Upscale page
         { FluentIcon::ColorFill32,         0xF0BCB }, // ic_fluent_color_fill_32_regular <- Theme page
-        { FluentIcon::Controls32,          0xE74A }, // ic_fluent_keyboard_16_regular <- Controls page
-        { FluentIcon::Eye32,               0xEFC9 }, // ic_fluent_eye_32_regular <- View page
+        { FluentIcon::Controls32,           0xE74A }, // ic_fluent_keyboard_16_regular <- Controls page
+        { FluentIcon::Eye32,                0xEFC9 }, // ic_fluent_eye_32_regular <- View page
         { FluentIcon::Info32,              0xF0059 }, // ic_fluent_info_32_regular <- About page
-        { FluentIcon::Scripts32,           0xF339 }, // ic_fluent_code_16_regular <- Scripts page
-        { FluentIcon::Settings32,          0xEA94 }, // ic_fluent_settings_32_regular <- General page
+        { FluentIcon::Scripts32,            0xF339 }, // ic_fluent_code_16_regular <- Scripts page
+        { FluentIcon::Settings32,           0xEA94 }, // ic_fluent_settings_32_regular <- General page
         { FluentIcon::WrenchScrewdriver32, 0xF0461 }, // ic_fluent_wrench_screwdriver_32_regular <- Advanced page
 
         // Shared loading resources

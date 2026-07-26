@@ -22,6 +22,12 @@ ThumbnailCache::ThumbnailCache()
 {
 }
 
+ThumbnailCache::~ThumbnailCache()
+{
+    if (threadConnections.hasLocalData())
+        threadConnections.setLocalData(nullptr);
+}
+
 QSqlDatabase ThumbnailCache::getDatabaseConnection()
 {
     if (threadConnections.hasLocalData()) {
@@ -478,12 +484,12 @@ std::unique_ptr<QImage> ThumbnailCache::readThumbnail(QString id)
     return nullptr;
 }
 
-void ThumbnailCache::clear()
+bool ThumbnailCache::clear()
 {
     QSqlDatabase db = getDatabaseConnection();
     if (!db.isOpen()) {
         qWarning() << "Cannot clear a closed thumbnail cache database";
-        return;
+        return false;
     }
 
     std::lock_guard lock(sDatabaseAccessMutex);
@@ -491,7 +497,7 @@ void ThumbnailCache::clear()
     if (!deleteQuery.exec(QStringLiteral("DELETE FROM thumbnails;"))) {
         qWarning() << "Failed to clear thumbnail cache:"
                    << deleteQuery.lastError().text();
-        return;
+        return false;
     }
     deleteQuery.finish();
 
@@ -502,7 +508,7 @@ void ThumbnailCache::clear()
     if (!cursorQuery.exec()) {
         qWarning() << "Failed to reset thumbnail cleanup cursor:"
                    << cursorQuery.lastError().text();
-        return;
+        return false;
     }
     cursorQuery.finish();
 
@@ -516,6 +522,7 @@ void ThumbnailCache::clear()
     bytesSinceMaintenance = 0;
     startupMaintenanceComplete.store(result.succeeded,
                                      std::memory_order_release);
+    return result.succeeded;
 }
 
 bool ThumbnailCache::ensureStartupMaintenance(QSqlDatabase &db)

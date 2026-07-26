@@ -414,7 +414,9 @@ void Core::connectComponents() {
       SortingMode newFolderIconSortingMode = settings->folderIconSortingMode();
       ThumbPanelStyle newThumbPanelStyle = settings->thumbPanelStyle();
 
-      bool layoutChanged = (newThumbnailResolution != lastThumbnailResolution) ||
+      const bool thumbnailResolutionChanged =
+          newThumbnailResolution != lastThumbnailResolution;
+      bool layoutChanged = thumbnailResolutionChanged ||
                            (newShowSubfoldersInPanel != lastShowSubfoldersInPanel) ||
                            (newSquareThumbnails != lastSquareThumbnails) ||
                            (newShowHiddenFiles != lastShowHiddenFiles) ||
@@ -422,6 +424,10 @@ void Core::connectComponents() {
                            (newSortFolders != lastSortFolders) ||
                            (newFolderIconSortingMode != lastFolderIconSortingMode) ||
                            (newThumbPanelStyle != lastThumbPanelStyle);
+
+      if (thumbnailResolutionChanged && !thumbnailer->clearCache()) {
+          mw->showError(tr("Failed to clear thumbnail cache"));
+      }
 
       if (layoutChanged) {
           bool folderSortingChanged = (newFolderIconSortingMode != lastFolderIconSortingMode);

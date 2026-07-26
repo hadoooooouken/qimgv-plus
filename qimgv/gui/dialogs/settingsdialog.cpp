@@ -1,6 +1,5 @@
 #include "settingsdialog.h"
 #include "settings.h"
-#include "components/cache/thumbnailcache.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGroupBox>
@@ -879,8 +878,6 @@ void SettingsDialog::saveSettings() {
   int newRes = thumbnailResolutionSlider->value();
   if (oldRes != newRes) {
     settings->setThumbnailResolution(newRes);
-    ThumbnailCache cache;
-    cache.clear();
   }
   settings->setThemeMode(
       static_cast<ThemeMode>(themeSelectorComboBox->currentIndex()));

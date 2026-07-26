@@ -16,6 +16,7 @@ class ThumbnailCache : public QObject
     Q_OBJECT
 public:
     explicit ThumbnailCache();
+    ~ThumbnailCache() override;
 
     [[nodiscard]] bool saveThumbnail(const QImage *image, QString id,
                                      const QString &sourcePath = QString());
@@ -23,7 +24,7 @@ public:
     std::unique_ptr<QImage> readThumbnail(QString id);
     QString thumbnailPath(QString id);
     bool exists(QString id);
-    void clear();
+    [[nodiscard]] bool clear();
 
 private:
     class ThreadLocalConnection {

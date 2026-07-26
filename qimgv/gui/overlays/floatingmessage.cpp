@@ -90,19 +90,23 @@ void FloatingMessage::setText(QString text) {
 
 void FloatingMessage::setIcon(FloatingMessageIcon icon) {
     iconLabel->show();
+    iconLabel->setIconOffset(0, 0);
 
     switch (icon) {
         case FloatingMessageIcon::ICON_INFO:
             iconLabel->setIcon(FluentIcon::Info20, kMessageIconSizePx);
+            iconLabel->setIconOffset(0, 1);
             break;
         case FloatingMessageIcon::ICON_DIRECTORY:
             iconLabel->setIcon(FluentIcon::Folder20, kMessageIconSizePx);
             break;
         case FloatingMessageIcon::ICON_LEFT_EDGE:
             iconLabel->setIcon(FluentIcon::ArrowPrevious20, kMessageIconSizePx);
+            iconLabel->setIconOffset(0, 2);
             break;
         case FloatingMessageIcon::ICON_RIGHT_EDGE:
             iconLabel->setIcon(FluentIcon::ArrowNext20, kMessageIconSizePx);
+            iconLabel->setIconOffset(0, 2);
             break;
         case FloatingMessageIcon::ICON_SUCCESS:
             iconLabel->setIcon(FluentIcon::CheckmarkCircle20, kMessageIconSizePx);

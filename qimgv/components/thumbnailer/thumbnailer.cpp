@@ -37,6 +37,29 @@ void Thumbnailer::waitForDone() {
     pool->waitForDone();
 }
 
+bool Thumbnailer::clearCache() {
+    clearTasks();
+    if (!pool->waitForDone()) {
+        qWarning() << "Failed to stop thumbnail workers before clearing cache";
+        return false;
+    }
+
+    bool cacheCleared = false;
+    ThumbnailCache *cacheForClear = cache.get();
+    // ThumbnailCache owns one SQL connection per calling thread. Run the
+    // reset on an owned worker and make that thread exit before returning so
+    // QThreadStorage closes and removes the connection on the same thread.
+    pool->start([cacheForClear, &cacheCleared]() {
+        cacheCleared = cacheForClear->clear();
+    });
+
+    if (!pool->waitForDone()) {
+        qWarning() << "Failed to stop thumbnail cache clear worker";
+        return false;
+    }
+    return cacheCleared;
+}
+
 void Thumbnailer::clearTasks() {
     pool->clear();
     queuedTasks.clear();
