@@ -69,6 +69,55 @@ QString wallpaperApplyFailureMessage(const WallpaperApplyResult &result) {
 
   return QCoreApplication::translate("Core", "Set wallpaper: unknown error");
 }
+
+QString imageSaveFailureMessage(const ImageSaveResult &result) {
+  if (!result.retainedBackupPath.isEmpty()) {
+    return QCoreApplication::translate(
+               "Core",
+               "Could not save file. A recovery backup was retained at:\n%1")
+        .arg(QDir::toNativeSeparators(result.retainedBackupPath));
+  }
+
+  switch (result.error) {
+  case ImageSaveError::InvalidSourceImage:
+    return QCoreApplication::translate("Core",
+                                       "Could not save file: the image is invalid");
+  case ImageSaveError::InvalidDestinationPath:
+    return QCoreApplication::translate(
+        "Core", "Could not save file: the destination path is invalid");
+  case ImageSaveError::SourceUnavailable:
+    return QCoreApplication::translate(
+        "Core", "Could not save file: the source is unavailable");
+  case ImageSaveError::TemporaryFileCreationFailed:
+    return QCoreApplication::translate(
+        "Core", "Could not save file: a temporary file could not be created");
+  case ImageSaveError::ImageEncodingFailed:
+    return QCoreApplication::translate(
+        "Core", "Could not save file: the image could not be encoded");
+  case ImageSaveError::TemporaryFileFlushFailed:
+    return QCoreApplication::translate(
+        "Core", "Could not save file: the temporary file could not be written");
+  case ImageSaveError::FileCopyFailed:
+    return QCoreApplication::translate("Core",
+                                       "Could not save file: the file copy failed");
+  case ImageSaveError::CommitFailed:
+    return QCoreApplication::translate(
+        "Core", "Could not save file: the destination could not be replaced");
+  case ImageSaveError::RecoveryFailed:
+    return QCoreApplication::translate(
+        "Core", "Could not save file: automatic recovery failed");
+  case ImageSaveError::None:
+    return {};
+  }
+
+  return QCoreApplication::translate("Core", "Could not save file");
+}
+
+QString retainedBackupWarningMessage(const ImageSaveResult &result) {
+  return QCoreApplication::translate(
+             "Core", "File saved, but a backup could not be removed:\n%1")
+      .arg(QDir::toNativeSeparators(result.retainedBackupPath));
+}
 }
 
 Core::Core()
@@ -996,9 +1045,15 @@ void Core::openFromClipboard() {
              ext.compare("avif", Qt::CaseInsensitive) == 0)
       quality = settings->modernSaveQuality();
 
-    bool success = FileOperations::saveImage(image, destPath, quality);
-    if (success)
+    const ImageSaveResult saveResult =
+        FileOperations::saveImage(image, destPath, quality);
+    if (saveResult.succeeded()) {
       loadPath(destPath);
+      if (!saveResult.retainedBackupPath.isEmpty())
+        mw->showWarning(retainedBackupWarningMessage(saveResult));
+    } else {
+      mw->showError(imageSaveFailureMessage(saveResult));
+    }
   }
 }
 
@@ -1568,7 +1623,7 @@ void Core::edit_template(
         editFunc(img->getImage(), std::forward<Args>(as)...)));
     model->updateImage(path, std::static_pointer_cast<Image>(img));
     if (save) {
-      saveFile(path);
+      (void)saveFile(path);
       if (state.currentFilePath != path)
         model->unload(path);
     }
@@ -1701,7 +1756,7 @@ void Core::cropAndSave(QRect rect) {
   if (mw->currentViewMode() == MODE_FOLDERVIEW)
     return;
   edit_template(false, tr("Crop"), {ImageLib::cropped}, rect);
-  saveFile(selectedPath());
+  (void)saveFile(selectedPath());
   updateInfoString();
 }
 
@@ -1736,13 +1791,18 @@ void Core::applyColorAdjustments(float exposure, float contrast, float brightnes
 // ---------------------------------------------------------------- image
 // operations ^
 
-bool Core::saveFile(const QString &filePath) {
+ImageSaveResult Core::saveFile(const QString &filePath) {
   return saveFile(filePath, filePath);
 }
 
-bool Core::saveFile(const QString &filePath, const QString &newPath) {
-  if (!model->saveFile(filePath, newPath))
-    return false;
+ImageSaveResult Core::saveFile(const QString &filePath, const QString &newPath) {
+  const ImageSaveResult saveResult = model->saveFile(filePath, newPath);
+  if (!saveResult.succeeded()) {
+    mw->showError(imageSaveFailureMessage(saveResult));
+    return saveResult;
+  }
+  if (!saveResult.retainedBackupPath.isEmpty())
+    mw->showWarning(retainedBackupWarningMessage(saveResult));
   mw->hideSaveOverlay();
   // switch to the new file
   if (model->containsFile(newPath) && state.currentFilePath != newPath) {
@@ -1750,7 +1810,7 @@ bool Core::saveFile(const QString &filePath, const QString &newPath) {
     if (mw->currentViewMode() == MODE_DOCUMENT)
       loadPath(newPath);
   }
-  return true;
+  return saveResult;
 }
 
 void Core::saveCurrentFile() { saveCurrentFileAs(selectedPath()); }
@@ -1758,11 +1818,11 @@ void Core::saveCurrentFile() { saveCurrentFileAs(selectedPath()); }
 void Core::saveCurrentFileAs(QString destPath) {
   if (model->isEmpty())
     return;
-  if (saveFile(selectedPath(), destPath)) {
-    mw->showMessageSuccess(tr("File saved"));
+  const ImageSaveResult saveResult = saveFile(selectedPath(), destPath);
+  if (saveResult.succeeded()) {
+    if (saveResult.retainedBackupPath.isEmpty())
+      mw->showMessageSuccess(tr("File saved"));
     updateInfoString();
-  } else {
-    mw->showError(tr("Could not save file"));
   }
 }
 

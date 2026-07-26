@@ -9,10 +9,6 @@
 #include <QStandardPaths>
 #include <QtGlobal>
 
-#ifdef Q_OS_WIN32
-#include "windows.h"
-#endif
-
 enum FileOpResult {
     SUCCESS,
     DESTINATION_FILE_EXISTS,
@@ -24,6 +20,29 @@ enum FileOpResult {
     DIRECTORY_NOT_EMPTY,
     NOTHING_TO_DO,
     OTHER_ERROR
+};
+
+enum class ImageSaveError {
+    None,
+    InvalidSourceImage,
+    InvalidDestinationPath,
+    SourceUnavailable,
+    TemporaryFileCreationFailed,
+    ImageEncodingFailed,
+    TemporaryFileFlushFailed,
+    FileCopyFailed,
+    CommitFailed,
+    RecoveryFailed
+};
+
+struct ImageSaveResult {
+    ImageSaveError error = ImageSaveError::None;
+    QString retainedBackupPath;
+    quint32 nativeError = 0;
+
+    [[nodiscard]] bool succeeded() const noexcept {
+        return error == ImageSaveError::None;
+    }
 };
 
 class QImage;
@@ -39,7 +58,11 @@ public:
 
     static QString decodeResult(const FileOpResult &result);
     static QString generateHash(const QString &str);
-    static bool saveImage(const QImage &image, const QString &destPath, int quality);
+    [[nodiscard]] static ImageSaveResult copyFileAtomically(
+        const QString &sourcePath, const QString &destPath);
+    [[nodiscard]] static ImageSaveResult saveImage(const QImage &image,
+                                                   const QString &destPath,
+                                                   int quality);
 
 private:
     static bool moveToTrashImpl(const QString &path);

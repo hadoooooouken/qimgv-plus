@@ -1,8 +1,86 @@
 #include "fileoperations.h"
+#include <QFile>
 #include <QImage>
+#include <QTemporaryFile>
+#include <QUuid>
+#include <string>
 #include <windows.h>
 
 static QString g_lastErrorMsg;
+
+namespace {
+
+constexpr DWORD kReplaceFileFlags = 0;
+constexpr DWORD kMoveFileFlags = MOVEFILE_WRITE_THROUGH;
+constexpr qsizetype kFileCopyBufferSizeBytes = 1024 * 1024;
+
+std::wstring nativePath(const QString &path) {
+    return QDir::toNativeSeparators(path).toStdWString();
+}
+
+ImageSaveResult commitTemporaryFile(const QString &temporaryPath,
+                                    const QString &destinationPath) {
+    const std::wstring nativeTemporaryPath = nativePath(temporaryPath);
+    const std::wstring nativeDestinationPath = nativePath(destinationPath);
+
+    if (!QFile::exists(destinationPath)) {
+        if (MoveFileExW(nativeTemporaryPath.c_str(), nativeDestinationPath.c_str(),
+                        kMoveFileFlags)) {
+            return {};
+        }
+
+        return {ImageSaveError::CommitFailed, {}, GetLastError()};
+    }
+
+    const QString backupSuffix = QStringLiteral(".qimgv_bak_");
+    const QString backupPath =
+        destinationPath + backupSuffix +
+        QUuid::createUuid().toString(QUuid::WithoutBraces);
+    const std::wstring nativeBackupPath = nativePath(backupPath);
+
+    if (ReplaceFileW(nativeDestinationPath.c_str(), nativeTemporaryPath.c_str(),
+                     nativeBackupPath.c_str(), kReplaceFileFlags, nullptr, nullptr)) {
+        if (QFile::exists(backupPath) && !QFile::remove(backupPath)) {
+            qWarning() << "FileOperations - Saved file, but could not remove backup:"
+                       << backupPath;
+            return {ImageSaveError::None, backupPath, 0};
+        }
+        return {};
+    }
+
+    const DWORD commitError = GetLastError();
+    if (commitError == ERROR_FILE_NOT_FOUND &&
+        !QFile::exists(destinationPath) &&
+        !QFile::exists(backupPath)) {
+        if (MoveFileExW(nativeTemporaryPath.c_str(), nativeDestinationPath.c_str(),
+                        kMoveFileFlags)) {
+            return {};
+        }
+        return {ImageSaveError::CommitFailed, {}, GetLastError()};
+    }
+
+    if (!QFile::exists(backupPath)) {
+        return {ImageSaveError::CommitFailed, {}, commitError};
+    }
+
+    if (QFile::exists(destinationPath)) {
+        qCritical() << "FileOperations - Replacement failed; recovery backup retained at:"
+                    << backupPath;
+        return {ImageSaveError::CommitFailed, backupPath, commitError};
+    }
+
+    if (MoveFileExW(nativeBackupPath.c_str(), nativeDestinationPath.c_str(),
+                    kMoveFileFlags)) {
+        return {ImageSaveError::CommitFailed, {}, commitError};
+    }
+
+    const DWORD recoveryError = GetLastError();
+    qCritical() << "FileOperations - Replacement recovery failed; backup retained at:"
+                << backupPath << "Windows error:" << recoveryError;
+    return {ImageSaveError::RecoveryFailed, backupPath, recoveryError};
+}
+
+} // namespace
 
 QString FileOperations::generateHash(const QString &str) {
     return QString(QCryptographicHash::hash(str.toUtf8(), QCryptographicHash::Md5).toHex());
@@ -297,74 +375,99 @@ bool FileOperations::moveToTrashImpl(const QString &filePath) {
     return QFile::moveToTrash(filePath);
 }
 
-bool FileOperations::saveImage(const QImage &image, const QString &destPath, int quality) {
+ImageSaveResult FileOperations::copyFileAtomically(const QString &sourcePath,
+                                                   const QString &destPath) {
+    if (destPath.isEmpty()) {
+        qWarning() << "FileOperations::copyFileAtomically() - Destination path is empty.";
+        return {ImageSaveError::InvalidDestinationPath};
+    }
+
+    QFile sourceFile(sourcePath);
+    if (!sourceFile.open(QIODevice::ReadOnly)) {
+        qWarning() << "FileOperations::copyFileAtomically() - Could not open source file:"
+                   << sourcePath << sourceFile.errorString();
+        return {ImageSaveError::SourceUnavailable};
+    }
+
+    const QString temporaryFileSuffix = QStringLiteral(".qimgv_tmp_XXXXXX");
+    QTemporaryFile temporaryFile(destPath + temporaryFileSuffix);
+    if (!temporaryFile.open()) {
+        qWarning() << "FileOperations::copyFileAtomically() - Could not create temporary file:"
+                   << temporaryFile.errorString();
+        return {ImageSaveError::TemporaryFileCreationFailed};
+    }
+
+    QByteArray buffer;
+    buffer.resize(kFileCopyBufferSizeBytes);
+    while (!sourceFile.atEnd()) {
+        const qint64 bytesRead = sourceFile.read(buffer.data(), buffer.size());
+        if (bytesRead < 0) {
+            qWarning() << "FileOperations::copyFileAtomically() - Could not read source file:"
+                       << sourcePath << sourceFile.errorString();
+            return {ImageSaveError::FileCopyFailed};
+        }
+
+        qint64 bytesWritten = 0;
+        while (bytesWritten < bytesRead) {
+            const qint64 writeResult =
+                temporaryFile.write(buffer.constData() + bytesWritten,
+                                    bytesRead - bytesWritten);
+            if (writeResult <= 0) {
+                qWarning() << "FileOperations::copyFileAtomically() - Could not write temporary file:"
+                           << temporaryFile.fileName()
+                           << temporaryFile.errorString();
+                return {ImageSaveError::FileCopyFailed};
+            }
+            bytesWritten += writeResult;
+        }
+    }
+
+    if (!temporaryFile.flush()) {
+        qWarning() << "FileOperations::copyFileAtomically() - Failed to flush temporary file:"
+                   << temporaryFile.fileName() << temporaryFile.errorString();
+        return {ImageSaveError::TemporaryFileFlushFailed};
+    }
+
+    const QString temporaryPath = temporaryFile.fileName();
+    temporaryFile.close();
+    return commitTemporaryFile(temporaryPath, destPath);
+}
+
+ImageSaveResult FileOperations::saveImage(const QImage &image,
+                                          const QString &destPath,
+                                          int quality) {
     if (image.isNull()) {
         qWarning() << "FileOperations::saveImage() - Source image is null.";
-        return false;
+        return {ImageSaveError::InvalidSourceImage};
     }
     if (destPath.isEmpty()) {
         qWarning() << "FileOperations::saveImage() - Destination path is empty.";
-        return false;
+        return {ImageSaveError::InvalidDestinationPath};
     }
 
-    QFileInfo fi(destPath);
-    QString ext = fi.suffix();
-    QString hashStr = generateHash(destPath);
-    QString tmpWritePath = destPath + ".qimgv_tmp_" + hashStr;
-    QString backupPath = destPath + ".qimgv_bak_" + hashStr;
-
-    // Clean up any stale temporary file from a previous interrupted save
-    if (QFile::exists(tmpWritePath)) {
-        QFile::remove(tmpWritePath);
+    const QFileInfo destinationInfo(destPath);
+    const QByteArray imageFormat = destinationInfo.suffix().toLatin1();
+    const QString temporaryFileSuffix = QStringLiteral(".qimgv_tmp_XXXXXX");
+    QTemporaryFile temporaryFile(destPath + temporaryFileSuffix);
+    if (!temporaryFile.open()) {
+        qWarning() << "FileOperations::saveImage() - Could not create temporary file:"
+                   << temporaryFile.errorString();
+        return {ImageSaveError::TemporaryFileCreationFailed};
     }
 
-    // Save image to temporary path first so original destination is never corrupted during encoding
-    bool saved = image.save(tmpWritePath, ext.toStdString().c_str(), quality);
-    if (!saved) {
-        qWarning() << "FileOperations::saveImage() - Failed to save image to temporary path:" << tmpWritePath;
-        QFile::remove(tmpWritePath);
-        return false;
+    if (!image.save(&temporaryFile, imageFormat.constData(), quality)) {
+        qWarning() << "FileOperations::saveImage() - Failed to encode image in temporary file:"
+                   << temporaryFile.fileName();
+        return {ImageSaveError::ImageEncodingFailed};
     }
 
-    bool originalExists = QFile::exists(destPath);
-
-    // Create backup of original destination file if it exists
-    if (originalExists) {
-        if (QFile::exists(backupPath)) {
-            QFile::remove(backupPath);
-        }
-        if (!QFile::copy(destPath, backupPath)) {
-            qWarning() << "FileOperations::saveImage() - Could not create backup of destination file:" << backupPath;
-            QFile::remove(tmpWritePath);
-            return false;
-        }
+    if (!temporaryFile.flush()) {
+        qWarning() << "FileOperations::saveImage() - Failed to flush temporary file:"
+                   << temporaryFile.fileName() << temporaryFile.errorString();
+        return {ImageSaveError::TemporaryFileFlushFailed};
     }
 
-    // Replace original destination file with temporary save file
-    if (originalExists) {
-        QFile::remove(destPath);
-    }
-
-    bool committed = QFile::rename(tmpWritePath, destPath);
-    if (committed) {
-        if (originalExists) {
-            QFile::remove(backupPath);
-        }
-        return true;
-    }
-
-    // Failed to commit: clean up temp file and attempt rollback from backup
-    qWarning() << "FileOperations::saveImage() - Failed to rename temporary file to destination path:" << destPath;
-    QFile::remove(tmpWritePath);
-
-    if (originalExists) {
-        bool restored = QFile::copy(backupPath, destPath);
-        if (restored) {
-            QFile::remove(backupPath);
-        } else {
-            qCritical() << "FileOperations::saveImage() - CRITICAL: Rollback failed! Original backup retained at:" << backupPath;
-        }
-    }
-
-    return false;
+    const QString temporaryPath = temporaryFile.fileName();
+    temporaryFile.close();
+    return commitTemporaryFile(temporaryPath, destPath);
 }

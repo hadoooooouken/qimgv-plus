@@ -238,26 +238,20 @@ void DirectoryModel::onImageReady(std::shared_ptr<Image> img, const QString &pat
     emit imageReady(img, path);
 }
 
-bool DirectoryModel::saveFile(const QString &filePath) {
+ImageSaveResult DirectoryModel::saveFile(const QString &filePath) {
     return saveFile(filePath, filePath);
 }
 
-bool DirectoryModel::saveFile(const QString &filePath, const QString &destPath) {
+ImageSaveResult DirectoryModel::saveFile(const QString &filePath, const QString &destPath) {
     if(!containsFile(filePath) || !cache.contains(filePath))
-        return false;
+        return {ImageSaveError::SourceUnavailable};
     auto img = cache.get(filePath);
-    bool success = false;
+    ImageSaveResult saveResult{ImageSaveError::FileCopyFailed};
     if(img->type() == ANIMATED) {
         if(filePath == destPath) {
-            success = true;
+            saveResult = {};
         } else {
-            QFile file(filePath);
-            if(file.exists()) {
-                if(QFile::exists(destPath)) {
-                    QFile::remove(destPath);
-                }
-                success = file.copy(destPath);
-            }
+            saveResult = FileOperations::copyFileAtomically(filePath, destPath);
         }
     } else if(img->type() == STATIC) {
         auto imgStatic = dynamic_cast<ImageStatic*>(img.get());
@@ -275,8 +269,8 @@ bool DirectoryModel::saveFile(const QString &filePath, const QString &destPath) 
                        ext.compare("avif", Qt::CaseInsensitive) == 0) {
                 quality = settings->modernSaveQuality();
             }
-            success = FileOperations::saveImage(*imgStatic->getImage(), destPath, quality);
-            if(success) {
+            saveResult = FileOperations::saveImage(*imgStatic->getImage(), destPath, quality);
+            if(saveResult.succeeded()) {
                 bool isOverwrite = (destPath.compare(filePath, Qt::CaseInsensitive) == 0);
                 if(isOverwrite) {
                     imgStatic->commitEdits();
@@ -284,7 +278,7 @@ bool DirectoryModel::saveFile(const QString &filePath, const QString &destPath) 
             }
         }
     }
-    if(success) {
+    if(saveResult.succeeded()) {
         if(filePath == destPath) { // replace
             dirManager.updateFileEntry(destPath);
             emit fileModified(destPath);
@@ -298,9 +292,8 @@ bool DirectoryModel::saveFile(const QString &filePath, const QString &destPath) 
                     emit fileModified(destPath);
             }
         }
-        return true;
     }
-    return false;
+    return saveResult;
 }
 
 // dirManager events

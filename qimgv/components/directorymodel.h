@@ -72,8 +72,9 @@ public:
 
     bool autoRefresh();
 
-    bool saveFile(const QString &filePath);
-    bool saveFile(const QString &filePath, const QString &destPath);
+    [[nodiscard]] ImageSaveResult saveFile(const QString &filePath);
+    [[nodiscard]] ImageSaveResult saveFile(const QString &filePath,
+                                           const QString &destPath);
 
     bool containsDir(QString dirPath) const;
     FileListSource source();

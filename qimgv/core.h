@@ -110,8 +110,9 @@ private:
     void startSlideshow();
     void stopSlideshow();
 
-    bool saveFile(const QString &filePath, const QString &newPath);
-    bool saveFile(const QString &filePath);
+    [[nodiscard]] ImageSaveResult saveFile(const QString &filePath,
+                                           const QString &newPath);
+    [[nodiscard]] ImageSaveResult saveFile(const QString &filePath);
 
     std::shared_ptr<ImageStatic> getEditableImage(const QString &filePath);
     QList<QString> currentSelection();
