@@ -31,6 +31,8 @@
 namespace {
 constexpr int PreloadDebounceDelayMs = 200;
 constexpr int PageChangeMessageDurationMs = 900;
+constexpr Qt::DropActions SupportedFileDragActions =
+    Qt::CopyAction | Qt::MoveAction;
 
 QString wallpaperApplyFailureMessage(const WallpaperApplyResult &result) {
   const QString nativeError = QString::number(result.nativeError);
@@ -1096,7 +1098,7 @@ void Core::onDraggedOut(QList<QString> paths) {
   mDrag = new QDrag(this);
   mDrag->setMimeData(mimeData);
   // mDrag->setPixmap(*thumb->pixmap().get());
-  mDrag->exec(Qt::CopyAction | Qt::MoveAction | Qt::LinkAction, Qt::CopyAction);
+  mDrag->exec(SupportedFileDragActions, Qt::CopyAction);
   mDrag->deleteLater();
   mDrag = nullptr;
 }

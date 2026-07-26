@@ -14,6 +14,10 @@ namespace {
 constexpr int kContextMenuIconSizePx = UiMetrics::kStandardIconSizePx;
 constexpr int kContextMenuWidthPx = 212;
 constexpr int kContextMenuHorizontalPaddingPx = 3;
+
+constexpr bool isSupportedDropAction(Qt::DropAction action) {
+    return action == Qt::CopyAction || action == Qt::MoveAction;
+}
 }
 
 FolderGridView::FolderGridView(QWidget *parent)
@@ -42,6 +46,11 @@ FolderGridView::FolderGridView(QWidget *parent)
 }
 
 void FolderGridView::dropEvent(QDropEvent *event) {
+    if(!isSupportedDropAction(event->dropAction())) {
+        event->ignore();
+        return;
+    }
+
     event->accept();
     ThumbnailWidget *item = dynamic_cast<ThumbnailWidget*>(itemAt(event->pos()));
     int index = -1;
@@ -53,10 +62,21 @@ void FolderGridView::dropEvent(QDropEvent *event) {
 }
 
 void FolderGridView::dragEnterEvent(QDragEnterEvent *event) {
-    event->accept();
+    if(isSupportedDropAction(event->dropAction()))
+        event->accept();
+    else
+        event->ignore();
 }
 
 void FolderGridView::dragMoveEvent(QDragMoveEvent *event) {
+    if(!isSupportedDropAction(event->dropAction())) {
+        event->ignore();
+        if(checkRange(lastDragTarget))
+            thumbnails.at(lastDragTarget)->setDropHovered(false);
+        lastDragTarget = -1;
+        return;
+    }
+
     event->accept();
     ThumbnailWidget *item = dynamic_cast<ThumbnailWidget*>(itemAt(event->pos()));
     int index = -1;
