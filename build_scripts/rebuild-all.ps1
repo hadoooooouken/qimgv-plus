@@ -144,6 +144,9 @@ $ALL_LIBS = [ordered]@{
             -ConfigArgs @(
                 "-DBUILD_SHARED_LIBS=OFF",
                 "-DAVIF_CODEC_AOM=LOCAL",
+                "-DAVIF_CODEC_AOM_DECODE=OFF",
+                "-DAVIF_CODEC_AOM_ENCODE=ON",
+                "-DAVIF_CODEC_DAV1D=LOCAL",
                 "-DAVIF_LIBYUV=LOCAL",
                 "-DAVIF_BUILD_APPS=OFF",
                 "-DAVIF_BUILD_TESTS=OFF"
@@ -157,8 +160,8 @@ $ALL_LIBS = [ordered]@{
             -ConfigArgs @(
                 "-DBUILD_SHARED_LIBS=OFF",
                 "-DBUILD_TESTING=OFF",
+                "-DJPEGXL_BUNDLE_LIBPNG=OFF",
                 "-DJPEGXL_ENABLE_TOOLS=OFF",
-                "-DJPEGXL_ENABLE_TESTS=OFF",
                 "-DJPEGXL_ENABLE_BENCHMARK=OFF",
                 "-DJPEGXL_ENABLE_DOXYGEN=OFF",
                 "-DJPEGXL_ENABLE_MANPAGES=OFF",
