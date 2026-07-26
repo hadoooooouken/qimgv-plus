@@ -4,6 +4,8 @@
 #include <QTimeLine>
 #include <QEasingCurve>
 #include <QDebug>
+#include <QPixmap>
+#include <QRectF>
 #include "gui/customwidgets/floatingwidget.h"
 #include "utils/iconfontmanager.h"
 
@@ -37,6 +39,11 @@ public slots:
     void readSettings();
 
 private:
+    struct NavigationIcon {
+        QPixmap pixmap;
+        QRectF visibleBounds;
+    };
+
     // Layout constants
     static constexpr int kZoneWidth          = 110; // full-width hit zone (unchanged)
     static constexpr int kButtonWidth        = 100; // visible pill width
@@ -50,8 +57,8 @@ private:
     static constexpr int kAnimationDuration  = 300; // milliseconds
     static constexpr int kSlideAmount        = 12;  // horizontal slide in pixels
 
-    QPixmap pixmapLeft;
-    QPixmap pixmapRight;
+    NavigationIcon mLeftIcon;
+    NavigationIcon mRightIcon;
     // Hit zones (full height, used for mouse detection)
     QRect mLeftZone, mRightZone;
     // Visible pill rects (subset of hit zones, used for painting)
@@ -69,7 +76,8 @@ private:
     bool mHiding = false;
     qreal mCurrentOpacity = 0.0;
     int mSlideOffset = 0;
-    void drawPixmap(QPainter &p, const QPixmap &pixmap, QRect buttonRect);
+    void drawPixmap(QPainter &p, const NavigationIcon &icon,
+                    const QRect &buttonRect);
 
 protected:
     virtual void resizeEvent(QResizeEvent *event);

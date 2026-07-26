@@ -1,6 +1,44 @@
 #include "clickzoneoverlay.h"
 #include "settings.h"
 
+#include <QImage>
+
+namespace {
+
+QRectF visiblePixmapBounds(const QPixmap &pixmap) {
+  if (pixmap.isNull())
+    return {};
+
+  const QImage image = pixmap.toImage();
+  QRect physicalBounds;
+  bool hasVisiblePixel = false;
+
+  for (int y = 0; y < image.height(); ++y) {
+    for (int x = 0; x < image.width(); ++x) {
+      if (qAlpha(image.pixel(x, y)) == 0)
+        continue;
+
+      const QRect pixelRect(QPoint(x, y), QPoint(x, y));
+      physicalBounds = hasVisiblePixel
+                           ? physicalBounds.united(pixelRect)
+                           : pixelRect;
+      hasVisiblePixel = true;
+    }
+  }
+
+  if (!hasVisiblePixel) {
+    qWarning() << "ClickZoneOverlay received a fully transparent navigation icon";
+    return QRectF(QPointF(), pixmap.deviceIndependentSize());
+  }
+
+  const qreal dpr = pixmap.devicePixelRatioF();
+  return QRectF(
+      QPointF(physicalBounds.x() / dpr, physicalBounds.y() / dpr),
+      QSizeF(physicalBounds.width() / dpr, physicalBounds.height() / dpr));
+}
+
+} // namespace
+
 ClickZoneOverlay::ClickZoneOverlay(FloatingWidgetContainer *parent)
     : FloatingWidget(parent) {
   // this is just for painting, we are handling mouse events elsewhere
@@ -163,25 +201,24 @@ void ClickZoneOverlay::paintEvent(QPaintEvent *event) {
   if (activeZone == HIGHLIGHT_LEFT) {
     QRect shifted = mLeftButton.translated(mSlideOffset, 0);
     p.drawRoundedRect(shifted, kButtonRadius, kButtonRadius);
-    drawPixmap(p, pixmapLeft, shifted);
+    drawPixmap(p, mLeftIcon, shifted);
   }
   if (activeZone == HIGHLIGHT_RIGHT) {
     QRect shifted = mRightButton.translated(mSlideOffset, 0);
     p.drawRoundedRect(shifted, kButtonRadius, kButtonRadius);
-    drawPixmap(p, pixmapRight, shifted);
+    drawPixmap(p, mRightIcon, shifted);
   }
 }
 
-// Draws the arrow pixmap centered inside the visible button rect.
-void ClickZoneOverlay::drawPixmap(QPainter &p, const QPixmap &pixmap, QRect buttonRect) {
-  if (pixmap.isNull())
+// Centers the arrow's visible pixels rather than its transparent canvas.
+void ClickZoneOverlay::drawPixmap(QPainter &p, const NavigationIcon &icon,
+                                  const QRect &buttonRect) {
+  if (icon.pixmap.isNull())
     return;
 
-  const qreal pixmapWidth = pixmap.width() / pixmap.devicePixelRatio();
-  const qreal pixmapHeight = pixmap.height() / pixmap.devicePixelRatio();
-  const QPointF pos(buttonRect.left() + (buttonRect.width() - pixmapWidth) / 2,
-                    buttonRect.top() + (buttonRect.height() - pixmapHeight) / 2);
-  p.drawPixmap(pos, pixmap);
+  const QPointF pos =
+      QRectF(buttonRect).center() - icon.visibleBounds.center();
+  p.drawPixmap(pos, icon.pixmap);
 }
 
 void ClickZoneOverlay::recolorIcons() {
@@ -194,8 +231,11 @@ void ClickZoneOverlay::recolorIcons() {
         arrowColor = QColor(164, 164, 164);
     }
 
-    pixmapLeft = IconFontManager::pixmap(
+    mLeftIcon.pixmap = IconFontManager::pixmap(
         FluentIcon::ChevronLeft48, kArrowIconSizePx, arrowColor, dpr);
-    pixmapRight = IconFontManager::pixmap(
+    mLeftIcon.visibleBounds = visiblePixmapBounds(mLeftIcon.pixmap);
+
+    mRightIcon.pixmap = IconFontManager::pixmap(
         FluentIcon::ChevronRight48, kArrowIconSizePx, arrowColor, dpr);
+    mRightIcon.visibleBounds = visiblePixmapBounds(mRightIcon.pixmap);
 }
