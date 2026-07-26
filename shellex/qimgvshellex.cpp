@@ -27,6 +27,39 @@
 #include <cmath>
 #include <functional>
 #include <mutex>
+#include <new>
+#include <utility>
+
+namespace {
+
+template <typename Callable, typename FailureCleanup>
+HRESULT invokeComBoundary(Callable &&callable,
+                          FailureCleanup &&failureCleanup) noexcept {
+  try {
+    return std::forward<Callable>(callable)();
+  } catch (const std::bad_alloc &) {
+    std::forward<FailureCleanup>(failureCleanup)();
+    return E_OUTOFMEMORY;
+  } catch (...) {
+    std::forward<FailureCleanup>(failureCleanup)();
+    return E_UNEXPECTED;
+  }
+}
+
+template <typename Callable>
+HRESULT invokeComBoundary(Callable &&callable) noexcept {
+  return invokeComBoundary(std::forward<Callable>(callable), []() noexcept {});
+}
+
+struct ComReleaser {
+  template <typename ComObject>
+  void operator()(ComObject *object) const noexcept {
+    if (object)
+      object->Release();
+  }
+};
+
+} // namespace
 
 const qint64 MAX_THUMBNAIL_FILE_SIZE = 256 * 1024 * 1024; // 256 MB
 const int MAX_THUMBNAIL_DIMENSION = 16384; // 16384 pixels
@@ -761,21 +794,30 @@ QImgvThumbnailProvider::~QImgvThumbnailProvider() {
 }
 
 // IUnknown Methods
-IFACEMETHODIMP QImgvThumbnailProvider::QueryInterface(REFIID riid, void **ppv) {
-  static const QITAB qit[] = {
-      QITABENT(QImgvThumbnailProvider, IThumbnailProvider),
-      QITABENT(QImgvThumbnailProvider, IInitializeWithFile),
-      QITABENT(QImgvThumbnailProvider, IInitializeWithStream),
-      {0},
-  };
-  return QISearch(this, qit, riid, ppv);
+IFACEMETHODIMP QImgvThumbnailProvider::QueryInterface(REFIID riid,
+                                                      void **ppv) noexcept {
+  if (!ppv)
+    return E_POINTER;
+  *ppv = nullptr;
+
+  return invokeComBoundary(
+      [&]() -> HRESULT {
+        static const QITAB qit[] = {
+            QITABENT(QImgvThumbnailProvider, IThumbnailProvider),
+            QITABENT(QImgvThumbnailProvider, IInitializeWithFile),
+            QITABENT(QImgvThumbnailProvider, IInitializeWithStream),
+            {0},
+        };
+        return QISearch(this, qit, riid, ppv);
+      },
+      [&]() noexcept { *ppv = nullptr; });
 }
 
-IFACEMETHODIMP_(ULONG) QImgvThumbnailProvider::AddRef() {
+IFACEMETHODIMP_(ULONG) QImgvThumbnailProvider::AddRef() noexcept {
   return InterlockedIncrement(&m_cRef);
 }
 
-IFACEMETHODIMP_(ULONG) QImgvThumbnailProvider::Release() {
+IFACEMETHODIMP_(ULONG) QImgvThumbnailProvider::Release() noexcept {
   ULONG cRef = InterlockedDecrement(&m_cRef);
   if (cRef == 0) {
     delete this;
@@ -785,30 +827,36 @@ IFACEMETHODIMP_(ULONG) QImgvThumbnailProvider::Release() {
 
 // IInitializeWithFile Methods
 IFACEMETHODIMP QImgvThumbnailProvider::Initialize(LPCWSTR pszFilePath,
-                                                  DWORD grfMode) {
-  if (!pszFilePath || *pszFilePath == L'\0')
-    return E_INVALIDARG;
-  if (m_pStream) {
-    m_pStream->Release();
-    m_pStream = nullptr;
-  }
-  m_szFilePath = pszFilePath;
-  return S_OK;
+                                                  DWORD grfMode) noexcept {
+  return invokeComBoundary([&]() -> HRESULT {
+    if (!pszFilePath || *pszFilePath == L'\0')
+      return E_INVALIDARG;
+
+    std::wstring filePath(pszFilePath);
+    IStream *previousStream = std::exchange(m_pStream, nullptr);
+    m_szFilePath.swap(filePath);
+    if (previousStream)
+      previousStream->Release();
+
+    return S_OK;
+  });
 }
 
 // IInitializeWithStream Methods
 IFACEMETHODIMP QImgvThumbnailProvider::Initialize(IStream *pStream,
-                                                  DWORD grfMode) {
-  if (!pStream)
-    return E_INVALIDARG;
-  if (m_pStream) {
-    m_pStream->Release();
-    m_pStream = nullptr;
-  }
-  m_pStream = pStream;
-  m_pStream->AddRef();
-  m_szFilePath.clear();
-  return S_OK;
+                                                  DWORD grfMode) noexcept {
+  return invokeComBoundary([&]() -> HRESULT {
+    if (!pStream)
+      return E_INVALIDARG;
+
+    pStream->AddRef();
+    IStream *previousStream = std::exchange(m_pStream, pStream);
+    m_szFilePath.clear();
+    if (previousStream)
+      previousStream->Release();
+
+    return S_OK;
+  });
 }
 
 // RAII class to manage DLL loading and search path restoration
@@ -849,11 +897,14 @@ private:
 
 // IThumbnailProvider Methods
 IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
-                                                    WTS_ALPHATYPE *pdwAlpha) {
-  if (!phbmp || !pdwAlpha || cx == 0)
-    return E_INVALIDARG;
+                                                    WTS_ALPHATYPE *pdwAlpha)
+    noexcept {
+  if (!phbmp || !pdwAlpha)
+    return E_POINTER;
   *phbmp = nullptr;
   *pdwAlpha = WTSAT_UNKNOWN;
+  if (cx == 0)
+    return E_INVALIDARG;
 
   cx = std::min(cx, MAX_REQUESTED_THUMBNAIL_EDGE);
 
@@ -861,7 +912,7 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
     return E_FAIL;
   }
 
-  try {
+  return invokeComBoundary([&]() -> HRESULT {
     // Retrieve absolute DLL directory path and set up DLL search environment
     HMODULE hModule = nullptr;
     wchar_t dllDir[MAX_PATH] = L"";
@@ -1203,11 +1254,13 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
     *phbmp = hbmp;
     *pdwAlpha = WTSAT_ARGB; // Enable alpha transparency channel
     return S_OK;
-  } catch (...) {
-    if (phbmp) *phbmp = nullptr;
-    if (pdwAlpha) *pdwAlpha = WTSAT_UNKNOWN;
-    return E_FAIL;
-  }
+  },
+                           [&]() noexcept {
+                             if (*phbmp)
+                               DeleteObject(*phbmp);
+                             *phbmp = nullptr;
+                             *pdwAlpha = WTSAT_UNKNOWN;
+                           });
 }
 
 // QImgvThumbnailProviderClassFactory Implementation
@@ -1222,19 +1275,30 @@ QImgvThumbnailProviderClassFactory::~QImgvThumbnailProviderClassFactory() {
 
 // IUnknown Methods
 IFACEMETHODIMP QImgvThumbnailProviderClassFactory::QueryInterface(REFIID riid,
-                                                                  void **ppv) {
-  static const QITAB qit[] = {
-      QITABENT(QImgvThumbnailProviderClassFactory, IClassFactory),
-      {0},
-  };
-  return QISearch(this, qit, riid, ppv);
+                                                                  void **ppv)
+    noexcept {
+  if (!ppv)
+    return E_POINTER;
+  *ppv = nullptr;
+
+  return invokeComBoundary(
+      [&]() -> HRESULT {
+        static const QITAB qit[] = {
+            QITABENT(QImgvThumbnailProviderClassFactory, IClassFactory),
+            {0},
+        };
+        return QISearch(this, qit, riid, ppv);
+      },
+      [&]() noexcept { *ppv = nullptr; });
 }
 
-IFACEMETHODIMP_(ULONG) QImgvThumbnailProviderClassFactory::AddRef() {
+IFACEMETHODIMP_(ULONG)
+QImgvThumbnailProviderClassFactory::AddRef() noexcept {
   return InterlockedIncrement(&m_cRef);
 }
 
-IFACEMETHODIMP_(ULONG) QImgvThumbnailProviderClassFactory::Release() {
+IFACEMETHODIMP_(ULONG)
+QImgvThumbnailProviderClassFactory::Release() noexcept {
   ULONG cRef = InterlockedDecrement(&m_cRef);
   if (cRef == 0) {
     delete this;
@@ -1245,167 +1309,186 @@ IFACEMETHODIMP_(ULONG) QImgvThumbnailProviderClassFactory::Release() {
 // IClassFactory Methods
 IFACEMETHODIMP
 QImgvThumbnailProviderClassFactory::CreateInstance(IUnknown *pUnkOuter,
-                                                   REFIID riid, void **ppv) {
+                                                   REFIID riid,
+                                                   void **ppv) noexcept {
+  if (!ppv)
+    return E_POINTER;
+  *ppv = nullptr;
   if (pUnkOuter != nullptr)
     return CLASS_E_NOAGGREGATION;
 
-  QImgvThumbnailProvider *pProvider =
-      new (std::nothrow) QImgvThumbnailProvider();
-  if (!pProvider)
-    return E_OUTOFMEMORY;
-
-  HRESULT hr = pProvider->QueryInterface(riid, ppv);
-  pProvider->Release();
-  return hr;
+  return invokeComBoundary(
+      [&]() -> HRESULT {
+        std::unique_ptr<QImgvThumbnailProvider, ComReleaser> provider(
+            new QImgvThumbnailProvider());
+        return provider->QueryInterface(riid, ppv);
+      },
+      [&]() noexcept { *ppv = nullptr; });
 }
 
-IFACEMETHODIMP QImgvThumbnailProviderClassFactory::LockServer(BOOL fLock) {
-  if (fLock) {
-    InterlockedIncrement(&g_cDllRef);
-  } else {
-    InterlockedDecrement(&g_cDllRef);
-  }
-  return S_OK;
+IFACEMETHODIMP
+QImgvThumbnailProviderClassFactory::LockServer(BOOL fLock) noexcept {
+  return invokeComBoundary([&]() -> HRESULT {
+    if (fLock) {
+      InterlockedIncrement(&g_cDllRef);
+    } else {
+      InterlockedDecrement(&g_cDllRef);
+    }
+    return S_OK;
+  });
 }
 
 // COM DLL Exported functions
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv) {
   if (ppv == nullptr)
-    return E_INVALIDARG;
+    return E_POINTER;
   *ppv = nullptr;
 
-  if (rclsid == CLSID_QImgvThumbnailProvider) {
-    QImgvThumbnailProviderClassFactory *pFactory =
-        new (std::nothrow) QImgvThumbnailProviderClassFactory();
-    if (!pFactory)
-      return E_OUTOFMEMORY;
-
-    HRESULT hr = pFactory->QueryInterface(riid, ppv);
-    pFactory->Release();
-    return hr;
-  }
-  return CLASS_E_CLASSNOTAVAILABLE;
+  return invokeComBoundary(
+      [&]() -> HRESULT {
+        if (rclsid == CLSID_QImgvThumbnailProvider) {
+          std::unique_ptr<QImgvThumbnailProviderClassFactory, ComReleaser>
+              factory(new QImgvThumbnailProviderClassFactory());
+          return factory->QueryInterface(riid, ppv);
+        }
+        return CLASS_E_CLASSNOTAVAILABLE;
+      },
+      [&]() noexcept { *ppv = nullptr; });
 }
 
-STDAPI DllCanUnloadNow() { return (g_cDllRef == 0) ? S_OK : S_FALSE; }
+STDAPI DllCanUnloadNow() {
+  return invokeComBoundary(
+      []() -> HRESULT { return (g_cDllRef == 0) ? S_OK : S_FALSE; });
+}
 
 STDAPI DllRegisterServer() {
-  HMODULE hModule = nullptr;
-  if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                              GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                          (LPCWSTR)&DllGetClassObject, &hModule)) {
-    return HRESULT_FROM_WIN32(GetLastError());
-  }
+  return invokeComBoundary([]() -> HRESULT {
+    HMODULE hModule = nullptr;
+    if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCWSTR)&DllGetClassObject, &hModule)) {
+      return HRESULT_FROM_WIN32(GetLastError());
+    }
 
-  wchar_t dllPath[MAX_PATH];
-  GetModuleFileNameW(hModule, dllPath, MAX_PATH);
+    wchar_t dllPath[MAX_PATH];
+    GetModuleFileNameW(hModule, dllPath, MAX_PATH);
 
-  // Register CLSID
-  wchar_t clsidKey[MAX_PATH];
-  swprintf_s(clsidKey, MAX_PATH, L"Software\\Classes\\CLSID\\%s",
-             CLSID_QImgvThumbnailProvider_Str);
+    // Register CLSID
+    wchar_t clsidKey[MAX_PATH];
+    swprintf_s(clsidKey, MAX_PATH, L"Software\\Classes\\CLSID\\%s",
+               CLSID_QImgvThumbnailProvider_Str);
 
-  HRESULT hr = CreateRegistryKeyAndValue(HKEY_CURRENT_USER, clsidKey, nullptr,
-                                         L"qimgv-plus Thumbnail Provider");
-  if (FAILED(hr))
-    return hr;
+    HRESULT hr = CreateRegistryKeyAndValue(
+        HKEY_CURRENT_USER, clsidKey, nullptr,
+        L"qimgv-plus Thumbnail Provider");
+    if (FAILED(hr))
+      return hr;
 
-  // Prefer surrogate/process isolation (DisableProcessIsolation = 0)
-  hr = CreateRegistryKeyAndDwordValue(HKEY_CURRENT_USER, clsidKey,
-                                      L"DisableProcessIsolation", 0);
-  if (FAILED(hr))
-    return hr;
+    // Prefer surrogate/process isolation (DisableProcessIsolation = 0)
+    hr = CreateRegistryKeyAndDwordValue(HKEY_CURRENT_USER, clsidKey,
+                                        L"DisableProcessIsolation", 0);
+    if (FAILED(hr))
+      return hr;
 
-  wchar_t inprocKey[MAX_PATH];
-  swprintf_s(inprocKey, MAX_PATH, L"%s\\InprocServer32", clsidKey);
-  hr = CreateRegistryKeyAndValue(HKEY_CURRENT_USER, inprocKey, nullptr,
-                                 dllPath);
-  if (FAILED(hr))
-    return hr;
+    wchar_t inprocKey[MAX_PATH];
+    swprintf_s(inprocKey, MAX_PATH, L"%s\\InprocServer32", clsidKey);
+    hr = CreateRegistryKeyAndValue(HKEY_CURRENT_USER, inprocKey, nullptr,
+                                   dllPath);
+    if (FAILED(hr))
+      return hr;
 
-  hr = CreateRegistryKeyAndValue(HKEY_CURRENT_USER, inprocKey,
-                                 L"ThreadingModel", L"Apartment");
-  if (FAILED(hr))
-    return hr;
+    hr = CreateRegistryKeyAndValue(HKEY_CURRENT_USER, inprocKey,
+                                   L"ThreadingModel", L"Apartment");
+    if (FAILED(hr))
+      return hr;
 
-  // Register for direct Extensions
-  for (const auto &info : g_extensionTable) {
-    wchar_t extKey[MAX_PATH];
-    swprintf_s(extKey, MAX_PATH,
-               L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
-               L"234630154E96}",
-               info.dotExt);
-    CreateRegistryKeyAndValue(HKEY_CURRENT_USER, extKey, nullptr,
-                              CLSID_QImgvThumbnailProvider_Str);
-  }
+    // Register for direct Extensions
+    for (const auto &info : g_extensionTable) {
+      wchar_t extKey[MAX_PATH];
+      swprintf_s(extKey, MAX_PATH,
+                 L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
+                 L"234630154E96}",
+                 info.dotExt);
+      CreateRegistryKeyAndValue(HKEY_CURRENT_USER, extKey, nullptr,
+                                CLSID_QImgvThumbnailProvider_Str);
+    }
 
-  // Register for ProgIDs
-  for (size_t i = 0; i < sizeof(g_extensionTable) / sizeof(g_extensionTable[0]); ++i) {
-    const auto &info = g_extensionTable[i];
-    if (info.progId) {
-      bool duplicate = false;
-      for (size_t j = 0; j < i; ++j) {
-        if (g_extensionTable[j].progId && wcscmp(g_extensionTable[j].progId, info.progId) == 0) {
-          duplicate = true;
-          break;
+    // Register for ProgIDs
+    for (size_t i = 0;
+         i < sizeof(g_extensionTable) / sizeof(g_extensionTable[0]); ++i) {
+      const auto &info = g_extensionTable[i];
+      if (info.progId) {
+        bool duplicate = false;
+        for (size_t j = 0; j < i; ++j) {
+          if (g_extensionTable[j].progId &&
+              wcscmp(g_extensionTable[j].progId, info.progId) == 0) {
+            duplicate = true;
+            break;
+          }
+        }
+        if (!duplicate) {
+          wchar_t progIdKey[MAX_PATH];
+          swprintf_s(
+              progIdKey, MAX_PATH,
+              L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
+              L"234630154E96}",
+              info.progId);
+          CreateRegistryKeyAndValue(HKEY_CURRENT_USER, progIdKey, nullptr,
+                                    CLSID_QImgvThumbnailProvider_Str);
         }
       }
-      if (!duplicate) {
-        wchar_t progIdKey[MAX_PATH];
-        swprintf_s(progIdKey, MAX_PATH,
-                   L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
-                   L"234630154E96}",
-                   info.progId);
-        CreateRegistryKeyAndValue(HKEY_CURRENT_USER, progIdKey, nullptr,
-                                  CLSID_QImgvThumbnailProvider_Str);
-      }
     }
-  }
 
-  // Notify shell about changes
-  SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
-  return S_OK;
+    // Notify shell about changes
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
+    return S_OK;
+  });
 }
 
 STDAPI DllUnregisterServer() {
-  wchar_t clsidKey[MAX_PATH];
-  swprintf_s(clsidKey, MAX_PATH, L"Software\\Classes\\CLSID\\%s",
-             CLSID_QImgvThumbnailProvider_Str);
-  DeleteRegistryKey(HKEY_CURRENT_USER, clsidKey);
+  return invokeComBoundary([]() -> HRESULT {
+    wchar_t clsidKey[MAX_PATH];
+    swprintf_s(clsidKey, MAX_PATH, L"Software\\Classes\\CLSID\\%s",
+               CLSID_QImgvThumbnailProvider_Str);
+    DeleteRegistryKey(HKEY_CURRENT_USER, clsidKey);
 
-  // Unregister for direct Extensions
-  for (const auto &info : g_extensionTable) {
-    wchar_t extKey[MAX_PATH];
-    swprintf_s(extKey, MAX_PATH,
-               L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
-               L"234630154E96}",
-               info.dotExt);
-    DeleteRegistryKey(HKEY_CURRENT_USER, extKey);
-  }
+    // Unregister for direct Extensions
+    for (const auto &info : g_extensionTable) {
+      wchar_t extKey[MAX_PATH];
+      swprintf_s(extKey, MAX_PATH,
+                 L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
+                 L"234630154E96}",
+                 info.dotExt);
+      DeleteRegistryKey(HKEY_CURRENT_USER, extKey);
+    }
 
-  // Unregister for ProgIDs
-  for (size_t i = 0; i < sizeof(g_extensionTable) / sizeof(g_extensionTable[0]); ++i) {
-    const auto &info = g_extensionTable[i];
-    if (info.progId) {
-      bool duplicate = false;
-      for (size_t j = 0; j < i; ++j) {
-        if (g_extensionTable[j].progId && wcscmp(g_extensionTable[j].progId, info.progId) == 0) {
-          duplicate = true;
-          break;
+    // Unregister for ProgIDs
+    for (size_t i = 0;
+         i < sizeof(g_extensionTable) / sizeof(g_extensionTable[0]); ++i) {
+      const auto &info = g_extensionTable[i];
+      if (info.progId) {
+        bool duplicate = false;
+        for (size_t j = 0; j < i; ++j) {
+          if (g_extensionTable[j].progId &&
+              wcscmp(g_extensionTable[j].progId, info.progId) == 0) {
+            duplicate = true;
+            break;
+          }
+        }
+        if (!duplicate) {
+          wchar_t progIdKey[MAX_PATH];
+          swprintf_s(
+              progIdKey, MAX_PATH,
+              L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
+              L"234630154E96}",
+              info.progId);
+          DeleteRegistryKey(HKEY_CURRENT_USER, progIdKey);
         }
       }
-      if (!duplicate) {
-        wchar_t progIdKey[MAX_PATH];
-        swprintf_s(progIdKey, MAX_PATH,
-                   L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
-                   L"234630154E96}",
-                   info.progId);
-        DeleteRegistryKey(HKEY_CURRENT_USER, progIdKey);
-      }
     }
-  }
 
-  // Notify shell about changes
-  SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
-  return S_OK;
+    // Notify shell about changes
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
+    return S_OK;
+  });
 }

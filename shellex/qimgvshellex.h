@@ -23,18 +23,19 @@ public:
     QImgvThumbnailProvider();
 
     // IUnknown
-    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv);
-    IFACEMETHODIMP_(ULONG) AddRef();
-    IFACEMETHODIMP_(ULONG) Release();
+    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv) noexcept;
+    IFACEMETHODIMP_(ULONG) AddRef() noexcept;
+    IFACEMETHODIMP_(ULONG) Release() noexcept;
 
     // IInitializeWithFile
-    IFACEMETHODIMP Initialize(LPCWSTR pszFilePath, DWORD grfMode);
+    IFACEMETHODIMP Initialize(LPCWSTR pszFilePath, DWORD grfMode) noexcept;
 
     // IInitializeWithStream
-    IFACEMETHODIMP Initialize(IStream *pStream, DWORD grfMode);
+    IFACEMETHODIMP Initialize(IStream *pStream, DWORD grfMode) noexcept;
 
     // IThumbnailProvider
-    IFACEMETHODIMP GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha);
+    IFACEMETHODIMP GetThumbnail(UINT cx, HBITMAP *phbmp,
+                               WTS_ALPHATYPE *pdwAlpha) noexcept;
 
 protected:
     virtual ~QImgvThumbnailProvider();
@@ -50,13 +51,14 @@ public:
     QImgvThumbnailProviderClassFactory();
 
     // IUnknown
-    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv);
-    IFACEMETHODIMP_(ULONG) AddRef();
-    IFACEMETHODIMP_(ULONG) Release();
+    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv) noexcept;
+    IFACEMETHODIMP_(ULONG) AddRef() noexcept;
+    IFACEMETHODIMP_(ULONG) Release() noexcept;
 
     // IClassFactory
-    IFACEMETHODIMP CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppv);
-    IFACEMETHODIMP LockServer(BOOL fLock);
+    IFACEMETHODIMP CreateInstance(IUnknown *pUnkOuter, REFIID riid,
+                                  void **ppv) noexcept;
+    IFACEMETHODIMP LockServer(BOOL fLock) noexcept;
 
 protected:
     virtual ~QImgvThumbnailProviderClassFactory();
