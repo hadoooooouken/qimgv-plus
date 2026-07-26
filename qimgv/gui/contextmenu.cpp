@@ -109,6 +109,7 @@ void ContextMenu::setupUi()
     m_zoomOut->setAccessibleName("ContextMenuButton");
     m_zoomOut->setAction("zoomOut");
     m_zoomOut->setIcon(FluentIcon::ZoomOut20, kIconSizePx);
+    m_zoomOut->setIconOffset(-1, 0);
     m_zoomOut->setToolTip(tr("Zoom out"));
     m_zoomOut->setTriggerMode(TriggerMode::PressTrigger);
     zoomLayout->addWidget(m_zoomOut);
@@ -167,6 +168,7 @@ void ContextMenu::setupUi()
     m_resize->setAccessibleName("ContextMenuButton");
     m_resize->setAction("resize");
     m_resize->setIcon(FluentIcon::Resize20, kIconSizePx);
+    m_resize->setIconOffset(-1, 0);
     m_resize->setToolTip(tr("Resize"));
     m_resize->setTriggerMode(TriggerMode::PressTrigger);
     transformLayout->addWidget(m_resize);
