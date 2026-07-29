@@ -138,6 +138,10 @@ void Thumbnailer::onTaskEnd(ThumbnailTaskResult result, QString filePath,
         !cacheWriter->enqueue(std::move(*result.cacheCandidate))) {
         qDebug() << "Dropped thumbnail cache write for" << filePath;
     }
+    if (result.accessTouch &&
+        !cacheWriter->enqueueAccessTouch(std::move(*result.accessTouch))) {
+        qDebug() << "Dropped thumbnail cache access update for" << filePath;
+    }
     runningTasks.remove(key);
 
     auto it = pendingReruns.find(key);

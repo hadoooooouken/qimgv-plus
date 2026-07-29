@@ -12,12 +12,13 @@
 #include <algorithm>
 #include <limits>
 
-std::mutex ThumbnailCache::sDatabaseAccessMutex;
+std::mutex ThumbnailCache::sDatabaseWriteMutex;
 
 ThumbnailCache::ThumbnailCache()
     : databasePath(settings->thumbnailCacheDir() +
                    QStringLiteral("thumbnails.db")),
-      maintenance(databasePath)
+      maintenance(databasePath),
+      decodedCache(kDecodedCacheMaximumBytes)
 {
 }
 
@@ -37,13 +38,14 @@ QSqlDatabase ThumbnailCache::getDatabaseConnection()
         }
 
         if (!connection->db.isOpen() || !connection->schemaReady) {
-            std::lock_guard lock(sDatabaseAccessMutex);
             if (!connection->db.isOpen() && !connection->db.open()) {
                 qWarning() << "Failed to reopen thumbnail cache database:"
                            << connection->db.lastError().text();
                 return connection->db;
             }
-            connection->schemaReady = initializeDatabase(connection->db);
+            connection->schemaReady =
+                configureDatabaseConnection(connection->db) &&
+                ensureDatabaseInitialized(connection->db);
             if (!connection->schemaReady)
                 connection->db.close();
         }
@@ -55,7 +57,6 @@ QSqlDatabase ThumbnailCache::getDatabaseConnection()
             .arg(reinterpret_cast<quintptr>(this))
             .arg(reinterpret_cast<quintptr>(QThread::currentThreadId()));
 
-    std::lock_guard lock(sDatabaseAccessMutex);
     QSqlDatabase db =
         QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connectionName);
     db.setDatabaseName(databasePath);
@@ -65,7 +66,9 @@ QSqlDatabase ThumbnailCache::getDatabaseConnection()
         qWarning() << "Failed to open thumbnail cache database:"
                    << db.lastError().text();
     } else {
-        schemaReady = initializeDatabase(db);
+        schemaReady =
+            configureDatabaseConnection(db) &&
+            ensureDatabaseInitialized(db);
         if (!schemaReady)
             db.close();
     }
@@ -75,16 +78,13 @@ QSqlDatabase ThumbnailCache::getDatabaseConnection()
     return db;
 }
 
-bool ThumbnailCache::initializeDatabase(QSqlDatabase &db)
+bool ThumbnailCache::configureDatabaseConnection(QSqlDatabase &db)
 {
     if (!executeSchemaStatement(
             db,
             QStringLiteral("PRAGMA busy_timeout=%1;")
                 .arg(kDatabaseBusyTimeoutMilliseconds),
             QStringLiteral("Failed to configure thumbnail cache busy timeout")) ||
-        !executeSchemaStatement(
-            db, QStringLiteral("PRAGMA journal_mode=WAL;"),
-            QStringLiteral("Failed to enable thumbnail cache WAL mode")) ||
         !executeSchemaStatement(
             db, QStringLiteral("PRAGMA synchronous=NORMAL;"),
             QStringLiteral("Failed to configure thumbnail cache synchronization")) ||
@@ -95,7 +95,30 @@ bool ThumbnailCache::initializeDatabase(QSqlDatabase &db)
             QStringLiteral("Failed to configure thumbnail cache WAL checkpoint"))) {
         return false;
     }
+    return true;
+}
 
+bool ThumbnailCache::ensureDatabaseInitialized(QSqlDatabase &db)
+{
+    if (databaseInitialized.load(std::memory_order_acquire))
+        return true;
+
+    std::lock_guard lock(sDatabaseWriteMutex);
+    if (databaseInitialized.load(std::memory_order_relaxed))
+        return true;
+
+    const bool initialized = initializeDatabaseSchema(db);
+    databaseInitialized.store(initialized, std::memory_order_release);
+    return initialized;
+}
+
+bool ThumbnailCache::initializeDatabaseSchema(QSqlDatabase &db)
+{
+    if (!executeSchemaStatement(
+            db, QStringLiteral("PRAGMA journal_mode=WAL;"),
+            QStringLiteral("Failed to enable thumbnail cache WAL mode"))) {
+        return false;
+    }
     if (!db.transaction()) {
         qWarning() << "Failed to start thumbnail cache schema transaction:"
                    << db.lastError().text();
@@ -280,7 +303,6 @@ bool ThumbnailCache::exists(QString id)
     if (!ensureStartupMaintenance(db))
         qWarning() << "Thumbnail cache startup maintenance will be retried";
 
-    std::lock_guard lock(sDatabaseAccessMutex);
     QSqlQuery query(db);
     query.prepare(QStringLiteral(
         "SELECT 1 FROM thumbnails "
@@ -319,7 +341,7 @@ bool ThumbnailCache::saveThumbnails(const QList<WriteEntry> &entries)
         return false;
     }
 
-    std::lock_guard lock(sDatabaseAccessMutex);
+    std::lock_guard lock(sDatabaseWriteMutex);
     const ThumbnailCacheMaintenance::Quota quota = currentQuota();
     QList<const WriteEntry *> persistableEntries;
     persistableEntries.reserve(entries.size());
@@ -475,6 +497,75 @@ bool ThumbnailCache::saveThumbnails(const QList<WriteEntry> &entries)
     return true;
 }
 
+bool ThumbnailCache::applyAccessTouches(
+    const QList<AccessTouch> &accessTouches)
+{
+    if (accessTouches.isEmpty()) {
+        qWarning() << "Cannot apply an empty thumbnail access batch";
+        return false;
+    }
+    for (const AccessTouch &accessTouch : accessTouches) {
+        if (accessTouch.id.isEmpty() || accessTouch.accessedAt <= 0) {
+            qWarning() << "Cannot apply an invalid thumbnail access touch";
+            return false;
+        }
+    }
+
+    QSqlDatabase db = getDatabaseConnection();
+    if (!db.isOpen()) {
+        qWarning() << "Cannot update a closed thumbnail cache database";
+        return false;
+    }
+    if (!ensureStartupMaintenance(db)) {
+        qWarning() << "Cannot update access times before maintenance succeeds";
+        return false;
+    }
+
+    std::lock_guard lock(sDatabaseWriteMutex);
+    if (!db.transaction()) {
+        qWarning() << "Failed to start thumbnail access transaction:"
+                   << db.lastError().text();
+        return false;
+    }
+
+    const auto rollbackTransaction = [&db]() {
+        if (!db.rollback()) {
+            qWarning() << "Failed to roll back thumbnail access transaction:"
+                       << db.lastError().text();
+        }
+        return false;
+    };
+
+    QSqlQuery query(db);
+    if (!query.prepare(QStringLiteral(
+            "UPDATE thumbnails "
+            "SET last_accessed = MAX(last_accessed, :accessed_at) "
+            "WHERE id = :id;"))) {
+        qWarning() << "Failed to prepare thumbnail access batch:"
+                   << query.lastError().text();
+        return rollbackTransaction();
+    }
+
+    for (const AccessTouch &accessTouch : accessTouches) {
+        query.bindValue(QStringLiteral(":accessed_at"),
+                        accessTouch.accessedAt);
+        query.bindValue(QStringLiteral(":id"), accessTouch.id);
+        if (!query.exec()) {
+            qWarning() << "Failed to update thumbnail access time:"
+                       << query.lastError().text();
+            return rollbackTransaction();
+        }
+        query.finish();
+    }
+
+    if (!db.commit()) {
+        qWarning() << "Failed to commit thumbnail access transaction:"
+                   << db.lastError().text();
+        return rollbackTransaction();
+    }
+    return true;
+}
+
 bool ThumbnailCache::performStartupMaintenance()
 {
     QSqlDatabase db = getDatabaseConnection();
@@ -494,6 +585,20 @@ ThumbnailCache::ReadResult ThumbnailCache::readThumbnail(
         return {};
     }
 
+    const qint64 now = QDateTime::currentSecsSinceEpoch();
+    DecodedThumbnailCache::LookupResult decodedResult =
+        decodedCache.lookup(id, sourceStamp, now,
+                            kAccessTouchIntervalSeconds);
+    if (decodedResult.image) {
+        std::optional<AccessTouch> accessTouch;
+        if (decodedResult.accessTouchRequired)
+            accessTouch = AccessTouch{id, now, 0};
+        return {
+            std::move(decodedResult.image),
+            decodedResult.requiresLinearColorSpace,
+            std::move(accessTouch)};
+    }
+
     QSqlDatabase db = getDatabaseConnection();
     if (!db.isOpen()) {
         qWarning() << "Cannot read from a closed thumbnail cache database";
@@ -509,65 +614,43 @@ ThumbnailCache::ReadResult ThumbnailCache::readThumbnail(
     qint64 lastAccessed = 0;
     bool requiresLinearColorSpace = false;
 
-    {
-        std::lock_guard lock(sDatabaseAccessMutex);
-        QSqlQuery query(db);
-        if (!query.prepare(QStringLiteral(
-                "SELECT original_width, original_height, label, data, "
-                "last_accessed, requires_linear_color_space "
-                "FROM thumbnails "
-                "WHERE id = :id "
-                "  AND source_path = :source_path COLLATE NOCASE "
-                "  AND source_mtime = :source_mtime "
-                "  AND source_size = :source_size;"))) {
-            qWarning() << "Failed to prepare thumbnail cache lookup:"
-                       << query.lastError().text();
-            return {};
-        }
-        query.bindValue(QStringLiteral(":id"), id);
-        query.bindValue(QStringLiteral(":source_path"),
-                        sourceStamp.normalizedPath);
-        query.bindValue(QStringLiteral(":source_mtime"),
-                        sourceStamp.modifiedTimeTicks);
-        query.bindValue(QStringLiteral(":source_size"), sourceStamp.size);
-
-        if (!query.exec()) {
-            qWarning() << "Failed to read thumbnail cache entry:"
-                       << query.lastError().text();
-            return {};
-        }
-        if (!query.next()) {
-            query.finish();
-            return {};
-        }
-
-        originalWidth = query.value(0).toInt();
-        originalHeight = query.value(1).toInt();
-        label = query.value(2).toString();
-        encodedThumbnail = query.value(3).toByteArray();
-        lastAccessed = query.value(4).toLongLong();
-        requiresLinearColorSpace = query.value(5).toBool();
-        query.finish();
-
-        const qint64 now = QDateTime::currentSecsSinceEpoch();
-        if (now - lastAccessed > kAccessTouchIntervalSeconds) {
-            QSqlQuery touchQuery(db);
-            if (!touchQuery.prepare(QStringLiteral(
-                    "UPDATE thumbnails "
-                    "SET last_accessed = :now WHERE id = :id;"))) {
-                qWarning() << "Failed to prepare thumbnail cache access update:"
-                           << touchQuery.lastError().text();
-            } else {
-                touchQuery.bindValue(QStringLiteral(":now"), now);
-                touchQuery.bindValue(QStringLiteral(":id"), id);
-                if (!touchQuery.exec()) {
-                    qWarning()
-                        << "Failed to update thumbnail cache access time:"
-                        << touchQuery.lastError().text();
-                }
-            }
-        }
+    QSqlQuery query(db);
+    if (!query.prepare(QStringLiteral(
+            "SELECT original_width, original_height, label, data, "
+            "last_accessed, requires_linear_color_space "
+            "FROM thumbnails "
+            "WHERE id = :id "
+            "  AND source_path = :source_path COLLATE NOCASE "
+            "  AND source_mtime = :source_mtime "
+            "  AND source_size = :source_size;"))) {
+        qWarning() << "Failed to prepare thumbnail cache lookup:"
+                   << query.lastError().text();
+        return {};
     }
+    query.bindValue(QStringLiteral(":id"), id);
+    query.bindValue(QStringLiteral(":source_path"),
+                    sourceStamp.normalizedPath);
+    query.bindValue(QStringLiteral(":source_mtime"),
+                    sourceStamp.modifiedTimeTicks);
+    query.bindValue(QStringLiteral(":source_size"), sourceStamp.size);
+
+    if (!query.exec()) {
+        qWarning() << "Failed to read thumbnail cache entry:"
+                   << query.lastError().text();
+        return {};
+    }
+    if (!query.next()) {
+        query.finish();
+        return {};
+    }
+
+    originalWidth = query.value(0).toInt();
+    originalHeight = query.value(1).toInt();
+    label = query.value(2).toString();
+    encodedThumbnail = query.value(3).toByteArray();
+    lastAccessed = query.value(4).toLongLong();
+    requiresLinearColorSpace = query.value(5).toBool();
+    query.finish();
 
     auto thumbnail = std::make_unique<QImage>();
     if (!encodedThumbnail.isEmpty() &&
@@ -577,10 +660,18 @@ ThumbnailCache::ReadResult ThumbnailCache::readThumbnail(
         thumbnail->setText(QStringLiteral("originalHeight"),
                            QString::number(originalHeight));
         thumbnail->setText(QStringLiteral("label"), label);
-        return {std::move(thumbnail), requiresLinearColorSpace};
+        decodedCache.insert(id, sourceStamp, *thumbnail,
+                            requiresLinearColorSpace, lastAccessed);
+        std::optional<AccessTouch> accessTouch;
+        if (lastAccessed < now - kAccessTouchIntervalSeconds)
+            accessTouch = AccessTouch{id, now, 0};
+        return {
+            std::move(thumbnail),
+            requiresLinearColorSpace,
+            std::move(accessTouch)};
     }
 
-    std::lock_guard lock(sDatabaseAccessMutex);
+    std::lock_guard lock(sDatabaseWriteMutex);
     if (!removeEntry(db, id,
                      QStringLiteral("thumbnail data is empty or corrupt"))) {
         qWarning() << "Corrupt thumbnail cache entry could not be removed";
@@ -588,15 +679,26 @@ ThumbnailCache::ReadResult ThumbnailCache::readThumbnail(
     return {};
 }
 
+void ThumbnailCache::storeDecodedThumbnail(
+    const QString &id, const ThumbnailSourceStamp &sourceStamp,
+    const QImage &image, bool requiresLinearColorSpace)
+{
+    decodedCache.insert(
+        id, sourceStamp, image, requiresLinearColorSpace,
+        QDateTime::currentSecsSinceEpoch());
+}
+
 bool ThumbnailCache::clear()
 {
+    decodedCache.clear();
+
     QSqlDatabase db = getDatabaseConnection();
     if (!db.isOpen()) {
         qWarning() << "Cannot clear a closed thumbnail cache database";
         return false;
     }
 
-    std::lock_guard lock(sDatabaseAccessMutex);
+    std::lock_guard lock(sDatabaseWriteMutex);
     QSqlQuery deleteQuery(db);
     if (!deleteQuery.exec(QStringLiteral("DELETE FROM thumbnails;"))) {
         qWarning() << "Failed to clear thumbnail cache:"
@@ -638,7 +740,7 @@ bool ThumbnailCache::ensureStartupMaintenance(QSqlDatabase &db)
     if (startupMaintenanceComplete.load(std::memory_order_relaxed))
         return true;
 
-    std::lock_guard databaseLock(sDatabaseAccessMutex);
+    std::lock_guard databaseLock(sDatabaseWriteMutex);
     ThumbnailCacheMaintenance::Request request;
     request.quota = currentQuota();
     request.scanStalePaths = true;

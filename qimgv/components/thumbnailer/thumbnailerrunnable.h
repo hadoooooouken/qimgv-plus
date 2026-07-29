@@ -23,6 +23,7 @@ struct ThumbnailRequest {
 struct ThumbnailTaskResult {
     std::shared_ptr<Thumbnail> thumbnail;
     std::optional<ThumbnailCacheCandidate> cacheCandidate;
+    std::optional<ThumbnailCache::AccessTouch> accessTouch;
 };
 
 Q_DECLARE_METATYPE(ThumbnailTaskResult)

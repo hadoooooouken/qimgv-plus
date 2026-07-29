@@ -10,6 +10,7 @@ target_sources(qimgv-plus PRIVATE
 
     cache/cache.cpp
     cache/cacheitem.cpp
+    cache/decodedthumbnailcache.cpp
     cache/thumbnailcache.cpp
     cache/thumbnailcachemaintenance.cpp
     cache/thumbnailsourcestamp.cpp

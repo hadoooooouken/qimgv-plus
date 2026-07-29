@@ -2,6 +2,7 @@
 
 #include "thumbnailcache.h"
 
+#include <QHash>
 #include <QImage>
 #include <QObject>
 #include <QThread>
@@ -33,6 +34,8 @@ public:
 
     [[nodiscard]] quint64 currentGeneration() const noexcept;
     [[nodiscard]] bool enqueue(ThumbnailCacheCandidate candidate);
+    [[nodiscard]] bool
+    enqueueAccessTouch(ThumbnailCache::AccessTouch accessTouch);
     void requestStartupMaintenance();
     void waitForDone();
     [[nodiscard]] bool clear();
@@ -40,6 +43,8 @@ public:
 private:
     static constexpr std::size_t kMaximumQueuedCandidates = 64;
     static constexpr std::size_t kMaximumBatchSize = 8;
+    static constexpr qsizetype kMaximumPendingAccessTouches = 1024;
+    static constexpr qsizetype kMaximumAccessTouchBatchSize = 256;
     static constexpr int kBatchCollectionDelayMilliseconds = 8;
     static constexpr int kThumbnailEncodingEffort = 2;
     static constexpr int kThumbnailEncodingQuality = 85;
@@ -47,6 +52,8 @@ private:
 
     void processQueue();
     void processBatch(std::deque<ThumbnailCacheCandidate> batch);
+    void processAccessTouches(
+        QList<ThumbnailCache::AccessTouch> accessTouches);
     void stop();
 
     ThumbnailCache &cache;
@@ -55,6 +62,7 @@ private:
     std::condition_variable workAvailable;
     std::condition_variable stateChanged;
     std::deque<ThumbnailCacheCandidate> queue;
+    QHash<QString, ThumbnailCache::AccessTouch> pendingAccessTouches;
     std::atomic<quint64> generation{0};
     bool startupMaintenanceRequested = false;
     bool clearRequested = false;

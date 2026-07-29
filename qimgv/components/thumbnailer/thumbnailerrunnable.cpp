@@ -41,6 +41,7 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
   QString thumbnailId = generateIdString(path, settings->thumbnailResolution(), false);
   std::unique_ptr<QImage> image;
   std::optional<ThumbnailCacheCandidate> cacheCandidate;
+  std::optional<ThumbnailCache::AccessTouch> accessTouch;
   bool isPdf = false;
 
   ThumbnailCache *activeCache = request.cache;
@@ -56,6 +57,10 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
     ThumbnailCache::ReadResult cacheResult =
         activeCache->readThumbnail(thumbnailId, *sourceStamp);
     image = std::move(cacheResult.image);
+    if (cacheResult.accessTouch) {
+      cacheResult.accessTouch->generation = request.cacheGeneration;
+      accessTouch = std::move(cacheResult.accessTouch);
+    }
     if (image && cacheResult.requiresLinearColorSpace) {
       *image =
           image->convertedToColorSpace(QColorSpace(QColorSpace::SRgbLinear));
@@ -110,6 +115,9 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
           cacheCandidate = ThumbnailCacheCandidate{
               *image, thumbnailId, *sourceStamp,
               requiresLinearColorSpace, request.cacheGeneration};
+          activeCache->storeDecodedThumbnail(
+              thumbnailId, *sourceStamp, *image,
+              requiresLinearColorSpace);
         }
       }
     }
@@ -176,7 +184,8 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
   }
   return {
       std::make_shared<Thumbnail>(fileName, label, size, colorManaged),
-      std::move(cacheCandidate)};
+      std::move(cacheCandidate),
+      std::move(accessTouch)};
 }
 
 QSize ThumbnailerRunnable::noUpscaleScaledSize(QSize originalSize, int size,
