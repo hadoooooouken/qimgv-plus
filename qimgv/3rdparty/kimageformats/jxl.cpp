@@ -16,6 +16,7 @@
 
 #include <jxl/cms.h>
 #include <jxl/encode.h>
+#include <jxl/resizable_parallel_runner.h>
 #include <jxl/thread_parallel_runner.h>
 
 #include <string.h>
@@ -56,6 +57,30 @@ Q_LOGGING_CATEGORY(LOG_JXLPLUGIN, "kf.imageformats.plugins.jxl", QtWarningMsg)
 #define MAX_IMAGE_PIXELS FEATURE_LEVEL_5_PIXELS
 #endif
 
+namespace
+{
+// Thumbnail-cache images fit within this bound. Running their codec work on
+// the caller avoids multiplying JXL worker pools inside the thumbnail pool.
+constexpr uint64_t kSingleThreadedImageMaximumDimension = 512;
+constexpr int kMinimumParallelDecoderProcessorCount = 4;
+constexpr int kMaximumJxlThreadCount = 64;
+
+bool shouldProcessSingleThreaded(uint64_t width, uint64_t height)
+{
+    return width <= kSingleThreadedImageMaximumDimension && height <= kSingleThreadedImageMaximumDimension;
+}
+
+int decoderThreadCount(uint64_t width, uint64_t height)
+{
+    const int processorCount = QThread::idealThreadCount();
+    if (shouldProcessSingleThreaded(width, height) || processorCount < kMinimumParallelDecoderProcessorCount) {
+        return 1;
+    }
+
+    return qBound(2, processorCount / 2, kMaximumJxlThreadCount);
+}
+}
+
 QJpegXLHandler::QJpegXLHandler()
     : m_parseState(ParseJpegXLNotParsed)
     , m_quality(90)
@@ -76,7 +101,7 @@ QJpegXLHandler::QJpegXLHandler()
 QJpegXLHandler::~QJpegXLHandler()
 {
     if (m_runner) {
-        JxlThreadParallelRunnerDestroy(m_runner);
+        JxlResizableParallelRunnerDestroy(m_runner);
     }
     if (m_decoder) {
         JxlDecoderDestroy(m_decoder);
@@ -177,19 +202,17 @@ bool QJpegXLHandler::ensureDecoder()
     JxlDecoderSetKeepOrientation(m_decoder, true);
 #endif
 
-    int num_worker_threads = QThread::idealThreadCount();
-    if (!m_runner && num_worker_threads >= 4) {
-        /* use half of the threads because plug-in is usually used in environment
-         * where application performs other tasks in the background (pre-load other images) */
-        num_worker_threads = num_worker_threads / 2;
-        num_worker_threads = qBound(2, num_worker_threads, 64);
-        m_runner = JxlThreadParallelRunnerCreate(nullptr, num_worker_threads);
+    m_runner = JxlResizableParallelRunnerCreate(nullptr);
+    if (!m_runner) {
+        qCWarning(LOG_JXLPLUGIN, "ERROR: JxlResizableParallelRunnerCreate failed");
+        m_parseState = ParseJpegXLError;
+        return false;
+    }
 
-        if (JxlDecoderSetParallelRunner(m_decoder, JxlThreadParallelRunner, m_runner) != JXL_DEC_SUCCESS) {
-            qCWarning(LOG_JXLPLUGIN, "ERROR: JxlDecoderSetParallelRunner failed");
-            m_parseState = ParseJpegXLError;
-            return false;
-        }
+    if (JxlDecoderSetParallelRunner(m_decoder, JxlResizableParallelRunner, m_runner) != JXL_DEC_SUCCESS) {
+        qCWarning(LOG_JXLPLUGIN, "ERROR: JxlDecoderSetParallelRunner failed");
+        m_parseState = ParseJpegXLError;
+        return false;
     }
 
     if (JxlDecoderSetInput(m_decoder, reinterpret_cast<const uint8_t *>(m_rawData.constData()), m_rawData.size()) != JXL_DEC_SUCCESS) {
@@ -237,6 +260,12 @@ bool QJpegXLHandler::ensureDecoder()
         m_parseState = ParseJpegXLError;
         return false;
     }
+
+    // The resizable runner includes the calling thread in this count, unlike
+    // JxlThreadParallelRunner's worker-thread count.
+    JxlResizableParallelRunnerSetThreads(
+        m_runner,
+        decoderThreadCount(m_basicinfo.xsize, m_basicinfo.ysize));
 
     m_parseState = ParseJpegXLBasicInfoParsed;
     return true;
@@ -870,7 +899,9 @@ bool QJpegXLHandler::write(const QImage &image)
     }
 
     void *runner = nullptr;
-    int num_worker_threads = qBound(1, QThread::idealThreadCount(), 64);
+    const int num_worker_threads = shouldProcessSingleThreaded(image.width(), image.height())
+        ? 0
+        : qBound(1, QThread::idealThreadCount(), kMaximumJxlThreadCount);
 
     if (num_worker_threads > 1) {
         runner = JxlThreadParallelRunnerCreate(nullptr, num_worker_threads);
@@ -1827,7 +1858,7 @@ bool QJpegXLHandler::rewind()
     JxlDecoderReleaseInput(m_decoder);
     JxlDecoderRewind(m_decoder);
     if (m_runner) {
-        if (JxlDecoderSetParallelRunner(m_decoder, JxlThreadParallelRunner, m_runner) != JXL_DEC_SUCCESS) {
+        if (JxlDecoderSetParallelRunner(m_decoder, JxlResizableParallelRunner, m_runner) != JXL_DEC_SUCCESS) {
             qCWarning(LOG_JXLPLUGIN, "ERROR: JxlDecoderSetParallelRunner failed");
             m_parseState = ParseJpegXLError;
             return false;
