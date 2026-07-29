@@ -2,7 +2,24 @@
 #include "settings.h"
 #include "components/comfymetadata/comfyksamplerparser.h"
 
+#include <array>
+#include <string_view>
 #include <utility>
+
+namespace {
+constexpr int kRiffHeaderSizeBytes = 12;
+constexpr int kWebpChunkSizeFieldBytes = 4;
+constexpr std::size_t kWebpFeatureFlagsSizeBytes = 1;
+constexpr std::string_view kWebpExtendedChunkType = "VP8X";
+constexpr std::string_view kAnimatedAvifFileType = "ftypavis";
+constexpr unsigned char kWebpAnimationFlag = 1U << 1;
+
+template<std::size_t Size>
+bool readExact(QDataStream &stream, std::array<char, Size> &buffer) {
+    const auto byteCount = static_cast<int>(buffer.size());
+    return stream.readRawData(buffer.data(), byteCount) == byteCount;
+}
+}
 
 DocumentInfo::DocumentInfo(QString path)
     : mDocumentType(DocumentType::NONE),
@@ -191,24 +208,26 @@ bool DocumentInfo::detectAPNG() {
 
 bool DocumentInfo::detectAnimatedWebP() {
     QFile f(fileInfo.filePath());
-    bool result = false;
-    if(f.open(QFile::ReadOnly)) {
-        QDataStream in(&f);
-        in.skipRawData(12);
-        char *buf = static_cast<char*>(malloc(5));
-        buf[4] = '\0';
-        in.readRawData(buf, 4);
-        if(strcmp(buf, "VP8X") == 0) {
-            in.skipRawData(4);
-            char flags;
-            in.readRawData(&flags, 1);
-            if(flags & (1 << 1)) {
-                result = true;
-            }
-        }
-        free(buf);
-    }
-    return result;
+    if(!f.open(QFile::ReadOnly))
+        return false;
+
+    QDataStream in(&f);
+    if(in.skipRawData(kRiffHeaderSizeBytes) != kRiffHeaderSizeBytes)
+        return false;
+
+    std::array<char, kWebpExtendedChunkType.size()> chunkType{};
+    if(!readExact(in, chunkType) ||
+       std::string_view(chunkType.data(), chunkType.size()) != kWebpExtendedChunkType)
+        return false;
+
+    if(in.skipRawData(kWebpChunkSizeFieldBytes) != kWebpChunkSizeFieldBytes)
+        return false;
+
+    std::array<char, kWebpFeatureFlagsSizeBytes> featureFlags{};
+    if(!readExact(in, featureFlags))
+        return false;
+
+    return (static_cast<unsigned char>(featureFlags.front()) & kWebpAnimationFlag) != 0;
 }
 
 bool DocumentInfo::detectAnimatedJxl() {
@@ -218,19 +237,17 @@ bool DocumentInfo::detectAnimatedJxl() {
 
 bool DocumentInfo::detectAnimatedAvif() {
     QFile f(fileInfo.filePath());
-    bool result = false;
-    if(f.open(QFile::ReadOnly)) {
-        QDataStream in(&f);
-        in.skipRawData(4); // skip box size
-        char *buf = static_cast<char*>(malloc(9));
-        buf[8] = '\0';
-        in.readRawData(buf, 8);
-        if(strcmp(buf, "ftypavis") == 0) {
-            result = true;
-        }
-        free(buf);
-    }
-    return result;
+    if(!f.open(QFile::ReadOnly))
+        return false;
+
+    QDataStream in(&f);
+    constexpr int kBoxSizeFieldBytes = 4;
+    if(in.skipRawData(kBoxSizeFieldBytes) != kBoxSizeFieldBytes)
+        return false;
+
+    std::array<char, kAnimatedAvifFileType.size()> fileType{};
+    return readExact(in, fileType) &&
+           std::string_view(fileType.data(), fileType.size()) == kAnimatedAvifFileType;
 }
 
 void DocumentInfo::loadExifTags() {
