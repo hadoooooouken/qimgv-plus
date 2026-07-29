@@ -2,7 +2,6 @@
 
 #include "settings.h"
 
-#include <QBuffer>
 #include <QDateTime>
 #include <QDebug>
 #include <QSet>
@@ -265,36 +264,17 @@ bool ThumbnailCache::exists(QString id)
     return query.next();
 }
 
-bool ThumbnailCache::saveThumbnail(const QImage *image, QString id,
-                                   const QString &sourcePath)
+bool ThumbnailCache::saveThumbnails(const QList<WriteEntry> &entries)
 {
-    if (!image || image->isNull()) {
-        qWarning() << "Cannot cache an invalid thumbnail image";
+    if (entries.isEmpty()) {
+        qWarning() << "Cannot save an empty thumbnail cache batch";
         return false;
     }
-    if (id.isEmpty()) {
-        qWarning() << "Cannot cache a thumbnail with an empty identifier";
-        return false;
-    }
-
-    QByteArray encodedThumbnail;
-    QBuffer buffer(&encodedThumbnail);
-    if (!buffer.open(QIODevice::WriteOnly)) {
-        qWarning() << "Failed to open thumbnail encoding buffer:"
-                   << buffer.errorString();
-        return false;
-    }
-
-    QImage thumbCopy = *image;
-    thumbCopy.setText(QStringLiteral("effort"),
-                      QString::number(kThumbnailEncodingEffort));
-    const bool encoded =
-        thumbCopy.save(&buffer, kThumbnailEncodingFormat,
-                       kThumbnailEncodingQuality);
-    buffer.close();
-    if (!encoded || encodedThumbnail.isEmpty()) {
-        qWarning() << "Failed to encode thumbnail as JXL";
-        return false;
+    for (const WriteEntry &entry : entries) {
+        if (entry.id.isEmpty() || entry.encodedData.isEmpty()) {
+            qWarning() << "Cannot save an invalid thumbnail cache entry";
+            return false;
+        }
     }
 
     QSqlDatabase db = getDatabaseConnection();
@@ -309,79 +289,128 @@ bool ThumbnailCache::saveThumbnail(const QImage *image, QString id,
 
     std::lock_guard lock(sDatabaseAccessMutex);
     const ThumbnailCacheMaintenance::Quota quota = currentQuota();
-    if (quota.maximumStorageBytes > 0 &&
-        encodedThumbnail.size() >= quota.maximumStorageBytes) {
-        qWarning() << "Encoded thumbnail is too large for the cache quota:"
-                   << encodedThumbnail.size() << "bytes";
+    QList<const WriteEntry *> persistableEntries;
+    persistableEntries.reserve(entries.size());
+    for (const WriteEntry &entry : entries) {
+        if (quota.maximumStorageBytes > 0 &&
+            entry.encodedData.size() >= quota.maximumStorageBytes) {
+            qWarning() << "Encoded thumbnail is too large for the cache quota:"
+                       << entry.encodedData.size() << "bytes";
+            continue;
+        }
+        persistableEntries.push_back(&entry);
+    }
+    if (persistableEntries.isEmpty())
+        return true;
+
+    if (!db.transaction()) {
+        qWarning() << "Failed to start thumbnail cache write transaction:"
+                   << db.lastError().text();
         return false;
     }
+
+    const auto rollbackTransaction = [&db]() {
+        if (!db.rollback()) {
+            qWarning() << "Failed to roll back thumbnail cache write "
+                          "transaction:"
+                       << db.lastError().text();
+        }
+        return false;
+    };
 
     QSqlQuery query(db);
-    query.prepare(QStringLiteral(
-        "INSERT INTO thumbnails "
-        "(id, last_modified, original_width, original_height, label, data, "
-        " source_path, last_accessed) "
-        "VALUES "
-        "(:id, :last_modified, :original_width, :original_height, :label, "
-        " :data, :source_path, :last_accessed) "
-        "ON CONFLICT(id) DO UPDATE SET "
-        "last_modified = excluded.last_modified, "
-        "original_width = excluded.original_width, "
-        "original_height = excluded.original_height, "
-        "label = excluded.label, "
-        "data = excluded.data, "
-        "source_path = excluded.source_path, "
-        "last_accessed = excluded.last_accessed;"));
-    query.bindValue(QStringLiteral(":id"), id);
-    query.bindValue(QStringLiteral(":last_modified"),
-                    image->text(QStringLiteral("lastModified")));
-    query.bindValue(QStringLiteral(":original_width"),
-                    image->text(QStringLiteral("originalWidth")).toInt());
-    query.bindValue(QStringLiteral(":original_height"),
-                    image->text(QStringLiteral("originalHeight")).toInt());
-    query.bindValue(QStringLiteral(":label"),
-                    image->text(QStringLiteral("label")));
-    query.bindValue(QStringLiteral(":data"), encodedThumbnail);
-    query.bindValue(QStringLiteral(":source_path"), sourcePath);
-    query.bindValue(QStringLiteral(":last_accessed"),
-                    QDateTime::currentSecsSinceEpoch());
-
-    if (!query.exec()) {
-        qWarning() << "Failed to save thumbnail to database:"
+    if (!query.prepare(QStringLiteral(
+            "INSERT INTO thumbnails "
+            "(id, last_modified, original_width, original_height, label, "
+            " data, source_path, last_accessed) "
+            "VALUES "
+            "(:id, :last_modified, :original_width, :original_height, "
+            " :label, :data, :source_path, :last_accessed) "
+            "ON CONFLICT(id) DO UPDATE SET "
+            "last_modified = excluded.last_modified, "
+            "original_width = excluded.original_width, "
+            "original_height = excluded.original_height, "
+            "label = excluded.label, "
+            "data = excluded.data, "
+            "source_path = excluded.source_path, "
+            "last_accessed = excluded.last_accessed;"))) {
+        qWarning() << "Failed to prepare thumbnail cache batch UPSERT:"
                    << query.lastError().text();
-        return false;
+        return rollbackTransaction();
     }
-    query.finish();
+
+    qint64 encodedBatchBytes = 0;
+    const qint64 lastAccessed = QDateTime::currentSecsSinceEpoch();
+    for (const WriteEntry *entry : persistableEntries) {
+        query.bindValue(QStringLiteral(":id"), entry->id);
+        query.bindValue(QStringLiteral(":last_modified"),
+                        entry->lastModified);
+        query.bindValue(QStringLiteral(":original_width"),
+                        entry->originalWidth);
+        query.bindValue(QStringLiteral(":original_height"),
+                        entry->originalHeight);
+        query.bindValue(QStringLiteral(":label"), entry->label);
+        query.bindValue(QStringLiteral(":data"), entry->encodedData);
+        query.bindValue(QStringLiteral(":source_path"), entry->sourcePath);
+        query.bindValue(QStringLiteral(":last_accessed"),
+                        lastAccessed);
+
+        if (!query.exec()) {
+            qWarning() << "Failed to save thumbnail batch entry:"
+                       << query.lastError().text();
+            return rollbackTransaction();
+        }
+        query.finish();
+
+        const qint64 entryBytes = entry->encodedData.size();
+        if (entryBytes >
+            std::numeric_limits<qint64>::max() - encodedBatchBytes) {
+            encodedBatchBytes = std::numeric_limits<qint64>::max();
+        } else {
+            encodedBatchBytes += entryBytes;
+        }
+    }
+
+    if (!db.commit()) {
+        qWarning() << "Failed to commit thumbnail cache write transaction:"
+                   << db.lastError().text();
+        return rollbackTransaction();
+    }
 
     const bool growthMaintenance =
-        maintenanceGrowthLimitReached(encodedThumbnail.size());
+        maintenanceGrowthLimitReached(encodedBatchBytes);
     ThumbnailCacheMaintenance::Result inspection =
         maintenance.inspect(db, quota);
     if (!inspection.succeeded) {
         qWarning() << inspection.errorMessage;
-        if (!removeEntry(db, id,
-                         QStringLiteral("usage inspection failed after insert"))) {
-            return false;
-        }
         return false;
     }
 
     if (!inspection.withinQuota) {
         ThumbnailCacheMaintenance::Request maintenanceRequest;
         maintenanceRequest.quota = quota;
-        maintenanceRequest.protectedEntryId = id;
+        maintenanceRequest.protectedEntryId =
+            persistableEntries.constLast()->id;
         maintenanceRequest.scanStalePaths = growthMaintenance;
         if (!runMaintenanceLocked(db, maintenanceRequest)) {
-            if (!removeEntry(
-                    db, id,
-                    QStringLiteral("cache quota could not be enforced"))) {
-                return false;
+            bool entriesRemoved = true;
+            for (const WriteEntry *entry : persistableEntries) {
+                if (!removeEntry(
+                        db, entry->id,
+                        QStringLiteral(
+                            "cache quota could not be enforced"))) {
+                    entriesRemoved = false;
+                }
             }
             ThumbnailCacheMaintenance::Request recoveryRequest;
             recoveryRequest.quota = quota;
             recoveryRequest.reconcileUsage = true;
             if (!runMaintenanceLocked(db, recoveryRequest)) {
                 qWarning() << "Thumbnail cache recovery maintenance failed";
+            }
+            if (!entriesRemoved) {
+                qWarning() << "Some thumbnail cache batch entries could not "
+                              "be removed after quota enforcement failed";
             }
             return false;
         }
@@ -390,7 +419,8 @@ bool ThumbnailCache::saveThumbnail(const QImage *image, QString id,
     if (growthMaintenance && inspection.withinQuota) {
         ThumbnailCacheMaintenance::Request maintenanceRequest;
         maintenanceRequest.quota = quota;
-        maintenanceRequest.protectedEntryId = id;
+        maintenanceRequest.protectedEntryId =
+            persistableEntries.constLast()->id;
         maintenanceRequest.scanStalePaths = true;
         if (!runMaintenanceLocked(db, maintenanceRequest)) {
             qWarning() << "Thumbnail cache growth maintenance will be retried";

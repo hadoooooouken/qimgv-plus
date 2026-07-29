@@ -1,10 +1,13 @@
 #include "thumbnailer.h"
 #include "settings.h"
 #include <QDebug>
+#include <utility>
 
 Thumbnailer::Thumbnailer() {
     cache = std::make_unique<ThumbnailCache>();
+    cacheWriter = std::make_unique<ThumbnailCacheWriter>(*cache);
     pool = std::make_unique<QThreadPool>();
+    qRegisterMetaType<ThumbnailTaskResult>();
     int threads = settings->thumbnailerThreadCount();
     int globalThreads = QThreadPool::globalInstance()->maxThreadCount();
     if(threads > globalThreads)
@@ -12,29 +15,21 @@ Thumbnailer::Thumbnailer() {
     pool->setMaxThreadCount(threads);
 
     if (settings->useThumbnailCache()) {
-        ThumbnailCache *cacheForMaintenance = cache.get();
-        pool->start([cacheForMaintenance]() {
-            if (!cacheForMaintenance->performStartupMaintenance()) {
-                qWarning() << "Thumbnail cache startup maintenance failed";
-            }
-        });
+        cacheWriter->requestStartupMaintenance();
     }
 }
 
 Thumbnailer::~Thumbnailer() {
     pool->clear();
     pool->waitForDone();
+    cacheWriter->waitForDone();
 
-    // No manual delete: `pool` is std::unique_ptr<QThreadPool>, declared
-    // after `cache` in the header, so ordinary C++ member destruction
-    // (reverse of declaration order) destroys it here, joining every
-    // worker thread and running each ThreadLocalConnection's destructor
-    // on its owning thread, before `cache` (and its QThreadStorage) is
-    // destroyed below.
+    // Member destruction stops the cache writer before destroying the cache.
 }
 
 void Thumbnailer::waitForDone() {
     pool->waitForDone();
+    cacheWriter->waitForDone();
 }
 
 bool Thumbnailer::clearCache() {
@@ -44,20 +39,7 @@ bool Thumbnailer::clearCache() {
         return false;
     }
 
-    bool cacheCleared = false;
-    ThumbnailCache *cacheForClear = cache.get();
-    // ThumbnailCache owns one SQL connection per calling thread. Run the
-    // reset on an owned worker and make that thread exit before returning so
-    // QThreadStorage closes and removes the connection on the same thread.
-    pool->start([cacheForClear, &cacheCleared]() {
-        cacheCleared = cacheForClear->clear();
-    });
-
-    if (!pool->waitForDone()) {
-        qWarning() << "Failed to stop thumbnail cache clear worker";
-        return false;
-    }
-    return cacheCleared;
+    return cacheWriter->clear();
 }
 
 void Thumbnailer::clearTasks() {
@@ -67,7 +49,10 @@ void Thumbnailer::clearTasks() {
 }
 
 std::shared_ptr<Thumbnail> Thumbnailer::getThumbnail(QString filePath, int size) {
-    return ThumbnailerRunnable::generate(nullptr, filePath, size, false, false);
+    ThumbnailRequest request;
+    request.path = std::move(filePath);
+    request.size = size;
+    return ThumbnailerRunnable::generate(request).thumbnail;
 }
 
 void Thumbnailer::getThumbnailAsync(QString path, int size, bool crop, bool force) {
@@ -106,7 +91,14 @@ void Thumbnailer::getThumbnailAsync(QString path, int size, bool crop, bool forc
 
 void Thumbnailer::startThumbnailerThread(QString filePath, int size, bool crop, bool force) {
     queuedTasks.insert(qMakePair(filePath, size), crop);
-    auto runnable = new ThumbnailerRunnable(settings->useThumbnailCache() ? cache.get() : nullptr, filePath, size, crop, force);
+    ThumbnailRequest request;
+    request.cache = settings->useThumbnailCache() ? cache.get() : nullptr;
+    request.path = filePath;
+    request.size = size;
+    request.crop = crop;
+    request.force = force;
+    request.cacheGeneration = cacheWriter->currentGeneration();
+    auto runnable = new ThumbnailerRunnable(std::move(request));
     connect(runnable, &ThumbnailerRunnable::taskStart, this, &Thumbnailer::onTaskStart);
     connect(runnable, &ThumbnailerRunnable::taskEnd, this, &Thumbnailer::onTaskEnd);
     runnable->setAutoDelete(true);
@@ -119,7 +111,9 @@ void Thumbnailer::onTaskStart(QString filePath, int size, bool crop) {
     queuedTasks.remove(key);
 }
 
-void Thumbnailer::onTaskEnd(std::shared_ptr<Thumbnail> thumbnail, QString filePath, int size) {
+void Thumbnailer::onTaskEnd(ThumbnailTaskResult result, QString filePath,
+                            int size) {
+    const std::shared_ptr<Thumbnail> &thumbnail = result.thumbnail;
     if (thumbnail) {
         thumbnail->pixmap();
     } else {
@@ -128,6 +122,10 @@ void Thumbnailer::onTaskEnd(std::shared_ptr<Thumbnail> thumbnail, QString filePa
     const TaskKey key = qMakePair(filePath, size);
     if (thumbnail) {
         emit thumbnailReady(thumbnail, filePath);
+    }
+    if (result.cacheCandidate &&
+        !cacheWriter->enqueue(std::move(*result.cacheCandidate))) {
+        qDebug() << "Dropped thumbnail cache write for" << filePath;
     }
     runningTasks.remove(key);
 

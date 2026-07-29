@@ -4,8 +4,10 @@
 #include <QMap>
 #include <QPair>
 #include <QThreadPool>
-#include "components/thumbnailer/thumbnailerrunnable.h"
 #include "components/cache/thumbnailcache.h"
+#include "components/cache/thumbnailcachewriter.h"
+#include "components/thumbnailer/thumbnailerrunnable.h"
+
 class Thumbnailer : public QObject
 {
     Q_OBJECT
@@ -25,6 +27,7 @@ private:
     using TaskKey = QPair<QString, int>;
 
     std::unique_ptr<ThumbnailCache> cache;
+    std::unique_ptr<ThumbnailCacheWriter> cacheWriter;
     std::unique_ptr<QThreadPool> pool;
     void startThumbnailerThread(QString filePath, int size, bool crop, bool force);
     QMap<TaskKey, bool> runningTasks;
@@ -42,7 +45,7 @@ private:
 
 private slots:
     void onTaskStart(QString filePath, int size, bool crop);
-    void onTaskEnd(std::shared_ptr<Thumbnail> thumbnail, QString filePath, int size);
+    void onTaskEnd(ThumbnailTaskResult result, QString filePath, int size);
 
 signals:
     void thumbnailReady(std::shared_ptr<Thumbnail> thumbnail, QString filePath);

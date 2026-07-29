@@ -2,21 +2,23 @@
 #include "settings.h"
 #include "utils/colormanager.h"
 #include "utils/imagelib.h"
-#include <QPainter>
 #include <QDebug>
+#include <QImageReader>
+#include <QPainter>
 #include <memory>
+#include <utility>
 
 #include <QColorSpace>
 
-ThumbnailerRunnable::ThumbnailerRunnable(ThumbnailCache *_cache, QString _path,
-                                         int _size, bool _crop, bool _force)
-    : path(_path), size(_size), crop(_crop), force(_force), cache(_cache) {}
+ThumbnailerRunnable::ThumbnailerRunnable(ThumbnailRequest request)
+    : request(std::move(request))
+{
+}
 
 void ThumbnailerRunnable::run() {
-  emit taskStart(path, size, crop);
-  std::shared_ptr<Thumbnail> thumbnail =
-      generate(cache, path, size, crop, force);
-  emit taskEnd(thumbnail, path, size);
+  emit taskStart(request.path, request.size, request.crop);
+  ThumbnailTaskResult result = generate(request);
+  emit taskEnd(std::move(result), request.path, request.size);
 }
 
 QString ThumbnailerRunnable::generateIdString(QString path, int size,
@@ -29,22 +31,24 @@ QString ThumbnailerRunnable::generateIdString(QString path, int size,
           .toHex());
 }
 
-std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
-                                                         QString path, int size,
-                                                         bool crop,
-                                                         bool force) {
+ThumbnailTaskResult
+ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
+  const QString &path = request.path;
+  const int size = request.size;
+  const bool crop = request.crop;
   DocumentInfo imgInfo(path);
   QString thumbnailId = generateIdString(path, settings->thumbnailResolution(), false);
   std::unique_ptr<QImage> image;
+  std::optional<ThumbnailCacheCandidate> cacheCandidate;
 
   const qint64 lastModified = imgInfo.lastModified().toSecsSinceEpoch();
 
-  ThumbnailCache *activeCache = cache;
+  ThumbnailCache *activeCache = request.cache;
   if (activeCache && settings->isPathExcludedFromCache(path)) {
     activeCache = nullptr;
   }
 
-  if (!force && activeCache) {
+  if (!request.force && activeCache) {
     image = activeCache->readThumbnail(thumbnailId);
     if (image && image->text(QStringLiteral("lastModified")).toLongLong() != lastModified)
       image.reset(nullptr);
@@ -61,7 +65,10 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
 
   if (!image) {
     if (imgInfo.type() == DocumentType::NONE) {
-      return std::make_shared<Thumbnail>(imgInfo.fileName(), QString(), size, nullptr);
+      return {
+          std::make_shared<Thumbnail>(imgInfo.fileName(), QString(), size,
+                                      nullptr),
+          std::nullopt};
     }
     std::pair<QImage, QSize> pair;
     pair = createThumbnail(imgInfo.filePath(),
@@ -95,16 +102,18 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
       if (activeCache) {
         if (originalSize.width() > settings->thumbnailResolution() ||
             originalSize.height() > settings->thumbnailResolution()) {
-          if (!activeCache->saveThumbnail(image.get(), thumbnailId, path)) {
-            qWarning() << "Thumbnail cache write failed for" << path;
-          }
+          cacheCandidate = ThumbnailCacheCandidate{
+              *image, thumbnailId, path, request.cacheGeneration};
         }
       }
     }
   }
 
   if (!image) {
-    return std::make_shared<Thumbnail>(imgInfo.fileName(), QStringLiteral("error"), size, nullptr);
+    return {
+        std::make_shared<Thumbnail>(imgInfo.fileName(),
+                                    QStringLiteral("error"), size, nullptr),
+        std::nullopt};
   }
 
   // scale and crop to the requested grid size
@@ -159,10 +168,11 @@ std::shared_ptr<Thumbnail> ThumbnailerRunnable::generate(ThumbnailCache *cache,
     label = image->text(QStringLiteral("originalWidth")) + QLatin1Char('x') + image->text(QStringLiteral("originalHeight")) +
             image->text(QStringLiteral("label"));
   }
-  return std::make_shared<Thumbnail>(imgInfo.fileName(), label, size, colorManaged);
+  return {
+      std::make_shared<Thumbnail>(imgInfo.fileName(), label, size,
+                                  colorManaged),
+      std::move(cacheCandidate)};
 }
-
-ThumbnailerRunnable::~ThumbnailerRunnable() {}
 
 QSize ThumbnailerRunnable::noUpscaleScaledSize(QSize originalSize, int size,
                                                Qt::AspectRatioMode mode) {

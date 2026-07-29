@@ -1,24 +1,40 @@
 #pragma once
 
-#include <QRunnable>
-#include <QProcess>
-#include <QThread>
-#include <QCryptographicHash>
-#include <ctime>
+#include "components/cache/thumbnailcachewriter.h"
 #include "sourcecontainers/thumbnail.h"
-#include "components/cache/thumbnailcache.h"
-#include "utils/imagefactory.h"
-#include "utils/imagelib.h"
+
+#include <QCryptographicHash>
+#include <QMetaType>
+#include <QRunnable>
 #include <memory>
-#include <QImageWriter>
+#include <optional>
+#include <utility>
+
+struct ThumbnailRequest {
+    ThumbnailCache *cache = nullptr;
+    QString path;
+    int size = 0;
+    bool crop = false;
+    bool force = false;
+    quint64 cacheGeneration = 0;
+};
+
+struct ThumbnailTaskResult {
+    std::shared_ptr<Thumbnail> thumbnail;
+    std::optional<ThumbnailCacheCandidate> cacheCandidate;
+};
+
+Q_DECLARE_METATYPE(ThumbnailTaskResult)
 
 class ThumbnailerRunnable : public QObject, public QRunnable {
     Q_OBJECT
 public:
-    ThumbnailerRunnable(ThumbnailCache* _cache, QString _path, int _size, bool _crop, bool _force);
-    ~ThumbnailerRunnable();
+    explicit ThumbnailerRunnable(ThumbnailRequest request);
+    ~ThumbnailerRunnable() override = default;
     void run();
-    static std::shared_ptr<Thumbnail> generate(ThumbnailCache *cache, QString path, int size, bool crop, bool force);
+    [[nodiscard]] static ThumbnailTaskResult
+    generate(const ThumbnailRequest &request);
+
 private:
     static QString generateIdString(QString path, int size, bool crop);
     static std::pair<QImage, QSize> createThumbnail(QString path, const char* format, int size, bool crop);
@@ -26,12 +42,9 @@ private:
     // that is already smaller than the target box - avoids blurry upscaled
     // thumbnails for tiny source images (icons, small screenshots, etc).
     static QSize noUpscaleScaledSize(QSize originalSize, int size, Qt::AspectRatioMode mode);
-    QString path;
-    int size;
-    bool crop, force;
-    ThumbnailCache* cache = nullptr;
+    ThumbnailRequest request;
 
 signals:
     void taskStart(QString, int, bool);
-    void taskEnd(std::shared_ptr<Thumbnail>, QString, int);
+    void taskEnd(ThumbnailTaskResult, QString, int);
 };

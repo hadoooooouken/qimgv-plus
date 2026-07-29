@@ -2,7 +2,9 @@
 
 #include "thumbnailcachemaintenance.h"
 
+#include <QByteArray>
 #include <QImage>
+#include <QList>
 #include <QObject>
 #include <QSqlDatabase>
 #include <QThreadStorage>
@@ -15,11 +17,20 @@ class ThumbnailCache : public QObject
 {
     Q_OBJECT
 public:
+    struct WriteEntry {
+        QString id;
+        QString lastModified;
+        int originalWidth = 0;
+        int originalHeight = 0;
+        QString label;
+        QByteArray encodedData;
+        QString sourcePath;
+    };
+
     explicit ThumbnailCache();
     ~ThumbnailCache() override;
 
-    [[nodiscard]] bool saveThumbnail(const QImage *image, QString id,
-                                     const QString &sourcePath = QString());
+    [[nodiscard]] bool saveThumbnails(const QList<WriteEntry> &entries);
     [[nodiscard]] bool performStartupMaintenance();
     std::unique_ptr<QImage> readThumbnail(QString id);
     QString thumbnailPath(QString id);
@@ -55,10 +66,6 @@ private:
     static constexpr qint64 kAccessTouchIntervalSeconds = 60 * 60;
     static constexpr int kDatabaseBusyTimeoutMilliseconds = 2000;
     static constexpr int kWalAutoCheckpointPages = 256;
-    static constexpr int kThumbnailEncodingEffort = 2;
-    static constexpr int kThumbnailEncodingQuality = 85;
-    static constexpr char kThumbnailEncodingFormat[] = "JXL";
-
     [[nodiscard]] QSqlDatabase getDatabaseConnection();
     [[nodiscard]] bool initializeDatabase(QSqlDatabase &db);
     [[nodiscard]] bool ensureStartupMaintenance(QSqlDatabase &db);
