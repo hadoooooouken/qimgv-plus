@@ -1,8 +1,9 @@
 #pragma once
 
 #include <memory>
-#include <QThreadPool>
+#include <QMap>
 #include <QPair>
+#include <QThreadPool>
 #include "components/thumbnailer/thumbnailerrunnable.h"
 #include "components/cache/thumbnailcache.h"
 class Thumbnailer : public QObject
@@ -21,29 +22,27 @@ public slots:
     void getThumbnailAsync(QString path, int size, bool crop, bool force);
 
 private:
+    using TaskKey = QPair<QString, int>;
+
     std::unique_ptr<ThumbnailCache> cache;
     std::unique_ptr<QThreadPool> pool;
     void startThumbnailerThread(QString filePath, int size, bool crop, bool force);
-    QMultiMap<QString, int> runningTasks;
-    QMultiMap<QString, int> queuedTasks;
+    QMap<TaskKey, bool> runningTasks;
+    QMap<TaskKey, bool> queuedTasks;
     bool m_selfDestructOnFinished = false;
 
-    // A request for (path,size) that arrives while a task for it is already
-    // running is not dropped anymore, it's deferred and restarted right
-    // after onTaskEnd() for the current run. force is kept as last requested,
-    // but never downgraded from true to false - otherwise a "spurious"
-    // duplicate request (e.g. simply re-entering the same folder) could
-    // clobber a genuine force=true that came from an actual on-disk file
-    // change (onFileModified).
+    // Repeated non-forced requests share the active task's result via
+    // thumbnailReady. Only a different output variant or explicit source
+    // refresh is deferred.
     struct PendingRerun {
         bool crop = false;
         bool force = false;
     };
-    QMap<QPair<QString, int>, PendingRerun> pendingReruns;
+    QMap<TaskKey, PendingRerun> pendingReruns;
 
 private slots:
-    void onTaskStart(QString filePath, int size);
-    void onTaskEnd(std::shared_ptr<Thumbnail> thumbnail, QString filePath);
+    void onTaskStart(QString filePath, int size, bool crop);
+    void onTaskEnd(std::shared_ptr<Thumbnail> thumbnail, QString filePath, int size);
 
 signals:
     void thumbnailReady(std::shared_ptr<Thumbnail> thumbnail, QString filePath);

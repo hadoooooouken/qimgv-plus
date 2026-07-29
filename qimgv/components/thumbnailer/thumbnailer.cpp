@@ -71,17 +71,29 @@ std::shared_ptr<Thumbnail> Thumbnailer::getThumbnail(QString filePath, int size)
 }
 
 void Thumbnailer::getThumbnailAsync(QString path, int size, bool crop, bool force) {
-    // Task hasn't started yet (still queued in the pool) - actual file read
-    // hasn't begun, so when it does start it will see the current mtime on
-    // its own. No point duplicating the request, drop it like before.
-    if(queuedTasks.contains(path, size))
+    const TaskKey key = qMakePair(path, size);
+    const auto queuedTask = queuedTasks.constFind(key);
+    const auto runningTask = runningTasks.constFind(key);
+
+    // A queued task has not sampled the source yet. It will observe the
+    // current revision when it starts, so an identical request needs no
+    // follow-up even when it is forced.
+    if(queuedTask != queuedTasks.cend() && crop == queuedTask.value())
         return;
 
-    if(runningTasks.contains(path, size)) {
-        auto key = qMakePair(path, size);
+    if(queuedTask != queuedTasks.cend() || runningTask != runningTasks.cend()) {
+        const bool activeCrop = queuedTask != queuedTasks.cend()
+                                    ? queuedTask.value()
+                                    : runningTask.value();
+
+        // All current consumers subscribe to thumbnailReady, so another
+        // non-forced request for the same output variant shares that result.
+        if(!force && crop == activeCrop)
+            return;
+
         auto it = pendingReruns.find(key);
         if(it != pendingReruns.end()) {
-            it->force = it->force || force; // never downgrade true -> false
+            it->force = it->force || force;
             it->crop = crop;
         } else {
             pendingReruns.insert(key, PendingRerun{crop, force});
@@ -93,7 +105,7 @@ void Thumbnailer::getThumbnailAsync(QString path, int size, bool crop, bool forc
 }
 
 void Thumbnailer::startThumbnailerThread(QString filePath, int size, bool crop, bool force) {
-    queuedTasks.insert(filePath, size);
+    queuedTasks.insert(qMakePair(filePath, size), crop);
     auto runnable = new ThumbnailerRunnable(settings->useThumbnailCache() ? cache.get() : nullptr, filePath, size, crop, force);
     connect(runnable, &ThumbnailerRunnable::taskStart, this, &Thumbnailer::onTaskStart);
     connect(runnable, &ThumbnailerRunnable::taskEnd, this, &Thumbnailer::onTaskEnd);
@@ -101,32 +113,35 @@ void Thumbnailer::startThumbnailerThread(QString filePath, int size, bool crop, 
     pool->start(runnable);
 }
 
-void Thumbnailer::onTaskStart(QString filePath, int size) {
-    runningTasks.insert(filePath, size);
-    queuedTasks.remove(filePath, size);
+void Thumbnailer::onTaskStart(QString filePath, int size, bool crop) {
+    const TaskKey key = qMakePair(filePath, size);
+    runningTasks.insert(key, crop);
+    queuedTasks.remove(key);
 }
 
-void Thumbnailer::onTaskEnd(std::shared_ptr<Thumbnail> thumbnail, QString filePath) {
+void Thumbnailer::onTaskEnd(std::shared_ptr<Thumbnail> thumbnail, QString filePath, int size) {
     if (thumbnail) {
         thumbnail->pixmap();
+    } else {
+        qWarning() << "Thumbnail worker returned no result for" << filePath;
     }
-    int size = thumbnail->size();
-    runningTasks.remove(filePath, size);
+    const TaskKey key = qMakePair(filePath, size);
+    if (thumbnail) {
+        emit thumbnailReady(thumbnail, filePath);
+    }
+    runningTasks.remove(key);
 
-    auto key = qMakePair(filePath, size);
     auto it = pendingReruns.find(key);
     if(it != pendingReruns.end()) {
         PendingRerun rerun = it.value();
         pendingReruns.erase(it);
-        // rerun.force is passed through as-is (not hardcoded to true) - with
-        // force=false, generate() checks mtime against the cache itself, so a
-        // spurious duplicate request just returns the cached thumbnail
-        // instead of triggering a real regeneration.
+
+        // The completed result was published above. The follow-up produces
+        // the requested variant or refreshes a changed source.
         startThumbnailerThread(filePath, size, rerun.crop, rerun.force);
         return;
     }
 
-    emit thumbnailReady(thumbnail, filePath);
     if(m_selfDestructOnFinished && runningTasks.isEmpty()) {
         deleteLater();
     }

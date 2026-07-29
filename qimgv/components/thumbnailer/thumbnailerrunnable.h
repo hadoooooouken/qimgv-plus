@@ -32,6 +32,6 @@ private:
     ThumbnailCache* cache = nullptr;
 
 signals:
-    void taskStart(QString, int);
-    void taskEnd(std::shared_ptr<Thumbnail>, QString);
+    void taskStart(QString, int, bool);
+    void taskEnd(std::shared_ptr<Thumbnail>, QString, int);
 };
