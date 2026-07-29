@@ -429,14 +429,12 @@ void DocumentInfo::loadExifOrientation() {
     if(mDocumentType == DocumentType::NONE)
         return;
 
-    QString path = filePath();
-    QImageReader *reader = nullptr;
-    if(!mFormat.isEmpty())
-        reader = new QImageReader(path, mFormat.toStdString().c_str());
-    else
-        reader = new QImageReader(path);
+    QImageReader reader;
+    reader.setFileName(filePath());
 
-    if(reader->canRead())
-        mOrientation = static_cast<int>(reader->transformation());
-    delete reader;
+    if(!mFormat.isEmpty())
+        reader.setFormat(mFormat.toLatin1());
+
+    if(reader.canRead())
+        mOrientation = static_cast<int>(reader.transformation());
 }
