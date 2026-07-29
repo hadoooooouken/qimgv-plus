@@ -9,6 +9,20 @@
 #include <QDebug>
 #include "settings.h"
 
+namespace {
+
+ThumbnailSource thumbnailSourceFromEntry(const FSEntry &entry)
+{
+  ThumbnailSource source{entry.path, std::nullopt};
+  if (!entry.path.isEmpty()) {
+    source.stamp = ThumbnailSourceStamp::fromMetadata(
+        entry.path, entry.size, entry.modifyTime);
+  }
+  return source;
+}
+
+} // namespace
+
 DirectoryPresenter::DirectoryPresenter(QObject *parent)
     : QObject(parent), mShowDirs(false) {
   // Own instance by default so DirectoryPresenter keeps working
@@ -240,8 +254,12 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
   if (!view || !model)
     return;
   if (!mShowDirs) {
-    for (int i : indexes)
-      thumbnailer->getThumbnailAsync(model->filePathAt(i), size, crop, force);
+    for (int i : indexes) {
+      if (i < 0 || i >= model->fileCount())
+        continue;
+      thumbnailer->getThumbnailAsync(
+          thumbnailSourceFromEntry(model->fileEntryAt(i)), size, crop, force);
+    }
     return;
   }
   for (int i : indexes) {
@@ -290,8 +308,12 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
                         std::shared_ptr<QPixmap>(pixmap)));
       view->setThumbnail(i, thumb);
     } else {
-      QString path = model->filePathAt(i - model->dirCount());
-      thumbnailer->getThumbnailAsync(path, size, crop, force);
+      const int fileIndex = i - model->dirCount();
+      if (fileIndex < 0 || fileIndex >= model->fileCount())
+        continue;
+      thumbnailer->getThumbnailAsync(
+          thumbnailSourceFromEntry(model->fileEntryAt(fileIndex)), size, crop,
+          force);
     }
   }
 }

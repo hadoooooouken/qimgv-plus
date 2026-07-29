@@ -56,14 +56,20 @@ std::shared_ptr<Thumbnail> Thumbnailer::getThumbnail(QString filePath, int size)
 }
 
 void Thumbnailer::getThumbnailAsync(QString path, int size, bool crop, bool force) {
-    const TaskKey key = qMakePair(path, size);
+    getThumbnailAsync(ThumbnailSource{std::move(path), std::nullopt}, size,
+                      crop, force);
+}
+
+void Thumbnailer::getThumbnailAsync(ThumbnailSource source, int size,
+                                    bool crop, bool force) {
+    const TaskKey key = qMakePair(source.path, size);
     const auto queuedTask = queuedTasks.constFind(key);
     const auto runningTask = runningTasks.constFind(key);
 
-    // A queued task has not sampled the source yet. It will observe the
-    // current revision when it starts, so an identical request needs no
-    // follow-up even when it is forced.
-    if(queuedTask != queuedTasks.cend() && crop == queuedTask.value())
+    // Identical non-forced consumers can share the source revision carried
+    // by the queued request. A forced request must retain its newer stamp.
+    if(queuedTask != queuedTasks.cend() && crop == queuedTask.value() &&
+       !force)
         return;
 
     if(queuedTask != queuedTasks.cend() || runningTask != runningTasks.cend()) {
@@ -80,20 +86,25 @@ void Thumbnailer::getThumbnailAsync(QString path, int size, bool crop, bool forc
         if(it != pendingReruns.end()) {
             it->force = it->force || force;
             it->crop = crop;
+            if (source.stamp)
+                it->sourceStamp = std::move(source.stamp);
         } else {
-            pendingReruns.insert(key, PendingRerun{crop, force});
+            pendingReruns.insert(
+                key, PendingRerun{crop, force, std::move(source.stamp)});
         }
         return;
     }
 
-    startThumbnailerThread(path, size, crop, force);
+    startThumbnailerThread(std::move(source), size, crop, force);
 }
 
-void Thumbnailer::startThumbnailerThread(QString filePath, int size, bool crop, bool force) {
-    queuedTasks.insert(qMakePair(filePath, size), crop);
+void Thumbnailer::startThumbnailerThread(ThumbnailSource source, int size,
+                                         bool crop, bool force) {
+    queuedTasks.insert(qMakePair(source.path, size), crop);
     ThumbnailRequest request;
     request.cache = settings->useThumbnailCache() ? cache.get() : nullptr;
-    request.path = filePath;
+    request.path = std::move(source.path);
+    request.sourceStamp = std::move(source.stamp);
     request.size = size;
     request.crop = crop;
     request.force = force;
@@ -136,7 +147,9 @@ void Thumbnailer::onTaskEnd(ThumbnailTaskResult result, QString filePath,
 
         // The completed result was published above. The follow-up produces
         // the requested variant or refreshes a changed source.
-        startThumbnailerThread(filePath, size, rerun.crop, rerun.force);
+        startThumbnailerThread(
+            ThumbnailSource{filePath, std::move(rerun.sourceStamp)}, size,
+            rerun.crop, rerun.force);
         return;
     }
 

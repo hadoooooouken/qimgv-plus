@@ -13,6 +13,7 @@
 struct ThumbnailRequest {
     ThumbnailCache *cache = nullptr;
     QString path;
+    std::optional<ThumbnailSourceStamp> sourceStamp;
     int size = 0;
     bool crop = false;
     bool force = false;

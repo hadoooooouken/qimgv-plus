@@ -15,7 +15,8 @@
 struct ThumbnailCacheCandidate {
     QImage image;
     QString id;
-    QString sourcePath;
+    ThumbnailSourceStamp sourceStamp;
+    bool requiresLinearColorSpace = false;
     quint64 generation = 0;
 };
 

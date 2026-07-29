@@ -3,6 +3,7 @@
 #include "utils/colormanager.h"
 #include "utils/imagelib.h"
 #include <QDebug>
+#include <QFileInfo>
 #include <QImageReader>
 #include <QPainter>
 #include <memory>
@@ -34,50 +35,55 @@ QString ThumbnailerRunnable::generateIdString(QString path, int size,
 ThumbnailTaskResult
 ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
   const QString &path = request.path;
+  const QString fileName = QFileInfo(path).fileName();
   const int size = request.size;
   const bool crop = request.crop;
-  DocumentInfo imgInfo(path);
   QString thumbnailId = generateIdString(path, settings->thumbnailResolution(), false);
   std::unique_ptr<QImage> image;
   std::optional<ThumbnailCacheCandidate> cacheCandidate;
-
-  const qint64 lastModified = imgInfo.lastModified().toSecsSinceEpoch();
+  bool isPdf = false;
 
   ThumbnailCache *activeCache = request.cache;
   if (activeCache && settings->isPathExcludedFromCache(path)) {
     activeCache = nullptr;
   }
 
-  if (!request.force && activeCache) {
-    image = activeCache->readThumbnail(thumbnailId);
-    if (image && image->text(QStringLiteral("lastModified")).toLongLong() != lastModified)
-      image.reset(nullptr);
+  std::optional<ThumbnailSourceStamp> sourceStamp = request.sourceStamp;
+  if (activeCache && !sourceStamp)
+    sourceStamp = ThumbnailSourceStamp::fromPath(path);
 
-    if (image) {
-      bool isHdrFile = (imgInfo.format() == QLatin1String("hdr") ||
-                        imgInfo.format() == QLatin1String("exr") ||
-                        imgInfo.format() == QLatin1String("pfm"));
-      if (isHdrFile) {
-        *image = image->convertedToColorSpace(QColorSpace(QColorSpace::SRgbLinear));
-      }
+  if (!request.force && activeCache && sourceStamp) {
+    ThumbnailCache::ReadResult cacheResult =
+        activeCache->readThumbnail(thumbnailId, *sourceStamp);
+    image = std::move(cacheResult.image);
+    if (image && cacheResult.requiresLinearColorSpace) {
+      *image =
+          image->convertedToColorSpace(QColorSpace(QColorSpace::SRgbLinear));
     }
   }
 
   if (!image) {
+    DocumentInfo imgInfo(path);
     if (imgInfo.type() == DocumentType::NONE) {
       return {
-          std::make_shared<Thumbnail>(imgInfo.fileName(), QString(), size,
-                                      nullptr),
+          std::make_shared<Thumbnail>(fileName, QString(), size, nullptr),
           std::nullopt};
     }
+    const QString format = imgInfo.format();
+    const bool requiresLinearColorSpace =
+        format == QLatin1String("hdr") ||
+        format == QLatin1String("exr") ||
+        format == QLatin1String("pfm");
+    isPdf = format == QLatin1String("pdf");
+    const QByteArray formatName = format.toLatin1();
     std::pair<QImage, QSize> pair;
     pair = createThumbnail(imgInfo.filePath(),
-                           imgInfo.format().toStdString().c_str(), 
+                           formatName.constData(),
                            settings->thumbnailResolution(), false);
     image = std::make_unique<QImage>(pair.first);
     QSize originalSize = pair.second;
 
-    if (image && imgInfo.format() == QLatin1String("pdf")) {
+    if (image && isPdf) {
       QImage opaqueImg(image->size(), QImage::Format_RGB32);
       opaqueImg.fill(Qt::white);
       QPainter painter(&opaqueImg);
@@ -94,16 +100,16 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
       // put in image info
       image->setText(QStringLiteral("originalWidth"), QString::number(originalSize.width()));
       image->setText(QStringLiteral("originalHeight"), QString::number(originalSize.height()));
-      image->setText(QStringLiteral("lastModified"), QString::number(lastModified));
 
       if (imgInfo.type() == ANIMATED)
         image->setText(QStringLiteral("label"), QStringLiteral(" [a]"));
 
-      if (activeCache) {
+      if (activeCache && sourceStamp) {
         if (originalSize.width() > settings->thumbnailResolution() ||
             originalSize.height() > settings->thumbnailResolution()) {
           cacheCandidate = ThumbnailCacheCandidate{
-              *image, thumbnailId, path, request.cacheGeneration};
+              *image, thumbnailId, *sourceStamp,
+              requiresLinearColorSpace, request.cacheGeneration};
         }
       }
     }
@@ -111,8 +117,8 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
 
   if (!image) {
     return {
-        std::make_shared<Thumbnail>(imgInfo.fileName(),
-                                    QStringLiteral("error"), size, nullptr),
+        std::make_shared<Thumbnail>(fileName, QStringLiteral("error"), size,
+                                    nullptr),
         std::nullopt};
   }
 
@@ -150,7 +156,7 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
   }
 
 
-  if (image && imgInfo.format() == QLatin1String("pdf") && image->hasAlphaChannel()) {
+  if (image && isPdf && image->hasAlphaChannel()) {
     QImage opaqueImg(image->size(), QImage::Format_RGB32);
     opaqueImg.fill(Qt::white);
     QPainter painter(&opaqueImg);
@@ -169,8 +175,7 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
             image->text(QStringLiteral("label"));
   }
   return {
-      std::make_shared<Thumbnail>(imgInfo.fileName(), label, size,
-                                  colorManaged),
+      std::make_shared<Thumbnail>(fileName, label, size, colorManaged),
       std::move(cacheCandidate)};
 }
 

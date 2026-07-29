@@ -1,6 +1,7 @@
 #pragma once
 
 #include "thumbnailcachemaintenance.h"
+#include "thumbnailsourcestamp.h"
 
 #include <QByteArray>
 #include <QImage>
@@ -19,12 +20,17 @@ class ThumbnailCache : public QObject
 public:
     struct WriteEntry {
         QString id;
-        QString lastModified;
+        ThumbnailSourceStamp sourceStamp;
         int originalWidth = 0;
         int originalHeight = 0;
         QString label;
         QByteArray encodedData;
-        QString sourcePath;
+        bool requiresLinearColorSpace = false;
+    };
+
+    struct ReadResult {
+        std::unique_ptr<QImage> image;
+        bool requiresLinearColorSpace = false;
     };
 
     explicit ThumbnailCache();
@@ -32,7 +38,8 @@ public:
 
     [[nodiscard]] bool saveThumbnails(const QList<WriteEntry> &entries);
     [[nodiscard]] bool performStartupMaintenance();
-    std::unique_ptr<QImage> readThumbnail(QString id);
+    [[nodiscard]] ReadResult
+    readThumbnail(const QString &id, const ThumbnailSourceStamp &sourceStamp);
     QString thumbnailPath(QString id);
     bool exists(QString id);
     [[nodiscard]] bool clear();

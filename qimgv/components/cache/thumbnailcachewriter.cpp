@@ -28,7 +28,9 @@ quint64 ThumbnailCacheWriter::currentGeneration() const noexcept
 
 bool ThumbnailCacheWriter::enqueue(ThumbnailCacheCandidate candidate)
 {
-    if (candidate.image.isNull() || candidate.id.isEmpty()) {
+    if (candidate.image.isNull() || candidate.id.isEmpty() ||
+        candidate.sourceStamp.normalizedPath.isEmpty() ||
+        candidate.sourceStamp.size < 0) {
         qWarning() << "Cannot enqueue an invalid thumbnail cache candidate";
         return false;
     }
@@ -186,21 +188,21 @@ void ThumbnailCacheWriter::processBatch(
         buffer.close();
         if (!encoded || encodedThumbnail.isEmpty()) {
             qWarning() << "Failed to encode thumbnail as JXL for"
-                       << candidate.sourcePath;
+                       << candidate.sourceStamp.normalizedPath;
             continue;
         }
 
         ThumbnailCache::WriteEntry entry;
         entry.id = std::move(candidate.id);
-        entry.lastModified =
-            candidate.image.text(QStringLiteral("lastModified"));
+        entry.sourceStamp = std::move(candidate.sourceStamp);
         entry.originalWidth =
             candidate.image.text(QStringLiteral("originalWidth")).toInt();
         entry.originalHeight =
             candidate.image.text(QStringLiteral("originalHeight")).toInt();
         entry.label = candidate.image.text(QStringLiteral("label"));
         entry.encodedData = std::move(encodedThumbnail);
-        entry.sourcePath = std::move(candidate.sourcePath);
+        entry.requiresLinearColorSpace =
+            candidate.requiresLinearColorSpace;
         entries.push_back(std::move(entry));
     }
 

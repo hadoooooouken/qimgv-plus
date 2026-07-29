@@ -13,7 +13,7 @@ public:
     bool operator==(const QString &anotherPath) const;
 
     QString path, name;
-    std::uintmax_t size;
-    std::filesystem::file_time_type modifyTime;
-    bool isDirectory;
+    std::uintmax_t size = 0;
+    std::filesystem::file_time_type modifyTime{};
+    bool isDirectory = false;
 };

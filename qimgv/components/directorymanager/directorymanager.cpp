@@ -755,8 +755,14 @@ void DirectoryManager::updateFileEntry(const QString &filePath) {
     if(!containsFile(filePath))
         return;
     FSEntry newEntry(filePath);
+    if(newEntry.path.isEmpty()) {
+        qWarning() << "[DirectoryManager] Cannot refresh file metadata:"
+                   << filePath;
+        return;
+    }
     int index = indexOfFile(filePath);
-    if(fileEntryVec.at(index).modifyTime != newEntry.modifyTime)
+    if(fileEntryVec.at(index).modifyTime != newEntry.modifyTime ||
+       fileEntryVec.at(index).size != newEntry.size)
         fileEntryVec.at(index) = newEntry;
     qDebug() << "fileMod" << filePath;
     emit fileModified(filePath);

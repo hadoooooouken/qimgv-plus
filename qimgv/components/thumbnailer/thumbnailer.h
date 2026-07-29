@@ -1,12 +1,18 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <QMap>
 #include <QPair>
 #include <QThreadPool>
 #include "components/cache/thumbnailcache.h"
 #include "components/cache/thumbnailcachewriter.h"
 #include "components/thumbnailer/thumbnailerrunnable.h"
+
+struct ThumbnailSource {
+    QString path;
+    std::optional<ThumbnailSourceStamp> stamp;
+};
 
 class Thumbnailer : public QObject
 {
@@ -19,9 +25,9 @@ public:
     void clearTasks();
     void waitForDone();
     void enableSelfDestruct();
-
-public slots:
     void getThumbnailAsync(QString path, int size, bool crop, bool force);
+    void getThumbnailAsync(ThumbnailSource source, int size, bool crop,
+                           bool force);
 
 private:
     using TaskKey = QPair<QString, int>;
@@ -29,7 +35,8 @@ private:
     std::unique_ptr<ThumbnailCache> cache;
     std::unique_ptr<ThumbnailCacheWriter> cacheWriter;
     std::unique_ptr<QThreadPool> pool;
-    void startThumbnailerThread(QString filePath, int size, bool crop, bool force);
+    void startThumbnailerThread(ThumbnailSource source, int size, bool crop,
+                                bool force);
     QMap<TaskKey, bool> runningTasks;
     QMap<TaskKey, bool> queuedTasks;
     bool m_selfDestructOnFinished = false;
@@ -40,6 +47,7 @@ private:
     struct PendingRerun {
         bool crop = false;
         bool force = false;
+        std::optional<ThumbnailSourceStamp> sourceStamp;
     };
     QMap<TaskKey, PendingRerun> pendingReruns;
 
