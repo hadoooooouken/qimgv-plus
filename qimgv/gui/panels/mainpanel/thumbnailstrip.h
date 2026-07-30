@@ -20,17 +20,16 @@ class ThumbnailStrip : public ThumbnailView
     Q_OBJECT
 public:
     explicit ThumbnailStrip(QWidget *parent = nullptr);
-    QSize itemSize();
+    QSize itemSize() const;
     void readSettings();
 
 private:
     int lastThumbnailResolution = 256;
     const int thumbPadding = 9;
     int thumbMarginX = 2, thumbMarginY = 4;
-    void updateThumbnailPositions(int start, int end);
-    void updateThumbnailPositions();
     void setupLayout();
-    ThumbnailStyle mCurrentStyle;
+    ThumbnailStyle mCurrentStyle = THUMB_SIMPLE;
+    mutable QSize cachedItemSize;
 
 public slots:
     virtual void focusOn(int index);
@@ -39,8 +38,9 @@ public slots:
 protected:
     virtual void resizeEvent(QResizeEvent *event);
     virtual void updateScrollbarIndicator();
-    void addItemToLayout(ThumbnailWidget *widget, int pos);
-    void removeItemFromLayout(int pos);
-    void removeAll();
-    ThumbnailWidget *createThumbnailWidget();
+    std::unique_ptr<ThumbnailWidget> createThumbnailWidget() override;
+    QRectF itemGeometry(int index) const override;
+    QSizeF contentSize() const override;
+    QPair<int, int> itemRangeForRect(const QRectF &rect) const override;
+    int widgetPoolCapacity() const override;
 };

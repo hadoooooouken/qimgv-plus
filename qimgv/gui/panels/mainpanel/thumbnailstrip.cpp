@@ -1,6 +1,11 @@
 #include "thumbnailstrip.h"
 #include "settings.h"
 
+namespace {
+constexpr qreal kPreloadSideCount = 2.0;
+constexpr int kPoolSafetyItemCount = 1;
+}
+
 ThumbnailStrip::ThumbnailStrip(QWidget *parent) : ThumbnailView(Qt::Horizontal, parent) {
     this->setAttribute(Qt::WA_NoMousePropagation, true);
     this->setFocusPolicy(Qt::NoFocus);
@@ -9,7 +14,7 @@ ThumbnailStrip::ThumbnailStrip(QWidget *parent) : ThumbnailView(Qt::Horizontal, 
 }
 
 void ThumbnailStrip::updateScrollbarIndicator() {
-    if(!thumbnails.count() || lastSelected() == -1)
+    if(!itemCount() || lastSelected() == -1)
         return;
     qreal itemCenter = (qreal)(lastSelected() + 0.5) / itemCount();
     if(scrollBar->orientation() == Qt::Horizontal)
@@ -24,8 +29,8 @@ void ThumbnailStrip::setupLayout() {
     this->setAlignment(Qt::AlignLeft | Qt::AlignTop);
 }
 
-ThumbnailWidget* ThumbnailStrip::createThumbnailWidget() {
-    ThumbnailWidget *widget = new ThumbnailWidget();
+std::unique_ptr<ThumbnailWidget> ThumbnailStrip::createThumbnailWidget() {
+    auto widget = std::make_unique<ThumbnailWidget>();
     widget->setPadding(thumbPadding);
     widget->setMargins(thumbMarginX, thumbMarginY);
     widget->setThumbStyle(mCurrentStyle);
@@ -34,87 +39,36 @@ ThumbnailWidget* ThumbnailStrip::createThumbnailWidget() {
     return widget;
 }
 
-void ThumbnailStrip::addItemToLayout(ThumbnailWidget* widget, int pos) {
-    scene.addItem(widget);
-    updateThumbnailPositions(pos, thumbnails.count() - 1);
-}
-
-void ThumbnailStrip::removeItemFromLayout(int pos) {
-    if(checkRange(pos)) {
-        ThumbnailWidget *thumb = thumbnails.at(pos);
-        scene.removeItem(thumb);
-        // move items
-        ThumbnailWidget *tmp;
-        if(orientation() == Qt::Horizontal) {
-            for(int i = pos; i < thumbnails.count(); i++) {
-                tmp = thumbnails.at(i);
-                tmp->moveBy(-tmp->boundingRect().width(), 0);
-            }
-        } else {
-            for(int i = pos; i < thumbnails.count(); i++) {
-                tmp = thumbnails.at(i);
-                tmp->moveBy(0, -tmp->boundingRect().height());
-            }
-        }
-    }
-}
-
-void ThumbnailStrip::removeAll() {
-    scene.clear(); // also calls delete on all items
-    thumbnails.clear();
-}
-
-void ThumbnailStrip::updateThumbnailPositions() {
-    updateThumbnailPositions(0, thumbnails.count() - 1);
-}
-
-void ThumbnailStrip::updateThumbnailPositions(int start, int end) {
-    if(start > end || !checkRange(start) || !checkRange(end))
-        return;
-    // assume all thumbnails are the same size
-    ThumbnailWidget *tmp;
-    if(orientation() == Qt::Horizontal) {
-        int thumbWidth = static_cast<int>(thumbnails.at(start)->boundingRect().width());
-        for(int i = start; i <= end; i++) {
-            tmp = thumbnails.at(i);
-            tmp->setPos(i * thumbWidth, 0);
-        }
-    } else {
-        int thumbHeight = static_cast<int>(thumbnails.at(start)->boundingRect().height());
-        for(int i = start; i <= end; i++) {
-            tmp = thumbnails.at(i);
-            tmp->setPos(0, i * thumbHeight);
-        }
-    }
-}
-
 void ThumbnailStrip::focusOn(int index) {
     if(!checkRange(index))
         return;
-    auto th = thumbnails.at(index);
+    const QRectF geometry = itemGeometry(index);
     if(settings->panelCenterSelection()) {
         if(settings->enableSmoothScroll()) {
-            QPointF targetCenter = th->sceneBoundingRect().center();
-            QPointF currentCenter = mapToScene(viewport()->rect().center());
-            int delta = (orientation() == Qt::Horizontal) ? (currentCenter.x() - targetCenter.x()) : (currentCenter.y() - targetCenter.y());
+            const QPointF targetCenter = geometry.center();
+            const QPointF currentCenter = mapToScene(viewport()->rect().center());
+            const int delta = orientation() == Qt::Horizontal
+                ? static_cast<int>(currentCenter.x() - targetCenter.x())
+                : static_cast<int>(currentCenter.y() - targetCenter.y());
             scrollSmooth(delta);
         } else {
-            QGraphicsView::centerOn(th->sceneBoundingRect().center());
+            QGraphicsView::centerOn(geometry.center());
         }
     } else {
         // partially show the next thumb if possible
         if(orientation() == Qt::Vertical) {
-            if(height() > th->height() * 2)
-                ensureVisible(th, 0, th->height()/2);
+            if(height() > geometry.height() * 2)
+                ensureVisible(geometry, 0, geometry.height() / 2);
             else
-                ensureVisible(th, 0, 0);
+                ensureVisible(geometry, 0, 0);
         } else {
-            if(width() > th->width() * 2)
-                ensureVisible(th, th->width() / 2, 0);
+            if(width() > geometry.width() * 2)
+                ensureVisible(geometry, geometry.width() / 2, 0);
             else
-                ensureVisible(th, 0, 0);
+                ensureVisible(geometry, 0, 0);
         }
     }
+    refreshVisibleItems();
     loadVisibleThumbnails();
 }
 
@@ -126,6 +80,7 @@ void ThumbnailStrip::focusOnSelection() {
 
 void ThumbnailStrip::readSettings() {
     int currentRes = settings->thumbnailResolution();
+    const int oldThumbnailSize = mThumbnailSize;
     if (currentRes != lastThumbnailResolution) {
         unloadAllThumbnails();
         lastThumbnailResolution = currentRes;
@@ -148,34 +103,74 @@ void ThumbnailStrip::readSettings() {
     }
 
     // apply style, size & reposition
-    for(int i = 0; i < thumbnails.count(); i++) {
-        thumbnails.at(i)->setPadding(thumbPadding);
-        thumbnails.at(i)->setMargins(thumbMarginX, thumbMarginY);
-        thumbnails.at(i)->setThumbStyle(mCurrentStyle);
-        thumbnails.at(i)->setThumbnailSize(mThumbnailSize);
-        thumbnails.at(i)->setUseThumbPanelColors(true);
+    cachedItemSize = {};
+    if(oldThumbnailSize != mThumbnailSize)
+        unloadAllThumbnails();
+    for(auto *widget : std::as_const(thumbnails)) {
+        widget->setPadding(thumbPadding);
+        widget->setMargins(thumbMarginX, thumbMarginY);
+        widget->setThumbStyle(mCurrentStyle);
+        widget->setThumbnailSize(mThumbnailSize);
+        widget->setUseThumbPanelColors(true);
     }
-    updateThumbnailPositions(0, thumbnails.count() - 1);
     fitSceneToContents();
+    updateLayout();
     setCropThumbnails(settings->squareThumbnails());
     focusOn(lastSelected());
 }
 
-QSize ThumbnailStrip::itemSize() {
-    if(!thumbnails.count()) {
-        ThumbnailWidget w;
-        w.setPadding(thumbPadding);
-        w.setMargins(thumbMarginX, thumbMarginY);
-        w.setThumbStyle(mCurrentStyle);
-        w.setThumbnailSize(mThumbnailSize);
-        return w.boundingRect().size().toSize();
-    } else {
-        return thumbnails.at(0)->boundingRect().size().toSize();
-    }
+QSize ThumbnailStrip::itemSize() const {
+    if(cachedItemSize.isValid())
+        return cachedItemSize;
+    ThumbnailWidget prototype;
+    prototype.setPadding(thumbPadding);
+    prototype.setMargins(thumbMarginX, thumbMarginY);
+    prototype.setThumbStyle(mCurrentStyle);
+    prototype.setThumbnailSize(mThumbnailSize);
+    prototype.setUseThumbPanelColors(true);
+    cachedItemSize = prototype.boundingRect().size().toSize();
+    return cachedItemSize;
+}
+
+QRectF ThumbnailStrip::itemGeometry(int index) const {
+    if(index < 0 || index >= itemCount())
+        return {};
+    const QSize size = itemSize();
+    if(orientation() == Qt::Horizontal)
+        return QRectF(index * size.width(), 0, size.width(), size.height());
+    return QRectF(0, index * size.height(), size.width(), size.height());
+}
+
+QSizeF ThumbnailStrip::contentSize() const {
+    const QSize size = itemSize();
+    if(orientation() == Qt::Horizontal)
+        return QSizeF(itemCount() * size.width(), size.height());
+    return QSizeF(size.width(), itemCount() * size.height());
+}
+
+QPair<int, int> ThumbnailStrip::itemRangeForRect(const QRectF &rect) const {
+    if(itemCount() == 0)
+        return {-1, -1};
+    const QSize size = itemSize();
+    const qreal start = orientation() == Qt::Horizontal ? rect.left() : rect.top();
+    const qreal end = orientation() == Qt::Horizontal ? rect.right() : rect.bottom();
+    const int extent = orientation() == Qt::Horizontal ? size.width() : size.height();
+    const int first = qBound(0, static_cast<int>(std::floor(start / extent)), itemCount() - 1);
+    const int last = qBound(0, static_cast<int>(std::floor(end / extent)), itemCount() - 1);
+    return first <= last ? QPair<int, int>{first, last} : QPair<int, int>{-1, -1};
+}
+
+int ThumbnailStrip::widgetPoolCapacity() const {
+    if(itemCount() == 0)
+        return 0;
+    const QSize size = itemSize();
+    const int viewportExtent = orientation() == Qt::Horizontal ? viewport()->width() : viewport()->height();
+    const int itemExtent = orientation() == Qt::Horizontal ? size.width() : size.height();
+    const qreal virtualExtent = viewportExtent + kPreloadSideCount * offscreenPreloadArea;
+    return static_cast<int>(std::ceil(virtualExtent / itemExtent)) + kPoolSafetyItemCount;
 }
 
 void ThumbnailStrip::resizeEvent(QResizeEvent *event) {
     ThumbnailView::resizeEvent(event);
-    fitSceneToContents();
     loadVisibleThumbnailsDelayed();
 }

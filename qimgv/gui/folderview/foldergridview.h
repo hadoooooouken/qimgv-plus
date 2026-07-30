@@ -1,11 +1,8 @@
 #pragma once
 
-#include <QGraphicsWidget>
-
 #include "components/actionmanager/actionmanager.h"
 #include "gui/customwidgets/thumbnailview.h"
 #include "gui/customwidgets/thumbnailwidget.h"
-#include "gui/flowlayout.h"
 #include "utils/stuff.h"
 
 class FolderGridView : public ThumbnailView {
@@ -40,11 +37,24 @@ public slots:
   virtual void setDragHover(int index) override;
 
 private:
-  FlowLayout *flowLayout;
-  QGraphicsWidget holderWidget;
+  struct GridGeometry {
+    QSizeF itemSize;
+    int columns;
+    int rows;
+    qreal horizontalOffset;
+  };
+
   int shiftedCol;
   void scrollToCurrent();
+  GridGeometry gridGeometry() const;
+  QSizeF thumbnailItemSize() const;
+  int itemAbove(int index) const;
+  int itemBelow(int index) const;
+  int columnOf(int index) const;
+  bool sameRow(int one, int two) const;
   int lastDragTarget = -1;
+  ThumbnailStyle thumbnailStyle = THUMB_NORMAL;
+  mutable QSizeF cachedItemSize;
 
 private slots:
   void onitemSelected();
@@ -52,13 +62,12 @@ private slots:
 protected:
   void resizeEvent(QResizeEvent *event) override;
   virtual void updateScrollbarIndicator() override;
-  void addItemToLayout(ThumbnailWidget *widget, int pos) override;
-  void removeItemFromLayout(int pos) override;
-  void removeAll() override;
   void setupLayout();
-  ThumbnailWidget *createThumbnailWidget() override;
-  void updateLayout() override;
-  virtual void fitSceneToContents() override;
+  std::unique_ptr<ThumbnailWidget> createThumbnailWidget() override;
+  QRectF itemGeometry(int index) const override;
+  QSizeF contentSize() const override;
+  QPair<int, int> itemRangeForRect(const QRectF &rect) const override;
+  int widgetPoolCapacity() const override;
 
   void keyPressEvent(QKeyEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;

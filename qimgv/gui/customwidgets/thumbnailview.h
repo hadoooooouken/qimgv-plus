@@ -1,11 +1,9 @@
 #pragma once
 
-/* This class manages QGraphicsScene, ThumbnailWidget list,
- * scrolling, requesting and setting thumbnails.
- * It doesn't do actual positioning of thumbnails within the scene.
- * (But maybe it should?)
+/* This class manages the logical item count, a viewport-sized pool of
+ * ThumbnailWidget instances, scrolling, geometry, and thumbnail state.
  *
- * Usage: subclass, implement layout-related stuff
+ * Subclasses provide the mathematical geometry for their layout style.
  */
 
 #include <QGraphicsView>
@@ -16,7 +14,13 @@
 #include <QTimeLine>
 #include <QTimer>
 #include <QElapsedTimer>
+#include <QHash>
+#include <QPair>
 #include <QScreen>
+#include <QSet>
+
+#include <functional>
+#include <memory>
 
 #include "gui/customwidgets/thumbnailwidget.h"
 #include "gui/idirectoryview.h"
@@ -46,7 +50,7 @@ public:
     void select(QList<int>) override;
     void select(int) override;
     QList<int> selection() override;
-    int itemCount();
+    int itemCount() const;
 
     void setSelectMode(ThumbnailSelectMode mode);
     int lastSelected();
@@ -105,6 +109,8 @@ private:
 
 protected:
     QGraphicsScene scene;
+    // Widgets are scene-owned pool entries. Their model indices live in the
+    // explicit binding maps below and must never be inferred from list order.
     QList<ThumbnailWidget*> thumbnails;
     QScrollBar *scrollBar;
     QTimeLine *scrollTimeLine;
@@ -134,18 +140,23 @@ protected:
     bool atSceneStart();
     bool atSceneEnd();
 
-    bool checkRange(int pos);
+    bool checkRange(int pos) const;
 
-    virtual ThumbnailWidget *createThumbnailWidget() = 0;
-    virtual void addItemToLayout(ThumbnailWidget* widget, int pos) = 0;
-    virtual void removeItemFromLayout(int pos) = 0;
-    virtual void removeAll() = 0;
-    virtual void updateLayout();
-    virtual void fitSceneToContents();
+    virtual std::unique_ptr<ThumbnailWidget> createThumbnailWidget() = 0;
+    virtual QRectF itemGeometry(int index) const = 0;
+    virtual QSizeF contentSize() const = 0;
+    virtual QPair<int, int> itemRangeForRect(const QRectF &rect) const = 0;
+    virtual int widgetPoolCapacity() const = 0;
     virtual void updateScrollbarIndicator() = 0;
 
+    void updateLayout();
+    void fitSceneToContents();
+    void refreshVisibleItems(bool clearBindings = false);
+    ThumbnailWidget *widgetForIndex(int index) const;
+    int indexForWidget(const ThumbnailWidget *widget) const;
+
     void setOrientation(Qt::Orientation _orientation);
-    Qt::Orientation orientation();
+    Qt::Orientation orientation() const;
 
     void setCropThumbnails(bool);
     void setDrawScrollbarIndicator(bool mode);
@@ -172,4 +183,19 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void hideEvent(QHideEvent *event) override;
+
+private:
+    int mItemCount = 0;
+    QHash<int, ThumbnailWidget*> boundWidgets;
+    QHash<const ThumbnailWidget*, int> widgetIndices;
+    QHash<int, std::shared_ptr<Thumbnail>> loadedThumbnails;
+    QSet<int> pendingThumbnailRequests;
+    bool layoutUpdateInProgress = false;
+
+    QRectF preloadRect() const;
+    void bindWidget(ThumbnailWidget *widget, int index);
+    void unbindWidget(ThumbnailWidget *widget);
+    void trimWidgetPool();
+    void shiftBoundItems(int firstIndex, int offset);
+    void shiftCachedItems(int firstIndex, int offset);
 };

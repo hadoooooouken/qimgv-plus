@@ -19,7 +19,6 @@ void ThumbnailStripProxy::init() {
 void ThumbnailStripProxy::initEager() {
     if(thumbnailStrip)
         return;
-    qApp->processEvents(); // chew through events in case we have something that alters stateBuf in queue
     QMutexLocker ml(&m);
     thumbnailStrip.reset(new ThumbnailStrip());
     thumbnailStrip->setParent(this);
@@ -63,9 +62,6 @@ void ThumbnailStripProxy::applyBufferedState() {
     mNeedsBufferApply = false;
     thumbnailStrip->populate(stateBuf.itemCount);
     thumbnailStrip->select(stateBuf.selection);
-    // wait till layout stuff happens
-    // before calling focusOn()
-    qApp->processEvents();
     thumbnailStrip->focusOnSelection();
 }
 
@@ -189,7 +185,6 @@ void ThumbnailStripProxy::showEvent(QShowEvent *event) {
         QTimer::singleShot(0, this, &ThumbnailStripProxy::applyBufferedState);
     } else {
         thumbnailStrip->updateGeometry();
-        qApp->processEvents(); // let the scene calculate bounding rects and positions
         thumbnailStrip->focusOnSelection();
     }
     QWidget::showEvent(event);

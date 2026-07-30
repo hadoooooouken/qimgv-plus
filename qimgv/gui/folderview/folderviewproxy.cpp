@@ -11,7 +11,6 @@ FolderViewProxy::FolderViewProxy(QWidget *parent)
 }
 
 void FolderViewProxy::init() {
-    qApp->processEvents(); // chew through events in case we have something that alters stateBuf in queue
     QMutexLocker ml(&m);
     if(folderView)
         return;
@@ -48,9 +47,6 @@ void FolderViewProxy::init() {
     folderView->populate(stateBuf.itemCount);
     folderView->setDirCount(stateBuf.dirCount);
     folderView->select(stateBuf.selection);
-    // wait till layout stuff happens
-    // before calling focusOn()
-    qApp->processEvents();
     folderView->focusOnSelection();
     folderView->onSortingChanged(stateBuf.sortingMode);
     folderView->onFolderSortingChanged(stateBuf.folderSortingMode);
