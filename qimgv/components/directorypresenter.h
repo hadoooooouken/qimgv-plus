@@ -3,19 +3,20 @@
 #include <QObject>
 #include <memory>
 #include "gui/idirectoryview.h"
+#include "components/foldercoverresolver.h"
 #include "components/thumbnailer/thumbnailer.h"
 #include "directorymodel.h"
 #include "sharedresources.h"
 #include "directoryexpandworker.h"
+#include <QColor>
+#include <QHash>
+#include <QMap>
 #include <QMimeData>
 #include <QPointer>
 #include <QThread>
-
-//tmp
 #include <QtSvg/QSvgRenderer>
-#include <QDir>
-#include <QImageReader>
-#include <QMultiMap>
+
+#include <tuple>
 
 class DirectoryPresenter : public QObject {
     Q_OBJECT
@@ -96,6 +97,7 @@ private slots:
     void onSettingsChanged();
     void generateThumbnails(QList<int>, int, bool, bool);
     void onThumbnailReady(std::shared_ptr<Thumbnail> thumb, QString filePath);
+    void onFolderCoverResolved(FolderCoverResult result);
     void populateView();
     void onItemActivated(int absoluteIndex);
     void onOpenSelectedRequested();
@@ -113,17 +115,45 @@ private:
     std::shared_ptr<IDirectoryView> view = nullptr;
     std::shared_ptr<DirectoryModel> model = nullptr;
     std::shared_ptr<Thumbnailer> thumbnailer;
+    std::unique_ptr<FolderCoverResolver> folderCoverResolver;
     bool mShowDirs;
-    QMultiMap<QString, int> dirThumbnailTasks;
 
-    std::shared_ptr<Thumbnail> composeFolderThumbnail(int size, const QString &dirName, const QPixmap &innerThumb);
+    struct PendingFolderThumbnail {
+        QString folderPath;
+        int thumbnailSize = 0;
+        quint64 generation = 0;
+    };
+
+    struct DefaultFolderIconKey {
+        int thumbnailSize = 0;
+        qreal devicePixelRatio = 1.0;
+        QRgb color = {};
+
+        friend bool operator<(const DefaultFolderIconKey &left,
+                              const DefaultFolderIconKey &right)
+        {
+            return std::tie(left.thumbnailSize, left.devicePixelRatio,
+                            left.color) <
+                   std::tie(right.thumbnailSize, right.devicePixelRatio,
+                            right.color);
+        }
+    };
+
+    QHash<QString, QList<PendingFolderThumbnail>> dirThumbnailTasks;
+    QSvgRenderer folderIconRenderer;
+    QMap<DefaultFolderIconKey, std::shared_ptr<QPixmap>>
+        defaultFolderIconCache;
+    quint64 folderThumbnailGeneration = {};
+
+    std::shared_ptr<QPixmap> defaultFolderPixmap(int size);
+    std::shared_ptr<Thumbnail>
+    defaultFolderThumbnail(int size, const QString &dirName);
+    std::shared_ptr<Thumbnail> composeFolderThumbnail(
+        int size, const QString &dirName, const QPixmap &innerThumb);
     std::shared_ptr<Thumbnail> composeUpArrowThumbnail(int size);
-
-    // Picks the folder-cover candidate file with a single linear pass
-    // instead of materializing and sorting the full entryInfoList() just
-    // to read list.first() - see composeFolderThumbnail() call site.
-    QString findFolderCoverImage(const QString &dirPath, const QStringList &filters,
-                                  SortingMode mode) const;
+    static QString thumbnailPathKey(const QString &path);
+    int directoryIndexForPath(const QString &path) const;
+    void invalidateFolderThumbnailRequests();
 
     // ---- asynchronous, cancellable selection expansion ----
     // Backs onItemActivated()/onOpenSelectedRequested()/

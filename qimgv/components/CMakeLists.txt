@@ -4,6 +4,7 @@ target_sources(qimgv-plus PRIVATE
     directorymodel.cpp
     directorypresenter.cpp
     directoryexpandworker.cpp
+    foldercoverresolver.cpp
 
     scriptmanager/scriptmanager.cpp
     actionmanager/actionmanager.cpp

@@ -1,15 +1,25 @@
 #include "directorypresenter.h"
+#include <QApplication>
+#include <QDir>
 #include <QPainter>
 #include <QPainterPath>
-#include <QDirIterator>
 #include <QFileInfo>
-#include <QSet>
-#include <QRegularExpression>
-#include <QCollator>
 #include <QDebug>
 #include "settings.h"
 
+#include <utility>
+
 namespace {
+
+const QString kFolderIconResource =
+    QStringLiteral(":/res/icons/common/other/folder32-scalable.svg");
+constexpr qreal kDefaultDevicePixelRatio = 1.0;
+constexpr qreal kFolderIconRenderedScale = 0.90;
+constexpr qreal kFolderWindowLeftOffset = 0.025;
+constexpr qreal kFolderWindowTopOffset = 0.17;
+constexpr qreal kFolderWindowWidthScale = 0.95;
+constexpr qreal kFolderWindowHeightScale = 0.80;
+constexpr qreal kFolderThumbnailCornerRadius = 4.0;
 
 ThumbnailSource thumbnailSourceFromEntry(const FSEntry &entry)
 {
@@ -24,7 +34,15 @@ ThumbnailSource thumbnailSourceFromEntry(const FSEntry &entry)
 } // namespace
 
 DirectoryPresenter::DirectoryPresenter(QObject *parent)
-    : QObject(parent), mShowDirs(false) {
+    : QObject(parent),
+      folderCoverResolver(std::make_unique<FolderCoverResolver>()),
+      mShowDirs(false),
+      folderIconRenderer(kFolderIconResource) {
+  if (!folderIconRenderer.isValid()) {
+    qWarning() << "[DirectoryPresenter] Could not load the default folder icon"
+               << kFolderIconResource;
+  }
+
   // Own instance by default so DirectoryPresenter keeps working
   // standalone; Core replaces it with a shared one via setThumbnailer()
   // so the thumbnail panel and folder view dedupe requests against each
@@ -32,6 +50,8 @@ DirectoryPresenter::DirectoryPresenter(QObject *parent)
   thumbnailer = std::make_shared<Thumbnailer>();
   connect(thumbnailer.get(), &Thumbnailer::thumbnailReady, this,
           &DirectoryPresenter::onThumbnailReady);
+  connect(folderCoverResolver.get(), &FolderCoverResolver::resultReady, this,
+          &DirectoryPresenter::onFolderCoverResolved, Qt::QueuedConnection);
   connect(settings, &Settings::settingsChanged, this,
           &DirectoryPresenter::onSettingsChanged);
 }
@@ -52,6 +72,7 @@ void DirectoryPresenter::setThumbnailer(std::shared_ptr<Thumbnailer> newThumbnai
 
 void DirectoryPresenter::unsetModel() {
   cancelExpandedPathsScan();
+  invalidateFolderThumbnailRequests();
   disconnect(model.get(), &DirectoryModel::fileRemoved, this,
              &DirectoryPresenter::onFileRemoved);
   disconnect(model.get(), &DirectoryModel::fileAdded, this,
@@ -67,7 +88,6 @@ void DirectoryPresenter::unsetModel() {
   disconnect(model.get(), &DirectoryModel::dirRenamed, this,
              &DirectoryPresenter::onDirRenamed);
   model = nullptr;
-  dirThumbnailTasks.clear();
   // also empty view?
 }
 
@@ -127,7 +147,7 @@ void DirectoryPresenter::reloadModel() { populateView(); }
 void DirectoryPresenter::populateView() {
   if (!model || !view)
     return;
-  dirThumbnailTasks.clear();
+  invalidateFolderThumbnailRequests();
   // Thumbnailer is shared with the other presenter. Clearing its pool here
   // would cancel that view's queued requests.
   view->populate(mShowDirs ? model->totalCount() : model->fileCount());
@@ -262,51 +282,27 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
     }
     return;
   }
+
+  const SortingMode folderIconSort = settings->folderIconSortingMode();
   for (int i : indexes) {
+    if (i < 0 || i >= model->totalCount())
+      continue;
+
     if (i < model->dirCount()) {
-      QString dirPath = model->dirPathAt(i);
-      QStringList filters;
-      for (auto &format : QImageReader::supportedImageFormats())
-        filters << "*." + QString::fromLatin1(format);
-      filters << "*.jfif" << "*.tga" << "*.webp";
+      const QString dirPath = model->dirPathAt(i);
 
-      SortingMode folderIconSort = settings->folderIconSortingMode();
-      // Single linear pass instead of entryInfoList()+sort - avoids
-      // materializing and sorting the whole directory just to read
-      // first(). See findFolderCoverImage() for details.
-      QString latestImage = findFolderCoverImage(dirPath, filters, folderIconSort);
-      if (!latestImage.isEmpty()) {
-        latestImage = QDir::fromNativeSeparators(latestImage);
-        dirThumbnailTasks.insert(latestImage, i);
-        thumbnailer->getThumbnailAsync(latestImage, size, false, false);
-      }
+      // The prepared default is published before cover discovery is queued,
+      // so directory enumeration can never delay the first visible icon.
+      view->setThumbnail(
+          i, defaultFolderThumbnail(size, model->dirNameAt(i)));
 
-      // show default folder icon while loading
-      QSvgRenderer svgRenderer;
-      svgRenderer.load(
-          QString(":/res/icons/common/other/folder32-scalable.svg"));
-      int factor = size / svgRenderer.defaultSize().width();
-      QSize baseSize = svgRenderer.defaultSize() * factor;
-      qreal dpr = qApp->devicePixelRatio();
-      QPixmap *pixmap = new QPixmap(baseSize);
-      pixmap->setDevicePixelRatio(dpr);
-      pixmap->fill(Qt::transparent);
-      
-      QRectF logicalRect(QPointF(0, 0), QSizeF(baseSize) / dpr);
-      QRectF renderedRect = logicalRect;
-      renderedRect.setSize(logicalRect.size() * 0.90f);
-      renderedRect.moveCenter(logicalRect.center());
-
-      QPainter pixPainter(pixmap);
-      svgRenderer.render(&pixPainter, renderedRect);
-      pixPainter.end();
-
-      ImageLib::recolor(*pixmap, settings->colorScheme().thumbnail_folder_icons);
-
-      std::shared_ptr<Thumbnail> thumb(
-          new Thumbnail(model->dirNameAt(i), tr("Folder"), size,
-                        std::shared_ptr<QPixmap>(pixmap)));
-      view->setThumbnail(i, thumb);
+      folderCoverResolver->resolve(
+          FolderCoverRequest{
+              dirPath,
+              folderIconSort,
+              size,
+              folderThumbnailGeneration
+          });
     } else {
       const int fileIndex = i - model->dirCount();
       if (fileIndex < 0 || fileIndex >= model->fileCount())
@@ -318,69 +314,48 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
   }
 }
 
-// Finds the folder-cover candidate with a single linear pass, tracking only
-// the current best-so-far entry per the active sort mode. Replaces the old
-// dir.entryInfoList(filters, QDir::Files, sortFlags) + list.first() pattern,
-// which had to materialize and fully sort every matching file in the folder
-// just to read one entry. This runs on every call to generateThumbnails(),
-// which fires on every folder-view scroll tick (ThumbnailView::
-// loadVisibleThumbnails()) - so the sort cost was being paid repeatedly on
-// the same folders as they scrolled in and out of the preload zone.
-//
-// Note: for SORT_TIME*/SORT_SIZE* this still stat()s every file, since that
-// IO is inherent to "newest/oldest/largest/smallest" semantics - only the
-// O(n log n) comparison + full-list allocation is removed. If folders can
-// live on slow/network drives, consider also moving this call off the GUI
-// thread (e.g. QtConcurrent::run, mirroring ThumbnailerRunnable).
-QString DirectoryPresenter::findFolderCoverImage(const QString &dirPath,
-                                                  const QStringList &filters,
-                                                  SortingMode mode) const {
-  QDirIterator it(dirPath, filters, QDir::Files);
-  QString bestPath;
-  QDateTime bestTime;
-  qint64 bestSize = -1;
-  QCollator collator;
-  collator.setCaseSensitivity(Qt::CaseInsensitive);
+void DirectoryPresenter::onFolderCoverResolved(FolderCoverResult result)
+{
+  if (result.request.generation != folderThumbnailGeneration ||
+      !view || !model || !mShowDirs)
+    return;
 
-  while (it.hasNext()) {
-    it.next();
-    QFileInfo info = it.fileInfo();
-    switch (mode) {
-      case SORT_NAME:
-      case SORT_NAME_DESC: {
-        bool better = bestPath.isEmpty();
-        if (!better) {
-          bool less = collator.compare(info.fileName(), QFileInfo(bestPath).fileName()) < 0;
-          better = (mode == SORT_NAME) ? less : !less;
-        }
-        if (better)
-          bestPath = info.absoluteFilePath();
-        break;
-      }
-      case SORT_SIZE:
-      case SORT_SIZE_DESC: {
-        qint64 sz = info.size();
-        bool better = bestSize < 0 || (mode == SORT_SIZE ? sz < bestSize : sz > bestSize);
-        if (better) {
-          bestSize = sz;
-          bestPath = info.absoluteFilePath();
-        }
-        break;
-      }
-      case SORT_TIME:
-      case SORT_TIME_DESC:
-      default: {
-        QDateTime t = info.lastModified();
-        bool better = !bestTime.isValid() || (mode == SORT_TIME ? t < bestTime : t > bestTime);
-        if (better) {
-          bestTime = t;
-          bestPath = info.absoluteFilePath();
-        }
-        break;
-      }
+  if (result.status == FolderCoverStatus::ReadError) {
+    qWarning() << "[FolderCoverResolver]" << result.diagnostic;
+    return;
+  }
+  if (result.status != FolderCoverStatus::CoverFound ||
+      result.coverPath.isEmpty())
+    return;
+
+  const int directoryIndex =
+      directoryIndexForPath(result.request.folderPath);
+  if (directoryIndex < 0)
+    return;
+
+  const QString coverKey = thumbnailPathKey(result.coverPath);
+  QList<PendingFolderThumbnail> &pending = dirThumbnailTasks[coverKey];
+  const PendingFolderThumbnail newRequest{
+      result.request.folderPath,
+      result.request.thumbnailSize,
+      result.request.generation
+  };
+  bool alreadyPending = false;
+  for (const PendingFolderThumbnail &existing : std::as_const(pending)) {
+    if (thumbnailPathKey(existing.folderPath) ==
+            thumbnailPathKey(newRequest.folderPath) &&
+        existing.thumbnailSize == newRequest.thumbnailSize &&
+        existing.generation == newRequest.generation) {
+      alreadyPending = true;
+      break;
     }
   }
-  return bestPath;
+  if (alreadyPending)
+    return;
+
+  pending.append(newRequest);
+  thumbnailer->getThumbnailAsync(
+      result.coverPath, result.request.thumbnailSize, false, false);
 }
 
 void DirectoryPresenter::onThumbnailReady(std::shared_ptr<Thumbnail> thumb,
@@ -388,19 +363,43 @@ void DirectoryPresenter::onThumbnailReady(std::shared_ptr<Thumbnail> thumb,
   if (!view || !model)
     return;
 
-  // folder thumbnail?
-  QString normalizedPath = QDir::fromNativeSeparators(filePath);
-  if (dirThumbnailTasks.contains(normalizedPath)) {
-    QList<int> indices = dirThumbnailTasks.values(normalizedPath);
-    for (int i : std::as_const(indices)) {
-      if (thumb->pixmap()) {
-        auto folderThumb = composeFolderThumbnail(
-            thumb->size(), model->dirNameAt(i), *thumb->pixmap());
-        view->setThumbnail(i, folderThumb);
+  if (!thumb) {
+    qWarning() << "[DirectoryPresenter] Thumbnailer returned an empty result for"
+               << filePath;
+    return;
+  }
+
+  const QString coverKey = thumbnailPathKey(filePath);
+  auto folderTasks = dirThumbnailTasks.find(coverKey);
+  if (folderTasks != dirThumbnailTasks.end()) {
+    QList<PendingFolderThumbnail> remaining;
+    const std::shared_ptr<QPixmap> innerPixmap = thumb->pixmap();
+    for (const PendingFolderThumbnail &task :
+         std::as_const(folderTasks.value())) {
+      if (task.thumbnailSize != thumb->size()) {
+        remaining.append(task);
+        continue;
+      }
+      if (task.generation != folderThumbnailGeneration || !mShowDirs)
+        continue;
+
+      const int directoryIndex = directoryIndexForPath(task.folderPath);
+      if (directoryIndex < 0)
+        continue;
+
+      if (innerPixmap) {
+        view->setThumbnail(
+            directoryIndex,
+            composeFolderThumbnail(
+                task.thumbnailSize, model->dirNameAt(directoryIndex),
+                *innerPixmap));
       }
     }
-    dirThumbnailTasks.remove(normalizedPath);
-    return;
+
+    if (remaining.isEmpty())
+      dirThumbnailTasks.erase(folderTasks);
+    else
+      folderTasks.value() = std::move(remaining);
   }
 
   int index = model->indexOfFile(filePath);
@@ -420,7 +419,7 @@ void DirectoryPresenter::onItemActivated(int absoluteIndex) {
           activePath = model->dirPathAt(absoluteIndex);
       else
           activePath = model->filePathAt(mShowDirs ? absoluteIndex - model->dirCount() : absoluteIndex);
-      
+
       // A recursive scan of every selected directory here (as this branch
       // used to do inline) is fine for a couple of images, but freezes the
       // UI thread for as long as a large subtree takes to walk. Do the
@@ -750,53 +749,104 @@ void DirectoryPresenter::selectAndFocus(int absoluteIndex) {
 }
 
 std::shared_ptr<Thumbnail>
-DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
-                                           const QPixmap &innerThumb) {
-  QSvgRenderer svgRenderer(
-      QString(":/res/icons/common/other/folder32-scalable.svg"));
-  if (!svgRenderer.isValid() || svgRenderer.defaultSize().width() <= 0)
-    return std::shared_ptr<Thumbnail>(
-        new Thumbnail(dirName, tr("Folder"), size, nullptr));
+DirectoryPresenter::defaultFolderThumbnail(int size, const QString &dirName)
+{
+  return std::make_shared<Thumbnail>(
+      dirName, tr("Folder"), size, defaultFolderPixmap(size));
+}
 
-  int factor = size / svgRenderer.defaultSize().width();
-  QSize baseSize = svgRenderer.defaultSize() * factor;
+std::shared_ptr<QPixmap>
+DirectoryPresenter::defaultFolderPixmap(int size)
+{
+  if (size <= 0 || !folderIconRenderer.isValid() ||
+      folderIconRenderer.defaultSize().width() <= 0)
+    return {};
 
+  const qreal reportedDevicePixelRatio =
+      qApp ? qApp->devicePixelRatio() : kDefaultDevicePixelRatio;
+  const qreal devicePixelRatio =
+      reportedDevicePixelRatio > 0
+          ? reportedDevicePixelRatio
+          : kDefaultDevicePixelRatio;
+  const QColor iconColor =
+      settings->colorScheme().thumbnail_folder_icons;
+  const DefaultFolderIconKey key{
+      size,
+      devicePixelRatio,
+      iconColor.rgba()
+  };
+  const auto cachedIcon = defaultFolderIconCache.constFind(key);
+  if (cachedIcon != defaultFolderIconCache.cend())
+    return cachedIcon.value();
+
+  const int scaleFactor =
+      qMax(1, size / folderIconRenderer.defaultSize().width());
+  const QSize baseSize =
+      folderIconRenderer.defaultSize() * scaleFactor;
   if (baseSize.isEmpty())
-    return std::shared_ptr<Thumbnail>(
-        new Thumbnail(dirName, tr("Folder"), size, nullptr));
+    return {};
 
-  qreal dpr = qApp->devicePixelRatio();
-  QPixmap *pixmap = new QPixmap(baseSize);
-  pixmap->setDevicePixelRatio(dpr);
+  auto pixmap = std::make_shared<QPixmap>(baseSize);
+  pixmap->setDevicePixelRatio(devicePixelRatio);
   pixmap->fill(Qt::transparent);
 
-  QRectF logicalRect(QPointF(0, 0), QSizeF(baseSize) / dpr);
+  const QRectF logicalRect(
+      QPointF(0, 0), QSizeF(baseSize) / devicePixelRatio);
   QRectF renderedRect = logicalRect;
-  renderedRect.setSize(logicalRect.size() * 0.90f);
+  renderedRect.setSize(
+      logicalRect.size() * kFolderIconRenderedScale);
   renderedRect.moveCenter(logicalRect.center());
 
   {
-    QPainter painter(pixmap);
-    svgRenderer.render(&painter, renderedRect);
-  } // painter scope ends here, so it's safe to recolor
+    QPainter painter(pixmap.get());
+    folderIconRenderer.render(&painter, renderedRect);
+  }
+  ImageLib::recolor(*pixmap, iconColor);
 
-  ImageLib::recolor(*pixmap, settings->colorScheme().thumbnail_folder_icons);
+  defaultFolderIconCache.insert(key, pixmap);
+  return pixmap;
+}
+
+std::shared_ptr<Thumbnail>
+DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
+                                           const QPixmap &innerThumb) {
+  const std::shared_ptr<QPixmap> defaultPixmap =
+      defaultFolderPixmap(size);
+  if (!defaultPixmap)
+    return std::make_shared<Thumbnail>(
+        dirName, tr("Folder"), size, std::shared_ptr<QPixmap>{});
+
+  auto pixmap = std::make_shared<QPixmap>(*defaultPixmap);
+  const qreal devicePixelRatio =
+      pixmap->devicePixelRatioF() > 0
+          ? pixmap->devicePixelRatioF()
+          : kDefaultDevicePixelRatio;
+  const QRectF logicalRect(
+      QPointF(0, 0), QSizeF(pixmap->size()) / devicePixelRatio);
+  QRectF renderedRect = logicalRect;
+  renderedRect.setSize(
+      logicalRect.size() * kFolderIconRenderedScale);
+  renderedRect.moveCenter(logicalRect.center());
 
   // Draw the inner thumbnail
-  QPainter painter(pixmap);
+  QPainter painter(pixmap.get());
   painter.setRenderHint(QPainter::Antialiasing);
   painter.setRenderHint(QPainter::SmoothPixmapTransform);
 
   // Approximation for the folder "window" (in logical coordinates)
-  QRectF windowRect(renderedRect.left() + renderedRect.width() * 0.025,
-                    renderedRect.top() + renderedRect.height() * 0.17,
-                    renderedRect.width() * 0.95, renderedRect.height() * 0.80);
+  QRectF windowRect(
+      renderedRect.left() +
+          renderedRect.width() * kFolderWindowLeftOffset,
+      renderedRect.top() +
+          renderedRect.height() * kFolderWindowTopOffset,
+      renderedRect.width() * kFolderWindowWidthScale,
+      renderedRect.height() * kFolderWindowHeightScale);
 
   // Maintain aspect ratio of the thumbnail inside the window
   // innerThumb already has its own dpr set, drawPixmap will handle it
   qreal innerDpr = innerThumb.devicePixelRatioF();
   if (innerDpr <= 0)
-    innerDpr = 1.0;
+    innerDpr = kDefaultDevicePixelRatio;
 
   QSize scaledSize(qRound(innerThumb.width() / innerDpr),
                    qRound(innerThumb.height() / innerDpr));
@@ -814,19 +864,53 @@ DirectoryPresenter::composeFolderThumbnail(int size, const QString &dirName,
   targetRect.moveCenter(windowRect.center());
 
   QPainterPath path;
-  path.addRoundedRect(targetRect, 4.0, 4.0);
+  path.addRoundedRect(targetRect, kFolderThumbnailCornerRadius,
+                      kFolderThumbnailCornerRadius);
   painter.setClipPath(path);
 
   painter.drawPixmap(targetRect, innerThumb, innerThumb.rect());
   painter.end();
 
-  return std::shared_ptr<Thumbnail>(
-      new Thumbnail(dirName, tr("Folder"), size, std::shared_ptr<QPixmap>(pixmap)));
+  return std::make_shared<Thumbnail>(
+      dirName, tr("Folder"), size, std::move(pixmap));
+}
+
+QString DirectoryPresenter::thumbnailPathKey(const QString &path)
+{
+  if (path.isEmpty())
+    return {};
+  return QDir::cleanPath(
+             QDir::fromNativeSeparators(path))
+      .toCaseFolded();
+}
+
+int DirectoryPresenter::directoryIndexForPath(const QString &path) const
+{
+  if (!model)
+    return -1;
+
+  const int directIndex = model->indexOfDir(path);
+  if (directIndex >= 0)
+    return directIndex;
+
+  const QString expectedPath = thumbnailPathKey(path);
+  for (int index = 0; index < model->dirCount(); ++index) {
+    if (thumbnailPathKey(model->dirPathAt(index)) == expectedPath)
+      return index;
+  }
+  return -1;
+}
+
+void DirectoryPresenter::invalidateFolderThumbnailRequests()
+{
+  ++folderThumbnailGeneration;
+  dirThumbnailTasks.clear();
 }
 
 void DirectoryPresenter::onSettingsChanged() {
   if (!view || !model || !mShowDirs)
     return;
+  invalidateFolderThumbnailRequests();
   QList<int> folderIndexes;
   for (int i = 0; i < model->dirCount(); ++i) {
     folderIndexes.append(i);
