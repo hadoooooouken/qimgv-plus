@@ -6,6 +6,7 @@
 namespace {
 constexpr int HoverEnterDurationMs = 100;
 constexpr int HoverLeaveDurationMs = 60;
+constexpr int WindowsHoverUpdateIntervalMs = 8;
 constexpr qreal MinHoverOpacity = 0.0;
 constexpr qreal MaxHoverOpacity = 1.0;
 constexpr qreal BackgroundCornerRadius = 8.0;
@@ -37,15 +38,6 @@ ThumbnailWidget::ThumbnailWidget(QGraphicsItem *parent) :
     font.setBold(false);
     QFontMetrics fm(font);
     textHeight = fm.height();
-
-    hoverTimeline = new QTimeLine(HoverEnterDurationMs, this);
-#ifdef _WIN32
-    hoverTimeline->setUpdateInterval(8);
-#else
-    hoverTimeline->setUpdateInterval(16);
-#endif
-    hoverTimeline->setEasingCurve(QEasingCurve::OutQuad);
-    connect(hoverTimeline, &QTimeLine::valueChanged, this, &ThumbnailWidget::setHoverOpacity);
 }
 
 void ThumbnailWidget::updateDpr(qreal newDpr) {
@@ -407,6 +399,8 @@ void ThumbnailWidget::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
 void ThumbnailWidget::setHovered(bool mode) {
     if(hovered != mode) {
         hovered = mode;
+        if(mode)
+            ensureHoverTimeline();
         if(hoverTimeline) {
             hoverTimeline->setDirection(mode ? QTimeLine::Forward : QTimeLine::Backward);
             hoverTimeline->setDuration(mode ? HoverEnterDurationMs : HoverLeaveDurationMs);
@@ -417,6 +411,16 @@ void ThumbnailWidget::setHovered(bool mode) {
             setHoverOpacity(mode ? MaxHoverOpacity : MinHoverOpacity);
         }
     }
+}
+
+void ThumbnailWidget::ensureHoverTimeline() {
+    if(hoverTimeline)
+        return;
+
+    hoverTimeline = new QTimeLine(HoverEnterDurationMs, this);
+    hoverTimeline->setUpdateInterval(WindowsHoverUpdateIntervalMs);
+    hoverTimeline->setEasingCurve(QEasingCurve::OutQuad);
+    connect(hoverTimeline, &QTimeLine::valueChanged, this, &ThumbnailWidget::setHoverOpacity);
 }
 
 bool ThumbnailWidget::isHovered() {

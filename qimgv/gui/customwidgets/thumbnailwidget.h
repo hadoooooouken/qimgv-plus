@@ -76,6 +76,7 @@ protected:
     bool isHovered();
     qreal getHoverOpacity() const { return hoverOpacity; }
     void setHoverOpacity(qreal opacity);
+    void ensureHoverTimeline();
     void updateBackgroundRect();
     void updateThumbnailDrawPosition();
     void updateDpr(qreal newDpr);
