@@ -7,7 +7,9 @@
 #include <QMetaObject>
 #include <QPointer>
 #include <QRunnable>
+#include <QThread>
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <filesystem>
@@ -20,7 +22,24 @@ namespace {
 
 namespace fs = std::filesystem;
 
-constexpr int kFolderCoverWorkerCount = 2;
+// Folder cover discovery enumerates a directory and stats its entries,
+// which is I/O-bound rather than CPU-bound. Unlike Thumbnailer's decode
+// pool (which halves the ideal thread count because decoding saturates
+// CPU cores), this pool can use the full ideal thread count so that
+// resolving covers for many sibling folders does not fall behind file
+// thumbnail generation. It is still clamped so pathological hardware
+// reports do not open an unbounded number of directory handles at once.
+constexpr int kMinFolderCoverWorkers = 2;
+constexpr int kMaxFolderCoverWorkers = 16;
+
+int folderCoverWorkerCount()
+{
+    const int idealThreadCount = QThread::idealThreadCount();
+    const int candidate =
+        idealThreadCount > 0 ? idealThreadCount : kMinFolderCoverWorkers;
+    return std::clamp(candidate, kMinFolderCoverWorkers, kMaxFolderCoverWorkers);
+}
+
 constexpr auto kAdditionalImageExtensions = std::to_array<const char *>({
     "jfif",
     "tga",
@@ -261,7 +280,7 @@ FolderCoverResolver::FolderCoverResolver(QObject *parent)
     : QObject(parent)
 {
     qRegisterMetaType<FolderCoverResult>();
-    threadPool.setMaxThreadCount(kFolderCoverWorkerCount);
+    threadPool.setMaxThreadCount(folderCoverWorkerCount());
 
     auto extensions = std::make_shared<QSet<QString>>();
     for (const QByteArray &format : QImageReader::supportedImageFormats())
@@ -383,4 +402,3 @@ void FolderCoverResolver::emitQueued(FolderCoverResult result)
         },
         Qt::QueuedConnection);
 }
-

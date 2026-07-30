@@ -55,13 +55,14 @@ std::shared_ptr<Thumbnail> Thumbnailer::getThumbnail(QString filePath, int size)
     return ThumbnailerRunnable::generate(request).thumbnail;
 }
 
-void Thumbnailer::getThumbnailAsync(QString path, int size, bool crop, bool force) {
+void Thumbnailer::getThumbnailAsync(QString path, int size, bool crop,
+                                    bool force, int priority) {
     getThumbnailAsync(ThumbnailSource{std::move(path), std::nullopt}, size,
-                      crop, force);
+                      crop, force, priority);
 }
 
 void Thumbnailer::getThumbnailAsync(ThumbnailSource source, int size,
-                                    bool crop, bool force) {
+                                    bool crop, bool force, int priority) {
     const TaskKey key = qMakePair(source.path, size);
     const auto queuedTask = queuedTasks.constFind(key);
     const auto runningTask = runningTasks.constFind(key);
@@ -86,20 +87,22 @@ void Thumbnailer::getThumbnailAsync(ThumbnailSource source, int size,
         if(it != pendingReruns.end()) {
             it->force = it->force || force;
             it->crop = crop;
+            it->priority = std::max(it->priority, priority);
             if (source.stamp)
                 it->sourceStamp = std::move(source.stamp);
         } else {
             pendingReruns.insert(
-                key, PendingRerun{crop, force, std::move(source.stamp)});
+                key, PendingRerun{crop, force, priority,
+                                  std::move(source.stamp)});
         }
         return;
     }
 
-    startThumbnailerThread(std::move(source), size, crop, force);
+    startThumbnailerThread(std::move(source), size, crop, force, priority);
 }
 
 void Thumbnailer::startThumbnailerThread(ThumbnailSource source, int size,
-                                         bool crop, bool force) {
+                                         bool crop, bool force, int priority) {
     queuedTasks.insert(qMakePair(source.path, size), crop);
     ThumbnailRequest request;
     request.cache = settings->useThumbnailCache() ? cache.get() : nullptr;
@@ -113,7 +116,7 @@ void Thumbnailer::startThumbnailerThread(ThumbnailSource source, int size,
     connect(runnable, &ThumbnailerRunnable::taskStart, this, &Thumbnailer::onTaskStart);
     connect(runnable, &ThumbnailerRunnable::taskEnd, this, &Thumbnailer::onTaskEnd);
     runnable->setAutoDelete(true);
-    pool->start(runnable);
+    pool->start(runnable, priority);
 }
 
 void Thumbnailer::onTaskStart(QString filePath, int size, bool crop) {
@@ -153,7 +156,7 @@ void Thumbnailer::onTaskEnd(ThumbnailTaskResult result, QString filePath,
         // the requested variant or refreshes a changed source.
         startThumbnailerThread(
             ThumbnailSource{filePath, std::move(rerun.sourceStamp)}, size,
-            rerun.crop, rerun.force);
+            rerun.crop, rerun.force, rerun.priority);
         return;
     }
 

@@ -9,6 +9,13 @@
 #include "components/cache/thumbnailcachewriter.h"
 #include "components/thumbnailer/thumbnailerrunnable.h"
 
+// QThreadPool::start() dequeues higher-priority runnables first.
+// File thumbnails use the default (0); folder cover decodes use an
+// elevated value so they are not starved by bulk file tasks that
+// were submitted earlier.
+constexpr int kDefaultThumbnailPriority = 0;
+constexpr int kFolderCoverThumbnailPriority = 1;
+
 struct ThumbnailSource {
     QString path;
     std::optional<ThumbnailSourceStamp> stamp;
@@ -25,9 +32,11 @@ public:
     void clearTasks();
     void waitForDone();
     void enableSelfDestruct();
-    void getThumbnailAsync(QString path, int size, bool crop, bool force);
+    void getThumbnailAsync(QString path, int size, bool crop, bool force,
+                           int priority = kDefaultThumbnailPriority);
     void getThumbnailAsync(ThumbnailSource source, int size, bool crop,
-                           bool force);
+                           bool force,
+                           int priority = kDefaultThumbnailPriority);
 
 private:
     using TaskKey = QPair<QString, int>;
@@ -36,7 +45,7 @@ private:
     std::unique_ptr<ThumbnailCacheWriter> cacheWriter;
     std::unique_ptr<QThreadPool> pool;
     void startThumbnailerThread(ThumbnailSource source, int size, bool crop,
-                                bool force);
+                                bool force, int priority);
     QMap<TaskKey, bool> runningTasks;
     QMap<TaskKey, bool> queuedTasks;
     bool m_selfDestructOnFinished = false;
@@ -47,6 +56,7 @@ private:
     struct PendingRerun {
         bool crop = false;
         bool force = false;
+        int priority = kDefaultThumbnailPriority;
         std::optional<ThumbnailSourceStamp> sourceStamp;
     };
     QMap<TaskKey, PendingRerun> pendingReruns;

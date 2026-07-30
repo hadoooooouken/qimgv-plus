@@ -355,7 +355,8 @@ void DirectoryPresenter::onFolderCoverResolved(FolderCoverResult result)
 
   pending.append(newRequest);
   thumbnailer->getThumbnailAsync(
-      result.coverPath, result.request.thumbnailSize, false, false);
+      result.coverPath, result.request.thumbnailSize, false, false,
+      kFolderCoverThumbnailPriority);
 }
 
 void DirectoryPresenter::onThumbnailReady(std::shared_ptr<Thumbnail> thumb,
