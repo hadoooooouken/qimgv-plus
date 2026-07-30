@@ -68,7 +68,6 @@ void DirectoryPresenter::unsetModel() {
              &DirectoryPresenter::onDirRenamed);
   model = nullptr;
   dirThumbnailTasks.clear();
-  thumbnailer->clearTasks();
   // also empty view?
 }
 
@@ -129,7 +128,8 @@ void DirectoryPresenter::populateView() {
   if (!model || !view)
     return;
   dirThumbnailTasks.clear();
-  thumbnailer->clearTasks();
+  // Thumbnailer is shared with the other presenter. Clearing its pool here
+  // would cancel that view's queued requests.
   view->populate(mShowDirs ? model->totalCount() : model->fileCount());
   view->setDirCount(mShowDirs ? model->dirCount() : 0);
   selectAndFocus(0);
