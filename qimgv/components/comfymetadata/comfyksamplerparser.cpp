@@ -109,6 +109,49 @@ private:
     QStringList mParts;
     qsizetype mCharacterCount = 0;
 };
+
+// Input keys that structurally hold an instruction *given to* a text- or
+// vision-generating node (a question, a referring expression, a system
+// prompt) rather than text the node produced. Matched by exact name, not
+// substring: unlike class_type, the argument name used for "an instruction
+// fed to the model" is drawn from a small, conventional vocabulary shared
+// across the ecosystem, so this list doesn't carry the same unenumerable
+// long tail that class_type allow/deny lists do. Concrete example:
+// Florence2Run's "text_input" holds the referring expression / DocVQA
+// question passed in by the user, not the caption it generates.
+bool isInstructionKeyName(const QString &key)
+{
+    static const QStringList kInstructionKeyNames = {
+        QStringLiteral("text_input"),
+        QStringLiteral("query"),
+        QStringLiteral("question"),
+        QStringLiteral("instruction"),
+        QStringLiteral("system_prompt"),
+    };
+    for (const QString &known : kInstructionKeyNames) {
+        if (key.compare(known, Qt::CaseInsensitive) == 0)
+            return true;
+    }
+    return false;
+}
+
+// An input is treated as potential prompt content purely by its key name —
+// no class_type is consulted anywhere in this classification.
+bool isContentKeyName(const QString &key)
+{
+    if (isInstructionKeyName(key))
+        return false;
+
+    static const QStringList kContentKeySubstrings = {
+        QStringLiteral("text"),   QStringLiteral("string"), QStringLiteral("value"),
+        QStringLiteral("prompt"), QStringLiteral("caption"),
+    };
+    for (const QString &sub : kContentKeySubstrings) {
+        if (key.contains(sub, Qt::CaseInsensitive))
+            return true;
+    }
+    return false;
+}
 }
 
 bool ComfyKSamplerParser::isLink(const QJsonValue &v)
@@ -412,7 +455,8 @@ double ComfyKSamplerParser::resolveSeedValue(const QJsonObject &prompt,
 
 std::expected<QString, QString>
 ComfyKSamplerParser::resolveConditioningText(const QJsonObject &prompt,
-                                              const QJsonValue &conditioningInput)
+                                              const QJsonValue &conditioningInput,
+                                              QStringList &outUnresolvedNodeIds)
 {
     QVector<QJsonValue> pending;
     pending.append(conditioningInput);
@@ -438,7 +482,7 @@ ComfyKSamplerParser::resolveConditioningText(const QJsonObject &prompt,
         // plain CLIPTextEncode as well as SDXL's text_g/text_l variant.
         if (classType.contains("CLIPTextEncode", Qt::CaseInsensitive)) {
             for (const char *key : { "text", "text_g", "text_l" }) {
-                auto text = resolveTextLink(prompt, sourceInputs.value(key));
+                auto text = resolveTextLink(prompt, sourceInputs.value(key), outUnresolvedNodeIds);
                 if (!text)
                     return std::unexpected(text.error());
 
@@ -471,44 +515,69 @@ ComfyKSamplerParser::resolveConditioningText(const QJsonObject &prompt,
 
 std::expected<QString, QString>
 ComfyKSamplerParser::resolveTextLink(const QJsonObject &prompt,
-                                     const QJsonValue &v)
+                                     const QJsonValue &v,
+                                     QStringList &outUnresolvedNodeIds)
 {
-    QVector<QJsonValue> pending;
-    pending.append(v);
     QSet<QString> visited;
     BoundedTextCollector textCollector;
 
-    while (!pending.isEmpty()) {
-        const QJsonValue currentValue = pending.takeLast();
-        if (currentValue.isString()) {
-            auto appendResult = textCollector.append(currentValue.toString());
+    // Returns whether `value` — and everything reachable from it — yielded
+    // at least one non-empty string. This lets a builder node that
+    // legitimately has no text of its own (StringConcatenate, Reroute,
+    // whose content lives entirely in their children) be told apart from a
+    // genuine dead end: a node with no content-shaped input at all, or one
+    // whose only content-shaped input turned out to be empty.
+    auto visit = [&](this auto &&self, const QJsonValue &value) -> std::expected<bool, QString> {
+        if (value.isString()) {
+            const QString text = value.toString();
+            if (text.isEmpty())
+                return false;
+            auto appendResult = textCollector.append(text);
             if (!appendResult)
                 return std::unexpected(appendResult.error());
-            continue;
+            return true;
         }
 
-        if (!isLink(currentValue))
-            continue;
+        if (!isLink(value))
+            return false;
 
-        const QString sourceId =
-            currentValue.toArray().at(0).toVariant().toString();
+        const QString sourceId = value.toArray().at(0).toVariant().toString();
         if (!prompt.contains(sourceId) || visited.contains(sourceId))
-            continue;
+            return false;
         visited.insert(sourceId);
 
-        const QJsonObject sourceInputs =
-            prompt.value(sourceId).toObject().value("inputs").toObject();
-        QVector<QJsonValue> inputValues;
+        const QJsonObject sourceNode = prompt.value(sourceId).toObject();
+        const QJsonObject sourceInputs = sourceNode.value("inputs").toObject();
+
+        // Classification is purely by input key name — class_type is never
+        // consulted. See isContentKeyName()/isInstructionKeyName() above.
+        bool yieldedAny = false;
         for (auto it = sourceInputs.constBegin(); it != sourceInputs.constEnd(); ++it) {
-            if ((it.value().isString() && !it.value().toString().isEmpty()) ||
-                isLink(it.value())) {
-                inputValues.append(it.value());
-            }
+            if (!isContentKeyName(it.key()))
+                continue;
+            if (!((it.value().isString() && !it.value().toString().isEmpty()) ||
+                  isLink(it.value())))
+                continue;
+
+            auto childYielded = self(it.value());
+            if (!childYielded)
+                return std::unexpected(childYielded.error());
+            yieldedAny = yieldedAny || *childYielded;
         }
 
-        for (auto it = inputValues.crbegin(); it != inputValues.crend(); ++it)
-            pending.append(*it);
-    }
+        if (!yieldedAny) {
+            const QString classType = sourceNode.value("class_type").toString();
+            outUnresolvedNodeIds.append(
+                classType.isEmpty() ? sourceId
+                                     : QStringLiteral("%1 (%2)").arg(sourceId, classType));
+        }
+
+        return yieldedAny;
+    };
+
+    auto result = visit(v);
+    if (!result)
+        return std::unexpected(result.error());
 
     return textCollector.joined();
 }
@@ -671,10 +740,13 @@ std::expected<KSamplerInfo, QString> ComfyKSamplerParser::parseFromJson(const QB
                                     { "VAELoader" },
                                     { "vae_name" });
     // Positive prompt – walk up the conditioning links
-    auto positivePrompt = resolveConditioningText(prompt, inputs.value("positive"));
+    QStringList unresolvedPromptNodeIds;
+    auto positivePrompt =
+        resolveConditioningText(prompt, inputs.value("positive"), unresolvedPromptNodeIds);
     if (!positivePrompt)
         return std::unexpected(positivePrompt.error());
     info.positivePrompt = *positivePrompt;
+    info.unresolvedPromptNodeIds = unresolvedPromptNodeIds;
 
     return info;
 }
