@@ -30,10 +30,10 @@
 ProxyStyleColors proxyStyleColors(const ColorScheme &colors) {
   return {
       .icons = colors.icons,
-      .control = colors.button,
-      .controlHover = colors.button_hover,
-      .controlPressed = colors.button_pressed,
-      .controlBorder = colors.widget_border,
+      .control = colors.combo_field,
+      .controlHover = colors.combo_field_hover,
+      .controlPressed = colors.combo_field_pressed,
+      .controlBorder = colors.combo_field_border,
       .controlFocusBorder = colors.accent,
   };
 }

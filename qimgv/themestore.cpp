@@ -88,6 +88,18 @@ void ColorScheme::setBaseColors(BaseColorScheme base) {
   createColorVariants();
 }
 
+namespace {
+// HSV-value deltas applied on top of `widget` to compute combo_field*.
+// Larger than the regular button delta (21/42) so plain QComboBox panels
+// stay visibly distinct from OS-tinted native dialog backgrounds
+// (SettingsDialog, PrintDialog, etc.), which sit on their own, lighter
+// baseline than `widget` and are not reachable from ColorScheme.
+constexpr int kComboFieldDeltaDark = 46;
+constexpr int kComboFieldHoverDeltaDark = 54;
+constexpr int kComboFieldPressedDeltaDark = 38;
+constexpr int kComboFieldBorderDeltaDark = 62;
+} // namespace
+
 void ColorScheme::createColorVariants() {
   if (widget.valueF() <= 0.45f) { // dark theme
     // top bar buttons
@@ -125,6 +137,19 @@ void ColorScheme::createColorVariants() {
                                                       : QColor(255, 255, 255);
     text_lc = QColor(text.darker(115));
     text_lc2 = QColor(text.darker(160));
+    // dedicated, stronger-contrast panel for plain QComboBox instances
+    // (see field comment in themestore.h)
+    combo_field.setHsv(widget.hue(), widget.saturation(),
+                       qMin(widget.value() + kComboFieldDeltaDark, 255));
+    combo_field_hover.setHsv(
+        widget.hue(), widget.saturation(),
+        qMin(widget.value() + kComboFieldHoverDeltaDark, 255));
+    combo_field_pressed.setHsv(
+        widget.hue(), widget.saturation(),
+        qMin(widget.value() + kComboFieldPressedDeltaDark, 255));
+    combo_field_border.setHsv(
+        widget.hue(), widget.saturation(),
+        qMin(widget.value() + kComboFieldBorderDeltaDark, 255));
   } else { // light theme
     // top bar buttons
     panel_button.setHsv(folderview_topbar.hue(), folderview_topbar.saturation(),
@@ -161,6 +186,12 @@ void ColorScheme::createColorVariants() {
                                                       : QColor(255, 255, 255);
     text_lc = QColor(text.lighter(130));
     text_lc2 = QColor(text.lighter(160));
+    // light theme's regular button/border already contrasts well against
+    // OS-tinted native dialog backgrounds, so reuse them as-is
+    combo_field = button;
+    combo_field_hover = button_hover;
+    combo_field_pressed = button_pressed;
+    combo_field_border = widget_border;
   }
   // misc
   input_field_focus = QColor(accent);

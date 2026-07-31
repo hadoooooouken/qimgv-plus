@@ -5,10 +5,6 @@ SettingsDialog QPushButton {
     min-height: %button_height%;
 }
 
-SettingsDialog QComboBox {
-    /*min-height: 20px;*/
-}
-
 [accessibleName="SLine"] {
     background-color: %sys_window_tinted%;
     min-height: 1px;
