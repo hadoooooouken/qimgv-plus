@@ -144,6 +144,8 @@ private:
     QMap<DefaultFolderIconKey, std::shared_ptr<QPixmap>>
         defaultFolderIconCache;
     quint64 folderThumbnailGeneration = {};
+    SortingMode lastFolderIconSort;
+    int lastFolderViewIconSize;
 
     std::shared_ptr<QPixmap> defaultFolderPixmap(int size);
     std::shared_ptr<Thumbnail>

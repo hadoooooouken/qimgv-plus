@@ -37,7 +37,9 @@ DirectoryPresenter::DirectoryPresenter(QObject *parent)
     : QObject(parent),
       folderCoverResolver(std::make_unique<FolderCoverResolver>()),
       mShowDirs(false),
-      folderIconRenderer(kFolderIconResource) {
+      folderIconRenderer(kFolderIconResource),
+      lastFolderIconSort(settings->folderIconSortingMode()),
+      lastFolderViewIconSize(settings->folderViewIconSize()) {
   if (!folderIconRenderer.isValid()) {
     qWarning() << "[DirectoryPresenter] Could not load the default folder icon"
                << kFolderIconResource;
@@ -909,6 +911,13 @@ void DirectoryPresenter::invalidateFolderThumbnailRequests()
 }
 
 void DirectoryPresenter::onSettingsChanged() {
+  const SortingMode currentSort = settings->folderIconSortingMode();
+  const int currentSize = settings->folderViewIconSize();
+  if (currentSort == lastFolderIconSort && currentSize == lastFolderViewIconSize)
+    return;
+  lastFolderIconSort = currentSort;
+  lastFolderViewIconSize = currentSize;
+
   if (!view || !model || !mShowDirs)
     return;
   invalidateFolderThumbnailRequests();
@@ -916,5 +925,5 @@ void DirectoryPresenter::onSettingsChanged() {
   for (int i = 0; i < model->dirCount(); ++i) {
     folderIndexes.append(i);
   }
-  generateThumbnails(folderIndexes, settings->folderViewIconSize(), false, true);
+  generateThumbnails(folderIndexes, currentSize, false, true);
 }
