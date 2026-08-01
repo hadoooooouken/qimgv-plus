@@ -7,11 +7,13 @@
 #include <QOpenGLWidget>
 #include <QPainter>
 #include <QScreen>
+#include <QSurfaceFormat>
 #include <QCoreApplication>
 
 namespace {
 constexpr int kCheckerboardTileSizePx = 16;
 constexpr int kCheckerboardCellsPerAxis = 2;
+constexpr int kViewerMultisampleCount = 4;
 constexpr qreal kMinimumDevicePixelRatio = 1.0;
 constexpr QRgb kCheckerboardLightRgb = 0xFF999999;
 constexpr QRgb kCheckerboardDarkRgb = 0xFF666666;
@@ -128,6 +130,9 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   this->setScene(scene);
 
   QOpenGLWidget *glViewport = new QOpenGLWidget();
+  QSurfaceFormat glFormat = glViewport->format();
+  glFormat.setSamples(kViewerMultisampleCount);
+  glViewport->setFormat(glFormat);
   this->setViewport(glViewport);
 
   connect(scrollTimeLineX, &QTimeLine::frameChanged, this,
