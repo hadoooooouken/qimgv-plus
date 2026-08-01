@@ -2821,8 +2821,8 @@ qimgv は [GNU GPL Version 3](https://www.gnu.org/licenses/gpl-3.0.en.html) の�
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
-        <source>Keep fit mode when switching images</source>
-        <translation>画像切り替え時にフィットモードを維持</translation>
+        <source>Keep fit mode selected via hotkey when switching images</source>
+        <translation>画像切り替え時にショートカットキーで選択したフィットモードを維持</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3971"/>

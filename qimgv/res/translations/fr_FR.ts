@@ -2826,8 +2826,8 @@ Signalez les problèmes / proposez des fonctionnalités [ici](https://github.com
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
-        <source>Keep fit mode when switching images</source>
-        <translation>Maintenir mode « ajustement » en passant d&apos;une image à l&apos;autre</translation>
+        <source>Keep fit mode selected via hotkey when switching images</source>
+        <translation>Conserver le mode d&apos;ajustement sélectionné avec un raccourci clavier lors du changement d&apos;image</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3971"/>

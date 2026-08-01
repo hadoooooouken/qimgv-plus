@@ -2821,8 +2821,8 @@ Informa de errores / solicita funciones [aquí](https://github.com/hadoooooouken
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
-        <source>Keep fit mode when switching images</source>
-        <translation>Mantener modo de encaje al cambiar de imagen</translation>
+        <source>Keep fit mode selected via hotkey when switching images</source>
+        <translation>Mantener el modo de ajuste seleccionado con un atajo de teclado al cambiar de imagen</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3971"/>

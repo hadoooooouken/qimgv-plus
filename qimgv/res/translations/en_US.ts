@@ -2854,8 +2854,8 @@ Report any issues / request features [here](https://github.com/hadoooooouken/qim
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
-        <source>Keep fit mode when switching images</source>
-        <translation type="unfinished"></translation>
+        <source>Keep fit mode selected via hotkey when switching images</source>
+        <translation>Keep fit mode selected via hotkey when switching images</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3971"/>

@@ -2711,8 +2711,8 @@ Total files: %3</source>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
-        <source>Keep fit mode when switching images</source>
-        <translation>Не змінювати при перемиканні зображення</translation>
+        <source>Keep fit mode selected via hotkey when switching images</source>
+        <translation>Зберігати вибраний гарячою клавішею режим масштабування під час перемикання зображень</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3976"/>

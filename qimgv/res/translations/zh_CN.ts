@@ -2682,8 +2682,8 @@ Total files: %3</source>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
-        <source>Keep fit mode when switching images</source>
-        <translation>切换图片时保持适应窗口模式</translation>
+        <source>Keep fit mode selected via hotkey when switching images</source>
+        <translation>切换图像时保留使用快捷键选择的适应模式</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3976"/>

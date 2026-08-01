@@ -2814,8 +2814,8 @@ Probleme melden / Funktionen anfragen [hier](https://github.com/hadoooooouken/qi
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
-        <source>Keep fit mode when switching images</source>
-        <translation>Anpassungsmodus beibehalten beim Bildwechsel</translation>
+        <source>Keep fit mode selected via hotkey when switching images</source>
+        <translation>Beim Bildwechsel den per Tastenkürzel ausgewählten Anpassungsmodus beibehalten</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3971"/>

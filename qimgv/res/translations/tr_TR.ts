@@ -2821,8 +2821,8 @@ Sorunları bildirin / özellik talep edin [buradan](https://github.com/hadoooooo
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3970"/>
-        <source>Keep fit mode when switching images</source>
-        <translation>Sığdırma modunu görüntü geçişlerinde koru</translation>
+        <source>Keep fit mode selected via hotkey when switching images</source>
+        <translation>Görüntüler arasında geçiş yaparken klavye kısayoluyla seçilen sığdırma modunu koru</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/settingsdialog.cpp" line="3971"/>
