@@ -1300,14 +1300,6 @@ void ImageViewerV2::applyFitMode() {
     fitNormal();
     break;
   case FIT_WIDTH:
-    // When auto-applying, don't upscale small images unless expandImage is on.
-    if (!expandImage) {
-      float scaleX = (float)viewport()->width() * dpr / image->width();
-      if (scaleX > 1.0f) {
-        fitNormal();
-        break;
-      }
-    }
     fitWidth(false);
     break;
   case FIT_WINDOW:
