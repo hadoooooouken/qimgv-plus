@@ -9,6 +9,7 @@
 #include <QMutex>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <atomic>
 #include <QThreadPool>
 #include "sourcecontainers/image.h"
@@ -69,6 +70,7 @@ public:
 
     void requestUpscale(std::shared_ptr<Image> image, QSize targetSize, QString path);
     [[nodiscard]] bool readSettings();
+    void invalidatePreview();
     void reset();
     bool isRequestStale(uint64_t taskGeneration) const;
 
@@ -85,6 +87,7 @@ private slots:
     void onTaskAborted(QString path, QSize targetSize, uint64_t taskGeneration);
 
 private:
+    void abortPreviewRequest();
     void triggerUpscaylProcessing(QRect visibleRect, double currentScale, double dpr);
     void reconcilePreloadState(bool forceReapply);
 
@@ -93,7 +96,9 @@ private:
     static constexpr int kMaxCropDimension = 1280;
 
     QTimer upscaylTimer;
-    bool upscaylActive = false;
+    // Invalidation requests cancellation but the worker remains active until
+    // its matching completion callback arrives.
+    std::optional<uint64_t> activeTaskGeneration;
     bool upscaylPendingRun = false;
 
     // Shared with the global-pool worker so it can converge on the latest

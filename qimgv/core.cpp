@@ -1994,7 +1994,7 @@ void Core::onScalingFinished(QImage scaled, ScalerRequest req) {
         upscaler->requestUpscale(req.image, req.size, req.path);
       } else {
         if (!limitExceeded) {
-          mw->hideUpscaledCrop();
+          upscaler->invalidatePreview();
         }
       }
     } else if (!settings->useUpscayl()) {

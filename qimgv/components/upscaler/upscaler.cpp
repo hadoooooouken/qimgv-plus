@@ -548,16 +548,7 @@ bool Upscaler::readSettings() {
     configuredModel = newModel;
 
     if (modelChanged) {
-        currentGeneration.fetch_add(1, std::memory_order_relaxed);
-        if (currentAbortFlag) {
-            currentAbortFlag->store(true, std::memory_order_relaxed);
-        }
-        upscaylTimer.stop();
-        {
-            QMutexLocker locker(&stateMutex);
-            upscaylPendingRun = false;
-        }
-        emit previewInvalidated();
+        invalidatePreview();
     }
 
     reconcilePreloadState(false);
@@ -601,20 +592,30 @@ void Upscaler::reconcilePreloadState(bool forceReapply) {
     }
 }
 
-void Upscaler::reset() {
+void Upscaler::abortPreviewRequest() {
     currentGeneration.fetch_add(1, std::memory_order_relaxed);
     if (currentAbortFlag) {
         currentAbortFlag->store(true, std::memory_order_relaxed);
     }
     currentAbortFlag.reset();
 
-    QMutexLocker locker(&stateMutex);
-    upscaylTimer.stop();
-    pendingUpscaylImage.reset();
-    pendingUpscaylPath = "";
-    upscaylActive = false;
-    upscaylPendingRun = false;
+    {
+        QMutexLocker locker(&stateMutex);
+        upscaylTimer.stop();
+        pendingUpscaylImage.reset();
+        pendingUpscaylPath = "";
+        upscaylPendingRun = false;
+    }
     emit upscaleAborted();
+}
+
+void Upscaler::invalidatePreview() {
+    abortPreviewRequest();
+    emit previewInvalidated();
+}
+
+void Upscaler::reset() {
+    abortPreviewRequest();
     if (!settings->preloadUpscayl()) {
         reconcilePreloadState(true);
     }
@@ -639,7 +640,7 @@ void Upscaler::onUpscaylTimerTimeout() {
 
     QMutexLocker locker(&stateMutex);
     if (pendingUpscaylImage) {
-        if (upscaylActive) {
+        if (activeTaskGeneration.has_value()) {
             upscaylPendingRun = true;
         } else {
             triggerUpscaylProcessing(visibleRect, currentScale, dpr);
@@ -651,7 +652,6 @@ void Upscaler::triggerUpscaylProcessing(QRect visibleRect, double currentScale, 
     if (!pendingUpscaylImage)
         return;
 
-    upscaylActive = true;
     upscaylPendingRun = false;
 
     QRect origCrop = visibleRect;
@@ -665,19 +665,16 @@ void Upscaler::triggerUpscaylProcessing(QRect visibleRect, double currentScale, 
     origCrop.setHeight(alignedH);
 
     if (origCrop.isEmpty()) {
-        upscaylActive = false;
         return;
     }
 
     std::shared_ptr<const QImage> origQImage = pendingUpscaylImage->getImage();
     if (!origQImage || origQImage->isNull()) {
-        upscaylActive = false;
         return;
     }
 
     QImage croppedImg = origQImage->copy(origCrop);
     if (croppedImg.isNull()) {
-        upscaylActive = false;
         return;
     }
 
@@ -704,8 +701,6 @@ void Upscaler::triggerUpscaylProcessing(QRect visibleRect, double currentScale, 
     QSize cropTargetSize(qRound(origCrop.width() * scaleX),
                          qRound(origCrop.height() * scaleY));
 
-    emit upscaleStarted();
-
     UpscalerTaskParams params;
     params.croppedImage = croppedImg;
     params.origCrop = origCrop;
@@ -713,18 +708,23 @@ void Upscaler::triggerUpscaylProcessing(QRect visibleRect, double currentScale, 
     params.targetSize = pendingUpscaylSize;
     params.modelName = configuredModel;
     params.generation = currentGeneration.load(std::memory_order_relaxed);
+    activeTaskGeneration = params.generation;
 
     UpscalerRunnable *task = new UpscalerRunnable(this, params, currentAbortFlag);
     if (pool) {
         pool->start(task);
+        emit upscaleStarted();
     } else {
         delete task;
-        upscaylActive = false;
+        activeTaskGeneration.reset();
     }
 }
 
 void Upscaler::onTaskFinished(QImage cropImg, QRect origCrop, QString path, QSize targetSize, uint64_t taskGeneration) {
-    upscaylActive = false;
+    if (activeTaskGeneration != taskGeneration) {
+        return;
+    }
+    activeTaskGeneration.reset();
 
     if (cropImg.isNull()) {
         if (upscaylPendingRun && pendingUpscaylImage) {
@@ -747,8 +747,10 @@ void Upscaler::onTaskFinished(QImage cropImg, QRect origCrop, QString path, QSiz
 void Upscaler::onTaskAborted(QString path, QSize targetSize, uint64_t taskGeneration) {
     Q_UNUSED(path);
     Q_UNUSED(targetSize);
-    Q_UNUSED(taskGeneration);
-    upscaylActive = false;
+    if (activeTaskGeneration != taskGeneration) {
+        return;
+    }
+    activeTaskGeneration.reset();
     emit upscaleAborted();
 
     if (upscaylPendingRun && pendingUpscaylImage) {
