@@ -183,6 +183,8 @@ Core::Core()
               mw->onUpscaleFinished(cropImg, origCrop);
       });
   connect(upscaler.get(), &Upscaler::upscaleAborted, mw, &MW::hideMessage);
+  connect(upscaler.get(), &Upscaler::previewInvalidated, mw,
+          &MW::hideUpscaledCrop);
 
   connect(upscaler.get(), &Upscaler::requestUpscaleParams, this, [this](const QString &path, bool *ok, QRect *visibleRect, double *currentScale, double *dpr) {
       if (!state.hasActiveImage || path != state.currentFilePath || mw->panoramaMode() || mw->isBusyInteracting()) {
@@ -211,10 +213,12 @@ Core::~Core() {
 
 void Core::readSettings() {
   if (upscaler) {
-      upscaler->readSettings();
+      const bool upscaylModelChanged = upscaler->readSettings();
       if (!settings->useUpscayl()) {
           upscaler->reset();
           mw->hideUpscaledCrop();
+      } else if (upscaylModelChanged) {
+          mw->refreshScaling();
       }
   }
   loopSlideshow = settings->loopSlideshow();

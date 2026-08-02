@@ -46,7 +46,7 @@ public:
     ~Upscaler();
 
     void requestUpscale(std::shared_ptr<Image> image, QSize targetSize, QString path);
-    void readSettings();
+    [[nodiscard]] bool readSettings();
     void reset();
     bool isRequestStale(uint64_t taskGeneration) const;
 
@@ -54,6 +54,7 @@ signals:
     void upscaleStarted();
     void upscaleFinished(QImage cropImg, QRect origCrop, QString path, QSize targetSize);
     void upscaleAborted();
+    void previewInvalidated();
     void requestUpscaleParams(const QString &path, bool *ok, QRect *visibleRect, double *currentScale, double *dpr);
 
 private slots:
@@ -88,4 +89,5 @@ private:
     std::atomic<uint64_t> currentGeneration{0};
     std::shared_ptr<std::atomic<bool>> currentAbortFlag;
     QThreadPool *pool = nullptr;
+    QString configuredModel;
 };

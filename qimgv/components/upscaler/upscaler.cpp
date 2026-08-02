@@ -500,6 +500,7 @@ Upscaler::Upscaler(QObject *parent) : QObject(parent) {
     upscaylTimer.setInterval(kDebounceIntervalMs);
     connect(&upscaylTimer, &QTimer::timeout, this, &Upscaler::onUpscaylTimerTimeout);
     preloadState = std::make_shared<UpscalerPreloadState>();
+    configuredModel = settings->upscaylModel();
 }
 
 Upscaler::~Upscaler() {
@@ -527,8 +528,26 @@ void Upscaler::requestUpscale(std::shared_ptr<Image> image, QSize targetSize, QS
     upscaylTimer.start();
 }
 
-void Upscaler::readSettings() {
+bool Upscaler::readSettings() {
+    const QString newModel = settings->upscaylModel();
+    const bool modelChanged = newModel != configuredModel;
+    configuredModel = newModel;
+
+    if (modelChanged) {
+        currentGeneration.fetch_add(1, std::memory_order_relaxed);
+        if (currentAbortFlag) {
+            currentAbortFlag->store(true, std::memory_order_relaxed);
+        }
+        upscaylTimer.stop();
+        {
+            QMutexLocker locker(&stateMutex);
+            upscaylPendingRun = false;
+        }
+        emit previewInvalidated();
+    }
+
     reconcilePreloadState(false);
+    return modelChanged;
 }
 
 void Upscaler::reconcilePreloadState(bool forceReapply) {

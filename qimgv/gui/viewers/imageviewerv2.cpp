@@ -730,6 +730,10 @@ void ImageViewerV2::requestScaling() {
   emit scalingRequested(scaledSizeR() * dpr, mScalingFilter);
 }
 
+void ImageViewerV2::refreshScaling() {
+  requestScaling();
+}
+
 bool ImageViewerV2::imageFits() const {
   if (!image)
     return true;

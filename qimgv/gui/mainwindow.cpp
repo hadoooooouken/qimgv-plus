@@ -610,6 +610,12 @@ bool MW::isBusyInteracting() const {
     return false;
 }
 
+void MW::refreshScaling() {
+    if (viewerWidget) {
+        viewerWidget->refreshScaling();
+    }
+}
+
 
 void MW::saveWindowGeometry() {
     if(this->windowState() == Qt::WindowNoState)

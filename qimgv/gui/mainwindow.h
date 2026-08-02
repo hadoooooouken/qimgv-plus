@@ -74,6 +74,7 @@ public:
   float currentScale() const;
   bool panoramaMode() const;
   bool isBusyInteracting() const;
+  void refreshScaling();
 
   void setCurrentInfo(int fileIndex, int fileCount, QString filePath,
                       QString fileName, QSize imageSize, qint64 fileSize,

@@ -36,6 +36,7 @@ public:
     void hideUpscaledCrop();
     bool panoramaMode() const { return imageViewer ? imageViewer->panoramaMode() : false; }
     bool isBusyInteracting() const;
+    void refreshScaling();
     bool isDisplaying();
     bool lockZoomEnabled();
     bool lockViewEnabled();

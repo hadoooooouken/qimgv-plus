@@ -283,6 +283,11 @@ void ViewerWidget::hideUpscaledCrop() {
         imageViewer->hideUpscaledCrop();
 }
 
+void ViewerWidget::refreshScaling() {
+    if (imageViewer)
+        imageViewer->refreshScaling();
+}
+
 void ViewerWidget::closeImage() {
     imageViewer->closeImage();
     showCursor();
