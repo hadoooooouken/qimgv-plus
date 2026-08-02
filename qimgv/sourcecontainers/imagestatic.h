@@ -19,6 +19,8 @@ public:
     std::shared_ptr<const QImage> getSourceImage();
     std::shared_ptr<const QImage> getImage();
     std::shared_ptr<const QImage> getDisplayImage() override;
+    // Changes whenever the effective image content is replaced or discarded.
+    quint64 contentRevision() const noexcept;
 
     int height();
     int width();
@@ -40,6 +42,8 @@ private:
     std::shared_ptr<const QImage> image, imageEdited;
     mutable std::shared_ptr<const QImage> imageColorManaged;
     mutable std::shared_ptr<const QImage> imageColorManagedEdited;
+    quint64 mContentRevision = 0;
+    void clearEditedImageState() noexcept;
     void loadGeneric();
     void loadICO();
     int mPageCount = 1;

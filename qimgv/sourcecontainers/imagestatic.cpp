@@ -144,7 +144,9 @@ void ImageStatic::loadPdf() {
 void ImageStatic::commitEdits() {
   if (isEdited()) {
     image.swap(imageEdited);
-    discardEditedImage();
+    // The effective pixels stay unchanged, so committing does not advance the
+    // content revision.
+    clearEditedImageState();
     mDocInfo->refresh();
   }
 }
@@ -204,6 +206,10 @@ std::shared_ptr<const QImage> ImageStatic::getImage() {
   return isEdited() ? imageEdited : image;
 }
 
+quint64 ImageStatic::contentRevision() const noexcept {
+  return mContentRevision;
+}
+
 int ImageStatic::height() {
   const QImage *img = (isEdited() ? imageEdited : image).get();
   return img ? img->height() : 0;
@@ -221,8 +227,14 @@ QSize ImageStatic::size() {
 
 bool ImageStatic::setEditedImage(std::unique_ptr<const QImage> imageEditedNew) {
   if (imageEditedNew && imageEditedNew->width() != 0) {
-    discardEditedImage();
+    const std::shared_ptr<const QImage> currentImage =
+        isEdited() ? imageEdited : image;
+    if (currentImage && *currentImage == *imageEditedNew)
+      return true;
+
+    clearEditedImageState();
     if (image && *image == *imageEditedNew) {
+      ++mContentRevision;
       return true;
     }
     imageEdited = std::move(imageEditedNew);
@@ -230,6 +242,7 @@ bool ImageStatic::setEditedImage(std::unique_ptr<const QImage> imageEditedNew) {
       imageColorManagedEdited = std::make_shared<const QImage>(ColorManager::applyColorManagement(*imageEdited));
     }
     mEdited = true;
+    ++mContentRevision;
     return true;
   }
   return false;
@@ -237,10 +250,15 @@ bool ImageStatic::setEditedImage(std::unique_ptr<const QImage> imageEditedNew) {
 
 bool ImageStatic::discardEditedImage() {
   if (imageEdited) {
-    imageEdited.reset();
-    imageColorManagedEdited.reset();
-    mEdited = false;
+    clearEditedImageState();
+    ++mContentRevision;
     return true;
   }
   return false;
+}
+
+void ImageStatic::clearEditedImageState() noexcept {
+  imageEdited.reset();
+  imageColorManagedEdited.reset();
+  mEdited = false;
 }

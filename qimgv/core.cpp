@@ -1675,7 +1675,7 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
     if (model->isEmpty())
       return;
 
-    if (activeAiResizeGeneration.has_value()) {
+    if (activeAiResizeOperation.has_value()) {
       mw->showMessageAiUpscale(tr("AI resize is already running."));
       return;
     }
@@ -1720,7 +1720,8 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
     request.sourceImage = source;
     request.generation = ++aiResizeGeneration;
 
-    activeAiResizeGeneration = request.generation;
+    activeAiResizeOperation = AiResizeOperation{
+        request.generation, path, img->contentRevision(), img};
     QApplication::setOverrideCursor(Qt::WaitCursor);
     aiResizeBusyUiActive = true;
     mw->showMessageAiUpscale(tr("AI resizing..."), 3600000);
@@ -1746,14 +1747,15 @@ void Core::clearAiResizeBusyUi() {
 }
 
 void Core::onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error) {
-  if (!activeAiResizeGeneration.has_value() ||
-      generation != activeAiResizeGeneration.value())
+  if (!activeAiResizeOperation.has_value() ||
+      generation != activeAiResizeOperation->generation)
     return;
 
-  activeAiResizeGeneration.reset();
+  const AiResizeOperation operation = *activeAiResizeOperation;
+  activeAiResizeOperation.reset();
   clearAiResizeBusyUi();
 
-  if (generation != aiResizeGeneration)
+  if (generation != aiResizeGeneration || path != operation.path)
     return;
 
   if (!success || image.isNull()) {
@@ -1772,7 +1774,14 @@ void Core::onAiResizeFinished(int generation, QString path, QImage image, bool s
     return;
   }
 
-  img->setEditedImage(std::unique_ptr<const QImage>(new QImage(std::move(image))));
+  const std::shared_ptr<ImageStatic> sourceImage = operation.sourceImage.lock();
+  if (!sourceImage || img != sourceImage ||
+      img->contentRevision() != operation.sourceRevision) {
+    mw->showWarning(tr("AI resize finished, but the image has changed."));
+    return;
+  }
+
+  img->setEditedImage(std::make_unique<const QImage>(std::move(image)));
   model->updateImage(path, std::static_pointer_cast<Image>(img));
 
   if (state.hasActiveImage && path == state.currentFilePath) {

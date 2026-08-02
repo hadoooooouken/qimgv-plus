@@ -22,6 +22,8 @@
 #include "utils/randomizer.h"
 #include "gui/dialogs/printdialog.h"
 
+class ImageStatic;
+
 #ifdef __GLIBC__
 #include <malloc.h>
 #endif
@@ -220,10 +222,17 @@ private slots:
     void preloadNeighbors();
 
 private:
+    struct AiResizeOperation {
+        int generation = 0;
+        QString path;
+        quint64 sourceRevision = 0;
+        std::weak_ptr<ImageStatic> sourceImage;
+    };
+
     std::unique_ptr<class Upscaler> upscaler;
     std::unique_ptr<class WallpaperController> wallpaperController;
     int aiResizeGeneration = 0;
-    std::optional<int> activeAiResizeGeneration;
+    std::optional<AiResizeOperation> activeAiResizeOperation;
     bool aiResizeBusyUiActive = false;
     void clearAiResizeBusyUi();
 
