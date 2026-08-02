@@ -17,6 +17,7 @@
 #include "components/thumbnailer/thumbnailer.h"
 #include "components/scriptmanager/scriptmanager.h"
 #include "gui/mainwindow.h"
+#include "gui/controllers/coldstartwindowcontroller.h"
 #include "utils/randomizer.h"
 #include "gui/dialogs/printdialog.h"
 
@@ -67,6 +68,7 @@ private:
 
     // ui stuff
     MW *mw;
+    std::unique_ptr<ColdStartWindowController> coldStartWindowController;
 
     State state;
     bool loopSlideshow, slideshow, shuffle;

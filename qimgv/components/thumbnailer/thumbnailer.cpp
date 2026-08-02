@@ -136,6 +136,8 @@ void Thumbnailer::onTaskEnd(ThumbnailTaskResult result, QString filePath,
     const TaskKey key = qMakePair(filePath, size);
     if (thumbnail) {
         emit thumbnailReady(thumbnail, filePath);
+    } else {
+        emit thumbnailFailed(filePath, size);
     }
     if (result.cacheCandidate &&
         !cacheWriter->enqueue(std::move(*result.cacheCandidate))) {

@@ -6,6 +6,8 @@ target_sources(qimgv-plus PRIVATE
     idirectoryview.cpp
     mainwindow.cpp
 
+    controllers/coldstartwindowcontroller.cpp
+
     customwidgets/actionbutton.cpp
     customwidgets/clickablelabel.cpp
     customwidgets/contextmenuitem.cpp

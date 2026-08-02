@@ -23,6 +23,7 @@ public:
 public slots:
     virtual void populate(int) override;
     virtual void setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb) override;
+    void setThumbnailUnavailable(int pos, int size) override;
     virtual void select(QList<int>) override;
     virtual void select(int) override;
     virtual QList<int> selection() override;

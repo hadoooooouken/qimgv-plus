@@ -87,6 +87,11 @@ void ThumbnailStripProxy::setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb
     }
 }
 
+void ThumbnailStripProxy::setThumbnailUnavailable(int pos, int size) {
+    if(thumbnailStrip)
+        thumbnailStrip->setThumbnailUnavailable(pos, size);
+}
+
 void ThumbnailStripProxy::select(QList<int> indices) {
     if(thumbnailStrip) {
         thumbnailStrip->select(indices);

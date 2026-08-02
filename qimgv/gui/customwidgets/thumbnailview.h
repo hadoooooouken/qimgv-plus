@@ -72,6 +72,7 @@ public slots:
     virtual void focusOnSelection() = 0;
     virtual void populate(int count) override;
     virtual void setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb) override;
+    void setThumbnailUnavailable(int pos, int size) override;
     virtual void insertItem(int index) override;
     virtual void removeItem(int index) override;
     virtual void reloadItem(int index) override;
@@ -80,6 +81,7 @@ public slots:
 signals:
     void itemActivated(int) override;
     void thumbnailsRequested(QList<int>, int, bool, bool) override;
+    void visibleThumbnailsReady();
     void draggedOut() override;
     void draggedToBookmarks(QList<int>) override;
     void draggedOver(int) override;
@@ -190,7 +192,9 @@ private:
     QHash<const ThumbnailWidget*, int> widgetIndices;
     QHash<int, std::shared_ptr<Thumbnail>> loadedThumbnails;
     QSet<int> pendingThumbnailRequests;
+    QSet<int> unavailableThumbnails;
     bool layoutUpdateInProgress = false;
+    bool visibleThumbnailsReadyReported = false;
 
     QRectF preloadRect() const;
     void bindWidget(ThumbnailWidget *widget, int index);
@@ -198,4 +202,6 @@ private:
     void trimWidgetPool();
     void shiftBoundItems(int firstIndex, int offset);
     void shiftCachedItems(int firstIndex, int offset);
+    bool visibleThumbnailsLoaded() const;
+    void notifyIfVisibleThumbnailsReady();
 };

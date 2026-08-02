@@ -52,6 +52,8 @@ DirectoryPresenter::DirectoryPresenter(QObject *parent)
   thumbnailer = std::make_shared<Thumbnailer>();
   connect(thumbnailer.get(), &Thumbnailer::thumbnailReady, this,
           &DirectoryPresenter::onThumbnailReady);
+  connect(thumbnailer.get(), &Thumbnailer::thumbnailFailed, this,
+          &DirectoryPresenter::onThumbnailFailed);
   connect(folderCoverResolver.get(), &FolderCoverResolver::resultReady, this,
           &DirectoryPresenter::onFolderCoverResolved, Qt::QueuedConnection);
   connect(settings, &Settings::settingsChanged, this,
@@ -67,9 +69,13 @@ void DirectoryPresenter::setThumbnailer(std::shared_ptr<Thumbnailer> newThumbnai
     return;
   disconnect(thumbnailer.get(), &Thumbnailer::thumbnailReady, this,
              &DirectoryPresenter::onThumbnailReady);
+  disconnect(thumbnailer.get(), &Thumbnailer::thumbnailFailed, this,
+             &DirectoryPresenter::onThumbnailFailed);
   thumbnailer = newThumbnailer;
   connect(thumbnailer.get(), &Thumbnailer::thumbnailReady, this,
           &DirectoryPresenter::onThumbnailReady);
+  connect(thumbnailer.get(), &Thumbnailer::thumbnailFailed, this,
+          &DirectoryPresenter::onThumbnailFailed);
 }
 
 void DirectoryPresenter::unsetModel() {
@@ -409,6 +415,37 @@ void DirectoryPresenter::onThumbnailReady(std::shared_ptr<Thumbnail> thumb,
   if (index == -1)
     return;
   view->setThumbnail(mShowDirs ? model->dirCount() + index : index, thumb);
+}
+
+void DirectoryPresenter::onThumbnailFailed(QString filePath, int size) {
+  if (!view || !model) {
+    qWarning() << "Cannot publish thumbnail failure without a directory view"
+                  " and model for"
+               << filePath;
+    return;
+  }
+
+  const QString coverKey = thumbnailPathKey(filePath);
+  auto folderTasks = dirThumbnailTasks.find(coverKey);
+  if (folderTasks != dirThumbnailTasks.end()) {
+    QList<PendingFolderThumbnail> remaining;
+    for (const PendingFolderThumbnail &task :
+         std::as_const(folderTasks.value())) {
+      if (task.thumbnailSize != size)
+        remaining.append(task);
+    }
+    if (remaining.isEmpty())
+      dirThumbnailTasks.erase(folderTasks);
+    else
+      folderTasks.value() = std::move(remaining);
+  }
+
+  const int index = model->indexOfFile(filePath);
+  if (index < 0)
+    return;
+
+  view->setThumbnailUnavailable(
+      mShowDirs ? model->dirCount() + index : index, size);
 }
 
 void DirectoryPresenter::onItemActivated(int absoluteIndex) {

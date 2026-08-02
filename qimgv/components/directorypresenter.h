@@ -97,6 +97,7 @@ private slots:
     void onSettingsChanged();
     void generateThumbnails(QList<int>, int, bool, bool);
     void onThumbnailReady(std::shared_ptr<Thumbnail> thumb, QString filePath);
+    void onThumbnailFailed(QString filePath, int size);
     void onFolderCoverResolved(FolderCoverResult result);
     void populateView();
     void onItemActivated(int absoluteIndex);

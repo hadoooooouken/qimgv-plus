@@ -236,8 +236,18 @@ void Core::readSettings() {
 }
 
 void Core::showGui() {
-    if (mw && !mw->isVisible())
-        mw->showDefault();
+    if (coldStartWindowController) {
+      coldStartWindowController->show();
+      return;
+    }
+
+    qWarning() << "Cold-start window controller is unavailable; showing the"
+                  " window immediately";
+    if (!mw) {
+      qCritical() << "Cannot show the application window: main window is null";
+      return;
+    }
+    mw->showDefault();
 }
 
 void Core::raiseWindow(const QString &pathReceived) {
@@ -271,7 +281,7 @@ void Core::raiseWindow(const QString &pathReceived) {
       }
   }
 
-  mw->showDefault();
+  showGui();
 
   if (resumed && mw->isMaximized()) {
       mw->setWindowState(Qt::WindowNoState);
@@ -317,6 +327,8 @@ void Core::initComponents() {
   thumbPanelPresenter.setThumbnailer(thumbnailer);
   folderViewPresenter.setThumbnailer(thumbnailer);
   attachModel(new DirectoryModel());
+  coldStartWindowController = std::make_unique<ColdStartWindowController>(
+      *mw, *mw->getFolderView());
 }
 
 void Core::connectComponents() {

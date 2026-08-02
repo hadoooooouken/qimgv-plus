@@ -23,6 +23,8 @@ void FolderViewProxy::init() {
 
     connect(folderView.get(), &FolderView::itemActivated, this, &FolderViewProxy::itemActivated);
     connect(folderView.get(), &FolderView::thumbnailsRequested, this, &FolderViewProxy::thumbnailsRequested);
+    connect(folderView.get(), &FolderView::visibleThumbnailsReady,
+            this, &FolderViewProxy::visibleThumbnailsReady);
     connect(folderView.get(), &FolderView::sortingSelected, this, &FolderViewProxy::sortingSelected);
     connect(folderView.get(), &FolderView::folderSortingSelected, this, &FolderViewProxy::folderSortingSelected);
     connect(folderView.get(), &FolderView::formatFilterSelected, this, &FolderViewProxy::formatFilterSelected);
@@ -38,8 +40,6 @@ void FolderViewProxy::init() {
     connect(folderView.get(), &FolderView::batchRequested, this, &FolderViewProxy::batchRequested);
     connect(folderView.get(), &FolderView::openSelectedRequested, this, &FolderViewProxy::openSelectedRequested);
 
-    folderView->show();
-
     // apply buffer
     if(!stateBuf.directory.isEmpty())
         folderView->setDirectoryPath(stateBuf.directory);
@@ -50,6 +50,7 @@ void FolderViewProxy::init() {
     folderView->focusOnSelection();
     folderView->onSortingChanged(stateBuf.sortingMode);
     folderView->onFolderSortingChanged(stateBuf.folderSortingMode);
+    folderView->show();
 }
 
 void FolderViewProxy::populate(int count) {
@@ -67,6 +68,11 @@ void FolderViewProxy::setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb) {
     if(folderView) {
         folderView->setThumbnail(pos, thumb);
     }
+}
+
+void FolderViewProxy::setThumbnailUnavailable(int pos, int size) {
+    if(folderView)
+        folderView->setThumbnailUnavailable(pos, size);
 }
 
 void FolderViewProxy::select(QList<int> indices) {

@@ -67,4 +67,5 @@ private slots:
 
 signals:
     void thumbnailReady(std::shared_ptr<Thumbnail> thumbnail, QString filePath);
+    void thumbnailFailed(QString filePath, int size);
 };

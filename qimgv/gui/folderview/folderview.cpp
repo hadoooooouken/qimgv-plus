@@ -135,6 +135,8 @@ FolderView::FolderView(QWidget *parent) :
     splitter->setStretchFactor(1, 50);
 
     connect(thumbnailGrid, &FolderGridView::thumbnailsRequested,  this, &FolderView::thumbnailsRequested);
+    connect(thumbnailGrid, &FolderGridView::visibleThumbnailsReady,
+            this, &FolderView::visibleThumbnailsReady);
     connect(thumbnailGrid, &FolderGridView::thumbnailSizeChanged, this, &FolderView::onThumbnailSizeChanged);
     connect(thumbnailGrid, &FolderGridView::itemActivated,   this, &FolderView::itemActivated);
     connect(thumbnailGrid, &FolderGridView::draggedOut,      this, &FolderView::draggedOut);
@@ -616,6 +618,10 @@ void FolderView::populate(int count) {
 
 void FolderView::setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb) {
     thumbnailGrid->setThumbnail(pos, thumb);
+}
+
+void FolderView::setThumbnailUnavailable(int pos, int size) {
+    thumbnailGrid->setThumbnailUnavailable(pos, size);
 }
 
 void FolderView::select(QList<int> indices) {

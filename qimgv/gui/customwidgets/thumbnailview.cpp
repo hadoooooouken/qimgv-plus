@@ -288,11 +288,14 @@ void ThumbnailView::populate(int newCount) {
     mItemCount = newCount;
     loadedThumbnails.clear();
     pendingThumbnailRequests.clear();
+    unavailableThumbnails.clear();
+    visibleThumbnailsReadyReported = false;
     fitSceneToContents();
     resetViewport();
     refreshVisibleItems(true);
     updateScrollbarIndicator();
     loadVisibleThumbnails();
+    notifyIfVisibleThumbnailsReady();
 }
 
 void ThumbnailView::addItem() {
@@ -330,6 +333,7 @@ void ThumbnailView::removeItem(int index) {
             unbindWidget(widget);
         loadedThumbnails.remove(index);
         pendingThumbnailRequests.remove(index);
+        unavailableThumbnails.remove(index);
         shiftCachedItems(index + 1, -1);
         shiftBoundItems(index + 1, -1);
         --mItemCount;
@@ -354,6 +358,7 @@ void ThumbnailView::reloadItem(int index) {
     if(!checkRange(index))
         return;
     loadedThumbnails.remove(index);
+    unavailableThumbnails.remove(index);
     pendingThumbnailRequests.insert(index);
     if(auto *widget = widgetForIndex(index))
         widget->unsetThumbnail();
@@ -379,17 +384,31 @@ void ThumbnailView::setDrawScrollbarIndicator(bool mode) {
 void ThumbnailView::setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb) {
     if(thumb && thumb->size() == floor(mThumbnailSize * qApp->devicePixelRatio()) && checkRange(pos)) {
         pendingThumbnailRequests.remove(pos);
+        unavailableThumbnails.remove(pos);
         auto *widget = widgetForIndex(pos);
         if(widget || !settings->unloadThumbs())
             loadedThumbnails.insert(pos, thumb);
         if(widget)
             widget->setThumbnail(std::move(thumb));
+        notifyIfVisibleThumbnailsReady();
     }
+}
+
+void ThumbnailView::setThumbnailUnavailable(int pos, int size) {
+    const int expectedSize = floor(mThumbnailSize * qApp->devicePixelRatio());
+    if(size != expectedSize || !checkRange(pos))
+        return;
+
+    pendingThumbnailRequests.remove(pos);
+    unavailableThumbnails.insert(pos);
+    notifyIfVisibleThumbnailsReady();
 }
 
 void ThumbnailView::unloadAllThumbnails() {
     loadedThumbnails.clear();
     pendingThumbnailRequests.clear();
+    unavailableThumbnails.clear();
+    visibleThumbnailsReadyReported = false;
     for(auto *widget : std::as_const(thumbnails))
         widget->unsetThumbnail();
 }
@@ -411,7 +430,9 @@ void ThumbnailView::loadVisibleThumbnails() {
         QList<int> loadList;
         loadList.reserve(boundWidgets.size());
         for(auto it = boundWidgets.cbegin(); it != boundWidgets.cend(); ++it) {
-            if(!it.value()->isLoaded && !pendingThumbnailRequests.contains(it.key()))
+            if(!it.value()->isLoaded &&
+               !pendingThumbnailRequests.contains(it.key()) &&
+               !unavailableThumbnails.contains(it.key()))
                 loadList.append(it.key());
         }
         std::sort(loadList.begin(), loadList.end());
@@ -430,6 +451,31 @@ void ThumbnailView::loadVisibleThumbnails() {
                     ++it;
             }
         }
+        notifyIfVisibleThumbnailsReady();
+    }
+}
+
+bool ThumbnailView::visibleThumbnailsLoaded() const {
+    if(!isVisible())
+        return false;
+
+    const QRectF visibleRect = mapToScene(viewport()->rect()).boundingRect();
+    const auto range = itemRangeForRect(visibleRect);
+    if(!checkRange(range.first) || !checkRange(range.second))
+        return itemCount() == 0;
+
+    for(int index = range.first; index <= range.second; ++index) {
+        if(!loadedThumbnails.contains(index) &&
+           !unavailableThumbnails.contains(index))
+            return false;
+    }
+    return true;
+}
+
+void ThumbnailView::notifyIfVisibleThumbnailsReady() {
+    if(!visibleThumbnailsReadyReported && visibleThumbnailsLoaded()) {
+        visibleThumbnailsReadyReported = true;
+        emit visibleThumbnailsReady();
     }
 }
 
@@ -650,6 +696,12 @@ void ThumbnailView::shiftCachedItems(int firstIndex, int offset) {
     for(const int index : std::as_const(pendingThumbnailRequests))
         shiftedRequests.insert(index >= firstIndex ? index + offset : index);
     pendingThumbnailRequests.swap(shiftedRequests);
+
+    QSet<int> shiftedUnavailable;
+    shiftedUnavailable.reserve(unavailableThumbnails.size());
+    for(const int index : std::as_const(unavailableThumbnails))
+        shiftedUnavailable.insert(index >= firstIndex ? index + offset : index);
+    unavailableThumbnails.swap(shiftedUnavailable);
 }
 
 //################### scrolling ######################
