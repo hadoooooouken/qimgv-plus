@@ -10,6 +10,7 @@
 #include <QDesktopServices>
 #include <QTranslator>
 #include <QSet>
+#include <optional>
 #include "appversion.h"
 #include "settings_types.h"
 #include "components/directorymodel.h"
@@ -222,7 +223,9 @@ private:
     std::unique_ptr<class Upscaler> upscaler;
     std::unique_ptr<class WallpaperController> wallpaperController;
     int aiResizeGeneration = 0;
-    bool aiResizeActive = false;
+    std::optional<int> activeAiResizeGeneration;
+    bool aiResizeBusyUiActive = false;
+    void clearAiResizeBusyUi();
 
 private slots:
     void onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error);

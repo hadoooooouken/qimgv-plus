@@ -1675,7 +1675,7 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
     if (model->isEmpty())
       return;
 
-    if (aiResizeActive) {
+    if (activeAiResizeGeneration.has_value()) {
       mw->showMessageAiUpscale(tr("AI resize is already running."));
       return;
     }
@@ -1720,8 +1720,9 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
     request.sourceImage = source;
     request.generation = ++aiResizeGeneration;
 
-    aiResizeActive = true;
+    activeAiResizeGeneration = request.generation;
     QApplication::setOverrideCursor(Qt::WaitCursor);
+    aiResizeBusyUiActive = true;
     mw->showMessageAiUpscale(tr("AI resizing..."), 3600000);
 
     auto task = new UpscaylResizeRunnable(request);
@@ -1735,13 +1736,25 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
   edit_template(false, tr("Resize"), {ImageLib::scaled}, size, filter);
 }
 
-void Core::onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error) {
-  if (generation != aiResizeGeneration)
+void Core::clearAiResizeBusyUi() {
+  if (!aiResizeBusyUiActive)
     return;
 
-  aiResizeActive = false;
+  aiResizeBusyUiActive = false;
   QApplication::restoreOverrideCursor();
   mw->hideMessage();
+}
+
+void Core::onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error) {
+  if (!activeAiResizeGeneration.has_value() ||
+      generation != activeAiResizeGeneration.value())
+    return;
+
+  activeAiResizeGeneration.reset();
+  clearAiResizeBusyUi();
+
+  if (generation != aiResizeGeneration)
+    return;
 
   if (!success || image.isNull()) {
     mw->showError(error.isEmpty() ? tr("AI resize failed.") : error);
@@ -2007,8 +2020,8 @@ void Core::onScalingFinished(QImage scaled, ScalerRequest req) {
 // reset state; clear cache; etc
 void Core::reset() {
   upscaler->reset();
-  aiResizeActive = false;
   aiResizeGeneration++;
+  clearAiResizeBusyUi();
   state.hasActiveImage = false;
   state.currentFilePath = "";
   state.directoryPath = "";
