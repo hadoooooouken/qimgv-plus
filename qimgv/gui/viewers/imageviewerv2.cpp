@@ -1975,27 +1975,41 @@ QRect ImageViewerV2::visibleOriginalImageRect() const {
 
   imageRectF.translate(-pixmapItem.offset());
 
-  QRect imgBounds(0, 0, image->width(), image->height());
-  return imageRectF.toAlignedRect().intersected(imgBounds);
+  // FilterPixmapItem geometry is logical, while QImage operations address
+  // physical source pixels.
+  const qreal imageDpr =
+      qMax(image->devicePixelRatio(), kMinimumDevicePixelRatio);
+  imageRectF = QTransform::fromScale(imageDpr, imageDpr).mapRect(imageRectF);
+
+  return imageRectF.toAlignedRect().intersected(image->rect());
 }
 
 void ImageViewerV2::setUpscaledCrop(const QImage &cropImg, QRect origCrop) {
   if (mPanoramaMode)
     return;
-  if (!image || image->isNull() || origCrop.isEmpty())
+  if (!image || image->isNull() || cropImg.isNull() || origCrop.isEmpty())
     return;
 
   pixmapItemCrop.setImage(cropImg);
 
+  const qreal sourceDpr =
+      qMax(image->devicePixelRatio(), kMinimumDevicePixelRatio);
+  const qreal cropDpr =
+      qMax(cropImg.devicePixelRatio(), kMinimumDevicePixelRatio);
+  const QPointF cropTopLeftInItem =
+      QPointF(origCrop.topLeft()) / sourceDpr;
+
   // Position at scene coordinates corresponding to the original crop
   QPointF scenePos =
-      pixmapItem.mapToScene(pixmapItem.offset() + origCrop.topLeft());
+      pixmapItem.mapToScene(pixmapItem.offset() + cropTopLeftInItem);
   scenePos = sceneRoundPos(scenePos);
 
   // Calculate the net upscale factor of this crop relative to its original crop
   // size
-  double upscaleFactor = (double)cropImg.width() / origCrop.width();
-  double cropScale = pixmapItem.scale() / upscaleFactor;
+  const double upscaleFactor =
+      static_cast<double>(cropImg.width()) / origCrop.width();
+  const double cropScale =
+      pixmapItem.scale() * cropDpr / (upscaleFactor * sourceDpr);
 
   pixmapItemCrop.setTransformationMode(pixmapItem.transformationMode());
   pixmapItemCrop.setScale(cropScale);
