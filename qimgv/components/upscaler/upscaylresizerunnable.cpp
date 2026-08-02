@@ -13,12 +13,17 @@ void UpscaylResizeRunnable::run() {
     }
 
     const QString appDir = QCoreApplication::applicationDirPath();
-    if (!UpscaylScaler::getInstance()->init(appDir, m_request.modelName)) {
-        emit finished(m_request.generation, m_request.path, QImage(), false, tr("Could not initialize AI model."));
+    const UpscaylInferenceResult inferenceResult =
+        UpscaylScaler::getInstance()->upscale(
+            UpscaylInferenceRequest{appDir, m_request.modelName,
+                                    *m_request.sourceImage});
+    if (inferenceResult.error == UpscaylInferenceError::ModelLoadFailed) {
+        emit finished(m_request.generation, m_request.path, QImage(), false,
+                      tr("Could not initialize AI model."));
         return;
     }
 
-    QImage upscaled = UpscaylScaler::getInstance()->upscale(*m_request.sourceImage);
+    QImage upscaled = inferenceResult.image;
     if (upscaled.isNull()) {
         emit finished(m_request.generation, m_request.path, QImage(), false, tr("AI resize failed."));
         return;

@@ -16,6 +16,29 @@
 
 class UpscalerPreloadState;
 
+struct UpscaylInferenceRequest final {
+    QString appDir;
+    QString modelName;
+    QImage inputImage;
+    const std::atomic<bool> *abortFlag = nullptr;
+};
+
+enum class UpscaylInferenceError {
+    None,
+    Aborted,
+    ModelLoadFailed,
+    ProcessingFailed
+};
+
+struct UpscaylInferenceResult final {
+    QImage image;
+    UpscaylInferenceError error = UpscaylInferenceError::None;
+
+    [[nodiscard]] bool succeeded() const noexcept {
+        return error == UpscaylInferenceError::None && !image.isNull();
+    }
+};
+
 class UpscaylScaler {
 public:
     static UpscaylScaler *getInstance() {
@@ -23,17 +46,16 @@ public:
         return &instance;
     }
 
-    // didLoad (if provided) is set to true only when this call actually loaded
-    // a model (i.e. it wasn't already loaded), so callers can skip redundant
-    // warm-up work when the model was already resident.
-    bool init(const QString &appDir, const QString &modelName = QString(), bool *didLoad = nullptr);
-    QImage upscale(const QImage &inputImage, const std::atomic<bool> *abortFlag = nullptr);
+    [[nodiscard]] UpscaylInferenceResult upscale(const UpscaylInferenceRequest &request);
     void destroy();
 
     ~UpscaylScaler() = default;
 
 private:
     UpscaylScaler();
+    bool initLocked(const QString &appDir, const QString &requestedModelName);
+    QImage upscaleLocked(const QImage &inputImage, const std::atomic<bool> *abortFlag);
+
     std::unique_ptr<RealESRGAN> realesrgan;
     QString loadedModel;
     QMutex mutex;

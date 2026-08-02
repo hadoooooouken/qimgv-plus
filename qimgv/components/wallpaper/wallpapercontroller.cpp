@@ -395,10 +395,12 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
             }, Qt::QueuedConnection);
 
             UpscaylScaler *upscaler = UpscaylScaler::getInstance();
-            if (upscaler && upscaler->init(appDir, modelName)) {
-                QImage upscaled =
-                    upscaler->upscale(croppedImage,
-                                      &request->cancelRequested);
+            if (upscaler) {
+                const UpscaylInferenceResult inferenceResult =
+                    upscaler->upscale(
+                        UpscaylInferenceRequest{appDir, modelName, croppedImage,
+                                                &request->cancelRequested});
+                QImage upscaled = inferenceResult.image;
                 if (request->cancelRequested.load(std::memory_order_relaxed)) {
                     finishRequest(std::nullopt);
                     return;

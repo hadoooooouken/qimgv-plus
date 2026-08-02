@@ -197,14 +197,8 @@ estimateUpscaleMemory(const QImage &inputImage, quint64 outputWidth,
 
 UpscaylScaler::UpscaylScaler() : realesrgan(nullptr) {}
 
-bool UpscaylScaler::init(const QString &appDir, const QString &requestedModelName, bool *didLoad) {
-    if (didLoad)
-        *didLoad = false;
-
-    QMutexLocker locker(&mutex);
-    const QString modelName = requestedModelName.trimmed().isEmpty()
-                                  ? settings->upscaylModel()
-                                  : requestedModelName.trimmed();
+bool UpscaylScaler::initLocked(const QString &appDir, const QString &requestedModelName) {
+    const QString modelName = requestedModelName.trimmed();
     if (realesrgan && loadedModel == modelName) {
         return true;
     }
@@ -242,13 +236,32 @@ bool UpscaylScaler::init(const QString &appDir, const QString &requestedModelNam
         return false;
     }
     loadedModel = modelName;
-    if (didLoad)
-        *didLoad = true;
     return true;
 }
 
-QImage UpscaylScaler::upscale(const QImage &inputImage, const std::atomic<bool> *abortFlag) {
+UpscaylInferenceResult UpscaylScaler::upscale(const UpscaylInferenceRequest &request) {
     QMutexLocker locker(&mutex);
+    if (request.abortFlag &&
+        request.abortFlag->load(std::memory_order_relaxed)) {
+        return {QImage(), UpscaylInferenceError::Aborted};
+    }
+
+    if (!initLocked(request.appDir, request.modelName)) {
+        return {QImage(), UpscaylInferenceError::ModelLoadFailed};
+    }
+
+    QImage image = upscaleLocked(request.inputImage, request.abortFlag);
+    if (image.isNull()) {
+        const bool aborted = request.abortFlag &&
+                             request.abortFlag->load(std::memory_order_relaxed);
+        return {QImage(), aborted ? UpscaylInferenceError::Aborted
+                                 : UpscaylInferenceError::ProcessingFailed};
+    }
+
+    return {image, UpscaylInferenceError::None};
+}
+
+QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<bool> *abortFlag) {
     if (!realesrgan) {
         qWarning() << "[Upscayl] upscale() called but realesrgan is null";
         return QImage();
@@ -437,14 +450,15 @@ void applyPreloadConfiguration(const UpscalerPreloadState::Configuration &config
     }
 
     const QString appDir = QCoreApplication::applicationDirPath();
-    bool didLoad = false;
-    if (UpscaylScaler::getInstance()->init(appDir, configuration.options.model, &didLoad) && didLoad) {
-        QImage dummy(kPreloadWarmupDimension,
-                     kPreloadWarmupDimension,
-                     QImage::Format_ARGB32);
-        dummy.fill(Qt::black);
-        const QImage warmed = UpscaylScaler::getInstance()->upscale(dummy);
-        Q_UNUSED(warmed);
+    QImage dummy(kPreloadWarmupDimension,
+                 kPreloadWarmupDimension,
+                 QImage::Format_ARGB32);
+    dummy.fill(Qt::black);
+    const UpscaylInferenceResult warmupResult =
+        UpscaylScaler::getInstance()->upscale(
+            UpscaylInferenceRequest{appDir, configuration.options.model, dummy});
+    if (!warmupResult.succeeded()) {
+        qWarning() << "[Upscayl] Model preload or warm-up failed";
     }
 }
 
@@ -697,6 +711,7 @@ void Upscaler::triggerUpscaylProcessing(QRect visibleRect, double currentScale, 
     params.origCrop = origCrop;
     params.path = pendingUpscaylPath;
     params.targetSize = pendingUpscaylSize;
+    params.modelName = configuredModel;
     params.generation = currentGeneration.load(std::memory_order_relaxed);
 
     UpscalerRunnable *task = new UpscalerRunnable(this, params, currentAbortFlag);

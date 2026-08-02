@@ -2,7 +2,6 @@
 #include "upscaler.h"
 #include <QCoreApplication>
 #include <QMetaObject>
-#include <QDebug>
 
 UpscalerRunnable::UpscalerRunnable(Upscaler *upscaler, const UpscalerTaskParams &params, std::shared_ptr<std::atomic<bool>> abortFlag)
     : upscaler(upscaler), params(params), abortFlag(abortFlag) {}
@@ -14,15 +13,12 @@ void UpscalerRunnable::run() {
         return;
     }
 
-    QString appDir = QCoreApplication::applicationDirPath();
-    if (!UpscaylScaler::getInstance()->init(appDir)) {
-        qWarning() << "[Upscayl] background init() failed";
-        QMetaObject::invokeMethod(upscaler, "onTaskAborted", Qt::QueuedConnection,
-                                  Q_ARG(QString, params.path), Q_ARG(QSize, params.targetSize), Q_ARG(uint64_t, params.generation));
-        return;
-    }
-
-    QImage upscaled = UpscaylScaler::getInstance()->upscale(params.croppedImage, abortFlag.get());
+    const QString appDir = QCoreApplication::applicationDirPath();
+    const UpscaylInferenceResult inferenceResult =
+        UpscaylScaler::getInstance()->upscale(
+            UpscaylInferenceRequest{appDir, params.modelName, params.croppedImage,
+                                    abortFlag.get()});
+    QImage upscaled = inferenceResult.image;
     if (upscaled.isNull()) {
         QMetaObject::invokeMethod(upscaler, "onTaskAborted", Qt::QueuedConnection,
                                   Q_ARG(QString, params.path), Q_ARG(QSize, params.targetSize), Q_ARG(uint64_t, params.generation));

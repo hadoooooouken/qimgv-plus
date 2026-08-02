@@ -140,7 +140,12 @@ public:
                 notifyStopped();
                 return;
             }
-            if (!UpscaylScaler::getInstance()->init(QCoreApplication::applicationDirPath(), m_job.upscaylModel)) {
+            const UpscaylInferenceResult inferenceResult =
+                UpscaylScaler::getInstance()->upscale(
+                    UpscaylInferenceRequest{QCoreApplication::applicationDirPath(),
+                                            m_job.upscaylModel, processedImg,
+                                            m_cancelFlag.get()});
+            if (inferenceResult.error == UpscaylInferenceError::ModelLoadFailed) {
                 if (m_cancelFlag->load()) {
                     notifyStopped();
                     return;
@@ -149,7 +154,8 @@ public:
                                QCoreApplication::translate("BatchConverter", "AI Model Error"), false);
                 return;
             }
-            QImage upscaled = UpscaylScaler::getInstance()->upscale(processedImg);
+
+            QImage upscaled = inferenceResult.image;
             if (upscaled.isNull()) {
                 if (m_cancelFlag->load()) {
                     notifyStopped();

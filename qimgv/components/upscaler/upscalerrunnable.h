@@ -15,6 +15,7 @@ struct UpscalerTaskParams {
     QRect origCrop;
     QString path;
     QSize targetSize;
+    QString modelName;
     uint64_t generation = 0;
 };
 
