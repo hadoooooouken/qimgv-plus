@@ -50,6 +50,10 @@ struct UpscaleMemoryEstimate final {
     quint64 deviceBytes = 0;
 };
 
+bool isAbortRequested(const std::atomic<bool> *abortFlag) noexcept {
+    return abortFlag && abortFlag->load(std::memory_order_relaxed);
+}
+
 bool hasPackedRgbaStorage(const QImage &image) {
     const bool compatibleFormat =
         image.format() == QImage::Format_ARGB32 ||
@@ -198,9 +202,9 @@ estimateUpscaleMemory(const QImage &inputImage, quint64 outputWidth,
 
 UpscaylScaler::UpscaylScaler() : realesrgan(nullptr) {}
 
-bool UpscaylScaler::initLocked(const QString &appDir, const QString &requestedModelName) {
+bool UpscaylScaler::initLocked(const QString &appDir, const QString &requestedModelName, bool forceReinit) {
     const QString modelName = requestedModelName.trimmed();
-    if (realesrgan && loadedModel == modelName) {
+    if (!forceReinit && realesrgan && loadedModel == modelName) {
         return true;
     }
 
@@ -242,8 +246,7 @@ bool UpscaylScaler::initLocked(const QString &appDir, const QString &requestedMo
 
 UpscaylInferenceResult UpscaylScaler::upscale(const UpscaylInferenceRequest &request) {
     QMutexLocker locker(&mutex);
-    if (request.abortFlag &&
-        request.abortFlag->load(std::memory_order_relaxed)) {
+    if (isAbortRequested(request.abortFlag)) {
         return {QImage(), UpscaylInferenceError::Aborted};
     }
 
@@ -251,38 +254,66 @@ UpscaylInferenceResult UpscaylScaler::upscale(const UpscaylInferenceRequest &req
         return {QImage(), UpscaylInferenceError::ModelLoadFailed};
     }
 
-    QImage image = upscaleLocked(request.inputImage, request.abortFlag);
-    if (image.isNull()) {
-        const bool aborted = request.abortFlag &&
-                             request.abortFlag->load(std::memory_order_relaxed);
-        return {QImage(), aborted ? UpscaylInferenceError::Aborted
-                                 : UpscaylInferenceError::ProcessingFailed};
+    ProcessingOutcome outcome = upscaleLocked(request.inputImage, request.abortFlag);
+
+    // A dead Vulkan device (e.g. after a Windows TDR driver reset) fails
+    // every subsequent attempt identically until something rebuilds
+    // realesrgan; nothing previously did. Detect that specific failure
+    // class and, once, force a full rebuild and retry. There is no partial
+    // "reset just the device" API, so this reuses the same
+    // destroy-and-reconstruct path initLocked() already takes on a model
+    // change. No retry loop or backoff timer: if the driver has not
+    // finished recovering yet, this attempt fails normally and the next
+    // user-triggered upscale calls initLocked() fresh and self-heals
+    // whenever the driver is actually ready.
+    if (outcome.image.isNull() &&
+        !isAbortRequested(request.abortFlag) &&
+        RealESRGAN::isDeviceLossError(outcome.rawErrorCode)) {
+        qWarning() << "[Upscayl] Vulkan device loss detected (error code:"
+                   << outcome.rawErrorCode << "), attempting one recovery cycle";
+
+        if (initLocked(request.appDir, request.modelName, /*forceReinit=*/true)) {
+            outcome = upscaleLocked(request.inputImage, request.abortFlag);
+        } else {
+            qWarning() << "[Upscayl] Device-loss recovery failed to reinitialize the model";
+        }
     }
 
-    return {image, UpscaylInferenceError::None};
+    if (outcome.image.isNull()) {
+        if (isAbortRequested(request.abortFlag)) {
+            return {QImage(), UpscaylInferenceError::Aborted};
+        }
+        const UpscaylInferenceError error =
+            RealESRGAN::isDeviceLossError(outcome.rawErrorCode)
+                ? UpscaylInferenceError::DeviceLost
+                : UpscaylInferenceError::ProcessingFailed;
+        return {QImage(), error};
+    }
+
+    return {outcome.image, UpscaylInferenceError::None};
 }
 
-QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<bool> *abortFlag) {
+UpscaylScaler::ProcessingOutcome UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<bool> *abortFlag) {
     if (!realesrgan) {
         qWarning() << "[Upscayl] upscale() called but realesrgan is null";
-        return QImage();
+        return {};
     }
 
-    if (abortFlag && abortFlag->load(std::memory_order_relaxed)) {
-        return QImage();
+    if (isAbortRequested(abortFlag)) {
+        return {};
     }
 
     const int inW = inputImage.width();
     const int inH = inputImage.height();
     if (inW <= 0 || inH <= 0) {
         qWarning() << "[Upscayl] upscale() image invalid size:" << inW << "x" << inH;
-        return QImage();
+        return {};
     }
 
     const int scale = realesrgan->scale;
     if (scale <= 0) {
         qWarning() << "[Upscayl] upscale() invalid model scale:" << scale;
-        return QImage();
+        return {};
     }
 
     const auto outW =
@@ -297,7 +328,7 @@ QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<
         *outH > kMaximumImageDimension) {
         qWarning() << "[Upscayl] upscale() output dimensions overflow:"
                    << inW << "x" << inH << "scale:" << scale;
-        return QImage();
+        return {};
     }
 
     const auto memoryEstimate =
@@ -305,13 +336,13 @@ QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<
     if (!memoryEstimate) {
         qWarning() << "[Upscayl] upscale() resource estimate overflowed or is unavailable for:"
                    << inW << "x" << inH;
-        return QImage();
+        return {};
     }
 
     const auto cpuBudget = queryCpuMemoryBudget();
     if (!cpuBudget) {
         qWarning() << "[Upscayl] upscale() could not query available system memory";
-        return QImage();
+        return {};
     }
 
     const RealESRGAN::DeviceMemorySnapshot deviceSnapshot =
@@ -319,7 +350,7 @@ QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<
     const auto deviceBudget = makeDeviceMemoryBudget(deviceSnapshot);
     if (!deviceBudget) {
         qWarning() << "[Upscayl] upscale() could not query a Vulkan device memory budget";
-        return QImage();
+        return {};
     }
 
     auto requiredCpuBytes =
@@ -330,7 +361,7 @@ QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<
     }
     if (!requiredCpuBytes) {
         qWarning() << "[Upscayl] upscale() shared CPU/device memory estimate overflowed";
-        return QImage();
+        return {};
     }
     if (*requiredCpuBytes > cpuBudget->usableBytes) {
         qWarning() << "[Upscayl] upscale() CPU memory budget exceeded:"
@@ -348,7 +379,7 @@ QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<
                    << (deviceBudget->sharesSystemMemory
                            ? memoryEstimate->deviceBytes
                            : 0);
-        return QImage();
+        return {};
     }
 
     if (memoryEstimate->deviceBytes > deviceBudget->usableBytes) {
@@ -360,11 +391,11 @@ QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<
                    << "usage known:" << deviceBudget->usageKnown
                    << "shares system memory:"
                    << deviceBudget->sharesSystemMemory;
-        return QImage();
+        return {};
     }
 
-    if (abortFlag && abortFlag->load(std::memory_order_relaxed)) {
-        return QImage();
+    if (isAbortRequested(abortFlag)) {
+        return {};
     }
 
     QImage imgRgba = inputImage;
@@ -376,7 +407,7 @@ QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<
     }
     if (imgRgba.isNull() || !hasPackedRgbaStorage(imgRgba)) {
         qWarning() << "[Upscayl] upscale() failed to allocate a packed RGBA input buffer";
-        return QImage();
+        return {};
     }
 
     QImage outImg(static_cast<int>(*outW), static_cast<int>(*outH),
@@ -387,14 +418,14 @@ QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<
     if (outImg.isNull() || !hasPackedRgbaStorage(outImg)) {
         qWarning() << "[Upscayl] upscale() failed to allocate output QImage of size:"
                    << *outW << "x" << *outH;
-        return QImage();
+        return {};
     }
 
     const uchar *inputPixels = imgRgba.constBits();
     uchar *outputPixels = outImg.bits();
     if (!inputPixels || !outputPixels) {
         qWarning() << "[Upscayl] upscale() image storage is unavailable after allocation";
-        return QImage();
+        return {};
     }
 
     const int ret =
@@ -404,10 +435,10 @@ QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<
 
     if (ret != 0) {
         qWarning() << "[Upscayl] processPixels failed or aborted, code:" << ret;
-        return QImage();
+        return {QImage(), ret};
     }
 
-    return outImg;
+    return {outImg, 0};
 }
 
 void UpscaylScaler::destroy() {

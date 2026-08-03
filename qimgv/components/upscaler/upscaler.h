@@ -28,7 +28,12 @@ enum class UpscaylInferenceError {
     None,
     Aborted,
     ModelLoadFailed,
-    ProcessingFailed
+    ProcessingFailed,
+    // The Vulkan device was lost (e.g. after a Windows TDR driver reset)
+    // and a single rebuild-and-retry recovery cycle also failed. Distinct
+    // from ProcessingFailed for logging/diagnostics; existing callers that
+    // only check succeeded() are unaffected.
+    DeviceLost
 };
 
 struct UpscaylInferenceResult final {
@@ -54,8 +59,24 @@ public:
 
 private:
     UpscaylScaler();
-    bool initLocked(const QString &appDir, const QString &requestedModelName);
-    QImage upscaleLocked(const QImage &inputImage, const std::atomic<bool> *abortFlag);
+
+    // Outcome of a single upscaleLocked() attempt. rawErrorCode mirrors
+    // RealESRGAN::process()'s return code when processPixels() was reached
+    // and failed; it stays 0 (no code available) for earlier-stage failures
+    // such as invalid input or budget checks, so it never gets misread as
+    // a device-loss signal.
+    struct ProcessingOutcome final {
+        QImage image;
+        int rawErrorCode = 0;
+    };
+
+    // forceReinit, when true, rebuilds `realesrgan` unconditionally even if
+    // requestedModelName matches the already-loaded model. Used to recover
+    // after a Vulkan device-loss error, since there is no partial "reset
+    // just the device" API and a full object rebuild is the only way to
+    // get a live Vulkan device/pipeline again.
+    bool initLocked(const QString &appDir, const QString &requestedModelName, bool forceReinit = false);
+    ProcessingOutcome upscaleLocked(const QImage &inputImage, const std::atomic<bool> *abortFlag);
 
     std::unique_ptr<RealESRGAN> realesrgan;
     QString loadedModel;
