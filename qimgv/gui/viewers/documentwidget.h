@@ -36,12 +36,22 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
+    enum class PanelHideSource {
+        None,
+        PointerExit,
+        WindowExit
+    };
+
     bool isSizeAllowed() const;
     void updatePanelVisibility();
+    void handlePointerMove(const QPoint &position);
+    void scheduleFloatingPanelHide(PanelHideSource source);
+    void cancelFloatingPanelHide();
 
     QBoxLayout *layout;
     std::shared_ptr<ViewerWidget> mViewWidget;
     std::shared_ptr<MainPanel> mainPanel;
     bool avoidPanelFlag, mPanelEnabled, mPanelFullscreenOnly, mIsFullscreen, mPanelPinned, mInteractionEnabled, mAllowPanelInit;
     QTimer hideTimer;
+    PanelHideSource mHideTimerSource = PanelHideSource::None;
 };

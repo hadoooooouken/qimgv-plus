@@ -103,6 +103,7 @@ signals:
     void showScriptSettings();
     void nextImageRequested();
     void prevImageRequested();
+    void clickableEdgePointerMoved(QPoint globalPosition);
 
 public slots:
     void setFitMode(ImageFitMode mode);

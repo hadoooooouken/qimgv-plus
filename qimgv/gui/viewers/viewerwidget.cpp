@@ -6,6 +6,7 @@
 #include "settings.h"
 #include <QApplication>
 #include <QClipboard>
+#include <QDebug>
 #include <QMimeData>
 #include <QPainter>
 #include "utils/imagelib.h"
@@ -408,24 +409,37 @@ bool ViewerWidget::eventFilter(QObject *object, QEvent *event) {
 
     if(event->type() == QEvent::MouseMove || event->type() == QEvent::Enter) {
         QPoint mousePos;
+        QPoint globalMousePos;
         if(event->type() == QEvent::MouseMove) {
-            auto mouseEvent = dynamic_cast<QMouseEvent*>(event);
+            const auto *mouseEvent = dynamic_cast<QMouseEvent*>(event);
+            if(!mouseEvent) {
+                qWarning() << "ViewerWidget received an invalid mouse move event";
+                return false;
+            }
             mousePos = mouseEvent->pos();
+            globalMousePos = mouseEvent->globalPosition().toPoint();
             if(mouseEvent->buttons())
                 return false;
         } else {
-            auto enterEvent = dynamic_cast<QEnterEvent*>(event);
+            const auto *enterEvent = dynamic_cast<QEnterEvent*>(event);
+            if(!enterEvent) {
+                qWarning() << "ViewerWidget received an invalid enter event";
+                return false;
+            }
             mousePos = enterEvent->pos();
+            globalMousePos = enterEvent->globalPosition().toPoint();
         }
         if(clickZoneOverlay->leftZone().contains(mousePos)) {
             clickZoneOverlay->setPressed(false);
             clickZoneOverlay->highlightLeft();
             setCursor(Qt::PointingHandCursor);
+            emit clickableEdgePointerMoved(globalMousePos);
             return true;
         } else if(clickZoneOverlay->rightZone().contains(mousePos)) {
             clickZoneOverlay->setPressed(false);
             clickZoneOverlay->highlightRight();
             setCursor(Qt::PointingHandCursor);
+            emit clickableEdgePointerMoved(globalMousePos);
             return true;
         } else {
             clickZoneOverlay->disableHighlight();

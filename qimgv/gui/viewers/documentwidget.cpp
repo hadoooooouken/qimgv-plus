@@ -4,6 +4,15 @@
 namespace {
 constexpr int MIN_WINDOW_WIDTH_FOR_PANEL = 800;
 constexpr int MIN_WINDOW_HEIGHT_FOR_PANEL = 500;
+constexpr int kPanelHoverMarginPx = 8;
+// Minimum grace period for a window/taskbar exit (leaveEvent /
+// WindowDeactivate), independent of the user's configured hover-hide
+// delay. Protects against an incidental cursor dip onto the Windows
+// taskbar instantly collapsing the panel when the user has set the
+// hover-hide delay to 0 ms; that setting only expresses "hide
+// immediately once the cursor leaves the panel's hover area", not
+// "skip the taskbar exit grace period too".
+constexpr int kWindowExitMinHideDelayMs = 600;
 }
 
 
@@ -34,6 +43,10 @@ DocumentWidget::DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget,
   mainPanel.reset(new MainPanel(this));
   connect(mainPanel.get(), &MainPanel::pinned, this,
           &DocumentWidget::setPanelPinned);
+  connect(mViewWidget.get(), &ViewerWidget::clickableEdgePointerMoved, this,
+          [this](const QPoint &globalPosition) {
+            handlePointerMove(mapFromGlobal(globalPosition));
+          });
 
   connect(settings, &Settings::settingsChanged, this,
           &DocumentWidget::readSettings);
@@ -45,7 +58,6 @@ std::shared_ptr<ViewerWidget> DocumentWidget::viewWidget() {
 }
 
 void DocumentWidget::readSettings() {
-  hideTimer.setInterval(settings->panelHideDelayMs());
   setPanelEnabled(settings->panelEnabled());
   mPanelFullscreenOnly = settings->panelFullscreenOnly();
   setPanelPinned(settings->panelPinned());
@@ -64,6 +76,8 @@ void DocumentWidget::onFullscreenModeChanged(bool mode) {
 void DocumentWidget::setPanelPinned(bool mode) {
   if (!mPanelEnabled)
     return;
+  if (mode)
+    cancelFloatingPanelHide();
   if (!mode) { // unpin
     if (mPanelPinned)
       layout->removeWidget(mainPanel.get());
@@ -105,16 +119,45 @@ void DocumentWidget::hideFloatingPanel() { hideFloatingPanel(false); }
 void DocumentWidget::hideFloatingPanel(bool animated) {
   if (!mPanelPinned) {
     if (animated)
-      hideTimer.start();
-    else
+      scheduleFloatingPanelHide(PanelHideSource::WindowExit);
+    else {
+      cancelFloatingPanelHide();
       mainPanel->hide();
+    }
   }
 }
 
+void DocumentWidget::scheduleFloatingPanelHide(PanelHideSource source) {
+  if (mPanelPinned || mainPanel->isHidden())
+    return;
+
+  // Give a real window/taskbar exit one full delay, but do not let the
+  // subsequent Leave/WindowDeactivate pair extend that deadline again.
+  const bool windowExitNeedsFullDelay =
+      source == PanelHideSource::WindowExit &&
+      mHideTimerSource != PanelHideSource::WindowExit;
+  if (!hideTimer.isActive() || windowExitNeedsFullDelay) {
+    mHideTimerSource = source;
+    const int delayMs = source == PanelHideSource::WindowExit
+                             ? qMax(settings->panelHideDelayMs(),
+                                    kWindowExitMinHideDelayMs)
+                             : settings->panelHideDelayMs();
+    hideTimer.start(delayMs);
+  }
+}
+
+void DocumentWidget::cancelFloatingPanelHide() {
+  hideTimer.stop();
+  mHideTimerSource = PanelHideSource::None;
+}
+
 void DocumentWidget::hideFloatingPanelDelayed() {
+  mHideTimerSource = PanelHideSource::None;
   if (!mPanelPinned) {
     QWidget *widgetUnderMouse = QApplication::widgetAt(QCursor::pos());
-    if (widgetUnderMouse && (widgetUnderMouse == mainPanel.get() || mainPanel->isAncestorOf(widgetUnderMouse))) {
+    if (widgetUnderMouse &&
+        (widgetUnderMouse == mainPanel.get() ||
+         mainPanel->isAncestorOf(widgetUnderMouse))) {
       return;
     }
     mainPanel->hideAnimated();
@@ -124,6 +167,7 @@ void DocumentWidget::hideFloatingPanelDelayed() {
 void DocumentWidget::setPanelEnabled(bool mode) {
   mPanelEnabled = mode;
   if (!mode) {
+    cancelFloatingPanelHide();
     mainPanel->hide();
   } else {
     setupMainPanel();
@@ -142,8 +186,10 @@ void DocumentWidget::setupMainPanel() {
 
 void DocumentWidget::setInteractionEnabled(bool mode) {
   mInteractionEnabled = mode;
-  if (!mode && !mPanelPinned)
+  if (!mode && !mPanelPinned) {
+    cancelFloatingPanelHide();
     mainPanel->hide();
+  }
 }
 
 void DocumentWidget::mouseMoveEvent(QMouseEvent *event) {
@@ -156,14 +202,30 @@ void DocumentWidget::mouseMoveEvent(QMouseEvent *event) {
       avoidPanelFlag = true;
     return;
   }
+
+  handlePointerMove(event->pos());
+}
+
+void DocumentWidget::handlePointerMove(const QPoint &position) {
+  if (!mInteractionEnabled || mPanelPinned)
+    return;
+
+  const QRect triggerRect = mainPanel->triggerRect();
+  const QRect hoverRect = triggerRect.adjusted(
+      -kPanelHoverMarginPx, -kPanelHoverMarginPx,
+      kPanelHoverMarginPx, kPanelHoverMarginPx);
+
+  if (hoverRect.contains(position))
+    cancelFloatingPanelHide();
+
   // show on hover event
-  if (mPanelEnabled && (mIsFullscreen || !mPanelFullscreenOnly) && isSizeAllowed()) {
-    if (mainPanel->triggerRect().contains(event->pos()) && !avoidPanelFlag) {
-      hideTimer.stop();
+  if (mPanelEnabled && (mIsFullscreen || !mPanelFullscreenOnly) &&
+      isSizeAllowed()) {
+    if (triggerRect.contains(position) && !avoidPanelFlag) {
       mainPanel->showAnimated();
     }
   }
-  // fade out on leave event
+  // Schedule fade-out after the pointer leaves the panel.
   if (!mainPanel->isHidden()) {
     // leaveEvent which misfires on HiDPI (rounding error somewhere?)
     // add a few px of buffer area to avoid bugs
@@ -171,30 +233,18 @@ void DocumentWidget::mouseMoveEvent(QMouseEvent *event) {
     // screen border
 
     // alright this also only works when in root window. sad.
-    if (!mainPanel->triggerRect()
-             .adjusted(-8, -8, 8, 8)
-             .contains(event->pos())) {
-      hideTimer.start();
-    }
+    if (!hoverRect.contains(position))
+      scheduleFloatingPanelHide(PanelHideSource::PointerExit);
   }
-  if (!mainPanel->triggerRect().contains(event->pos()))
+  if (!triggerRect.contains(position))
     avoidPanelFlag = false;
 }
 
 void DocumentWidget::enterEvent(QEnterEvent *event) {
   QWidget::enterEvent(event);
-  if (!mInteractionEnabled)
-    return;
   // we can't track move events outside the window (without additional timer),
   // so just hook the panel event here
-  if (!mPanelPinned && mPanelEnabled &&
-      (mIsFullscreen || !mPanelFullscreenOnly) && isSizeAllowed()) {
-    if (mainPanel->triggerRect().contains(mapFromGlobal(cursor().pos())) &&
-        !avoidPanelFlag) {
-      hideTimer.stop();
-      mainPanel->showAnimated();
-    }
-  }
+  handlePointerMove(mapFromGlobal(QCursor::pos()));
 }
 
 void DocumentWidget::leaveEvent(QEvent *event) {
@@ -218,6 +268,7 @@ bool DocumentWidget::isSizeAllowed() const {
 void DocumentWidget::updatePanelVisibility() {
   if (!isSizeAllowed()) {
     if (mainPanel && !mainPanel->isHidden()) {
+      cancelFloatingPanelHide();
       mainPanel->hide();
     }
   } else {

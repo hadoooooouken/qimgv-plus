@@ -14,17 +14,11 @@ SlidePanel::SlidePanel(FloatingWidgetContainer *parent)
 
   outCurve.setType(QEasingCurve::OutCubic);
 
-  timeline.setDuration(ANIMATION_DURATION);
+  timeline.setDuration(kAnimationDurationMs);
   timeline.setEasingCurve(QEasingCurve::Linear);
-  timeline.setUpdateInterval(16);
   timeline.setStartFrame(0);
-  timeline.setEndFrame(ANIMATION_DURATION);
-  // For some reason 16 feels janky on windows. Linux is fine.
-#ifdef _WIN32
-  timeline.setUpdateInterval(8);
-#else
-  timeline.setUpdateInterval(16);
-#endif
+  timeline.setEndFrame(kAnimationDurationMs);
+  timeline.setUpdateInterval(kAnimationUpdateIntervalMs);
 
   connect(&timeline, &QTimeLine::frameChanged, this,
           &SlidePanel::animationUpdate);
@@ -43,18 +37,18 @@ SlidePanel::~SlidePanel() {}
 
 void SlidePanel::hide() {
   timeline.stop();
+  mVisibilityTarget = VisibilityTarget::Hidden;
   QWidget::hide();
+  fadeEffect->setOpacity(panelVisibleOpacity);
+  setProperty("pos", startPosition);
+  finishActiveAnimation();
 }
 
 void SlidePanel::hideAnimated() {
   if (layoutManaged())
     hide();
-  else if (!this->isHidden() && timeline.state() != QTimeLine::Running) {
-    mHiding = true;
-    outCurve.setType(QEasingCurve::InCubic);
-    emit animationStarted();
-    timeline.start();
-  }
+  else if (!this->isHidden())
+    animateTo(VisibilityTarget::Hidden);
 }
 
 void SlidePanel::showAnimated() {
@@ -64,11 +58,10 @@ void SlidePanel::showAnimated() {
       return;
     }
     // If already showing and fully visible, do nothing
-    if (!mHiding && !this->isHidden() && timeline.state() != QTimeLine::Running)
+    if (mVisibilityTarget == VisibilityTarget::Visible &&
+        !this->isHidden() && timeline.state() != QTimeLine::Running)
       return;
 
-    mHiding = false;
-    outCurve.setType(QEasingCurve::OutCubic);
     if (this->isHidden()) {
       fadeEffect->setOpacity(0);
       setProperty("pos", endPosition);
@@ -78,11 +71,41 @@ void SlidePanel::showAnimated() {
       // allocates its compositing pixmap before the animation starts
       repaint();
     }
-    if (timeline.state() != QTimeLine::Running) {
-      emit animationStarted();
-      timeline.start();
-    }
+    animateTo(VisibilityTarget::Visible);
   }
+}
+
+void SlidePanel::animateTo(VisibilityTarget target) {
+  mVisibilityTarget = target;
+  const QTimeLine::Direction direction =
+      target == VisibilityTarget::Visible ? QTimeLine::Forward
+                                          : QTimeLine::Backward;
+  timeline.setDirection(direction);
+
+  if (timeline.state() == QTimeLine::Running)
+    return;
+
+  // Only pick the curve shape when starting a fresh run from rest.
+  // Changing it mid-flight (i.e. on a live reversal, handled above)
+  // would recompute valueForProgress() under a different curve at the
+  // same progress ratio and produce a visible position/opacity jump.
+  outCurve.setType(target == VisibilityTarget::Visible
+                        ? QEasingCurve::OutCubic
+                        : QEasingCurve::InCubic);
+
+  if (!mAnimationActive) {
+    mAnimationActive = true;
+    emit animationStarted();
+  }
+  timeline.start();
+}
+
+void SlidePanel::finishActiveAnimation() {
+  if (!mAnimationActive)
+    return;
+
+  mAnimationActive = false;
+  emit animationFinished();
 }
 
 bool SlidePanel::layoutManaged() { return mLayoutManaged; }
@@ -108,10 +131,12 @@ bool SlidePanel::hasWidget() { return (mWidget != nullptr); }
 void SlidePanel::show() {
   if (hasWidget()) {
     timeline.stop();
+    mVisibilityTarget = VisibilityTarget::Visible;
     fadeEffect->setOpacity(panelVisibleOpacity);
     setProperty("pos", startPosition);
     QWidget::show();
     QWidget::raise();
+    finishActiveAnimation();
   } else {
     qWarning() << "Warning: Trying to show panel containing no widget!";
   }
@@ -127,22 +152,22 @@ QRect SlidePanel::staticGeometry() { return mStaticGeometry; }
 void SlidePanel::animationUpdate(int frame) {
   // Calculate local cursor position; correct for the current pos() animation
   QPoint adjustedPos = mapFromGlobal(QCursor::pos()) + this->pos();
-  if (mHiding && triggerRect().contains(adjustedPos, true)) {
+  if (mVisibilityTarget == VisibilityTarget::Hidden &&
+      triggerRect().contains(adjustedPos, true)) {
     // Smoothly reverse the animation if cursor is back at the panel
     showAnimated();
   } else {
     // Apply the animation frame
-    qreal value = outCurve.valueForProgress(static_cast<qreal>(frame) /
-                                            ANIMATION_DURATION);
-
-    QPoint posA = mHiding ? startPosition : endPosition;
-    QPoint posB = mHiding ? endPosition : startPosition;
+    const qreal visibleProgress = outCurve.valueForProgress(
+        static_cast<qreal>(frame) / kAnimationDurationMs);
 
     QPoint newPosOffset =
-        QPoint(static_cast<int>((posB.x() - posA.x()) * value),
-               static_cast<int>((posB.y() - posA.y()) * value));
-    setProperty("pos", posA + newPosOffset);
-    fadeEffect->setOpacity(mHiding ? (1 - value) : value);
+        QPoint(static_cast<int>((startPosition.x() - endPosition.x()) *
+                                visibleProgress),
+               static_cast<int>((startPosition.y() - endPosition.y()) *
+                                visibleProgress));
+    setProperty("pos", endPosition + newPosOffset);
+    fadeEffect->setOpacity(panelVisibleOpacity * visibleProgress);
   }
   update();
 }
@@ -153,12 +178,24 @@ void SlidePanel::setAnimationRange(QPoint start, QPoint end) {
 }
 
 void SlidePanel::onAnimationFinish() {
-  if (mHiding) {
+  const int targetTime = mVisibilityTarget == VisibilityTarget::Visible
+                             ? timeline.duration()
+                             : 0;
+  if (timeline.currentTime() != targetTime) {
+    const QTimeLine::Direction direction =
+        mVisibilityTarget == VisibilityTarget::Visible ? QTimeLine::Forward
+                                                       : QTimeLine::Backward;
+    timeline.setDirection(direction);
+    timeline.start();
+    return;
+  }
+
+  if (mVisibilityTarget == VisibilityTarget::Hidden) {
     QWidget::hide();
     fadeEffect->setOpacity(panelVisibleOpacity);
     setProperty("pos", startPosition);
   }
-  emit animationFinished();
+  finishActiveAnimation();
 }
 
 QRect SlidePanel::triggerRect() { return mTriggerRect; }

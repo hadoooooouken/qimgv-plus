@@ -53,19 +53,29 @@ protected:
   QTimer timer;
   QTimeLine timeline;
   QEasingCurve outCurve;
-  const int ANIMATION_DURATION = 300;
-  bool mHiding = true;
   PanelPosition mPosition;
   void recalculateGeometry();
   virtual void updateTriggerRect();
 
 private:
+  enum class VisibilityTarget {
+    Hidden,
+    Visible
+  };
+
+  static constexpr int kAnimationDurationMs = 300;
+  static constexpr int kAnimationUpdateIntervalMs = 8;
+
+  void animateTo(VisibilityTarget target);
+  void finishActiveAnimation();
   void setOrientation();
   Qt::Orientation mOrientation;
   QRect mStaticGeometry;
   qreal panelVisibleOpacity = 1.0;
   QPoint startPosition, endPosition;
   bool mLayoutManaged = false;
+  bool mAnimationActive = false;
+  VisibilityTarget mVisibilityTarget = VisibilityTarget::Hidden;
 
 signals:
   void animationStarted();
