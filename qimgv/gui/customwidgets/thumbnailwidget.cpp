@@ -202,6 +202,18 @@ void ThumbnailWidget::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
     // actual thumbnail still has incorrect dpr but it is still drawn "correctly" so whatever
     updateDpr(painter->paintEngine()->paintDevice()->devicePixelRatioF());
 
+    // WA_OpaquePaintEvent (see FolderGridView/ThumbnailWidget ctor) tells Qt that
+    // this item guarantees full, opaque coverage of its boundingRect() every
+    // paint - combined with QGraphicsView::CacheBackground, Qt will not clear
+    // stale pixels for us. Since widgets are recycled from a pool as the user
+    // navigates between folders (see ThumbnailView::bindWidget/unbindWidget),
+    // and the actual thumbnail/icon draw calls below only cover a centered
+    // sub-rect (drawRectCentered, which shrinks for non-cropped aspect ratios),
+    // we must unconditionally paint over the full area first or leftover pixels
+    // from whatever this widget instance previously displayed will show through.
+    QColor bg = mUseThumbPanelColors ? settings->colorScheme().thumbpanel : settings->colorScheme().folderview;
+    painter->fillRect(boundingRect(), bg);
+
     if((hoverOpacity > MinHoverOpacity) && !isHighlighted())
         drawHoverBg(painter);
     if(isHighlighted())

@@ -1,6 +1,24 @@
 #include "settings.h"
 
+#include <algorithm>
+
 Settings *settings = nullptr;
+
+namespace {
+constexpr auto kPanelHideDelayKey = "panelHideDelayMs";
+
+int normalizedPanelHideDelayMs(int delayMs) {
+  const int clampedDelay =
+      std::clamp(delayMs, Settings::MinPanelHideDelayMs,
+                 Settings::MaxPanelHideDelayMs);
+  const int offset = clampedDelay - Settings::MinPanelHideDelayMs;
+  const int roundedSteps =
+      (offset + Settings::PanelHideDelayStepMs / 2) /
+      Settings::PanelHideDelayStepMs;
+  return Settings::MinPanelHideDelayMs +
+         roundedSteps * Settings::PanelHideDelayStepMs;
+}
+} // namespace
 
 Settings::Settings(QObject *parent) : QObject(parent) {
   QString appDirPath = QApplication::applicationDirPath();
@@ -851,6 +869,18 @@ bool Settings::panelPinned() {
 
 void Settings::setPanelPinned(bool mode) {
   settings->settingsConf->setValue("panelPinned", mode);
+}
+//------------------------------------------------------------------------------
+int Settings::panelHideDelayMs() {
+  return normalizedPanelHideDelayMs(
+      settings->settingsConf
+          ->value(kPanelHideDelayKey, DefaultPanelHideDelayMs)
+          .toInt());
+}
+
+void Settings::setPanelHideDelayMs(int delayMs) {
+  settings->settingsConf->setValue(
+      kPanelHideDelayKey, normalizedPanelHideDelayMs(delayMs));
 }
 //------------------------------------------------------------------------------
 /*

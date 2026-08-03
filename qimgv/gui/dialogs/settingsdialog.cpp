@@ -9,6 +9,10 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
+namespace {
+constexpr int kPanelSliderMinimumWidth = 180;
+}
+
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent) {
   setupUi();
@@ -53,6 +57,16 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   panelSizeSlider->setMinimum(13);
   panelSizeSlider->setMaximum(32);
   panelSizeSlider->setSingleStep(1);
+  connect(panelHideDelaySlider, &QSlider::valueChanged, this,
+          [this](int value) {
+            const int step = Settings::PanelHideDelayStepMs;
+            const int snapped = ((value + step / 2) / step) * step;
+            if (snapped != value) {
+              panelHideDelaySlider->setValue(snapped);
+              return;
+            }
+            panelHideDelayValueLabel->setText(tr("%1 ms").arg(snapped));
+          });
   this->setWindowTitle(tr("Preferences — ") + qApp->applicationName());
 
   shortcutsTableWidget->horizontalHeader()->setSectionResizeMode(
@@ -516,6 +530,9 @@ void SettingsDialog::readSettings() {
   loopSlideshowCheckBox->setChecked(settings->loopSlideshow());
   enablePanelCheckBox->setChecked(settings->panelEnabled());
   thumbnailPanelGroupContents->setEnabled(settings->panelEnabled());
+  panelHideDelaySlider->setValue(settings->panelHideDelayMs());
+  panelHideDelayValueLabel->setText(
+      tr("%1 ms").arg(panelHideDelaySlider->value()));
   panelFullscreenOnlyCheckBox->setChecked(settings->panelFullscreenOnly());
   squareThumbnailsCheckBox->setChecked(settings->squareThumbnails());
   transparencyGridCheckBox->setChecked(settings->transparencyGrid());
@@ -763,6 +780,7 @@ void SettingsDialog::saveSettings() {
   settings->setLanguage(langs.key(langComboBox->currentText()));
 
   settings->setPanelEnabled(enablePanelCheckBox->isChecked());
+  settings->setPanelHideDelayMs(panelHideDelaySlider->value());
   settings->setPanelFullscreenOnly(
       panelFullscreenOnlyCheckBox->isChecked());
   settings->setSquareThumbnails(squareThumbnailsCheckBox->isChecked());
@@ -1763,6 +1781,38 @@ void SettingsDialog::setupUi() {
 
         verticalLayout_15->addLayout(gridLayout_4);
 
+        panelHideDelayLayout = new QHBoxLayout();
+        panelHideDelayLayout->setObjectName("panelHideDelayLayout");
+        panelHideDelayLayout->setContentsMargins(0, 0, 0, 0);
+        panelHideDelayLabel = new QLabel(thumbnailPanelGroupContents);
+        panelHideDelayLabel->setObjectName("panelHideDelayLabel");
+
+        panelHideDelayLayout->addWidget(panelHideDelayLabel);
+
+        panelHideDelaySlider = new QSlider(thumbnailPanelGroupContents);
+        panelHideDelaySlider->setObjectName("panelHideDelaySlider");
+        sizePolicy5.setHeightForWidth(panelHideDelaySlider->sizePolicy().hasHeightForWidth());
+        panelHideDelaySlider->setSizePolicy(sizePolicy5);
+        panelHideDelaySlider->setMinimumSize(QSize(kPanelSliderMinimumWidth, 0));
+        panelHideDelaySlider->setRange(Settings::MinPanelHideDelayMs,
+                                       Settings::MaxPanelHideDelayMs);
+        panelHideDelaySlider->setSingleStep(Settings::PanelHideDelayStepMs);
+        panelHideDelaySlider->setPageStep(Settings::PanelHideDelayStepMs);
+        panelHideDelaySlider->setOrientation(Qt::Orientation::Horizontal);
+        panelHideDelaySlider->setTickPosition(QSlider::TickPosition::TicksBelow);
+        panelHideDelaySlider->setTickInterval(Settings::PanelHideDelayStepMs);
+
+        panelHideDelayLayout->addWidget(panelHideDelaySlider);
+
+        panelHideDelayValueLabel = new QLabel(thumbnailPanelGroupContents);
+        panelHideDelayValueLabel->setObjectName("panelHideDelayValueLabel");
+
+        panelHideDelayLayout->addWidget(panelHideDelayValueLabel);
+
+        panelHideDelayLayout->addStretch();
+
+        verticalLayout_15->addLayout(panelHideDelayLayout);
+
         widget_2 = new QWidget(thumbnailPanelGroupContents);
         widget_2->setObjectName("widget_2");
 #if QT_CONFIG(accessibility)
@@ -1783,7 +1833,7 @@ void SettingsDialog::setupUi() {
         panelSizeSlider->setObjectName("panelSizeSlider");
         sizePolicy5.setHeightForWidth(panelSizeSlider->sizePolicy().hasHeightForWidth());
         panelSizeSlider->setSizePolicy(sizePolicy5);
-        panelSizeSlider->setMinimumSize(QSize(180, 0));
+        panelSizeSlider->setMinimumSize(QSize(kPanelSliderMinimumWidth, 0));
         panelSizeSlider->setMinimum(10);
         panelSizeSlider->setMaximum(26);
         panelSizeSlider->setSingleStep(1);
@@ -3929,6 +3979,7 @@ void SettingsDialog::retranslateUi() {
         panelFullscreenOnlyCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Disable in windowed mode", nullptr));
         panelCenterSelectionCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Center selected image", nullptr));
         showSubfoldersInPanelCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Show subfolders", nullptr));
+        panelHideDelayLabel->setText(QCoreApplication::translate("SettingsDialog", "Hide delay:", nullptr));
         thumbStyleExtended->setText(QCoreApplication::translate("SettingsDialog", "Extended", nullptr));
         label_8->setText(QCoreApplication::translate("SettingsDialog", "Previews only", nullptr));
         label_18->setText(QCoreApplication::translate("SettingsDialog", "Display style:", nullptr));

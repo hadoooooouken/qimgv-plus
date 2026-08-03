@@ -29,6 +29,10 @@ class Settings : public QObject {
 public:
   static constexpr int MinThumbnailerThreads = 1;
   static constexpr int MaxThumbnailerThreads = 32;
+  static constexpr int MinPanelHideDelayMs = 0;
+  static constexpr int MaxPanelHideDelayMs = 2'000;
+  static constexpr int PanelHideDelayStepMs = 100;
+  static constexpr int DefaultPanelHideDelayMs = 500;
   static constexpr int DefaultThumbnailCacheMaxSizeMB = 512;
   static constexpr qint64 DefaultThumbnailCacheMaxEntries = 100'000;
 
@@ -251,6 +255,8 @@ public:
 
   bool panelPinned();
   void setPanelPinned(bool mode);
+  int panelHideDelayMs();
+  void setPanelHideDelayMs(int delayMs);
   int memoryAllocationLimit();
   void setMemoryAllocationLimit(int limitMB);
   bool panelCenterSelection();

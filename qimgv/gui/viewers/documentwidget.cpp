@@ -13,7 +13,6 @@ DocumentWidget::DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget,
       mPanelEnabled(false), mPanelFullscreenOnly(false), avoidPanelFlag(false),
       mIsFullscreen(false), mInteractionEnabled(false), mAllowPanelInit(false) {
   hideTimer.setSingleShot(true);
-  hideTimer.setInterval(600);
   connect(&hideTimer, &QTimer::timeout, this,
           &DocumentWidget::hideFloatingPanelDelayed);
 
@@ -46,6 +45,7 @@ std::shared_ptr<ViewerWidget> DocumentWidget::viewWidget() {
 }
 
 void DocumentWidget::readSettings() {
+  hideTimer.setInterval(settings->panelHideDelayMs());
   setPanelEnabled(settings->panelEnabled());
   mPanelFullscreenOnly = settings->panelFullscreenOnly();
   setPanelPinned(settings->panelPinned());

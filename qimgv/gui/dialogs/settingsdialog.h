@@ -128,6 +128,10 @@ private:
     QCheckBox *panelCenterSelectionCheckBox;
     QCheckBox *showSubfoldersInPanelCheckBox;
     QSpacerItem *horizontalSpacer_8;
+    QHBoxLayout *panelHideDelayLayout;
+    QLabel *panelHideDelayLabel;
+    QSlider *panelHideDelaySlider;
+    QLabel *panelHideDelayValueLabel;
     QWidget *widget_6;
     QGridLayout *gridLayout_4;
     QRadioButton *thumbStyleExtended;
