@@ -147,7 +147,9 @@ Core::Core()
   connect(settings, &Settings::settingsChanged, this, &Core::readSettings);
 
   upscaler = std::make_unique<Upscaler>(this);
-  upscaler->readSettings();
+  // Initial load: no active image/UI state yet to refresh, so the
+  // modelChanged result is not actionable here (unlike in Core::readSettings()).
+  (void)upscaler->readSettings();
   wallpaperController = std::make_unique<WallpaperController>(this);
   connect(wallpaperController.get(),
           &WallpaperController::wallpaperApplyFinished,
