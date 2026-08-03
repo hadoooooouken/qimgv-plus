@@ -872,6 +872,38 @@ BookmarksItem[highlighted="true"] {
     border-color: %folderview_hc2%;
 }
 
+/* per-item action buttons (move up/down, remove): shown on row hover.
+   folderview_button_hover/pressed are NOT used here: in the dark theme
+   folderview_button_hover equals folderview_hc2, i.e. the highlighted-row
+   background - a hovered button on the currently selected bookmark would
+   be invisible. bookmark_action_*_rgba is a translucent text_hc2 overlay
+   (black/white depending on theme lightness, same anchor color already
+   used for BookmarksItem QLabel above), so it stays a neutral part of the
+   folderview palette while still contrasting against folderview_hc and
+   folderview_hc2 in both themes. Only background-color/border-radius are
+   set here (no border/padding) so button visibility never changes the
+   row height. */
+BookmarksItem [accessibleName="BookmarksItemMoveDownLabel"],
+BookmarksItem [accessibleName="BookmarksItemMoveUpLabel"],
+BookmarksItem [accessibleName="BookmarksItemRemoveLabel"] {
+    border-radius: 4px;
+}
+
+BookmarksItem [accessibleName="BookmarksItemMoveDownLabel"]:hover,
+BookmarksItem [accessibleName="BookmarksItemMoveUpLabel"]:hover,
+BookmarksItem [accessibleName="BookmarksItemRemoveLabel"]:hover {
+    background-color: %bookmark_action_hover_rgba%;
+}
+
+BookmarksItem [accessibleName="BookmarksItemMoveDownLabel"]:pressed,
+BookmarksItem [accessibleName="BookmarksItemMoveDownLabel"][pressed="true"],
+BookmarksItem [accessibleName="BookmarksItemMoveUpLabel"]:pressed,
+BookmarksItem [accessibleName="BookmarksItemMoveUpLabel"][pressed="true"],
+BookmarksItem [accessibleName="BookmarksItemRemoveLabel"]:pressed,
+BookmarksItem [accessibleName="BookmarksItemRemoveLabel"][pressed="true"] {
+    background-color: %bookmark_action_pressed_rgba%;
+}
+
 /*----------------------------------------------------------------------------*/
 /* places panel (bg) */
 /*----------------------------------------------------------------------------*/

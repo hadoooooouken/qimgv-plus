@@ -28,7 +28,7 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
     folderIconWidget.installEventFilter(this);
 
     moveDownItemButton.setIcon(FluentIcon::ChevronDown20, UiMetrics::kCompactIconSizePx);
-    moveDownItemButton.setIconOffset(0, 2);
+    moveDownItemButton.setIconOffset(-1, 2);
     moveDownItemButton.setMinimumSize(UiMetrics::kCompactIconSizePx,
                                       UiMetrics::kCompactIconSizePx);
     moveDownItemButton.installEventFilter(this);
@@ -36,7 +36,7 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
     moveDownItemButton.setAccessibleName("BookmarksItemMoveDownLabel");
 
     moveUpItemButton.setIcon(FluentIcon::ChevronUp20, UiMetrics::kCompactIconSizePx);
-    moveUpItemButton.setIconOffset(0, 2);
+    moveUpItemButton.setIconOffset(-1, 2);
     moveUpItemButton.setMinimumSize(UiMetrics::kCompactIconSizePx,
                                     UiMetrics::kCompactIconSizePx);
     moveUpItemButton.installEventFilter(this);

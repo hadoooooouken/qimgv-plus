@@ -382,6 +382,16 @@ void Settings::loadStylesheet() {
                        "rgba(" + QString::number(colors.text.red()) + "," +
                            QString::number(colors.text.green()) + "," +
                            QString::number(colors.text.blue()) + ",62%)");
+    styleSheet.replace(
+        "%bookmark_action_hover_rgba%",
+        "rgba(" + QString::number(colors.text_hc2.red()) + "," +
+            QString::number(colors.text_hc2.green()) + "," +
+            QString::number(colors.text_hc2.blue()) + ",14%)");
+    styleSheet.replace(
+        "%bookmark_action_pressed_rgba%",
+        "rgba(" + QString::number(colors.text_hc2.red()) + "," +
+            QString::number(colors.text_hc2.green()) + "," +
+            QString::number(colors.text_hc2.blue()) + ",26%)");
     styleSheet.replace("%accent_hover_rgba%",
                        "rgba(" + QString::number(colors.accent.red()) + "," +
                            QString::number(colors.accent.green()) + "," +
