@@ -1,5 +1,6 @@
 #include "upscalerrunnable.h"
 #include "upscaler.h"
+#include "utils/colormanager.h"
 #include <QCoreApplication>
 #include <QMetaObject>
 
@@ -24,6 +25,8 @@ void UpscalerRunnable::run() {
                                   Q_ARG(QString, params.path), Q_ARG(QSize, params.targetSize), Q_ARG(uint64_t, params.generation));
         return;
     }
+
+    upscaled = ColorManager::applyColorManagement(upscaled);
 
     if (upscaler->isRequestStale(params.generation)) {
         QMetaObject::invokeMethod(upscaler, "onTaskAborted", Qt::QueuedConnection,

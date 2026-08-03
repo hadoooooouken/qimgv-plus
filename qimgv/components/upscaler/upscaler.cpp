@@ -1,6 +1,7 @@
 #include "upscaler.h"
 #include "upscalerrunnable.h"
 #include "settings.h"
+#include <QColorSpace>
 #include <QDir>
 #include <QFileInfo>
 #include <QMutexLocker>
@@ -380,6 +381,9 @@ QImage UpscaylScaler::upscaleLocked(const QImage &inputImage, const std::atomic<
 
     QImage outImg(static_cast<int>(*outW), static_cast<int>(*outH),
                   QImage::Format_ARGB32);
+    if (inputImage.colorSpace().isValid()) {
+        outImg.setColorSpace(inputImage.colorSpace());
+    }
     if (outImg.isNull() || !hasPackedRgbaStorage(outImg)) {
         qWarning() << "[Upscayl] upscale() failed to allocate output QImage of size:"
                    << *outW << "x" << *outH;
