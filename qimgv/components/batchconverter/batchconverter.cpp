@@ -171,14 +171,34 @@ public:
                     notifyStopped();
                     return;
                 }
-                processedImg = applyResize(processedImg, targetSize, m_job.keepAspectRatio, m_job.scalingFilter);
+                QImage resized = applyResize(processedImg, targetSize, m_job.keepAspectRatio, m_job.scalingFilter);
+                if (resized.isNull()) {
+                    if (m_cancelFlag->load()) {
+                        notifyStopped();
+                        return;
+                    }
+                    notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                                   QCoreApplication::translate("BatchConverter", "Resize Error"), false);
+                    return;
+                }
+                processedImg = resized;
             }
         } else if (m_job.doResize) {
             if (m_cancelFlag->load()) {
                 notifyStopped();
                 return;
             }
-            processedImg = applyResize(processedImg, targetSize, m_job.keepAspectRatio, m_job.scalingFilter);
+            QImage resized = applyResize(processedImg, targetSize, m_job.keepAspectRatio, m_job.scalingFilter);
+            if (resized.isNull()) {
+                if (m_cancelFlag->load()) {
+                    notifyStopped();
+                    return;
+                }
+                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                               QCoreApplication::translate("BatchConverter", "Resize Error"), false);
+                return;
+            }
+            processedImg = resized;
         }
 
         if (m_cancelFlag->load()) {
@@ -241,14 +261,13 @@ public:
 
 private:
     QImage applyResize(const QImage &img, const QSize &targetSize, bool keepAspect, int filter) {
-        if (img.isNull()) return img;
+        if (img.isNull()) return QImage();
         QSize finalSize = targetSize;
         if (keepAspect) {
             finalSize = img.size().scaled(targetSize, Qt::KeepAspectRatio);
         }
         std::shared_ptr<const QImage> imgPtr = std::make_shared<const QImage>(img);
-        QImage scaledImg = ImageLib::scaled(imgPtr, finalSize, static_cast<ScalingFilter>(filter));
-        return scaledImg.isNull() ? img : scaledImg;
+        return ImageLib::scaled(imgPtr, finalSize, static_cast<ScalingFilter>(filter));
     }
 
     BatchConverter *m_converter;
