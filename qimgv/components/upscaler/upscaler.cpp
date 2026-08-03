@@ -787,3 +787,16 @@ void Upscaler::onTaskAborted(QString path, QSize targetSize, uint64_t taskGenera
         onUpscaylTimerTimeout();
     }
 }
+
+void Upscaler::onTaskFailed(const QString &error, uint64_t taskGeneration) {
+    if (activeTaskGeneration != taskGeneration) {
+        return;
+    }
+    activeTaskGeneration.reset();
+    emit upscaleFailed(error);
+
+    if (upscaylPendingRun && pendingUpscaylImage) {
+        upscaylPendingRun = false;
+        onUpscaylTimerTimeout();
+    }
+}

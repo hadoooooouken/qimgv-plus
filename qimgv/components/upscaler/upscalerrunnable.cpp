@@ -19,14 +19,27 @@ void UpscalerRunnable::run() {
         UpscaylScaler::getInstance()->upscale(
             UpscaylInferenceRequest{appDir, params.modelName, params.croppedImage,
                                     abortFlag.get()});
-    QImage upscaled = inferenceResult.image;
-    if (upscaled.isNull()) {
+
+    if (upscaler->isRequestStale(params.generation) ||
+        inferenceResult.error == UpscaylInferenceError::Aborted) {
         QMetaObject::invokeMethod(upscaler, "onTaskAborted", Qt::QueuedConnection,
                                   Q_ARG(QString, params.path), Q_ARG(QSize, params.targetSize), Q_ARG(uint64_t, params.generation));
         return;
     }
 
-    upscaled = ColorManager::applyColorManagement(upscaled);
+    if (!inferenceResult.succeeded()) {
+        QString errorMsg;
+        if (inferenceResult.error == UpscaylInferenceError::ModelLoadFailed) {
+            errorMsg = QCoreApplication::translate("Upscaler", "AI Model failed to load");
+        } else {
+            errorMsg = QCoreApplication::translate("Upscaler", "AI Upscaling processing failed");
+        }
+        QMetaObject::invokeMethod(upscaler, "onTaskFailed", Qt::QueuedConnection,
+                                  Q_ARG(QString, errorMsg), Q_ARG(uint64_t, params.generation));
+        return;
+    }
+
+    QImage upscaled = ColorManager::applyColorManagement(inferenceResult.image);
 
     if (upscaler->isRequestStale(params.generation)) {
         QMetaObject::invokeMethod(upscaler, "onTaskAborted", Qt::QueuedConnection,

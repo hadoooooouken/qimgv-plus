@@ -78,6 +78,7 @@ signals:
     void upscaleStarted();
     void upscaleFinished(QImage cropImg, QRect origCrop, QString path, QSize targetSize);
     void upscaleAborted();
+    void upscaleFailed(const QString &error);
     void previewInvalidated();
     void requestUpscaleParams(const QString &path, bool *ok, QRect *visibleRect, double *currentScale, double *dpr);
 
@@ -85,6 +86,7 @@ private slots:
     void onUpscaylTimerTimeout();
     void onTaskFinished(QImage cropImg, QRect origCrop, QString path, QSize targetSize, uint64_t taskGeneration);
     void onTaskAborted(QString path, QSize targetSize, uint64_t taskGeneration);
+    void onTaskFailed(const QString &error, uint64_t taskGeneration);
 
 private:
     void abortPreviewRequest();

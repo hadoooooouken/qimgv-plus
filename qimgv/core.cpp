@@ -184,6 +184,10 @@ Core::Core()
               mw->onUpscaleFinished(cropImg, origCrop);
       });
   connect(upscaler.get(), &Upscaler::upscaleAborted, mw, &MW::hideMessage);
+  connect(upscaler.get(), &Upscaler::upscaleFailed, this, [this](const QString &error) {
+      mw->hideMessage();
+      mw->showError(error);
+  });
   connect(upscaler.get(), &Upscaler::previewInvalidated, mw,
           &MW::hideUpscaledCrop);
 
