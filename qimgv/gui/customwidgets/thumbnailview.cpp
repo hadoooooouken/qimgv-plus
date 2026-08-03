@@ -286,12 +286,15 @@ void ThumbnailView::populate(int newCount) {
     pendingThumbnailRequests.clear();
     unavailableThumbnails.clear();
     visibleThumbnailsReadyReported = false;
+    resetCachedContent();
     fitSceneToContents();
     resetViewport();
     refreshVisibleItems(true);
     updateScrollbarIndicator();
     loadVisibleThumbnails();
     notifyIfVisibleThumbnailsReady();
+    if(viewport())
+        viewport()->update();
 }
 
 void ThumbnailView::addItem() {
@@ -407,6 +410,9 @@ void ThumbnailView::unloadAllThumbnails() {
     visibleThumbnailsReadyReported = false;
     for(auto *widget : std::as_const(thumbnails))
         widget->unsetThumbnail();
+    resetCachedContent();
+    if(viewport())
+        viewport()->update();
 }
 
 void ThumbnailView::setBlockThumbnailLoading(bool block) {
@@ -484,8 +490,11 @@ void ThumbnailView::resetViewport() {
     if(scrollTimeLine->state() == QTimeLine::Running)
         scrollTimeLine->stop();
     blockThumbnailLoading = false;
+    resetCachedContent();
     const QScopedValueRollback updatingLayout(layoutUpdateInProgress, true);
     scrollBar->setValue(0);
+    if(viewport())
+        viewport()->update();
 }
 
 int ThumbnailView::thumbnailSize() {

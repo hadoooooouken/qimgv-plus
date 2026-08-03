@@ -41,7 +41,6 @@ FolderGridView::FolderGridView(QWidget *parent)
 
     this->viewport()->setAttribute(Qt::WA_OpaquePaintEvent, true);
     this->scene.setBackgroundBrush(settings->colorScheme().folderview);
-    this->setCacheMode(QGraphicsView::CacheBackground);
 
     // turn this off until [multi]selection is implemented
     setDrawScrollbarIndicator(false);
