@@ -131,9 +131,12 @@ public:
         // force every file in a downscale batch through the (much slower,
         // single-threaded) AI path - fall through to the regular resize
         // below instead.
+        QSize finalTarget = m_job.keepAspectRatio
+                                ? srcImg.size().scaled(targetSize, Qt::KeepAspectRatio)
+                                : targetSize;
         bool wantsUpscayl = m_job.useUpscayl &&
-                             (targetSize.width() > srcImg.width() ||
-                              targetSize.height() > srcImg.height());
+                             (finalTarget.width() > srcImg.width() ||
+                              finalTarget.height() > srcImg.height());
 
         if (wantsUpscayl) {
             if (m_cancelFlag->load()) {

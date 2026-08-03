@@ -123,7 +123,6 @@ private slots:
 
 private:
     void updateUpscaylAvailability();
-    bool targetIsUpscale() const;
     void setupUi();
     void setupLeftPanel(QBoxLayout *mainLayout);
     void setupRightPanel(QBoxLayout *mainLayout);
