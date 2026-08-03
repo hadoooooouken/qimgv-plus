@@ -1,5 +1,6 @@
 #include "clickzoneoverlay.h"
 #include "settings.h"
+#include "utils/displayutils.h"
 
 #include <QImage>
 
@@ -61,7 +62,7 @@ ClickZoneOverlay::ClickZoneOverlay(FloatingWidgetContainer *parent)
   mTimeline.setEasingCurve(QEasingCurve::Linear);
   mTimeline.setStartFrame(0);
   mTimeline.setEndFrame(kAnimationDuration);
-  mTimeline.setUpdateInterval(8);
+  mTimeline.setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
 
   connect(&mTimeline, &QTimeLine::frameChanged, this,
           &ClickZoneOverlay::animationUpdate);
@@ -114,6 +115,8 @@ void ClickZoneOverlay::setPressed(bool mode) {
 void ClickZoneOverlay::setHighlightedZone(ActiveHighlightZone zone) {
     if (activeZone == zone && mTimeline.state() != QTimeLine::Running)
         return;
+
+    mTimeline.setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
 
     if (zone != HIGHLIGHT_NONE) {
         // Switch sides without restarting from zero — just update the

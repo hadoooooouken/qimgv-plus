@@ -1,6 +1,7 @@
 #include "imageviewerv2.h"
 #include "settings.h"
 #include "panoramagraphicsitem.h"
+#include "utils/displayutils.h"
 #include <QKeyEvent>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
@@ -65,10 +66,10 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
 
   scrollTimeLineY = new QTimeLine(ANIMATION_SPEED, this);
   scrollTimeLineY->setEasingCurve(QEasingCurve::OutSine);
-  scrollTimeLineY->setUpdateInterval(SCROLL_UPDATE_RATE);
+  scrollTimeLineY->setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
   scrollTimeLineX = new QTimeLine(ANIMATION_SPEED, this);
   scrollTimeLineX->setEasingCurve(QEasingCurve::OutSine);
-  scrollTimeLineX->setUpdateInterval(SCROLL_UPDATE_RATE);
+  scrollTimeLineX->setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
   connect(scrollTimeLineX, &QTimeLine::finished, this,
           &ImageViewerV2::onScrollTimelineFinished);
   connect(scrollTimeLineY, &QTimeLine::finished, this,
@@ -78,7 +79,7 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   QEasingCurve zoomCurve;
   zoomCurve.setCustomType(smootherstepEasing);
   zoomTimeLine->setEasingCurve(zoomCurve);
-  zoomTimeLine->setUpdateInterval(SCROLL_UPDATE_RATE);
+  zoomTimeLine->setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
   connect(zoomTimeLine, &QTimeLine::valueChanged, this,
           &ImageViewerV2::onZoomTimelineValueChanged);
   connect(zoomTimeLine, &QTimeLine::finished, this,
@@ -1431,6 +1432,7 @@ inline void ImageViewerV2::scroll(int dx, int dy, bool smooth) {
 }
 
 void ImageViewerV2::scrollSmooth(int dx, int dy) {
+  const int refreshIntervalMs = DisplayUtils::animationTimerIntervalMs(this);
   if (dx) {
     bool redirect = false;
     int currentXPos = hs->value();
@@ -1450,6 +1452,7 @@ void ImageViewerV2::scrollSmooth(int dx, int dy) {
     }
     scrollTimeLineX->stop();
     scrollTimeLineX->setFrameRange(currentXPos, newEndFrame);
+    scrollTimeLineX->setUpdateInterval(refreshIntervalMs);
     scrollTimeLineX->start();
   }
   if (dy) {
@@ -1471,6 +1474,7 @@ void ImageViewerV2::scrollSmooth(int dx, int dy) {
     }
     scrollTimeLineY->stop();
     scrollTimeLineY->setFrameRange(currentYPos, newEndFrame);
+    scrollTimeLineY->setUpdateInterval(refreshIntervalMs);
     scrollTimeLineY->start();
   }
   saveViewportPos();
@@ -1598,6 +1602,7 @@ void ImageViewerV2::doZoomIn(bool atCursor) {
     zoomStartScale = currentScale();
     zoomTargetScale = newScale;
     zoomTimeLine->stop();
+    zoomTimeLine->setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
     zoomTimeLine->start();
   } else {
     zoomAnchored(newScale);
@@ -1654,6 +1659,7 @@ void ImageViewerV2::doZoomOut(bool atCursor) {
     zoomStartScale = currentScale();
     zoomTargetScale = newScale;
     zoomTimeLine->stop();
+    zoomTimeLine->setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
     zoomTimeLine->start();
   } else {
     zoomAnchored(newScale);

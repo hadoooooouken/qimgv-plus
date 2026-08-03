@@ -1,5 +1,6 @@
 #include "thumbnailview.h"
 #include "settings.h"
+#include "utils/displayutils.h"
 
 #include <QScopedValueRollback>
 
@@ -36,12 +37,6 @@ ThumbnailView::ThumbnailView(Qt::Orientation _orientation, QWidget *parent)
     connect(&loadTimer, &QTimer::timeout, this, &ThumbnailView::loadVisibleThumbnails);
     loadTimer.setInterval(static_cast<const int>(LOAD_DELAY));
     loadTimer.setSingleShot(true);
-
-    qreal screenMaxRefreshRate = 60;
-    for(auto screen : qApp->screens())
-        if(screen->refreshRate() > screenMaxRefreshRate)
-            screenMaxRefreshRate = screen->refreshRate();
-    scrollRefreshRate = 1000 / screenMaxRefreshRate;
 
     createScrollTimeLine();
 
@@ -140,6 +135,7 @@ void ThumbnailView::createScrollTimeLine() {
         scrollTimeLine->stop();
         scrollTimeLine->deleteLater();
     }
+    scrollRefreshRate = DisplayUtils::animationTimerIntervalMs(this);
     scrollTimeLine = new QTimeLine(SCROLL_DURATION, this);
     scrollTimeLine->setEasingCurve(QEasingCurve::OutSine);
     scrollTimeLine->setUpdateInterval(scrollRefreshRate);

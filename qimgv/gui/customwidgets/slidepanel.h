@@ -64,7 +64,6 @@ private:
   };
 
   static constexpr int kAnimationDurationMs = 300;
-  static constexpr int kAnimationUpdateIntervalMs = 8;
 
   void animateTo(VisibilityTarget target);
   void finishActiveAnimation();

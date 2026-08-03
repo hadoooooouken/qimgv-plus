@@ -14,6 +14,7 @@ target_sources(qimgv-plus PRIVATE
     colormanager.cpp
     pngwriter.cpp
     iconfontmanager.cpp
+    displayutils.cpp
 )
 
 target_sources(qimgv-plus PRIVATE

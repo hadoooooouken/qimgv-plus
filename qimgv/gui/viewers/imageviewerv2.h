@@ -165,7 +165,6 @@ private:
          useFixedZoomLevels, trackpadDetection, mAnimationActive;
     QList<float> zoomLevels;
     MouseInteractionState mouseInteraction;
-    const int SCROLL_UPDATE_RATE = 7;
     const int DEFAULT_SCROLL_DISTANCE = 240;
     const qreal TRACKPAD_SCROLL_MULTIPLIER = 0.7;
     const qreal WHEEL_SCROLL_MULTIPLIER = 2.0f;

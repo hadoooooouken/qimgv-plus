@@ -1,12 +1,12 @@
 #include "thumbnailwidget.h"
 #include "settings.h"
+#include "utils/displayutils.h"
 #include <QPainterPath>
 #include <QTimeLine>
 
 namespace {
 constexpr int HoverEnterDurationMs = 100;
 constexpr int HoverLeaveDurationMs = 60;
-constexpr int WindowsHoverUpdateIntervalMs = 8;
 constexpr qreal MinHoverOpacity = 0.0;
 constexpr qreal MaxHoverOpacity = 1.0;
 constexpr qreal BackgroundCornerRadius = 8.0;
@@ -417,6 +417,7 @@ void ThumbnailWidget::setHovered(bool mode) {
             hoverTimeline->setDirection(mode ? QTimeLine::Forward : QTimeLine::Backward);
             hoverTimeline->setDuration(mode ? HoverEnterDurationMs : HoverLeaveDurationMs);
             if(hoverTimeline->state() != QTimeLine::Running) {
+                hoverTimeline->setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
                 hoverTimeline->start();
             }
         } else {
@@ -430,7 +431,7 @@ void ThumbnailWidget::ensureHoverTimeline() {
         return;
 
     hoverTimeline = new QTimeLine(HoverEnterDurationMs, this);
-    hoverTimeline->setUpdateInterval(WindowsHoverUpdateIntervalMs);
+    hoverTimeline->setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
     hoverTimeline->setEasingCurve(QEasingCurve::OutQuad);
     connect(hoverTimeline, &QTimeLine::valueChanged, this, &ThumbnailWidget::setHoverOpacity);
 }

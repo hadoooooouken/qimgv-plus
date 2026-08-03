@@ -1,4 +1,5 @@
 #include "slidepanel.h"
+#include "utils/displayutils.h"
 
 SlidePanel::SlidePanel(FloatingWidgetContainer *parent)
     : FloatingWidget(parent), panelSize(50), slideAmount(40), mWidget(nullptr) {
@@ -18,7 +19,7 @@ SlidePanel::SlidePanel(FloatingWidgetContainer *parent)
   timeline.setEasingCurve(QEasingCurve::Linear);
   timeline.setStartFrame(0);
   timeline.setEndFrame(kAnimationDurationMs);
-  timeline.setUpdateInterval(kAnimationUpdateIntervalMs);
+  timeline.setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
 
   connect(&timeline, &QTimeLine::frameChanged, this,
           &SlidePanel::animationUpdate);
@@ -97,6 +98,7 @@ void SlidePanel::animateTo(VisibilityTarget target) {
     mAnimationActive = true;
     emit animationStarted();
   }
+  timeline.setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
   timeline.start();
 }
 
