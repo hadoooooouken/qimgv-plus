@@ -17,6 +17,8 @@ public slots:
     void addBookmark(QString directoryPath);
 
     void removeBookmark(QString dirPath);
+    void moveBookmarkUp(QString dirPath);
+    void moveBookmarkDown(QString dirPath);
     void onPathChanged(QString path);
 private slots:
     void readSettings();

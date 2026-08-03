@@ -25,6 +25,8 @@ public slots:
 signals:
     void clicked(QString dirPath);
     void removeClicked(QString dirPath);
+    void moveUpClicked(QString dirPath);
+    void moveDownClicked(QString dirPath);
     void droppedIn(QList<QString> paths, QString dirPath, Qt::DropAction action);
 
 protected:
@@ -40,11 +42,15 @@ protected:
 
 private slots:
     void onRemoveClicked();
+    void onMoveUpClicked();
+    void onMoveDownClicked();
 
 private:
     QString dirName, dirPath;
 
     IconWidget folderIconWidget;
+    IconButton moveDownItemButton;
+    IconButton moveUpItemButton;
     IconButton removeItemButton;
     QLabel dirNameLabel;
     QSpacerItem *spacer;

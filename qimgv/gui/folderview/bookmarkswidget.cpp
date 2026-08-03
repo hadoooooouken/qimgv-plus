@@ -40,6 +40,8 @@ void BookmarksWidget::addBookmark(QString dirPath) {
     item->show();
     connect(item, &BookmarksItem::clicked, this, &BookmarksWidget::bookmarkClicked);
     connect(item, &BookmarksItem::removeClicked, this, &BookmarksWidget::removeBookmark);
+    connect(item, &BookmarksItem::moveUpClicked, this, &BookmarksWidget::moveBookmarkUp);
+    connect(item, &BookmarksItem::moveDownClicked, this, &BookmarksWidget::moveBookmarkDown);
     connect(item, &BookmarksItem::droppedIn, this, &BookmarksWidget::droppedIn);
     saveBookmarks();
 }
@@ -53,6 +55,8 @@ void BookmarksWidget::removeBookmark(QString dirPath) {
             layout.removeWidget(w);
             disconnect(w, &BookmarksItem::clicked, this, &BookmarksWidget::bookmarkClicked);
             disconnect(w, &BookmarksItem::removeClicked, this, &BookmarksWidget::removeBookmark);
+            disconnect(w, &BookmarksItem::moveUpClicked, this, &BookmarksWidget::moveBookmarkUp);
+            disconnect(w, &BookmarksItem::moveDownClicked, this, &BookmarksWidget::moveBookmarkDown);
             disconnect(w, &BookmarksItem::droppedIn, this, &BookmarksWidget::droppedIn);
             w->deleteLater();
             paths.removeAll(dirPath);
@@ -60,6 +64,28 @@ void BookmarksWidget::removeBookmark(QString dirPath) {
             break;
         }
     }
+}
+
+void BookmarksWidget::moveBookmarkUp(QString dirPath) {
+    int index = paths.indexOf(dirPath);
+    if(index <= 0)
+        return;
+    int targetIndex = index - 1;
+    paths.move(index, targetIndex);
+    QLayoutItem *item = layout.takeAt(index);
+    layout.insertItem(targetIndex, item);
+    saveBookmarks();
+}
+
+void BookmarksWidget::moveBookmarkDown(QString dirPath) {
+    int index = paths.indexOf(dirPath);
+    if(index < 0 || index >= paths.size() - 1)
+        return;
+    int targetIndex = index + 1;
+    paths.move(index, targetIndex);
+    QLayoutItem *item = layout.takeAt(index);
+    layout.insertItem(targetIndex, item);
+    saveBookmarks();
 }
 
 void BookmarksWidget::onPathChanged(QString path) {

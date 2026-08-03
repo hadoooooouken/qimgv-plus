@@ -27,6 +27,22 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
     folderIconWidget.setMinimumSize(kFolderIconSizePx, kFolderIconSizePx);
     folderIconWidget.installEventFilter(this);
 
+    moveDownItemButton.setIcon(FluentIcon::ChevronDown20, UiMetrics::kCompactIconSizePx);
+    moveDownItemButton.setIconOffset(0, 2);
+    moveDownItemButton.setMinimumSize(UiMetrics::kCompactIconSizePx,
+                                      UiMetrics::kCompactIconSizePx);
+    moveDownItemButton.installEventFilter(this);
+    moveDownItemButton.hide();
+    moveDownItemButton.setAccessibleName("BookmarksItemMoveDownLabel");
+
+    moveUpItemButton.setIcon(FluentIcon::ChevronUp20, UiMetrics::kCompactIconSizePx);
+    moveUpItemButton.setIconOffset(0, 2);
+    moveUpItemButton.setMinimumSize(UiMetrics::kCompactIconSizePx,
+                                    UiMetrics::kCompactIconSizePx);
+    moveUpItemButton.installEventFilter(this);
+    moveUpItemButton.hide();
+    moveUpItemButton.setAccessibleName("BookmarksItemMoveUpLabel");
+
     removeItemButton.setIcon(FluentIcon::BookmarkRemove20, UiMetrics::kCompactIconSizePx);
     removeItemButton.setIconOffset(0, 1);
     removeItemButton.setMinimumSize(UiMetrics::kCompactIconSizePx,
@@ -36,11 +52,15 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
 
     removeItemButton.setAccessibleName("BookmarksItemRemoveLabel");
 
+    connect(&moveDownItemButton, &IconButton::clicked, this, &BookmarksItem::onMoveDownClicked);
+    connect(&moveUpItemButton, &IconButton::clicked, this, &BookmarksItem::onMoveUpClicked);
     connect(&removeItemButton, &IconButton::clicked, this, &BookmarksItem::onRemoveClicked);
 
     layout.addWidget(&folderIconWidget);
     layout.addWidget(&dirNameLabel);
     layout.addSpacerItem(spacer);
+    layout.addWidget(&moveDownItemButton);
+    layout.addWidget(&moveUpItemButton);
     layout.addWidget(&removeItemButton);
 
     setMouseTracking(true);
@@ -54,11 +74,15 @@ QString BookmarksItem::path() {
 
 void BookmarksItem::enterEvent(QEnterEvent *event) {
     QWidget::enterEvent(event);
+    moveDownItemButton.show();
+    moveUpItemButton.show();
     removeItemButton.show();
 }
 
 void BookmarksItem::leaveEvent(QEvent *event) {
     QWidget::leaveEvent(event);
+    moveDownItemButton.hide();
+    moveUpItemButton.hide();
     removeItemButton.hide();
 }
 
@@ -101,6 +125,14 @@ void BookmarksItem::mouseMoveEvent(QMouseEvent *event) {
 
 void BookmarksItem::onRemoveClicked() {
     emit removeClicked(dirPath);
+}
+
+void BookmarksItem::onMoveUpClicked() {
+    emit moveUpClicked(dirPath);
+}
+
+void BookmarksItem::onMoveDownClicked() {
+    emit moveDownClicked(dirPath);
 }
 
 void BookmarksItem::paintEvent(QPaintEvent *event) {
