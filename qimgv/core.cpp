@@ -147,6 +147,7 @@ Core::Core()
   connect(settings, &Settings::settingsChanged, this, &Core::readSettings);
 
   upscaler = std::make_unique<Upscaler>(this);
+  upscaler->readSettings();
   wallpaperController = std::make_unique<WallpaperController>(this);
   connect(wallpaperController.get(),
           &WallpaperController::wallpaperApplyFinished,

@@ -436,18 +436,22 @@ public:
         Options options;
         uint64_t generation = 0;
     };
-
     QMutex mutex;
     std::shared_ptr<const Configuration> desiredConfiguration;
     uint64_t nextGeneration = 0;
     bool workerBusy = false;
+    std::atomic<bool> shutdownRequested{false};
 };
 
 namespace {
 
 constexpr int kPreloadWarmupDimension = 512;
 
-void applyPreloadConfiguration(const UpscalerPreloadState::Configuration &configuration) {
+void applyPreloadConfiguration(const UpscalerPreloadState::Configuration &configuration,
+                               const std::atomic<bool> *shutdownFlag) {
+    if (shutdownFlag && shutdownFlag->load(std::memory_order_relaxed)) {
+        return;
+    }
     if (!configuration.options.shouldPreload()) {
         UpscaylScaler::getInstance()->destroy();
         return;
@@ -460,8 +464,9 @@ void applyPreloadConfiguration(const UpscalerPreloadState::Configuration &config
     dummy.fill(Qt::black);
     const UpscaylInferenceResult warmupResult =
         UpscaylScaler::getInstance()->upscale(
-            UpscaylInferenceRequest{appDir, configuration.options.model, dummy});
-    if (!warmupResult.succeeded()) {
+            UpscaylInferenceRequest{appDir, configuration.options.model, dummy, shutdownFlag});
+    if (!warmupResult.succeeded() &&
+        (!shutdownFlag || !shutdownFlag->load(std::memory_order_relaxed))) {
         qWarning() << "[Upscayl] Model preload or warm-up failed";
     }
 }
@@ -478,6 +483,12 @@ public:
         }
 
         while (true) {
+            if (state->shutdownRequested.load(std::memory_order_relaxed)) {
+                QMutexLocker locker(&state->mutex);
+                state->workerBusy = false;
+                return;
+            }
+
             std::shared_ptr<const UpscalerPreloadState::Configuration> configuration;
             {
                 QMutexLocker locker(&state->mutex);
@@ -489,7 +500,13 @@ public:
                 }
             }
 
-            applyPreloadConfiguration(*configuration);
+            applyPreloadConfiguration(*configuration, &state->shutdownRequested);
+
+            if (state->shutdownRequested.load(std::memory_order_relaxed)) {
+                QMutexLocker locker(&state->mutex);
+                state->workerBusy = false;
+                return;
+            }
 
             QMutexLocker locker(&state->mutex);
             if (!state->desiredConfiguration) {
@@ -524,6 +541,11 @@ Upscaler::Upscaler(QObject *parent) : QObject(parent) {
 Upscaler::~Upscaler() {
     if (currentAbortFlag) {
         currentAbortFlag->store(true, std::memory_order_relaxed);
+    }
+    if (preloadState) {
+        preloadState->shutdownRequested.store(true, std::memory_order_relaxed);
+        QMutexLocker locker(&preloadState->mutex);
+        preloadState->desiredConfiguration.reset();
     }
     if (pool) {
         pool->waitForDone();
@@ -562,6 +584,9 @@ bool Upscaler::readSettings() {
 void Upscaler::reconcilePreloadState(bool forceReapply) {
     if (!preloadState) {
         qWarning() << "[Upscayl] Cannot reconcile preload state without shared state";
+        return;
+    }
+    if (preloadState->shutdownRequested.load(std::memory_order_relaxed)) {
         return;
     }
 
