@@ -723,6 +723,13 @@ void Core::onModelLoaded() {
   folderViewPresenter.reloadModel();
   thumbPanelPresenter.selectAndFocus(state.currentFilePath);
   folderViewPresenter.selectAndFocus(state.currentFilePath);
+  if (!pendingFolderViewSelectPath.isEmpty()) {
+    // Now that the directory has actually finished loading, restore
+    // selection/scroll to the folder we navigated up/back from instead of
+    // leaving the view on the first item.
+    folderViewPresenter.selectAndFocus(pendingFolderViewSelectPath);
+    pendingFolderViewSelectPath.clear();
+  }
   if (shuffle)
     syncRandomizer();
 }
@@ -2174,9 +2181,13 @@ void Core::loadParentDir() {
   stopSlideshow();
   QFileInfo currentDir(model->directoryPath());
   QFileInfo parentDir(currentDir.absolutePath());
-  if (parentDir.exists() && parentDir.isReadable())
+  if (parentDir.exists() && parentDir.isReadable()) {
+    // Directory scanning is asynchronous, so the parent directory isn't
+    // loaded yet at this point - selecting it now would no-op. Defer to
+    // onModelLoaded() instead (see pendingFolderViewSelectPath).
+    pendingFolderViewSelectPath = currentDir.absoluteFilePath();
     loadPath(parentDir.absoluteFilePath());
-  folderViewPresenter.selectAndFocus(currentDir.absoluteFilePath());
+  }
 }
 
 void Core::nextDirectory() {
@@ -2235,9 +2246,16 @@ void Core::prevDirectory() { prevDirectory(false); }
 
 void Core::historyBack() {
   if (!backHistory.isEmpty()) {
+    QString childPath = model->directoryPath();
     QString path = backHistory.takeLast();
-    forwardHistory.append(model->directoryPath());
+    forwardHistory.append(childPath);
     blockHistory = true;
+    // Restore selection/scroll position to the folder we just left once the
+    // parent directory has actually finished loading (see
+    // pendingFolderViewSelectPath) - otherwise the view jumps back to the
+    // top instead of where we were.
+    if (!childPath.isEmpty())
+      pendingFolderViewSelectPath = childPath;
     loadPath(path);
     blockHistory = false;
   } else {

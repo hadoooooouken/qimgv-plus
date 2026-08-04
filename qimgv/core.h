@@ -257,6 +257,14 @@ private:
 
     QStringList backHistory, forwardHistory;
     bool blockHistory = false;
+    // Directory scanning (DirectoryManager/DirectoryScanner) runs on a
+    // background thread, so the folder view's model is not ready yet when
+    // loadPath() returns - selecting/scrolling to a path synchronously right
+    // after it would silently no-op. Instead, the path we want highlighted
+    // once the new directory finishes loading is stashed here and applied
+    // in onModelLoaded() (mirrors the dirTreeView's m_pendingScrollPath
+    // approach in FolderView).
+    QString pendingFolderViewSelectPath;
     ViewMode m_lastViewMode = MODE_DOCUMENT;
     QString m_lastFilePath;
     bool m_resumeFromStandby = false;
