@@ -55,6 +55,36 @@ QString destinationReservationKey(const QString &path) {
     return normalizedPath.toCaseFolded();
 }
 
+// Resolves the final per-file output size for a given bounding box, honoring
+// the selected AspectFitMode. Computed individually for every source image,
+// since files in a batch can have different aspect ratios.
+QSize computeAspectFitSize(const QSize &srcSize, const QSize &boundingSize,
+                           bool keepAspectRatio, AspectFitMode mode) {
+    if (!keepAspectRatio) {
+        return boundingSize;
+    }
+
+    switch (mode) {
+    case AspectFitMode::Width: {
+        if (srcSize.width() <= 0) {
+            return boundingSize;
+        }
+        const double scale = static_cast<double>(boundingSize.width()) / srcSize.width();
+        return QSize(boundingSize.width(), qRound(srcSize.height() * scale));
+    }
+    case AspectFitMode::Height: {
+        if (srcSize.height() <= 0) {
+            return boundingSize;
+        }
+        const double scale = static_cast<double>(boundingSize.height()) / srcSize.height();
+        return QSize(qRound(srcSize.width() * scale), boundingSize.height());
+    }
+    case AspectFitMode::Auto:
+    default:
+        return srcSize.scaled(boundingSize, Qt::KeepAspectRatio);
+    }
+}
+
 } // namespace
 
 class BatchConverterRunnable : public QRunnable {
@@ -126,14 +156,13 @@ public:
             }
         }
 
-        // "Use Upscayl" only makes sense when the target is actually larger
+        // "Upscayl" only makes sense when the target is actually larger
         // than this source image. A stale/persisted checkbox state must not
         // force every file in a downscale batch through the (much slower,
         // single-threaded) AI path - fall through to the regular resize
         // below instead.
-        QSize finalTarget = m_job.keepAspectRatio
-                                ? srcImg.size().scaled(targetSize, Qt::KeepAspectRatio)
-                                : targetSize;
+        QSize finalTarget = computeAspectFitSize(srcImg.size(), targetSize,
+                                                 m_job.keepAspectRatio, m_job.aspectFitMode);
         bool wantsUpscayl = m_job.useUpscayl &&
                              (finalTarget.width() > srcImg.width() ||
                               finalTarget.height() > srcImg.height());
@@ -174,7 +203,8 @@ public:
                     notifyStopped();
                     return;
                 }
-                QImage resized = applyResize(processedImg, targetSize, m_job.keepAspectRatio, m_job.scalingFilter);
+                QImage resized = applyResize(processedImg, targetSize, m_job.keepAspectRatio,
+                                             m_job.aspectFitMode, m_job.scalingFilter);
                 if (resized.isNull()) {
                     if (m_cancelFlag->load()) {
                         notifyStopped();
@@ -191,7 +221,8 @@ public:
                 notifyStopped();
                 return;
             }
-            QImage resized = applyResize(processedImg, targetSize, m_job.keepAspectRatio, m_job.scalingFilter);
+            QImage resized = applyResize(processedImg, targetSize, m_job.keepAspectRatio,
+                                         m_job.aspectFitMode, m_job.scalingFilter);
             if (resized.isNull()) {
                 if (m_cancelFlag->load()) {
                     notifyStopped();
@@ -263,12 +294,10 @@ public:
     }
 
 private:
-    QImage applyResize(const QImage &img, const QSize &targetSize, bool keepAspect, int filter) {
+    QImage applyResize(const QImage &img, const QSize &targetSize, bool keepAspect,
+                       AspectFitMode fitMode, int filter) {
         if (img.isNull()) return QImage();
-        QSize finalSize = targetSize;
-        if (keepAspect) {
-            finalSize = img.size().scaled(targetSize, Qt::KeepAspectRatio);
-        }
+        QSize finalSize = computeAspectFitSize(img.size(), targetSize, keepAspect, fitMode);
         std::shared_ptr<const QImage> imgPtr = std::make_shared<const QImage>(img);
         return ImageLib::scaled(imgPtr, finalSize, static_cast<ScalingFilter>(filter));
     }

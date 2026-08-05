@@ -5,6 +5,7 @@
 #include "sourcecontainers/thumbnail.h"
 #include "utils/imagelib.h"
 #include "components/batchconverter/batchconverter.h"
+#include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDialog>
@@ -108,6 +109,7 @@ private slots:
     void onCommonResolutionChanged(int index);
     void onResetSizes();
     void onResizeRadioToggled();
+    void onKeepAspectRatioToggled(bool checked);
 
     void onSelectAll();
     void onDeselectAll();
@@ -155,6 +157,10 @@ private:
     QSpinBox *width;
     QSpinBox *height;
     QCheckBox *keepAspectRatio;
+    QButtonGroup *aspectFitModeGroup;
+    QRadioButton *aspectFitAutoRadio;
+    QRadioButton *aspectFitWidthRadio;
+    QRadioButton *aspectFitHeightRadio;
     QCheckBox *useUpscaylCheckBox;
     QComboBox *filterComboBox;
     QComboBox *upscaylModelComboBox;

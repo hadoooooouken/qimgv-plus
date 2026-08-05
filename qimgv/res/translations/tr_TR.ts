@@ -4,86 +4,94 @@
 <context>
     <name>BatchConverter</name>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="82"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="112"/>
         <source>Stopped</source>
         <translation>Durduruldu</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="96"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="153"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="164"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="215"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="230"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="314"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="320"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="332"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="344"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="126"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="185"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="196"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="213"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="231"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="269"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="284"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="365"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="371"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="383"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="395"/>
         <source>Failed</source>
         <translation>Başarısız</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="97"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="127"/>
         <source>Load Error</source>
         <translation>Yükleme hatası</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="154"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="186"/>
         <source>AI Model Error</source>
         <translation>Yapay Zekâ modeli hatası</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="165"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="197"/>
         <source>AI Upscaling Failed</source>
         <translation>Yapay Zekâ ölçekleme başarısız</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="222"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="239"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="326"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="338"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="214"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="232"/>
+        <source>Resize Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="276"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="293"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="377"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="389"/>
         <source>Done</source>
         <translation>Bitti</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="216"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="270"/>
         <source>Save Error</source>
         <translation>Kaydetme hatası</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="231"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="285"/>
         <source>Commit Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="288"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="339"/>
         <source>Could not create a unique batch subfolder in &quot;%1&quot;. The batch was aborted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="314"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="365"/>
         <source>Invalid destination path</source>
         <translation>Geçersiz hedef yol</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="223"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="326"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="338"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="277"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="377"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="389"/>
         <source>Skipped (Exists)</source>
         <translation>Atlandı (Mevcut)</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="320"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="344"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="371"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="395"/>
         <source>Destination planning failed: invalid reservation key</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="333"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="384"/>
         <source>Destination planning failed: no unique output path is available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="349"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="400"/>
         <source>Processing...</source>
         <translation>İşleniyor...</translation>
     </message>
@@ -136,22 +144,21 @@
         <translation>Yüzde:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="420"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="421"/>
         <source>Keep aspect ratio</source>
         <translation>En boy oranını koru</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="423"/>
         <source>Use Upscayl</source>
-        <translation>Upscayl kullan</translation>
+        <translation type="vanished">Upscayl kullan</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="432"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="446"/>
         <source>Filter:</source>
         <translation>Filtre:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="439"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="453"/>
         <source>Model:</source>
         <translation>Model:</translation>
     </message>
@@ -166,98 +173,113 @@
         <translation>Sıfırla</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="456"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="470"/>
         <source>Color adjustments</source>
         <translation>Renk ayarları</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="461"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="475"/>
         <source>Exposure:</source>
         <translation>Pozlama:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="464"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="478"/>
         <source>Contrast:</source>
         <translation>Kontrast:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="467"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="481"/>
         <source>Brightness:</source>
         <translation>Parlaklık:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="476"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="490"/>
         <source>Temperature:</source>
         <translation>Sıcaklık:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="479"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="493"/>
         <source>Tint:</source>
         <translation>Ton:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="470"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="484"/>
         <source>Saturation:</source>
         <translation>Doygunluk:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="473"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="426"/>
+        <source>Auto</source>
+        <translation>Otomatik</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="428"/>
+        <source>Width</source>
+        <translation>Genişlik</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="429"/>
+        <source>Height</source>
+        <translation>Yükseklik</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="487"/>
         <source>Hue:</source>
         <translation>Renk tonu:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="505"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="519"/>
         <source>Output folder:</source>
         <translation>Çıkış klasörü:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="509"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="523"/>
         <source>...</source>
         <translation>...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="514"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="528"/>
         <source>Create subfolder for batch</source>
         <translation>Toplu işlem için alt klasör oluştur</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="517"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="531"/>
         <source>Filename pattern:</source>
         <translation>Dosya adı şablonu:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="518"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="532"/>
         <source>{name}_converted</source>
         <translation>{name}_converted</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="521"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="535"/>
         <source>Available: {name}, {ext}, {date}, {index}</source>
         <translation>Kullanılabilir: {name}, {ext}, {date}, {index}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="525"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="539"/>
         <source>Overwrite existing files</source>
         <translation>Mevcut dosyaların üzerine yaz</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="533"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="547"/>
         <source>Ready to convert.</source>
         <translation>Dönüştürmeye hazır.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="537"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="551"/>
         <source>Convert</source>
         <translation>Dönüştür</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="539"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="953"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="553"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="961"/>
         <source>Cancel</source>
         <translation>İptal</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="485"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="499"/>
         <source>Reset Color Adjustments</source>
         <translation>Renk Ayarlarını Sıfırla</translation>
     </message>
@@ -272,115 +294,115 @@
         <translation>Maks. Yükseklik:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="652"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="439"/>
+        <source>Upscayl</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="666"/>
         <source>Nearest</source>
         <translation>En yakın komşu</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="653"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="667"/>
         <source>Bilinear</source>
         <translation>Bilineer</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="654"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="668"/>
         <source>Smart sharpen</source>
         <translation>Akıllı keskinleştirme</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="655"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="669"/>
         <source>Magic Kernel Sharp 2021</source>
         <translation>Magic Kernel Sharp 2021</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="659"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="673"/>
         <source>Original size</source>
         <translation>Orijinal boyut</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="682"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="696"/>
         <source>Reset: %1 x %2</source>
         <translation>Sıfırla: %1 x %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="706"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="720"/>
         <source>No AI models found in models/ directory.</source>
         <translation>models/ dizininde Yapay Zekâ modeli bulunamadı.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="863"/>
-        <source>Use Upscayl only applies when the target size is larger than the original; it has no effect at this size and will be skipped.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="897"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="905"/>
         <source>%1 files selected (%2 MB)</source>
         <translation>%1 dosya seçildi (%2 MB)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="901"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="909"/>
         <source>Select Output Directory</source>
         <translation>Çıkış Dizinini Seçin</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="918"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="919"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="926"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="927"/>
         <source>PNG Compression level (0 - none, 9 - max)</source>
         <translation>PNG sıkıştırma seviyesi (0 - yok, 9 - maks)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="934"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="935"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="942"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="943"/>
         <source>Quality (1 - lowest, 100 - highest)</source>
         <translation>Kalite (1 - en düşük, 100 - en yüksek)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="950"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1093"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="958"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1097"/>
         <source>Stopping...</source>
         <translation>Durduruluyor...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="953"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="961"/>
         <source>Stop</source>
         <translation>Durdur</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="963"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="971"/>
         <source>Invalid Directory</source>
         <translation>Geçersiz Dizin</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="963"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="971"/>
         <source>Please select a valid output directory.</source>
         <translation>Lütfen geçerli bir çıkış dizini seçin.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="969"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="977"/>
         <source>Invalid Pattern</source>
         <translation>Geçersiz Şablon</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="969"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="977"/>
         <source>Filename pattern cannot contain path traversal sequences (..) or absolute paths.</source>
         <translation>Dosya adı şablonu, yol geçiş dizilimleri (..) veya mutlak yollar içeremez.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="979"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="987"/>
         <source>No files</source>
         <translation>Dosya yok</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="979"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="987"/>
         <source>No files selected in the queue. Please check at least one file.</source>
         <translation>Kuyrukta hiç dosya seçilmedi. Lütfen en az bir dosyayı işaretleyin.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="993"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1001"/>
         <source>Resolution Limit Exceeded</source>
         <translation>Çözünürlük Sınırı Aşıldı</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="994"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1002"/>
         <source>Target resolution (%1x%2) exceeds safety limits.
 
 Maximum allowed dimension: %3 px
@@ -395,48 +417,48 @@ Please reduce the percentage or absolute size.</source>
 Lütfen yüzdeyi veya mutlak boyutu azaltın.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1010"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1071"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1018"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1075"/>
         <source>Processing...</source>
         <translation>İşleniyor...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1106"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1110"/>
         <source>Stopped by user. Success: %1, Failed: %2</source>
         <translation>Kullanıcı tarafından durduruldu. Başarılı: %1, Başarısız: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1112"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1116"/>
         <source>Batch aborted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1113"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1117"/>
         <source>Batch Conversion Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1058"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1062"/>
         <source>Pending</source>
         <translation>Beklemede</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1074"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1078"/>
         <source>Processed %1 / %2 files.</source>
         <translation>%1 / %2 dosya işlendi.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1081"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1085"/>
         <source>Finished. Success: %1, Failed: %2</source>
         <translation>Bitti. Başarılı: %1, Başarısız: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1082"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1086"/>
         <source>Batch Conversion Complete</source>
         <translation>Toplu Dönüştürme Tamamlandı</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1083"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1087"/>
         <source>Batch process complete.
 
 Successfully converted: %1
@@ -723,237 +745,237 @@ Toplam dosya: %3</translation>
 <context>
     <name>Core</name>
     <message>
-        <location filename="../../core.cpp" line="636"/>
+        <location filename="../../core.cpp" line="643"/>
         <source>Updated: </source>
         <translation>Güncellendi: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="644"/>
+        <location filename="../../core.cpp" line="651"/>
         <source>Welcome to </source>
         <translation>Hoş geldiniz</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="645"/>
+        <location filename="../../core.cpp" line="652"/>
         <source> version </source>
         <translation> sürüm </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="663"/>
+        <location filename="../../core.cpp" line="670"/>
         <source>Shuffle mode: OFF</source>
         <translation>Karıştırma modu: KAPALI</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="666"/>
+        <location filename="../../core.cpp" line="673"/>
         <source>Shuffle mode: ON</source>
         <translation>Karıştırma modu: AÇIK</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="675"/>
+        <location filename="../../core.cpp" line="682"/>
         <source>Slideshow: OFF</source>
         <translation>Slayt gösterisi: KAPALI</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="679"/>
+        <location filename="../../core.cpp" line="686"/>
         <source>Slideshow: ON</source>
         <translation>Slayt gösterisi: AÇIK</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="815"/>
-        <location filename="../../core.cpp" line="818"/>
-        <location filename="../../core.cpp" line="821"/>
+        <location filename="../../core.cpp" line="829"/>
+        <location filename="../../core.cpp" line="832"/>
+        <location filename="../../core.cpp" line="835"/>
         <source>Delete </source>
         <translation>Sil </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="816"/>
+        <location filename="../../core.cpp" line="830"/>
         <source> folders permanently?</source>
         <translation> klasörü kalıcı olarak silinsin mi?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="819"/>
+        <location filename="../../core.cpp" line="833"/>
         <source> files permanently?</source>
         <translation> dosyayı kalıcı olarak silinsin mi?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="822"/>
+        <location filename="../../core.cpp" line="836"/>
         <source> items permanently?</source>
         <translation> öge kalıcı olarak silinsin mi?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="830"/>
+        <location filename="../../core.cpp" line="844"/>
         <source>Delete permanently</source>
         <translation>Kalıcı olarak sil</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="852"/>
+        <location filename="../../core.cpp" line="866"/>
         <source>File removed</source>
         <translation>Dosya kaldırıldı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="858"/>
-        <location filename="../../core.cpp" line="861"/>
-        <location filename="../../core.cpp" line="864"/>
+        <location filename="../../core.cpp" line="872"/>
+        <location filename="../../core.cpp" line="875"/>
+        <location filename="../../core.cpp" line="878"/>
         <source>Removed: </source>
         <translation>Kaldırıldı: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="862"/>
-        <location filename="../../core.cpp" line="933"/>
+        <location filename="../../core.cpp" line="876"/>
+        <location filename="../../core.cpp" line="947"/>
         <source> files</source>
         <translation> dosya</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="889"/>
-        <location filename="../../core.cpp" line="891"/>
-        <location filename="../../core.cpp" line="893"/>
+        <location filename="../../core.cpp" line="903"/>
+        <location filename="../../core.cpp" line="905"/>
+        <location filename="../../core.cpp" line="907"/>
         <source>Move </source>
         <translation>Taşı </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="893"/>
+        <location filename="../../core.cpp" line="907"/>
         <source> items to trash?</source>
         <translation> öge çöp kutusuna taşınsın mı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="901"/>
+        <location filename="../../core.cpp" line="915"/>
         <source>Move to trash</source>
         <translation>Çöp kutusuna taşı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="921"/>
+        <location filename="../../core.cpp" line="935"/>
         <source>Folder moved to trash</source>
         <translation>Klasör çöp kutusuna taşındı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="923"/>
+        <location filename="../../core.cpp" line="937"/>
         <source>Moved to trash</source>
         <translation>Çöp kutusuna taşındı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="929"/>
-        <location filename="../../core.cpp" line="932"/>
-        <location filename="../../core.cpp" line="935"/>
+        <location filename="../../core.cpp" line="943"/>
+        <location filename="../../core.cpp" line="946"/>
+        <location filename="../../core.cpp" line="949"/>
         <source>Moved to trash: </source>
         <translation>Çöp kutusuna taşındı: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1010"/>
+        <location filename="../../core.cpp" line="1024"/>
         <source>File copied</source>
         <translation>Dosya kopyalandı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1017"/>
+        <location filename="../../core.cpp" line="1031"/>
         <source>Path copied</source>
         <translation>Dosya yolu kopyalandı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1191"/>
-        <location filename="../../core.cpp" line="1540"/>
-        <location filename="../../core.cpp" line="1562"/>
+        <location filename="../../core.cpp" line="1205"/>
+        <location filename="../../core.cpp" line="1554"/>
+        <location filename="../../core.cpp" line="1576"/>
         <source>File exists</source>
         <translation>Dosya zaten var</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1191"/>
+        <location filename="../../core.cpp" line="1205"/>
         <source>Overwrite file?</source>
         <translation>Dosyanın üzerine yazılsın mı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1286"/>
+        <location filename="../../core.cpp" line="1300"/>
         <source>Add folder</source>
         <translation>Klasör ekle</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1287"/>
+        <location filename="../../core.cpp" line="1301"/>
         <source>Folder name:</source>
         <translation>Klasör adı:</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1294"/>
+        <location filename="../../core.cpp" line="1308"/>
         <source>Folder already exists</source>
         <translation>Klasör zaten var</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1305"/>
+        <location filename="../../core.cpp" line="1319"/>
         <source>Failed to create folder</source>
         <translation>Klasör oluşturulamadı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1359"/>
+        <location filename="../../core.cpp" line="1373"/>
         <source>Cannot copy a directory into itself or a subdirectory of itself.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1410"/>
-        <location filename="../../core.cpp" line="1492"/>
+        <location filename="../../core.cpp" line="1424"/>
+        <location filename="../../core.cpp" line="1506"/>
         <source>Could not create directory </source>
         <translation>Dizin oluşturulamadı </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1441"/>
+        <location filename="../../core.cpp" line="1455"/>
         <source>Cannot move a directory into itself or a subdirectory of itself.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1538"/>
+        <location filename="../../core.cpp" line="1552"/>
         <source>File moved.</source>
         <translation>Dosya taşındı.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1541"/>
-        <location filename="../../core.cpp" line="1563"/>
+        <location filename="../../core.cpp" line="1555"/>
+        <location filename="../../core.cpp" line="1577"/>
         <source>Destination file exists. Overwrite?</source>
         <translation>Dosya hedefte var. Üzerine yazılsın mı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1560"/>
+        <location filename="../../core.cpp" line="1574"/>
         <source>File copied.</source>
         <translation>Dosya kopyalandı.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1638"/>
+        <location filename="../../core.cpp" line="1652"/>
         <source>Perform action &quot;</source>
         <translation>Eylemi gerçekleştir: &quot;</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1639"/>
+        <location filename="../../core.cpp" line="1653"/>
         <source>Changes will be saved immediately.</source>
         <translation>Değişiklikler hemen kaydedilecektir.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1660"/>
+        <location filename="../../core.cpp" line="1674"/>
         <source>Flip horizontal</source>
         <translation>Yatay çevir</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1664"/>
+        <location filename="../../core.cpp" line="1678"/>
         <source>Flip vertical</source>
         <translation>Dikey çevir</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1669"/>
+        <location filename="../../core.cpp" line="1683"/>
         <source>Rotate</source>
         <translation>Döndür</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1711"/>
-        <location filename="../../core.cpp" line="1737"/>
+        <location filename="../../core.cpp" line="1725"/>
+        <location filename="../../core.cpp" line="1751"/>
         <source>Resize</source>
         <translation>Yeniden boyutlandır</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1780"/>
+        <location filename="../../core.cpp" line="1794"/>
         <source>AI resize finished, but the image has changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1798"/>
-        <location filename="../../core.cpp" line="1804"/>
+        <location filename="../../core.cpp" line="1812"/>
+        <location filename="../../core.cpp" line="1818"/>
         <source>Crop</source>
         <translation>Kırp</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1870"/>
+        <location filename="../../core.cpp" line="1884"/>
         <source>File saved</source>
         <translation>Dosya kaydedildi</translation>
     </message>
@@ -963,23 +985,23 @@ Toplam dosya: %3</translation>
         <translation>Dosya kaydedilemedi</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1949"/>
-        <location filename="../../core.cpp" line="1955"/>
+        <location filename="../../core.cpp" line="1963"/>
+        <location filename="../../core.cpp" line="1969"/>
         <source>Set wallpaper: file not supported</source>
         <translation>Duvar kağıdı yap: dosya desteklenmiyor</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1974"/>
+        <location filename="../../core.cpp" line="1988"/>
         <source>Could not open image</source>
         <translation>Görüntü açılamadı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1978"/>
+        <location filename="../../core.cpp" line="1992"/>
         <source>Can only print static images</source>
         <translation>Sadece hareketsiz görüntüler yazdırılabilir</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="173"/>
+        <location filename="../../core.cpp" line="176"/>
         <source>AI Upscaling...</source>
         <translation>Yapay Zeka Ölçekleme...</translation>
     </message>
@@ -1076,110 +1098,110 @@ Toplam dosya: %3</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="168"/>
+        <location filename="../../core.cpp" line="171"/>
         <source>Set wallpaper: failed to clean up wallpaper file: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="445"/>
+        <location filename="../../core.cpp" line="452"/>
         <source>Failed to clear thumbnail cache</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="826"/>
+        <location filename="../../core.cpp" line="840"/>
         <source>Delete folder permanently?</source>
         <translation>Klasörü kalıcı olarak sil?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="828"/>
+        <location filename="../../core.cpp" line="842"/>
         <source>Delete file permanently?</source>
         <translation>Dosyayı kalıcı olarak sil?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="850"/>
+        <location filename="../../core.cpp" line="864"/>
         <source>Folder removed</source>
         <translation>Klasör kaldırıldı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="859"/>
-        <location filename="../../core.cpp" line="930"/>
+        <location filename="../../core.cpp" line="873"/>
+        <location filename="../../core.cpp" line="944"/>
         <source> folders</source>
         <translation> klasör</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="865"/>
-        <location filename="../../core.cpp" line="936"/>
+        <location filename="../../core.cpp" line="879"/>
+        <location filename="../../core.cpp" line="950"/>
         <source> items</source>
         <translation> öğe</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="889"/>
+        <location filename="../../core.cpp" line="903"/>
         <source> folders to trash?</source>
         <translation> klasörü çöp kutusuna taşı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="891"/>
+        <location filename="../../core.cpp" line="905"/>
         <source> files to trash?</source>
         <translation> dosyayı çöp kutusuna taşı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="897"/>
+        <location filename="../../core.cpp" line="911"/>
         <source>Move folder to trash?</source>
         <translation>Klasörü çöp kutusuna taşı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="899"/>
+        <location filename="../../core.cpp" line="913"/>
         <source>Move file to trash?</source>
         <translation>Dosyayı çöp kutusuna taşı?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1679"/>
+        <location filename="../../core.cpp" line="1693"/>
         <source>AI resize is already running.</source>
         <translation>Yapay Zekâ boyutlandırma zaten çalışıyor.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1688"/>
+        <location filename="../../core.cpp" line="1702"/>
         <source>AI resize supports one image at a time.</source>
         <translation>Yapay Zekâ boyutlandırma aynı anda yalnızca bir resmi destekler.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1695"/>
-        <location filename="../../core.cpp" line="1701"/>
+        <location filename="../../core.cpp" line="1709"/>
+        <location filename="../../core.cpp" line="1715"/>
         <source>Could not resize image.</source>
         <translation>Resim boyutlandırılamadı.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1727"/>
+        <location filename="../../core.cpp" line="1741"/>
         <source>AI resizing...</source>
         <translation>Yapay Zekâ ile boyutlandırılıyor...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1762"/>
+        <location filename="../../core.cpp" line="1776"/>
         <source>AI resize failed.</source>
         <translation>Yapay Zekâ ile boyutlandırma başarısız.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1767"/>
+        <location filename="../../core.cpp" line="1781"/>
         <source>AI resize finished, but the image is no longer in the list.</source>
         <translation>Yapay Zekâ boyutlandırma bitti ancak resim artık listede değil.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1773"/>
+        <location filename="../../core.cpp" line="1787"/>
         <source>Could not apply AI resize.</source>
         <translation>Yapay Zekâ boyutlandırma uygulanamadı.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1789"/>
+        <location filename="../../core.cpp" line="1803"/>
         <source>AI resize finished.</source>
         <translation>Yapay Zekâ boyutlandırma bitti.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1791"/>
+        <location filename="../../core.cpp" line="1805"/>
         <source>AI resize finished for %1.</source>
         <translation>%1 için Yapay Zekâ boyutlandırma bitti.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1961"/>
+        <location filename="../../core.cpp" line="1975"/>
         <source>Set wallpaper: failed to get image</source>
         <translation>Duvar kağıdı ayarla: resim alınamadı</translation>
     </message>
@@ -1212,39 +1234,39 @@ Toplam dosya: %3</translation>
         <translation type="vanished">Duvar kağıdı ayarla: PNG kaydedilemedi</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="156"/>
+        <location filename="../../core.cpp" line="159"/>
         <source>Wallpaper set</source>
         <translation>Duvar kağıdı ayarlandı</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2063"/>
+        <location filename="../../core.cpp" line="2077"/>
         <source>Could not open path: </source>
         <translation>Dosya yolu açılamadı: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2128"/>
+        <location filename="../../core.cpp" line="2142"/>
         <source>Could not load folder: </source>
         <translation>Klasör yüklenemedi: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2322"/>
+        <location filename="../../core.cpp" line="2347"/>
         <source>End of directory.</source>
         <translation>Dizin sonu.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2356"/>
+        <location filename="../../core.cpp" line="2381"/>
         <source>Load failed: </source>
         <translation>Yükleme başarısız: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2425"/>
-        <location filename="../../core.cpp" line="2432"/>
+        <location filename="../../core.cpp" line="2450"/>
+        <location filename="../../core.cpp" line="2457"/>
         <source>Error: could not load image.</source>
         <translation>Hata: Görüntü yüklenemedi.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2469"/>
-        <location filename="../../core.cpp" line="2492"/>
+        <location filename="../../core.cpp" line="2494"/>
+        <location filename="../../core.cpp" line="2517"/>
         <source>Page %1/%2</source>
         <translation>Sayfa %1/%2</translation>
     </message>
@@ -1469,37 +1491,37 @@ Toplam dosya: %3</translation>
 <context>
     <name>FolderGridView</name>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="602"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="601"/>
         <source>Rename</source>
         <translation>Yeniden adlandır</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="574"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="573"/>
         <source>Open only selected</source>
         <translation>Yalnızca seçilenleri aç</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="581"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="580"/>
         <source>Batch convert</source>
         <translation>Toplu dönüştür</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="588"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="587"/>
         <source>Add folder</source>
         <translation>Klasör ekle</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="595"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="594"/>
         <source>Show in folder</source>
         <translation>Klasörde göster</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="611"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="610"/>
         <source>Move to trash</source>
         <translation>Çöp kutusuna taşı</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="620"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="619"/>
         <source>Delete permanently</source>
         <translation>Kalıcı olarak sil</translation>
     </message>
@@ -3509,6 +3531,19 @@ Example: D:\Downloads; E:\Pictures</source>
         <location filename="../../gui/dialogs/shortcutcreatordialog.cpp" line="106"/>
         <source>. Replace?</source>
         <translation>. Değiştirilsin mi?</translation>
+    </message>
+</context>
+<context>
+    <name>Upscaler</name>
+    <message>
+        <location filename="../../components/upscaler/upscalerrunnable.cpp" line="33"/>
+        <source>AI Model failed to load</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../components/upscaler/upscalerrunnable.cpp" line="35"/>
+        <source>AI Upscaling processing failed</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -417,12 +417,26 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     lCol->addWidget(resetButton);
 
     QHBoxLayout *chkLayout = new QHBoxLayout();
+
     keepAspectRatio = new QCheckBox(tr("Keep aspect ratio"), this);
     keepAspectRatio->setChecked(true);
-    keepAspectRatio->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
-    useUpscaylCheckBox = new QCheckBox(tr("Use Upscayl"), this);
-    useUpscaylCheckBox->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
     chkLayout->addWidget(keepAspectRatio);
+
+    aspectFitModeGroup = new QButtonGroup(this);
+    aspectFitAutoRadio = new QRadioButton(tr("Auto"), this);
+    aspectFitAutoRadio->setChecked(true);
+    aspectFitWidthRadio = new QRadioButton(tr("Width"), this);
+    aspectFitHeightRadio = new QRadioButton(tr("Height"), this);
+    aspectFitModeGroup->addButton(aspectFitAutoRadio, static_cast<int>(AspectFitMode::Auto));
+    aspectFitModeGroup->addButton(aspectFitWidthRadio, static_cast<int>(AspectFitMode::Width));
+    aspectFitModeGroup->addButton(aspectFitHeightRadio, static_cast<int>(AspectFitMode::Height));
+    chkLayout->addWidget(aspectFitAutoRadio);
+    chkLayout->addWidget(aspectFitWidthRadio);
+    chkLayout->addWidget(aspectFitHeightRadio);
+
+    chkLayout->addStretch(1);
+
+    useUpscaylCheckBox = new QCheckBox(tr("Upscayl"), this);
     chkLayout->addWidget(useUpscaylCheckBox);
     lCol->addLayout(chkLayout);
 
@@ -718,6 +732,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     connect(height, qOverload<int>(&QSpinBox::valueChanged), this, &BatchConverterDialog::onHeightChanged);
     connect(resComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &BatchConverterDialog::onCommonResolutionChanged);
     connect(resetButton, &QPushButton::clicked, this, &BatchConverterDialog::onResetSizes);
+    connect(keepAspectRatio, &QCheckBox::toggled, this, &BatchConverterDialog::onKeepAspectRatioToggled);
     connect(useUpscaylCheckBox, &QCheckBox::toggled, this, &BatchConverterDialog::onUseUpscaylToggled);
 
     connect(selectAllBtn, &QPushButton::clicked, this, &BatchConverterDialog::onSelectAll);
@@ -766,10 +781,23 @@ void BatchConverterDialog::onResizeRadioToggled() {
         keepAspectRatio->blockSignals(true);
         keepAspectRatio->setChecked(true);
         keepAspectRatio->blockSignals(false);
+        // Percent mode applies the same percentage to both dimensions per
+        // file, so Auto/W/H are equivalent - keep the group disabled.
+        aspectFitAutoRadio->setEnabled(false);
+        aspectFitWidthRadio->setEnabled(false);
+        aspectFitHeightRadio->setEnabled(false);
         onPercentChanged(percent->value());
     } else {
+        onKeepAspectRatioToggled(keepAspectRatio->isChecked());
         onWidthChanged(width->value());
     }
+}
+
+void BatchConverterDialog::onKeepAspectRatioToggled(bool checked) {
+    bool enable = checked && !byPercentage->isChecked();
+    aspectFitAutoRadio->setEnabled(enable);
+    aspectFitWidthRadio->setEnabled(enable);
+    aspectFitHeightRadio->setEnabled(enable);
 }
 
 void BatchConverterDialog::onPercentChanged(double val) {
@@ -1001,6 +1029,7 @@ void BatchConverterDialog::startConversion() {
     job.resizePercent = percent->value();
     job.targetSize = targetSize;
     job.keepAspectRatio = keepAspectRatio->isChecked();
+    job.aspectFitMode = static_cast<AspectFitMode>(aspectFitModeGroup->checkedId());
     // Per-file upscaling check for mixed resolution batches lives inside BatchConverter itself.
     job.useUpscayl = job.doResize && useUpscaylCheckBox->isChecked();
     job.upscaylModel = upscaylModelComboBox->currentText();

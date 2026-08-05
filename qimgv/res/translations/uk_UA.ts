@@ -4,86 +4,94 @@
 <context>
     <name>BatchConverter</name>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="82"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="112"/>
         <source>Stopped</source>
         <translation>Зупинено</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="96"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="153"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="164"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="215"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="230"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="314"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="320"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="332"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="344"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="126"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="185"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="196"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="213"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="231"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="269"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="284"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="365"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="371"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="383"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="395"/>
         <source>Failed</source>
         <translation>Не вдалося</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="97"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="127"/>
         <source>Load Error</source>
         <translation>Помилка завантаження</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="154"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="186"/>
         <source>AI Model Error</source>
         <translation>Помилка моделі ШІ</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="165"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="197"/>
         <source>AI Upscaling Failed</source>
         <translation>Помилка масштабування ШІ</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="222"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="239"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="326"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="338"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="214"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="232"/>
+        <source>Resize Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="276"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="293"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="377"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="389"/>
         <source>Done</source>
         <translation>Готово</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="216"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="270"/>
         <source>Save Error</source>
         <translation>Помилка збереження</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="231"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="285"/>
         <source>Commit Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="288"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="339"/>
         <source>Could not create a unique batch subfolder in &quot;%1&quot;. The batch was aborted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="314"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="365"/>
         <source>Invalid destination path</source>
         <translation>Неправильний шлях призначення</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="223"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="326"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="338"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="277"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="377"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="389"/>
         <source>Skipped (Exists)</source>
         <translation>Пропущено (існує)</translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="320"/>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="344"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="371"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="395"/>
         <source>Destination planning failed: invalid reservation key</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="333"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="384"/>
         <source>Destination planning failed: no unique output path is available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../components/batchconverter/batchconverter.cpp" line="349"/>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="400"/>
         <source>Processing...</source>
         <translation>Обробка...</translation>
     </message>
@@ -136,22 +144,21 @@
         <translation>Відсоток:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="420"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="421"/>
         <source>Keep aspect ratio</source>
         <translation>Зберігати пропорції</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="423"/>
         <source>Use Upscayl</source>
-        <translation>Використовувати Upscayl</translation>
+        <translation type="vanished">Використовувати Upscayl</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="432"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="446"/>
         <source>Filter:</source>
         <translation>Фільтр:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="439"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="453"/>
         <source>Model:</source>
         <translation>Модель:</translation>
     </message>
@@ -166,37 +173,37 @@
         <translation>Скинути</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="456"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="470"/>
         <source>Color adjustments</source>
         <translation>Корекція кольорів</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="461"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="475"/>
         <source>Exposure:</source>
         <translation>Експозиція:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="464"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="478"/>
         <source>Contrast:</source>
         <translation>Контрастність:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="467"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="481"/>
         <source>Brightness:</source>
         <translation>Яскравість:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="476"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="490"/>
         <source>Temperature:</source>
         <translation>Температура:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="479"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="493"/>
         <source>Tint:</source>
         <translation>Відтінок:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="470"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="484"/>
         <source>Saturation:</source>
         <translation>Насиченість:</translation>
     </message>
@@ -211,166 +218,181 @@
         <translation>Макс. висота:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="473"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="426"/>
+        <source>Auto</source>
+        <translation>Авто</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="428"/>
+        <source>Width</source>
+        <translation>Ширина</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="429"/>
+        <source>Height</source>
+        <translation>Висота</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="439"/>
+        <source>Upscayl</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="487"/>
         <source>Hue:</source>
         <translation>Колірний тон:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="505"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="519"/>
         <source>Output folder:</source>
         <translation>Вихідна папка:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="509"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="523"/>
         <source>...</source>
         <translation>...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="514"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="528"/>
         <source>Create subfolder for batch</source>
         <translation>Створити підпапку для пакета</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="517"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="531"/>
         <source>Filename pattern:</source>
         <translation>Шаблон імені файлу:</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="518"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="532"/>
         <source>{name}_converted</source>
         <translation>{name}_converted</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="521"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="535"/>
         <source>Available: {name}, {ext}, {date}, {index}</source>
         <translation>Доступно: {name}, {ext}, {date}, {index}</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="525"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="539"/>
         <source>Overwrite existing files</source>
         <translation>Перезаписувати існуючі файли</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="533"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="547"/>
         <source>Ready to convert.</source>
         <translation>Готово до конвертації.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="537"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="551"/>
         <source>Convert</source>
         <translation>Конвертувати</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="539"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="953"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="553"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="961"/>
         <source>Cancel</source>
         <translation>Скасувати</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="652"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="666"/>
         <source>Nearest</source>
         <translation>Найближчий сусід</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="653"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="667"/>
         <source>Bilinear</source>
         <translation>Білінійний</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="654"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="668"/>
         <source>Smart sharpen</source>
         <translation>Розумна різкість</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="655"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="669"/>
         <source>Magic Kernel Sharp 2021</source>
         <translation>Magic Kernel Sharp 2021</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="682"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="696"/>
         <source>Reset: %1 x %2</source>
         <translation>Скинути: %1 x %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="706"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="720"/>
         <source>No AI models found in models/ directory.</source>
         <translation>Не знайдено моделей ШІ в папці models/.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="863"/>
-        <source>Use Upscayl only applies when the target size is larger than the original; it has no effect at this size and will be skipped.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="897"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="905"/>
         <source>%1 files selected (%2 MB)</source>
         <translation>Вибрано файлів: %1 (%2 МБ)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="901"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="909"/>
         <source>Select Output Directory</source>
         <translation>Вибрати вихідну папку</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="918"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="919"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="926"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="927"/>
         <source>PNG Compression level (0 - none, 9 - max)</source>
         <translation>Рівень стиснення PNG (0 - без стиснення, 9 - макс)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="934"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="935"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="942"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="943"/>
         <source>Quality (1 - lowest, 100 - highest)</source>
         <translation>Якість (1 - найнижча, 100 - найвища)</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="950"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1093"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="958"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1097"/>
         <source>Stopping...</source>
         <translation>Зупинка...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="953"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="961"/>
         <source>Stop</source>
         <translation>Стоп</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="963"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="971"/>
         <source>Invalid Directory</source>
         <translation>Невірна папка</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="963"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="971"/>
         <source>Please select a valid output directory.</source>
         <translation>Будь ласка, виберіть дійсну вихідну папку.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="969"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="977"/>
         <source>Invalid Pattern</source>
         <translation>Неправильний шаблон</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="969"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="977"/>
         <source>Filename pattern cannot contain path traversal sequences (..) or absolute paths.</source>
         <translation>Шаблон імені файлу не може містити послідовності переходу по папках (..) або абсолютні шляхи.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="979"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="987"/>
         <source>No files</source>
         <translation>Немає файлів</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="979"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="987"/>
         <source>No files selected in the queue. Please check at least one file.</source>
         <translation>У черзі немає вибраних файлів. Будь ласка, позначте хоча б один файл.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="993"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1001"/>
         <source>Resolution Limit Exceeded</source>
         <translation>Перевищено ліміт роздільної здатності</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="994"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1002"/>
         <source>Target resolution (%1x%2) exceeds safety limits.
 
 Maximum allowed dimension: %3 px
@@ -385,48 +407,48 @@ Please reduce the percentage or absolute size.</source>
 Будь ласка, зменште відсоток або аболютний розмір.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1010"/>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1071"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1018"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1075"/>
         <source>Processing...</source>
         <translation>Обробка...</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1106"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1110"/>
         <source>Stopped by user. Success: %1, Failed: %2</source>
         <translation>Зупинено користувачем. Успішно: %1, Помилок: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1112"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1116"/>
         <source>Batch aborted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1113"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1117"/>
         <source>Batch Conversion Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1058"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1062"/>
         <source>Pending</source>
         <translation>Очікування</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1074"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1078"/>
         <source>Processed %1 / %2 files.</source>
         <translation>Оброблено %1 з %2 файлів.</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1081"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1085"/>
         <source>Finished. Success: %1, Failed: %2</source>
         <translation>Завершено. Успішно: %1, Помилок: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1082"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1086"/>
         <source>Batch Conversion Complete</source>
         <translation>Пакетне перетворення завершено</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1083"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="1087"/>
         <source>Batch process complete.
 
 Successfully converted: %1
@@ -439,12 +461,12 @@ Total files: %3</source>
 Всього файлів: %3</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="659"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="673"/>
         <source>Original size</source>
         <translation>Оригінальний розмір</translation>
     </message>
     <message>
-        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="485"/>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="499"/>
         <source>Reset Color Adjustments</source>
         <translation>Скинути корекцію кольорів</translation>
     </message>
@@ -723,237 +745,237 @@ Total files: %3</source>
 <context>
     <name>Core</name>
     <message>
-        <location filename="../../core.cpp" line="636"/>
+        <location filename="../../core.cpp" line="643"/>
         <source>Updated: </source>
         <translation>Оновлено: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="644"/>
+        <location filename="../../core.cpp" line="651"/>
         <source>Welcome to </source>
         <translation>Ласкаво просимо до </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="645"/>
+        <location filename="../../core.cpp" line="652"/>
         <source> version </source>
         <translation> версія </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="663"/>
+        <location filename="../../core.cpp" line="670"/>
         <source>Shuffle mode: OFF</source>
         <translation>Режим перемішування: Вимкнено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="666"/>
+        <location filename="../../core.cpp" line="673"/>
         <source>Shuffle mode: ON</source>
         <translation>Режим перемішування: Увімкнено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="675"/>
+        <location filename="../../core.cpp" line="682"/>
         <source>Slideshow: OFF</source>
         <translation>Слайд-шоу: Вимкнено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="679"/>
+        <location filename="../../core.cpp" line="686"/>
         <source>Slideshow: ON</source>
         <translation>Слайд-шоу: Увімкнено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="815"/>
-        <location filename="../../core.cpp" line="818"/>
-        <location filename="../../core.cpp" line="821"/>
+        <location filename="../../core.cpp" line="829"/>
+        <location filename="../../core.cpp" line="832"/>
+        <location filename="../../core.cpp" line="835"/>
         <source>Delete </source>
         <translation>Видалити </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="816"/>
+        <location filename="../../core.cpp" line="830"/>
         <source> folders permanently?</source>
         <translation> папок назавжди?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="819"/>
+        <location filename="../../core.cpp" line="833"/>
         <source> files permanently?</source>
         <translation> файлів назавжди?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="822"/>
+        <location filename="../../core.cpp" line="836"/>
         <source> items permanently?</source>
         <translation> елементів остаточно?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="830"/>
+        <location filename="../../core.cpp" line="844"/>
         <source>Delete permanently</source>
         <translation>Видалити остаточно</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="852"/>
+        <location filename="../../core.cpp" line="866"/>
         <source>File removed</source>
         <translation>Файл видалено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="858"/>
-        <location filename="../../core.cpp" line="861"/>
-        <location filename="../../core.cpp" line="864"/>
+        <location filename="../../core.cpp" line="872"/>
+        <location filename="../../core.cpp" line="875"/>
+        <location filename="../../core.cpp" line="878"/>
         <source>Removed: </source>
         <translation>Видалено: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="862"/>
-        <location filename="../../core.cpp" line="933"/>
+        <location filename="../../core.cpp" line="876"/>
+        <location filename="../../core.cpp" line="947"/>
         <source> files</source>
         <translation> файлів</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="889"/>
-        <location filename="../../core.cpp" line="891"/>
-        <location filename="../../core.cpp" line="893"/>
+        <location filename="../../core.cpp" line="903"/>
+        <location filename="../../core.cpp" line="905"/>
+        <location filename="../../core.cpp" line="907"/>
         <source>Move </source>
         <translation>Помістити </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="893"/>
+        <location filename="../../core.cpp" line="907"/>
         <source> items to trash?</source>
         <translation> елементів до кошику?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="901"/>
+        <location filename="../../core.cpp" line="915"/>
         <source>Move to trash</source>
         <translation>Помістити в кошик</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="921"/>
+        <location filename="../../core.cpp" line="935"/>
         <source>Folder moved to trash</source>
         <translation>Папку поміщено в кошик</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="923"/>
+        <location filename="../../core.cpp" line="937"/>
         <source>Moved to trash</source>
         <translation>Переміщено в кошик</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="929"/>
-        <location filename="../../core.cpp" line="932"/>
-        <location filename="../../core.cpp" line="935"/>
+        <location filename="../../core.cpp" line="943"/>
+        <location filename="../../core.cpp" line="946"/>
+        <location filename="../../core.cpp" line="949"/>
         <source>Moved to trash: </source>
         <translation>Переміщено в кошик: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1010"/>
+        <location filename="../../core.cpp" line="1024"/>
         <source>File copied</source>
         <translation>Файл скопійовано</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1017"/>
+        <location filename="../../core.cpp" line="1031"/>
         <source>Path copied</source>
         <translation>Шлях скопійовано</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1191"/>
-        <location filename="../../core.cpp" line="1540"/>
-        <location filename="../../core.cpp" line="1562"/>
+        <location filename="../../core.cpp" line="1205"/>
+        <location filename="../../core.cpp" line="1554"/>
+        <location filename="../../core.cpp" line="1576"/>
         <source>File exists</source>
         <translation>Файл існує</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1191"/>
+        <location filename="../../core.cpp" line="1205"/>
         <source>Overwrite file?</source>
         <translation>Перезаписати файл?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1286"/>
+        <location filename="../../core.cpp" line="1300"/>
         <source>Add folder</source>
         <translation>Додати папку</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1287"/>
+        <location filename="../../core.cpp" line="1301"/>
         <source>Folder name:</source>
         <translation>Назва папки:</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1294"/>
+        <location filename="../../core.cpp" line="1308"/>
         <source>Folder already exists</source>
         <translation>Папка вже існує</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1305"/>
+        <location filename="../../core.cpp" line="1319"/>
         <source>Failed to create folder</source>
         <translation>Не вдалося створити папку</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1359"/>
+        <location filename="../../core.cpp" line="1373"/>
         <source>Cannot copy a directory into itself or a subdirectory of itself.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1410"/>
-        <location filename="../../core.cpp" line="1492"/>
+        <location filename="../../core.cpp" line="1424"/>
+        <location filename="../../core.cpp" line="1506"/>
         <source>Could not create directory </source>
         <translation>Не вдалося створити директорію </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1441"/>
+        <location filename="../../core.cpp" line="1455"/>
         <source>Cannot move a directory into itself or a subdirectory of itself.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1538"/>
+        <location filename="../../core.cpp" line="1552"/>
         <source>File moved.</source>
         <translation>Файл переміщено.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1541"/>
-        <location filename="../../core.cpp" line="1563"/>
+        <location filename="../../core.cpp" line="1555"/>
+        <location filename="../../core.cpp" line="1577"/>
         <source>Destination file exists. Overwrite?</source>
         <translation>Файл існує. Перезаписати?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1560"/>
+        <location filename="../../core.cpp" line="1574"/>
         <source>File copied.</source>
         <translation>Файл скопійовано.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1638"/>
+        <location filename="../../core.cpp" line="1652"/>
         <source>Perform action &quot;</source>
         <translation>Виконати дію &quot;</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1639"/>
+        <location filename="../../core.cpp" line="1653"/>
         <source>Changes will be saved immediately.</source>
         <translation>Зміни будуть збережені негайно.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1660"/>
+        <location filename="../../core.cpp" line="1674"/>
         <source>Flip horizontal</source>
         <translation>Перевернути горизонтально</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1664"/>
+        <location filename="../../core.cpp" line="1678"/>
         <source>Flip vertical</source>
         <translation>Перевернути вертикально</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1669"/>
+        <location filename="../../core.cpp" line="1683"/>
         <source>Rotate</source>
         <translation>Повернути</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1711"/>
-        <location filename="../../core.cpp" line="1737"/>
+        <location filename="../../core.cpp" line="1725"/>
+        <location filename="../../core.cpp" line="1751"/>
         <source>Resize</source>
         <translation>Змінити розмір</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1780"/>
+        <location filename="../../core.cpp" line="1794"/>
         <source>AI resize finished, but the image has changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1798"/>
-        <location filename="../../core.cpp" line="1804"/>
+        <location filename="../../core.cpp" line="1812"/>
+        <location filename="../../core.cpp" line="1818"/>
         <source>Crop</source>
         <translation>Обрізати</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1870"/>
+        <location filename="../../core.cpp" line="1884"/>
         <source>File saved</source>
         <translation>Файл збережено</translation>
     </message>
@@ -963,23 +985,23 @@ Total files: %3</source>
         <translation>Не вдалос зберегти файл</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1949"/>
-        <location filename="../../core.cpp" line="1955"/>
+        <location filename="../../core.cpp" line="1963"/>
+        <location filename="../../core.cpp" line="1969"/>
         <source>Set wallpaper: file not supported</source>
         <translation>Встановлення шпалер: файл не підтримується</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1974"/>
+        <location filename="../../core.cpp" line="1988"/>
         <source>Could not open image</source>
         <translation>Не вдалося відкрити зображення</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1978"/>
+        <location filename="../../core.cpp" line="1992"/>
         <source>Can only print static images</source>
         <translation>Можливий друк лише статичних зображень</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="173"/>
+        <location filename="../../core.cpp" line="176"/>
         <source>AI Upscaling...</source>
         <translation>Масштабування ШІ...</translation>
     </message>
@@ -1076,110 +1098,110 @@ Total files: %3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="168"/>
+        <location filename="../../core.cpp" line="171"/>
         <source>Set wallpaper: failed to clean up wallpaper file: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="445"/>
+        <location filename="../../core.cpp" line="452"/>
         <source>Failed to clear thumbnail cache</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="826"/>
+        <location filename="../../core.cpp" line="840"/>
         <source>Delete folder permanently?</source>
         <translation>Видалити папку назавжди?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="828"/>
+        <location filename="../../core.cpp" line="842"/>
         <source>Delete file permanently?</source>
         <translation>Видалити файл назавжди?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="850"/>
+        <location filename="../../core.cpp" line="864"/>
         <source>Folder removed</source>
         <translation>Папку видалено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="859"/>
-        <location filename="../../core.cpp" line="930"/>
+        <location filename="../../core.cpp" line="873"/>
+        <location filename="../../core.cpp" line="944"/>
         <source> folders</source>
         <translation> папок</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="865"/>
-        <location filename="../../core.cpp" line="936"/>
+        <location filename="../../core.cpp" line="879"/>
+        <location filename="../../core.cpp" line="950"/>
         <source> items</source>
         <translation> елементів</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="889"/>
+        <location filename="../../core.cpp" line="903"/>
         <source> folders to trash?</source>
         <translation> папок у кошик?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="891"/>
+        <location filename="../../core.cpp" line="905"/>
         <source> files to trash?</source>
         <translation> файлів у кошик?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="897"/>
+        <location filename="../../core.cpp" line="911"/>
         <source>Move folder to trash?</source>
         <translation>Помістити папку в кошик?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="899"/>
+        <location filename="../../core.cpp" line="913"/>
         <source>Move file to trash?</source>
         <translation>Помістити файл у кошик?</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1679"/>
+        <location filename="../../core.cpp" line="1693"/>
         <source>AI resize is already running.</source>
         <translation>Масштабування ШІ вже запущено.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1688"/>
+        <location filename="../../core.cpp" line="1702"/>
         <source>AI resize supports one image at a time.</source>
         <translation>Масштабування ШІ підтримує лише одне зображення за раз.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1695"/>
-        <location filename="../../core.cpp" line="1701"/>
+        <location filename="../../core.cpp" line="1709"/>
+        <location filename="../../core.cpp" line="1715"/>
         <source>Could not resize image.</source>
         <translation>Не вдалося змінити розмір зображення.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1727"/>
+        <location filename="../../core.cpp" line="1741"/>
         <source>AI resizing...</source>
         <translation>Масштабування ШІ...</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1762"/>
+        <location filename="../../core.cpp" line="1776"/>
         <source>AI resize failed.</source>
         <translation>Помилка масштабування ШІ.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1767"/>
+        <location filename="../../core.cpp" line="1781"/>
         <source>AI resize finished, but the image is no longer in the list.</source>
         <translation>Масштабування ШІ завершено, але зображення більше немає в списку.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1773"/>
+        <location filename="../../core.cpp" line="1787"/>
         <source>Could not apply AI resize.</source>
         <translation>Не вдалося застосувати масштабування ШІ.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1789"/>
+        <location filename="../../core.cpp" line="1803"/>
         <source>AI resize finished.</source>
         <translation>Масштабування ШІ завершено.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1791"/>
+        <location filename="../../core.cpp" line="1805"/>
         <source>AI resize finished for %1.</source>
         <translation>Масштабування ШІ для %1 завершено.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="1961"/>
+        <location filename="../../core.cpp" line="1975"/>
         <source>Set wallpaper: failed to get image</source>
         <translation>Встановлення шпалер: не вдалося отримати зображення</translation>
     </message>
@@ -1212,39 +1234,39 @@ Total files: %3</source>
         <translation type="vanished">Встановлення шпалер: не вдалося зберегти PNG</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="156"/>
+        <location filename="../../core.cpp" line="159"/>
         <source>Wallpaper set</source>
         <translation>Шпалери встановлено</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2063"/>
+        <location filename="../../core.cpp" line="2077"/>
         <source>Could not open path: </source>
         <translation>Не вдалося відкрити шлях: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2128"/>
+        <location filename="../../core.cpp" line="2142"/>
         <source>Could not load folder: </source>
         <translation>Не вдалося завантажити теку: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2322"/>
+        <location filename="../../core.cpp" line="2347"/>
         <source>End of directory.</source>
         <translation>Кінець директорії.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2356"/>
+        <location filename="../../core.cpp" line="2381"/>
         <source>Load failed: </source>
         <translation>Завантаження не вдалося: </translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2425"/>
-        <location filename="../../core.cpp" line="2432"/>
+        <location filename="../../core.cpp" line="2450"/>
+        <location filename="../../core.cpp" line="2457"/>
         <source>Error: could not load image.</source>
         <translation>Помилка: не вдалося завантажити зображення.</translation>
     </message>
     <message>
-        <location filename="../../core.cpp" line="2469"/>
-        <location filename="../../core.cpp" line="2492"/>
+        <location filename="../../core.cpp" line="2494"/>
+        <location filename="../../core.cpp" line="2517"/>
         <source>Page %1/%2</source>
         <translation>Сторінка %1/%2</translation>
     </message>
@@ -1469,37 +1491,37 @@ Total files: %3</source>
 <context>
     <name>FolderGridView</name>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="602"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="601"/>
         <source>Rename</source>
         <translation>Перейменувати</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="574"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="573"/>
         <source>Open only selected</source>
         <translation>Відкрити тільки виділені</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="581"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="580"/>
         <source>Batch convert</source>
         <translation>Пакетне конвертування</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="588"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="587"/>
         <source>Add folder</source>
         <translation>Додати папку</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="595"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="594"/>
         <source>Show in folder</source>
         <translation>Показати в папці</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="611"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="610"/>
         <source>Move to trash</source>
         <translation>Помістити в корзину</translation>
     </message>
     <message>
-        <location filename="../../gui/folderview/foldergridview.cpp" line="620"/>
+        <location filename="../../gui/folderview/foldergridview.cpp" line="619"/>
         <source>Delete permanently</source>
         <translation>Видалити назавжди</translation>
     </message>
@@ -3509,6 +3531,19 @@ qimgv розповсюджується за ліцензією [GNU GPL верс
         <location filename="../../gui/dialogs/shortcutcreatordialog.cpp" line="106"/>
         <source>. Replace?</source>
         <translation>. Замінити?</translation>
+    </message>
+</context>
+<context>
+    <name>Upscaler</name>
+    <message>
+        <location filename="../../components/upscaler/upscalerrunnable.cpp" line="33"/>
+        <source>AI Model failed to load</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../components/upscaler/upscalerrunnable.cpp" line="35"/>
+        <source>AI Upscaling processing failed</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

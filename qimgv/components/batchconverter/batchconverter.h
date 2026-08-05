@@ -8,7 +8,14 @@
 #include <QList>
 #include <QSet>
 #include <atomic>
+#include <cstdint>
 #include <memory>
+
+enum class AspectFitMode : uint8_t {
+    Auto,   // Fit into the target box, constrained by whichever side is tighter (per file).
+    Width,  // Scale is derived from the target width only; height follows proportionally.
+    Height  // Scale is derived from the target height only; width follows proportionally.
+};
 
 struct BatchJob {
     QString format;
@@ -18,6 +25,7 @@ struct BatchJob {
     double resizePercent = 100.0;
     QSize targetSize;
     bool keepAspectRatio = true;
+    AspectFitMode aspectFitMode = AspectFitMode::Auto;
     bool useUpscayl = false;
     QString upscaylModel;
     int scalingFilter = 0;
