@@ -15,6 +15,8 @@
 #include <QUuid>
 #include <QCoreApplication>
 #include <QThreadPool>
+#include <QTimer>
+#include <QPointer>
 #include "components/upscaler/upscaler.h"
 #include "components/upscaler/upscaylresizerunnable.h"
 #include "components/wallpaper/wallpapercontroller.h"
@@ -264,6 +266,20 @@ void Core::raiseWindow(const QString &pathReceived) {
 
   bool resumed = m_resumeFromStandby;
 
+  // The window may currently be hidden (standby) or minimized. Bringing
+  // it back involves several native Win32 calls further down (SW_RESTORE,
+  // a TOPMOST/NOTOPMOST toggle to steal focus, SetForegroundWindow...).
+  // On Windows, SetWindowPos(..., SWP_SHOWWINDOW, ...) right after a
+  // hide/minimize can make the OS present the window's raw backing
+  // surface for a frame before Qt/DWM has painted real content over it,
+  // which is what shows up as a brief white flash. Keeping the window
+  // fully transparent for the duration of that dance and only revealing
+  // it once everything has settled hides that frame regardless of its
+  // cause (same technique ColdStartWindowController uses on first launch).
+  bool wasHidden = !mw->isVisible();
+  if (wasHidden)
+    mw->setWindowOpacity(0.0);
+
   if (m_resumeFromStandby) {
       m_resumeFromStandby = false;
       if (!pathReceived.isEmpty()) {
@@ -288,6 +304,13 @@ void Core::raiseWindow(const QString &pathReceived) {
       }
   }
 
+  // Let the event queue catch up before showing the window, same as the
+  // cold-start path in main.cpp: without this, resuming from standby (or
+  // a second instance handing off a path) paints the bare window for one
+  // frame before pending layout/style events are processed, which shows
+  // up as a brief white background flash.
+  qApp->processEvents();
+
   showGui();
 
   if (resumed && mw->isMaximized()) {
@@ -308,6 +331,14 @@ void Core::raiseWindow(const QString &pathReceived) {
   SetActiveWindow(hwnd);
   mw->raise();
   mw->activateWindow();
+
+  if (wasHidden) {
+    QPointer<MW> mwGuard(mw);
+    QTimer::singleShot(0, mw, [mwGuard]() {
+      if (mwGuard)
+        mwGuard->setWindowOpacity(1.0);
+    });
+  }
 }
 
 // create MainWindow and all widgets
