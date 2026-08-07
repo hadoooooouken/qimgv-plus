@@ -58,6 +58,10 @@ public:
 
     static QString decodeResult(const FileOpResult &result);
     static QString generateHash(const QString &str);
+    // True if fileName is one of FileOperations' own transient temp/backup
+    // artifacts (see saveImage()/copyFileAtomically()), never real directory
+    // content. Filesystem-watcher consumers should ignore events for these.
+    [[nodiscard]] static bool isInternalArtifact(const QString &fileName);
     [[nodiscard]] static ImageSaveResult copyFileAtomically(
         const QString &sourcePath, const QString &destPath);
     [[nodiscard]] static ImageSaveResult saveImage(const QImage &image,

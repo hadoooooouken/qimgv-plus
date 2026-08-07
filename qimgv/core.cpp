@@ -106,10 +106,14 @@ QString imageSaveFailureMessage(const ImageSaveResult &result) {
                                        "Could not save file: the file copy failed");
   case ImageSaveError::CommitFailed:
     return QCoreApplication::translate(
-        "Core", "Could not save file: the destination could not be replaced");
+               "Core",
+               "Could not save file: the destination could not be replaced (Windows error %1)")
+        .arg(result.nativeError);
   case ImageSaveError::RecoveryFailed:
     return QCoreApplication::translate(
-        "Core", "Could not save file: automatic recovery failed");
+               "Core",
+               "Could not save file: automatic recovery failed (Windows error %1)")
+        .arg(result.nativeError);
   case ImageSaveError::None:
     return {};
   }

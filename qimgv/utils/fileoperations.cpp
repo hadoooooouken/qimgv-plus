@@ -14,6 +14,13 @@ constexpr DWORD kReplaceFileFlags = 0;
 constexpr DWORD kMoveFileFlags = MOVEFILE_WRITE_THROUGH;
 constexpr qsizetype kFileCopyBufferSizeBytes = 1024 * 1024;
 
+// Shared with FileOperations::isInternalArtifact() below - any filename
+// containing one of these markers is a transient implementation detail of
+// the atomic save mechanism (temp write target / pre-replace backup), never
+// real user content. Nothing outside this file should hardcode these.
+const QString kTemporaryFileMarker = QStringLiteral(".qimgv_tmp_");
+const QString kBackupFileMarker = QStringLiteral(".qimgv_bak_");
+
 std::wstring nativePath(const QString &path) {
     return QDir::toNativeSeparators(path).toStdWString();
 }
@@ -29,12 +36,15 @@ ImageSaveResult commitTemporaryFile(const QString &temporaryPath,
             return {};
         }
 
-        return {ImageSaveError::CommitFailed, {}, GetLastError()};
+        const DWORD moveError = GetLastError();
+        qWarning() << "FileOperations - MoveFileExW failed committing"
+                   << temporaryPath << "to" << destinationPath
+                   << "Windows error:" << moveError;
+        return {ImageSaveError::CommitFailed, {}, moveError};
     }
 
-    const QString backupSuffix = QStringLiteral(".qimgv_bak_");
     const QString backupPath =
-        destinationPath + backupSuffix +
+        destinationPath + kBackupFileMarker +
         QUuid::createUuid().toString(QUuid::WithoutBraces);
     const std::wstring nativeBackupPath = nativePath(backupPath);
 
@@ -56,10 +66,16 @@ ImageSaveResult commitTemporaryFile(const QString &temporaryPath,
                         kMoveFileFlags)) {
             return {};
         }
-        return {ImageSaveError::CommitFailed, {}, GetLastError()};
+        const DWORD fallbackMoveError = GetLastError();
+        qWarning() << "FileOperations - Fallback MoveFileExW failed committing"
+                   << temporaryPath << "to" << destinationPath
+                   << "Windows error:" << fallbackMoveError;
+        return {ImageSaveError::CommitFailed, {}, fallbackMoveError};
     }
 
     if (!QFile::exists(backupPath)) {
+        qWarning() << "FileOperations - ReplaceFileW failed before creating a backup for"
+                   << destinationPath << "Windows error:" << commitError;
         return {ImageSaveError::CommitFailed, {}, commitError};
     }
 
@@ -71,6 +87,9 @@ ImageSaveResult commitTemporaryFile(const QString &temporaryPath,
 
     if (MoveFileExW(nativeBackupPath.c_str(), nativeDestinationPath.c_str(),
                     kMoveFileFlags)) {
+        qWarning() << "FileOperations - ReplaceFileW failed for" << destinationPath
+                   << "Windows error:" << commitError
+                   << "- original file restored from backup, no data lost.";
         return {ImageSaveError::CommitFailed, {}, commitError};
     }
 
@@ -389,48 +408,64 @@ ImageSaveResult FileOperations::copyFileAtomically(const QString &sourcePath,
         return {ImageSaveError::SourceUnavailable};
     }
 
-    const QString temporaryFileSuffix = QStringLiteral(".qimgv_tmp_XXXXXX");
-    QTemporaryFile temporaryFile(destPath + temporaryFileSuffix);
-    if (!temporaryFile.open()) {
-        qWarning() << "FileOperations::copyFileAtomically() - Could not create temporary file:"
-                   << temporaryFile.errorString();
-        return {ImageSaveError::TemporaryFileCreationFailed};
-    }
-
-    QByteArray buffer;
-    buffer.resize(kFileCopyBufferSizeBytes);
-    while (!sourceFile.atEnd()) {
-        const qint64 bytesRead = sourceFile.read(buffer.data(), buffer.size());
-        if (bytesRead < 0) {
-            qWarning() << "FileOperations::copyFileAtomically() - Could not read source file:"
-                       << sourcePath << sourceFile.errorString();
-            return {ImageSaveError::FileCopyFailed};
+    const QString temporaryFileSuffix = kTemporaryFileMarker + QStringLiteral("XXXXXX");
+    QString temporaryPath;
+    {
+        // Scoped so the QTemporaryFile object - and the native Windows handle
+        // it keeps open internally even after close() - is fully released
+        // before commitTemporaryFile() below tries to move/replace the
+        // destination. Committing while that handle is still alive causes
+        // MoveFileExW/ReplaceFileW to fail with ERROR_SHARING_VIOLATION
+        // (Windows error 32), since the file has "just been created and
+        // closed" from the OS's point of view.
+        QTemporaryFile temporaryFile(destPath + temporaryFileSuffix);
+        if (!temporaryFile.open()) {
+            qWarning() << "FileOperations::copyFileAtomically() - Could not create temporary file:"
+                       << temporaryFile.errorString();
+            return {ImageSaveError::TemporaryFileCreationFailed};
         }
 
-        qint64 bytesWritten = 0;
-        while (bytesWritten < bytesRead) {
-            const qint64 writeResult =
-                temporaryFile.write(buffer.constData() + bytesWritten,
-                                    bytesRead - bytesWritten);
-            if (writeResult <= 0) {
-                qWarning() << "FileOperations::copyFileAtomically() - Could not write temporary file:"
-                           << temporaryFile.fileName()
-                           << temporaryFile.errorString();
+        QByteArray buffer;
+        buffer.resize(kFileCopyBufferSizeBytes);
+        while (!sourceFile.atEnd()) {
+            const qint64 bytesRead = sourceFile.read(buffer.data(), buffer.size());
+            if (bytesRead < 0) {
+                qWarning() << "FileOperations::copyFileAtomically() - Could not read source file:"
+                           << sourcePath << sourceFile.errorString();
                 return {ImageSaveError::FileCopyFailed};
             }
-            bytesWritten += writeResult;
+
+            qint64 bytesWritten = 0;
+            while (bytesWritten < bytesRead) {
+                const qint64 writeResult =
+                    temporaryFile.write(buffer.constData() + bytesWritten,
+                                        bytesRead - bytesWritten);
+                if (writeResult <= 0) {
+                    qWarning() << "FileOperations::copyFileAtomically() - Could not write temporary file:"
+                               << temporaryFile.fileName()
+                               << temporaryFile.errorString();
+                    return {ImageSaveError::FileCopyFailed};
+                }
+                bytesWritten += writeResult;
+            }
         }
-    }
 
-    if (!temporaryFile.flush()) {
-        qWarning() << "FileOperations::copyFileAtomically() - Failed to flush temporary file:"
-                   << temporaryFile.fileName() << temporaryFile.errorString();
-        return {ImageSaveError::TemporaryFileFlushFailed};
-    }
+        if (!temporaryFile.flush()) {
+            qWarning() << "FileOperations::copyFileAtomically() - Failed to flush temporary file:"
+                       << temporaryFile.fileName() << temporaryFile.errorString();
+            return {ImageSaveError::TemporaryFileFlushFailed};
+        }
 
-    const QString temporaryPath = temporaryFile.fileName();
-    temporaryFile.close();
-    return commitTemporaryFile(temporaryPath, destPath);
+        temporaryPath = temporaryFile.fileName();
+        // We commit this file ourselves right below; don't let the
+        // QTemporaryFile destructor delete it out from under us.
+        temporaryFile.setAutoRemove(false);
+    } // temporaryFile is destroyed here, releasing its native handle.
+
+    const ImageSaveResult result = commitTemporaryFile(temporaryPath, destPath);
+    if (!result.succeeded() && result.retainedBackupPath.isEmpty())
+        QFile::remove(temporaryPath);
+    return result;
 }
 
 ImageSaveResult FileOperations::saveImage(const QImage &image,
@@ -447,27 +482,49 @@ ImageSaveResult FileOperations::saveImage(const QImage &image,
 
     const QFileInfo destinationInfo(destPath);
     const QByteArray imageFormat = destinationInfo.suffix().toLatin1();
-    const QString temporaryFileSuffix = QStringLiteral(".qimgv_tmp_XXXXXX");
-    QTemporaryFile temporaryFile(destPath + temporaryFileSuffix);
-    if (!temporaryFile.open()) {
-        qWarning() << "FileOperations::saveImage() - Could not create temporary file:"
-                   << temporaryFile.errorString();
-        return {ImageSaveError::TemporaryFileCreationFailed};
-    }
+    const QString temporaryFileSuffix = kTemporaryFileMarker + QStringLiteral("XXXXXX");
+    QString temporaryPath;
+    {
+        // See the comment in copyFileAtomically(): the QTemporaryFile must be
+        // fully destroyed - not just close()d - before we try to move/replace
+        // the destination, or the still-open native handle causes
+        // ERROR_SHARING_VIOLATION on MoveFileExW/ReplaceFileW.
+        QTemporaryFile temporaryFile(destPath + temporaryFileSuffix);
+        if (!temporaryFile.open()) {
+            qWarning() << "FileOperations::saveImage() - Could not create temporary file:"
+                       << temporaryFile.errorString();
+            return {ImageSaveError::TemporaryFileCreationFailed};
+        }
 
-    if (!image.save(&temporaryFile, imageFormat.constData(), quality)) {
-        qWarning() << "FileOperations::saveImage() - Failed to encode image in temporary file:"
-                   << temporaryFile.fileName();
-        return {ImageSaveError::ImageEncodingFailed};
-    }
+        if (!image.save(&temporaryFile, imageFormat.constData(), quality)) {
+            qWarning() << "FileOperations::saveImage() - Failed to encode image in temporary file:"
+                       << temporaryFile.fileName();
+            return {ImageSaveError::ImageEncodingFailed};
+        }
 
-    if (!temporaryFile.flush()) {
-        qWarning() << "FileOperations::saveImage() - Failed to flush temporary file:"
-                   << temporaryFile.fileName() << temporaryFile.errorString();
-        return {ImageSaveError::TemporaryFileFlushFailed};
-    }
+        if (!temporaryFile.flush()) {
+            qWarning() << "FileOperations::saveImage() - Failed to flush temporary file:"
+                       << temporaryFile.fileName() << temporaryFile.errorString();
+            return {ImageSaveError::TemporaryFileFlushFailed};
+        }
 
-    const QString temporaryPath = temporaryFile.fileName();
-    temporaryFile.close();
-    return commitTemporaryFile(temporaryPath, destPath);
+        temporaryPath = temporaryFile.fileName();
+        temporaryFile.setAutoRemove(false);
+    } // temporaryFile is destroyed here, releasing its native handle.
+
+    const ImageSaveResult result = commitTemporaryFile(temporaryPath, destPath);
+    if (!result.succeeded() && result.retainedBackupPath.isEmpty())
+        QFile::remove(temporaryPath);
+    return result;
+}
+
+// Any consumer that reacts to raw filesystem events (namely DirectoryManager's
+// DirectoryWatcher handlers) needs to recognize and ignore the temp/backup
+// files this class creates during an atomic save - they are never real
+// directory content, just a transient implementation detail, and the caller
+// of saveImage()/copyFileAtomically() already pushes the real, user-facing
+// update (DirectoryModel::saveFile() calls updateFileEntry()/emits
+// fileModified() directly once the save succeeds).
+bool FileOperations::isInternalArtifact(const QString &fileName) {
+    return fileName.contains(kTemporaryFileMarker) || fileName.contains(kBackupFileMarker);
 }
