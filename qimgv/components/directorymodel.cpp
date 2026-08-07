@@ -1,8 +1,6 @@
 #include "directorymodel.h"
 #include "sourcecontainers/imagestatic.h"
 #include "settings.h"
-#include <QTimer>
-#include <QPointer>
 
 DirectoryModel::DirectoryModel(QObject *parent) :
     QObject(parent),
@@ -258,21 +256,12 @@ ImageSaveResult DirectoryModel::saveFile(const QString &filePath, const QString 
     struct SelfWriteGuard {
         DirectoryManager &dm;
         QString path;
-        ~SelfWriteGuard() {
-            // The watcher's notification for our own write is relayed from a
-            // background thread via a queued connection, so it can only be
-            // processed once this synchronous call returns and the main
-            // thread's event loop resumes - it has NOT arrived yet at this
-            // point. Lifting suppression synchronously here would race ahead
-            // of it and defeat the whole point. Give it a short grace period
-            // on the event loop instead.
-            QPointer<DirectoryManager> dmPtr(&dm);
-            QString capturedPath = path;
-            QTimer::singleShot(300, [dmPtr, capturedPath]() {
-                if (dmPtr)
-                    dmPtr->endSelfWrite(capturedPath);
-            });
-        }
+        // Hands off to DirectoryManager::scheduleEndSelfWrite(), which lifts
+        // suppression once it has actually seen (or given up waiting for)
+        // the watcher notification our own write triggers - see the
+        // comment on that function for why a fixed delay here isn't
+        // reliable enough.
+        ~SelfWriteGuard() { dm.scheduleEndSelfWrite(path); }
     } selfWriteGuard{dirManager, destPath};
 
     auto img = cache.get(filePath);

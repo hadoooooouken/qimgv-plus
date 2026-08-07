@@ -869,40 +869,67 @@ bool DirectoryManager::fileWatcherActive() {
 }
 
 void DirectoryManager::beginSelfWrite(const QString &filePath) {
-    const int count = ++selfWriteRefCounts[lookupKey(filePath)];
-    qDebug() << "selfWrite BEGIN" << filePath << "refcount" << count;
+    SelfWriteState &state = selfWriteStates[lookupKey(filePath)];
+    ++state.refCount;
 }
 
-void DirectoryManager::endSelfWrite(const QString &filePath) {
+void DirectoryManager::scheduleEndSelfWrite(const QString &filePath, int firstEventTimeoutMs, int quietPeriodMs) {
     const QString key = lookupKey(filePath);
-    auto it = selfWriteRefCounts.find(key);
-    if(it == selfWriteRefCounts.end()) {
-        qDebug() << "selfWrite END (already gone)" << filePath;
+    auto it = selfWriteStates.find(key);
+    if(it == selfWriteStates.end())
         return;
+    SelfWriteState &state = it.value();
+    ++state.pendingEnds;
+    state.quietPeriodMs = quietPeriodMs;
+    if(!state.timer) {
+        state.timer = new QTimer(this);
+        state.timer->setSingleShot(true);
+        connect(state.timer, &QTimer::timeout, this, [this, key]() {
+            finalizeSelfWrite(key);
+        });
     }
-    if(--it.value() <= 0) {
-        selfWriteRefCounts.erase(it);
-        qDebug() << "selfWrite END" << filePath << "refcount 0, cleared";
-    } else {
-        qDebug() << "selfWrite END" << filePath << "refcount" << it.value();
+    state.timer->start(firstEventTimeoutMs);
+}
+
+void DirectoryManager::noteSelfWriteActivity(const QString &filePath) {
+    const QString key = lookupKey(filePath);
+    auto it = selfWriteStates.find(key);
+    if(it == selfWriteStates.end())
+        return;
+    SelfWriteState &state = it.value();
+    // Only relevant once someone is actually waiting to end - if we're
+    // still in the middle of the write itself (scheduleEndSelfWrite() not
+    // called yet), there's no timer running to extend.
+    if(state.pendingEnds > 0 && state.timer)
+        state.timer->start(state.quietPeriodMs);
+}
+
+void DirectoryManager::finalizeSelfWrite(const QString &key) {
+    auto it = selfWriteStates.find(key);
+    if(it == selfWriteStates.end())
+        return;
+    SelfWriteState &state = it.value();
+    state.refCount -= state.pendingEnds;
+    state.pendingEnds = 0;
+    if(state.refCount <= 0) {
+        state.timer->deleteLater();
+        selfWriteStates.erase(it);
     }
 }
 
 bool DirectoryManager::isSelfWrite(const QString &filePath) const {
-    return selfWriteRefCounts.contains(lookupKey(filePath));
+    return selfWriteStates.contains(lookupKey(filePath));
 }
 
 //----------------------------------------------------------------------------
 // fs watcher events  ( onFile___External() )
 // these take file NAMES, not paths
 void DirectoryManager::onFileRemovedExternal(QString fileName) {
-    if (FileOperations::isInternalArtifact(fileName)) {
-        qDebug() << "fileRemExt SKIP (internal artifact)" << fileName;
+    if (FileOperations::isInternalArtifact(fileName))
         return;
-    }
     QString fullPath = watcher->watchPath() + "/" + fileName;
     if (isSelfWrite(fullPath)) {
-        qDebug() << "fileRemExt SKIP (self-write)" << fullPath;
+        noteSelfWriteActivity(fullPath);
         return;
     }
     removeDirEntry(fullPath);
@@ -910,13 +937,11 @@ void DirectoryManager::onFileRemovedExternal(QString fileName) {
 }
 
 void DirectoryManager::onFileAddedExternal(QString fileName) {
-    if (FileOperations::isInternalArtifact(fileName)) {
-        qDebug() << "fileAddExt SKIP (internal artifact)" << fileName;
+    if (FileOperations::isInternalArtifact(fileName))
         return;
-    }
     QString fullPath = watcher->watchPath() + "/" + fileName;
     if (isSelfWrite(fullPath)) {
-        qDebug() << "fileAddExt SKIP (self-write)" << fullPath;
+        noteSelfWriteActivity(fullPath);
         return;
     }
     if(isDir(fullPath))
@@ -938,13 +963,13 @@ void DirectoryManager::onFileRenamedExternal(QString oldName, QString newName) {
     // whatever raw shape the OS reports while we're the one writing it.
     if (FileOperations::isInternalArtifact(oldName) ||
         FileOperations::isInternalArtifact(newName)) {
-        qDebug() << "fileRenExt SKIP (internal artifact)" << oldName << "->" << newName;
         return;
     }
     QString oldPath = watcher->watchPath() + "/" + oldName;
     QString newPath = watcher->watchPath() + "/" + newName;
     if (isSelfWrite(oldPath) || isSelfWrite(newPath)) {
-        qDebug() << "fileRenExt SKIP (self-write)" << oldPath << "->" << newPath;
+        noteSelfWriteActivity(oldPath);
+        noteSelfWriteActivity(newPath);
         return;
     }
     if(isDir(newPath))
@@ -954,13 +979,11 @@ void DirectoryManager::onFileRenamedExternal(QString oldName, QString newName) {
 }
 
 void DirectoryManager::onFileModifiedExternal(QString fileName) {
-    if (FileOperations::isInternalArtifact(fileName)) {
-        qDebug() << "fileModExt SKIP (internal artifact)" << fileName;
+    if (FileOperations::isInternalArtifact(fileName))
         return;
-    }
     QString fullPath = watcher->watchPath() + "/" + fileName;
     if (isSelfWrite(fullPath)) {
-        qDebug() << "fileModExt SKIP (self-write)" << fullPath;
+        noteSelfWriteActivity(fullPath);
         return;
     }
     updateFileEntry(fullPath);

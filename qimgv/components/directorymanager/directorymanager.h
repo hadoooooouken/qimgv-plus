@@ -13,6 +13,7 @@
 #include <QPointer>
 #include <QThreadPool>
 #include <QRunnable>
+#include <QTimer>
 #include <atomic>
 #include <memory>
 
@@ -90,15 +91,39 @@ public:
     void renameFileEntry(const QString &oldFilePath, const QString &newName);
 
     // Callers that write filePath themselves (DirectoryModel::saveFile(), via
-    // FileOperations) call beginSelfWrite() before the write and endSelfWrite()
-    // once it's done. While active, ANY filesystem-watcher event that touches
-    // filePath is ignored, regardless of whether the OS reports the write as
-    // a plain modify, or as a rename/delete/create sequence (as with
-    // FileOperations' temp-write + backup-and-replace mechanism) - the caller
-    // already pushes the authoritative update (updateFileEntry()/
-    // insertFileEntry() + fileModified()) itself once the write succeeds.
+    // FileOperations) call beginSelfWrite() before the write and
+    // scheduleEndSelfWrite() once it's done. While active, ANY
+    // filesystem-watcher event that touches filePath is ignored, regardless
+    // of whether the OS reports the write as a plain modify, or as a
+    // rename/delete/create sequence (as with FileOperations' temp-write +
+    // backup-and-replace mechanism) - the caller already pushes the
+    // authoritative update (updateFileEntry()/insertFileEntry() +
+    // fileModified()) itself once the write succeeds.
     void beginSelfWrite(const QString &filePath);
-    void endSelfWrite(const QString &filePath);
+
+    // Lifting suppression can't happen synchronously: the watcher's
+    // notification for our own write is relayed from a background thread
+    // via a queued connection, so it hasn't arrived yet when the caller's
+    // write call returns (see DirectoryModel::saveFile()). Instead of
+    // guessing a single fixed delay - which either races ahead of a
+    // notification that's simply slow to arrive (busy disk, AV scanning the
+    // file right after we wrote it, ...) or, on a multi-event sequence
+    // (e.g. a rename pair, or a remove+add pair from the backup-and-replace
+    // dance), stops listening after the first one and lets a later one
+    // through - suppression is lifted based on actual observed activity:
+    //   - firstEventTimeoutMs bounds how long we wait to see ANY matching
+    //     event at all; nothing arriving in that window means the write
+    //     apparently didn't produce a watcher event for this path, so
+    //     there's nothing left to wait for.
+    //   - Every time a matching event actually arrives and gets suppressed
+    //     (see the onFile___External() handlers below, which call
+    //     noteSelfWriteActivity() on a hit), the wait is shortened to just
+    //     quietPeriodMs from that point - long enough to catch the rest of
+    //     a multi-event sequence without waiting out the full timeout for
+    //     each one.
+    void scheduleEndSelfWrite(const QString &filePath,
+                               int firstEventTimeoutMs = 800,
+                               int quietPeriodMs = 150);
     bool isSelfWrite(const QString &filePath) const;
 
     bool insertDirEntry(const QString &dirPath);
@@ -132,9 +157,26 @@ private:
 
     // Refcounted so overlapping beginSelfWrite() calls for the same path
     // (shouldn't normally happen with a single in-flight save, but is cheap
-    // to make safe) don't let one endSelfWrite() lift suppression the other
-    // still needs.
-    QHash<QString, int> selfWriteRefCounts;
+    // to make safe) don't let one resolved scheduleEndSelfWrite() lift
+    // suppression the other still needs. pendingEnds counts
+    // scheduleEndSelfWrite() calls that haven't fired yet; when the timer
+    // fires it resolves all of them at once (they're all waiting on the
+    // same underlying watcher activity for this path, so there's no reason
+    // to stagger them). timer is owned by this DirectoryManager (parented
+    // in its constructor) and created lazily on first use.
+    struct SelfWriteState {
+        int refCount = 0;
+        int pendingEnds = 0;
+        int quietPeriodMs = 150;
+        QTimer *timer = nullptr;
+    };
+    QHash<QString, SelfWriteState> selfWriteStates;
+    // Called from the onFile___External() handlers whenever they suppress
+    // an event as belonging to an in-flight self-write, to extend the
+    // pending scheduleEndSelfWrite() wait - see the comment on
+    // scheduleEndSelfWrite() above.
+    void noteSelfWriteActivity(const QString &filePath);
+    void finalizeSelfWrite(const QString &key);
 
     DirectoryWatcher* watcher;
     void readSettings();
