@@ -1,5 +1,6 @@
 #include "directorymanager.h"
 #include "settings.h"
+#include "utils/fileoperations.h"
 
 #include <QThreadPool>
 #include <QRunnable>
@@ -867,17 +868,59 @@ bool DirectoryManager::fileWatcherActive() {
     return watcher->isObserving();
 }
 
+void DirectoryManager::beginSelfWrite(const QString &filePath) {
+    const int count = ++selfWriteRefCounts[lookupKey(filePath)];
+    qDebug() << "selfWrite BEGIN" << filePath << "refcount" << count;
+}
+
+void DirectoryManager::endSelfWrite(const QString &filePath) {
+    const QString key = lookupKey(filePath);
+    auto it = selfWriteRefCounts.find(key);
+    if(it == selfWriteRefCounts.end()) {
+        qDebug() << "selfWrite END (already gone)" << filePath;
+        return;
+    }
+    if(--it.value() <= 0) {
+        selfWriteRefCounts.erase(it);
+        qDebug() << "selfWrite END" << filePath << "refcount 0, cleared";
+    } else {
+        qDebug() << "selfWrite END" << filePath << "refcount" << it.value();
+    }
+}
+
+bool DirectoryManager::isSelfWrite(const QString &filePath) const {
+    return selfWriteRefCounts.contains(lookupKey(filePath));
+}
+
 //----------------------------------------------------------------------------
 // fs watcher events  ( onFile___External() )
 // these take file NAMES, not paths
 void DirectoryManager::onFileRemovedExternal(QString fileName) {
+    if (FileOperations::isInternalArtifact(fileName)) {
+        qDebug() << "fileRemExt SKIP (internal artifact)" << fileName;
+        return;
+    }
     QString fullPath = watcher->watchPath() + "/" + fileName;
+    if (isSelfWrite(fullPath)) {
+        qDebug() << "fileRemExt SKIP (self-write)" << fullPath;
+        return;
+    }
+    qDebug() << "fileRemExt PROCESS" << fullPath;
     removeDirEntry(fullPath);
     removeFileEntry(fullPath);
 }
 
 void DirectoryManager::onFileAddedExternal(QString fileName) {
+    if (FileOperations::isInternalArtifact(fileName)) {
+        qDebug() << "fileAddExt SKIP (internal artifact)" << fileName;
+        return;
+    }
     QString fullPath = watcher->watchPath() + "/" + fileName;
+    if (isSelfWrite(fullPath)) {
+        qDebug() << "fileAddExt SKIP (self-write)" << fullPath;
+        return;
+    }
+    qDebug() << "fileAddExt PROCESS" << fullPath;
     if(isDir(fullPath))
         insertDirEntry(fullPath);
     else
@@ -885,8 +928,28 @@ void DirectoryManager::onFileAddedExternal(QString fileName) {
 }
 
 void DirectoryManager::onFileRenamedExternal(QString oldName, QString newName) {
+    // FileOperations' atomic save can rename/replace the destination file
+    // through a temp-write + backup-and-replace sequence. Depending on the
+    // filesystem/OS, that can surface here as ordinary renames or as direct
+    // add/remove of the real destination name - either way, without these
+    // guards it can look like "the current file changed identity", which
+    // removes it from the list and makes Core auto-advance to the next
+    // image, even though nothing actually changed from the user's
+    // perspective. isInternalArtifact() catches the temp/backup names
+    // themselves; isSelfWrite() catches the real destination path for
+    // whatever raw shape the OS reports while we're the one writing it.
+    if (FileOperations::isInternalArtifact(oldName) ||
+        FileOperations::isInternalArtifact(newName)) {
+        qDebug() << "fileRenExt SKIP (internal artifact)" << oldName << "->" << newName;
+        return;
+    }
     QString oldPath = watcher->watchPath() + "/" + oldName;
     QString newPath = watcher->watchPath() + "/" + newName;
+    if (isSelfWrite(oldPath) || isSelfWrite(newPath)) {
+        qDebug() << "fileRenExt SKIP (self-write)" << oldPath << "->" << newPath;
+        return;
+    }
+    qDebug() << "fileRenExt PROCESS" << oldPath << "->" << newPath;
     if(isDir(newPath))
         renameDirEntry(oldPath, newName);
     else
@@ -894,7 +957,17 @@ void DirectoryManager::onFileRenamedExternal(QString oldName, QString newName) {
 }
 
 void DirectoryManager::onFileModifiedExternal(QString fileName) {
-    updateFileEntry(watcher->watchPath() + "/" + fileName);
+    if (FileOperations::isInternalArtifact(fileName)) {
+        qDebug() << "fileModExt SKIP (internal artifact)" << fileName;
+        return;
+    }
+    QString fullPath = watcher->watchPath() + "/" + fileName;
+    if (isSelfWrite(fullPath)) {
+        qDebug() << "fileModExt SKIP (self-write)" << fullPath;
+        return;
+    }
+    qDebug() << "fileModExt PROCESS" << fullPath;
+    updateFileEntry(fullPath);
 }
 
 void DirectoryManager::rebuildFileLookupMap() {

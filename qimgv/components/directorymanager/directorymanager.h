@@ -89,6 +89,18 @@ public:
     void updateFileEntry(const QString &filePath);
     void renameFileEntry(const QString &oldFilePath, const QString &newName);
 
+    // Callers that write filePath themselves (DirectoryModel::saveFile(), via
+    // FileOperations) call beginSelfWrite() before the write and endSelfWrite()
+    // once it's done. While active, ANY filesystem-watcher event that touches
+    // filePath is ignored, regardless of whether the OS reports the write as
+    // a plain modify, or as a rename/delete/create sequence (as with
+    // FileOperations' temp-write + backup-and-replace mechanism) - the caller
+    // already pushes the authoritative update (updateFileEntry()/
+    // insertFileEntry() + fileModified()) itself once the write succeeds.
+    void beginSelfWrite(const QString &filePath);
+    void endSelfWrite(const QString &filePath);
+    bool isSelfWrite(const QString &filePath) const;
+
     bool insertDirEntry(const QString &dirPath);
     //bool forceInsertDirEntry(const QString &dirPath);
     void removeDirEntry(const QString &dirPath);
@@ -117,6 +129,12 @@ private:
         return path;
 #endif
     }
+
+    // Refcounted so overlapping beginSelfWrite() calls for the same path
+    // (shouldn't normally happen with a single in-flight save, but is cheap
+    // to make safe) don't let one endSelfWrite() lift suppression the other
+    // still needs.
+    QHash<QString, int> selfWriteRefCounts;
 
     DirectoryWatcher* watcher;
     void readSettings();

@@ -1,6 +1,8 @@
 #include "directorymodel.h"
 #include "sourcecontainers/imagestatic.h"
 #include "settings.h"
+#include <QTimer>
+#include <QPointer>
 
 DirectoryModel::DirectoryModel(QObject *parent) :
     QObject(parent),
@@ -245,6 +247,34 @@ ImageSaveResult DirectoryModel::saveFile(const QString &filePath) {
 ImageSaveResult DirectoryModel::saveFile(const QString &filePath, const QString &destPath) {
     if(!containsFile(filePath) || !cache.contains(filePath))
         return {ImageSaveError::SourceUnavailable};
+
+    // FileOperations writes destPath via a temp file + backup-and-replace
+    // sequence. The filesystem watcher can observe that as the file being
+    // removed/re-added and react on its own - suppress watcher reactions to
+    // destPath for the duration of our own write; we push the real,
+    // authoritative update to dirManager ourselves below once the save
+    // actually succeeds.
+    dirManager.beginSelfWrite(destPath);
+    struct SelfWriteGuard {
+        DirectoryManager &dm;
+        QString path;
+        ~SelfWriteGuard() {
+            // The watcher's notification for our own write is relayed from a
+            // background thread via a queued connection, so it can only be
+            // processed once this synchronous call returns and the main
+            // thread's event loop resumes - it has NOT arrived yet at this
+            // point. Lifting suppression synchronously here would race ahead
+            // of it and defeat the whole point. Give it a short grace period
+            // on the event loop instead.
+            QPointer<DirectoryManager> dmPtr(&dm);
+            QString capturedPath = path;
+            QTimer::singleShot(300, [dmPtr, capturedPath]() {
+                if (dmPtr)
+                    dmPtr->endSelfWrite(capturedPath);
+            });
+        }
+    } selfWriteGuard{dirManager, destPath};
+
     auto img = cache.get(filePath);
     ImageSaveResult saveResult{ImageSaveError::FileCopyFailed};
     if(img->type() == ANIMATED) {
@@ -406,5 +436,3 @@ void DirectoryModel::preload(QString filePath) {
     if(containsFile(filePath) && !cache.contains(filePath))
         loader.loadAsync(filePath);
 }
-
-
