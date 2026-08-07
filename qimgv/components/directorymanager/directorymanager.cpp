@@ -905,7 +905,6 @@ void DirectoryManager::onFileRemovedExternal(QString fileName) {
         qDebug() << "fileRemExt SKIP (self-write)" << fullPath;
         return;
     }
-    qDebug() << "fileRemExt PROCESS" << fullPath;
     removeDirEntry(fullPath);
     removeFileEntry(fullPath);
 }
@@ -920,7 +919,6 @@ void DirectoryManager::onFileAddedExternal(QString fileName) {
         qDebug() << "fileAddExt SKIP (self-write)" << fullPath;
         return;
     }
-    qDebug() << "fileAddExt PROCESS" << fullPath;
     if(isDir(fullPath))
         insertDirEntry(fullPath);
     else
@@ -949,7 +947,6 @@ void DirectoryManager::onFileRenamedExternal(QString oldName, QString newName) {
         qDebug() << "fileRenExt SKIP (self-write)" << oldPath << "->" << newPath;
         return;
     }
-    qDebug() << "fileRenExt PROCESS" << oldPath << "->" << newPath;
     if(isDir(newPath))
         renameDirEntry(oldPath, newName);
     else
@@ -966,7 +963,6 @@ void DirectoryManager::onFileModifiedExternal(QString fileName) {
         qDebug() << "fileModExt SKIP (self-write)" << fullPath;
         return;
     }
-    qDebug() << "fileModExt PROCESS" << fullPath;
     updateFileEntry(fullPath);
 }
 
