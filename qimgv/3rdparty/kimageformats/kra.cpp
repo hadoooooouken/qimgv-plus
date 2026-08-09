@@ -9,10 +9,7 @@
 */
 
 #include "kra.h"
-
-extern "C" {
-#include "miniz.h"
-}
+#include "kraora_p.h"
 
 #include <QFile>
 #include <QIODevice>
@@ -36,34 +33,7 @@ bool KraHandler::canRead() const
 
 bool KraHandler::read(QImage *image)
 {
-    device()->seek(0);
-    QByteArray data = device()->readAll();
-    mz_zip_archive zip_archive;
-    memset(&zip_archive, 0, sizeof(zip_archive));
-
-    if (!mz_zip_reader_init_mem(&zip_archive, data.constData(), data.size(), 0)) {
-        return false;
-    }
-
-    int file_index = mz_zip_reader_locate_file(&zip_archive, "mergedimage.png", nullptr, 0);
-    if (file_index < 0) {
-        mz_zip_reader_end(&zip_archive);
-        return false;
-    }
-
-    size_t uncompressed_size = 0;
-    void *pData = mz_zip_reader_extract_to_heap(&zip_archive, file_index, &uncompressed_size, 0);
-    if (!pData) {
-        mz_zip_reader_end(&zip_archive);
-        return false;
-    }
-
-    bool success = image->loadFromData(static_cast<const uchar*>(pData), static_cast<int>(uncompressed_size), "PNG");
-
-    mz_free(pData);
-    mz_zip_reader_end(&zip_archive);
-
-    return success;
+    return KraOraInternal::readMergedImage(device(), image);
 }
 
 bool KraHandler::canRead(QIODevice *device)
