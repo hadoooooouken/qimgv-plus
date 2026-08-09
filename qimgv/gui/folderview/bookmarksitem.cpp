@@ -59,8 +59,8 @@ BookmarksItem::BookmarksItem(QString _dirName, QString _dirPath, QWidget *parent
     layout.addWidget(&folderIconWidget);
     layout.addWidget(&dirNameLabel);
     layout.addSpacerItem(spacer);
-    layout.addWidget(&moveDownItemButton);
     layout.addWidget(&moveUpItemButton);
+    layout.addWidget(&moveDownItemButton);
     layout.addWidget(&removeItemButton);
 
     setMouseTracking(true);
