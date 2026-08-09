@@ -337,8 +337,22 @@ void Core::raiseWindow(const QString &pathReceived) {
   mw->activateWindow();
 
   if (wasHidden) {
+    // The native restore/topmost-toggle sequence above can itself trigger
+    // a resize on some setups (e.g. DWM finishing the restore animation a
+    // frame late after resuming from standby). ImageViewerV2::resizeEvent()
+    // reacts to that by recomputing the fit/zoom, which for a large image
+    // is a visible jump if it happens *after* we've already revealed the
+    // window. Flush the queue here, while still transparent, so a resize
+    // event that shows up right away is applied before anything is shown.
+    qApp->processEvents();
+
+    // A short delay (instead of singleShot(0)) gives a *late* resize event
+    // - one that wasn't queued yet at the processEvents() call above, e.g.
+    // still in flight from the compositor - a chance to arrive and be
+    // processed by ImageViewerV2::resizeEvent() before we reveal, instead
+    // of landing just after and being seen as a shift.
     QPointer<MW> mwGuard(mw);
-    QTimer::singleShot(0, mw, [mwGuard]() {
+    QTimer::singleShot(100, mw, [mwGuard]() {
       if (mwGuard)
         mwGuard->setWindowOpacity(1.0);
     });
