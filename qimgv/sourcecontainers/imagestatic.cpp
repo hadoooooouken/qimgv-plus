@@ -38,12 +38,20 @@ void ImageStatic::loadGeneric() {
   QImageReader r(mPath, mDocInfo->format().toStdString().c_str());
   r.setAllocationLimit(settings->memoryAllocationLimit());
 
-  int count = r.imageCount();
-  mPageCount = count > 0 ? count : 1;
+  // The DDS plugin reports mip levels through imageCount(), but those are
+  // downscaled copies of the same texture, not separate pages/frames like
+  // in a multi-page TIFF/PDF. Treat DDS as single-page and always load the
+  // base (largest) mip level, so it doesn't get shown as "Page 1/N".
+  if (mDocInfo->format() == "dds") {
+    mPageCount = 1;
+  } else {
+    int count = r.imageCount();
+    mPageCount = count > 0 ? count : 1;
 
-  int page = pageOverride.value(mPath, 0);
-  if (page > 0 && page < mPageCount)
-    r.jumpToImage(page);
+    int page = pageOverride.value(mPath, 0);
+    if (page > 0 && page < mPageCount)
+      r.jumpToImage(page);
+  }
 
   QSize sz = r.size();
   if (sz.isValid() && sz.width() > 0 && sz.height() > 0) {
