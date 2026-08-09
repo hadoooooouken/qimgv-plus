@@ -9,7 +9,6 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QGuiApplication>
 #include <QHash>
 #include <QIODevice>
 #include <QImage>
@@ -26,8 +25,9 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
-#include <mutex>
+#include <limits>
 #include <new>
+#include <string_view>
 #include <utility>
 
 namespace {
@@ -64,6 +64,9 @@ struct ComReleaser {
 const qint64 MAX_THUMBNAIL_FILE_SIZE = 256 * 1024 * 1024; // 256 MB
 const int MAX_THUMBNAIL_DIMENSION = 16384; // 16384 pixels
 constexpr UINT MAX_REQUESTED_THUMBNAIL_EDGE = 1024;
+constexpr int MAX_DDS_MIP_LEVEL_COUNT = 32;
+constexpr ULONG STREAM_COPY_CHUNK_SIZE = 64 * 1024;
+constexpr qint64 MAX_IN_MEMORY_FALLBACK_BYTES = 1024 * 1024;
 constexpr qint64 MAX_RAW_PREVIEW_SOURCE_BYTES = 32 * 1024 * 1024;
 constexpr qint64 MAX_RAW_PREVIEW_BITMAP_BYTES = 64 * 1024 * 1024;
 constexpr qint64 MAX_SVG_SOURCE_BYTES = 8 * 1024 * 1024;
@@ -191,8 +194,8 @@ static const ExtensionInfo g_extensionTable[] = {
   { L".jp2",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
   { L".j2k",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
   { L".jpf",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
-  { L".jpx",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
-  { L".jpc",  nullptr, false, L"qimgvplus.AssocFile.jp2" },
+  { L".jpx",  "jp2",  false, L"qimgvplus.AssocFile.jp2" },
+  { L".jpc",  "j2k",  false, L"qimgvplus.AssocFile.jp2" },
 
   // HTJ2K / JPH
   { L".jph",  nullptr, false, L"qimgvplus.AssocFile.jph" },
@@ -201,9 +204,140 @@ static const ExtensionInfo g_extensionTable[] = {
   { L".svg",  nullptr, false, L"qimgvplus.AssocFile.svg" }
 };
 
+static wchar_t asciiLower(wchar_t character) noexcept {
+  if (character >= L'A' && character <= L'Z')
+    return character + (L'a' - L'A');
+  return character;
+}
+
+static std::wstring_view
+fileExtension(std::wstring_view fileName) noexcept {
+  if (fileName.empty())
+    return {};
+
+  const size_t separatorPosition = fileName.find_last_of(L"\\/");
+  const size_t extensionPosition = fileName.find_last_of(L'.');
+  if (extensionPosition == std::wstring_view::npos ||
+      extensionPosition + 1 == fileName.size() ||
+      (separatorPosition != std::wstring_view::npos &&
+       extensionPosition < separatorPosition))
+    return {};
+
+  return fileName.substr(extensionPosition);
+}
+
+static const ExtensionInfo *
+findExtensionInfo(std::wstring_view fileName) noexcept {
+  const std::wstring_view extension = fileExtension(fileName);
+  if (extension.empty())
+    return nullptr;
+
+  for (const auto &info : g_extensionTable) {
+    const std::wstring_view supportedExtension(info.dotExt);
+    if (extension.size() == supportedExtension.size() &&
+        std::equal(extension.cbegin(), extension.cend(),
+                   supportedExtension.cbegin(),
+                   [](wchar_t left, wchar_t right) {
+                     return asciiLower(left) == asciiLower(right);
+                   }))
+      return &info;
+  }
+  return nullptr;
+}
+
+struct QtLibraryRequirements {
+  bool needsSvg;
+  bool needsPdf;
+  bool needsJpeg;
+  bool needsZlib;
+};
+
+static QtLibraryRequirements
+qtLibraryRequirements(const ExtensionInfo &extensionInfo) noexcept {
+  const wchar_t *extension = extensionInfo.dotExt;
+  const bool isTiff = _wcsicmp(extension, L".tif") == 0 ||
+                      _wcsicmp(extension, L".tiff") == 0;
+  const bool isLayeredArchive = _wcsicmp(extension, L".kra") == 0 ||
+                                _wcsicmp(extension, L".ora") == 0;
+  return {
+      .needsSvg = _wcsicmp(extension, L".svg") == 0,
+      .needsPdf = _wcsicmp(extension, L".ai") == 0,
+      .needsJpeg = extensionInfo.isRaw || isTiff,
+      .needsZlib = isTiff || isLayeredArchive,
+  };
+}
+
+constexpr QtLibraryRequirements UNNAMED_SVG_LIBRARY_REQUIREMENTS{
+    .needsSvg = true,
+    .needsPdf = false,
+    .needsJpeg = false,
+    .needsZlib = false,
+};
+
 using SvgReferenceGraph = QHash<QString, QSet<QString>>;
 
 static bool isSvgExtension(const QString &ext) { return ext == u"svg"; }
+static bool isDdsExtension(const QString &ext) { return ext == u"dds"; }
+
+struct ThumbnailReaderOptions {
+  QByteArray format;
+  QString extension;
+  UINT requestedEdge;
+};
+
+static bool configureThumbnailReader(
+    QImageReader &reader, const ThumbnailReaderOptions &options) {
+  if (options.format.isEmpty())
+    return false;
+
+  reader.setFormat(options.format);
+  reader.setAutoDetectImageFormat(false);
+  reader.setAutoTransform(true);
+
+  // DDS exposes mip levels as images and cannot scale while decoding. Select a
+  // bounded mip level without enumerating frames for animated/multipage files.
+  if (isDdsExtension(options.extension)) {
+    const int imageCount = reader.imageCount();
+    if (imageCount <= 0 || imageCount > MAX_DDS_MIP_LEVEL_COUNT)
+      return false;
+
+    int bestIndex = 0;
+    int bestDifference = std::numeric_limits<int>::max();
+    bool foundValidMip = false;
+    for (int imageIndex = 0; imageIndex < imageCount; ++imageIndex) {
+      if (!reader.jumpToImage(imageIndex))
+        return false;
+
+      const QSize mipSize = reader.size();
+      if (!mipSize.isValid())
+        continue;
+
+      const int mipEdge = std::max(mipSize.width(), mipSize.height());
+      const int difference =
+          std::abs(mipEdge - static_cast<int>(options.requestedEdge));
+      if (difference < bestDifference) {
+        bestDifference = difference;
+        bestIndex = imageIndex;
+        foundValidMip = true;
+      }
+    }
+
+    if (!foundValidMip || !reader.jumpToImage(bestIndex))
+      return false;
+  }
+
+  QSize size = reader.size();
+  if (size.isValid()) {
+    if (size.width() > MAX_THUMBNAIL_DIMENSION ||
+        size.height() > MAX_THUMBNAIL_DIMENSION)
+      return false;
+    size.scale(options.requestedEdge, options.requestedEdge,
+               Qt::KeepAspectRatio);
+    reader.setScaledSize(size);
+  }
+
+  return true;
+}
 
 static bool parseSafeSvgNumber(const QString &value, double &number) {
   bool ok = false;
@@ -515,32 +649,60 @@ static bool readSvgFile(const QString &path, QByteArray &svg) {
   return svg.size() <= MAX_SVG_SOURCE_BYTES;
 }
 
-static bool readSvgStream(IStream *stream, QByteArray &svg) {
+static HRESULT readBoundedStream(IStream *stream, qint64 maximumBytes,
+                                 QByteArray &data) {
   if (!stream)
-    return false;
+    return E_POINTER;
+  if (maximumBytes < 0)
+    return E_INVALIDARG;
 
-  LARGE_INTEGER streamStart = {};
-  if (FAILED(stream->Seek(streamStart, STREAM_SEEK_SET, nullptr)))
-    return false;
+  data.clear();
 
-  constexpr ULONG streamChunkSize = 64 * 1024;
-  char chunk[streamChunkSize];
-  bool complete = true;
-  while (complete) {
-    ULONG bytesRead = 0;
-    const HRESULT result = stream->Read(chunk, streamChunkSize, &bytesRead);
-    if (FAILED(result) ||
-        svg.size() > MAX_SVG_SOURCE_BYTES - static_cast<qint64>(bytesRead)) {
-      complete = false;
-      break;
+  LARGE_INTEGER zero = {};
+  ULARGE_INTEGER savedPosition = {};
+  HRESULT result = stream->Seek(zero, STREAM_SEEK_CUR, &savedPosition);
+  if (FAILED(result) ||
+      savedPosition.QuadPart >
+          static_cast<ULONGLONG>(std::numeric_limits<LONGLONG>::max()))
+    return FAILED(result) ? result : STG_E_SEEKERROR;
+
+  result = stream->Seek(zero, STREAM_SEEK_SET, nullptr);
+  if (SUCCEEDED(result)) {
+    char chunk[STREAM_COPY_CHUNK_SIZE];
+    while (true) {
+      ULONG bytesRead = 0;
+      result = stream->Read(chunk, STREAM_COPY_CHUNK_SIZE, &bytesRead);
+      if (FAILED(result))
+        break;
+      if (bytesRead > STREAM_COPY_CHUNK_SIZE) {
+        result = STG_E_READFAULT;
+        break;
+      }
+      if (data.size() >
+          maximumBytes - static_cast<qint64>(bytesRead)) {
+        result = HRESULT_FROM_WIN32(ERROR_FILE_TOO_LARGE);
+        break;
+      }
+
+      data.append(chunk, static_cast<qsizetype>(bytesRead));
+      if (result == S_FALSE || bytesRead == 0) {
+        result = S_OK;
+        break;
+      }
     }
-    svg.append(chunk, static_cast<qsizetype>(bytesRead));
-    if (bytesRead == 0)
-      break;
   }
 
-  return SUCCEEDED(stream->Seek(streamStart, STREAM_SEEK_SET, nullptr)) &&
-         complete;
+  LARGE_INTEGER restorePosition = {};
+  restorePosition.QuadPart = static_cast<LONGLONG>(savedPosition.QuadPart);
+  const HRESULT restoreResult =
+      stream->Seek(restorePosition, STREAM_SEEK_SET, nullptr);
+  if (FAILED(result))
+    return result;
+  return restoreResult;
+}
+
+static bool readSvgStream(IStream *stream, QByteArray &svg) {
+  return SUCCEEDED(readBoundedStream(stream, MAX_SVG_SOURCE_BYTES, svg));
 }
 
 static HBITMAP renderSvgThumbnail(const QByteArray &svg, UINT requestedEdge) {
@@ -606,17 +768,6 @@ static HBITMAP renderSvgThumbnail(const QByteArray &svg, UINT requestedEdge) {
   return bitmap;
 }
 
-static bool isRawExtension(const QString &ext) {
-  for (const auto &info : g_extensionTable) {
-    if (info.isRaw) {
-      if (ext == QString::fromWCharArray(info.dotExt + 1)) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 static QImage
 createQImageFromLibRawImage(const libraw_processed_image_t *processedImage,
                             UINT requestedEdge) {
@@ -640,6 +791,7 @@ createQImageFromLibRawImage(const libraw_processed_image_t *processedImage,
       return QImage();
 
     QImageReader previewReader(&previewBuffer, "JPEG");
+    previewReader.setAutoDetectImageFormat(false);
     QSize previewSize = previewReader.size();
     if (!previewSize.isValid() ||
         previewSize.width() > MAX_THUMBNAIL_DIMENSION ||
@@ -688,16 +840,9 @@ createQImageFromLibRawImage(const libraw_processed_image_t *processedImage,
   return img.copy();
 }
 
-static bool tryLibRawEmbeddedPreview(const std::wstring &filePath,
-                                     UINT requestedEdge,
-                                     QImage &outImg) {
-  if (filePath.empty())
-    return false;
-
-  LibRaw raw;
-  if (raw.open_file(filePath.c_str()) != LIBRAW_SUCCESS)
-    return false;
-
+static bool extractLibRawEmbeddedPreview(LibRaw &raw, UINT requestedEdge,
+                                         QImage &outImg) {
+  outImg = QImage();
   if (qint64(raw.imgdata.thumbnail.tlength) >
       MAX_RAW_PREVIEW_SOURCE_BYTES) {
     raw.recycle();
@@ -723,6 +868,33 @@ static bool tryLibRawEmbeddedPreview(const std::wstring &filePath,
   return false;
 }
 
+static bool tryLibRawEmbeddedPreview(const std::wstring &filePath,
+                                     UINT requestedEdge,
+                                     QImage &outImg) {
+  if (filePath.empty())
+    return false;
+
+  LibRaw raw;
+  if (raw.open_file(filePath.c_str()) != LIBRAW_SUCCESS)
+    return false;
+  return extractLibRawEmbeddedPreview(raw, requestedEdge, outImg);
+}
+
+static bool tryLibRawEmbeddedPreview(const QByteArray &rawBuffer,
+                                     UINT requestedEdge,
+                                     QImage &outImg) {
+  if (rawBuffer.isEmpty() ||
+      rawBuffer.size() > MAX_THUMBNAIL_FILE_SIZE)
+    return false;
+
+  LibRaw raw;
+  if (raw.open_buffer(rawBuffer.constData(),
+                      static_cast<size_t>(rawBuffer.size())) !=
+      LIBRAW_SUCCESS)
+    return false;
+  return extractLibRawEmbeddedPreview(raw, requestedEdge, outImg);
+}
+
 
 
 // {978A692C-CD23-4A59-8664-98F1E1B9200B}
@@ -735,6 +907,10 @@ const wchar_t *CLSID_QImgvThumbnailProvider_Str =
     L"{978A692C-CD23-4A59-8664-98F1E1B9200B}";
 
 long g_cDllRef = 0;
+
+static long dllReferenceCount() noexcept {
+  return InterlockedCompareExchange(&g_cDllRef, 0, 0);
+}
 
 
 
@@ -782,15 +958,12 @@ HRESULT DeleteRegistryKey(HKEY hKeyParent, LPCWSTR pszSubKey) {
 QImgvThumbnailProvider::QImgvThumbnailProvider()
     : m_cRef(1), m_pStream(nullptr) {
   InterlockedIncrement(&g_cDllRef);
-  m_szFilePath.clear();
 }
 
 QImgvThumbnailProvider::~QImgvThumbnailProvider() {
-  InterlockedDecrement(&g_cDllRef);
-  if (m_pStream) {
-    m_pStream->Release();
-    m_pStream = nullptr;
-  }
+  IStream *stream = std::exchange(m_pStream, nullptr);
+  if (stream)
+    stream->Release();
 }
 
 // IUnknown Methods
@@ -821,6 +994,7 @@ IFACEMETHODIMP_(ULONG) QImgvThumbnailProvider::Release() noexcept {
   ULONG cRef = InterlockedDecrement(&m_cRef);
   if (cRef == 0) {
     delete this;
+    InterlockedDecrement(&g_cDllRef);
   }
   return cRef;
 }
@@ -859,40 +1033,96 @@ IFACEMETHODIMP QImgvThumbnailProvider::Initialize(IStream *pStream,
   });
 }
 
-// RAII class to manage DLL loading and search path restoration
-class DllEnvironmentManager {
+// Keeps Qt and the root-level dependencies used by image plugins loaded for
+// the complete thumbnail request without changing DllHost's global DLL search
+// path.
+class ScopedQtLibraries {
 public:
-  DllEnvironmentManager(const wchar_t *dllDir) {
-    m_restored = FALSE;
-    m_hCore = nullptr;
-    m_hGui = nullptr;
+  ScopedQtLibraries(const wchar_t *dllDir,
+                    const QtLibraryRequirements &requirements)
+      : m_error(ERROR_SUCCESS),
+        m_hCore(loadFromDirectory(dllDir, L"Qt6Core.dll", m_error)),
+        m_hGui(loadFromDirectory(dllDir, L"Qt6Gui.dll", m_error)),
+        m_hSvg(requirements.needsSvg
+                   ? loadFromDirectory(dllDir, L"Qt6Svg.dll", m_error)
+                   : nullptr),
+        m_hPdf(requirements.needsPdf
+                   ? loadFromDirectory(dllDir, L"Qt6Pdf.dll", m_error)
+                   : nullptr),
+        m_hJpeg(requirements.needsJpeg
+                    ? loadFromDirectory(dllDir, L"jpeg62.dll", m_error)
+                    : nullptr),
+        m_hZlib(requirements.needsZlib
+                    ? loadFromDirectory(dllDir, L"zlib1.dll", m_error)
+                    : nullptr),
+        m_ready(m_hCore && m_hGui &&
+                 (!requirements.needsSvg || m_hSvg) &&
+                 (!requirements.needsPdf || m_hPdf) &&
+                 (!requirements.needsJpeg || m_hJpeg) &&
+                 (!requirements.needsZlib || m_hZlib)) {}
 
-    if (dllDir && dllDir[0] != L'\0') {
-      m_restored = SetDllDirectoryW(dllDir);
+  ScopedQtLibraries(const ScopedQtLibraries &) = delete;
+  ScopedQtLibraries &operator=(const ScopedQtLibraries &) = delete;
+  ScopedQtLibraries(ScopedQtLibraries &&) = delete;
+  ScopedQtLibraries &operator=(ScopedQtLibraries &&) = delete;
 
-      wchar_t corePath[MAX_PATH];
-      wchar_t guiPath[MAX_PATH];
-      swprintf_s(corePath, MAX_PATH, L"%s\\Qt6Core.dll", dllDir);
-      swprintf_s(guiPath, MAX_PATH, L"%s\\Qt6Gui.dll", dllDir);
-
-      m_hCore = LoadLibraryW(corePath);
-      m_hGui = LoadLibraryW(guiPath);
-    }
+  ~ScopedQtLibraries() {
+    release(m_hPdf);
+    release(m_hSvg);
+    release(m_hGui);
+    release(m_hCore);
+    release(m_hJpeg);
+    release(m_hZlib);
   }
-  ~DllEnvironmentManager() {
-    if (m_hGui)
-      FreeLibrary(m_hGui);
-    if (m_hCore)
-      FreeLibrary(m_hCore);
-    if (m_restored) {
-      SetDllDirectoryW(nullptr);
-    }
+
+  bool isReady() const noexcept { return m_ready; }
+  DWORD errorCode() const noexcept {
+    return m_error == ERROR_SUCCESS ? ERROR_MOD_NOT_FOUND : m_error;
   }
 
 private:
-  BOOL m_restored;
+  static void recordFirstError(DWORD &firstError, DWORD error) noexcept {
+    if (firstError == ERROR_SUCCESS) {
+      firstError =
+          error == ERROR_SUCCESS ? ERROR_MOD_NOT_FOUND : error;
+    }
+  }
+
+  static HMODULE loadFromDirectory(const wchar_t *dllDir,
+                                   const wchar_t *fileName,
+                                   DWORD &firstError) noexcept {
+    if (!dllDir || *dllDir == L'\0' || !fileName || *fileName == L'\0') {
+      recordFirstError(firstError, ERROR_INVALID_PARAMETER);
+      return nullptr;
+    }
+
+    wchar_t path[MAX_PATH] = L"";
+    if (!PathCombineW(path, dllDir, fileName)) {
+      recordFirstError(firstError, ERROR_INSUFFICIENT_BUFFER);
+      return nullptr;
+    }
+
+    constexpr DWORD safeSearchFlags =
+        LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32;
+    HMODULE module = LoadLibraryExW(path, nullptr, safeSearchFlags);
+    if (!module)
+      recordFirstError(firstError, GetLastError());
+    return module;
+  }
+
+  static void release(HMODULE module) noexcept {
+    if (module)
+      FreeLibrary(module);
+  }
+
+  DWORD m_error;
   HMODULE m_hCore;
   HMODULE m_hGui;
+  HMODULE m_hSvg;
+  HMODULE m_hPdf;
+  HMODULE m_hJpeg;
+  HMODULE m_hZlib;
+  bool m_ready;
 };
 
 // IThumbnailProvider Methods
@@ -913,148 +1143,174 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
   }
 
   return invokeComBoundary([&]() -> HRESULT {
+    const ExtensionInfo *extensionInfo = nullptr;
+    bool probeUnnamedStreamAsSvg = false;
+    if (m_pStream) {
+      STATSTG sizeInfo{};
+      const HRESULT sizeResult =
+          m_pStream->Stat(&sizeInfo, STATFLAG_NONAME);
+      if (SUCCEEDED(sizeResult) &&
+          sizeInfo.cbSize.QuadPart >
+              static_cast<ULONGLONG>(MAX_THUMBNAIL_FILE_SIZE))
+        return E_FAIL;
+
+      // A stream name is optional and is not guaranteed to be a file path.
+      // Use it when available, but retain only the bounded SVG path for a
+      // genuinely unnamed stream.
+      STATSTG nameInfo{};
+      const HRESULT nameResult =
+          m_pStream->Stat(&nameInfo, STATFLAG_DEFAULT);
+      if (SUCCEEDED(nameResult)) {
+        if (FAILED(sizeResult) &&
+            nameInfo.cbSize.QuadPart >
+                static_cast<ULONGLONG>(MAX_THUMBNAIL_FILE_SIZE)) {
+          if (nameInfo.pwcsName)
+            CoTaskMemFree(nameInfo.pwcsName);
+          return E_FAIL;
+        }
+
+        if (nameInfo.pwcsName && *nameInfo.pwcsName != L'\0') {
+          const std::wstring_view streamName(nameInfo.pwcsName);
+          extensionInfo = findExtensionInfo(streamName);
+          CoTaskMemFree(nameInfo.pwcsName);
+        } else {
+          if (nameInfo.pwcsName)
+            CoTaskMemFree(nameInfo.pwcsName);
+          probeUnnamedStreamAsSvg = true;
+        }
+      } else {
+        probeUnnamedStreamAsSvg = true;
+      }
+    } else {
+      extensionInfo = findExtensionInfo(m_szFilePath);
+    }
+
+    // Explicit unsupported extensions must never reach a decoder. An unnamed
+    // stream may only enter the capped and validated SVG-specific path below.
+    if (!extensionInfo && !probeUnnamedStreamAsSvg)
+      return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+
     // Retrieve absolute DLL directory path and set up DLL search environment
     HMODULE hModule = nullptr;
     wchar_t dllDir[MAX_PATH] = L"";
-    if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                               GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                           (LPCWSTR)&DllGetClassObject, &hModule)) {
-      GetModuleFileNameW(hModule, dllDir, MAX_PATH);
-      PathRemoveFileSpecW(dllDir);
-    }
-    DllEnvironmentManager envManager(dllDir);
+    if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            reinterpret_cast<LPCWSTR>(&DllGetClassObject),
+                            &hModule))
+      return HRESULT_FROM_WIN32(GetLastError());
 
-    // Initialize Qt and its image format plugin path once across all thumbnail
-    // provider threads.
-    static std::once_flag qtInitialization;
-    std::call_once(qtInitialization, [dllDir] {
-      static int argc = 1;
-      static char appName[] = "qimgvshellex.dll";
-      static char *argv[] = {appName, nullptr};
-      if (!QCoreApplication::instance()) {
-        new QCoreApplication(argc, argv);
-      }
+    const DWORD modulePathLength = GetModuleFileNameW(hModule, dllDir, MAX_PATH);
+    if (modulePathLength == 0)
+      return HRESULT_FROM_WIN32(GetLastError());
+    if (modulePathLength >= MAX_PATH || !PathRemoveFileSpecW(dllDir))
+      return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
 
-      if (dllDir[0] != L'\0') {
-        QString qPath = QString::fromWCharArray(dllDir);
-        QCoreApplication::addLibraryPath(qPath);
-      }
-    });
+    const QtLibraryRequirements libraryRequirements =
+        extensionInfo ? qtLibraryRequirements(*extensionInfo)
+                      : UNNAMED_SVG_LIBRARY_REQUIREMENTS;
+    ScopedQtLibraries qtLibraries(dllDir, libraryRequirements);
+    if (!qtLibraries.isReady())
+      return HRESULT_FROM_WIN32(qtLibraries.errorCode());
 
-    QString ext;
-    if (m_pStream) {
-      STATSTG statstg;
-      if (SUCCEEDED(m_pStream->Stat(&statstg, STATFLAG_DEFAULT))) {
-        if ((qint64)statstg.cbSize.QuadPart > MAX_THUMBNAIL_FILE_SIZE) {
-          if (statstg.pwcsName) {
-            CoTaskMemFree(statstg.pwcsName);
-          }
-          return E_FAIL;
-        }
-        if (statstg.pwcsName) {
-          ext = QFileInfo(QString::fromWCharArray(statstg.pwcsName)).suffix().toLower();
-          CoTaskMemFree(statstg.pwcsName);
-        }
-      }
-    } else {
+    // QImageReader only needs Qt's plugin search path. Creating a
+    // process-global QCoreApplication in an unloadable COM DLL leaves a
+    // dangling qApp when the provider module is recycled by Explorer.
+    if (dllDir[0] != L'\0')
+      QCoreApplication::addLibraryPath(QString::fromWCharArray(dllDir));
+
+    const QString ext = extensionInfo
+                            ? QString::fromWCharArray(extensionInfo->dotExt + 1)
+                            : QString();
+    if (!m_szFilePath.empty()) {
       QFileInfo fileInfo(QString::fromStdWString(m_szFilePath));
-      if (fileInfo.size() > MAX_THUMBNAIL_FILE_SIZE) {
+      if (fileInfo.size() > MAX_THUMBNAIL_FILE_SIZE)
         return E_FAIL;
-      }
-      ext = fileInfo.suffix().toLower();
     }
 
-    const bool knownSvg = isSvgExtension(ext);
-    if (knownSvg || (ext.isEmpty() && m_pStream)) {
+    const bool knownSvg = extensionInfo && isSvgExtension(ext);
+    if (knownSvg || probeUnnamedStreamAsSvg) {
       QByteArray svg;
       const bool readSucceeded =
           m_pStream ? readSvgStream(m_pStream, svg)
                     : readSvgFile(QString::fromStdWString(m_szFilePath), svg);
       HBITMAP bitmap = readSucceeded ? renderSvgThumbnail(svg, cx) : nullptr;
-      if (!bitmap && knownSvg)
-        return E_FAIL;
       if (bitmap) {
         *phbmp = bitmap;
         *pdwAlpha = WTSAT_ARGB;
         return S_OK;
       }
+      return knownSvg ? E_FAIL
+                      : HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
     }
 
-    // Avoid content-based selection of the installed RAW image plugin when a
-    // stream does not expose a file name.
-    if (ext.isEmpty())
+    if (!extensionInfo)
+      return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+
+    if (extensionInfo->isRaw) {
+      QImage rawImg;
+      bool previewExtracted = false;
+      if (m_pStream) {
+        QByteArray rawBuffer;
+        const HRESULT readResult = readBoundedStream(
+            m_pStream, MAX_THUMBNAIL_FILE_SIZE, rawBuffer);
+        if (FAILED(readResult))
+          return readResult;
+        previewExtracted =
+            tryLibRawEmbeddedPreview(rawBuffer, cx, rawImg);
+      } else {
+        previewExtracted =
+            tryLibRawEmbeddedPreview(m_szFilePath, cx, rawImg);
+      }
+
+      if (!previewExtracted || rawImg.isNull())
+        return E_FAIL;
+
+      if (rawImg.width() > (int)cx || rawImg.height() > (int)cx) {
+        rawImg = rawImg.scaled(cx, cx, Qt::KeepAspectRatio,
+                               Qt::SmoothTransformation);
+      }
+      if (rawImg.format() != QImage::Format_ARGB32_Premultiplied) {
+        rawImg = rawImg.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+      }
+
+      BITMAPV5HEADER bi;
+      ZeroMemory(&bi, sizeof(bi));
+      bi.bV5Size = sizeof(bi);
+      bi.bV5Width = rawImg.width();
+      bi.bV5Height = -rawImg.height(); // Top-down
+      bi.bV5Planes = 1;
+      bi.bV5BitCount = 32;
+      bi.bV5Compression = BI_BITFIELDS;
+      bi.bV5RedMask = 0x00FF0000;
+      bi.bV5GreenMask = 0x0000FF00;
+      bi.bV5BlueMask = 0x000000FF;
+      bi.bV5AlphaMask = 0xFF000000;
+
+      void *pBits = nullptr;
+      HDC hdc = GetDC(nullptr);
+      HBITMAP hbmp = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
+                                      &pBits, nullptr, 0);
+      ReleaseDC(nullptr, hdc);
+      if (hbmp && pBits) {
+        memcpy(pBits, rawImg.constBits(), rawImg.sizeInBytes());
+        *phbmp = hbmp;
+        *pdwAlpha = WTSAT_ARGB;
+        return S_OK;
+      }
+
+      if (hbmp)
+        DeleteObject(hbmp);
       return E_FAIL;
-
-  if (isRawExtension(ext)) {
-    if (m_szFilePath.empty())
-      return E_FAIL;
-
-    QImage rawImg;
-    if (!tryLibRawEmbeddedPreview(m_szFilePath, cx, rawImg) || rawImg.isNull())
-      return E_FAIL;
-
-    if (rawImg.width() > (int)cx || rawImg.height() > (int)cx) {
-      rawImg = rawImg.scaled(cx, cx, Qt::KeepAspectRatio,
-                             Qt::SmoothTransformation);
     }
-    if (rawImg.format() != QImage::Format_ARGB32_Premultiplied) {
-      rawImg = rawImg.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-    }
-
-    BITMAPV5HEADER bi;
-    ZeroMemory(&bi, sizeof(bi));
-    bi.bV5Size = sizeof(bi);
-    bi.bV5Width = rawImg.width();
-    bi.bV5Height = -rawImg.height(); // Top-down
-    bi.bV5Planes = 1;
-    bi.bV5BitCount = 32;
-    bi.bV5Compression = BI_BITFIELDS;
-    bi.bV5RedMask = 0x00FF0000;
-    bi.bV5GreenMask = 0x0000FF00;
-    bi.bV5BlueMask = 0x000000FF;
-    bi.bV5AlphaMask = 0xFF000000;
-
-    void *pBits = nullptr;
-    HDC hdc = GetDC(nullptr);
-    HBITMAP hbmp = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
-                                    &pBits, nullptr, 0);
-    ReleaseDC(nullptr, hdc);
-    if (hbmp && pBits) {
-      memcpy(pBits, rawImg.constBits(), rawImg.sizeInBytes());
-      *phbmp = hbmp;
-      *pdwAlpha = WTSAT_ARGB;
-      return S_OK;
-    }
-
-    if (hbmp)
-      DeleteObject(hbmp);
-    return E_FAIL;
-  }
 
   // Fallback / standard path: set up QImageReader
   std::unique_ptr<QStreamDevice> streamDevice;
   QImageReader reader;
   QByteArray format;
 
-  if (!ext.isEmpty()) {
-    const ExtensionInfo *found = nullptr;
-    for (const auto &info : g_extensionTable) {
-      if (ext == QString::fromWCharArray(info.dotExt + 1)) {
-        found = &info;
-        break;
-      }
-    }
-
-    if (found) {
-      if (found->qtFormat) {
-        format = found->qtFormat;
-      } else {
-        format = ext.toUtf8();
-      }
-    } else {
-      format = ext.toUtf8();
-    }
-  }
+  format = extensionInfo->qtFormat ? QByteArray(extensionInfo->qtFormat)
+                                   : ext.toUtf8();
+  const ThumbnailReaderOptions readerOptions{format, ext, cx};
 
   qint64 streamSize = 0;
   bool seekable = false;
@@ -1081,53 +1337,20 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
     reader.setFileName(filePath);
   }
 
-  if (!format.isEmpty()) {
-    reader.setFormat(format);
-  }
-
-  reader.setAutoTransform(true); // Rotate according to Exif orientation tags
-
-  // If the format has multiple images (e.g. ICO), choose the one closest to
-  // requested size cx
-  int imageCount = reader.imageCount();
-  if (imageCount > 1) {
-    int bestIndex = 0;
-    int bestDiff = 999999;
-    for (int i = 0; i < imageCount; ++i) {
-      if (reader.jumpToImage(i)) {
-        QSize frameSize = reader.size();
-        if (frameSize.isValid()) {
-          int diff = qAbs(frameSize.width() - (int)cx);
-          if (diff < bestDiff) {
-            bestDiff = diff;
-            bestIndex = i;
-          }
-        }
-      }
-    }
-    reader.jumpToImage(bestIndex);
-  }
-
-  // Scale size during read if supported by reader for major performance gains
-  QSize size = reader.size();
-  if (size.isValid()) {
-    if (size.width() > MAX_THUMBNAIL_DIMENSION || size.height() > MAX_THUMBNAIL_DIMENSION) {
-      return E_FAIL;
-    }
-    size.scale(cx, cx, Qt::KeepAspectRatio);
-    reader.setScaledSize(size);
-  }
+  if (!configureThumbnailReader(reader, readerOptions))
+    return E_FAIL;
 
   QImage img;
   if (!reader.read(&img)) {
     if (m_pStream) {
       // Fallback for stream: try memory buffer if small, otherwise temporary file
       if (seekable && streamSize > 0 &&
-          streamSize <= 1024 * 1024) { // up to 1 MB in memory
+          streamSize <= MAX_IN_MEMORY_FALLBACK_BYTES) {
         QByteArray buffer;
         buffer.resize(streamSize);
         LARGE_INTEGER zero = {0};
-        m_pStream->Seek(zero, STREAM_SEEK_SET, nullptr);
+        if (FAILED(m_pStream->Seek(zero, STREAM_SEEK_SET, nullptr)))
+          return E_FAIL;
         ULONG bytesRead = 0;
         HRESULT hr =
             m_pStream->Read(buffer.data(), (ULONG)streamSize, &bytesRead);
@@ -1135,17 +1358,8 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
           QBuffer memBuffer(&buffer);
           memBuffer.open(QIODevice::ReadOnly);
           QImageReader memReader(&memBuffer);
-          if (!format.isEmpty())
-            memReader.setFormat(format);
-          memReader.setAutoTransform(true);
-          QSize sz = memReader.size();
-          if (sz.isValid()) {
-            if (sz.width() > MAX_THUMBNAIL_DIMENSION || sz.height() > MAX_THUMBNAIL_DIMENSION) {
-              return E_FAIL;
-            }
-            sz.scale(cx, cx, Qt::KeepAspectRatio);
-            memReader.setScaledSize(sz);
-          }
+          if (!configureThumbnailReader(memReader, readerOptions))
+            return E_FAIL;
           if (memReader.read(&img)) {
             // success
           }
@@ -1160,23 +1374,36 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
         if (tempFile.open()) {
           // Rewind stream and copy data
           LARGE_INTEGER zero = {0};
-          m_pStream->Seek(zero, STREAM_SEEK_SET, nullptr);
-          char chunk[65536];
-          ULONG read;
+          if (FAILED(m_pStream->Seek(zero, STREAM_SEEK_SET, nullptr)))
+            return E_FAIL;
+          char chunk[STREAM_COPY_CHUNK_SIZE];
           qint64 totalCopied = 0;
           bool writeFailed = false;
 
-          while (SUCCEEDED(m_pStream->Read(chunk, sizeof(chunk), &read)) &&
-                 read > 0) {
-            totalCopied += read;
-            if (totalCopied > MAX_THUMBNAIL_FILE_SIZE) {
+          while (true) {
+            ULONG bytesRead = 0;
+            const HRESULT readResult =
+                m_pStream->Read(chunk, STREAM_COPY_CHUNK_SIZE, &bytesRead);
+            if (FAILED(readResult) ||
+                bytesRead > STREAM_COPY_CHUNK_SIZE) {
               writeFailed = true;
               break;
             }
-            if (tempFile.write(chunk, read) != (qint64)read) {
+            if (bytesRead == 0)
+              break;
+            if (totalCopied >
+                MAX_THUMBNAIL_FILE_SIZE - static_cast<qint64>(bytesRead)) {
               writeFailed = true;
               break;
             }
+            totalCopied += static_cast<qint64>(bytesRead);
+            if (tempFile.write(chunk, static_cast<qint64>(bytesRead)) !=
+                static_cast<qint64>(bytesRead)) {
+              writeFailed = true;
+              break;
+            }
+            if (readResult == S_FALSE)
+              break;
           }
 
           if (writeFailed) {
@@ -1185,20 +1412,12 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
             return E_FAIL;
           }
 
-          tempFile.flush();
+          if (!tempFile.flush())
+            return E_FAIL;
 
           QImageReader fileReader(tempFile.fileName());
-          if (!format.isEmpty())
-            fileReader.setFormat(format);
-          fileReader.setAutoTransform(true);
-          QSize sz = fileReader.size();
-          if (sz.isValid()) {
-            if (sz.width() > MAX_THUMBNAIL_DIMENSION || sz.height() > MAX_THUMBNAIL_DIMENSION) {
-              return E_FAIL;
-            }
-            sz.scale(cx, cx, Qt::KeepAspectRatio);
-            fileReader.setScaledSize(sz);
-          }
+          if (!configureThumbnailReader(fileReader, readerOptions))
+            return E_FAIL;
           if (fileReader.read(&img)) {
             // success
           }
@@ -1269,9 +1488,8 @@ QImgvThumbnailProviderClassFactory::QImgvThumbnailProviderClassFactory()
   InterlockedIncrement(&g_cDllRef);
 }
 
-QImgvThumbnailProviderClassFactory::~QImgvThumbnailProviderClassFactory() {
-  InterlockedDecrement(&g_cDllRef);
-}
+QImgvThumbnailProviderClassFactory::~QImgvThumbnailProviderClassFactory() =
+    default;
 
 // IUnknown Methods
 IFACEMETHODIMP QImgvThumbnailProviderClassFactory::QueryInterface(REFIID riid,
@@ -1302,6 +1520,7 @@ QImgvThumbnailProviderClassFactory::Release() noexcept {
   ULONG cRef = InterlockedDecrement(&m_cRef);
   if (cRef == 0) {
     delete this;
+    InterlockedDecrement(&g_cDllRef);
   }
   return cRef;
 }
@@ -1358,7 +1577,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv) {
 
 STDAPI DllCanUnloadNow() {
   return invokeComBoundary(
-      []() -> HRESULT { return (g_cDllRef == 0) ? S_OK : S_FALSE; });
+      []() -> HRESULT { return dllReferenceCount() == 0 ? S_OK : S_FALSE; });
 }
 
 STDAPI DllRegisterServer() {
@@ -1409,8 +1628,10 @@ STDAPI DllRegisterServer() {
                  L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
                  L"234630154E96}",
                  info.dotExt);
-      CreateRegistryKeyAndValue(HKEY_CURRENT_USER, extKey, nullptr,
-                                CLSID_QImgvThumbnailProvider_Str);
+      hr = CreateRegistryKeyAndValue(HKEY_CURRENT_USER, extKey, nullptr,
+                                     CLSID_QImgvThumbnailProvider_Str);
+      if (FAILED(hr))
+        return hr;
     }
 
     // Register for ProgIDs
@@ -1433,8 +1654,10 @@ STDAPI DllRegisterServer() {
               L"Software\\Classes\\%s\\ShellEx\\{E357FCCD-A995-4576-B01F-"
               L"234630154E96}",
               info.progId);
-          CreateRegistryKeyAndValue(HKEY_CURRENT_USER, progIdKey, nullptr,
-                                    CLSID_QImgvThumbnailProvider_Str);
+          hr = CreateRegistryKeyAndValue(HKEY_CURRENT_USER, progIdKey, nullptr,
+                                         CLSID_QImgvThumbnailProvider_Str);
+          if (FAILED(hr))
+            return hr;
         }
       }
     }

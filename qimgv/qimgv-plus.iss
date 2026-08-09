@@ -25,11 +25,11 @@ SetupIconFile=res\icons\common\logo\app\{#MyAppIconName}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
+ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\{#MyAppExeName}
 UninstallDisplayName={#MyAppName}
 CloseApplications=yes
-CloseApplicationsFilter={#MyAppExeName}
 ChangesAssociations=yes
 
 [Languages]
@@ -459,48 +459,80 @@ Root: HKA; Subkey: "Software\Classes\CLSID\{#MyAppCLSID}\InprocServer32"; ValueT
 Root: HKA; Subkey: "Software\Classes\CLSID\{#MyAppCLSID}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Apartment"; Flags: uninsdeletekey; Tasks: thumbnails
 
 ; System File Associations (IThumbnailProvider GUID: {E357FCCD-A995-4576-B01F-234630154E96})
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.webp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.svg\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tiff\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tga\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ico\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.avif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.heic\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.heif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jxl\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.psd\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.dng\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.cr2\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.cr3\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.nef\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.arw\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.orf\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.rw2\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.pef\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raf\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raw\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.kra\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ora\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.exr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.hdr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.qoi\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.dds\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jxr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.hdp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wdp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ai\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.psb\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jp2\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.j2k\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpf\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpx\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpc\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
-Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jph\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Flags: uninsdeletekey; Tasks: thumbnails
+; These are shared Shell keys. Ownership-aware [Code] handles uninstall;
+; never add recursive uninsdelete flags here.
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.webp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.svg\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tiff\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.tga\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.avif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.heic\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.heif\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jxl\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.psd\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.dng\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.cr2\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.cr3\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.nef\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.arw\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.orf\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.rw2\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.pef\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raf\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raw\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.kra\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ora\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.exr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.hdr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.qoi\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.dds\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jxr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.hdp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wdp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ai\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.psb\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jp2\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.j2k\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpf\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpx\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jpc\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jph\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
 
 [Code]
 const
   PF_AVX2_INSTRUCTIONS_AVAILABLE = 40;
+  ThumbnailProviderClassId = '{978A692C-CD23-4A59-8664-98F1E1B9200B}';
+  ThumbnailProviderDllName = 'qimgvshellex.dll';
+  ThumbnailHandlerCategory = '{E357FCCD-A995-4576-B01F-234630154E96}';
+  SystemFileAssociationsPath =
+    'Software\Classes\SystemFileAssociations\';
+  DirectFileAssociationsPath = 'Software\Classes\';
+  ThumbnailProviderClassPath = 'Software\Classes\CLSID\' +
+    ThumbnailProviderClassId;
+  SupportedThumbnailExtensions =
+    '.webp;.svg;.tiff;.tif;.tga;.avif;.heic;.heif;.jxl;.psd;.dng;.cr2;' +
+    '.cr3;.nef;.arw;.orf;.rw2;.pef;.raf;.raw;.kra;.ora;.exr;.hdr;.qoi;' +
+    '.dds;.jxr;.hdp;.wdp;.ai;.psb;.jp2;.j2k;.jpf;.jpx;.jpc;.jph';
+  ObsoleteThumbnailExtensions =
+    '.jpg;.jpeg;.jpe;.jfif;.png;.gif;.bmp;.dib;.ico;.pdf;.svgz';
+  LegacyThumbnailProgIds =
+    'qimgvplus.AssocFile.raw;qimgvplus.AssocFile.kra;' +
+    'qimgvplus.AssocFile.ora;qimgvplus.AssocFile.webp;' +
+    'qimgvplus.AssocFile.jxl;qimgvplus.AssocFile.avif;' +
+    'qimgvplus.AssocFile.heic;qimgvplus.AssocFile.heif;' +
+    'qimgvplus.AssocFile.exr;qimgvplus.AssocFile.hdr;' +
+    'qimgvplus.AssocFile.tga;qimgvplus.AssocFile.jxr;' +
+    'qimgvplus.AssocFile.qoi;qimgvplus.AssocFile.dds;' +
+    'qimgvplus.AssocFile.psd;qimgvplus.AssocFile.psb;' +
+    'qimgvplus.AssocFile.ai;qimgvplus.AssocFile.pdf;' +
+    'qimgvplus.AssocFile.tif;qimgvplus.AssocFile.tiff;' +
+    'qimgvplus.AssocFile.jp2;qimgvplus.AssocFile.jph;' +
+    'qimgvplus.AssocFile.svg';
+
+var
+  ForeignThumbnailHandlerPaths: array of String;
+  ForeignThumbnailHandlerProviders: array of String;
 
 function IsProcessorFeaturePresent(Feature: Integer): Boolean;
   external 'IsProcessorFeaturePresent@kernel32.dll stdcall';
@@ -510,4 +542,380 @@ begin
   Result := IsProcessorFeaturePresent(PF_AVX2_INSTRUCTIONS_AVAILABLE);
   if not Result then
     MsgBox(CustomMessage('AVX2ErrorMsg'), mbError, MB_OK);
+end;
+
+function RemoveOwnedThumbnailHandler(RootKey: HKEY;
+  const AssociationPath: String): Boolean;
+var
+  HandlerPath: String;
+  RegisteredProvider: String;
+begin
+  Result := True;
+  HandlerPath := AssociationPath + '\ShellEx\' + ThumbnailHandlerCategory;
+
+  if RegValueExists(RootKey, HandlerPath, '') then
+  begin
+    if not RegQueryStringValue(RootKey, HandlerPath, '',
+      RegisteredProvider) then
+    begin
+      Log(Format('Failed to read thumbnail handler ownership: %s', [HandlerPath]));
+      Result := False;
+      exit;
+    end;
+
+    if CompareText(RegisteredProvider, ThumbnailProviderClassId) <> 0 then
+      exit;
+
+    if not RegDeleteValue(RootKey, HandlerPath, '') then
+    begin
+      Log(Format('Failed to remove qimgv-plus thumbnail handler: %s', [HandlerPath]));
+      Result := False;
+      exit;
+    end;
+
+    RegDeleteKeyIfEmpty(RootKey, HandlerPath);
+  end;
+end;
+
+function RemoveOwnedThumbnailHandlers(RootKey: HKEY;
+  const AssociationPrefix: String; Entries: String): Boolean;
+var
+  SeparatorPosition: Integer;
+  Entry: String;
+begin
+  Result := True;
+  while Entries <> '' do
+  begin
+    SeparatorPosition := Pos(';', Entries);
+    if SeparatorPosition = 0 then
+    begin
+      Entry := Entries;
+      Entries := '';
+    end
+    else
+    begin
+      Entry := Copy(Entries, 1, SeparatorPosition - 1);
+      Delete(Entries, 1, SeparatorPosition);
+    end;
+
+    if (Entry <> '') and
+       not RemoveOwnedThumbnailHandler(RootKey, AssociationPrefix + Entry) then
+      Result := False;
+  end;
+end;
+
+function HasOwnedThumbnailHandler(RootKey: HKEY;
+  const AssociationPath: String): Boolean;
+var
+  HandlerPath: String;
+  RegisteredProvider: String;
+begin
+  HandlerPath := AssociationPath + '\ShellEx\' + ThumbnailHandlerCategory;
+  Result := False;
+  if not RegValueExists(RootKey, HandlerPath, '') then
+    exit;
+
+  if not RegQueryStringValue(RootKey, HandlerPath, '', RegisteredProvider) then
+    exit;
+
+  Result := CompareText(RegisteredProvider, ThumbnailProviderClassId) = 0;
+end;
+
+function HasOwnedThumbnailHandlers(RootKey: HKEY;
+  const AssociationPrefix: String; Entries: String): Boolean;
+var
+  SeparatorPosition: Integer;
+  Entry: String;
+begin
+  Result := False;
+  while Entries <> '' do
+  begin
+    SeparatorPosition := Pos(';', Entries);
+    if SeparatorPosition = 0 then
+    begin
+      Entry := Entries;
+      Entries := '';
+    end
+    else
+    begin
+      Entry := Copy(Entries, 1, SeparatorPosition - 1);
+      Delete(Entries, 1, SeparatorPosition);
+    end;
+
+    if (Entry <> '') and
+       HasOwnedThumbnailHandler(RootKey, AssociationPrefix + Entry) then
+    begin
+      Result := True;
+      exit;
+    end;
+  end;
+end;
+
+function HasOwnedThumbnailRegistration(RootKey: HKEY): Boolean;
+begin
+  Result := RegKeyExists(RootKey, ThumbnailProviderClassPath) or
+    HasOwnedThumbnailHandlers(RootKey, SystemFileAssociationsPath,
+      SupportedThumbnailExtensions) or
+    HasOwnedThumbnailHandlers(RootKey, SystemFileAssociationsPath,
+      ObsoleteThumbnailExtensions) or
+    HasOwnedThumbnailHandlers(RootKey, DirectFileAssociationsPath,
+      SupportedThumbnailExtensions) or
+    HasOwnedThumbnailHandlers(RootKey, DirectFileAssociationsPath,
+      ObsoleteThumbnailExtensions) or
+    HasOwnedThumbnailHandlers(RootKey, DirectFileAssociationsPath,
+      LegacyThumbnailProgIds);
+end;
+
+procedure ClearForeignThumbnailHandlerBackups;
+begin
+  SetArrayLength(ForeignThumbnailHandlerPaths, 0);
+  SetArrayLength(ForeignThumbnailHandlerProviders, 0);
+end;
+
+function BackupForeignThumbnailHandler(RootKey: HKEY;
+  const AssociationPath: String): Boolean;
+var
+  BackupIndex: Integer;
+  HandlerPath: String;
+  RegisteredProvider: String;
+begin
+  Result := True;
+  HandlerPath := AssociationPath + '\ShellEx\' + ThumbnailHandlerCategory;
+  if not RegValueExists(RootKey, HandlerPath, '') then
+    exit;
+
+  if not RegQueryStringValue(RootKey, HandlerPath, '', RegisteredProvider) then
+  begin
+    Log(Format('Failed to back up thumbnail handler ownership: %s', [HandlerPath]));
+    Result := False;
+    exit;
+  end;
+
+  if CompareText(RegisteredProvider, ThumbnailProviderClassId) = 0 then
+    exit;
+
+  BackupIndex := GetArrayLength(ForeignThumbnailHandlerPaths);
+  SetArrayLength(ForeignThumbnailHandlerPaths, BackupIndex + 1);
+  SetArrayLength(ForeignThumbnailHandlerProviders, BackupIndex + 1);
+  ForeignThumbnailHandlerPaths[BackupIndex] := HandlerPath;
+  ForeignThumbnailHandlerProviders[BackupIndex] := RegisteredProvider;
+end;
+
+function BackupForeignThumbnailHandlers(RootKey: HKEY;
+  const AssociationPrefix: String; Entries: String): Boolean;
+var
+  SeparatorPosition: Integer;
+  Entry: String;
+begin
+  Result := True;
+  while Entries <> '' do
+  begin
+    SeparatorPosition := Pos(';', Entries);
+    if SeparatorPosition = 0 then
+    begin
+      Entry := Entries;
+      Entries := '';
+    end
+    else
+    begin
+      Entry := Copy(Entries, 1, SeparatorPosition - 1);
+      Delete(Entries, 1, SeparatorPosition);
+    end;
+
+    if (Entry <> '') and
+       not BackupForeignThumbnailHandler(RootKey,
+         AssociationPrefix + Entry) then
+      Result := False;
+  end;
+end;
+
+function BackupForeignThumbnailRegistrations(RootKey: HKEY): Boolean;
+begin
+  ClearForeignThumbnailHandlerBackups;
+  Result := BackupForeignThumbnailHandlers(RootKey,
+    SystemFileAssociationsPath, SupportedThumbnailExtensions);
+  if not BackupForeignThumbnailHandlers(RootKey,
+    SystemFileAssociationsPath, ObsoleteThumbnailExtensions) then
+    Result := False;
+end;
+
+function RestoreForeignThumbnailHandlerBackups(RootKey: HKEY): Boolean;
+var
+  BackupIndex: Integer;
+begin
+  Result := True;
+  if GetArrayLength(ForeignThumbnailHandlerPaths) = 0 then
+    exit;
+
+  for BackupIndex := 0 to
+    GetArrayLength(ForeignThumbnailHandlerPaths) - 1 do
+  begin
+    if not RegValueExists(RootKey,
+      ForeignThumbnailHandlerPaths[BackupIndex], '') then
+    begin
+      if not RegWriteStringValue(RootKey,
+        ForeignThumbnailHandlerPaths[BackupIndex], '',
+        ForeignThumbnailHandlerProviders[BackupIndex]) then
+      begin
+        Log(Format('Failed to restore foreign thumbnail handler: %s', [ForeignThumbnailHandlerPaths[BackupIndex]]));
+        Result := False;
+      end;
+    end;
+  end;
+
+  if Result then
+    ClearForeignThumbnailHandlerBackups;
+end;
+
+function RemoveThumbnailProviderClass(RootKey: HKEY): Boolean;
+var
+  InprocServerPath: String;
+  RegisteredServer: String;
+begin
+  Result := True;
+  if not RegKeyExists(RootKey, ThumbnailProviderClassPath) then
+    exit;
+
+  InprocServerPath := ThumbnailProviderClassPath + '\InprocServer32';
+  if not RegQueryStringValue(RootKey, InprocServerPath, '',
+    RegisteredServer) then
+  begin
+    Log(Format('Failed to verify thumbnail provider ownership: %s', [InprocServerPath]));
+    Result := False;
+    exit;
+  end;
+
+  if CompareText(ExtractFileName(RegisteredServer),
+    ThumbnailProviderDllName) <> 0 then
+  begin
+    Log(Format('Refusing to remove a foreign thumbnail provider class: %s', [RegisteredServer]));
+    Result := False;
+    exit;
+  end;
+
+  if not RegDeleteKeyIncludingSubkeys(RootKey,
+    ThumbnailProviderClassPath) then
+  begin
+    Log(Format('Failed to remove qimgv-plus thumbnail provider class: %s', [ThumbnailProviderClassPath]));
+    Result := False;
+  end;
+end;
+
+function CleanupThumbnailRegistrations(RootKey: HKEY;
+  RemoveSupportedHandlers: Boolean): Boolean;
+begin
+  Result := True;
+
+  if not RemoveOwnedThumbnailHandlers(RootKey, SystemFileAssociationsPath,
+    ObsoleteThumbnailExtensions) then
+    Result := False;
+  if not RemoveOwnedThumbnailHandlers(RootKey, DirectFileAssociationsPath,
+    ObsoleteThumbnailExtensions) then
+    Result := False;
+
+  { Migrate old regsvr32 routes to the installer's SystemFileAssociations. }
+  if not RemoveOwnedThumbnailHandlers(RootKey, DirectFileAssociationsPath,
+    SupportedThumbnailExtensions) then
+    Result := False;
+  if not RemoveOwnedThumbnailHandlers(RootKey, DirectFileAssociationsPath,
+    LegacyThumbnailProgIds) then
+    Result := False;
+
+  if RemoveSupportedHandlers then
+  begin
+    if not RemoveOwnedThumbnailHandlers(RootKey, SystemFileAssociationsPath,
+      SupportedThumbnailExtensions) then
+      Result := False;
+    if not RemoveThumbnailProviderClass(RootKey) then
+      Result := False;
+  end;
+end;
+
+procedure RaiseThumbnailCleanupFailure;
+begin
+  RaiseException(
+    'qimgv-plus could not safely update its thumbnail handler registrations. ' +
+    'See the setup log for details.');
+end;
+
+procedure WarnAboutMachineThumbnailProvider;
+begin
+  Log('A machine-wide qimgv-plus thumbnail provider registration remains.');
+  SuppressibleMsgBox(
+    'A machine-wide qimgv-plus thumbnail provider is still registered. ' +
+    'Run Setup as administrator to update or remove it.',
+    mbError, MB_OK, IDOK);
+end;
+
+procedure TryRestoreForeignThumbnailHandlers(ShowError: Boolean);
+begin
+  if GetArrayLength(ForeignThumbnailHandlerPaths) = 0 then
+    exit;
+
+  if not RestoreForeignThumbnailHandlerBackups(HKA64) then
+  begin
+    Log('Failed to restore one or more foreign thumbnail handlers.');
+    if ShowError then
+      SuppressibleMsgBox(
+        'A thumbnail handler owned by another application could not be ' +
+        'restored. See the uninstall log for details.',
+        mbError, MB_OK, IDOK);
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  CleanupSucceeded: Boolean;
+  RemoveSupportedHandlers: Boolean;
+begin
+  if CurStep <> ssInstall then
+    exit;
+
+  RemoveSupportedHandlers := not WizardIsTaskSelected('thumbnails');
+  { HKA follows the selected install scope. Do not mutate HKCU from an admin
+    install because over-the-shoulder elevation may use another account. }
+  CleanupSucceeded :=
+    CleanupThumbnailRegistrations(HKA64, RemoveSupportedHandlers);
+
+  if not IsAdminInstallMode and
+     HasOwnedThumbnailRegistration(HKLM64) then
+    WarnAboutMachineThumbnailProvider;
+
+  if not CleanupSucceeded then
+    RaiseThumbnailCleanupFailure;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  CleanupSucceeded: Boolean;
+begin
+  if CurUninstallStep = usPostUninstall then
+  begin
+    TryRestoreForeignThumbnailHandlers(False);
+    exit;
+  end;
+
+  if CurUninstallStep <> usUninstall then
+    exit;
+
+  { Older uninstall logs contain recursive deletion entries for these shared
+    ShellEx leaves. Preserve a provider that took ownership after installation. }
+  if not BackupForeignThumbnailRegistrations(HKA64) then
+    RaiseThumbnailCleanupFailure;
+
+  { Match the scope that owns this uninstaller. }
+  CleanupSucceeded := CleanupThumbnailRegistrations(HKA64, True);
+
+  if not IsAdminInstallMode and
+     HasOwnedThumbnailRegistration(HKLM64) then
+    WarnAboutMachineThumbnailProvider;
+
+  if not CleanupSucceeded then
+    RaiseThumbnailCleanupFailure;
+end;
+
+procedure DeinitializeUninstall;
+begin
+  { Retry when a fatal uninstall error prevented the post-uninstall step. }
+  TryRestoreForeignThumbnailHandlers(True);
 end;
