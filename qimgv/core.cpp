@@ -772,8 +772,13 @@ void Core::onModelLoaded() {
     folderViewPresenter.selectAndFocus(pendingFolderViewSelectPath);
     pendingFolderViewSelectPath.clear();
   }
+  if (pendingModelImageSync) {
+    model->updateImage(state.currentFilePath, state.currentImg);
+    pendingModelImageSync = false;
+  }
   if (shuffle)
     syncRandomizer();
+  updateInfoString();
 }
 
 void Core::onDirectoryViewFileActivated(QString filePath) {
@@ -2448,8 +2453,7 @@ void Core::modelDelayLoad() {
   model->clearScaler();
   model->setDirectory(state.directoryPath);
   mw->setDirectoryPath(state.directoryPath);
-  model->updateImage(state.currentFilePath, state.currentImg);
-  updateInfoString();
+  pendingModelImageSync = true;
 }
 
 void Core::preloadNeighbors() {

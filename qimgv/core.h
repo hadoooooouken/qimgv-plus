@@ -265,6 +265,13 @@ private:
     // in onModelLoaded() (mirrors the dirTreeView's m_pendingScrollPath
     // approach in FolderView).
     QString pendingFolderViewSelectPath;
+    // modelDelayLoad() displays the already-decoded image before the
+    // directory scan has run, so DirectoryModel::updateImage() can't
+    // register it in the model's cache yet - containsFile() stays false
+    // until the async scan populates fileLookupMap. Stash the need to do
+    // so and flush it once the scan actually finishes, in onModelLoaded()
+    // (same pattern as pendingFolderViewSelectPath above).
+    bool pendingModelImageSync = false;
     ViewMode m_lastViewMode = MODE_DOCUMENT;
     QString m_lastFilePath;
     bool m_resumeFromStandby = false;
