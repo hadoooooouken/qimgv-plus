@@ -888,11 +888,25 @@ void MW::showFullScreen() {
 }
 
 void MW::showWindowed() {
+    const bool leavingPseudoFullscreen = m_pseudoFullscreen;
+
     this->setWindowFlags(this->windowFlags() & ~Qt::FramelessWindowHint);
 
-    restoreWindowGeometry();
+    if (leavingPseudoFullscreen)
+        restoreWindowGeometry();
+
     m_pseudoFullscreen = false;
     this->show();
+
+    // restoreWindowGeometry() already refreshes currentDisplay when leaving
+    // pseudo-fullscreen; on a plain hide()->show() (standby resume or cold
+    // start) that call is skipped above, so refresh it here directly. This
+    // keeps currentDisplay accurate if the monitor layout changed while the
+    // window was hidden, without re-applying geometry/state, which is what
+    // corrupted the widget hierarchy on a maximized standby resume.
+    if (!leavingPseudoFullscreen)
+        updateCurrentDisplay();
+
     emit fullscreenStateChanged(false);
 }
 

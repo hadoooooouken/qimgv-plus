@@ -268,8 +268,6 @@ void Core::raiseWindow(const QString &pathReceived) {
   if (m_raiseWindowActive) return;
   RaiseWindowGuard raiseWindowGuard(m_raiseWindowActive);
 
-  bool resumed = m_resumeFromStandby;
-
   // The window may currently be hidden (standby) or minimized. Bringing
   // it back involves several native Win32 calls further down (SW_RESTORE,
   // a TOPMOST/NOTOPMOST toggle to steal focus, SetForegroundWindow...).
@@ -316,11 +314,6 @@ void Core::raiseWindow(const QString &pathReceived) {
   qApp->processEvents();
 
   showGui();
-
-  if (resumed && mw->isMaximized()) {
-      mw->setWindowState(Qt::WindowNoState);
-      mw->setWindowState(Qt::WindowMaximized);
-  }
 
   HWND hwnd = (HWND)mw->winId();
   if (IsIconic(hwnd)) {
