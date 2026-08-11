@@ -179,6 +179,7 @@ void DirectoryPresenter::onFileRenamed(QString fromPath, int indexFrom,
                                        QString toPath, int indexTo) {
   Q_UNUSED(fromPath)
   Q_UNUSED(toPath)
+  folderCoverResolver->invalidate(model->directoryPath());
   if (!view)
     return;
   if (mShowDirs) {
@@ -200,6 +201,7 @@ void DirectoryPresenter::onFileRenamed(QString fromPath, int indexFrom,
 }
 
 void DirectoryPresenter::onFileAdded(QString filePath) {
+  folderCoverResolver->invalidate(model->directoryPath());
   if (!view)
     return;
   int index = model->indexOfFile(filePath);
@@ -207,6 +209,7 @@ void DirectoryPresenter::onFileAdded(QString filePath) {
 }
 
 void DirectoryPresenter::onFileModified(QString filePath) {
+  folderCoverResolver->invalidate(model->directoryPath());
   if (!view)
     return;
   int index = model->indexOfFile(filePath);

@@ -45,6 +45,7 @@ public:
     ~FolderCoverResolver() override;
 
     void resolve(FolderCoverRequest request);
+    void invalidate(const QString &folderPath);
 
 signals:
     void resultReady(FolderCoverResult result);

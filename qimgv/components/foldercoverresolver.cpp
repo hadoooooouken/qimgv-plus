@@ -365,6 +365,17 @@ void FolderCoverResolver::resolve(FolderCoverRequest request)
     threadPool.start(task.release());
 }
 
+void FolderCoverResolver::invalidate(const QString &folderPath)
+{
+    const QString key = normalizedPath(folderPath).toCaseFolded();
+    for (auto it = coverCache.begin(); it != coverCache.end();) {
+        if (it.key().first == key)
+            it = coverCache.erase(it);
+        else
+            ++it;
+    }
+}
+
 void FolderCoverResolver::onSearchFinished(FolderCoverResult result)
 {
     const CacheKey key =
