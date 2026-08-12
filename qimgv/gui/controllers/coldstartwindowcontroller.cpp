@@ -10,10 +10,18 @@ ColdStartWindowController::ColdStartWindowController(
     : window(&window) {
     maximumWaitTimer.setSingleShot(true);
     maximumWaitTimer.setInterval(kMaximumWaitMs);
+    documentLayoutSettleTimer.setSingleShot(true);
+    documentLayoutSettleTimer.setInterval(kDocumentLayoutSettleDelayMs);
 
     connect(&folderView, &FolderViewProxy::visibleThumbnailsReady,
             this, &ColdStartWindowController::onVisibleThumbnailsReady);
+    connect(&documentLayoutSettleTimer, &QTimer::timeout, this, [this]() {
+        if(state == State::WaitingForDocumentLayout)
+            revealWindow();
+    });
     connect(&maximumWaitTimer, &QTimer::timeout, this, [this]() {
+        if(state != State::WaitingForFolderView)
+            return;
         qWarning() << "Cold-start folder view did not become ready within"
                    << kMaximumWaitMs << "ms; revealing the window";
         revealWindow();
@@ -27,10 +35,23 @@ void ColdStartWindowController::show() {
         return;
     }
 
-    if(state == State::WaitingForFolderView ||
-       state == State::RevealScheduled) {
+    if(state == State::WaitingForFolderView) {
         if(window->currentViewMode() != MODE_FOLDERVIEW)
-            revealWindow();
+            waitForDocumentLayout();
+        return;
+    }
+
+    if(state == State::WaitingForDocumentLayout) {
+        if(window->currentViewMode() == MODE_FOLDERVIEW)
+            waitForFolderView();
+        else
+            documentLayoutSettleTimer.start();
+        return;
+    }
+
+    if(state == State::RevealScheduled) {
+        if(window->currentViewMode() != MODE_FOLDERVIEW)
+            waitForDocumentLayout();
         return;
     }
 
@@ -41,15 +62,27 @@ void ColdStartWindowController::show() {
     }
 
     if(window->currentViewMode() != MODE_FOLDERVIEW) {
-        state = State::Shown;
-        window->showDefault();
+        waitForDocumentLayout();
         return;
     }
 
+    waitForFolderView();
+}
+
+void ColdStartWindowController::waitForFolderView() {
+    documentLayoutSettleTimer.stop();
     state = State::WaitingForFolderView;
     window->setWindowOpacity(kHiddenWindowOpacity);
     maximumWaitTimer.start();
     window->showDefault();
+}
+
+void ColdStartWindowController::waitForDocumentLayout() {
+    maximumWaitTimer.stop();
+    state = State::WaitingForDocumentLayout;
+    window->setWindowOpacity(kHiddenWindowOpacity);
+    window->showDefault();
+    documentLayoutSettleTimer.start();
 }
 
 void ColdStartWindowController::onVisibleThumbnailsReady() {
@@ -57,16 +90,20 @@ void ColdStartWindowController::onVisibleThumbnailsReady() {
         return;
 
     state = State::RevealScheduled;
-    QTimer::singleShot(kLayoutSettleDelayMs, this,
-                       &ColdStartWindowController::revealWindow);
+    QTimer::singleShot(kLayoutSettleDelayMs, this, [this]() {
+        if(state == State::RevealScheduled)
+            revealWindow();
+    });
 }
 
 void ColdStartWindowController::revealWindow() {
     if(state != State::WaitingForFolderView &&
+       state != State::WaitingForDocumentLayout &&
        state != State::RevealScheduled)
         return;
 
     maximumWaitTimer.stop();
+    documentLayoutSettleTimer.stop();
     state = State::Shown;
     if(window) {
         window->setWindowOpacity(kVisibleWindowOpacity);

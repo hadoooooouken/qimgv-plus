@@ -16,7 +16,6 @@
 #include <QCoreApplication>
 #include <QThreadPool>
 #include <QTimer>
-#include <QPointer>
 #include "components/upscaler/upscaler.h"
 #include "components/upscaler/upscaylresizerunnable.h"
 #include "components/wallpaper/wallpapercontroller.h"
@@ -33,6 +32,7 @@
 namespace {
 constexpr int PreloadDebounceDelayMs = 200;
 constexpr int PageChangeMessageDurationMs = 900;
+constexpr int WindowRevealDelayMs = 100;
 constexpr Qt::DropActions SupportedFileDragActions =
     Qt::CopyAction | Qt::MoveAction;
 
@@ -150,6 +150,12 @@ Core::Core()
   lastThumbPanelStyle = settings->thumbPanelStyle();
   slideshowTimer.setSingleShot(true);
   preloadTimer.setSingleShot(true);
+  m_raiseWindowRevealTimer.setSingleShot(true);
+  m_raiseWindowRevealTimer.setInterval(WindowRevealDelayMs);
+  connect(&m_raiseWindowRevealTimer, &QTimer::timeout, mw, [this]() {
+    m_raiseWindowConcealed = false;
+    mw->setWindowOpacity(1.0);
+  });
   connect(settings, &Settings::settingsChanged, this, &Core::readSettings);
 
   upscaler = std::make_unique<Upscaler>(this);
@@ -264,8 +270,14 @@ void Core::showGui() {
 }
 
 void Core::raiseWindow(const QString &pathReceived) {
-  if (!mw) return;
+  if (!mw) {
+    qCritical() << "Cannot raise the application window: main window is null";
+    return;
+  }
+
+  m_pendingRaiseWindowRequests.enqueue(pathReceived);
   if (m_raiseWindowActive) return;
+
   RaiseWindowGuard raiseWindowGuard(m_raiseWindowActive);
 
   // The window may currently be hidden (standby) or minimized. Bringing
@@ -278,9 +290,43 @@ void Core::raiseWindow(const QString &pathReceived) {
   // fully transparent for the duration of that dance and only revealing
   // it once everything has settled hides that frame regardless of its
   // cause (same technique ColdStartWindowController uses on first launch).
-  bool wasHidden = !mw->isVisible();
-  if (wasHidden)
+  const bool needsDelayedReveal = !mw->isVisible() || m_raiseWindowConcealed;
+  if (needsDelayedReveal) {
+    m_raiseWindowRevealTimer.stop();
+    m_raiseWindowConcealed = true;
     mw->setWindowOpacity(0.0);
+  }
+
+  drainRaiseWindowRequests();
+
+  showGui();
+
+  HWND hwnd = (HWND)mw->winId();
+  if (IsIconic(hwnd)) {
+    ShowWindow(hwnd, SW_RESTORE);
+  }
+
+  SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+  SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0,
+               SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
+
+  SetForegroundWindow(hwnd);
+  SetActiveWindow(hwnd);
+  mw->raise();
+  mw->activateWindow();
+
+  if (needsDelayedReveal) {
+    // The native restore/topmost-toggle sequence above can itself trigger
+    // a resize on some setups (e.g. DWM finishing the restore animation a
+    // frame late after resuming from standby). Keep draining second-instance
+    // requests while transparent so the reveal timer cannot expose an
+    // intermediate image or layout.
+    drainRaiseWindowRequests();
+    m_raiseWindowRevealTimer.start();
+  }
+}
+
+void Core::processRaiseWindowRequest(const QString &pathReceived) {
 
   if (m_resumeFromStandby) {
       m_resumeFromStandby = false;
@@ -305,51 +351,20 @@ void Core::raiseWindow(const QString &pathReceived) {
           loadDefaultPath();
       }
   }
+}
 
+void Core::drainRaiseWindowRequests() {
   // Let the event queue catch up before showing the window, same as the
   // cold-start path in main.cpp: without this, resuming from standby (or
   // a second instance handing off a path) paints the bare window for one
-  // frame before pending layout/style events are processed, which shows
-  // up as a brief white background flash.
-  qApp->processEvents();
-
-  showGui();
-
-  HWND hwnd = (HWND)mw->winId();
-  if (IsIconic(hwnd)) {
-    ShowWindow(hwnd, SW_RESTORE);
-  }
-
-  SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-  SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0,
-               SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
-
-  SetForegroundWindow(hwnd);
-  SetActiveWindow(hwnd);
-  mw->raise();
-  mw->activateWindow();
-
-  if (wasHidden) {
-    // The native restore/topmost-toggle sequence above can itself trigger
-    // a resize on some setups (e.g. DWM finishing the restore animation a
-    // frame late after resuming from standby). ImageViewerV2::resizeEvent()
-    // reacts to that by recomputing the fit/zoom, which for a large image
-    // is a visible jump if it happens *after* we've already revealed the
-    // window. Flush the queue here, while still transparent, so a resize
-    // event that shows up right away is applied before anything is shown.
+  // frame before pending layout/style events are processed. If processing
+  // events delivers another request, load it in the same hidden transaction
+  // and settle its events before returning.
+  do {
+    while (!m_pendingRaiseWindowRequests.isEmpty())
+      processRaiseWindowRequest(m_pendingRaiseWindowRequests.dequeue());
     qApp->processEvents();
-
-    // A short delay (instead of singleShot(0)) gives a *late* resize event
-    // - one that wasn't queued yet at the processEvents() call above, e.g.
-    // still in flight from the compositor - a chance to arrive and be
-    // processed by ImageViewerV2::resizeEvent() before we reveal, instead
-    // of landing just after and being seen as a shift.
-    QPointer<MW> mwGuard(mw);
-    QTimer::singleShot(100, mw, [mwGuard]() {
-      if (mwGuard)
-        mwGuard->setWindowOpacity(1.0);
-    });
-  }
+  } while (!m_pendingRaiseWindowRequests.isEmpty());
 }
 
 // create MainWindow and all widgets

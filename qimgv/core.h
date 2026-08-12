@@ -6,10 +6,12 @@
 #include <QClipboard>
 #include <QDrag>
 #include <QImage>
+#include <QQueue>
 #include <QFileSystemModel>
 #include <QDesktopServices>
 #include <QTranslator>
 #include <QSet>
+#include <QTimer>
 #include <optional>
 #include "appversion.h"
 #include "settings_types.h"
@@ -68,6 +70,8 @@ private:
     void loadTranslation();
     void onUpdate();
     void onFirstRun();
+    void processRaiseWindowRequest(const QString &pathReceived);
+    void drainRaiseWindowRequests();
 
     // ui stuff
     MW *mw;
@@ -240,10 +244,9 @@ private slots:
     void onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error);
 
 private:
-    // Guards Core::raiseWindow() against re-entrant invocation (e.g. if a
-    // future code path ends up calling it from within its own call stack).
-    // Sets the flag for the guard's lifetime; resets it on every exit path,
-    // including early returns, via RAII.
+    // Keeps one invocation responsible for draining re-entrant raise-window
+    // requests. Sets the flag for the guard's lifetime and resets it on every
+    // exit path via RAII.
     class RaiseWindowGuard {
     public:
         explicit RaiseWindowGuard(bool &flag) : active(flag) { active = true; }
@@ -254,6 +257,9 @@ private:
         bool &active;
     };
     bool m_raiseWindowActive = false;
+    bool m_raiseWindowConcealed = false;
+    QQueue<QString> m_pendingRaiseWindowRequests;
+    QTimer m_raiseWindowRevealTimer;
 
     QStringList backHistory, forwardHistory;
     bool blockHistory = false;
