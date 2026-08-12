@@ -335,28 +335,34 @@ void FolderCoverResolver::resolve(FolderCoverRequest request)
         coverCache.erase(cachedCover);
     }
 
+    const quint64 folderRevision = folderRevisions.value(key.first);
     auto pending = pendingRequests.find(key);
-    if (pending != pendingRequests.end()) {
-        for (const FolderCoverRequest &existing : std::as_const(*pending)) {
+    if (pending != pendingRequests.end() &&
+        pending->folderRevision == folderRevision) {
+        for (const FolderCoverRequest &existing :
+             std::as_const(pending->requests)) {
             if (existing.thumbnailSize == request.thumbnailSize &&
                 existing.generation == request.generation)
                 return;
         }
-        pending->append(std::move(request));
+        pending->requests.append(std::move(request));
         return;
     }
 
-    pendingRequests.insert(key, QList<FolderCoverRequest>{request});
+    pendingRequests.insert(
+        key,
+        PendingResolve{folderRevision, QList<FolderCoverRequest>{request}});
     const QPointer<FolderCoverResolver> resolver(this);
     auto resultHandler =
-        [resolver](FolderCoverResult result) mutable {
+        [resolver, folderRevision](FolderCoverResult result) mutable {
             if (!resolver)
                 return;
             QMetaObject::invokeMethod(
                 resolver.get(),
-                [resolver, result = std::move(result)]() mutable {
+                [resolver, result = std::move(result), folderRevision]() mutable {
                     if (resolver)
-                        resolver->onSearchFinished(std::move(result));
+                        resolver->onSearchFinished(
+                            std::move(result), folderRevision);
                 },
                 Qt::QueuedConnection);
         };
@@ -368,6 +374,7 @@ void FolderCoverResolver::resolve(FolderCoverRequest request)
 void FolderCoverResolver::invalidate(const QString &folderPath)
 {
     const QString key = normalizedPath(folderPath).toCaseFolded();
+    ++folderRevisions[key];
     for (auto it = coverCache.begin(); it != coverCache.end();) {
         if (it.key().first == key)
             it = coverCache.erase(it);
@@ -376,13 +383,24 @@ void FolderCoverResolver::invalidate(const QString &folderPath)
     }
 }
 
-void FolderCoverResolver::onSearchFinished(FolderCoverResult result)
+void FolderCoverResolver::onSearchFinished(FolderCoverResult result,
+                                           quint64 folderRevision)
 {
     const CacheKey key =
         cacheKey(result.request.folderPath, result.request.sortingMode);
-    const QList<FolderCoverRequest> requests = pendingRequests.take(key);
-    if (requests.isEmpty())
+    auto pending = pendingRequests.find(key);
+    if (pending == pendingRequests.end() ||
+        pending->folderRevision != folderRevision) {
         return;
+    }
+
+    if (folderRevisions.value(key.first) != folderRevision) {
+        pendingRequests.erase(pending);
+        return;
+    }
+
+    QList<FolderCoverRequest> requests = std::move(pending->requests);
+    pendingRequests.erase(pending);
 
     if (result.status == FolderCoverStatus::CoverFound)
         coverCache.insert(key, result.coverPath);

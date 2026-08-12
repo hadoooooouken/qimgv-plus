@@ -51,10 +51,15 @@ signals:
     void resultReady(FolderCoverResult result);
 
 private slots:
-    void onSearchFinished(FolderCoverResult result);
+    void onSearchFinished(FolderCoverResult result, quint64 folderRevision);
 
 private:
     using CacheKey = QPair<QString, int>;
+
+    struct PendingResolve {
+        quint64 folderRevision = 0;
+        QList<FolderCoverRequest> requests;
+    };
 
     static CacheKey cacheKey(const QString &folderPath, SortingMode sortingMode);
     void emitQueued(FolderCoverResult result);
@@ -62,5 +67,6 @@ private:
     QThreadPool threadPool;
     std::shared_ptr<const QSet<QString>> supportedExtensions;
     QHash<CacheKey, QString> coverCache;
-    QHash<CacheKey, QList<FolderCoverRequest>> pendingRequests;
+    QHash<QString, quint64> folderRevisions;
+    QHash<CacheKey, PendingResolve> pendingRequests;
 };
