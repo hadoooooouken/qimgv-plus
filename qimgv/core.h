@@ -258,6 +258,8 @@ private:
     };
     bool m_raiseWindowActive = false;
     bool m_raiseWindowConcealed = false;
+    bool m_raiseWindowAwaitingDocumentRendering = false;
+    bool m_raiseWindowDocumentRenderingSettled = false;
     QQueue<QString> m_pendingRaiseWindowRequests;
     QTimer m_raiseWindowRevealTimer;
 

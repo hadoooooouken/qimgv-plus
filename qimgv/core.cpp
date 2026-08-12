@@ -32,7 +32,9 @@
 namespace {
 constexpr int PreloadDebounceDelayMs = 200;
 constexpr int PageChangeMessageDurationMs = 900;
-constexpr int WindowRevealDelayMs = 100;
+constexpr int FolderViewRevealDelayMs = 100;
+constexpr int DocumentReadyFallbackMs = 1000;
+constexpr int SettledDocumentRevealDelayMs = 0;
 constexpr Qt::DropActions SupportedFileDragActions =
     Qt::CopyAction | Qt::MoveAction;
 
@@ -151,10 +153,34 @@ Core::Core()
   slideshowTimer.setSingleShot(true);
   preloadTimer.setSingleShot(true);
   m_raiseWindowRevealTimer.setSingleShot(true);
-  m_raiseWindowRevealTimer.setInterval(WindowRevealDelayMs);
   connect(&m_raiseWindowRevealTimer, &QTimer::timeout, mw, [this]() {
+    if (m_raiseWindowDocumentRenderingSettled &&
+        !mw->isDocumentRenderingSettled()) {
+      m_raiseWindowDocumentRenderingSettled = false;
+      m_raiseWindowAwaitingDocumentRendering = true;
+      m_raiseWindowRevealTimer.start(DocumentReadyFallbackMs);
+      return;
+    }
+    if (m_raiseWindowAwaitingDocumentRendering) {
+      qWarning() << "Raised document rendering did not settle within"
+                 << DocumentReadyFallbackMs << "ms; revealing the window";
+    }
+    m_raiseWindowAwaitingDocumentRendering = false;
+    m_raiseWindowDocumentRenderingSettled = false;
     m_raiseWindowConcealed = false;
     mw->setWindowOpacity(1.0);
+  });
+  connect(mw, &MW::documentRenderingSettled, this, [this]() {
+    if (!m_raiseWindowConcealed ||
+        !m_raiseWindowAwaitingDocumentRendering) {
+      return;
+    }
+
+    m_raiseWindowDocumentRenderingSettled = true;
+    if (!m_raiseWindowActive) {
+      m_raiseWindowAwaitingDocumentRendering = false;
+      m_raiseWindowRevealTimer.start(SettledDocumentRevealDelayMs);
+    }
   });
   connect(settings, &Settings::settingsChanged, this, &Core::readSettings);
 
@@ -293,6 +319,8 @@ void Core::raiseWindow(const QString &pathReceived) {
   const bool needsDelayedReveal = !mw->isVisible() || m_raiseWindowConcealed;
   if (needsDelayedReveal) {
     m_raiseWindowRevealTimer.stop();
+    m_raiseWindowAwaitingDocumentRendering = false;
+    m_raiseWindowDocumentRenderingSettled = false;
     m_raiseWindowConcealed = true;
     mw->setWindowOpacity(0.0);
   }
@@ -321,8 +349,24 @@ void Core::raiseWindow(const QString &pathReceived) {
     // frame late after resuming from standby). Keep draining second-instance
     // requests while transparent so the reveal timer cannot expose an
     // intermediate image or layout.
+    m_raiseWindowAwaitingDocumentRendering = true;
+    m_raiseWindowDocumentRenderingSettled = false;
     drainRaiseWindowRequests();
-    m_raiseWindowRevealTimer.start();
+
+    const bool waitsForDocumentRendering =
+        mw->currentViewMode() == MODE_DOCUMENT;
+    m_raiseWindowAwaitingDocumentRendering = waitsForDocumentRendering;
+    if (waitsForDocumentRendering && mw->isDocumentRenderingSettled())
+      m_raiseWindowDocumentRenderingSettled = true;
+    if (!waitsForDocumentRendering) {
+      m_raiseWindowDocumentRenderingSettled = false;
+      m_raiseWindowRevealTimer.start(FolderViewRevealDelayMs);
+    } else if (m_raiseWindowDocumentRenderingSettled) {
+      m_raiseWindowAwaitingDocumentRendering = false;
+      m_raiseWindowRevealTimer.start(SettledDocumentRevealDelayMs);
+    } else {
+      m_raiseWindowRevealTimer.start(DocumentReadyFallbackMs);
+    }
   }
 }
 

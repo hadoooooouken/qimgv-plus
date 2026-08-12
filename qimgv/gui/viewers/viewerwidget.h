@@ -38,6 +38,7 @@ public:
     bool isBusyInteracting() const;
     void refreshScaling();
     bool isDisplaying();
+    bool isRenderingSettled() const;
     bool lockZoomEnabled();
     bool lockViewEnabled();
     ScalingFilter scalingFilter();
@@ -79,6 +80,7 @@ private slots:
 signals:
     void scaleChanged(qreal scale);
     void scalingRequested(QSize, ScalingFilter);
+    void renderingSettled();
     void zoomIn();
     void zoomOut();
     void zoomInCursor();

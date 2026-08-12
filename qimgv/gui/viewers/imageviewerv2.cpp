@@ -135,6 +135,8 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   glFormat.setSamples(kViewerMultisampleCount);
   glViewport->setFormat(glFormat);
   this->setViewport(glViewport);
+  connect(glViewport, &QOpenGLWidget::frameSwapped,
+          this, &ImageViewerV2::onViewportFrameSwapped);
 
   connect(scrollTimeLineX, &QTimeLine::frameChanged, this,
           &ImageViewerV2::scrollToX);
@@ -577,6 +579,8 @@ void ImageViewerV2::showImage(std::shared_ptr<const QImage> _image,
 
 // reset state, remove image & stop animation
 void ImageViewerV2::reset() {
+  mRenderingSettled = false;
+  mFramePresentationPending = false;
   stopPosAnimation();
   pixmapItemScaled.setImage(QImage());
   pixmapItemCrop.setImage(QImage());
@@ -619,9 +623,28 @@ void ImageViewerV2::setScaledImage(QImage newFrame) {
   pixmapItemScaled.setImage(imageScaled);
   pixmapItem.hide();
   pixmapItemScaled.show();
+  requestSettledFramePresentation();
 }
 
 bool ImageViewerV2::isDisplaying() const { return (image != nullptr); }
+
+bool ImageViewerV2::isRenderingSettled() const {
+  return mRenderingSettled;
+}
+
+void ImageViewerV2::requestSettledFramePresentation() {
+  mFramePresentationPending = true;
+  viewport()->update();
+}
+
+void ImageViewerV2::onViewportFrameSwapped() {
+  if (!mFramePresentationPending)
+    return;
+
+  mFramePresentationPending = false;
+  mRenderingSettled = true;
+  emit renderingSettled();
+}
 
 void ImageViewerV2::scrollUp() { scroll(0, -DEFAULT_SCROLL_DISTANCE, true); }
 
@@ -694,11 +717,18 @@ void ImageViewerV2::hide() {
 }
 
 void ImageViewerV2::requestScaling() {
+  mRenderingSettled = false;
+  mFramePresentationPending = false;
   bool isAt100 = std::abs(pixmapItem.scale() - 1.0) < kScaleEpsilon;
   if (mSvgMode || !image || isAt100 ||
       (mScalingFilter == QI_FILTER_CAS && !(mUseUpscayl && pixmapItem.scale() > 1.0)) ||
       (mScalingFilter == QI_FILTER_SMART_GPU && !(mUseUpscayl && pixmapItem.scale() > 1.0)) ||
-      movie || (zoomTimeLine && zoomTimeLine->state() == QTimeLine::Running) ||
+      movie) {
+    requestSettledFramePresentation();
+    return;
+  }
+
+  if ((zoomTimeLine && zoomTimeLine->state() == QTimeLine::Running) ||
       mouseInteraction == MouseInteractionState::MOUSE_ZOOM ||
       mouseInteraction == MouseInteractionState::MOUSE_WHEEL_ZOOM) {
     return;
@@ -714,6 +744,7 @@ void ImageViewerV2::requestScaling() {
   if (mUseUpscayl) {
     maxScale = 40.0f; // allow extreme zoom with Upscayl (up to 4000%)
     if (currentScale() > maxScale) {
+      requestSettledFramePresentation();
       return;
     }
   } else
@@ -721,6 +752,7 @@ void ImageViewerV2::requestScaling() {
     if (currentScale() > maxScale || targetSize.width() > maxDim ||
         targetSize.height() > maxDim ||
         (qint64)targetSize.width() * targetSize.height() > maxPixels) {
+      requestSettledFramePresentation();
       return;
     }
   }
@@ -1043,6 +1075,9 @@ void ImageViewerV2::showEvent(QShowEvent *event) {
   // reapply fitmode to fix viewport position
   if (imageFitMode == FIT_ORIGINAL)
     applyFitMode();
+  mRenderingSettled = false;
+  mFramePresentationPending = false;
+  scaleTimer->start();
 }
 
 void ImageViewerV2::keyPressEvent(QKeyEvent *event) {
@@ -1388,6 +1423,8 @@ void ImageViewerV2::resizeEvent(QResizeEvent *event) {
   // Qt emits some unnecessary resizeEvents on startup
   // so we try to ignore them
   if (parentWidget()->isVisible()) {
+    mRenderingSettled = false;
+    mFramePresentationPending = false;
     stopPosAnimation();
     updateMinScale();
     if (imageFitMode == FIT_FREE || imageFitMode == FIT_ORIGINAL) {

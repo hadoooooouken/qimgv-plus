@@ -112,6 +112,8 @@ void MW::setupUi() {
     imageInfoOverlay = new ImageInfoOverlayProxy(viewerWidget.get());
     floatingMessage = new FloatingMessageProxy(viewerWidget.get());
     connect(viewerWidget.get(), &ViewerWidget::scalingRequested, this, &MW::scalingRequested);
+    connect(viewerWidget.get(), &ViewerWidget::renderingSettled,
+            this, &MW::documentRenderingSettled);
     connect(viewerWidget.get(), &ViewerWidget::draggedOut,       this, &MW::draggedOut);
     connect(viewerWidget.get(), &ViewerWidget::nextImageRequested, this, &MW::nextImageRequested);
     connect(viewerWidget.get(), &ViewerWidget::prevImageRequested, this, &MW::prevImageRequested);
@@ -608,6 +610,10 @@ bool MW::isBusyInteracting() const {
         return viewerWidget->isBusyInteracting();
     }
     return false;
+}
+
+bool MW::isDocumentRenderingSettled() const {
+    return viewerWidget && viewerWidget->isRenderingSettled();
 }
 
 void MW::refreshScaling() {

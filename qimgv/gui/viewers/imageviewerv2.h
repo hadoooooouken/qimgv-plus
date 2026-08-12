@@ -46,6 +46,7 @@ public:
     virtual void showImage(std::shared_ptr<const QImage> _image, QString filePath = "");
     virtual void showAnimation(const QString &filePath, const QString &format);
     virtual void setScaledImage(QImage newFrame);
+    bool isRenderingSettled() const;
     void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
     void hideUpscaledCrop();
     virtual bool isDisplaying() const;
@@ -77,6 +78,7 @@ public:
 
 signals:
     void scalingRequested(QSize, ScalingFilter);
+    void renderingSettled();
     void scaleChanged(qreal);
     void sourceSizeChanged(QSize);
     void imageAreaChanged(QRect);
@@ -176,6 +178,8 @@ private:
     int gestureThreshold = 40;
 
     bool dragsEnabled = true;
+    bool mRenderingSettled = false;
+    bool mFramePresentationPending = false;
 
     float zoomStep = 0.1f, dpr;
     float minScale, maxScale, fitWindowScale, fitWidthScale, fitHeightScale, expandLimit, lockedScale;
@@ -206,6 +210,8 @@ private:
     void mouseMoveZoom(QMouseEvent *event);
     void reset();
     void applyFitMode();
+    void requestSettledFramePresentation();
+    void onViewportFrameSwapped();
     void onMovieFrameChanged(int frameNumber);
 
     QTimeLine *scrollTimeLineX, *scrollTimeLineY;

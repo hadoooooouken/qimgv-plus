@@ -10,14 +10,19 @@ ColdStartWindowController::ColdStartWindowController(
     : window(&window) {
     maximumWaitTimer.setSingleShot(true);
     maximumWaitTimer.setInterval(kMaximumWaitMs);
-    documentLayoutSettleTimer.setSingleShot(true);
-    documentLayoutSettleTimer.setInterval(kDocumentLayoutSettleDelayMs);
+    documentReadyFallbackTimer.setSingleShot(true);
+    documentReadyFallbackTimer.setInterval(kDocumentReadyFallbackMs);
 
     connect(&folderView, &FolderViewProxy::visibleThumbnailsReady,
             this, &ColdStartWindowController::onVisibleThumbnailsReady);
-    connect(&documentLayoutSettleTimer, &QTimer::timeout, this, [this]() {
-        if(state == State::WaitingForDocumentLayout)
-            revealWindow();
+    connect(&window, &MW::documentRenderingSettled,
+            this, &ColdStartWindowController::onDocumentRenderingSettled);
+    connect(&documentReadyFallbackTimer, &QTimer::timeout, this, [this]() {
+        if(state != State::WaitingForDocumentLayout)
+            return;
+        qWarning() << "Cold-start document rendering did not settle within"
+                   << kDocumentReadyFallbackMs << "ms; revealing the window";
+        revealWindow();
     });
     connect(&maximumWaitTimer, &QTimer::timeout, this, [this]() {
         if(state != State::WaitingForFolderView)
@@ -44,13 +49,16 @@ void ColdStartWindowController::show() {
     if(state == State::WaitingForDocumentLayout) {
         if(window->currentViewMode() == MODE_FOLDERVIEW)
             waitForFolderView();
+        else if(window->isDocumentRenderingSettled())
+            onDocumentRenderingSettled();
         else
-            documentLayoutSettleTimer.start();
+            documentReadyFallbackTimer.start();
         return;
     }
 
     if(state == State::RevealScheduled) {
-        if(window->currentViewMode() != MODE_FOLDERVIEW)
+        if(window->currentViewMode() != MODE_FOLDERVIEW &&
+           !window->isDocumentRenderingSettled())
             waitForDocumentLayout();
         return;
     }
@@ -70,7 +78,7 @@ void ColdStartWindowController::show() {
 }
 
 void ColdStartWindowController::waitForFolderView() {
-    documentLayoutSettleTimer.stop();
+    documentReadyFallbackTimer.stop();
     state = State::WaitingForFolderView;
     window->setWindowOpacity(kHiddenWindowOpacity);
     maximumWaitTimer.start();
@@ -82,7 +90,12 @@ void ColdStartWindowController::waitForDocumentLayout() {
     state = State::WaitingForDocumentLayout;
     window->setWindowOpacity(kHiddenWindowOpacity);
     window->showDefault();
-    documentLayoutSettleTimer.start();
+    if(state == State::WaitingForDocumentLayout &&
+       window->isDocumentRenderingSettled()) {
+        onDocumentRenderingSettled();
+    } else if(state == State::WaitingForDocumentLayout) {
+        documentReadyFallbackTimer.start();
+    }
 }
 
 void ColdStartWindowController::onVisibleThumbnailsReady() {
@@ -96,6 +109,27 @@ void ColdStartWindowController::onVisibleThumbnailsReady() {
     });
 }
 
+void ColdStartWindowController::onDocumentRenderingSettled() {
+    if(state != State::WaitingForDocumentLayout)
+        return;
+
+    documentReadyFallbackTimer.stop();
+    state = State::RevealScheduled;
+    QTimer::singleShot(kLayoutSettleDelayMs, this, [this]() {
+        if(state != State::RevealScheduled)
+            return;
+        if(window && window->currentViewMode() == MODE_FOLDERVIEW) {
+            waitForFolderView();
+            return;
+        }
+        if(window && !window->isDocumentRenderingSettled()) {
+            waitForDocumentLayout();
+            return;
+        }
+        revealWindow();
+    });
+}
+
 void ColdStartWindowController::revealWindow() {
     if(state != State::WaitingForFolderView &&
        state != State::WaitingForDocumentLayout &&
@@ -103,7 +137,7 @@ void ColdStartWindowController::revealWindow() {
         return;
 
     maximumWaitTimer.stop();
-    documentLayoutSettleTimer.stop();
+    documentReadyFallbackTimer.stop();
     state = State::Shown;
     if(window) {
         window->setWindowOpacity(kVisibleWindowOpacity);

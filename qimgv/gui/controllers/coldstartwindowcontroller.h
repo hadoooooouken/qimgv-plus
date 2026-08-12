@@ -16,6 +16,7 @@ public:
 
 private slots:
     void onVisibleThumbnailsReady();
+    void onDocumentRenderingSettled();
     void revealWindow();
 
 private:
@@ -29,7 +30,7 @@ private:
 
     static constexpr int kMaximumWaitMs = 30000;
     static constexpr int kLayoutSettleDelayMs = 0;
-    static constexpr int kDocumentLayoutSettleDelayMs = 100;
+    static constexpr int kDocumentReadyFallbackMs = 1000;
     static constexpr qreal kHiddenWindowOpacity = 0.0;
     static constexpr qreal kVisibleWindowOpacity = 1.0;
 
@@ -38,6 +39,6 @@ private:
 
     QPointer<MW> window;
     QTimer maximumWaitTimer;
-    QTimer documentLayoutSettleTimer;
+    QTimer documentReadyFallbackTimer;
     State state = State::Initial;
 };

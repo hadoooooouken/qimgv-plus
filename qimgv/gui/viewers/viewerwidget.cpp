@@ -38,6 +38,8 @@ ViewerWidget::ViewerWidget(QWidget *parent)
     imageViewer->hide();
 
     connect(imageViewer.get(), &ImageViewerV2::scalingRequested, this, &ViewerWidget::scalingRequested);
+    connect(imageViewer.get(), &ImageViewerV2::renderingSettled,
+            this, &ViewerWidget::renderingSettled);
     connect(imageViewer.get(), &ImageViewerV2::scaleChanged, this, &ViewerWidget::onScaleChanged);
     connect(imageViewer.get(), &ImageViewerV2::playbackFinished, this, &ViewerWidget::onAnimationPlaybackFinished);
     connect(this, &ViewerWidget::toggleTransparencyGrid, imageViewer.get(), &ImageViewerV2::toggleTransparencyGrid);
@@ -299,6 +301,10 @@ bool ViewerWidget::isDisplaying() {
         return true;
     else
         return false;
+}
+
+bool ViewerWidget::isRenderingSettled() const {
+    return imageViewer && imageViewer->isRenderingSettled();
 }
 
 bool ViewerWidget::lockZoomEnabled() {

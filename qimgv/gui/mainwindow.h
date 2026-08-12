@@ -74,6 +74,7 @@ public:
   float currentScale() const;
   bool panoramaMode() const;
   bool isBusyInteracting() const;
+  bool isDocumentRenderingSettled() const;
   void refreshScaling();
 
   void setCurrentInfo(int fileIndex, int fileCount, QString filePath,
@@ -188,6 +189,7 @@ signals:
 
   // viewerWidget
   void scalingRequested(QSize, ScalingFilter);
+  void documentRenderingSettled();
   void zoomIn();
   void zoomOut();
   void zoomInCursor();
