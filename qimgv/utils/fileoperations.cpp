@@ -14,10 +14,10 @@ constexpr DWORD kReplaceFileFlags = 0;
 constexpr DWORD kMoveFileFlags = MOVEFILE_WRITE_THROUGH;
 constexpr qsizetype kFileCopyBufferSizeBytes = 1024 * 1024;
 
-// Shared with FileOperations::isInternalArtifact() below - any filename
-// containing one of these markers is a transient implementation detail of
-// the atomic save mechanism (temp write target / pre-replace backup), never
-// real user content. Nothing outside this file should hardcode these.
+// Shared with FileOperations::isInternalArtifact() below. These markers
+// identify staging and backup artifacts of the atomic save mechanism,
+// including files retained for recovery. Nothing outside this file should
+// hardcode them.
 const QString kTemporaryFileMarker = QStringLiteral(".qimgv_tmp_");
 const QString kBackupFileMarker = QStringLiteral(".qimgv_bak_");
 
@@ -97,6 +97,30 @@ ImageSaveResult commitTemporaryFile(const QString &temporaryPath,
     qCritical() << "FileOperations - Replacement recovery failed; backup retained at:"
                 << backupPath << "Windows error:" << recoveryError;
     return {ImageSaveError::RecoveryFailed, backupPath, recoveryError};
+}
+
+ImageSaveResult finalizeFailedCommit(ImageSaveResult result,
+                                     const QString &temporaryPath) {
+    if (result.succeeded() || !QFile::exists(temporaryPath))
+        return result;
+
+    if (!result.retainedBackupPath.isEmpty()) {
+        result.retainedTemporaryPath = temporaryPath;
+        qCritical() << "FileOperations - Failed commit retained a staged file at:"
+                    << temporaryPath;
+        return result;
+    }
+
+    QFile temporaryFile(temporaryPath);
+    if (temporaryFile.remove())
+        return result;
+
+    result.retainedTemporaryPath = temporaryPath;
+    result.cleanupError = ImageSaveCleanupError::TemporaryFileRemovalFailed;
+    qCritical() << "FileOperations - Could not remove staged file after failed commit;"
+                   " recovery copy retained at:"
+                << temporaryPath << temporaryFile.errorString();
+    return result;
 }
 
 } // namespace
@@ -462,10 +486,8 @@ ImageSaveResult FileOperations::copyFileAtomically(const QString &sourcePath,
         temporaryFile.setAutoRemove(false);
     } // temporaryFile is destroyed here, releasing its native handle.
 
-    const ImageSaveResult result = commitTemporaryFile(temporaryPath, destPath);
-    if (!result.succeeded() && result.retainedBackupPath.isEmpty())
-        QFile::remove(temporaryPath);
-    return result;
+    return finalizeFailedCommit(commitTemporaryFile(temporaryPath, destPath),
+                                temporaryPath);
 }
 
 ImageSaveResult FileOperations::saveImage(const QImage &image,
@@ -512,19 +534,17 @@ ImageSaveResult FileOperations::saveImage(const QImage &image,
         temporaryFile.setAutoRemove(false);
     } // temporaryFile is destroyed here, releasing its native handle.
 
-    const ImageSaveResult result = commitTemporaryFile(temporaryPath, destPath);
-    if (!result.succeeded() && result.retainedBackupPath.isEmpty())
-        QFile::remove(temporaryPath);
-    return result;
+    return finalizeFailedCommit(commitTemporaryFile(temporaryPath, destPath),
+                                temporaryPath);
 }
 
 // Any consumer that reacts to raw filesystem events (namely DirectoryManager's
 // DirectoryWatcher handlers) needs to recognize and ignore the temp/backup
-// files this class creates during an atomic save - they are never real
-// directory content, just a transient implementation detail, and the caller
-// of saveImage()/copyFileAtomically() already pushes the real, user-facing
-// update (DirectoryModel::saveFile() calls updateFileEntry()/emits
-// fileModified() directly once the save succeeds).
+// files this class creates during an atomic save - they are internal staging
+// or recovery artifacts, and the caller of saveImage()/copyFileAtomically()
+// already pushes the real, user-facing update (DirectoryModel::saveFile()
+// calls updateFileEntry()/emits fileModified() directly once the save
+// succeeds).
 bool FileOperations::isInternalArtifact(const QString &fileName) {
     return fileName.contains(kTemporaryFileMarker) || fileName.contains(kBackupFileMarker);
 }

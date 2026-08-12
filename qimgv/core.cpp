@@ -77,6 +77,23 @@ QString wallpaperApplyFailureMessage(const WallpaperApplyResult &result) {
 }
 
 QString imageSaveFailureMessage(const ImageSaveResult &result) {
+  if (!result.retainedBackupPath.isEmpty() &&
+      !result.retainedTemporaryPath.isEmpty()) {
+    return QCoreApplication::translate(
+               "Core",
+               "Could not save file. Recovery files were retained:\n"
+               "Original backup:\n%1\n\nStaged copy:\n%2")
+        .arg(QDir::toNativeSeparators(result.retainedBackupPath),
+             QDir::toNativeSeparators(result.retainedTemporaryPath));
+  }
+
+  if (!result.retainedTemporaryPath.isEmpty()) {
+    return QCoreApplication::translate(
+               "Core",
+               "Could not save file. A staged recovery copy was retained at:\n%1")
+        .arg(QDir::toNativeSeparators(result.retainedTemporaryPath));
+  }
+
   if (!result.retainedBackupPath.isEmpty()) {
     return QCoreApplication::translate(
                "Core",

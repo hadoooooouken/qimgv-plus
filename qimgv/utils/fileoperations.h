@@ -35,10 +35,17 @@ enum class ImageSaveError {
     RecoveryFailed
 };
 
+enum class ImageSaveCleanupError {
+    None,
+    TemporaryFileRemovalFailed
+};
+
 struct ImageSaveResult {
     ImageSaveError error = ImageSaveError::None;
     QString retainedBackupPath;
     quint32 nativeError = 0;
+    QString retainedTemporaryPath;
+    ImageSaveCleanupError cleanupError = ImageSaveCleanupError::None;
 
     [[nodiscard]] bool succeeded() const noexcept {
         return error == ImageSaveError::None;
@@ -58,9 +65,9 @@ public:
 
     static QString decodeResult(const FileOpResult &result);
     static QString generateHash(const QString &str);
-    // True if fileName is one of FileOperations' own transient temp/backup
-    // artifacts (see saveImage()/copyFileAtomically()), never real directory
-    // content. Filesystem-watcher consumers should ignore events for these.
+    // True if fileName is one of FileOperations' own staging/backup artifacts
+    // (see saveImage()/copyFileAtomically()). Filesystem-watcher consumers
+    // should ignore these, including artifacts retained for recovery.
     [[nodiscard]] static bool isInternalArtifact(const QString &fileName);
     [[nodiscard]] static ImageSaveResult copyFileAtomically(
         const QString &sourcePath, const QString &destPath);
