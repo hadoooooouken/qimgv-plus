@@ -33,6 +33,8 @@
 
 #include <JXRGlue.h>
 #include <cstring>
+#include <limits>
+#include <utility>
 
 Q_DECLARE_LOGGING_CATEGORY(LOG_JXRPLUGIN)
 
@@ -96,18 +98,161 @@ Q_LOGGING_CATEGORY(LOG_JXRPLUGIN, "kf.imageformats.plugins.jxr", QtWarningMsg)
 #define JXR_MAX_METADATA_SIZE (4 * 1024 * 1024)
 #endif
 
+namespace
+{
+constexpr qsizetype temporaryFileStemLength = 8;
+
+// jxrlib opens filename arguments through the narrow Windows CRT. Adapting the
+// staged QFile keeps the temporary path in Qt's Unicode-aware file APIs.
+class JxrFileStream
+{
+public:
+    explicit JxrFileStream(QSharedPointer<QFile> file)
+        : m_file(std::move(file))
+    {
+    }
+
+    ERR open(QIODevice::OpenMode mode)
+    {
+        if (m_file.isNull() || m_file->isOpen()) {
+            return WMP_errInvalidParameter;
+        }
+        if (!m_file->open(mode)) {
+            return WMP_errFileIO;
+        }
+
+        m_closeError = WMP_errSuccess;
+        m_stream = {};
+        m_stream.state.pvObj = this;
+        m_stream.fMem = FALSE;
+        m_stream.Close = close;
+        m_stream.EOS = atEnd;
+        m_stream.Read = read;
+        m_stream.Write = write;
+        m_stream.SetPos = setPosition;
+        m_stream.GetPos = position;
+        return WMP_errSuccess;
+    }
+
+    WMPStream *stream()
+    {
+        return &m_stream;
+    }
+
+    ERR closeError() const
+    {
+        return m_closeError;
+    }
+
+private:
+    Q_DISABLE_COPY_MOVE(JxrFileStream)
+
+    static JxrFileStream *adapter(WMPStream *stream)
+    {
+        return stream == nullptr ? nullptr : static_cast<JxrFileStream *>(stream->state.pvObj);
+    }
+
+    static ERR close(WMPStream **stream)
+    {
+        if (stream == nullptr || *stream == nullptr) {
+            return WMP_errInvalidParameter;
+        }
+
+        auto fileStream = adapter(*stream);
+        if (fileStream == nullptr || fileStream->m_file.isNull()) {
+            return WMP_errInvalidParameter;
+        }
+
+        auto error = WMP_errSuccess;
+        if (fileStream->m_file->isOpen()) {
+            if (fileStream->m_file->isWritable() && !fileStream->m_file->flush()) {
+                error = WMP_errFileIO;
+            }
+            fileStream->m_file->close();
+        }
+        fileStream->m_closeError = error;
+        *stream = nullptr;
+        return error;
+    }
+
+    static Bool atEnd(WMPStream *stream)
+    {
+        const auto fileStream = adapter(stream);
+        return fileStream == nullptr || fileStream->m_file.isNull() || fileStream->m_file->atEnd();
+    }
+
+    static ERR read(WMPStream *stream, void *data, size_t size)
+    {
+        auto fileStream = adapter(stream);
+        if (fileStream == nullptr || fileStream->m_file.isNull() || !fileStream->m_file->isReadable() || (data == nullptr && size != 0)
+            || size > static_cast<size_t>((std::numeric_limits<qint64>::max)())) {
+            return WMP_errInvalidParameter;
+        }
+        if (size == 0) {
+            return WMP_errSuccess;
+        }
+
+        const auto bytesRead = fileStream->m_file->read(static_cast<char *>(data), static_cast<qint64>(size));
+        return bytesRead == static_cast<qint64>(size) ? WMP_errSuccess : WMP_errFileIO;
+    }
+
+    static ERR write(WMPStream *stream, const void *data, size_t size)
+    {
+        auto fileStream = adapter(stream);
+        if (fileStream == nullptr || fileStream->m_file.isNull() || !fileStream->m_file->isWritable() || (data == nullptr && size != 0)
+            || size > static_cast<size_t>((std::numeric_limits<qint64>::max)())) {
+            return WMP_errInvalidParameter;
+        }
+        if (size == 0) {
+            return WMP_errSuccess;
+        }
+
+        const auto bytesWritten = fileStream->m_file->write(static_cast<const char *>(data), static_cast<qint64>(size));
+        return bytesWritten == static_cast<qint64>(size) ? WMP_errSuccess : WMP_errFileIO;
+    }
+
+    static ERR setPosition(WMPStream *stream, size_t offset)
+    {
+        auto fileStream = adapter(stream);
+        if (fileStream == nullptr || fileStream->m_file.isNull() || offset > static_cast<size_t>((std::numeric_limits<qint64>::max)())) {
+            return WMP_errInvalidParameter;
+        }
+        return fileStream->m_file->seek(static_cast<qint64>(offset)) ? WMP_errSuccess : WMP_errFileIO;
+    }
+
+    static ERR position(WMPStream *stream, size_t *offset)
+    {
+        auto fileStream = adapter(stream);
+        if (fileStream == nullptr || fileStream->m_file.isNull() || offset == nullptr) {
+            return WMP_errInvalidParameter;
+        }
+
+        const auto filePosition = fileStream->m_file->pos();
+        if (filePosition < 0) {
+            return WMP_errFileIO;
+        }
+        *offset = static_cast<size_t>(filePosition);
+        return WMP_errSuccess;
+    }
+
+    QSharedPointer<QFile> m_file;
+    WMPStream m_stream = {};
+    ERR m_closeError = WMP_errSuccess;
+};
+}
+
 class JXRHandlerPrivate : public QSharedData
 {
 private:
     QSharedPointer<QTemporaryDir> m_tempDir;
     QSharedPointer<QFile> m_jxrFile;
+    QSharedPointer<JxrFileStream> m_jxrStream;
     MicroExif m_exif;
     qint32 m_quality;
     QImageIOHandler::Transformations m_transformations;
     mutable QHash<QString, QString> m_txtMeta;
 
 public:
-    PKFactory *pFactory = nullptr;
     PKCodecFactory *pCodecFactory = nullptr;
     PKImageDecode *pDecoder = nullptr;
     PKImageEncode *pEncoder = nullptr;
@@ -116,10 +261,8 @@ public:
         : m_quality(-1)
         , m_transformations(QImageIOHandler::TransformationNone)
     {
-        m_tempDir = QSharedPointer<QTemporaryDir>(new QTemporaryDir);
-        if (auto err = PKCreateFactory(&pFactory, PK_SDK_VERSION)) {
-            qCCritical(LOG_JXRPLUGIN) << "JXRHandlerPrivate::JXRHandlerPrivate() error while initializing the JXR factory:" << err;
-        } else if (auto err = PKCreateCodecFactory(&pCodecFactory, WMP_SDK_VERSION)) {
+        m_tempDir = QSharedPointer<QTemporaryDir>::create();
+        if (auto err = PKCreateCodecFactory(&pCodecFactory, WMP_SDK_VERSION)) {
             qCCritical(LOG_JXRPLUGIN) << "JXRHandlerPrivate::JXRHandlerPrivate() error while initializing the JXR codec factory:" << err;
         }
     }
@@ -142,16 +285,34 @@ public:
                 qCWarning(LOG_JXRPLUGIN) << "JXRHandlerPrivate::JXRHandlerPrivate() error while releasing the codec factory:" << err;
             }
         }
-        if (pFactory) {
-            if (auto err = pFactory->Release(&pFactory)) {
-                qCWarning(LOG_JXRPLUGIN) << "JXRHandlerPrivate::JXRHandlerPrivate() error while releasing the factory:" << err;
-            }
-        }
     }
 
-    QString fileName() const
+    QSharedPointer<QFile> createTemporaryFile() const
     {
-        return m_jxrFile->fileName();
+        if (m_tempDir.isNull() || !m_tempDir->isValid()) {
+            const auto error = m_tempDir.isNull() ? QStringLiteral("temporary directory is unavailable") : m_tempDir->errorString();
+            qCWarning(LOG_JXRPLUGIN) << "JXRHandlerPrivate::createTemporaryFile() unable to create a temporary directory:" << error;
+            return {};
+        }
+
+        const auto fileName = QStringLiteral("%1.jxr").arg(m_tempDir->filePath(QUuid::createUuid().toString(QUuid::WithoutBraces).left(temporaryFileStemLength)));
+        return QSharedPointer<QFile>::create(fileName);
+    }
+
+    WMPStream *openFileStream(QIODevice::OpenMode mode)
+    {
+        if (m_jxrFile.isNull()) {
+            qCWarning(LOG_JXRPLUGIN) << "JXRHandlerPrivate::openFileStream() temporary file is unavailable";
+            return nullptr;
+        }
+
+        auto stream = QSharedPointer<JxrFileStream>::create(m_jxrFile);
+        if (const auto error = stream->open(mode)) {
+            qCWarning(LOG_JXRPLUGIN) << "JXRHandlerPrivate::openFileStream() unable to open the temporary file:" << m_jxrFile->errorString() << error;
+            return nullptr;
+        }
+        m_jxrStream = std::move(stream);
+        return m_jxrStream->stream();
     }
 
     /*!
@@ -564,10 +725,17 @@ public:
     bool initForWriting()
     {
         // I have to use QFile because, on Windows, the QTemporary file is locked (even if I close it)
-        auto fileName = QStringLiteral("%1.jxr").arg(m_tempDir->filePath(QUuid::createUuid().toString(QUuid::WithoutBraces).left(8)));
-        QSharedPointer<QFile> file(new QFile(fileName));
+        auto file = createTemporaryFile();
+        if (file.isNull()) {
+            return false;
+        }
         m_jxrFile = file;
-        return initEncoder();
+        auto stream = openFileStream(QFile::WriteOnly);
+        if (stream == nullptr || !initEncoder()) {
+            return false;
+        }
+        pEncoder->pStream = stream;
+        return true;
     }
 
     /*!
@@ -587,6 +755,10 @@ public:
         }
         if (auto err = pEncoder->Release(&pEncoder)) {
             qCWarning(LOG_JXRPLUGIN) << "JXRHandlerPrivate::finalizeWriting() error while releasing the encoder:" << err;
+            return false;
+        }
+        if (!m_jxrStream.isNull() && m_jxrStream->closeError() != WMP_errSuccess) {
+            qCWarning(LOG_JXRPLUGIN) << "JXRHandlerPrivate::finalizeWriting() error while closing the temporary file:" << m_jxrFile->errorString();
             return false;
         }
 
@@ -940,9 +1112,12 @@ private:
             return true;
         }
         // I have to use QFile because, on Windows, the QTemporary file is locked (even if I close it)
-        auto fileName = QStringLiteral("%1.jxr").arg(m_tempDir->filePath(QUuid::createUuid().toString(QUuid::WithoutBraces).left(8)));
-        QSharedPointer<QFile> file(new QFile(fileName));
+        auto file = createTemporaryFile();
+        if (file.isNull()) {
+            return false;
+        }
         if (!file->open(QFile::WriteOnly)) {
+            qCWarning(LOG_JXRPLUGIN) << "JXRHandlerPrivate::readDevice() unable to open the temporary file:" << file->errorString();
             return false;
         }
         if (!deviceCopy(file.data(), device)) {
@@ -951,6 +1126,7 @@ private:
         }
         file->close();
         m_exif = MicroExif::fromDevice(file.data());
+        file->close();
         m_jxrFile = file;
         return true;
     }
@@ -963,8 +1139,21 @@ private:
         if (pCodecFactory == nullptr) {
             return false;
         }
-        if (auto err = pCodecFactory->CreateDecoderFromFile(qUtf8Printable(fileName()), &pDecoder)) {
+        auto stream = openFileStream(QFile::ReadOnly);
+        if (stream == nullptr) {
+            return false;
+        }
+        if (auto err = pCodecFactory->CreateCodec(&IID_PKImageWmpDecode, reinterpret_cast<void **>(&pDecoder))) {
             qCWarning(LOG_JXRPLUGIN) << "JXRHandlerPrivate::initDecoder() unable to create decoder:" << err;
+            return false;
+        }
+        pDecoder->pStream = stream;
+        pDecoder->fStreamOwner = TRUE;
+        if (auto err = pDecoder->Initialize(pDecoder, stream)) {
+            qCWarning(LOG_JXRPLUGIN) << "JXRHandlerPrivate::initDecoder() unable to initialize decoder:" << err;
+            if (auto releaseError = pDecoder->Release(&pDecoder)) {
+                qCWarning(LOG_JXRPLUGIN) << "JXRHandlerPrivate::initDecoder() unable to release decoder after initialization failure:" << releaseError;
+            }
             return false;
         }
         setTransformation(JXRHandlerPrivate::orientationToTransformation(pDecoder->WMP.wmiI.oOrientation));
@@ -974,7 +1163,7 @@ private:
 
     bool initEncoder()
     {
-        if (pDecoder) {
+        if (pEncoder) {
             return true;
         }
         if (pCodecFactory == nullptr) {
@@ -1157,12 +1346,6 @@ bool JXRHandler::write(const QImage &image)
     if (!d->initForWriting()) {
         return false;
     }
-    struct WMPStream *pEncodeStream = nullptr;
-    if (auto err = d->pFactory->CreateStreamFromFilename(&pEncodeStream, qUtf8Printable(d->fileName()), "wb")) {
-        qCWarning(LOG_JXRPLUGIN) << "JXRHandler::write() unable to create stream:" << err;
-        return false;
-    }
-
     // convert the image to a supported format
     auto qi = d->imageToSave(image);
     auto jxlfmt = d->exactFormat(qi.format());
@@ -1191,7 +1374,7 @@ bool JXRHandler::write(const QImage &image)
         qCWarning(LOG_JXRPLUGIN) << "JXRHandler::write() something wrong when calculating encoder parameters for" << qi.format();
         return false;
     }
-    if (auto err = d->pEncoder->Initialize(d->pEncoder, pEncodeStream, &wmiSCP, sizeof(wmiSCP))) {
+    if (auto err = d->pEncoder->Initialize(d->pEncoder, d->pEncoder->pStream, &wmiSCP, sizeof(wmiSCP))) {
         qCWarning(LOG_JXRPLUGIN) << "JXRHandler::write() error while initializing the encoder:" << err;
         return false;
     }
