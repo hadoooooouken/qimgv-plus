@@ -4,6 +4,7 @@
 #include <QtEndian>
 #include <cstring>
 #include <QCoreApplication>
+#include <limits>
 #include <mutex>
 
 namespace {
@@ -107,28 +108,52 @@ struct IhdrChunk {
 };
 #pragma pack(pop)
 
-void writeChunk(QFile &file, const char type[4], const void *data, uint32_t size) {
+constexpr qint64 kChunkTypeSize = 4;
+
+bool writeExactly(QFile &file, const char *data, qint64 size) {
+    if (size < 0 || (size > 0 && data == nullptr)) {
+        return false;
+    }
+
+    qint64 totalWritten = 0;
+    while (totalWritten < size) {
+        const qint64 bytesWritten = file.write(data + totalWritten, size - totalWritten);
+        if (bytesWritten <= 0) {
+            return false;
+        }
+        totalWritten += bytesWritten;
+    }
+
+    return file.error() == QFileDevice::NoError;
+}
+
+bool writeChunk(QFile &file, const char type[4], const void *data, uint32_t size) {
     auto &loader = LibDeflateLoader::instance();
 
     // 1. Chunk Length (4 bytes, big endian)
     uint32_t lenBE = qToBigEndian<uint32_t>(size);
-    file.write(reinterpret_cast<const char*>(&lenBE), 4);
+    if (!writeExactly(file, reinterpret_cast<const char*>(&lenBE), sizeof(lenBE))) {
+        return false;
+    }
 
     // 2. Chunk Type (4 bytes)
-    file.write(type, 4);
+    if (!writeExactly(file, type, kChunkTypeSize)) {
+        return false;
+    }
 
     // 3. Chunk Data (len bytes)
-    if (size > 0 && data) {
-        file.write(reinterpret_cast<const char*>(data), size);
+    if (size > 0
+        && !writeExactly(file, reinterpret_cast<const char*>(data), static_cast<qint64>(size))) {
+        return false;
     }
 
     // 4. CRC-32 (4 bytes, big endian) of Type + Data
-    uint32_t crc = loader.crc32(0, type, 4);
+    uint32_t crc = loader.crc32(0, type, kChunkTypeSize);
     if (size > 0 && data) {
         crc = loader.crc32(crc, data, size);
     }
     uint32_t crcBE = qToBigEndian<uint32_t>(crc);
-    file.write(reinterpret_cast<const char*>(&crcBE), 4);
+    return writeExactly(file, reinterpret_cast<const char*>(&crcBE), sizeof(crcBE));
 }
 
 } // namespace
@@ -211,7 +236,7 @@ bool savePngWithLibdeflate(const QImage &image, const QString &filePath, int com
         '\r', '\n',
         0x1a, '\n'
     };
-    if (file.write(signature, 8) != 8) {
+    if (!writeExactly(file, signature, sizeof(signature))) {
         return false;
     }
 
@@ -225,13 +250,23 @@ bool savePngWithLibdeflate(const QImage &image, const QString &filePath, int com
     ihdr.filterMethod = 0;
     ihdr.interlaceMethod = 0;
 
-    writeChunk(file, "IHDR", &ihdr, sizeof(ihdr));
+    if (!writeChunk(file, "IHDR", &ihdr, sizeof(ihdr))) {
+        return false;
+    }
 
     // Write IDAT Chunk
-    writeChunk(file, "IDAT", compressedData.constData(), compressedData.size());
+    if (static_cast<uint64_t>(compressedData.size()) > std::numeric_limits<uint32_t>::max()) {
+        return false;
+    }
+    if (!writeChunk(file, "IDAT", compressedData.constData(),
+                    static_cast<uint32_t>(compressedData.size()))) {
+        return false;
+    }
 
     // Write IEND Chunk
-    writeChunk(file, "IEND", nullptr, 0);
+    if (!writeChunk(file, "IEND", nullptr, 0)) {
+        return false;
+    }
 
-    return true;
+    return file.flush() && file.error() == QFileDevice::NoError;
 }
