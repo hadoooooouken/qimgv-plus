@@ -156,6 +156,12 @@ void DirectoryPresenter::populateView() {
   if (!model || !view)
     return;
   invalidateFolderThumbnailRequests();
+  // The directory we're entering may have accumulated changes while it
+  // wasn't being watched (e.g. a file added externally). Any cover cached
+  // for this path from a previous time it was shown as a tile can no
+  // longer be trusted, so drop it - the next time this path is resolved
+  // as a tile it will get a fresh scan instead of a stale cache hit.
+  folderCoverResolver->invalidate(model->directoryPath());
   // Thumbnailer is shared with the other presenter. Clearing its pool here
   // would cancel that view's queued requests.
   view->populate(mShowDirs ? model->totalCount() : model->fileCount());
