@@ -110,10 +110,10 @@ Name: "thumbnails"; Description: "{cm:ThumbnailsTaskDesc}"; GroupDescription: "{
 
 [Files]
 Source: "..\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "{#MyAppExeName},cache\*,conf\*,thumbnails\*"
+Source: "..\release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs uninsrestartdelete; Excludes: "{#MyAppExeName},cache\*,conf\*,thumbnails\*"
 Source: "res\icons\common\logo\app\{#MyAppIconName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "res\filetypes\*"; DestDir: "{app}\res\filetypes"; Flags: ignoreversion
-Source: "..\release\qimgvshellex.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\release\qimgvshellex.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppIconName}"
