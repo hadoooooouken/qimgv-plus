@@ -36,6 +36,8 @@ target_sources(qimgv-plus PRIVATE
 
     wallpaper/wallpapercontroller.cpp
 
+    mimepayload/mimepayloadmanager.cpp
+
     comfymetadata/comfyksamplerparser.cpp
     comfymetadata/pngtextchunkreader.cpp
 )

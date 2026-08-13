@@ -131,7 +131,10 @@ void Settings::setupCache() {
   }
 
   mTmpDir = std::make_unique<QDir>(cachePath);
-  mTmpDir->mkpath(mTmpDir->absolutePath());
+  if (!mTmpDir->mkpath(mTmpDir->absolutePath())) {
+    qWarning() << "Failed to create cache directory:"
+               << mTmpDir->absolutePath();
+  }
   mThumbCacheDir = std::make_unique<QDir>(thumbPath);
   mThumbCacheDir->mkpath(mThumbCacheDir->absolutePath());
 }

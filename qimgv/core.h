@@ -38,11 +38,6 @@ struct State {
     std::shared_ptr<Image> currentImg;
 };
 
-enum MimeDataTarget {
-    TARGET_CLIPBOARD,
-    TARGET_DROP
-};
-
 class Core : public QObject {
     Q_OBJECT
 public:
@@ -97,7 +92,6 @@ private:
     bool setDirectory(QString path);
 
     QDrag *mDrag;
-    QMimeData *getMimeDataForImage(std::shared_ptr<Image> img, MimeDataTarget target);
     QTranslator *translator = nullptr;
 
     Randomizer randomizer;
@@ -235,6 +229,7 @@ private:
 
     std::unique_ptr<class Upscaler> upscaler;
     std::unique_ptr<class WallpaperController> wallpaperController;
+    std::unique_ptr<class MimePayloadManager> mimePayloadManager;
     int aiResizeGeneration = 0;
     std::optional<AiResizeOperation> activeAiResizeOperation;
     bool aiResizeBusyUiActive = false;

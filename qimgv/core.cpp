@@ -11,14 +11,13 @@
 #include <QInputDialog>
 #include <algorithm>
 #include <QRegularExpression>
-#include <QTemporaryFile>
-#include <QUuid>
 #include <QCoreApplication>
 #include <QThreadPool>
 #include <QTimer>
 #include "components/upscaler/upscaler.h"
 #include "components/upscaler/upscaylresizerunnable.h"
 #include "components/wallpaper/wallpapercontroller.h"
+#include "components/mimepayload/mimepayloadmanager.h"
 #include <QColorSpace>
 #include <tchar.h>
 #include <windows.h>
@@ -145,6 +144,45 @@ QString retainedBackupWarningMessage(const ImageSaveResult &result) {
              "Core", "File saved, but a backup could not be removed:\n%1")
       .arg(QDir::toNativeSeparators(result.retainedBackupPath));
 }
+
+QString mimePayloadFailureMessage(MimePayloadError error) {
+  switch (error) {
+  case MimePayloadError::ImageUnavailable:
+    return QCoreApplication::translate(
+        "Core", "Could not prepare image transfer: the image is unavailable");
+  case MimePayloadError::SourcePathUnavailable:
+    return QCoreApplication::translate(
+        "Core",
+        "Could not prepare image transfer: the source path is unavailable");
+  case MimePayloadError::StorageRootUnavailable:
+    return QCoreApplication::translate(
+        "Core",
+        "Could not prepare image transfer: temporary storage is unavailable");
+  case MimePayloadError::PayloadDirectoryCreationFailed:
+    return QCoreApplication::translate(
+        "Core",
+        "Could not prepare image transfer: the temporary directory could not "
+        "be created");
+  case MimePayloadError::PayloadFileCreationFailed:
+    return QCoreApplication::translate(
+        "Core",
+        "Could not prepare image transfer: the temporary file could not be "
+        "created");
+  case MimePayloadError::ImageEncodingFailed:
+    return QCoreApplication::translate(
+        "Core", "Could not prepare image transfer: the image could not be encoded");
+  case MimePayloadError::PayloadCommitFailed:
+    return QCoreApplication::translate(
+        "Core",
+        "Could not prepare image transfer: the temporary file could not be "
+        "written");
+  case MimePayloadError::None:
+    return {};
+  }
+
+  return QCoreApplication::translate(
+      "Core", "Could not prepare image transfer");
+}
 }
 
 Core::Core()
@@ -206,6 +244,16 @@ Core::Core()
   // modelChanged result is not actionable here (unlike in Core::readSettings()).
   (void)upscaler->readSettings();
   wallpaperController = std::make_unique<WallpaperController>(this);
+  mimePayloadManager =
+      std::make_unique<MimePayloadManager>(settings->tmpDir(), this);
+  connect(mimePayloadManager.get(),
+          &MimePayloadManager::payloadCleanupFailed,
+          this,
+          [this](const QString &path) {
+            mw->showError(
+                tr("Failed to clean up temporary image-transfer data: %1")
+                    .arg(QDir::toNativeSeparators(path)));
+          });
   connect(wallpaperController.get(),
           &WallpaperController::wallpaperApplyFinished,
           this,
@@ -268,9 +316,6 @@ Core::Core()
 
 Core::~Core() {
   delete translator;
-
-  QString instanceTempDir = settings->tmpDir() + "temp_" + QString::number(QCoreApplication::applicationPid()) + "/";
-  QDir(instanceTempDir).removeRecursively();
 }
 
 void Core::readSettings() {
@@ -1135,8 +1180,14 @@ void Core::copyFileClipboard() {
   if (model->isEmpty())
     return;
 
-  QMimeData *mimeData =
-      getMimeDataForImage(model->getImage(selectedPath()), TARGET_CLIPBOARD);
+  MimePayloadResult payloadResult = mimePayloadManager->createPayload(
+      {model->getImage(selectedPath()), MimePayloadTarget::Clipboard});
+  if (!payloadResult.succeeded()) {
+    mw->showError(mimePayloadFailureMessage(payloadResult.error));
+    return;
+  }
+
+  QMimeData *mimeData = payloadResult.mimeData.release();
 
   // mimeData->text() should already contain an url
   QByteArray gnomeFormat =
@@ -1244,8 +1295,13 @@ void Core::onDraggedOut(QList<QString> paths) {
   QMimeData *mimeData;
   // single selection, image
   if (paths.count() == 1 && model->containsFile(paths.constFirst())) {
-    mimeData =
-        getMimeDataForImage(model->getImage(paths.constLast()), TARGET_DROP);
+    MimePayloadResult payloadResult = mimePayloadManager->createPayload(
+        {model->getImage(paths.constLast()), MimePayloadTarget::Drop});
+    if (!payloadResult.succeeded()) {
+      mw->showError(mimePayloadFailureMessage(payloadResult.error));
+      return;
+    }
+    mimeData = payloadResult.mimeData.release();
   } else { // multi-selection, or single directory. drag urls
     mimeData = new QMimeData();
     QList<QUrl> urlList;
@@ -1260,54 +1316,6 @@ void Core::onDraggedOut(QList<QString> paths) {
   mDrag->exec(SupportedFileDragActions, Qt::CopyAction);
   mDrag->deleteLater();
   mDrag = nullptr;
-}
-
-class TempFileCleaner : public QObject {
-public:
-  TempFileCleaner(const QString &filePath, const QString &dirPath = QString(), QObject *parent = nullptr)
-      : QObject(parent), m_filePath(filePath), m_dirPath(dirPath) {}
-  ~TempFileCleaner() {
-    if (!m_filePath.isEmpty()) {
-      QFile::remove(m_filePath);
-    }
-    if (!m_dirPath.isEmpty()) {
-      QDir(m_dirPath).rmdir(m_dirPath);
-    }
-  }
-private:
-  QString m_filePath;
-  QString m_dirPath;
-};
-
-QMimeData *Core::getMimeDataForImage(std::shared_ptr<Image> img,
-                                     MimeDataTarget target) {
-  QMimeData *mimeData = new QMimeData();
-  if (!img)
-    return mimeData;
-  QString path = img->filePath();
-  if (img->type() == STATIC) {
-    if (img->isEdited()) {
-      path.clear();
-      QString uniqueId = QUuid::createUuid().toString(QUuid::WithoutBraces);
-      QString instanceTempDir = settings->tmpDir() + "payload_" + QString::number(QCoreApplication::applicationPid()) + "_" + uniqueId + "/";
-      if (QDir().mkpath(instanceTempDir)) {
-        QString tempPath = instanceTempDir + img->baseName() + ".png";
-
-        // use faster compression for drag'n'drop
-        int pngQuality = (target == TARGET_DROP) ? 80 : 30;
-        if (img->getImage()->save(tempPath, "PNG", pngQuality)) {
-          path = tempPath;
-          new TempFileCleaner(path, instanceTempDir, mimeData);
-        }
-      }
-    }
-  }
-  
-  if (target == TARGET_CLIPBOARD)
-    mimeData->setImageData(*img->getImage().get());
-  if (!path.isEmpty())
-    mimeData->setUrls({QUrl::fromLocalFile(path)});
-  return mimeData;
 }
 
 void Core::sortBy(SortingMode mode) { model->setSortingMode(mode); }
