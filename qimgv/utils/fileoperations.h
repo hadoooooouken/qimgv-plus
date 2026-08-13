@@ -40,6 +40,11 @@ enum class ImageSaveCleanupError {
     TemporaryFileRemovalFailed
 };
 
+enum class ExistingDestinationPolicy {
+    Replace,
+    Preserve
+};
+
 struct ImageSaveResult {
     ImageSaveError error = ImageSaveError::None;
     QString retainedBackupPath;
@@ -50,6 +55,38 @@ struct ImageSaveResult {
     [[nodiscard]] bool succeeded() const noexcept {
         return error == ImageSaveError::None;
     }
+
+    [[nodiscard]] bool cleanupSucceeded() const noexcept {
+        return cleanupError == ImageSaveCleanupError::None;
+    }
+};
+
+struct AtomicFileRequest {
+    QString destinationPath;
+    ExistingDestinationPolicy existingDestinationPolicy =
+        ExistingDestinationPolicy::Replace;
+};
+
+class AtomicFileTransaction {
+public:
+    explicit AtomicFileTransaction(AtomicFileRequest request);
+    ~AtomicFileTransaction();
+
+    AtomicFileTransaction(const AtomicFileTransaction &) = delete;
+    AtomicFileTransaction &operator=(const AtomicFileTransaction &) = delete;
+    AtomicFileTransaction(AtomicFileTransaction &&) = delete;
+    AtomicFileTransaction &operator=(AtomicFileTransaction &&) = delete;
+
+    [[nodiscard]] const ImageSaveResult &creationResult() const noexcept;
+    [[nodiscard]] const QString &temporaryPath() const noexcept;
+    [[nodiscard]] ImageSaveResult commit();
+    [[nodiscard]] ImageSaveResult discard();
+
+private:
+    AtomicFileRequest m_request;
+    QString m_temporaryPath;
+    ImageSaveResult m_creationResult;
+    bool m_active = false;
 };
 
 class QImage;

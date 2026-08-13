@@ -86,6 +86,8 @@ BatchItemWidget::BatchItemWidget(const QString &filePath, QWidget *parent)
     destInfoLabel = new QLabel(this);
     destInfoLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
     destInfoLabel->setAlignment(Qt::AlignRight);
+    destInfoLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    destInfoLabel->setWordWrap(true);
     destInfoLabel->setStyleSheet(
         QString("color: %1; font-size: 10px;").arg(colors.text_lc.name()));
     rightInfo->addWidget(destInfoLabel);

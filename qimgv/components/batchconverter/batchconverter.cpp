@@ -1,4 +1,5 @@
 #include "batchconverter.h"
+#include "utils/fileoperations.h"
 #include "utils/imagelib.h"
 #include "utils/pngwriter.h"
 #include <QImageReader>
@@ -10,39 +11,49 @@
 #include <QRunnable>
 #include <QCoreApplication>
 #include <QThread>
-#include <QFile>
-#include <QRandomGenerator>
 #include <QSet>
 #include <cmath>
-#include <string>
-#include <windows.h>
+#include <utility>
 #include "components/upscaler/upscaler.h"
 
 namespace {
 
-constexpr DWORD kReplaceFileFlags = 0;
+QString retainedArtifactDetails(const ImageSaveResult &result) {
+    QStringList details;
+    if (!result.retainedBackupPath.isEmpty()) {
+        details.append(QCoreApplication::translate(
+                           "BatchConverter",
+                           "Original backup retained at:\n%1")
+                           .arg(QDir::toNativeSeparators(result.retainedBackupPath)));
+    }
+    if (!result.retainedTemporaryPath.isEmpty()) {
+        const QString nativeTemporaryPath =
+            QDir::toNativeSeparators(result.retainedTemporaryPath);
+        if (result.cleanupSucceeded()) {
+            details.append(QCoreApplication::translate(
+                               "BatchConverter", "Staged output retained at:\n%1")
+                               .arg(nativeTemporaryPath));
+        } else {
+            details.append(QCoreApplication::translate(
+                               "BatchConverter",
+                               "Temporary output could not be removed. Retained at:\n%1")
+                               .arg(nativeTemporaryPath));
+        }
+    }
+    return details.join(QLatin1Char('\n'));
+}
 
-bool commitTemporaryOutput(const QString &tempPath, const QString &destPath, bool overwrite) {
-    const std::wstring nativeTempPath = QDir::toNativeSeparators(tempPath).toStdWString();
-    const std::wstring nativeDestPath = QDir::toNativeSeparators(destPath).toStdWString();
-
-    if (!overwrite) {
-        return MoveFileExW(nativeTempPath.c_str(), nativeDestPath.c_str(), MOVEFILE_WRITE_THROUGH);
+QString operationDetails(const QString &operation, const ImageSaveResult &result) {
+    QStringList details{operation};
+    if (result.nativeError != 0) {
+        details.append(QCoreApplication::translate("BatchConverter", "Windows error: %1")
+                           .arg(result.nativeError));
     }
 
-    if (ReplaceFileW(nativeDestPath.c_str(), nativeTempPath.c_str(), nullptr,
-                     kReplaceFileFlags, nullptr, nullptr)) {
-        return true;
-    }
-
-    if (GetLastError() != ERROR_FILE_NOT_FOUND) {
-        return false;
-    }
-
-    // ReplaceFileW requires an existing destination. The temporary output is
-    // in the destination directory, so this fallback remains a same-volume
-    // atomic rename and refuses to overwrite a file created during the race.
-    return MoveFileExW(nativeTempPath.c_str(), nativeDestPath.c_str(), MOVEFILE_WRITE_THROUGH);
+    const QString artifactDetails = retainedArtifactDetails(result);
+    if (!artifactDetails.isEmpty())
+        details.append(artifactDetails);
+    return details.join(QLatin1Char('\n'));
 }
 
 QString destinationReservationKey(const QString &path) {
@@ -108,8 +119,8 @@ public:
                 m_converter, "onTaskFinished", Qt::QueuedConnection, Q_ARG(int, m_index),
                 Q_ARG(QString, status), Q_ARG(QString, details), Q_ARG(bool, success));
         };
-        auto notifyStopped = [this, &notifyFinished]() {
-            notifyFinished(QCoreApplication::translate("BatchConverter", "Stopped"), QString(), false);
+        auto notifyStopped = [this, &notifyFinished](const QString &details = QString()) {
+            notifyFinished(QCoreApplication::translate("BatchConverter", "Stopped"), details, false);
         };
 
         if (m_cancelFlag->load()) {
@@ -240,11 +251,22 @@ public:
             return;
         }
 
-        QFileInfo destFi(m_destPath);
-        QString tempPath = destFi.absolutePath() + "/.qimgv_tmp_"
-                           + QString::number(QCoreApplication::applicationPid()) + "_"
-                           + QString::number(m_index) + "_"
-                           + QString::number(QRandomGenerator::global()->generate());
+        AtomicFileRequest fileRequest;
+        fileRequest.destinationPath = m_destPath;
+        fileRequest.existingDestinationPolicy =
+            m_job.overwrite ? ExistingDestinationPolicy::Replace
+                            : ExistingDestinationPolicy::Preserve;
+        AtomicFileTransaction stagedOutput(std::move(fileRequest));
+        if (!stagedOutput.creationResult().succeeded()) {
+            notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                           operationDetails(
+                               QCoreApplication::translate("BatchConverter", "Save Error"),
+                               stagedOutput.creationResult()),
+                           false);
+            return;
+        }
+
+        const QString &tempPath = stagedOutput.temporaryPath();
 
         QByteArray formatBa = m_job.format.toLatin1();
         bool saved = false;
@@ -259,30 +281,41 @@ public:
         }
 
         if (m_cancelFlag->load()) {
-            QFile::remove(tempPath);
-            notifyStopped();
+            notifyStopped(retainedArtifactDetails(stagedOutput.discard()));
             return;
         }
 
         if (!saved) {
-            QFile::remove(tempPath);
+            const ImageSaveResult cleanupResult = stagedOutput.discard();
             notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
-                           QCoreApplication::translate("BatchConverter", "Save Error"), false);
+                           operationDetails(
+                               QCoreApplication::translate("BatchConverter", "Save Error"),
+                               cleanupResult),
+                           false);
             return;
         }
 
         if (!m_job.overwrite && QFileInfo::exists(m_destPath)) {
-            QFile::remove(tempPath);
-            notifyFinished(QCoreApplication::translate("BatchConverter", "Done"),
-                           QCoreApplication::translate("BatchConverter", "Skipped (Exists)"), true);
+            const ImageSaveResult cleanupResult = stagedOutput.discard();
+            const QString skippedDetails = operationDetails(
+                QCoreApplication::translate("BatchConverter", "Skipped (Exists)"), cleanupResult);
+            if (!cleanupResult.cleanupSucceeded()) {
+                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                               skippedDetails, false);
+            } else {
+                notifyFinished(QCoreApplication::translate("BatchConverter", "Done"),
+                               skippedDetails, true);
+            }
             return;
         }
 
-        const bool committed = commitTemporaryOutput(tempPath, m_destPath, m_job.overwrite);
-        if (!committed) {
-            QFile::remove(tempPath);
+        const ImageSaveResult commitResult = stagedOutput.commit();
+        if (!commitResult.succeeded()) {
             notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
-                           QCoreApplication::translate("BatchConverter", "Commit Error"), false);
+                           operationDetails(
+                               QCoreApplication::translate("BatchConverter", "Commit Error"),
+                               commitResult),
+                           false);
             return;
         }
 
@@ -290,6 +323,11 @@ public:
                                 .arg(m_job.format.toUpper())
                                 .arg(processedImg.width())
                                 .arg(processedImg.height());
+        const QString artifactDetails = retainedArtifactDetails(commitResult);
+        if (!artifactDetails.isEmpty()) {
+            detailsStr.append(QLatin1Char('\n'));
+            detailsStr.append(artifactDetails);
+        }
         notifyFinished(QCoreApplication::translate("BatchConverter", "Done"), detailsStr, true);
     }
 
@@ -471,6 +509,8 @@ void BatchConverter::onTaskFinished(int index, QString status, QString details, 
     if (!m_isConverting && !m_isCancelling) return;
 
     if (m_isCancelling) {
+        if (!details.isEmpty())
+            emit progressUpdated(index, status, details, success);
         return;
     }
 
