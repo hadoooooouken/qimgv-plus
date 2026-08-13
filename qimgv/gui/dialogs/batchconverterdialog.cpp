@@ -352,7 +352,9 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
 
     // Left Column
     QVBoxLayout *lCol = new QVBoxLayout();
+    auto *resizeModeGroup = new QButtonGroup(this);
     byPercentage = new QRadioButton(tr("By Percent:"), this);
+    resizeModeGroup->addButton(byPercentage);
     lCol->addWidget(byPercentage);
 
     QHBoxLayout *percLayout = new QHBoxLayout();
@@ -372,6 +374,7 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     lCol->addLayout(percLayout);
 
     byAbsoluteSize = new QRadioButton(tr("By Absolute Size:"), this);
+    resizeModeGroup->addButton(byAbsoluteSize);
     byAbsoluteSize->setChecked(true);
     lCol->addWidget(byAbsoluteSize);
 
