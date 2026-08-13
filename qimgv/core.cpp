@@ -315,7 +315,8 @@ Core::Core()
 }
 
 Core::~Core() {
-  delete translator;
+  if (translator)
+    QApplication::removeTranslator(translator.get());
 }
 
 void Core::readSettings() {
@@ -764,7 +765,7 @@ void Core::initActions() {
 
 void Core::loadTranslation() {
   if (!translator)
-    translator = new QTranslator;
+    translator = std::make_unique<QTranslator>();
   QString trPathFallback =
       QCoreApplication::applicationDirPath() + "/translations";
 #ifdef TRANSLATIONS_PATH
@@ -776,7 +777,7 @@ void Core::loadTranslation() {
   if (localeName == "system")
     localeName = QLocale::system().name();
   if (localeName.isEmpty() || localeName == "en_US") {
-    QApplication::removeTranslator(translator);
+    QApplication::removeTranslator(translator.get());
     return;
   }
   QString trFile = trPath + "/" + localeName;
@@ -788,7 +789,7 @@ void Core::loadTranslation() {
       return;
     }
   }
-  QApplication::installTranslator(translator);
+  QApplication::installTranslator(translator.get());
 }
 
 void Core::onUpdate() {

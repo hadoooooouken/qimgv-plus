@@ -92,7 +92,7 @@ private:
     bool setDirectory(QString path);
 
     QDrag *mDrag;
-    QTranslator *translator = nullptr;
+    std::unique_ptr<QTranslator> translator;
 
     Randomizer randomizer;
     void syncRandomizer();
