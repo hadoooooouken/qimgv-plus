@@ -128,7 +128,7 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
       upscaylModelComboBox->addItems(modelNames);
 
       // Pre-select the model from settings
-      int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
+      int modelIdx = upscaylModelComboBox->findText(settings->resizeUpscaylModel());
       if (modelIdx != -1) {
         upscaylModelComboBox->setCurrentIndex(modelIdx);
       } else {
@@ -301,7 +301,7 @@ void ResizeDialog::sizeSelect() {
       useUpscayl = useUpscaylCheckBox->isChecked() && targetIsUpscale();
       upscaylModel = upscaylModelComboBox->currentText();
       settings->setResizeUseUpscayl(useUpscayl);
-      settings->setUpscaylModel(upscaylModel);
+      settings->setResizeUpscaylModel(upscaylModel);
       settings->sync();
     }
     emit sizeSelected(targetSize, selectedFilter, useUpscayl, upscaylModel);

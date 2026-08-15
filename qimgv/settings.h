@@ -53,6 +53,10 @@ public:
   static QString defaultUpscaylModel();
   QString upscaylModel();
   void setUpscaylModel(const QString &model);
+  QString resizeUpscaylModel();
+  void setResizeUpscaylModel(const QString &model);
+  QString batchUpscaylModel();
+  void setBatchUpscaylModel(const QString &model);
   bool upscaylLimitEnabled();
   void setUpscaylLimitEnabled(bool enabled);
   int upscaylLimitValue();

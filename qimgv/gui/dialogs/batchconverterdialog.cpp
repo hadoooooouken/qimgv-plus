@@ -713,7 +713,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
             if (modelsDir.exists(modelName + ".bin")) modelNames.append(modelName);
         }
         upscaylModelComboBox->addItems(modelNames);
-        int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
+        int modelIdx = upscaylModelComboBox->findText(settings->batchUpscaylModel());
         upscaylModelComboBox->setCurrentIndex(modelIdx != -1 ? modelIdx : 0);
         useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
         bool resizeEnabled = resizeEnableCheckBox->isChecked();
@@ -1040,7 +1040,7 @@ void BatchConverterDialog::startConversion() {
     job.upscaylModel = upscaylModelComboBox->currentText();
 
     settings->setResizeUseUpscayl(useUpscaylCheckBox->isChecked());
-    settings->setUpscaylModel(job.upscaylModel);
+    settings->setBatchUpscaylModel(job.upscaylModel);
     settings->sync();
 
     job.scalingFilter = filterComboBox->currentData().toInt();

@@ -718,6 +718,38 @@ void Settings::setUpscaylModel(const QString &model) {
                                                  : normalizedModel);
 }
 
+QString Settings::resizeUpscaylModel() {
+  const QString fallback = upscaylModel();
+  const QString model = settings->settingsConf
+                            ->value("resizeUpscaylModel", fallback)
+                            .toString()
+                            .trimmed();
+  return model.isEmpty() ? fallback : model;
+}
+
+void Settings::setResizeUpscaylModel(const QString &model) {
+  const QString normalizedModel = model.trimmed();
+  settings->settingsConf->setValue(
+      "resizeUpscaylModel",
+      normalizedModel.isEmpty() ? upscaylModel() : normalizedModel);
+}
+
+QString Settings::batchUpscaylModel() {
+  const QString fallback = upscaylModel();
+  const QString model = settings->settingsConf
+                            ->value("batchUpscaylModel", fallback)
+                            .toString()
+                            .trimmed();
+  return model.isEmpty() ? fallback : model;
+}
+
+void Settings::setBatchUpscaylModel(const QString &model) {
+  const QString normalizedModel = model.trimmed();
+  settings->settingsConf->setValue(
+      "batchUpscaylModel",
+      normalizedModel.isEmpty() ? upscaylModel() : normalizedModel);
+}
+
 QString Settings::defaultUpscaylModel() {
   return QStringLiteral("4xLSDIRCompactC3");
 }
