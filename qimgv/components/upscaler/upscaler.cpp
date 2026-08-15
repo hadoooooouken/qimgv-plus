@@ -25,6 +25,8 @@ constexpr quint64 kCpuReserveDivisor = 4;
 constexpr quint64 kDeviceReserveDivisor = 5;
 constexpr quint64 kFallbackDeviceReserveDivisor = 2;
 constexpr quint64 kMaximumReserveDivisor = 2;
+// Fallback only: used when RealESRGAN::detectedScale() can't derive the
+// scale from the loaded model's own ncnn graph (see initLocked()).
 constexpr int kModelScale = 4;
 constexpr int kModelPrepadding = 10;
 
@@ -224,13 +226,7 @@ bool UpscaylScaler::initLocked(const QString &appDir, const QString &requestedMo
     }
 
     realesrgan = std::make_unique<RealESRGAN>(-1, false);
-    realesrgan->scale = kModelScale;
     realesrgan->prepadding = kModelPrepadding;
-
-    {
-        int autoTile = realesrgan->autoTilesize();
-        realesrgan->tilesize = autoTile;
-    }
 
     const int res = realesrgan->load(paramFile.absoluteFilePath().toStdWString(),
                                      binFile.absoluteFilePath().toStdWString());
@@ -240,6 +236,18 @@ bool UpscaylScaler::initLocked(const QString &appDir, const QString &requestedMo
         loadedModel = "";
         return false;
     }
+
+    realesrgan->scale = realesrgan->detectedScale().value_or(kModelScale);
+    if (!realesrgan->detectedScale().has_value()) {
+        qWarning() << "[Upscayl] Could not detect model scale from graph, falling back to"
+                   << kModelScale << "for model:" << modelName;
+    }
+
+    {
+        int autoTile = realesrgan->autoTilesize();
+        realesrgan->tilesize = autoTile;
+    }
+
     loadedModel = modelName;
     return true;
 }
