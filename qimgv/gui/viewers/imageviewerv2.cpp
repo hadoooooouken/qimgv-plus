@@ -736,25 +736,19 @@ void ImageViewerV2::requestScaling() {
 
   QSize targetSize = scaledSizeR() * dpr;
 
-  // Default limits (same as ImageLib::scaled)
-  int maxDim = 12288;
-  qint64 maxPixels = 100000000; // 100 megapixels
-  float maxScale = 4.0f;
+  // Output buffer limits (same as ImageLib::scaled defaults)
+  constexpr int    kMaxScaledDimension = 12288;
+  constexpr qint64 kMaxScaledPixels    = 100'000'000; // 100 megapixels
 
-  if (mUseUpscayl) {
-    maxScale = 40.0f; // allow extreme zoom with Upscayl (up to 4000%)
-    if (currentScale() > maxScale) {
-      requestSettledFramePresentation();
-      return;
-    }
-  } else
-  {
-    if (currentScale() > maxScale || targetSize.width() > maxDim ||
-        targetSize.height() > maxDim ||
-        (qint64)targetSize.width() * targetSize.height() > maxPixels) {
-      requestSettledFramePresentation();
-      return;
-    }
+  // Upscayl path: output buffer is guarded downstream by ImageLib::scaled()
+  // with enhanced limits (16384 dim / 256 MP).
+  // Non-Upscayl path: cap the CPU-scaled output size here.
+  if (!mUseUpscayl &&
+      (targetSize.width() > kMaxScaledDimension ||
+       targetSize.height() > kMaxScaledDimension ||
+       static_cast<qint64>(targetSize.width()) * targetSize.height() > kMaxScaledPixels)) {
+    requestSettledFramePresentation();
+    return;
   }
 
   if (scaleTimer->isActive())
