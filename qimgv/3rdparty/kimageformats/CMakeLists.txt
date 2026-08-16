@@ -71,10 +71,10 @@ target_include_directories(kimg_exr SYSTEM PRIVATE
     "${IMATH_ROOT}/include/Imath"
 )
 target_link_libraries(kimg_exr PRIVATE 
-    "${OPENEXR_ROOT}/lib/OpenEXR-4_0.lib"
-    "${OPENEXR_ROOT}/lib/OpenEXRCore-4_0.lib"
-    "${OPENEXR_ROOT}/lib/Iex-4_0.lib"
-    "${OPENEXR_ROOT}/lib/IlmThread-4_0.lib"
+    "${OPENEXR_ROOT}/lib/OpenEXR-3_4.lib"
+    "${OPENEXR_ROOT}/lib/OpenEXRCore-3_4.lib"
+    "${OPENEXR_ROOT}/lib/Iex-3_4.lib"
+    "${OPENEXR_ROOT}/lib/IlmThread-3_4.lib"
     "${IMATH_ROOT}/lib/Imath-3_2.lib"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/OpenJPH/install/lib/openjph.0.27.lib"
 )
