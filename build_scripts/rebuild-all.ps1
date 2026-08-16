@@ -23,6 +23,52 @@ $ErrorActionPreference = "Stop"
 $ROOT = (Resolve-Path "$PSScriptRoot\..\formats").Path
 
 # ---------------------------------------------------------------------------
+# VC dev environment bootstrap
+# ---------------------------------------------------------------------------
+# Some sub-builds (meson/ninja for dav1d, etc.) resolve "cl" via PATH instead
+# of an absolute path. Without vcvarsall imported into THIS process, those
+# nested build steps fail with "CreateProcess failed: The system cannot find
+# the file specified." even though top-level MSBuild/cmake builds work fine.
+# Importing vcvars here makes cl.exe visible to every child process spawned
+# from this script (cmake -> MSBuild -> custom build steps -> meson -> ninja).
+
+function Import-VcVars {
+    Write-Info "Locating Visual Studio vcvarsall.bat..."
+    $vswhere = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+    if (-not (Test-Path $vswhere)) {
+        throw "vswhere.exe not found at $vswhere"
+    }
+
+    $vsInstallPath = & $vswhere -latest -property installationPath
+    if (-not $vsInstallPath) {
+        throw "vswhere could not locate a Visual Studio installation."
+    }
+
+    $vcvars = Join-Path $vsInstallPath "VC\Auxiliary\Build\vcvarsall.bat"
+    if (-not (Test-Path $vcvars)) {
+        throw "Could not locate vcvarsall.bat at $vcvars"
+    }
+    Write-Info "Using $vcvars"
+
+    $envDump = cmd.exe /c "call `"$vcvars`" x64 && set"
+    if ($LASTEXITCODE -ne 0) {
+        throw "vcvarsall.bat x64 failed (exit code $LASTEXITCODE)"
+    }
+
+    foreach ($line in $envDump) {
+        if ($line -match "^(.*?)=(.*)$") {
+            [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2])
+        }
+    }
+
+    $cl = Get-Command cl -ErrorAction SilentlyContinue
+    if (-not $cl) {
+        throw "vcvarsall.bat ran but cl.exe is still not on PATH."
+    }
+    Write-Info "cl.exe resolved to $($cl.Source)"
+}
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -252,6 +298,8 @@ Write-Host "  qimgv format libraries rebuild" -ForegroundColor White
 Write-Host "  Root : $ROOT"         -ForegroundColor DarkGray
 Write-Host "  Libs : $($Libraries -join ', ')" -ForegroundColor DarkGray
 Write-Host "  Mode : $(if ($FullClean) { 'Full clean' } else { 'Cache-only clean' })" -ForegroundColor DarkGray
+
+Import-VcVars
 
 foreach ($lib in $Libraries) {
     $n++
