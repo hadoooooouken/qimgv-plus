@@ -47,19 +47,13 @@ if ($copied -eq 0) {
     Write-Host "Deployed $copied / $($dlls.Count) plugins." -ForegroundColor Green
 }
 
-# Copy EXR/Imath dependency DLLs to main release/ directory
+# Copy dependency DLLs to main release/ directory
 $mainReleaseDir = Join-Path $projectRoot "release"
 if (-not (Test-Path $mainReleaseDir)) {
     New-Item -ItemType Directory -Path $mainReleaseDir -Force | Out-Null
 }
 
 $depDlls = @(
-    "formats\openexr\install\bin\OpenEXR-3_4.dll"
-    "formats\openexr\install\bin\OpenEXRCore-3_4.dll"
-    "formats\openexr\install\bin\Iex-3_4.dll"
-    "formats\openexr\install\bin\IlmThread-3_4.dll"
-    "formats\openexr\install\bin\OpenEXRUtil-3_4.dll"
-    "formats\Imath\install\bin\Imath-3_2.dll"
     "formats\zlib-ng\install\bin\zlib1.dll"
     "formats\libdeflate\install\bin\deflate.dll"
 )
