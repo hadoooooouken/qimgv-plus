@@ -243,11 +243,11 @@ if(WIN32)
     set(IMATH_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/Imath/install/bin")
 
     set(EXR_DLLS
-        "${OPENEXR_BIN_DIR}/OpenEXR-4_0.dll"
-        "${OPENEXR_BIN_DIR}/OpenEXRCore-4_0.dll"
-        "${OPENEXR_BIN_DIR}/Iex-4_0.dll"
-        "${OPENEXR_BIN_DIR}/IlmThread-4_0.dll"
-        "${OPENEXR_BIN_DIR}/OpenEXRUtil-4_0.dll"
+        "${OPENEXR_BIN_DIR}/OpenEXR-3_4.dll"
+        "${OPENEXR_BIN_DIR}/OpenEXRCore-3_4.dll"
+        "${OPENEXR_BIN_DIR}/Iex-3_4.dll"
+        "${OPENEXR_BIN_DIR}/IlmThread-3_4.dll"
+        "${OPENEXR_BIN_DIR}/OpenEXRUtil-3_4.dll"
         "${IMATH_BIN_DIR}/Imath-3_2.dll"
     )
 

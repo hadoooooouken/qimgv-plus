@@ -54,11 +54,11 @@ if (-not (Test-Path $mainReleaseDir)) {
 }
 
 $depDlls = @(
-    "formats\openexr\install\bin\OpenEXR-4_0.dll"
-    "formats\openexr\install\bin\OpenEXRCore-4_0.dll"
-    "formats\openexr\install\bin\Iex-4_0.dll"
-    "formats\openexr\install\bin\IlmThread-4_0.dll"
-    "formats\openexr\install\bin\OpenEXRUtil-4_0.dll"
+    "formats\openexr\install\bin\OpenEXR-3_4.dll"
+    "formats\openexr\install\bin\OpenEXRCore-3_4.dll"
+    "formats\openexr\install\bin\Iex-3_4.dll"
+    "formats\openexr\install\bin\IlmThread-3_4.dll"
+    "formats\openexr\install\bin\OpenEXRUtil-3_4.dll"
     "formats\Imath\install\bin\Imath-3_2.dll"
     "formats\zlib-ng\install\bin\zlib1.dll"
     "formats\libdeflate\install\bin\deflate.dll"
