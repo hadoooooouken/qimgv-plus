@@ -238,29 +238,6 @@ if(WIN32)
         message(WARNING "OpenMP runtime NOT found at: ${OPENMP_DLL_PATH}")
     endif()
 
-    # 9. Copy OpenEXR and Imath runtime dependencies for kimg_exr
-    set(OPENEXR_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/openexr/install/bin")
-    set(IMATH_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/Imath/install/bin")
-
-    set(EXR_DLLS
-        "${OPENEXR_BIN_DIR}/OpenEXR-3_4.dll"
-        "${OPENEXR_BIN_DIR}/OpenEXRCore-3_4.dll"
-        "${OPENEXR_BIN_DIR}/Iex-3_4.dll"
-        "${OPENEXR_BIN_DIR}/IlmThread-3_4.dll"
-        "${OPENEXR_BIN_DIR}/OpenEXRUtil-3_4.dll"
-        "${IMATH_BIN_DIR}/Imath-3_2.dll"
-    )
-
-    foreach(_dll ${EXR_DLLS})
-        if(EXISTS "${_dll}")
-            add_custom_command(TARGET qimgv-plus POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_dll}" "$<TARGET_FILE_DIR:qimgv-plus>/"
-                COMMENT "Deploying OpenEXR/Imath/OpenJPH dependency: ${_dll}..."
-            )
-        else()
-            message(WARNING "EXR dependency DLL NOT found at: ${_dll}")
-        endif()
-    endforeach()
 
     # 9b. Copy zlib-ng shared library for qtiff.dll and qimgv-plus.exe
     set(ZLIB_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install/bin/zlib1.dll")
