@@ -311,6 +311,7 @@ void BatchConverterDialog::setupRightPanel(QBoxLayout *mainLayout) {
     setupColorSection(scrollLayout);
     scrollLayout->addSpacerItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Fixed));
     setupRenameSection(scrollLayout);
+    scrollLayout->addStretch(1);
 
     scrollArea->setWidget(scrollWidget);
     mainLayout->addWidget(scrollArea, 0);
