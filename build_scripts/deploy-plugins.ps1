@@ -56,6 +56,7 @@ if (-not (Test-Path $mainReleaseDir)) {
 $depDlls = @(
     "formats\zlib-ng\install\bin\zlib1.dll"
     "formats\libdeflate\install\bin\deflate.dll"
+    "formats\zstd\install\bin\zstd.dll"
 )
 
 # libjpeg-turbo's shared DLL is versioned (e.g. jpeg62.dll) by SO_MAJOR_VERSION,

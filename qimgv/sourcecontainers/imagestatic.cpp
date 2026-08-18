@@ -1,5 +1,6 @@
 #include "imagestatic.h"
 #include "settings.h"
+#include "utils/blendreader.h"
 #include "utils/colormanager.h"
 #include <QPainter>
 #include <QPdfDocument>
@@ -30,6 +31,21 @@ void ImageStatic::load() {
     loadICO();
   else if (mDocInfo->format() == "pdf")
     loadPdf();
+  else if (mDocInfo->format() == "blend") {
+    QString error;
+    QImage loaded = BlendReader::readPreview(mPath, &error);
+    if (loaded.isNull()) {
+      if (!error.isEmpty()) {
+        qWarning() << "ImageStatic: failed to load Blender preview" << mPath
+                   << "Error:" << error;
+      }
+      return;
+    }
+    image = std::make_shared<const QImage>(std::move(loaded));
+    imageColorManaged =
+        std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+    mLoaded = true;
+  }
   else
     loadGeneric();
 }

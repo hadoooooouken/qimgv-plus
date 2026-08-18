@@ -250,7 +250,18 @@ if(WIN32)
         message(WARNING "zlib-ng DLL not found at: ${ZLIB_DLL_PATH}")
     endif()
 
-    # 9c. Copy shared libjpeg-turbo library for qtiff.dll (via libtiff) and qjpeg.dll.
+    # 9c. Copy Zstandard shared library for Blender .blend previews
+    set(ZSTD_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zstd/install/bin/zstd.dll")
+    if(EXISTS "${ZSTD_DLL_PATH}")
+        add_custom_command(TARGET qimgv-plus POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ZSTD_DLL_PATH}" "$<TARGET_FILE_DIR:qimgv-plus>/"
+            COMMENT "Deploying Zstandard shared library (zstd.dll)..."
+        )
+    else()
+        message(WARNING "Zstandard DLL not found at: ${ZSTD_DLL_PATH}")
+    endif()
+
+    # 9d. Copy shared libjpeg-turbo library for qtiff.dll (via libtiff) and qjpeg.dll.
     # Both plugins link against this one AVX2/LTCG-optimized build (see
     # build_scripts/build_qtiff_jpeg.ps1 Step 2 and build_qjpeg_jpeg.ps1) instead of
     # each carrying a private static copy. Like zlib1.dll above, this has to sit next

@@ -38,6 +38,7 @@ const QVector<FormatGroup> &allFormatGroups() {
         { "EXR",        {"exr"} },
         { "HDR",        {"hdr"} },
         { "DDS/TGA",    {"dds", "tga"} },
+        { "BLEND",      {"blend"} },
         { "ICO",        {"ico"} },
     };
     return groups;

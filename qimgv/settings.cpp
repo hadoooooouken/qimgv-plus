@@ -504,7 +504,7 @@ void Settings::setColorTid(int tid) { mColorScheme.tid = tid; }
 //------------------------------------------------------------------------------
 QList<QByteArray> Settings::supportedFormats() {
   auto formats = QImageReader::supportedImageFormats();
-  formats << "jfif" << "ai";
+  formats << "jfif" << "ai" << "blend";
   return formats;
 }
 //------------------------------------------------------------------------------

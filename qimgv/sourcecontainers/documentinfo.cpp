@@ -107,7 +107,11 @@ void DocumentInfo::detectFormat() {
     mMimeType = mimeDb.mimeTypeForFile(fileInfo.filePath(), QMimeDatabase::MatchContent);
     auto mimeName = mMimeType.name().toUtf8();
     auto suffix = fileInfo.suffix().toLower().toUtf8();
-    if(mimeName == "image/jpeg") {
+    if(suffix == "blend") {
+        mFormat = "blend";
+        mDocumentType = DocumentType::STATIC;
+        exifLoaded = true; // Blender files have no Exiv2 metadata path.
+    } else if(mimeName == "image/jpeg") {
         mFormat = "jpg";
         mDocumentType = DocumentType::STATIC;
     } else if(mimeName == "image/png") {

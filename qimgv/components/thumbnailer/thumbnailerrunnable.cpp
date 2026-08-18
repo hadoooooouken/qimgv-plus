@@ -1,5 +1,6 @@
 #include "thumbnailerrunnable.h"
 #include "settings.h"
+#include "utils/blendreader.h"
 #include "utils/colormanager.h"
 #include "utils/imagelib.h"
 #include <QDebug>
@@ -211,6 +212,40 @@ QSize ThumbnailerRunnable::noUpscaleScaledSize(QSize originalSize, int size,
 std::pair<QImage, QSize>
 ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
                                      bool squared) {
+  const bool isBlend =
+      format &&
+      QString::compare(QString::fromLatin1(format), QStringLiteral("blend"),
+                       Qt::CaseInsensitive) == 0;
+  if (isBlend) {
+    QImage fullSize = BlendReader::readPreview(path);
+    if (fullSize.isNull())
+      return std::make_pair(QImage(), QSize());
+
+    QSize originalSize = fullSize.size();
+    Qt::AspectRatioMode ARMode =
+        squared ? Qt::KeepAspectRatioByExpanding : Qt::KeepAspectRatio;
+    QSize scaledSize = noUpscaleScaledSize(originalSize, size, ARMode);
+    QImage result;
+    if (squared) {
+      QRect clip(0, 0, size, size);
+      QRect scaledRect(QPoint(0, 0), scaledSize);
+      clip.moveCenter(scaledRect.center());
+      QImage scaled = (scaledSize == fullSize.size())
+                          ? fullSize
+                          : fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                                            Qt::SmoothTransformation);
+      result = ImageLib::croppedRaw(&scaled, clip);
+      if (result.isNull())
+        result = scaled;
+    } else {
+      result = (scaledSize == fullSize.size())
+                   ? fullSize
+                   : fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                                     Qt::SmoothTransformation);
+    }
+    return std::make_pair(result, originalSize);
+  }
+
   bool isIco = (format && QString::compare(QString::fromLatin1(format), QStringLiteral("ico"), Qt::CaseInsensitive) == 0);
   if (isIco) {
     QImage fullSize = ImageLib::loadICO(path);
