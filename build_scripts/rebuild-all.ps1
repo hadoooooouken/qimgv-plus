@@ -15,7 +15,7 @@
     .\rebuild-all.ps1 -Libraries Imath,openexr -FullClean
 #>
 param(
-    [string[]] $Libraries = @("Imath","openexr","libavif","libjxl","jxrlib","libdeflate","LibRaw"),
+    [string[]] $Libraries = @("Imath","openexr","libavif","libjxl","jxrlib","libdeflate","zstd","LibRaw"),
     [switch]   $FullClean
 )
 
@@ -240,6 +240,24 @@ $ALL_LIBS = [ordered]@{
                 "-DLIBDEFLATE_BUILD_STATIC_LIB=ON",
                 "-DLIBDEFLATE_BUILD_GZIP=OFF",
                 "-DLIBDEFLATE_BUILD_TESTS=OFF"
+            )
+    }
+
+    "zstd" = {
+        Build-Library `
+            -SrcDir     "$ROOT\zstd\build\cmake" `
+            -BuildDir   "$ROOT\zstd\build-msvc" `
+            -InstallDir "$ROOT\zstd\install" `
+            -ConfigArgs @(
+                "-DCMAKE_INSTALL_PREFIX=$ROOT\zstd\install",
+                "-DZSTD_BUILD_STATIC=ON",
+                "-DZSTD_BUILD_SHARED=OFF",
+                "-DZSTD_BUILD_PROGRAMS=OFF",
+                "-DZSTD_BUILD_TESTS=OFF",
+                "-DZSTD_BUILD_CONTRIB=OFF",
+                "-DZSTD_USE_STATIC_RUNTIME=OFF",
+                "-DCMAKE_C_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /arch:AVX2 /GL /GS /guard:cf /Qspectre",
+                "-DCMAKE_STATIC_LINKER_FLAGS_RELEASE=/LTCG"
             )
     }
 
