@@ -40,6 +40,7 @@ const QVector<FormatGroup> &allFormatGroups() {
         { "DDS/TGA",    {"dds", "tga"} },
         { "BLEND",      {"blend"} },
         { "ICO",        {"ico"} },
+        { "Fonts",      {"ttf", "otf", "ttc"} },
     };
     return groups;
 }

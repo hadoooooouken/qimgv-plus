@@ -111,6 +111,10 @@ void DocumentInfo::detectFormat() {
         mFormat = "blend";
         mDocumentType = DocumentType::STATIC;
         exifLoaded = true; // Blender files have no Exiv2 metadata path.
+    } else if(suffix == "ttf" || suffix == "otf" || suffix == "ttc") {
+        mFormat = "font";
+        mDocumentType = DocumentType::STATIC;
+        exifLoaded = true; // Font files have no Exiv2 metadata path.
     } else if(mimeName == "image/jpeg") {
         mFormat = "jpg";
         mDocumentType = DocumentType::STATIC;

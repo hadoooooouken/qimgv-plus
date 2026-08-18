@@ -2,6 +2,7 @@
 #include "settings.h"
 #include "utils/blendreader.h"
 #include "utils/colormanager.h"
+#include "utils/fontpreview.h"
 #include <QPainter>
 #include <QPdfDocument>
 #include <time.h>
@@ -31,6 +32,17 @@ void ImageStatic::load() {
     loadICO();
   else if (mDocInfo->format() == "pdf")
     loadPdf();
+  else if (mDocInfo->format() == "font") {
+    QImage loaded = FontPreview::render(mPath);
+    if (loaded.isNull()) {
+      qWarning() << "ImageStatic: failed to render font preview" << mPath;
+      return;
+    }
+    image = std::make_shared<const QImage>(std::move(loaded));
+    imageColorManaged =
+        std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+    mLoaded = true;
+  }
   else if (mDocInfo->format() == "blend") {
     QString error;
     QImage loaded = BlendReader::readPreview(mPath, &error);

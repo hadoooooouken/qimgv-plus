@@ -2,6 +2,7 @@
 #include "settings.h"
 #include "utils/blendreader.h"
 #include "utils/colormanager.h"
+#include "utils/fontpreview.h"
 #include "utils/imagelib.h"
 #include <QDebug>
 #include <QFileInfo>
@@ -225,6 +226,40 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
     Qt::AspectRatioMode ARMode =
         squared ? Qt::KeepAspectRatioByExpanding : Qt::KeepAspectRatio;
     QSize scaledSize = noUpscaleScaledSize(originalSize, size, ARMode);
+    QImage result;
+    if (squared) {
+      QRect clip(0, 0, size, size);
+      QRect scaledRect(QPoint(0, 0), scaledSize);
+      clip.moveCenter(scaledRect.center());
+      QImage scaled = (scaledSize == fullSize.size())
+                          ? fullSize
+                          : fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                                            Qt::SmoothTransformation);
+      result = ImageLib::croppedRaw(&scaled, clip);
+      if (result.isNull())
+        result = scaled;
+    } else {
+      result = (scaledSize == fullSize.size())
+                   ? fullSize
+                   : fullSize.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                                     Qt::SmoothTransformation);
+    }
+    return std::make_pair(result, originalSize);
+  }
+
+  const bool isFont =
+      format &&
+      QString::compare(QString::fromLatin1(format), QStringLiteral("font"),
+                       Qt::CaseInsensitive) == 0;
+  if (isFont) {
+    QImage fullSize = FontPreview::render(path);
+    if (fullSize.isNull())
+      return std::make_pair(QImage(), QSize());
+
+    const QSize originalSize = fullSize.size();
+    const Qt::AspectRatioMode ARMode =
+        squared ? Qt::KeepAspectRatioByExpanding : Qt::KeepAspectRatio;
+    const QSize scaledSize = noUpscaleScaledSize(originalSize, size, ARMode);
     QImage result;
     if (squared) {
       QRect clip(0, 0, size, size);

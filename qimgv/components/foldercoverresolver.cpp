@@ -43,7 +43,10 @@ int folderCoverWorkerCount()
 constexpr auto kAdditionalImageExtensions = std::to_array<const char *>({
     "jfif",
     "tga",
-    "webp"
+    "webp",
+    "ttf",
+    "otf",
+    "ttc"
 });
 
 QString normalizedPath(const QString &path)
