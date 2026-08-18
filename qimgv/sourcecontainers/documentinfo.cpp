@@ -157,6 +157,10 @@ void DocumentInfo::detectFormat() {
     } else if(mimeName == "image/x-exr" || suffix == "exr") {
         mFormat = "exr";
         mDocumentType = DocumentType::STATIC;
+    } else if(suffix == "djvu" || suffix == "djv" || mimeName == "image/vnd.djvu" || mimeName == "image/x-djvu") {
+        mFormat = "djvu";
+        mDocumentType = DocumentType::STATIC;
+        exifLoaded = true;
     } else if(mimeName == "application/pdf" || suffix == "pdf" || suffix == "ai" || mimeName == "application/illustrator") {
         mFormat = "pdf";
         mDocumentType = DocumentType::STATIC;
@@ -266,7 +270,7 @@ void DocumentInfo::loadExifTags() {
     // to Exiv2 or having zero metadata support. Bypassing them avoids 
     // first-chance exceptions during debugging sessions.
     static const QStringList unsupportedByExiv2 = {
-        "gif", "bmp", "svg", "hdr", "exr", "pdf", 
+        "gif", "bmp", "svg", "hdr", "exr", "pdf", "djvu",
         "tga", "kra", "ora", "jxr", "qoi", "dds",
         "ai"
     };

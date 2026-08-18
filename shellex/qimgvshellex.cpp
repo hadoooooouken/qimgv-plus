@@ -1,5 +1,6 @@
 // shellex/qimgvshellex.cpp
 #include "qimgvshellex.h"
+#include "djvu.h"
 #include <memory>
 #include <shlwapi.h>
 
@@ -27,6 +28,7 @@
 #include <functional>
 #include <limits>
 #include <new>
+#include <mutex>
 #include <string_view>
 #include <utility>
 
@@ -186,6 +188,10 @@ static const ExtensionInfo g_extensionTable[] = {
   // Adobe Illustrator
   { L".ai",   "pdf",  false, L"qimgvplus.AssocFile.ai" },
 
+  // DjVu
+  { L".djvu", nullptr, false, L"qimgvplus.AssocFile.djvu" },
+  { L".djv",  nullptr, false, L"qimgvplus.AssocFile.djvu" },
+
   // TIFF
   { L".tif",  "tiff", false, L"qimgvplus.AssocFile.tif" },
   { L".tiff", "tiff", false, L"qimgvplus.AssocFile.tiff" },
@@ -278,6 +284,9 @@ using SvgReferenceGraph = QHash<QString, QSet<QString>>;
 
 static bool isSvgExtension(const QString &ext) { return ext == u"svg"; }
 static bool isDdsExtension(const QString &ext) { return ext == u"dds"; }
+static bool isDjvuExtension(const QString &ext) {
+  return ext == u"djvu" || ext == u"djv";
+}
 
 struct ThumbnailReaderOptions {
   QByteArray format;
@@ -897,6 +906,69 @@ static bool tryLibRawEmbeddedPreview(const QByteArray &rawBuffer,
 
 
 
+static QImage renderDjvuThumbnail(const QByteArray &data, UINT requestedEdge) {
+  if (data.isEmpty() || requestedEdge == 0)
+    return QImage();
+
+  static std::once_flag initFlag;
+  std::call_once(initFlag, [] { djvu_init(); });
+
+  djvu_ctx *ctx = djvu_ctx_new(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  if (!ctx)
+    return QImage();
+
+  djvu_doc *doc = djvu_doc_open(
+      ctx, reinterpret_cast<const uint8_t *>(data.constData()),
+      static_cast<size_t>(data.size()));
+  if (!doc) {
+    djvu_ctx_free(ctx);
+    return QImage();
+  }
+
+  QImage result;
+  if (djvu_doc_page_count(doc) > 0) {
+    djvu_render_info nativeInfo{};
+    if (djvu_page_render_info(doc, 0, 1, &nativeInfo) == 0 &&
+        nativeInfo.width > 0 && nativeInfo.height > 0) {
+      const int longestEdge = std::max(nativeInfo.width, nativeInfo.height);
+      const int decodeEdge = static_cast<int>(requestedEdge) * 2;
+      const int subsample =
+          std::max(1, (longestEdge + decodeEdge - 1) / decodeEdge);
+
+      djvu_render_info renderInfo{};
+      if (djvu_page_render_info(doc, 0, subsample, &renderInfo) == 0 &&
+          renderInfo.width > 0 && renderInfo.height > 0) {
+        QImage::Format format = QImage::Format_Invalid;
+        if (renderInfo.format == DJVU_FORMAT_RGB24)
+          format = QImage::Format_RGB888;
+        else if (renderInfo.format == DJVU_FORMAT_GRAY8)
+          format = QImage::Format_Grayscale8;
+
+        if (format != QImage::Format_Invalid) {
+          QImage decoded(renderInfo.width, renderInfo.height, format);
+          if (!decoded.isNull() &&
+              djvu_page_render_into(doc, 0, subsample, decoded.bits(),
+                                    decoded.bytesPerLine()) == 0) {
+            result = std::move(decoded);
+          }
+        }
+      }
+    }
+  }
+
+  djvu_doc_close(doc);
+  djvu_ctx_free(ctx);
+
+  if (!result.isNull() &&
+      (result.width() > static_cast<int>(requestedEdge) ||
+       result.height() > static_cast<int>(requestedEdge))) {
+    result = result.scaled(static_cast<int>(requestedEdge),
+                           static_cast<int>(requestedEdge),
+                           Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  }
+  return result;
+}
+
 // {978A692C-CD23-4A59-8664-98F1E1B9200B}
 const CLSID CLSID_QImgvThumbnailProvider = {
     0x978a692c,
@@ -1301,6 +1373,61 @@ IFACEMETHODIMP QImgvThumbnailProvider::GetThumbnail(UINT cx, HBITMAP *phbmp,
       if (hbmp)
         DeleteObject(hbmp);
       return E_FAIL;
+    }
+
+    if (isDjvuExtension(ext)) {
+      QByteArray djvuData;
+      if (m_pStream) {
+        const HRESULT readResult =
+            readBoundedStream(m_pStream, MAX_THUMBNAIL_FILE_SIZE, djvuData);
+        if (FAILED(readResult))
+          return readResult;
+      } else {
+        QFile djvuFile(QString::fromStdWString(m_szFilePath));
+        if (!djvuFile.open(QIODevice::ReadOnly))
+          return E_FAIL;
+        djvuData = djvuFile.readAll();
+        if (djvuData.isEmpty() ||
+            djvuData.size() > MAX_THUMBNAIL_FILE_SIZE)
+          return E_FAIL;
+      }
+
+      QImage djvuImage = renderDjvuThumbnail(djvuData, cx);
+      if (djvuImage.isNull())
+        return E_FAIL;
+
+      if (djvuImage.format() != QImage::Format_ARGB32_Premultiplied)
+        djvuImage =
+            djvuImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+
+      BITMAPV5HEADER bi;
+      ZeroMemory(&bi, sizeof(bi));
+      bi.bV5Size = sizeof(bi);
+      bi.bV5Width = djvuImage.width();
+      bi.bV5Height = -djvuImage.height();
+      bi.bV5Planes = 1;
+      bi.bV5BitCount = 32;
+      bi.bV5Compression = BI_BITFIELDS;
+      bi.bV5RedMask = 0x00FF0000;
+      bi.bV5GreenMask = 0x0000FF00;
+      bi.bV5BlueMask = 0x000000FF;
+      bi.bV5AlphaMask = 0xFF000000;
+
+      void *pBits = nullptr;
+      HDC hdc = GetDC(nullptr);
+      HBITMAP hbmp = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
+                                      &pBits, nullptr, 0);
+      ReleaseDC(nullptr, hdc);
+      if (!hbmp || !pBits) {
+        if (hbmp)
+          DeleteObject(hbmp);
+        return E_FAIL;
+      }
+
+      memcpy(pBits, djvuImage.constBits(), djvuImage.sizeInBytes());
+      *phbmp = hbmp;
+      *pdwAlpha = WTSAT_RGB;
+      return S_OK;
     }
 
   // Fallback / standard path: set up QImageReader

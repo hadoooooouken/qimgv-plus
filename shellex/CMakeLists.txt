@@ -1,7 +1,7 @@
 # shellex/CMakeLists.txt
 cmake_minimum_required(VERSION 3.25)
 
-project(qimgvshellex LANGUAGES CXX)
+project(qimgvshellex LANGUAGES C CXX)
 
 set(CMAKE_AUTOMOC ON)
 
@@ -12,6 +12,7 @@ add_library(qimgvshellex SHARED
     qimgvshellex.h
     qimgvshellex.cpp
     qimgvshellex.def
+    "${CMAKE_CURRENT_SOURCE_DIR}/../qimgv/3rdparty/djvudec/djvu.c"
 )
 
 # Standard C++ features
@@ -34,6 +35,7 @@ set_target_properties(qimgvshellex PROPERTIES
 # Link Qt, LibRaw, and standard Win32 libraries
 target_include_directories(qimgvshellex PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/../formats/LibRaw"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../qimgv/3rdparty/djvudec"
 )
 target_link_libraries(qimgvshellex PRIVATE
     Qt6::Core

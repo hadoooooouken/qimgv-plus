@@ -2,12 +2,14 @@
 #include "settings.h"
 #include "utils/blendreader.h"
 #include "utils/colormanager.h"
+#include "utils/djvureader.h"
 #include "utils/fontpreview.h"
 #include "utils/imagelib.h"
 #include <QDebug>
 #include <QFileInfo>
 #include <QImageReader>
 #include <QPainter>
+#include <limits>
 #include <memory>
 #include <utility>
 
@@ -213,6 +215,36 @@ QSize ThumbnailerRunnable::noUpscaleScaledSize(QSize originalSize, int size,
 std::pair<QImage, QSize>
 ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
                                      bool squared) {
+  const bool isDjvu =
+      format &&
+      QString::compare(QString::fromLatin1(format), QStringLiteral("djvu"),
+                       Qt::CaseInsensitive) == 0;
+  if (isDjvu) {
+    const int decodeEdge =
+        size <= std::numeric_limits<int>::max() / 2 ? size * 2 : size;
+    DjvuRenderResult rendered =
+        DjvuReader::renderPage(path, 0, decodeEdge);
+    if (rendered.image.isNull())
+      return std::make_pair(QImage(), QSize());
+
+    QImage result = std::move(rendered.image);
+    if (squared) {
+      const Qt::AspectRatioMode mode = Qt::KeepAspectRatioByExpanding;
+      const QSize scaledSize = noUpscaleScaledSize(result.size(), size, mode);
+      if (scaledSize != result.size())
+        result = result.scaled(scaledSize, Qt::IgnoreAspectRatio,
+                               Qt::SmoothTransformation);
+
+      QRect clip(0, 0, size, size);
+      QRect scaledRect(QPoint(0, 0), result.size());
+      clip.moveCenter(scaledRect.center());
+      QImage cropped = ImageLib::croppedRaw(&result, clip);
+      if (!cropped.isNull())
+        result = std::move(cropped);
+    }
+
+    return std::make_pair(std::move(result), rendered.originalSize);
+  }
   const bool isBlend =
       format &&
       QString::compare(QString::fromLatin1(format), QStringLiteral("blend"),

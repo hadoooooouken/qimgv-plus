@@ -170,6 +170,8 @@ Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".wdp"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".ai"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".pdf"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".djvu"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".djv"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".psb"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".jp2"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".j2k"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
@@ -262,6 +264,10 @@ Root: HKA; Subkey: "Software\Classes\.ai"; ValueType: string; ValueName: ""; Val
 Root: HKA; Subkey: "Software\Classes\.ai\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.ai"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.pdf"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.pdf"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.pdf\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.pdf"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.djvu"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.djvu"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.djvu\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.djvu"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.djv"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.djvu"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.djv\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.djvu"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.psb"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.psb"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.psb\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.psb"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 
@@ -335,6 +341,10 @@ Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.jxr\shell\open\command"
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.pdf"; ValueType: string; ValueName: ""; ValueData: "PDF Document (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.pdf\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\pdf.ico"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.pdf\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
+
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.djvu"; ValueType: string; ValueName: ""; ValueData: "DjVu Document (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.djvu\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\djvu.ico"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.djvu\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
 
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.png"; ValueType: string; ValueName: ""; ValueData: "PNG Image (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.png\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\png.ico"; Flags: uninsdeletekey; Tasks: associate
@@ -445,6 +455,8 @@ Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueT
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".wdp"; ValueData: "qimgvplus.AssocFile.jxr"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ai"; ValueData: "qimgvplus.AssocFile.ai"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".pdf"; ValueData: "qimgvplus.AssocFile.pdf"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".djvu"; ValueData: "qimgvplus.AssocFile.djvu"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".djv"; ValueData: "qimgvplus.AssocFile.djvu"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".psb"; ValueData: "qimgvplus.AssocFile.psb"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".jp2"; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".j2k"; ValueData: "qimgvplus.AssocFile.jp2"; Flags: uninsdeletekey; Tasks: associate
@@ -491,6 +503,8 @@ Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jxr\ShellEx\{{E357F
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.hdp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.wdp\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ai\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.djvu\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.djv\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.psb\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jp2\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.j2k\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
@@ -513,7 +527,7 @@ const
   SupportedThumbnailExtensions =
     '.webp;.svg;.tiff;.tif;.tga;.avif;.heic;.heif;.jxl;.psd;.dng;.cr2;' +
     '.cr3;.nef;.arw;.orf;.rw2;.pef;.raf;.raw;.kra;.ora;.exr;.hdr;.qoi;' +
-    '.dds;.jxr;.hdp;.wdp;.ai;.psb;.jp2;.j2k;.jpf;.jpx;.jpc;.jph';
+    '.dds;.jxr;.hdp;.wdp;.ai;.djvu;.djv;.psb;.jp2;.j2k;.jpf;.jpx;.jpc;.jph';
   ObsoleteThumbnailExtensions =
     '.jpg;.jpeg;.jpe;.jfif;.png;.gif;.bmp;.dib;.ico;.pdf;.svgz';
   LegacyThumbnailProgIds =
@@ -526,6 +540,7 @@ const
     'qimgvplus.AssocFile.qoi;qimgvplus.AssocFile.dds;' +
     'qimgvplus.AssocFile.psd;qimgvplus.AssocFile.psb;' +
     'qimgvplus.AssocFile.ai;qimgvplus.AssocFile.pdf;' +
+    'qimgvplus.AssocFile.djvu;' +
     'qimgvplus.AssocFile.tif;qimgvplus.AssocFile.tiff;' +
     'qimgvplus.AssocFile.jp2;qimgvplus.AssocFile.jph;' +
     'qimgvplus.AssocFile.svg';

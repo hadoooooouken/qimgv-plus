@@ -1,5 +1,22 @@
 include(GNUInstallDirs)
 
+# djvudec is a plain-C decoder embedded into qimgv-plus. The parent project
+# historically only needed C++, so explicitly enable C for the amalgamated
+# decoder instead of compiling djvu.c as C++.
+enable_language(C)
+
+add_library(djvudec STATIC
+    3rdparty/djvudec/djvu.c
+)
+target_include_directories(djvudec PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/djvudec"
+)
+set_target_properties(djvudec PROPERTIES
+    C_STANDARD 11
+    C_STANDARD_REQUIRED ON
+    C_EXTENSIONS OFF
+)
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # TRANSLATIONS
@@ -97,6 +114,7 @@ target_link_libraries(qimgv-plus PRIVATE
     Qt6::OpenGLWidgets 
     Qt6::SvgWidgets
     Qt6::Pdf
+    djvudec
 )
 
 # OPTION DEFINITIONS, LINKING

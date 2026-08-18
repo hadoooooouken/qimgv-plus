@@ -2,6 +2,7 @@
 #include "settings.h"
 #include "utils/blendreader.h"
 #include "utils/colormanager.h"
+#include "utils/djvureader.h"
 #include "utils/fontpreview.h"
 #include <QPainter>
 #include <QPdfDocument>
@@ -32,6 +33,8 @@ void ImageStatic::load() {
     loadICO();
   else if (mDocInfo->format() == "pdf")
     loadPdf();
+  else if (mDocInfo->format() == "djvu")
+    loadDjvu();
   else if (mDocInfo->format() == "font") {
     QImage loaded = FontPreview::render(mPath);
     if (loaded.isNull()) {
@@ -133,6 +136,24 @@ void ImageStatic::loadICO() {
   } else {
     qWarning() << "ImageStatic: failed to load ico" << mPath;
   }
+}
+
+void ImageStatic::loadDjvu() {
+  int page = pageOverride.value(mPath, 0);
+  constexpr int kMaxDisplayDimension = 16384;
+  DjvuRenderResult rendered =
+      DjvuReader::renderPage(mPath, page, kMaxDisplayDimension);
+
+  if (rendered.pageCount <= 0 || rendered.image.isNull()) {
+    qWarning() << "ImageStatic: failed to load DjVu" << mPath;
+    return;
+  }
+
+  mPageCount = rendered.pageCount;
+  image = std::make_shared<const QImage>(std::move(rendered.image));
+  imageColorManaged =
+      std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+  mLoaded = true;
 }
 
 void ImageStatic::loadPdf() {
