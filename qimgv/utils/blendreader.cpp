@@ -1,4 +1,5 @@
 #include "blendreader.h"
+#include "imagelib.h"
 
 #include <QByteArray>
 #include <QFile>
@@ -8,12 +9,15 @@
 
 #include <algorithm>
 #include <limits>
+#include <memory>
 
 namespace {
 
 constexpr qsizetype kLegacyHeaderSize = 12;
 constexpr qsizetype kCurrentHeaderSize = 17;
 constexpr quint32 kMaxPreviewDimension = 16384;
+constexpr quint32 kPreviewUpscaleThreshold = 128;
+constexpr int kPreviewUpscaleFactor = 2;
 constexpr quint64 kMaxPreviewBytes = 64ull * 1024ull * 1024ull;
 constexpr qsizetype kSkipBufferSize = 64 * 1024;
 
@@ -511,8 +515,25 @@ QImage readPreviewFromInput(BlendInput &input, QString *error)
         // Blender's stored thumbnail uses bottom-up scanline order. Its
         // official thumbnailer reverses the rows when writing the image.
         QImage result = view.copy().mirrored(false, true);
-        if (result.isNull())
+        if (result.isNull()) {
             setError(error, QStringLiteral("cannot copy Blender preview image"));
+            return {};
+        }
+
+        // Embedded .blend previews are typically at most 128 px on their
+        // longest side. Upscale those tiny previews 2x for more useful
+        // in-app viewing while preserving their aspect ratio.
+        if (std::max(width, height) <= kPreviewUpscaleThreshold) {
+            const QSize targetSize(result.width() * kPreviewUpscaleFactor,
+                                   result.height() * kPreviewUpscaleFactor);
+            const auto source = std::make_shared<const QImage>(result);
+            result = ImageLib::scaled(source, targetSize, QI_FILTER_MKS2021);
+            if (result.isNull()) {
+                setError(error, QStringLiteral("cannot upscale Blender preview image"));
+                return {};
+            }
+        }
+
         return result;
     }
 }
