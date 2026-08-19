@@ -31,6 +31,7 @@ const QVector<FormatGroup> &allFormatGroups() {
                         } },
         { "QOI",        {"qoi"} },
         { "KRA/ORA",    {"kra", "ora"} },
+        { "CBZ",        {"cbz"} },
         { "PDF",        {"pdf"} },
         { "DjVu",       {"djvu", "djv"} },
         { "SVG",        {"svg"} },

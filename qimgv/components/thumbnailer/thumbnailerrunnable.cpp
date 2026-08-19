@@ -346,10 +346,16 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
   auto reader = std::make_unique<QImageReader>(path, format);
   reader->setAllocationLimit(settings->memoryAllocationLimit());
 
-  // Select the optimal frame for multi-image formats like ICO
+  // Only multi-resolution formats should choose a frame by thumbnail size.
+  // Multipage documents such as TIFF and CBZ must use page 0 as their cover.
+  const bool isDds =
+      format &&
+      QString::compare(QString::fromLatin1(format), QStringLiteral("dds"),
+                       Qt::CaseInsensitive) == 0;
+  const bool selectBestResolution = isIco || isDds;
   int bestIndex = 0;
   int imageCount = reader->imageCount();
-  if (imageCount > 1) {
+  if (selectBestResolution && imageCount > 1) {
     int bestDiff = 999999;
     for (int i = 0; i < imageCount; ++i) {
       if (reader->jumpToImage(i)) {
@@ -394,7 +400,7 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
       reader->setFileName("");
       reader = std::make_unique<QImageReader>(path, format);
       reader->setAllocationLimit(settings->memoryAllocationLimit());
-      if (imageCount > 1) {
+      if (selectBestResolution && imageCount > 1) {
         reader->jumpToImage(bestIndex);
       }
     }

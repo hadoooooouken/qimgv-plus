@@ -115,6 +115,12 @@ void DocumentInfo::detectFormat() {
         mFormat = "font";
         mDocumentType = DocumentType::STATIC;
         exifLoaded = true; // Font files have no Exiv2 metadata path.
+    } else if(suffix == "cbz") {
+        // CBZ is an ordinary ZIP container, so recognize it only by its explicit
+        // extension. Never promote application/zip to CBZ based on MIME alone.
+        mFormat = "cbz";
+        mDocumentType = DocumentType::STATIC;
+        exifLoaded = true;
     } else if(mimeName == "image/jpeg") {
         mFormat = "jpg";
         mDocumentType = DocumentType::STATIC;

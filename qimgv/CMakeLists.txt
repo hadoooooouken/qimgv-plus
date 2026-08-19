@@ -195,7 +195,7 @@ if(WIN32)
 
 
     # 5. kimageformats dependencies (safe check)
-    set(_kimg_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw avif jxl kra ora jxr heif jp2 jph png)
+    set(_kimg_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw avif jxl kra ora cbz jxr heif jp2 jph png)
     foreach(_plugin ${_kimg_plugins})
         if(TARGET kimg_${_plugin})
             add_dependencies(qimgv-plus kimg_${_plugin})
@@ -209,7 +209,7 @@ if(WIN32)
         COMMENT "Preparing imageformats output directory..."
     )
     # Copy each plugin only if its target was actually built
-    set(_kimg_required_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw kra ora jp2 jph)
+    set(_kimg_required_plugins ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw kra ora cbz jp2 jph)
     foreach(_plugin ${_kimg_required_plugins})
         if(TARGET kimg_${_plugin})
             add_custom_command(TARGET qimgv-plus POST_BUILD

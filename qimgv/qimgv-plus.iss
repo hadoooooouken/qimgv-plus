@@ -161,6 +161,7 @@ Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".raw"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".kra"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".ora"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".cbz"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".exr"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".hdr"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".qoi"; ValueData: ""; Flags: uninsdeletekey; Tasks: associate
@@ -246,6 +247,8 @@ Root: HKA; Subkey: "Software\Classes\.kra"; ValueType: string; ValueName: ""; Va
 Root: HKA; Subkey: "Software\Classes\.kra\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.kra"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.ora"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.ora"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.ora\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.ora"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.cbz"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.cbz"; Flags: uninsdeletevalue; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\.cbz\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.cbz"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.exr"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.exr"; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.exr\OpenWithProgids"; ValueType: string; ValueName: "qimgvplus.AssocFile.exr"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\.hdr"; ValueType: string; ValueName: ""; ValueData: "qimgvplus.AssocFile.hdr"; Flags: uninsdeletevalue; Tasks: associate
@@ -390,6 +393,10 @@ Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.ora"; ValueType: string
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.ora\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\ora.ico"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.ora\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
 
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.cbz"; ValueType: string; ValueName: ""; ValueData: "Comic Book ZIP (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.cbz\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\cbz.ico"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.cbz\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
+
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.avif"; ValueType: string; ValueName: ""; ValueData: "AVIF Image (qimgv-plus)"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.avif\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\res\filetypes\avif.ico"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\Classes\qimgvplus.AssocFile.avif\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey; Tasks: associate
@@ -446,6 +453,7 @@ Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueT
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".raw"; ValueData: "qimgvplus.AssocFile.raw"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".kra"; ValueData: "qimgvplus.AssocFile.kra"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ora"; ValueData: "qimgvplus.AssocFile.ora"; Flags: uninsdeletekey; Tasks: associate
+Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".cbz"; ValueData: "qimgvplus.AssocFile.cbz"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".exr"; ValueData: "qimgvplus.AssocFile.exr"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".hdr"; ValueData: "qimgvplus.AssocFile.hdr"; Flags: uninsdeletekey; Tasks: associate
 Root: HKA; Subkey: "Software\{#MyAppName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".qoi"; ValueData: "qimgvplus.AssocFile.qoi"; Flags: uninsdeletekey; Tasks: associate
@@ -495,6 +503,7 @@ Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raf\ShellEx\{{E357F
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.raw\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.kra\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.ora\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
+Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.cbz\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.exr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.hdr\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.qoi\ShellEx\{{E357FCCD-A995-4576-B01F-234630154E96}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppCLSID}"; Tasks: thumbnails
@@ -526,13 +535,14 @@ const
     ThumbnailProviderClassId;
   SupportedThumbnailExtensions =
     '.webp;.svg;.tiff;.tif;.tga;.avif;.heic;.heif;.jxl;.psd;.dng;.cr2;' +
-    '.cr3;.nef;.arw;.orf;.rw2;.pef;.raf;.raw;.kra;.ora;.exr;.hdr;.qoi;' +
+    '.cr3;.nef;.arw;.orf;.rw2;.pef;.raf;.raw;.kra;.ora;.cbz;.exr;.hdr;.qoi;' +
     '.dds;.jxr;.hdp;.wdp;.ai;.djvu;.djv;.psb;.jp2;.j2k;.jpf;.jpx;.jpc;.jph';
   ObsoleteThumbnailExtensions =
     '.jpg;.jpeg;.jpe;.jfif;.png;.gif;.bmp;.dib;.ico;.pdf;.svgz';
   LegacyThumbnailProgIds =
     'qimgvplus.AssocFile.raw;qimgvplus.AssocFile.kra;' +
-    'qimgvplus.AssocFile.ora;qimgvplus.AssocFile.webp;' +
+    'qimgvplus.AssocFile.ora;qimgvplus.AssocFile.cbz;' +
+    'qimgvplus.AssocFile.webp;' +
     'qimgvplus.AssocFile.jxl;qimgvplus.AssocFile.avif;' +
     'qimgvplus.AssocFile.heic;qimgvplus.AssocFile.heif;' +
     'qimgvplus.AssocFile.exr;qimgvplus.AssocFile.hdr;' +

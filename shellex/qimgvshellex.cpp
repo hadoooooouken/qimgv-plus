@@ -159,6 +159,7 @@ static const ExtensionInfo g_extensionTable[] = {
   // Krita / OpenRaster
   { L".kra",  "kra",  false, L"qimgvplus.AssocFile.kra" },
   { L".ora",  "ora",  false, L"qimgvplus.AssocFile.ora" },
+  { L".cbz",  "cbz",  false, L"qimgvplus.AssocFile.cbz" },
 
   // Modern web/mobile formats
   { L".webp", nullptr, false, L"qimgvplus.AssocFile.webp" },
@@ -265,11 +266,14 @@ qtLibraryRequirements(const ExtensionInfo &extensionInfo) noexcept {
                       _wcsicmp(extension, L".tiff") == 0;
   const bool isLayeredArchive = _wcsicmp(extension, L".kra") == 0 ||
                                 _wcsicmp(extension, L".ora") == 0;
+  const bool isCbz = _wcsicmp(extension, L".cbz") == 0;
   return {
       .needsSvg = _wcsicmp(extension, L".svg") == 0,
       .needsPdf = _wcsicmp(extension, L".ai") == 0,
-      .needsJpeg = extensionInfo.isRaw || isTiff,
-      .needsZlib = isTiff || isLayeredArchive,
+      // CBZ may contain TIFF pages, whose plugin uses the root-level JPEG DLL.
+      .needsJpeg = extensionInfo.isRaw || isTiff || isCbz,
+      // PNG/TIFF pages inside CBZ may load plugins that depend on zlib1.dll.
+      .needsZlib = isTiff || isLayeredArchive || isCbz,
   };
 }
 
