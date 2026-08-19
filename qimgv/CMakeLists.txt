@@ -89,6 +89,7 @@ add_subdirectory(sourcecontainers)
 add_subdirectory(gui)
 add_subdirectory(utils)
 
+add_subdirectory(3rdparty/miniz)
 add_subdirectory(3rdparty/kimageformats)
 
 # C++ STANDARD
