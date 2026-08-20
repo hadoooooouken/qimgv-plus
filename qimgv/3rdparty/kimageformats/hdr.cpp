@@ -16,6 +16,11 @@
 #include <QLoggingCategory>
 #include <QRegularExpressionMatch>
 
+#include <array>
+#include <cmath>
+#include <immintrin.h>
+#include <type_traits>
+
 /* *** HDR_HALF_QUALITY ***
  * If defined, a 16-bits float image is created, otherwise a 32-bits float ones (default).
  */
@@ -286,33 +291,109 @@ static bool Read_Old_Line(uchar *image, int width, QDataStream &s)
     return true;
 }
 
-template<class float_T>
-void RGBE_To_QRgbLine(uchar *image, float_T *scanline, const Header& h)
+namespace {
+
+constexpr int kRgbeChannelCount = 4;
+constexpr int kRgbeRedOffset = 0;
+constexpr int kRgbeGreenOffset = 1;
+constexpr int kRgbeBlueOffset = 2;
+constexpr int kRgbeExponentOffset = 3;
+constexpr int kRgbeExponentShift = 24;
+constexpr int kRgbeExponentBias = 128;
+constexpr int kRgbeMinimumExponent = -31;
+constexpr int kRgbeMaximumExponent = 31;
+constexpr int kRgbeScaleCount = 256;
+constexpr int kRgbePixelsPerAvx2Block = 8;
+constexpr int kRgbePixelsPerAvx2Store = 2;
+constexpr int kRgbeAvx2StoresPerBlock = kRgbePixelsPerAvx2Block / kRgbePixelsPerAvx2Store;
+constexpr int kFirstAlphaLane = 3;
+constexpr int kSecondAlphaLane = 7;
+constexpr int kAlphaLaneMask = (1 << kFirstAlphaLane) | (1 << kSecondAlphaLane);
+constexpr float kRgbeChannelMaximum = 255.0f;
+constexpr float kOpaqueAlpha = 1.0f;
+
+const std::array<float, kRgbeScaleCount>& rgbeScaleLut()
 {
-    auto exposure = h.exposure();
-    for (int j = 0, width = h.width(); j < width; j++) {
-        // v = ldexp(1.0, int(image[3]) - 128);
-        float v;
-        int e = qBound(-31, int(image[3]) - 128, 31);
-        if (e > 0) {
-            v = float(1 << e);
-        } else {
-            v = 1.0f / float(1 << -e);
+    static const auto scales = [] {
+        std::array<float, kRgbeScaleCount> result{};
+        for (int exponentByte = 0; exponentByte < kRgbeScaleCount; ++exponentByte) {
+            const int exponent = qBound(kRgbeMinimumExponent,
+                                        exponentByte - kRgbeExponentBias,
+                                        kRgbeMaximumExponent);
+            result[exponentByte] = std::ldexp(kOpaqueAlpha, exponent) / kRgbeChannelMaximum;
         }
+        return result;
+    }();
+    return scales;
+}
 
-        auto j4 = j * 4;
-        auto vn = v / 255.0f;
-        if (exposure > 0) {
-            vn /= exposure;
-        }
+template<class float_T>
+void convertRgbeScalar(const uchar *image, float_T *scanline, int pixelCount, float exposureScale)
+{
+    const auto& scales = rgbeScaleLut();
+    for (int pixel = 0; pixel < pixelCount; ++pixel) {
+        const float scale = scales[image[kRgbeExponentOffset]] * exposureScale;
 
-        scanline[j4] = float_T(float(image[0]) * vn);
-        scanline[j4 + 1] = float_T(float(image[1]) * vn);
-        scanline[j4 + 2] = float_T(float(image[2]) * vn);
-        scanline[j4 + 3] = float_T(1.0f);
-        image += 4;
+        scanline[kRgbeRedOffset] = float_T(float(image[kRgbeRedOffset]) * scale);
+        scanline[kRgbeGreenOffset] = float_T(float(image[kRgbeGreenOffset]) * scale);
+        scanline[kRgbeBlueOffset] = float_T(float(image[kRgbeBlueOffset]) * scale);
+        scanline[kRgbeExponentOffset] = float_T(kOpaqueAlpha);
+        image += kRgbeChannelCount;
+        scanline += kRgbeChannelCount;
     }
 }
+
+void storeRgbePairAvx2(const uchar *image, float *scanline, __m256 scales)
+{
+    const __m128i packedChannels = _mm_loadl_epi64(reinterpret_cast<const __m128i *>(image));
+    const __m256 channels = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(packedChannels));
+    const __m256 converted = _mm256_mul_ps(channels, scales);
+    const __m256 opaqueAlpha = _mm256_set1_ps(kOpaqueAlpha);
+    _mm256_storeu_ps(scanline, _mm256_blend_ps(converted, opaqueAlpha, kAlphaLaneMask));
+}
+
+template<class float_T>
+void RGBE_To_QRgbLine(const uchar *image, float_T *scanline, const Header& h)
+{
+    const float exposure = h.exposure();
+    const float exposureScale = exposure > 0.0f ? kOpaqueAlpha / exposure : kOpaqueAlpha;
+    int convertedPixelCount = 0;
+
+    if constexpr (std::is_same_v<float_T, float>) {
+        const auto& scales = rgbeScaleLut();
+        const __m256 exposureVector = _mm256_set1_ps(exposureScale);
+        const __m256i pairScaleOffsets = _mm256_setr_epi32(0, 0, 0, 0, 1, 1, 1, 1);
+
+        for (; convertedPixelCount + kRgbePixelsPerAvx2Block <= h.width();
+             convertedPixelCount += kRgbePixelsPerAvx2Block) {
+            const uchar *blockImage = image + convertedPixelCount * kRgbeChannelCount;
+            float *blockScanline = scanline + convertedPixelCount * kRgbeChannelCount;
+            const __m256i packedPixels =
+                _mm256_loadu_si256(reinterpret_cast<const __m256i *>(blockImage));
+            // Each packed RGBe pixel occupies one 32-bit lane, with its exponent in the high byte.
+            const __m256i exponentIndexes = _mm256_srli_epi32(packedPixels, kRgbeExponentShift);
+            const __m256 gatheredScales = _mm256_i32gather_ps(scales.data(), exponentIndexes, sizeof(float));
+            const __m256 adjustedScales = _mm256_mul_ps(gatheredScales, exposureVector);
+
+            for (int storeIndex = 0; storeIndex < kRgbeAvx2StoresPerBlock; ++storeIndex) {
+                const int pixelOffset = storeIndex * kRgbePixelsPerAvx2Store;
+                const __m256i scaleIndexes = _mm256_add_epi32(
+                    pairScaleOffsets, _mm256_set1_epi32(pixelOffset));
+                const __m256 pairScales = _mm256_permutevar8x32_ps(adjustedScales, scaleIndexes);
+                storeRgbePairAvx2(blockImage + pixelOffset * kRgbeChannelCount,
+                                  blockScanline + pixelOffset * kRgbeChannelCount,
+                                  pairScales);
+            }
+        }
+    }
+
+    convertRgbeScalar(image + convertedPixelCount * kRgbeChannelCount,
+                      scanline + convertedPixelCount * kRgbeChannelCount,
+                      h.width() - convertedPixelCount,
+                      exposureScale);
+}
+
+} // namespace
 
 QImage::Format imageFormat()
 {
