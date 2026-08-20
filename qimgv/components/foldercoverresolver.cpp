@@ -1,16 +1,15 @@
 #include "foldercoverresolver.h"
+#include "utils/formatregistry.h"
 
 #include <QCollator>
 #include <QDir>
 #include <QFileInfo>
-#include <QImageReader>
 #include <QMetaObject>
 #include <QPointer>
 #include <QRunnable>
 #include <QThread>
 
 #include <algorithm>
-#include <array>
 #include <cstdint>
 #include <filesystem>
 #include <functional>
@@ -39,15 +38,6 @@ int folderCoverWorkerCount()
         idealThreadCount > 0 ? idealThreadCount : kMinFolderCoverWorkers;
     return std::clamp(candidate, kMinFolderCoverWorkers, kMaxFolderCoverWorkers);
 }
-
-constexpr auto kAdditionalImageExtensions = std::to_array<const char *>({
-    "jfif",
-    "tga",
-    "webp",
-    "ttf",
-    "otf",
-    "ttc"
-});
 
 QString normalizedPath(const QString &path)
 {
@@ -285,12 +275,9 @@ FolderCoverResolver::FolderCoverResolver(QObject *parent)
     qRegisterMetaType<FolderCoverResult>();
     threadPool.setMaxThreadCount(folderCoverWorkerCount());
 
-    auto extensions = std::make_shared<QSet<QString>>();
-    for (const QByteArray &format : QImageReader::supportedImageFormats())
-        extensions->insert(QString::fromLatin1(format).toLower());
-    for (const char *extension : kAdditionalImageExtensions)
-        extensions->insert(QString::fromLatin1(extension));
-    supportedExtensions = std::move(extensions);
+    supportedExtensions =
+        std::make_shared<const QSet<QString>>(
+            FormatRegistry::supportedExtensionSet());
 }
 
 FolderCoverResolver::~FolderCoverResolver()

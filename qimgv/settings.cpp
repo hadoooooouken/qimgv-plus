@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "utils/formatregistry.h"
 
 #include <algorithm>
 
@@ -503,9 +504,7 @@ void Settings::setColorScheme(ColorScheme scheme) {
 void Settings::setColorTid(int tid) { mColorScheme.tid = tid; }
 //------------------------------------------------------------------------------
 QList<QByteArray> Settings::supportedFormats() {
-  auto formats = QImageReader::supportedImageFormats();
-  formats << "jfif" << "ai" << "djvu" << "djv" << "blend" << "ttf" << "otf" << "ttc";
-  return formats;
+  return FormatRegistry::supportedExtensions();
 }
 //------------------------------------------------------------------------------
 // (for open/save dialogs, as a single string)

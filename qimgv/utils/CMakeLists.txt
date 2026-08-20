@@ -22,6 +22,7 @@ target_sources(qimgv-plus PRIVATE
     djvureader.cpp
     fontpreview.cpp
     cmdoptionsrunner.cpp
+    formatregistry.cpp
     formatgroups.cpp
     imagefactory.cpp
     imagelib.cpp
