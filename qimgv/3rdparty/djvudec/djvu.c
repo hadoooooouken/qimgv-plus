@@ -3224,7 +3224,11 @@ const int16_t djvu_iw44_zigzag[1024] = {
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(__SSE2__) || defined(_M_X64) || defined(_M_AMD64) || \
+#if defined(__AVX2__)
+#define DJVU_IW44_AVX2 1
+#define DJVU_IW44_SSE2 1
+#include <immintrin.h>
+#elif defined(__SSE2__) || defined(_M_X64) || defined(_M_AMD64) || \
     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #define DJVU_IW44_SSE2 1
 #include <emmintrin.h>
@@ -3379,6 +3383,66 @@ static void scatter_lift_block(iw_block *blk, int16_t *data16, int base, int bw)
     }
 }
 
+#ifdef DJVU_IW44_AVX2
+
+enum { DJVU_AVX2_PACK_I16_ORDER = 0xd8 };
+
+static void bv_i16x16_to_i32(const int16_t *src, __m256i *lo, __m256i *hi)
+{
+    *lo = _mm256_cvtepi16_epi32(
+        _mm_loadu_si128((const __m128i *)src));
+    *hi = _mm256_cvtepi16_epi32(
+        _mm_loadu_si128((const __m128i *)(src + 8)));
+}
+
+static __m256i bv_pack_i32_trunc_avx2(__m256i lo, __m256i hi)
+{
+    __m256i packed;
+    lo = _mm256_srai_epi32(_mm256_slli_epi32(lo, 16), 16);
+    hi = _mm256_srai_epi32(_mm256_slli_epi32(hi, 16), 16);
+    packed = _mm256_packs_epi32(lo, hi);
+    return _mm256_permute4x64_epi64(packed, DJVU_AVX2_PACK_I16_ORDER);
+}
+
+static void filter_bv_apply16_s1(int16_t *q, int i, int s, int s3, int lift)
+{
+    __m256i q_lo, q_hi, a_lo, a_hi, b_lo, b_hi, t_lo, t_hi;
+    __m256i ms_lo, ms_hi, ps_lo, ps_hi, ms3_lo, ms3_hi, ps3_lo, ps3_hi;
+    bv_i16x16_to_i32(q + i, &q_lo, &q_hi);
+    bv_i16x16_to_i32(q + i - s, &ms_lo, &ms_hi);
+    bv_i16x16_to_i32(q + i + s, &ps_lo, &ps_hi);
+    bv_i16x16_to_i32(q + i - s3, &ms3_lo, &ms3_hi);
+    bv_i16x16_to_i32(q + i + s3, &ps3_lo, &ps3_hi);
+    a_lo = _mm256_add_epi32(ms_lo, ps_lo);
+    a_hi = _mm256_add_epi32(ms_hi, ps_hi);
+    b_lo = _mm256_add_epi32(ms3_lo, ps3_lo);
+    b_hi = _mm256_add_epi32(ms3_hi, ps3_hi);
+
+    t_lo = _mm256_add_epi32(_mm256_slli_epi32(a_lo, 3), a_lo);
+    t_hi = _mm256_add_epi32(_mm256_slli_epi32(a_hi, 3), a_hi);
+    if (lift) {
+        const __m256i bias = _mm256_set1_epi32(16);
+        t_lo = _mm256_srai_epi32(
+            _mm256_add_epi32(_mm256_sub_epi32(t_lo, b_lo), bias), 5);
+        t_hi = _mm256_srai_epi32(
+            _mm256_add_epi32(_mm256_sub_epi32(t_hi, b_hi), bias), 5);
+        q_lo = _mm256_sub_epi32(q_lo, t_lo);
+        q_hi = _mm256_sub_epi32(q_hi, t_hi);
+    } else {
+        const __m256i bias = _mm256_set1_epi32(8);
+        t_lo = _mm256_srai_epi32(
+            _mm256_add_epi32(_mm256_sub_epi32(t_lo, b_lo), bias), 4);
+        t_hi = _mm256_srai_epi32(
+            _mm256_add_epi32(_mm256_sub_epi32(t_hi, b_hi), bias), 4);
+        q_lo = _mm256_add_epi32(q_lo, t_lo);
+        q_hi = _mm256_add_epi32(q_hi, t_hi);
+    }
+    _mm256_storeu_si256((__m256i *)(q + i),
+                        bv_pack_i32_trunc_avx2(q_lo, q_hi));
+}
+
+#endif
+
 #ifdef DJVU_IW44_SSE2
 
 static void bv_i16x8_to_i32(const int16_t *src, __m128i *lo, __m128i *hi)
@@ -3429,10 +3493,15 @@ static void filter_bv_apply8_s1(int16_t *q, int i, int s, int s3, int lift)
 static void filter_bv_lift_interior_s1(int16_t *q, int w, int s, int s3)
 {
     int i = 0;
+#ifdef DJVU_IW44_AVX2
+    for (; i + 16 <= w; i += 16)
+        filter_bv_apply16_s1(q, i, s, s3, 1);
+#else
     for (; i + 16 <= w; i += 16) {
         filter_bv_apply8_s1(q, i, s, s3, 1);
         filter_bv_apply8_s1(q, i + 8, s, s3, 1);
     }
+#endif
     for (; i + 8 <= w; i += 8)
         filter_bv_apply8_s1(q, i, s, s3, 1);
     for (; i < w; i++) {
@@ -3445,10 +3514,15 @@ static void filter_bv_lift_interior_s1(int16_t *q, int w, int s, int s3)
 static void filter_bv_interp_interior_s1(int16_t *q, int w, int s, int s3)
 {
     int i = 0;
+#ifdef DJVU_IW44_AVX2
+    for (; i + 16 <= w; i += 16)
+        filter_bv_apply16_s1(q, i, s, s3, 0);
+#else
     for (; i + 16 <= w; i += 16) {
         filter_bv_apply8_s1(q, i, s, s3, 0);
         filter_bv_apply8_s1(q, i + 8, s, s3, 0);
     }
+#endif
     for (; i + 8 <= w; i += 8)
         filter_bv_apply8_s1(q, i, s, s3, 0);
     for (; i < w; i++) {
@@ -3803,6 +3877,20 @@ static int16_t *build_unified(djvu_ctx *ctx, iw_map *m)
 static void map_image_clamp_row(const int16_t *src, int8_t *dst, int w)
 {
     int j = 0;
+#ifdef DJVU_IW44_AVX2
+    {
+        const __m256i thirty_two = _mm256_set1_epi16(32);
+        for (; j + 16 <= w; j += 16) {
+            __m256i v = _mm256_loadu_si256((const __m256i *)(src + j));
+            __m128i lo, hi, p8;
+            v = _mm256_srai_epi16(_mm256_adds_epi16(v, thirty_two), 6);
+            lo = _mm256_castsi256_si128(v);
+            hi = _mm256_extracti128_si256(v, 1);
+            p8 = _mm_packs_epi16(lo, hi);
+            _mm_storeu_si128((__m128i *)(dst + j), p8);
+        }
+    }
+#endif
 #ifdef DJVU_IW44_SSE2
 
     {
@@ -4390,10 +4478,75 @@ int djvu_iw44_is_color(iw_pixmap *pm)
 
 static int clamp255(int v) { return v < 0 ? 0 : (v > 255 ? 255 : v); }
 
+#ifdef DJVU_IW44_AVX2
+
+static void ycbcr_store_rgb16_avx2(uint8_t *dst, __m128i rv,
+                                   __m128i gv, __m128i bv)
+{
+    __m128i rpart, gpart, bpart;
+
+    rpart = _mm_shuffle_epi8(rv, _mm_setr_epi8(
+        0, -1, -1, 1, -1, -1, 2, -1, -1, 3, -1, -1, 4, -1, -1, 5));
+    gpart = _mm_shuffle_epi8(gv, _mm_setr_epi8(
+        -1, 0, -1, -1, 1, -1, -1, 2, -1, -1, 3, -1, -1, 4, -1, -1));
+    bpart = _mm_shuffle_epi8(bv, _mm_setr_epi8(
+        -1, -1, 0, -1, -1, 1, -1, -1, 2, -1, -1, 3, -1, -1, 4, -1));
+    _mm_storeu_si128((__m128i *)dst,
+                     _mm_or_si128(_mm_or_si128(rpart, gpart), bpart));
+
+    rpart = _mm_shuffle_epi8(rv, _mm_setr_epi8(
+        -1, -1, 6, -1, -1, 7, -1, -1, 8, -1, -1, 9, -1, -1, 10, -1));
+    gpart = _mm_shuffle_epi8(gv, _mm_setr_epi8(
+        5, -1, -1, 6, -1, -1, 7, -1, -1, 8, -1, -1, 9, -1, -1, 10));
+    bpart = _mm_shuffle_epi8(bv, _mm_setr_epi8(
+        -1, 5, -1, -1, 6, -1, -1, 7, -1, -1, 8, -1, -1, 9, -1, -1));
+    _mm_storeu_si128((__m128i *)(dst + 16),
+                     _mm_or_si128(_mm_or_si128(rpart, gpart), bpart));
+
+    rpart = _mm_shuffle_epi8(rv, _mm_setr_epi8(
+        -1, 11, -1, -1, 12, -1, -1, 13, -1, -1, 14, -1, -1, 15, -1, -1));
+    gpart = _mm_shuffle_epi8(gv, _mm_setr_epi8(
+        -1, -1, 11, -1, -1, 12, -1, -1, 13, -1, -1, 14, -1, -1, 15, -1));
+    bpart = _mm_shuffle_epi8(bv, _mm_setr_epi8(
+        10, -1, -1, 11, -1, -1, 12, -1, -1, 13, -1, -1, 14, -1, -1, 15));
+    _mm_storeu_si128((__m128i *)(dst + 32),
+                     _mm_or_si128(_mm_or_si128(rpart, gpart), bpart));
+}
+
+#endif
+
 static void ycbcr_row_to_rgb(const int8_t *y, const int8_t *b, const int8_t *r,
                              uint8_t *dst, int w)
 {
     int x = 0;
+#ifdef DJVU_IW44_AVX2
+    {
+        const __m256i c128 = _mm256_set1_epi16(128);
+        for (; x + 16 <= w; x += 16) {
+            __m256i yv = _mm256_cvtepi8_epi16(
+                _mm_loadu_si128((const __m128i *)(y + x)));
+            __m256i bv = _mm256_cvtepi8_epi16(
+                _mm_loadu_si128((const __m128i *)(b + x)));
+            __m256i rv = _mm256_cvtepi8_epi16(
+                _mm_loadu_si128((const __m128i *)(r + x)));
+            __m256i t1 = _mm256_srai_epi16(bv, 2);
+            __m256i t2 = _mm256_add_epi16(rv, _mm256_srai_epi16(rv, 1));
+            __m256i y128 = _mm256_add_epi16(yv, c128);
+            __m256i t3 = _mm256_sub_epi16(y128, t1);
+            __m256i tr = _mm256_add_epi16(y128, t2);
+            __m256i tg = _mm256_sub_epi16(t3, _mm256_srai_epi16(t2, 1));
+            __m256i tb = _mm256_add_epi16(t3, _mm256_slli_epi16(bv, 1));
+            __m128i ru = _mm_packus_epi16(_mm256_castsi256_si128(tr),
+                                         _mm256_extracti128_si256(tr, 1));
+            __m128i gu = _mm_packus_epi16(_mm256_castsi256_si128(tg),
+                                         _mm256_extracti128_si256(tg, 1));
+            __m128i bu = _mm_packus_epi16(_mm256_castsi256_si128(tb),
+                                         _mm256_extracti128_si256(tb, 1));
+            ycbcr_store_rgb16_avx2(dst, ru, gu, bu);
+            dst += 48;
+        }
+    }
+#endif
 #ifdef DJVU_IW44_SSE2
     {
         const __m128i c128 = _mm_set1_epi16(128);
@@ -4593,7 +4746,11 @@ int djvu_iw44_render_gray(iw_pixmap *pm, uint8_t *gray)
 
 #include <string.h>
 
-#if defined(__SSE2__) || defined(_M_X64) || defined(_M_AMD64) || \
+#if defined(__AVX2__)
+#define DJVU_SCALER_AVX2 1
+#define DJVU_SCALER_SSE2 1
+#include <immintrin.h>
+#elif defined(__SSE2__) || defined(_M_X64) || defined(_M_AMD64) || \
     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #define DJVU_SCALER_SSE2 1
 #include <emmintrin.h>
@@ -4841,6 +4998,41 @@ static void scaler_interp_row(const uint8_t *lower, const uint8_t *upper,
 {
     int i = 0, n = w * 3;
 
+#ifdef DJVU_SCALER_AVX2
+    if (n >= 32) {
+        const __m256i vvf = _mm256_set1_epi16((short)vf);
+        const __m256i bias = _mm256_set1_epi16(FRACSIZE2);
+        for (; i + 32 <= n; i += 32) {
+            __m256i lo0 = _mm256_cvtepu8_epi16(
+                _mm_loadu_si128((const __m128i *)(lower + i)));
+            __m256i lo1 = _mm256_cvtepu8_epi16(
+                _mm_loadu_si128((const __m128i *)(lower + i + 16)));
+            __m256i up0 = _mm256_cvtepu8_epi16(
+                _mm_loadu_si128((const __m128i *)(upper + i)));
+            __m256i up1 = _mm256_cvtepu8_epi16(
+                _mm_loadu_si128((const __m128i *)(upper + i + 16)));
+            __m256i d0 = _mm256_sub_epi16(up0, lo0);
+            __m256i d1 = _mm256_sub_epi16(up1, lo1);
+            __m128i out0, out1;
+
+            d0 = _mm256_srai_epi16(
+                _mm256_add_epi16(_mm256_mullo_epi16(d0, vvf), bias),
+                FRACBITS);
+            d1 = _mm256_srai_epi16(
+                _mm256_add_epi16(_mm256_mullo_epi16(d1, vvf), bias),
+                FRACBITS);
+            lo0 = _mm256_add_epi16(lo0, d0);
+            lo1 = _mm256_add_epi16(lo1, d1);
+            out0 = _mm_packus_epi16(_mm256_castsi256_si128(lo0),
+                                    _mm256_extracti128_si256(lo0, 1));
+            out1 = _mm_packus_epi16(_mm256_castsi256_si128(lo1),
+                                    _mm256_extracti128_si256(lo1, 1));
+            _mm256_storeu_si256((__m256i *)(dst + i),
+                                _mm256_inserti128_si256(
+                                    _mm256_castsi128_si256(out0), out1, 1));
+        }
+    }
+#endif
 #ifdef DJVU_SCALER_SSE2
 
     if (n >= 16) {
