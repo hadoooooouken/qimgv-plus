@@ -3,6 +3,17 @@
 #include <QImage>
 #include <QSize>
 #include <QString>
+#include <QtTypes>
+
+struct DjvuDecodeLimits {
+    quint64 maximumInputBytes = 0;
+    quint64 memoryBudgetBytes = 0;
+    int maximumEdge = 0;
+
+    static DjvuDecodeLimits fromMemoryLimitMiB(int memoryLimitMiB,
+                                                int maximumEdge) noexcept;
+    bool isValid() const noexcept;
+};
 
 struct DjvuRenderResult {
     QImage image;
@@ -13,9 +24,6 @@ struct DjvuRenderResult {
 
 class DjvuReader {
 public:
-    // maxEdge <= 0 renders at native resolution. Otherwise djvudec's integer
-    // subsampling is chosen so the decoded page is bounded approximately by
-    // maxEdge without first allocating the full-resolution bitmap.
     static DjvuRenderResult renderPage(const QString &path, int page,
-                                       int maxEdge = 0);
+                                       const DjvuDecodeLimits &limits);
 };

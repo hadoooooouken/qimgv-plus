@@ -222,8 +222,10 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
   if (isDjvu) {
     const int decodeEdge =
         size <= std::numeric_limits<int>::max() / 2 ? size * 2 : size;
+    const DjvuDecodeLimits limits = DjvuDecodeLimits::fromMemoryLimitMiB(
+        settings->memoryAllocationLimit(), decodeEdge);
     DjvuRenderResult rendered =
-        DjvuReader::renderPage(path, 0, decodeEdge);
+        DjvuReader::renderPage(path, 0, limits);
     if (rendered.image.isNull())
       return std::make_pair(QImage(), QSize());
 

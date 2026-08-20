@@ -141,8 +141,10 @@ void ImageStatic::loadICO() {
 void ImageStatic::loadDjvu() {
   int page = pageOverride.value(mPath, 0);
   constexpr int kMaxDisplayDimension = 16384;
+  const DjvuDecodeLimits limits = DjvuDecodeLimits::fromMemoryLimitMiB(
+      settings->memoryAllocationLimit(), kMaxDisplayDimension);
   DjvuRenderResult rendered =
-      DjvuReader::renderPage(mPath, page, kMaxDisplayDimension);
+      DjvuReader::renderPage(mPath, page, limits);
 
   if (rendered.pageCount <= 0 || rendered.image.isNull()) {
     qWarning() << "ImageStatic: failed to load DjVu" << mPath;
