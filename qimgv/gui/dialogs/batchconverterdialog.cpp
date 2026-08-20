@@ -22,6 +22,8 @@
 namespace {
 constexpr int kBatchThumbnailExtent = 48;
 constexpr int kBatchThumbnailCornerRadius = 6;
+constexpr int kBatchDialogWidth = 1048;
+constexpr int kBatchDialogHeight = 1024;
 constexpr qreal kMinimumDevicePixelRatio = 1.0;
 }
 
@@ -249,7 +251,7 @@ bool LinkedSliderSpin::eventFilter(QObject *watched, QEvent *event) {
 // ==================== BatchConverterDialog UI Setup ====================
 
 void BatchConverterDialog::setupUi() {
-    resize(1048, 996);
+    resize(kBatchDialogWidth, kBatchDialogHeight);
     setWindowTitle(tr("Batch Converter"));
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -307,6 +309,7 @@ void BatchConverterDialog::setupRightPanel(QBoxLayout *mainLayout) {
 
     setupFormatSection(scrollLayout);
     setupResizeSection(scrollLayout);
+    setupTransformSection(scrollLayout);
     scrollLayout->addSpacerItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Fixed));
     setupColorSection(scrollLayout);
     scrollLayout->addSpacerItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Fixed));
@@ -466,6 +469,15 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     splitLayout->addLayout(lCol);
     rcLayout->addLayout(splitLayout);
     scrollLayout->addWidget(resizeContainer);
+}
+
+void BatchConverterDialog::setupTransformSection(QVBoxLayout *scrollLayout) {
+    QHBoxLayout *flipLayout = new QHBoxLayout();
+    flipHorizontalCheckBox = new QCheckBox(tr("Flip horizontal"), this);
+    flipVerticalCheckBox = new QCheckBox(tr("Flip vertical"), this);
+    flipLayout->addWidget(flipHorizontalCheckBox, 1);
+    flipLayout->addWidget(flipVerticalCheckBox, 1);
+    scrollLayout->addLayout(flipLayout);
 }
 
 void BatchConverterDialog::setupColorSection(QVBoxLayout *scrollLayout) {
@@ -1039,6 +1051,8 @@ void BatchConverterDialog::startConversion() {
     // Per-file upscaling check for mixed resolution batches lives inside BatchConverter itself.
     job.useUpscayl = job.doResize && useUpscaylCheckBox->isChecked();
     job.upscaylModel = upscaylModelComboBox->currentText();
+    job.flipHorizontal = flipHorizontalCheckBox->isChecked();
+    job.flipVertical = flipVerticalCheckBox->isChecked();
 
     settings->setResizeUseUpscayl(useUpscaylCheckBox->isChecked());
     settings->setBatchUpscaylModel(job.upscaylModel);

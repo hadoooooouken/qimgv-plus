@@ -130,6 +130,7 @@ private:
     void setupRightPanel(QBoxLayout *mainLayout);
     void setupFormatSection(QVBoxLayout *scrollLayout);
     void setupResizeSection(QVBoxLayout *scrollLayout);
+    void setupTransformSection(QVBoxLayout *scrollLayout);
     void setupColorSection(QVBoxLayout *scrollLayout);
     void setupRenameSection(QVBoxLayout *scrollLayout);
     void setupBottomPanel(QVBoxLayout *mainLayout);
@@ -166,6 +167,9 @@ private:
     QComboBox *upscaylModelComboBox;
     QComboBox *resComboBox;
     QPushButton *resetButton;
+
+    QCheckBox *flipHorizontalCheckBox;
+    QCheckBox *flipVerticalCheckBox;
 
     QWidget *colorContainer;
     QCheckBox *colorEnableCheckBox;

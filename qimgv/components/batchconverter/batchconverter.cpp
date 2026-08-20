@@ -246,6 +246,26 @@ public:
             processedImg = resized;
         }
 
+        if (m_job.flipHorizontal || m_job.flipVertical) {
+            if (m_cancelFlag->load()) {
+                notifyStopped();
+                return;
+            }
+            QImage flippedImg = processedImg.mirrored(m_job.flipHorizontal,
+                                                       m_job.flipVertical);
+            if (m_cancelFlag->load()) {
+                notifyStopped();
+                return;
+            }
+            if (flippedImg.isNull()) {
+                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                               QCoreApplication::translate("BatchConverter", "Transform Error"),
+                               false);
+                return;
+            }
+            processedImg = std::move(flippedImg);
+        }
+
         if (m_cancelFlag->load()) {
             notifyStopped();
             return;

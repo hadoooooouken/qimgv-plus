@@ -29,6 +29,8 @@ struct BatchJob {
     bool useUpscayl = false;
     QString upscaylModel;
     int scalingFilter = 0;
+    bool flipHorizontal = false;
+    bool flipVertical = false;
     float exposure = 0.0f;
     float contrast = 1.0f;
     float brightness = 0.0f;

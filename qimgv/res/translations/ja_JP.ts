@@ -47,6 +47,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../../components/batchconverter/batchconverter.cpp" line="262"/>
+        <source>Transform Error</source>
+        <translation>変換エラー</translation>
+    </message>
+    <message>
         <location filename="../../components/batchconverter/batchconverter.cpp" line="306"/>
         <location filename="../../components/batchconverter/batchconverter.cpp" line="331"/>
         <location filename="../../components/batchconverter/batchconverter.cpp" line="415"/>
@@ -187,6 +192,16 @@
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="459"/>
         <source>Model:</source>
         <translation>モデル:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="476"/>
+        <source>Flip horizontal</source>
+        <translation>水平反転</translation>
+    </message>
+    <message>
+        <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="477"/>
+        <source>Flip vertical</source>
+        <translation>垂直反転</translation>
     </message>
     <message>
         <location filename="../../gui/dialogs/batchconverterdialog.cpp" line="411"/>
