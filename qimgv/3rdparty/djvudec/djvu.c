@@ -2,6 +2,7 @@
 #ifndef DJVU_H
 #define DJVU_H
 
+#include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -356,6 +357,41 @@ static inline void djvu_dict_unlock(djvu_ctx *ctx)
 void *djvu_alloc(djvu_ctx *ctx, size_t size);
 void  djvu_free(djvu_ctx *ctx, void *ptr);
 void  djvu_errorf(djvu_ctx *ctx, djvu_severity sev, const char *fmt, ...);
+
+enum {
+    DJVU_MAX_DECODED_DIMENSION = 65535,
+    DJVU_IW_BLOCK_EDGE = 32,
+    DJVU_IW_BLOCK_PIXELS = DJVU_IW_BLOCK_EDGE * DJVU_IW_BLOCK_EDGE,
+    DJVU_IW_UNIFIED_EXTRA_ROWS = 4,
+    DJVU_IW_UNIFIED_PADDING = 16
+};
+
+#define DJVU_MAX_DECODED_PIXELS ((size_t)256 * 1024 * 1024)
+#define DJVU_MAX_BITMAP_BYTES DJVU_MAX_DECODED_PIXELS
+
+static int djvu_checked_size_add(size_t left, size_t right, size_t *result)
+{
+    if (!result || left > SIZE_MAX - right) return -1;
+    *result = left + right;
+    return 0;
+}
+
+static int djvu_checked_size_mul(size_t left, size_t right, size_t *result)
+{
+    if (!result || (right != 0 && left > SIZE_MAX / right)) return -1;
+    *result = left * right;
+    return 0;
+}
+
+static int djvu_geometry_supported(int width, int height)
+{
+    size_t pixels;
+    return width > 0 && height > 0 &&
+           width <= DJVU_MAX_DECODED_DIMENSION &&
+           height <= DJVU_MAX_DECODED_DIMENSION &&
+           djvu_checked_size_mul((size_t)width, (size_t)height, &pixels) == 0 &&
+           pixels <= DJVU_MAX_DECODED_PIXELS;
+}
 
 static inline double djvu_bench_now_ms(void)
 {
@@ -759,9 +795,9 @@ void djvu_bm_blit(djvu_bitmap *dst, const djvu_bitmap *src, int dx, int dy, int 
 
 void djvu_bm_compress(djvu_ctx *ctx, djvu_bitmap *bm);
 
-void djvu_bm_uncompress(djvu_ctx *ctx, djvu_bitmap *bm);
+int djvu_bm_uncompress(djvu_ctx *ctx, djvu_bitmap *bm);
 
-void djvu_bm_ensure_bytes(djvu_ctx *ctx, djvu_bitmap *bm);
+int djvu_bm_ensure_bytes(djvu_ctx *ctx, djvu_bitmap *bm);
 
 int djvu_bm_uncompress_copy(djvu_ctx *ctx, const djvu_bitmap *src, djvu_bitmap *dst);
 
@@ -1416,9 +1452,15 @@ enum {
 
 static int djvu_bm_alloc_guard(djvu_ctx *ctx, djvu_bitmap *bm)
 {
-    size_t gs = (size_t)bm->bytes_per_row + (size_t)bm->border;
+    size_t gs;
+    if (!bm) return -1;
     djvu_free(ctx, bm->guard);
     bm->guard = NULL;
+    if (bm->bytes_per_row < 0 || bm->border < 0 ||
+        djvu_checked_size_add((size_t)bm->bytes_per_row, (size_t)bm->border,
+                              &gs) != 0 ||
+        gs > DJVU_MAX_BITMAP_BYTES)
+        return -1;
     if (gs == 0) return 0;
     bm->guard = (uint8_t *)djvu_alloc(ctx, gs);
     if (!bm->guard) return -1;
@@ -1565,28 +1607,59 @@ static size_t bm_encode_rle(djvu_ctx *ctx, const djvu_bitmap *bm,
     return (size_t)pos;
 }
 
+static int djvu_bm_layout_size(int height, int width, int border,
+                               int *bytes_per_row, size_t *allocation_size)
+{
+    size_t stride, pixels, total, guard_size;
+
+    if (!bytes_per_row || !allocation_size || height < 0 || width < 0 ||
+        border < 0 || height > DJVU_MAX_DECODED_DIMENSION ||
+        width > DJVU_MAX_DECODED_DIMENSION ||
+        djvu_checked_size_add((size_t)width, (size_t)border, &stride) != 0 ||
+        stride > INT_MAX ||
+        djvu_checked_size_mul((size_t)height, stride, &pixels) != 0 ||
+        djvu_checked_size_add(pixels, (size_t)border, &total) != 0 ||
+        djvu_checked_size_add(stride, (size_t)border, &guard_size) != 0 ||
+        total > DJVU_MAX_BITMAP_BYTES || guard_size > DJVU_MAX_BITMAP_BYTES ||
+        total > INT_MAX)
+        return -1;
+
+    *bytes_per_row = (int)stride;
+    *allocation_size = total;
+    return 0;
+}
+
 int djvu_bm_init(djvu_ctx *ctx, djvu_bitmap *bm, int height, int width, int border)
 {
-    long max;
+    int bytes_per_row;
+    size_t allocation_size;
+
+    if (!bm) return -1;
     djvu_free(ctx, bm->data);
     djvu_free(ctx, bm->guard);
     djvu_free(ctx, bm->rle);
-    bm->data = NULL;
-    bm->guard = NULL;
-    bm->rle = NULL;
-    bm->rle_len = 0;
+    memset(bm, 0, sizeof(*bm));
+    if (djvu_bm_layout_size(height, width, border, &bytes_per_row,
+                            &allocation_size) != 0)
+        return -1;
+
     bm->width = width;
     bm->height = height;
     bm->border = border;
-    bm->bytes_per_row = width + border;
-    max = (long)height * bm->bytes_per_row + border;
-    bm->max_offset = (int)max;
-    if (max > 0) {
-        bm->data = (uint8_t *)djvu_alloc(ctx, (size_t)max);
+    bm->bytes_per_row = bytes_per_row;
+    bm->max_offset = (int)allocation_size;
+    if (allocation_size > 0) {
+        bm->data = (uint8_t *)djvu_alloc(ctx, allocation_size);
         if (!bm->data) return -1;
-        memset(bm->data, 0, (size_t)max);
+        memset(bm->data, 0, allocation_size);
     }
-    return djvu_bm_alloc_guard(ctx, bm);
+    if (djvu_bm_alloc_guard(ctx, bm) != 0) {
+        djvu_free(ctx, bm->data);
+        bm->data = NULL;
+        bm->max_offset = 0;
+        return -1;
+    }
+    return 0;
 }
 
 void djvu_bm_free(djvu_ctx *ctx, djvu_bitmap *bm)
@@ -1621,20 +1694,28 @@ static void bm_decode_rle_rows(djvu_bitmap *bm, const uint8_t *runs)
     }
 }
 
-void djvu_bm_uncompress(djvu_ctx *ctx, djvu_bitmap *bm)
+int djvu_bm_uncompress(djvu_ctx *ctx, djvu_bitmap *bm)
 {
-    if (!bm || bm->data || !bm->rle || bm->width <= 0 || bm->height <= 0)
-        return;
+    int bytes_per_row;
+    size_t allocation_size;
 
-    bm->bytes_per_row = bm->width + bm->border;
-    bm->max_offset = bm->height * bm->bytes_per_row + bm->border;
-    bm->data = (uint8_t *)djvu_alloc(ctx, (size_t)bm->max_offset);
-    if (!bm->data) return;
-    memset(bm->data, 0, (size_t)bm->max_offset);
+    if (!bm) return -1;
+    if (bm->data) return 0;
+    if (!bm->rle || bm->width <= 0 || bm->height <= 0 ||
+        djvu_bm_layout_size(bm->height, bm->width, bm->border,
+                            &bytes_per_row, &allocation_size) != 0)
+        return -1;
+
+    bm->bytes_per_row = bytes_per_row;
+    bm->max_offset = (int)allocation_size;
+    bm->data = (uint8_t *)djvu_alloc(ctx, allocation_size);
+    if (!bm->data) return -1;
+    memset(bm->data, 0, allocation_size);
     if (djvu_bm_alloc_guard(ctx, bm) != 0) {
         djvu_free(ctx, bm->data);
         bm->data = NULL;
-        return;
+        bm->max_offset = 0;
+        return -1;
     }
 
     bm_decode_rle_rows(bm, bm->rle);
@@ -1642,22 +1723,29 @@ void djvu_bm_uncompress(djvu_ctx *ctx, djvu_bitmap *bm)
     djvu_free(ctx, bm->rle);
     bm->rle = NULL;
     bm->rle_len = 0;
+    return 0;
 }
 
 int djvu_bm_uncompress_copy(djvu_ctx *ctx, const djvu_bitmap *src, djvu_bitmap *dst)
 {
+    int bytes_per_row;
+    size_t allocation_size;
+
+    if (!dst) return -1;
     memset(dst, 0, sizeof(*dst));
-    if (!src || !src->rle || src->width <= 0 || src->height <= 0)
+    if (!src || !src->rle || src->width <= 0 || src->height <= 0 ||
+        djvu_bm_layout_size(src->height, src->width, src->border,
+                            &bytes_per_row, &allocation_size) != 0)
         return -1;
 
     dst->width = src->width;
     dst->height = src->height;
     dst->border = src->border;
-    dst->bytes_per_row = src->width + src->border;
-    dst->max_offset = src->height * dst->bytes_per_row + dst->border;
-    dst->data = (uint8_t *)djvu_alloc(ctx, (size_t)dst->max_offset);
+    dst->bytes_per_row = bytes_per_row;
+    dst->max_offset = (int)allocation_size;
+    dst->data = (uint8_t *)djvu_alloc(ctx, allocation_size);
     if (!dst->data) return -1;
-    memset(dst->data, 0, (size_t)dst->max_offset);
+    memset(dst->data, 0, allocation_size);
     if (djvu_bm_alloc_guard(ctx, dst) != 0) {
         djvu_free(ctx, dst->data);
         memset(dst, 0, sizeof(*dst));
@@ -1668,10 +1756,11 @@ int djvu_bm_uncompress_copy(djvu_ctx *ctx, const djvu_bitmap *src, djvu_bitmap *
     return 0;
 }
 
-void djvu_bm_ensure_bytes(djvu_ctx *ctx, djvu_bitmap *bm)
+int djvu_bm_ensure_bytes(djvu_ctx *ctx, djvu_bitmap *bm)
 {
-    if (bm && !bm->data && bm->rle)
-        djvu_bm_uncompress(ctx, bm);
+    if (!bm) return -1;
+    if (bm->data) return 0;
+    return bm->rle ? djvu_bm_uncompress(ctx, bm) : -1;
 }
 
 void djvu_bm_compress(djvu_ctx *ctx, djvu_bitmap *bm)
@@ -1695,30 +1784,45 @@ void djvu_bm_compress(djvu_ctx *ctx, djvu_bitmap *bm)
 int djvu_bm_set_min_border(djvu_ctx *ctx, djvu_bitmap *bm, int value)
 {
     int new_bpr, r;
-    long new_max;
-    uint8_t *nd;
+    size_t new_max, new_guard_size;
+    uint8_t *nd, *ng = NULL;
 
-    if (!bm->data && bm->rle)
-        djvu_bm_uncompress(ctx, bm);
+    if (!bm || djvu_bm_ensure_bytes(ctx, bm) != 0)
+        return -1;
     if (bm->border >= value) return 0;
-    new_bpr = bm->width + value;
-    new_max = (long)bm->height * new_bpr + value;
-    nd = (uint8_t *)djvu_alloc(ctx, (size_t)(new_max > 0 ? new_max : 1));
+    if (value < 0) return -1;
+    if (djvu_bm_layout_size(bm->height, bm->width, value, &new_bpr,
+                            &new_max) != 0)
+        return -1;
+    if (djvu_checked_size_add((size_t)new_bpr, (size_t)value,
+                              &new_guard_size) != 0)
+        return -1;
+    nd = (uint8_t *)djvu_alloc(ctx, new_max > 0 ? new_max : 1);
     if (!nd) return -1;
-    memset(nd, 0, (size_t)(new_max > 0 ? new_max : 1));
+    memset(nd, 0, new_max > 0 ? new_max : 1);
+    if (new_guard_size > 0) {
+        ng = (uint8_t *)djvu_alloc(ctx, new_guard_size);
+        if (!ng) {
+            djvu_free(ctx, nd);
+            return -1;
+        }
+        memset(ng, 0, new_guard_size);
+    }
     if (bm->data) {
         for (r = 0; r < bm->height; r++) {
-            int src = r * bm->bytes_per_row + bm->border;
-            int dst = r * new_bpr + value;
+            size_t src = (size_t)r * (size_t)bm->bytes_per_row + (size_t)bm->border;
+            size_t dst = (size_t)r * (size_t)new_bpr + (size_t)value;
             memcpy(nd + dst, bm->data + src, (size_t)bm->width);
         }
     }
     djvu_free(ctx, bm->data);
+    djvu_free(ctx, bm->guard);
     bm->data = nd;
+    bm->guard = ng;
     bm->border = value;
     bm->bytes_per_row = new_bpr;
     bm->max_offset = (int)new_max;
-    return djvu_bm_alloc_guard(ctx, bm);
+    return 0;
 }
 
 static void bm_blit_bytes(djvu_bitmap *dst, const djvu_bitmap *src,
@@ -2139,7 +2243,9 @@ static int img_add_shape(jb2_image *im, int parent)
 {
     int no = im->inherited_shapes + im->nshapes;
     if (im->nshapes >= im->cap_shapes) {
-        int nc = im->cap_shapes ? im->cap_shapes * 2 : 64;
+        int nc;
+        if (im->cap_shapes > INT_MAX / 2) return -1;
+        nc = im->cap_shapes ? im->cap_shapes * 2 : 64;
         jb2_shape *ns = (jb2_shape *)djvu_alloc(im->ctx, sizeof(jb2_shape) * nc);
         if (!ns) return -1;
         if (im->shapes) { memcpy(ns, im->shapes, sizeof(jb2_shape) * im->nshapes);
@@ -2155,7 +2261,9 @@ static int img_add_shape(jb2_image *im, int parent)
 static int img_add_blit(jb2_image *im, jb2_blit b)
 {
     if (im->nblits >= im->cap_blits) {
-        int nc = im->cap_blits ? im->cap_blits * 2 : 256;
+        int nc;
+        if (im->cap_blits > INT_MAX / 2) return -1;
+        nc = im->cap_blits ? im->cap_blits * 2 : 256;
         jb2_blit *nb = (jb2_blit *)djvu_alloc(im->ctx, sizeof(jb2_blit) * nc);
         if (!nb) return -1;
         if (im->blits) { memcpy(nb, im->blits, sizeof(jb2_blit) * im->nblits);
@@ -2175,7 +2283,9 @@ static void img_set_inherited_dict(jb2_image *im, jb2_image *dict)
 static int iarr_push(djvu_ctx *ctx, int **arr, int *n, int *cap, int v)
 {
     if (*n >= *cap) {
-        int nc = *cap ? *cap * 2 : 64;
+        int nc;
+        if (*cap > INT_MAX / 2) return -1;
+        nc = *cap ? *cap * 2 : 64;
         int *na = (int *)djvu_alloc(ctx, sizeof(int) * nc);
         if (!na) return -1;
         if (*arr) { memcpy(na, *arr, sizeof(int) * *n); djvu_free(ctx, *arr); }
@@ -2283,7 +2393,7 @@ static inline int jb2_zp_decode_pixel(djvu_zp *DJVU_RESTRICT zp,
     return z;
 }
 
-static void code_bitmap_directly(jb2_codec *c, djvu_bitmap *bm)
+static int code_bitmap_directly(jb2_codec *c, djvu_bitmap *bm)
 {
     int dw, dy, bpr, h;
     uint8_t *DJVU_RESTRICT row_base;
@@ -2295,7 +2405,13 @@ static void code_bitmap_directly(jb2_codec *c, djvu_bitmap *bm)
     uint8_t *DJVU_RESTRICT bd;
     uint32_t a, fence;
 
-    djvu_bm_set_min_border(c->ctx, bm, 3);
+    if (!c || !bm || bm->width < 0 || bm->height < 0)
+        return -1;
+    if (bm->width == 0 || bm->height == 0)
+        return 0;
+    if (djvu_bm_set_min_border(c->ctx, bm, 3) != 0 ||
+        !bm->data || !bm->guard)
+        return -1;
     dw = bm->width;
     h = bm->height;
     dy = h - 1;
@@ -2378,17 +2494,13 @@ static void code_bitmap_directly(jb2_codec *c, djvu_bitmap *bm)
         up0 = (dy >= 0) ? row_base + dy * bpr : guard;
     }
     zp->a = a;
+    return 0;
 }
 
-static void code_bitmap_cross(jb2_codec *c, djvu_bitmap *bm, djvu_bitmap *cbm, int libno)
+static int code_bitmap_cross(jb2_codec *c, djvu_bitmap *bm, djvu_bitmap *cbm,
+                             int libno)
 {
-    int cw = cbm->width, dw = bm->width, dh = bm->height, ch = cbm->height;
-    int xmin = c->libinfo[libno * 4 + 0];
-    int xmax = c->libinfo[libno * 4 + 2];
-    int ymin = c->libinfo[libno * 4 + 1];
-    int ymax = c->libinfo[libno * 4 + 3];
-    int xd2c = ((1 + (dw >> 1)) - dw) - ((((1 + xmax) - xmin) >> 1) - xmax);
-    int yd2c = ((1 + (dh >> 1)) - dh) - ((((1 + ymax) - ymin) >> 1) - ymax);
+    int cw, dw, dh, ch, xmin, xmax, ymin, ymax, xd2c, yd2c;
     int dy, cy, bm_bpr, cbm_bpr;
     uint8_t *DJVU_RESTRICT bm_base;
     uint8_t *DJVU_RESTRICT cbm_base;
@@ -2403,9 +2515,24 @@ static void code_bitmap_cross(jb2_codec *c, djvu_bitmap *bm, djvu_bitmap *cbm, i
     uint8_t *DJVU_RESTRICT bd;
     uint32_t a, fence;
 
-    djvu_bm_set_min_border(c->ctx, bm, 2);
-    djvu_bm_set_min_border(c->ctx, cbm, 2 - xd2c);
-    djvu_bm_set_min_border(c->ctx, cbm, (2 + dw + xd2c) - cw);
+    if (!c || !bm || !cbm || libno < 0 || libno >= c->nlib2shape)
+        return -1;
+    cw = cbm->width; dw = bm->width; dh = bm->height; ch = cbm->height;
+    xmin = c->libinfo[libno * 4 + 0];
+    xmax = c->libinfo[libno * 4 + 2];
+    ymin = c->libinfo[libno * 4 + 1];
+    ymax = c->libinfo[libno * 4 + 3];
+    xd2c = ((1 + (dw >> 1)) - dw) - ((((1 + xmax) - xmin) >> 1) - xmax);
+    yd2c = ((1 + (dh >> 1)) - dh) - ((((1 + ymax) - ymin) >> 1) - ymax);
+    if (dw < 0 || dh < 0 || cw < 0 || ch < 0)
+        return -1;
+    if (dw == 0 || dh == 0)
+        return 0;
+    if (djvu_bm_set_min_border(c->ctx, bm, 2) != 0 ||
+        djvu_bm_set_min_border(c->ctx, cbm, 2 - xd2c) != 0 ||
+        djvu_bm_set_min_border(c->ctx, cbm, (2 + dw + xd2c) - cw) != 0 ||
+        !bm->data || !bm->guard || !cbm->data || !cbm->guard)
+        return -1;
 
     bm_bpr = bm->bytes_per_row;
     cbm_bpr = cbm->bytes_per_row;
@@ -2443,13 +2570,20 @@ static void code_bitmap_cross(jb2_codec *c, djvu_bitmap *bm, djvu_bitmap *cbm, i
         xdn1 = (cy - 1 >= 0 && cy - 1 < ch) ? cbm_base + (cy - 1) * cbm_bpr + xd2c : cbm_guard + xd2c;
     }
     zp->a = a;
+    return 0;
 }
 
-static void shape2lib_set(jb2_codec *c, int shapeno, int libno)
+static int shape2lib_set(jb2_codec *c, int shapeno, int libno)
 {
-    while (c->nshape2lib <= shapeno)
-        iarr_push(c->ctx, &c->shape2lib, &c->nshape2lib, &c->cap_shape2lib, -1);
+    while (c->nshape2lib <= shapeno) {
+        if (iarr_push(c->ctx, &c->shape2lib, &c->nshape2lib,
+                      &c->cap_shape2lib, -1) != 0) {
+            c->error = 1;
+            return -1;
+        }
+    }
     c->shape2lib[shapeno] = libno;
+    return 0;
 }
 
 static void shape_bbox(jb2_shape *jshp, int may_write,
@@ -2472,13 +2606,20 @@ static int add_library(jb2_codec *c, int shapeno, jb2_shape *jshp)
 {
     int libno = c->nlib2shape;
     int xmin, ymin, xmax, ymax;
-    iarr_push(c->ctx, &c->lib2shape, &c->nlib2shape, &c->cap_lib2shape, shapeno);
-    shape2lib_set(c, shapeno, libno);
+    if (iarr_push(c->ctx, &c->lib2shape, &c->nlib2shape,
+                  &c->cap_lib2shape, shapeno) != 0 ||
+        shape2lib_set(c, shapeno, libno) != 0) {
+        c->error = 1;
+        return -1;
+    }
     shape_bbox(jshp, 1, &xmin, &ymin, &xmax, &ymax);
-    iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, xmin);
-    iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, ymin);
-    iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, xmax);
-    iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, ymax);
+    if (iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, xmin) != 0 ||
+        iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, ymin) != 0 ||
+        iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, xmax) != 0 ||
+        iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, ymax) != 0) {
+        c->error = 1;
+        return -1;
+    }
     return libno;
 }
 
@@ -2490,14 +2631,26 @@ static void init_library(jb2_codec *c, jb2_image *jim)
     for (i = 0; i < nshape; i++) {
         jb2_shape *jshp = djvu_jb2_get_shape(jim, i);
         int xmin, ymin, xmax, ymax;
-        iarr_push(c->ctx, &c->shape2lib, &c->nshape2lib, &c->cap_shape2lib, i);
-        iarr_push(c->ctx, &c->lib2shape, &c->nlib2shape, &c->cap_lib2shape, i);
+        if (iarr_push(c->ctx, &c->shape2lib, &c->nshape2lib,
+                      &c->cap_shape2lib, i) != 0 ||
+            iarr_push(c->ctx, &c->lib2shape, &c->nlib2shape,
+                      &c->cap_lib2shape, i) != 0) {
+            c->error = 1;
+            return;
+        }
 
         shape_bbox(jshp, 0, &xmin, &ymin, &xmax, &ymax);
-        iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, xmin);
-        iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, ymin);
-        iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, xmax);
-        iarr_push(c->ctx, &c->libinfo, &c->nlibinfo, &c->cap_libinfo, ymax);
+        if (iarr_push(c->ctx, &c->libinfo, &c->nlibinfo,
+                      &c->cap_libinfo, xmin) != 0 ||
+            iarr_push(c->ctx, &c->libinfo, &c->nlibinfo,
+                      &c->cap_libinfo, ymin) != 0 ||
+            iarr_push(c->ctx, &c->libinfo, &c->nlibinfo,
+                      &c->cap_libinfo, xmax) != 0 ||
+            iarr_push(c->ctx, &c->libinfo, &c->nlibinfo,
+                      &c->cap_libinfo, ymax) != 0) {
+            c->error = 1;
+            return;
+        }
     }
 }
 
@@ -2547,7 +2700,11 @@ static int code_abs_mark_size(jb2_codec *c, djvu_bitmap *bm, int border)
     int xsize = code_num(c, 0, BIGPOSITIVE, &c->abs_size_x);
     int ysize = code_num(c, 0, BIGPOSITIVE, &c->abs_size_y);
     if (xsize != (0xffff & xsize) || ysize != (0xffff & ysize)) { c->error = 1; return -1; }
-    return djvu_bm_init(c->ctx, bm, ysize, xsize, border);
+    if (djvu_bm_init(c->ctx, bm, ysize, xsize, border) != 0) {
+        c->error = 1;
+        return -1;
+    }
+    return 0;
 }
 
 static int code_rel_mark_size(jb2_codec *c, djvu_bitmap *bm, int cw, int ch, int border)
@@ -2556,14 +2713,21 @@ static int code_rel_mark_size(jb2_codec *c, djvu_bitmap *bm, int cw, int ch, int
     int ydiff = code_num(c, BIGNEGATIVE, BIGPOSITIVE, &c->rel_size_y);
     int xsize = cw + xdiff, ysize = ch + ydiff;
     if (xsize != (0xffff & xsize) || ysize != (0xffff & ysize)) { c->error = 1; return -1; }
-    return djvu_bm_init(c->ctx, bm, ysize, xsize, border);
+    if (djvu_bm_init(c->ctx, bm, ysize, xsize, border) != 0) {
+        c->error = 1;
+        return -1;
+    }
+    return 0;
 }
 
 static void code_image_size_image(jb2_codec *c, jb2_image *jim)
 {
     c->image_columns = code_num(c, 0, BIGPOSITIVE, &c->image_size_dist);
     c->image_rows = code_num(c, 0, BIGPOSITIVE, &c->image_size_dist);
-    if (c->image_columns == 0 || c->image_rows == 0) { c->error = 1; return; }
+    if (!djvu_geometry_supported(c->image_columns, c->image_rows)) {
+        c->error = 1;
+        return;
+    }
     jim->width = c->image_columns;
     jim->height = c->image_rows;
 
@@ -2692,21 +2856,30 @@ static int code_record(jb2_codec *c, jb2_image *jim, int jim_is_image)
 
     case REC_NewMark:
         need_add_blit = need_add_library = 1;
-        code_abs_mark_size(c, &tmp_shape.bm, 4);
-        code_bitmap_directly(c, &tmp_shape.bm);
+        if (code_abs_mark_size(c, &tmp_shape.bm, 4) != 0 ||
+            code_bitmap_directly(c, &tmp_shape.bm) != 0) {
+            c->error = 1;
+            break;
+        }
         code_rel_location(c, &blit, tmp_shape.bm.height, tmp_shape.bm.width);
         break;
 
     case REC_NewMarkLibraryOnly:
         need_add_library = 1;
-        code_abs_mark_size(c, &tmp_shape.bm, 4);
-        code_bitmap_directly(c, &tmp_shape.bm);
+        if (code_abs_mark_size(c, &tmp_shape.bm, 4) != 0 ||
+            code_bitmap_directly(c, &tmp_shape.bm) != 0) {
+            c->error = 1;
+            break;
+        }
         break;
 
     case REC_NewMarkImageOnly:
         need_add_blit = 1;
-        code_abs_mark_size(c, &tmp_shape.bm, 3);
-        code_bitmap_directly(c, &tmp_shape.bm);
+        if (code_abs_mark_size(c, &tmp_shape.bm, 3) != 0 ||
+            code_bitmap_directly(c, &tmp_shape.bm) != 0) {
+            c->error = 1;
+            break;
+        }
         code_rel_location(c, &blit, tmp_shape.bm.height, tmp_shape.bm.width);
         break;
 
@@ -2715,6 +2888,7 @@ static int code_record(jb2_codec *c, jb2_image *jim, int jim_is_image)
     case REC_MatchedRefineImageOnly: {
         djvu_bitmap *cbm;
         djvu_bitmap cbm_copy;
+        jb2_shape *parent_shape;
         int cbm_owned = 0;
         int cw, ch;
         if (rectype == REC_MatchedRefine) { need_add_blit = need_add_library = 1; }
@@ -2724,7 +2898,12 @@ static int code_record(jb2_codec *c, jb2_image *jim, int jim_is_image)
         if (c->error) break;
         parent = c->lib2shape[match];
         tmp_shape.parent = parent;
-        cbm = &djvu_jb2_get_shape(jim, parent)->bm;
+        parent_shape = djvu_jb2_get_shape(jim, parent);
+        if (!parent_shape) {
+            c->error = 1;
+            break;
+        }
+        cbm = &parent_shape->bm;
 
         if (!cbm->data && cbm->rle) {
             if (djvu_bm_uncompress_copy(c->ctx, cbm, &cbm_copy) != 0) {
@@ -2736,8 +2915,12 @@ static int code_record(jb2_codec *c, jb2_image *jim, int jim_is_image)
         }
         cw = (1 + c->libinfo[match * 4 + 2]) - c->libinfo[match * 4 + 0];
         ch = (1 + c->libinfo[match * 4 + 3]) - c->libinfo[match * 4 + 1];
-        code_rel_mark_size(c, &tmp_shape.bm, cw, ch, 4);
-        code_bitmap_cross(c, &tmp_shape.bm, cbm, match);
+        if (code_rel_mark_size(c, &tmp_shape.bm, cw, ch, 4) != 0 ||
+            code_bitmap_cross(c, &tmp_shape.bm, cbm, match) != 0) {
+            c->error = 1;
+            if (cbm_owned) djvu_bm_free(c->ctx, &cbm_copy);
+            break;
+        }
         if (cbm_owned) djvu_bm_free(c->ctx, &cbm_copy);
         if (rectype != REC_MatchedRefineLibraryOnly)
             code_rel_location(c, &blit, tmp_shape.bm.height, tmp_shape.bm.width);
@@ -2763,8 +2946,11 @@ static int code_record(jb2_codec *c, jb2_image *jim, int jim_is_image)
 
     case REC_NonMarkData:
         need_add_blit = 1;
-        code_abs_mark_size(c, &tmp_shape.bm, 3);
-        code_bitmap_directly(c, &tmp_shape.bm);
+        if (code_abs_mark_size(c, &tmp_shape.bm, 3) != 0 ||
+            code_bitmap_directly(c, &tmp_shape.bm) != 0) {
+            c->error = 1;
+            break;
+        }
         code_abs_location(c, &blit, tmp_shape.bm.height);
         break;
 
@@ -2794,15 +2980,21 @@ static int code_record(jb2_codec *c, jb2_image *jim, int jim_is_image)
         int shapeno = img_add_shape(jim, tmp_shape.parent);
         if (shapeno < 0) { c->error = 1; djvu_bm_free(c->ctx, &tmp_shape.bm); return rectype; }
         jim->shapes[jim->nshapes - 1].bm = tmp_shape.bm;
-        shape2lib_set(c, shapeno, -1);
-        if (need_add_library)
-            add_library(c, shapeno, &jim->shapes[jim->nshapes - 1]);
-        if (need_add_blit) {
+        memset(&tmp_shape.bm, 0, sizeof(tmp_shape.bm));
+        if (need_add_blit)
             blit.shapeno = shapeno;
-            img_add_blit(jim, blit);
+        if (shape2lib_set(c, shapeno, -1) != 0 ||
+            (need_add_library &&
+             add_library(c, shapeno, &jim->shapes[jim->nshapes - 1]) < 0) ||
+            (need_add_blit && img_add_blit(jim, blit) != 0)) {
+            c->error = 1;
+            return rectype;
         }
     } else if (rectype == REC_MatchedCopy) {
-        img_add_blit(jim, blit);
+        if (img_add_blit(jim, blit) != 0) {
+            c->error = 1;
+            return rectype;
+        }
     }
     (void)have_blit;
 
@@ -2895,9 +3087,9 @@ static jb2_image *jb2_decode_into(djvu_ctx *ctx, const uint8_t *data, size_t len
             if (shs) {
                 int sn = atoi(shs);
                 jb2_shape *sh = djvu_jb2_get_shape(jim, sn);
-                if (sh && djvu_bm_has_pixels(&sh->bm)) {
+                if (sh && djvu_bm_has_pixels(&sh->bm) &&
+                    djvu_bm_ensure_bytes(ctx, &sh->bm) == 0) {
                     int rr, cc, w = sh->bm.width, h = sh->bm.height;
-                    djvu_bm_ensure_bytes(ctx, &sh->bm);
                     fprintf(stderr, "SHAPE %d %dx%d:\n", sn, w, h);
                     for (rr = h - 1; rr >= 0; rr--) {
                         int ro = djvu_bm_rowoffset(&sh->bm, rr);
@@ -2914,9 +3106,9 @@ static jb2_image *jb2_decode_into(djvu_ctx *ctx, const uint8_t *data, size_t len
                 jb2_blit *b = &jim->blits[bi];
                 jb2_shape *sh = djvu_jb2_get_shape(jim, b->shapeno);
                 unsigned sum = 0; int rr, cc, w = 0, h = 0;
-                if (sh && djvu_bm_has_pixels(&sh->bm)) {
+                if (sh && djvu_bm_has_pixels(&sh->bm) &&
+                    djvu_bm_ensure_bytes(ctx, &sh->bm) == 0) {
                     w = sh->bm.width; h = sh->bm.height;
-                    djvu_bm_ensure_bytes(ctx, &sh->bm);
                     for (rr = 0; rr < h; rr++) {
                         int ro = djvu_bm_rowoffset(&sh->bm, rr);
                         for (cc = 0; cc < w; cc++)
@@ -3097,15 +3289,33 @@ struct iw_pixmap {
 
 static iw_map *map_new(djvu_ctx *ctx, int w, int h)
 {
-    iw_map *m = (iw_map *)djvu_alloc(ctx, sizeof(iw_map));
-    size_t blocks_bytes;
+    iw_map *m;
+    size_t rounded_w, rounded_h, rounded_pixels, block_count, blocks_bytes;
+
+    if (!djvu_geometry_supported(w, h) ||
+        djvu_checked_size_add((size_t)w, DJVU_IW_BLOCK_EDGE - 1,
+                              &rounded_w) != 0 ||
+        djvu_checked_size_add((size_t)h, DJVU_IW_BLOCK_EDGE - 1,
+                              &rounded_h) != 0)
+        return NULL;
+    rounded_w &= ~((size_t)DJVU_IW_BLOCK_EDGE - 1);
+    rounded_h &= ~((size_t)DJVU_IW_BLOCK_EDGE - 1);
+    if (rounded_w > INT_MAX || rounded_h > INT_MAX ||
+        djvu_checked_size_mul(rounded_w, rounded_h, &rounded_pixels) != 0 ||
+        rounded_pixels > DJVU_MAX_DECODED_PIXELS)
+        return NULL;
+    block_count = rounded_pixels / DJVU_IW_BLOCK_PIXELS;
+    if (block_count == 0 || block_count > INT_MAX ||
+        djvu_checked_size_mul(sizeof(iw_block), block_count, &blocks_bytes) != 0)
+        return NULL;
+
+    m = (iw_map *)djvu_alloc(ctx, sizeof(iw_map));
     if (!m) return NULL;
     memset(m, 0, sizeof(*m));
     m->w = w; m->h = h;
-    m->bw = (w + 0x20 - 1) & ~0x1f;
-    m->bh = (h + 0x20 - 1) & ~0x1f;
-    m->nb = (m->bw * m->bh) / 1024;
-    blocks_bytes = sizeof(iw_block) * (size_t)m->nb;
+    m->bw = (int)rounded_w;
+    m->bh = (int)rounded_h;
+    m->nb = (int)block_count;
     m->blocks = (iw_block *)djvu_alloc(ctx, blocks_bytes);
     if (!m->blocks) { djvu_free(ctx, m); return NULL; }
     memset(m->blocks, 0, blocks_bytes);
@@ -3562,16 +3772,27 @@ static void backward(int16_t *p, int w, int h, int rowsize, int begin, int end)
 
 static int16_t *build_unified(djvu_ctx *ctx, iw_map *m)
 {
-
-    size_t n = (size_t)m->bw * m->bh + (size_t)m->bw * 4 + 16;
-    int16_t *data16 = (int16_t *)djvu_alloc(ctx, sizeof(int16_t) * n);
+    size_t map_pixels, extra_pixels, n, allocation_size;
+    int16_t *data16;
     int blockidx = 0, i, j, pidx = 0;
+
+    if (!m || !m->blocks || m->bw <= 0 || m->bh <= 0 ||
+        djvu_checked_size_mul((size_t)m->bw, (size_t)m->bh,
+                              &map_pixels) != 0 ||
+        djvu_checked_size_mul((size_t)m->bw, DJVU_IW_UNIFIED_EXTRA_ROWS,
+                              &extra_pixels) != 0 ||
+        djvu_checked_size_add(map_pixels, extra_pixels, &n) != 0 ||
+        djvu_checked_size_add(n, DJVU_IW_UNIFIED_PADDING, &n) != 0 ||
+        djvu_checked_size_mul(sizeof(int16_t), n, &allocation_size) != 0)
+        return NULL;
+    data16 = (int16_t *)djvu_alloc(ctx, allocation_size);
     if (!data16) return NULL;
 
-    memset(data16, 0, sizeof(int16_t) * n);
+    memset(data16, 0, allocation_size);
 
-    for (i = 0; i < m->bh; i += 32, pidx += 32 * m->bw) {
-        for (j = 0; j < m->bw; j += 32) {
+    for (i = 0; i < m->bh; i += DJVU_IW_BLOCK_EDGE,
+         pidx += DJVU_IW_BLOCK_EDGE * m->bw) {
+        for (j = 0; j < m->bw; j += DJVU_IW_BLOCK_EDGE) {
             scatter_lift_block(&m->blocks[blockidx], data16, pidx + j, m->bw);
             blockidx++;
         }
@@ -3803,8 +4024,8 @@ static inline int iw_zp_dec_iw(djvu_zp *DJVU_RESTRICT zp,
     return 0;
 }
 
-static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
-                           iw_block *blk, int fbucket, int nbucket)
+static int decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
+                          iw_block *blk, int fbucket, int nbucket)
 {
     int thres = c->quant_high[band];
     int bbstate = 0;
@@ -3888,7 +4109,7 @@ static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
                     if (!pcoeff) {
                         zp->a = a;
                         zp->fence = fence;
-                        return;
+                        return -1;
                     }
                     for (i = 0; i < 16; i++)
                         if ((cstate[cidx + i] & 1) == 0) cstate[cidx + i] = 8;
@@ -3952,6 +4173,7 @@ static void decode_buckets(iw_codec *c, djvu_zp *zp, int bit, int band,
 
     zp->a = a;
     zp->fence = fence;
+    return 0;
 }
 
 static int code_slice(iw_codec *c, djvu_zp *zp)
@@ -3961,9 +4183,11 @@ static int code_slice(iw_codec *c, djvu_zp *zp)
         int blockno;
         int fbucket = band_start[c->curband];
         int nbucket = band_size[c->curband];
-        for (blockno = 0; blockno < c->map->nb; blockno++)
-            decode_buckets(c, zp, c->curbit, c->curband,
-                           &c->map->blocks[blockno], fbucket, nbucket);
+        for (blockno = 0; blockno < c->map->nb; blockno++) {
+            if (decode_buckets(c, zp, c->curbit, c->curband,
+                               &c->map->blocks[blockno], fbucket, nbucket) != 0)
+                return -1;
+        }
     }
     if (++c->curband >= 10) {
         c->curband = 0;
@@ -4067,6 +4291,11 @@ int djvu_iw44_decode_chunk(iw_pixmap *pm, const uint8_t *data, size_t len)
         }
         w = (data[pos] << 8) | data[pos + 1]; pos += 2;
         h = (data[pos] << 8) | data[pos + 1]; pos += 2;
+        if (!djvu_geometry_supported(w, h)) {
+            djvu_errorf(ctx, DJVU_SEVERITY_ERROR,
+                        "IW44: unsupported image geometry %dx%d", w, h);
+            return -1;
+        }
         if ((major & 0x7f) == 1 && minor >= 2) {
             if (pos >= len) return -1;
             crcbdelay = data[pos++];
@@ -4080,14 +4309,22 @@ int djvu_iw44_decode_chunk(iw_pixmap *pm, const uint8_t *data, size_t len)
         pm->w = w; pm->h = h;
         pm->ymap = map_new(ctx, w, h);
         pm->yc = (iw_codec *)djvu_alloc(ctx, sizeof(iw_codec));
-        if (!pm->ymap || !pm->yc) return -1;
+        if (!pm->ymap || !pm->yc) {
+            djvu_errorf(ctx, DJVU_SEVERITY_ERROR,
+                        "IW44: failed to allocate luminance map");
+            return -1;
+        }
         codec_init(pm->yc, ctx, pm->ymap);
         if (pm->crcbdelay >= 0) {
             pm->cbmap = map_new(ctx, w, h);
             pm->crmap = map_new(ctx, w, h);
             pm->cbc = (iw_codec *)djvu_alloc(ctx, sizeof(iw_codec));
             pm->crc = (iw_codec *)djvu_alloc(ctx, sizeof(iw_codec));
-            if (!pm->cbmap || !pm->crmap || !pm->cbc || !pm->crc) return -1;
+            if (!pm->cbmap || !pm->crmap || !pm->cbc || !pm->crc) {
+                djvu_errorf(ctx, DJVU_SEVERITY_ERROR,
+                            "IW44: failed to allocate chrominance maps");
+                return -1;
+            }
             codec_init(pm->cbc, ctx, pm->cbmap);
             codec_init(pm->crc, ctx, pm->crmap);
         }
@@ -4101,10 +4338,28 @@ int djvu_iw44_decode_chunk(iw_pixmap *pm, const uint8_t *data, size_t len)
     djvu_zp_init(&zp, data + pos, len - pos);
 
     for (flag = 1; flag != 0 && pm->cslices < nslices; pm->cslices++) {
-        flag = code_slice(pm->yc, &zp);
+        int slice_result = code_slice(pm->yc, &zp);
+        if (slice_result < 0) {
+            djvu_errorf(ctx, DJVU_SEVERITY_ERROR,
+                        "IW44: failed to allocate coefficient storage");
+            return -1;
+        }
+        flag = slice_result;
         if (pm->crc && pm->cbc && pm->crcbdelay <= pm->cslices) {
-            flag |= code_slice(pm->cbc, &zp);
-            flag |= code_slice(pm->crc, &zp);
+            slice_result = code_slice(pm->cbc, &zp);
+            if (slice_result < 0) {
+                djvu_errorf(ctx, DJVU_SEVERITY_ERROR,
+                            "IW44: failed to allocate coefficient storage");
+                return -1;
+            }
+            flag |= slice_result;
+            slice_result = code_slice(pm->crc, &zp);
+            if (slice_result < 0) {
+                djvu_errorf(ctx, DJVU_SEVERITY_ERROR,
+                            "IW44: failed to allocate coefficient storage");
+                return -1;
+            }
+            flag |= slice_result;
         }
     }
     pm->cserial++;
