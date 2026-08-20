@@ -15,15 +15,16 @@
 
 #include <QColorSpace>
 
-ThumbnailerRunnable::ThumbnailerRunnable(ThumbnailRequest request)
-    : request(std::move(request))
+ThumbnailerRunnable::ThumbnailerRunnable(ThumbnailRequest request,
+                                         QObject *parent)
+    : QObject(parent), request(std::move(request))
 {
 }
 
 void ThumbnailerRunnable::run() {
-  emit taskStart(request.path, request.size, request.crop);
+  emit taskStart(request.taskId);
   ThumbnailTaskResult result = generate(request);
-  emit taskEnd(std::move(result), request.path, request.size);
+  emit taskEnd(request.taskId, std::move(result));
 }
 
 QString ThumbnailerRunnable::generateIdString(QString path, int size,
@@ -38,6 +39,9 @@ QString ThumbnailerRunnable::generateIdString(QString path, int size,
 
 ThumbnailTaskResult
 ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
+  if (request.decodeContext.isCancellationRequested())
+    return {};
+
   const QString &path = request.path;
   const QString fileName = QFileInfo(path).fileName();
   const int size = request.size;
@@ -71,6 +75,9 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
     }
   }
 
+  if (request.decodeContext.isCancellationRequested())
+    return {};
+
   if (!image) {
     DocumentInfo imgInfo(path);
     if (imgInfo.type() == DocumentType::NONE) {
@@ -88,7 +95,10 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
     std::pair<QImage, QSize> pair;
     pair = createThumbnail(imgInfo.filePath(),
                            formatName.constData(),
-                           settings->thumbnailResolution(), false);
+                           settings->thumbnailResolution(), false,
+                           request.decodeContext);
+    if (request.decodeContext.isCancellationRequested())
+      return {};
     image = std::make_unique<QImage>(pair.first);
     QSize originalSize = pair.second;
 
@@ -113,7 +123,8 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
       if (imgInfo.type() == ANIMATED)
         image->setText(QStringLiteral("label"), QStringLiteral(" [a]"));
 
-      if (activeCache && sourceStamp) {
+      if (activeCache && sourceStamp &&
+          !request.decodeContext.isCancellationRequested()) {
         if (originalSize.width() > settings->thumbnailResolution() ||
             originalSize.height() > settings->thumbnailResolution()) {
           cacheCandidate = ThumbnailCacheCandidate{
@@ -133,6 +144,8 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
                                     nullptr),
         std::nullopt};
   }
+  if (request.decodeContext.isCancellationRequested())
+    return {};
 
   // scale and crop to the requested grid size
   Qt::AspectRatioMode ARMode = crop ? (Qt::KeepAspectRatioByExpanding) : (Qt::KeepAspectRatio);
@@ -178,6 +191,9 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
   }
   QImage colorManaged = ColorManager::applyColorManagement(*image);
 
+  if (request.decodeContext.isCancellationRequested())
+    return {};
+
   QString label;
   if (colorManaged.width() == 0) {
     label = QStringLiteral("error");
@@ -214,7 +230,11 @@ QSize ThumbnailerRunnable::noUpscaleScaledSize(QSize originalSize, int size,
 
 std::pair<QImage, QSize>
 ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
-                                     bool squared) {
+                                     bool squared,
+                                     const DecodeContext &context) {
+  if (context.isCancellationRequested())
+    return std::make_pair(QImage(), QSize());
+
   const bool isDjvu =
       format &&
       QString::compare(QString::fromLatin1(format), QStringLiteral("djvu"),
@@ -225,7 +245,7 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
     const DjvuDecodeLimits limits = DjvuDecodeLimits::fromMemoryLimitMiB(
         settings->memoryAllocationLimit(), decodeEdge);
     DjvuRenderResult rendered =
-        DjvuReader::renderPage(path, 0, limits);
+        DjvuReader::renderPage(path, 0, limits, context);
     if (rendered.image.isNull())
       return std::make_pair(QImage(), QSize());
 
@@ -252,7 +272,7 @@ ThumbnailerRunnable::createThumbnail(QString path, const char *format, int size,
       QString::compare(QString::fromLatin1(format), QStringLiteral("blend"),
                        Qt::CaseInsensitive) == 0;
   if (isBlend) {
-    QImage fullSize = BlendReader::readPreview(path);
+    QImage fullSize = BlendReader::readPreview(path, context);
     if (fullSize.isNull())
       return std::make_pair(QImage(), QSize());
 

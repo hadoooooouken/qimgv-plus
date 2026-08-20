@@ -4,15 +4,21 @@
 #include <QRunnable>
 #include "utils/imagefactory.h"
 
+struct ImageLoadRequest {
+    QString path;
+    quint64 taskId = 0;
+    DecodeContext decodeContext;
+};
+
 class LoaderRunnable: public QObject, public QRunnable
 {
     Q_OBJECT
 public:
-    LoaderRunnable(QString _path);
+    explicit LoaderRunnable(ImageLoadRequest request,
+                            QObject *parent = nullptr);
     void run();
 private:
-    QString path;
+    ImageLoadRequest request;
 signals:
-    void finished(std::shared_ptr<Image>, QString);
-    void failed(QString);
+    void finished(quint64 taskId, std::shared_ptr<Image> image);
 };

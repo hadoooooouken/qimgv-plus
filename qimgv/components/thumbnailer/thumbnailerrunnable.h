@@ -10,6 +10,8 @@
 #include <optional>
 #include <utility>
 
+#include "utils/decodecontext.h"
+
 struct ThumbnailRequest {
     ThumbnailCache *cache = nullptr;
     QString path;
@@ -18,6 +20,8 @@ struct ThumbnailRequest {
     bool crop = false;
     bool force = false;
     quint64 cacheGeneration = 0;
+    quint64 taskId = 0;
+    DecodeContext decodeContext;
 };
 
 struct ThumbnailTaskResult {
@@ -31,7 +35,8 @@ Q_DECLARE_METATYPE(ThumbnailTaskResult)
 class ThumbnailerRunnable : public QObject, public QRunnable {
     Q_OBJECT
 public:
-    explicit ThumbnailerRunnable(ThumbnailRequest request);
+    explicit ThumbnailerRunnable(ThumbnailRequest request,
+                                 QObject *parent = nullptr);
     ~ThumbnailerRunnable() override = default;
     void run();
     [[nodiscard]] static ThumbnailTaskResult
@@ -39,7 +44,9 @@ public:
 
 private:
     static QString generateIdString(QString path, int size, bool crop);
-    static std::pair<QImage, QSize> createThumbnail(QString path, const char* format, int size, bool crop);
+    static std::pair<QImage, QSize>
+    createThumbnail(QString path, const char *format, int size, bool crop,
+                    const DecodeContext &context);
     // Same as QSize::scaled(size, size, mode), but never enlarges an image
     // that is already smaller than the target box - avoids blurry upscaled
     // thumbnails for tiny source images (icons, small screenshots, etc).
@@ -47,6 +54,6 @@ private:
     ThumbnailRequest request;
 
 signals:
-    void taskStart(QString, int, bool);
-    void taskEnd(ThumbnailTaskResult, QString, int);
+    void taskStart(quint64 taskId);
+    void taskEnd(quint64 taskId, ThumbnailTaskResult result);
 };

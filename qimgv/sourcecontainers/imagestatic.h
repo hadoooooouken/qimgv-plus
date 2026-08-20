@@ -5,14 +5,16 @@
 #include <QSemaphore>
 #include <QCryptographicHash>
 #include "image.h"
+#include "utils/decodecontext.h"
 #include "utils/imagelib.h"
 #include <settings.h>
 #include <QIcon>
 
 class ImageStatic : public Image {
 public:
-    ImageStatic(QString _path);
-    ImageStatic(std::unique_ptr<DocumentInfo> _info);
+    explicit ImageStatic(QString path, DecodeContext context = {});
+    explicit ImageStatic(std::unique_ptr<DocumentInfo> info,
+                         DecodeContext context = {});
     ~ImageStatic();
 
     std::unique_ptr<QPixmap> getPixmap();
@@ -40,6 +42,7 @@ private:
     void load();
     void loadPdf();
     void loadDjvu();
+    DecodeContext mDecodeContext;
     std::shared_ptr<const QImage> image, imageEdited;
     mutable std::shared_ptr<const QImage> imageColorManaged;
     mutable std::shared_ptr<const QImage> imageColorManagedEdited;

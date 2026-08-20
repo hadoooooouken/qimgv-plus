@@ -18,6 +18,7 @@ target_link_libraries(qimgv-plus PRIVATE "${QIMGV_ZSTD_LIBRARY}")
 target_sources(qimgv-plus PRIVATE
     actions.cpp
     blendreader.cpp
+    decodecontext.h
     djvureader.cpp
     fontpreview.cpp
     cmdoptionsrunner.cpp

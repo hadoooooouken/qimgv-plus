@@ -2,8 +2,11 @@
 
 #include <memory>
 #include <optional>
+#include <stop_token>
+#include <QHash>
 #include <QMap>
 #include <QPair>
+#include <QPointer>
 #include <QThreadPool>
 #include "components/cache/thumbnailcache.h"
 #include "components/cache/thumbnailcachewriter.h"
@@ -41,13 +44,36 @@ public:
 private:
     using TaskKey = QPair<QString, int>;
 
+    struct IndexedTask {
+        bool crop = false;
+        quint64 taskId = 0;
+    };
+
+    enum class TaskPhase {
+        Queued,
+        Running,
+        CancellationRequested,
+    };
+
+    struct TaskRecord {
+        TaskKey key;
+        bool crop = false;
+        std::stop_source cancellationSource;
+        QPointer<ThumbnailerRunnable> runnable;
+        TaskPhase phase = TaskPhase::Queued;
+    };
+
     std::unique_ptr<ThumbnailCache> cache;
     std::unique_ptr<ThumbnailCacheWriter> cacheWriter;
     std::unique_ptr<QThreadPool> pool;
     void startThumbnailerThread(ThumbnailSource source, int size, bool crop,
                                 bool force, int priority);
-    QMap<TaskKey, bool> runningTasks;
-    QMap<TaskKey, bool> queuedTasks;
+    [[nodiscard]] quint64 nextTaskId();
+    void removeLogicalTask(const TaskRecord &record, quint64 taskId);
+    QMap<TaskKey, IndexedTask> runningTasks;
+    QMap<TaskKey, IndexedTask> queuedTasks;
+    QHash<quint64, TaskRecord> tasks;
+    quint64 mNextTaskId = 0;
     bool m_selfDestructOnFinished = false;
 
     // Repeated non-forced requests share the active task's result via
@@ -62,8 +88,8 @@ private:
     QMap<TaskKey, PendingRerun> pendingReruns;
 
 private slots:
-    void onTaskStart(QString filePath, int size, bool crop);
-    void onTaskEnd(ThumbnailTaskResult result, QString filePath, int size);
+    void onTaskStart(quint64 taskId);
+    void onTaskEnd(quint64 taskId, ThumbnailTaskResult result);
 
 signals:
     void thumbnailReady(std::shared_ptr<Thumbnail> thumbnail, QString filePath);

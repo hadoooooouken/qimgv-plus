@@ -5,8 +5,10 @@
 #include "sourcecontainers/image.h"
 #include "sourcecontainers/imageanimated.h"
 #include "sourcecontainers/imagestatic.h"
+#include "utils/decodecontext.h"
 
 class ImageFactory {
 public:
-    static std::shared_ptr<Image> createImage(QString path);
+    static std::shared_ptr<Image> createImage(QString path,
+                                              DecodeContext context = {});
 };

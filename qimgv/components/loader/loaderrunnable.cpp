@@ -2,13 +2,16 @@
 
 #include <QElapsedTimer>
 
-LoaderRunnable::LoaderRunnable(QString _path) : path(_path) {
+#include <utility>
+
+LoaderRunnable::LoaderRunnable(ImageLoadRequest request, QObject *parent)
+    : QObject(parent), request(std::move(request)) {
 }
 
 void LoaderRunnable::run() {
     //QElapsedTimer t;
     //t.start();
-    auto image = ImageFactory::createImage(path);
+    auto image = ImageFactory::createImage(request.path, request.decodeContext);
     //qDebug() << "L: " << t.elapsed();
-    emit finished(image, path);
+    emit finished(request.taskId, std::move(image));
 }

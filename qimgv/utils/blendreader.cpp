@@ -19,6 +19,7 @@ constexpr quint32 kMaxPreviewDimension = 16384;
 constexpr quint32 kPreviewUpscaleThreshold = 128;
 constexpr int kPreviewUpscaleFactor = 2;
 constexpr quint64 kMaxPreviewBytes = 64ull * 1024ull * 1024ull;
+constexpr quint64 kMaxDecompressedPrefixBytes = 128ull * 1024ull * 1024ull;
 constexpr qsizetype kSkipBufferSize = 64 * 1024;
 
 enum class BHeadLayout {
@@ -69,20 +70,77 @@ quint64 readU64(const char *data, bool littleEndian)
 
 class BlendInput {
 public:
+    explicit BlendInput(const DecodeContext &context) : mContext(context) {}
     virtual ~BlendInput() = default;
-    virtual bool readExact(char *dst, qsizetype size, QString *error) = 0;
-    virtual bool skip(quint64 size, QString *error) = 0;
+
+    bool readExact(char *dst, qsizetype size, QString *error)
+    {
+        if (size < 0) {
+            setError(error, QStringLiteral("invalid Blender read length"));
+            return false;
+        }
+        if (!beginOperation(quint64(size), error))
+            return false;
+        if (!readExactImpl(dst, size, error))
+            return false;
+        mDecompressedBytes += quint64(size);
+        return true;
+    }
+
+    bool skip(quint64 size, QString *error)
+    {
+        if (!beginOperation(size, error))
+            return false;
+        if (!skipImpl(size, error))
+            return false;
+        mDecompressedBytes += size;
+        return true;
+    }
+
+protected:
+    [[nodiscard]] bool cancellationRequested(QString *error) const
+    {
+        if (!mContext.isCancellationRequested())
+            return false;
+        setError(error, QStringLiteral("Blender preview decoding cancelled"));
+        return true;
+    }
+
+private:
+    bool beginOperation(quint64 size, QString *error) const
+    {
+        if (cancellationRequested(error))
+            return false;
+        if (size > kMaxDecompressedPrefixBytes - mDecompressedBytes) {
+            setError(error,
+                     QStringLiteral("Blender decompressed prefix exceeds safety limit"));
+            return false;
+        }
+        return true;
+    }
+
+    virtual bool readExactImpl(char *dst, qsizetype size, QString *error) = 0;
+    virtual bool skipImpl(quint64 size, QString *error) = 0;
+
+    const DecodeContext &mContext;
+    quint64 mDecompressedBytes = 0;
 };
 
 class FileBlendInput final : public BlendInput {
 public:
-    explicit FileBlendInput(QFile &file) : mFile(file) {}
+    FileBlendInput(QFile &file, const DecodeContext &context)
+        : BlendInput(context), mFile(file) {}
 
-    bool readExact(char *dst, qsizetype size, QString *error) override
+private:
+    bool readExactImpl(char *dst, qsizetype size, QString *error) override
     {
         qsizetype done = 0;
         while (done < size) {
-            const qint64 n = mFile.read(dst + done, qint64(size - done));
+            if (cancellationRequested(error))
+                return false;
+            const qint64 readSize = std::min<qint64>(
+                qint64(size - done), qint64(kSkipBufferSize));
+            const qint64 n = mFile.read(dst + done, readSize);
             if (n <= 0) {
                 if (mFile.error() != QFileDevice::NoError) {
                     setError(error, QStringLiteral("cannot read Blender file: %1")
@@ -97,7 +155,7 @@ public:
         return true;
     }
 
-    bool skip(quint64 size, QString *error) override
+    bool skipImpl(quint64 size, QString *error) override
     {
         if (size > quint64(std::numeric_limits<qint64>::max()) ||
             mFile.pos() > std::numeric_limits<qint64>::max() - qint64(size)) {
@@ -116,13 +174,13 @@ public:
         return true;
     }
 
-private:
     QFile &mFile;
 };
 
 class GzipBlendInput final : public BlendInput {
 public:
-    explicit GzipBlendInput(QFile &file) : mFile(file) {}
+    GzipBlendInput(QFile &file, const DecodeContext &context)
+        : BlendInput(context), mFile(file) {}
 
     ~GzipBlendInput() override
     {
@@ -145,10 +203,13 @@ public:
         return true;
     }
 
-    bool readExact(char *dst, qsizetype size, QString *error) override
+private:
+    bool readExactImpl(char *dst, qsizetype size, QString *error) override
     {
         qsizetype done = 0;
         while (done < size) {
+            if (cancellationRequested(error))
+                return false;
             if (mStream.avail_in == 0) {
                 const qint64 n = mFile.read(mCompressed.data(), mCompressed.size());
                 if (n <= 0) {
@@ -168,7 +229,8 @@ public:
 
             const qsizetype remaining = size - done;
             const uInt outputCapacity = uInt(std::min<quint64>(
-                quint64(remaining), quint64(std::numeric_limits<uInt>::max())));
+                {quint64(remaining), quint64(kSkipBufferSize),
+                 quint64(std::numeric_limits<uInt>::max())}));
             mStream.next_out = reinterpret_cast<Bytef *>(dst + done);
             mStream.avail_out = outputCapacity;
 
@@ -199,21 +261,20 @@ public:
         return true;
     }
 
-    bool skip(quint64 size, QString *error) override
+    bool skipImpl(quint64 size, QString *error) override
     {
         QByteArray scratch(kSkipBufferSize, Qt::Uninitialized);
         quint64 remaining = size;
         while (remaining != 0) {
             const qsizetype chunk = qsizetype(std::min<quint64>(
                 remaining, quint64(scratch.size())));
-            if (!readExact(scratch.data(), chunk, error))
+            if (!readExactImpl(scratch.data(), chunk, error))
                 return false;
             remaining -= quint64(chunk);
         }
         return true;
     }
 
-private:
     QString zlibError(const QString &prefix, int code) const
     {
         if (mStream.msg)
@@ -229,7 +290,8 @@ private:
 
 class ZstdBlendInput final : public BlendInput {
 public:
-    explicit ZstdBlendInput(QFile &file) : mFile(file) {}
+    ZstdBlendInput(QFile &file, const DecodeContext &context)
+        : BlendInput(context), mFile(file) {}
 
     ~ZstdBlendInput() override
     {
@@ -262,10 +324,13 @@ public:
         return true;
     }
 
-    bool readExact(char *dst, qsizetype size, QString *error) override
+private:
+    bool readExactImpl(char *dst, qsizetype size, QString *error) override
     {
         qsizetype done = 0;
         while (done < size) {
+            if (cancellationRequested(error))
+                return false;
             if (mInput.pos == mInput.size) {
                 const qint64 n = mFile.read(mCompressed.data(), mCompressed.size());
                 if (n <= 0) {
@@ -285,7 +350,7 @@ public:
 
             ZSTD_outBuffer output{
                 dst + done,
-                size_t(size - done),
+                size_t(std::min<qsizetype>(size - done, kSkipBufferSize)),
                 0,
             };
             const size_t inputBefore = mInput.pos;
@@ -306,21 +371,20 @@ public:
         return true;
     }
 
-    bool skip(quint64 size, QString *error) override
+    bool skipImpl(quint64 size, QString *error) override
     {
         QByteArray scratch(kSkipBufferSize, Qt::Uninitialized);
         quint64 remaining = size;
         while (remaining != 0) {
             const qsizetype chunk = qsizetype(std::min<quint64>(
                 remaining, quint64(scratch.size())));
-            if (!readExact(scratch.data(), chunk, error))
+            if (!readExactImpl(scratch.data(), chunk, error))
                 return false;
             remaining -= quint64(chunk);
         }
         return true;
     }
 
-private:
     QFile &mFile;
     ZSTD_DStream *mStream = nullptr;
     QByteArray mCompressed;
@@ -542,6 +606,13 @@ QImage readPreviewFromInput(BlendInput &input, QString *error)
 
 QImage BlendReader::readPreview(const QString &path, QString *error)
 {
+    return readPreview(path, DecodeContext{}, error);
+}
+
+QImage BlendReader::readPreview(const QString &path,
+                                const DecodeContext &context,
+                                QString *error)
+{
     if (error)
         error->clear();
 
@@ -566,19 +637,19 @@ QImage BlendReader::readPreview(const QString &path, QString *error)
     const bool isGzip = p[0] == 0x1F && p[1] == 0x8B;
 
     if (isZstd) {
-        ZstdBlendInput input(file);
+        ZstdBlendInput input(file, context);
         if (!input.init(error))
             return {};
         return readPreviewFromInput(input, error);
     }
 
     if (isGzip) {
-        GzipBlendInput input(file);
+        GzipBlendInput input(file, context);
         if (!input.init(error))
             return {};
         return readPreviewFromInput(input, error);
     }
 
-    FileBlendInput input(file);
+    FileBlendInput input(file, context);
     return readPreviewFromInput(input, error);
 }

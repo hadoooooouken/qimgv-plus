@@ -20,7 +20,7 @@ Thumbnailer::Thumbnailer() {
 }
 
 Thumbnailer::~Thumbnailer() {
-    pool->clear();
+    clearTasks();
     pool->waitForDone();
     cacheWriter->waitForDone();
 
@@ -43,9 +43,29 @@ bool Thumbnailer::clearCache() {
 }
 
 void Thumbnailer::clearTasks() {
-    pool->clear();
-    queuedTasks.clear();
     pendingReruns.clear();
+
+    QList<quint64> removedTaskIds;
+    for (auto it = tasks.begin(); it != tasks.end(); ++it) {
+        const quint64 taskId = it.key();
+        TaskRecord &record = it.value();
+        record.cancellationSource.request_stop();
+        removeLogicalTask(record, taskId);
+
+        if (record.phase == TaskPhase::Queued && record.runnable &&
+            pool->tryTake(record.runnable.data())) {
+            record.runnable->deleteLater();
+            removedTaskIds.append(taskId);
+        } else {
+            // tryTake() can lose a race with a worker that has started but
+            // whose queued taskStart signal has not reached this object yet.
+            // Keep that physical task registered until taskEnd arrives.
+            record.phase = TaskPhase::CancellationRequested;
+        }
+    }
+
+    for (const quint64 taskId : std::as_const(removedTaskIds))
+        tasks.remove(taskId);
 }
 
 std::shared_ptr<Thumbnail> Thumbnailer::getThumbnail(QString filePath, int size) {
@@ -69,14 +89,14 @@ void Thumbnailer::getThumbnailAsync(ThumbnailSource source, int size,
 
     // Identical non-forced consumers can share the source revision carried
     // by the queued request. A forced request must retain its newer stamp.
-    if(queuedTask != queuedTasks.cend() && crop == queuedTask.value() &&
+    if(queuedTask != queuedTasks.cend() && crop == queuedTask->crop &&
        !force)
         return;
 
     if(queuedTask != queuedTasks.cend() || runningTask != runningTasks.cend()) {
         const bool activeCrop = queuedTask != queuedTasks.cend()
-                                    ? queuedTask.value()
-                                    : runningTask.value();
+                                    ? queuedTask->crop
+                                    : runningTask->crop;
 
         // All current consumers subscribe to thumbnailReady, so another
         // non-forced request for the same output variant shares that result.
@@ -103,7 +123,10 @@ void Thumbnailer::getThumbnailAsync(ThumbnailSource source, int size,
 
 void Thumbnailer::startThumbnailerThread(ThumbnailSource source, int size,
                                          bool crop, bool force, int priority) {
-    queuedTasks.insert(qMakePair(source.path, size), crop);
+    const TaskKey key = qMakePair(source.path, size);
+    const quint64 taskId = nextTaskId();
+    std::stop_source cancellationSource;
+
     ThumbnailRequest request;
     request.cache = settings->useThumbnailCache() ? cache.get() : nullptr;
     request.path = std::move(source.path);
@@ -112,28 +135,84 @@ void Thumbnailer::startThumbnailerThread(ThumbnailSource source, int size,
     request.crop = crop;
     request.force = force;
     request.cacheGeneration = cacheWriter->currentGeneration();
-    auto runnable = new ThumbnailerRunnable(std::move(request));
-    connect(runnable, &ThumbnailerRunnable::taskStart, this, &Thumbnailer::onTaskStart);
-    connect(runnable, &ThumbnailerRunnable::taskEnd, this, &Thumbnailer::onTaskEnd);
-    runnable->setAutoDelete(true);
+    request.taskId = taskId;
+    request.decodeContext.cancellationToken = cancellationSource.get_token();
+
+    auto *runnable = new ThumbnailerRunnable(std::move(request), this);
+    runnable->setAutoDelete(false);
+    connect(runnable, &ThumbnailerRunnable::taskStart, this,
+            &Thumbnailer::onTaskStart, Qt::QueuedConnection);
+    connect(runnable, &ThumbnailerRunnable::taskEnd, this,
+            &Thumbnailer::onTaskEnd, Qt::QueuedConnection);
+
+    queuedTasks.insert(key, IndexedTask{crop, taskId});
+    tasks.insert(taskId,
+                 TaskRecord{key, crop, std::move(cancellationSource),
+                            QPointer<ThumbnailerRunnable>(runnable),
+                            TaskPhase::Queued});
     pool->start(runnable, priority);
 }
 
-void Thumbnailer::onTaskStart(QString filePath, int size, bool crop) {
-    const TaskKey key = qMakePair(filePath, size);
-    runningTasks.insert(key, crop);
-    queuedTasks.remove(key);
+quint64 Thumbnailer::nextTaskId()
+{
+    do {
+        ++mNextTaskId;
+    } while (tasks.contains(mNextTaskId));
+    return mNextTaskId;
 }
 
-void Thumbnailer::onTaskEnd(ThumbnailTaskResult result, QString filePath,
-                            int size) {
+void Thumbnailer::removeLogicalTask(const TaskRecord &record, quint64 taskId)
+{
+    const auto queued = queuedTasks.constFind(record.key);
+    if (queued != queuedTasks.cend() && queued->taskId == taskId)
+        queuedTasks.remove(record.key);
+
+    const auto running = runningTasks.constFind(record.key);
+    if (running != runningTasks.cend() && running->taskId == taskId)
+        runningTasks.remove(record.key);
+}
+
+void Thumbnailer::onTaskStart(quint64 taskId) {
+    auto task = tasks.find(taskId);
+    if (task == tasks.end() ||
+        task->phase == TaskPhase::CancellationRequested)
+        return;
+
+    const auto queued = queuedTasks.constFind(task->key);
+    if (queued != queuedTasks.cend() && queued->taskId == taskId)
+        queuedTasks.remove(task->key);
+    runningTasks.insert(task->key, IndexedTask{task->crop, taskId});
+    task->phase = TaskPhase::Running;
+}
+
+void Thumbnailer::onTaskEnd(quint64 taskId, ThumbnailTaskResult result) {
+    auto task = tasks.find(taskId);
+    if (task == tasks.end())
+        return;
+
+    const TaskKey key = task->key;
+    const QString filePath = key.first;
+    const int size = key.second;
+    const bool cancelled = task->cancellationSource.stop_requested();
+    QPointer<ThumbnailerRunnable> runnable = task->runnable;
+
+    removeLogicalTask(*task, taskId);
+
+    if (cancelled) {
+        if (runnable)
+            runnable->deleteLater();
+        tasks.erase(task);
+        if (m_selfDestructOnFinished && tasks.isEmpty())
+            deleteLater();
+        return;
+    }
+
     const std::shared_ptr<Thumbnail> &thumbnail = result.thumbnail;
     if (thumbnail) {
         thumbnail->pixmap();
     } else {
         qWarning() << "Thumbnail worker returned no result for" << filePath;
     }
-    const TaskKey key = qMakePair(filePath, size);
     if (thumbnail) {
         emit thumbnailReady(thumbnail, filePath);
     } else {
@@ -147,7 +226,9 @@ void Thumbnailer::onTaskEnd(ThumbnailTaskResult result, QString filePath,
         !cacheWriter->enqueueAccessTouch(std::move(*result.accessTouch))) {
         qDebug() << "Dropped thumbnail cache access update for" << filePath;
     }
-    runningTasks.remove(key);
+    if (runnable)
+        runnable->deleteLater();
+    tasks.erase(task);
 
     auto it = pendingReruns.find(key);
     if(it != pendingReruns.end()) {
@@ -162,14 +243,14 @@ void Thumbnailer::onTaskEnd(ThumbnailTaskResult result, QString filePath,
         return;
     }
 
-    if(m_selfDestructOnFinished && runningTasks.isEmpty()) {
+    if(m_selfDestructOnFinished && tasks.isEmpty()) {
         deleteLater();
     }
 }
 
 void Thumbnailer::enableSelfDestruct() {
     m_selfDestructOnFinished = true;
-    if(runningTasks.isEmpty()) {
+    if(tasks.isEmpty()) {
         deleteLater();
     }
 }

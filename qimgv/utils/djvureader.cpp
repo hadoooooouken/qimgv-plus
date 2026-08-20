@@ -21,6 +21,7 @@ constexpr quint64 kBytesPerMiB = kBytesPerKiB * kBytesPerKiB;
 constexpr quint64 kQImageScanlineAlignmentBytes = 4;
 constexpr quint64 kRgbChannelCount = 3;
 constexpr quint64 kGrayscaleChannelCount = 1;
+constexpr qint64 kFileReadChunkBytes = 1024 * 1024;
 constexpr quint64 kMaximumDecoderInputBytes =
     std::numeric_limits<quint32>::max();
 
@@ -215,8 +216,18 @@ bool DjvuDecodeLimits::isValid() const noexcept {
 }
 
 DjvuRenderResult DjvuReader::renderPage(const QString &path, int page,
-                                        const DjvuDecodeLimits &limits) {
+                                        const DjvuDecodeLimits &limits)
+{
+    return renderPage(path, page, limits, DecodeContext{});
+}
+
+DjvuRenderResult DjvuReader::renderPage(const QString &path, int page,
+                                        const DjvuDecodeLimits &limits,
+                                        const DecodeContext &context) {
     DjvuRenderResult result;
+
+    if (context.isCancellationRequested())
+        return result;
 
     if (!limits.isValid()) {
         qWarning() << "DjvuReader: invalid decode limits" << path;
@@ -252,15 +263,30 @@ DjvuRenderResult DjvuReader::renderPage(const QString &path, int page,
 
     QByteArray data;
     try {
-        data = file.read(fileSize);
+        data.resize(qsizetype(fileSize));
     } catch (const std::bad_alloc &) {
         qWarning() << "DjvuReader: failed to allocate document buffer" << path;
         return result;
     }
-    if (data.size() != fileSize) {
-        qWarning() << "DjvuReader: failed to read complete document" << path;
-        return result;
+
+    qsizetype bytesRead = 0;
+    while (bytesRead < data.size()) {
+        if (context.isCancellationRequested())
+            return result;
+        const qint64 chunkSize = std::min<qint64>(
+            kFileReadChunkBytes, qint64(data.size() - bytesRead));
+        const qint64 readResult =
+            file.read(data.data() + bytesRead, chunkSize);
+        if (readResult <= 0) {
+            qWarning() << "DjvuReader: failed to read complete document" << path
+                       << file.errorString();
+            return result;
+        }
+        bytesRead += qsizetype(readResult);
     }
+
+    if (context.isCancellationRequested())
+        return result;
 
     ensureDjvuInitialized();
 
@@ -281,7 +307,12 @@ DjvuRenderResult DjvuReader::renderPage(const QString &path, int page,
         return result;
     }
 
+    if (context.isCancellationRequested())
+        return result;
+
     result.pageCount = djvu_doc_page_count(doc.get());
+    if (context.isCancellationRequested())
+        return result;
     if (result.pageCount <= 0) {
         qWarning() << "DjvuReader: document has no pages" << path;
         result.pageCount = 0;
@@ -291,6 +322,9 @@ DjvuRenderResult DjvuReader::renderPage(const QString &path, int page,
     if (page < 0 || page >= result.pageCount)
         page = 0;
     result.pageIndex = page;
+
+    if (context.isCancellationRequested())
+        return result;
 
     djvu_render_info nativeInfo{};
     if (djvu_page_render_info(doc.get(), page, 1, &nativeInfo) != 0 ||
@@ -302,6 +336,9 @@ DjvuRenderResult DjvuReader::renderPage(const QString &path, int page,
 
     result.originalSize = QSize(nativeInfo.width, nativeInfo.height);
     const int subsample = subsampleForEdge(nativeInfo, limits.maximumEdge);
+
+    if (context.isCancellationRequested())
+        return result;
 
     djvu_render_info renderInfo{};
     if (djvu_page_render_info(doc.get(), page, subsample, &renderInfo) != 0 ||
@@ -333,6 +370,9 @@ DjvuRenderResult DjvuReader::renderPage(const QString &path, int page,
         return result;
     }
 
+    if (context.isCancellationRequested())
+        return result;
+
     QImage rendered(renderInfo.width, renderInfo.height, imageFormat);
     if (rendered.isNull()) {
         qWarning() << "DjvuReader: failed to allocate rendered page" << path
@@ -347,8 +387,20 @@ DjvuRenderResult DjvuReader::renderPage(const QString &path, int page,
         return result;
     }
 
-    if (djvu_page_render_into(doc.get(), page, subsample, rendered.bits(),
-                              rendered.bytesPerLine()) != 0) {
+    djvu_abort abortToken{};
+    djvu_abort_init(&abortToken);
+    std::stop_callback abortCallback(
+        context.cancellationToken,
+        [&abortToken] { djvu_abort_request(&abortToken); });
+
+    if (context.isCancellationRequested())
+        return result;
+
+    if (djvu_page_render_into_abortable(
+            doc.get(), page, subsample, rendered.bits(),
+            rendered.bytesPerLine(), &abortToken) != 0) {
+        if (context.isCancellationRequested())
+            return result;
         qWarning() << "DjvuReader: failed to render page" << path << "page"
                    << page;
         logDecoderAllocationFailure(path, budget);

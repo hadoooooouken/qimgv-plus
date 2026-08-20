@@ -9,10 +9,15 @@
 #include <time.h>
 
 
-ImageStatic::ImageStatic(QString _path) : Image(_path) { load(); }
+ImageStatic::ImageStatic(QString path, DecodeContext context)
+    : Image(path), mDecodeContext(std::move(context))
+{
+  load();
+}
 
-ImageStatic::ImageStatic(std::unique_ptr<DocumentInfo> _info)
-    : Image(std::move(_info)) {
+ImageStatic::ImageStatic(std::unique_ptr<DocumentInfo> info,
+                         DecodeContext context)
+    : Image(std::move(info)), mDecodeContext(std::move(context)) {
   load();
 }
 
@@ -26,7 +31,7 @@ int ImageStatic::frameCount() const {
 
 // load image data from disk
 void ImageStatic::load() {
-  if (isLoaded()) {
+  if (isLoaded() || mDecodeContext.isCancellationRequested()) {
     return;
   }
   if (mDocInfo->mimeType().name() == "image/vnd.microsoft.icon")
@@ -48,9 +53,9 @@ void ImageStatic::load() {
   }
   else if (mDocInfo->format() == "blend") {
     QString error;
-    QImage loaded = BlendReader::readPreview(mPath, &error);
+    QImage loaded = BlendReader::readPreview(mPath, mDecodeContext, &error);
     if (loaded.isNull()) {
-      if (!error.isEmpty()) {
+      if (!mDecodeContext.isCancellationRequested() && !error.isEmpty()) {
         qWarning() << "ImageStatic: failed to load Blender preview" << mPath
                    << "Error:" << error;
       }
@@ -144,9 +149,11 @@ void ImageStatic::loadDjvu() {
   const DjvuDecodeLimits limits = DjvuDecodeLimits::fromMemoryLimitMiB(
       settings->memoryAllocationLimit(), kMaxDisplayDimension);
   DjvuRenderResult rendered =
-      DjvuReader::renderPage(mPath, page, limits);
+      DjvuReader::renderPage(mPath, page, limits, mDecodeContext);
 
   if (rendered.pageCount <= 0 || rendered.image.isNull()) {
+    if (mDecodeContext.isCancellationRequested())
+      return;
     qWarning() << "ImageStatic: failed to load DjVu" << mPath;
     return;
   }

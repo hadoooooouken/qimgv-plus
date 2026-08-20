@@ -5,6 +5,8 @@
 #include <QString>
 #include <QtTypes>
 
+#include "utils/decodecontext.h"
+
 struct DjvuDecodeLimits {
     quint64 maximumInputBytes = 0;
     quint64 memoryBudgetBytes = 0;
@@ -26,4 +28,7 @@ class DjvuReader {
 public:
     static DjvuRenderResult renderPage(const QString &path, int page,
                                        const DjvuDecodeLimits &limits);
+    static DjvuRenderResult renderPage(const QString &path, int page,
+                                       const DjvuDecodeLimits &limits,
+                                       const DecodeContext &context);
 };
