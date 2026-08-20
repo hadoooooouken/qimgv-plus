@@ -15,16 +15,26 @@
 
 #include <QColorSpace>
 
+void ThumbnailTaskNotifier::reportCompletion(
+    ThumbnailTaskCompletion completion) {
+  emit taskCompleted(std::move(completion));
+}
+
 ThumbnailerRunnable::ThumbnailerRunnable(ThumbnailRequest request,
-                                         QObject *parent)
-    : QObject(parent), request(std::move(request))
+                                         ThumbnailTaskNotifier &notifier)
+    : request(std::move(request)), notifier(notifier)
 {
+  completion.taskId = this->request.taskId;
+  setAutoDelete(true);
+}
+
+ThumbnailerRunnable::~ThumbnailerRunnable() {
+  notifier.reportCompletion(std::move(completion));
 }
 
 void ThumbnailerRunnable::run() {
-  emit taskStart(request.taskId);
-  ThumbnailTaskResult result = generate(request);
-  emit taskEnd(request.taskId, std::move(result));
+  completion.result = generate(request);
+  completion.status = ThumbnailTaskCompletionStatus::Finished;
 }
 
 QString ThumbnailerRunnable::generateIdString(QString path, int size,

@@ -5,6 +5,7 @@
 
 #include <QCryptographicHash>
 #include <QMetaType>
+#include <QObject>
 #include <QRunnable>
 #include <memory>
 #include <optional>
@@ -32,13 +33,37 @@ struct ThumbnailTaskResult {
 
 Q_DECLARE_METATYPE(ThumbnailTaskResult)
 
-class ThumbnailerRunnable : public QObject, public QRunnable {
+enum class ThumbnailTaskCompletionStatus {
+    RemovedBeforeRun,
+    Finished,
+};
+
+struct ThumbnailTaskCompletion {
+    quint64 taskId = 0;
+    ThumbnailTaskCompletionStatus status =
+        ThumbnailTaskCompletionStatus::RemovedBeforeRun;
+    ThumbnailTaskResult result;
+};
+
+Q_DECLARE_METATYPE(ThumbnailTaskCompletion)
+
+class ThumbnailTaskNotifier final : public QObject {
     Q_OBJECT
 public:
-    explicit ThumbnailerRunnable(ThumbnailRequest request,
-                                 QObject *parent = nullptr);
-    ~ThumbnailerRunnable() override = default;
-    void run();
+    using QObject::QObject;
+    // May be called by pool threads; receivers must use queued connections.
+    void reportCompletion(ThumbnailTaskCompletion completion);
+
+signals:
+    void taskCompleted(ThumbnailTaskCompletion completion);
+};
+
+class ThumbnailerRunnable final : public QRunnable {
+public:
+    ThumbnailerRunnable(ThumbnailRequest request,
+                        ThumbnailTaskNotifier &notifier);
+    ~ThumbnailerRunnable() override;
+    void run() override;
     [[nodiscard]] static ThumbnailTaskResult
     generate(const ThumbnailRequest &request);
 
@@ -52,8 +77,6 @@ private:
     // thumbnails for tiny source images (icons, small screenshots, etc).
     static QSize noUpscaleScaledSize(QSize originalSize, int size, Qt::AspectRatioMode mode);
     ThumbnailRequest request;
-
-signals:
-    void taskStart(quint64 taskId);
-    void taskEnd(quint64 taskId, ThumbnailTaskResult result);
+    ThumbnailTaskNotifier &notifier;
+    ThumbnailTaskCompletion completion;
 };

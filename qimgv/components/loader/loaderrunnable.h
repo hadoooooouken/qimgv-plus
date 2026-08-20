@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+
+#include <QMetaType>
 #include <QObject>
 #include <QRunnable>
 #include "utils/imagefactory.h"
@@ -10,15 +13,39 @@ struct ImageLoadRequest {
     DecodeContext decodeContext;
 };
 
-class LoaderRunnable: public QObject, public QRunnable
-{
+enum class ImageLoadCompletionStatus {
+    RemovedBeforeRun,
+    Finished,
+};
+
+struct ImageLoadCompletion {
+    quint64 taskId = 0;
+    ImageLoadCompletionStatus status =
+        ImageLoadCompletionStatus::RemovedBeforeRun;
+    std::shared_ptr<Image> image;
+};
+
+Q_DECLARE_METATYPE(ImageLoadCompletion)
+
+class LoaderTaskNotifier final : public QObject {
     Q_OBJECT
 public:
-    explicit LoaderRunnable(ImageLoadRequest request,
-                            QObject *parent = nullptr);
-    void run();
+    using QObject::QObject;
+    // May be called by pool threads; receivers must use queued connections.
+    void reportCompletion(ImageLoadCompletion completion);
+
+signals:
+    void taskCompleted(ImageLoadCompletion completion);
+};
+
+class LoaderRunnable final : public QRunnable {
+public:
+    LoaderRunnable(ImageLoadRequest request, LoaderTaskNotifier &notifier);
+    ~LoaderRunnable() override;
+    void run() override;
+
 private:
     ImageLoadRequest request;
-signals:
-    void finished(quint64 taskId, std::shared_ptr<Image> image);
+    LoaderTaskNotifier &notifier;
+    ImageLoadCompletion completion;
 };

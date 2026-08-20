@@ -30,7 +30,7 @@ public:
     // Lets multiple DirectoryPresenter instances (e.g. the thumbnail panel
     // and the folder view, which always mirror the same DirectoryModel)
     // share one Thumbnailer. Sharing makes Thumbnailer's own request
-    // deduplication (queuedTasks/runningTasks/pendingReruns) effective
+    // deduplication (activeTasks/pendingReruns) effective
     // across both presenters instead of just within each one, so opening a
     // folder no longer decodes+resizes every image twice in parallel.
     // Must be called before the presenter starts requesting thumbnails
