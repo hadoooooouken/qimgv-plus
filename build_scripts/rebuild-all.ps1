@@ -256,8 +256,7 @@ $ALL_LIBS = [ordered]@{
                 "-DZSTD_BUILD_TESTS=OFF",
                 "-DZSTD_BUILD_CONTRIB=OFF",
                 "-DZSTD_USE_STATIC_RUNTIME=OFF",
-                "-DCMAKE_C_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /arch:AVX2 /GL /GS /guard:cf /Qspectre",
-                "-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=/LTCG"
+                "-DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON"
             )
     }
 
