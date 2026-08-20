@@ -24,6 +24,22 @@ void LoaderRunnable::run() {
     //t.start();
     completion.image =
         ImageFactory::createImage(request.path, request.decodeContext);
-    completion.status = ImageLoadCompletionStatus::Finished;
     //qDebug() << "L: " << t.elapsed();
+
+    // Warm the lazy DocumentInfo cache (exif / ComfyUI generation-info) here,
+    // on the loader pool worker thread, instead of leaving the first, expensive
+    // call to run synchronously on the GUI thread inside Core::guiSetImage().
+    // getExifTags()/getGenerationInfo() are idempotent and cache their result
+    // (exifLoaded/generationInfoLoaded), so this call absorbs the costly first
+    // parse; the later call from guiSetImage() just hits the cache.
+    // Skipped if the load was already cancelled or decode failed, since there
+    // is nothing to read metadata from in that case.
+    // Measured: ~0-1ms per file on characteristic ComfyUI PNGs (vs 90-150ms
+    // decode), well under the threshold for needing a separate async pipeline.
+    if (completion.image && !request.decodeContext.isCancellationRequested()) {
+        completion.image->getExifTags();
+        completion.image->getGenerationInfo();
+    }
+
+    completion.status = ImageLoadCompletionStatus::Finished;
 }
