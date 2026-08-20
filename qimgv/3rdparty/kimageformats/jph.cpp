@@ -11,8 +11,9 @@
 #include <QSize>
 #include <QColorSpace>
 #include <QLoggingCategory>
-#include <vector>
 #include <algorithm>
+#include <exception>
+#include <vector>
 
 #include <openjph/ojph_arch.h>
 #include <openjph/ojph_file.h>
@@ -66,7 +67,14 @@ public:
             codestream.read_headers(&mem_file);
             header_read = true;
             return true;
-        } catch (...) {
+        } catch (const std::exception &error) {
+            qCWarning(LOG_JPHPLUGIN) << "Failed to read JPH headers:" << error.what();
+            mem_file.close();
+            buffer.clear();
+            return false;
+        } catch (const char *error) {
+            qCWarning(LOG_JPHPLUGIN) << "Failed to read JPH headers:"
+                                     << (error ? error : "Unknown OpenJPH error");
             mem_file.close();
             buffer.clear();
             return false;
@@ -294,7 +302,12 @@ bool JPHHandler::read(QImage *image)
         img.setColorSpace(QColorSpace(QColorSpace::SRgb));
         *image = img;
         return true;
-    } catch (...) {
+    } catch (const std::exception &error) {
+        qCWarning(LOG_JPHPLUGIN) << "Failed to decode JPH image:" << error.what();
+        return false;
+    } catch (const char *error) {
+        qCWarning(LOG_JPHPLUGIN) << "Failed to decode JPH image:"
+                                 << (error ? error : "Unknown OpenJPH error");
         return false;
     }
 }
