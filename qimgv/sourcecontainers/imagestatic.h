@@ -1,7 +1,9 @@
 #pragma once
 
+#include <QHash>
 #include <QImage>
 #include <QImageWriter>
+#include <QMutex>
 #include <QSemaphore>
 #include <QCryptographicHash>
 #include "image.h"
@@ -32,8 +34,10 @@ public:
     bool discardEditedImage();
     void commitEdits();
 
-    static QHash<QString,int> pageOverride;
+    static int pageOverrideForPath(const QString &path);
+    static void setPageOverrideForPath(const QString &path, int pageIndex);
     int frameCount() const override;
+    int pageIndex() const noexcept;
 
 public slots:
     void crop(QRect newRect);
@@ -51,4 +55,7 @@ private:
     void loadGeneric();
     void loadICO();
     int mPageCount = 1;
+    int mPageIndex = 0;
+    static QHash<QString, int> pageOverrides;
+    static QMutex pageOverridesMutex;
 };

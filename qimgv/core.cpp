@@ -950,14 +950,14 @@ void Core::nextPage() {
   if (count <= 1)
     return;
   QString path = state.currentFilePath;
-  int cur = ImageStatic::pageOverride.value(path, 0);
+  int cur = ImageStatic::pageOverrideForPath(path);
   if (cur + 1 >= count)
     return;
-  ImageStatic::pageOverride[path] = cur + 1;
+  ImageStatic::setPageOverrideForPath(path, cur + 1);
   if (model->reload(path)) {
     showPageChangeMessage(path);
   } else {
-    ImageStatic::pageOverride[path] = cur;
+    ImageStatic::setPageOverrideForPath(path, cur);
   }
 }
 
@@ -965,14 +965,14 @@ void Core::prevPage() {
   if (!state.hasActiveImage || !state.currentImg)
     return;
   QString path = state.currentFilePath;
-  int cur = ImageStatic::pageOverride.value(path, 0);
+  int cur = ImageStatic::pageOverrideForPath(path);
   if (cur <= 0)
     return;
-  ImageStatic::pageOverride[path] = cur - 1;
+  ImageStatic::setPageOverrideForPath(path, cur - 1);
   if (model->reload(path)) {
     showPageChangeMessage(path);
   } else {
-    ImageStatic::pageOverride[path] = cur;
+    ImageStatic::setPageOverrideForPath(path, cur);
   }
 }
 
@@ -2621,7 +2621,7 @@ void Core::maybeShowPageHint(const std::shared_ptr<Image> &img) {
     return;
   autoPageHintShown.insert(path);
 
-  int page = ImageStatic::pageOverride.value(path, 0) + 1;
+  int page = ImageStatic::pageOverrideForPath(path) + 1;
   mw->showMessage(tr("Page %1/%2").arg(page).arg(img->frameCount()),
                    PageChangeMessageDurationMs);
 }
@@ -2629,7 +2629,7 @@ void Core::maybeShowPageHint(const std::shared_ptr<Image> &img) {
 // Shows "Page N/M" for `path` right after an explicit page-turn hotkey.
 // Callers only reach this after DirectoryModel::reload() has returned true,
 // confirming a fresh image was actually loaded -- not just that the target
-// page number was written to ImageStatic::pageOverride. DirectoryModel::reload()
+// page number was stored by ImageStatic. DirectoryModel::reload()
 // performs its load synchronously and emits imageReady() through a same-thread
 // direct connection, so by the time reload(path) returns in nextPage()/prevPage(),
 // state.currentImg already reflects the freshly reloaded page. This lets us
@@ -2644,7 +2644,7 @@ void Core::showPageChangeMessage(const QString &path) {
   if (state.currentImg->type() != STATIC || state.currentImg->frameCount() <= 1)
     return;
 
-  int page = ImageStatic::pageOverride.value(path, 0) + 1;
+  int page = ImageStatic::pageOverrideForPath(path) + 1;
   mw->showMessage(tr("Page %1/%2").arg(page).arg(state.currentImg->frameCount()),
                    PageChangeMessageDurationMs);
 }

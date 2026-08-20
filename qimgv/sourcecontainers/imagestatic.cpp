@@ -4,6 +4,7 @@
 #include "utils/colormanager.h"
 #include "utils/djvureader.h"
 #include "utils/fontpreview.h"
+#include <QMutexLocker>
 #include <QPainter>
 #include <QPdfDocument>
 #include <time.h>
@@ -23,10 +24,25 @@ ImageStatic::ImageStatic(std::unique_ptr<DocumentInfo> info,
 
 ImageStatic::~ImageStatic() {}
 
-QHash<QString,int> ImageStatic::pageOverride;
+QHash<QString, int> ImageStatic::pageOverrides;
+QMutex ImageStatic::pageOverridesMutex;
+
+int ImageStatic::pageOverrideForPath(const QString &path) {
+  const QMutexLocker locker(&pageOverridesMutex);
+  return pageOverrides.value(path, 0);
+}
+
+void ImageStatic::setPageOverrideForPath(const QString &path, int pageIndex) {
+  const QMutexLocker locker(&pageOverridesMutex);
+  pageOverrides.insert(path, pageIndex);
+}
 
 int ImageStatic::frameCount() const {
   return mPageCount;
+}
+
+int ImageStatic::pageIndex() const noexcept {
+  return mPageIndex;
 }
 
 // load image data from disk
@@ -84,9 +100,9 @@ void ImageStatic::loadGeneric() {
     int count = r.imageCount();
     mPageCount = count > 0 ? count : 1;
 
-    int page = pageOverride.value(mPath, 0);
-    if (page > 0 && page < mPageCount)
-      r.jumpToImage(page);
+    int page = pageOverrideForPath(mPath);
+    if (page > 0 && page < mPageCount && r.jumpToImage(page))
+      mPageIndex = page;
   }
 
   QSize sz = r.size();
@@ -144,7 +160,7 @@ void ImageStatic::loadICO() {
 }
 
 void ImageStatic::loadDjvu() {
-  int page = pageOverride.value(mPath, 0);
+  int page = pageOverrideForPath(mPath);
   constexpr int kMaxDisplayDimension = 16384;
   const DjvuDecodeLimits limits = DjvuDecodeLimits::fromMemoryLimitMiB(
       settings->memoryAllocationLimit(), kMaxDisplayDimension);
@@ -158,6 +174,7 @@ void ImageStatic::loadDjvu() {
     return;
   }
 
+  mPageIndex = rendered.pageIndex;
   mPageCount = rendered.pageCount;
   image = std::make_shared<const QImage>(std::move(rendered.image));
   imageColorManaged =
@@ -178,7 +195,7 @@ void ImageStatic::loadPdf() {
   }
   mPageCount = pageCount;
 
-  int page = pageOverride.value(mPath, 0);
+  int page = pageOverrideForPath(mPath);
   if (page < 0 || page >= pageCount)
     page = 0;
 
@@ -192,6 +209,7 @@ void ImageStatic::loadPdf() {
     return;
   }
 
+  mPageIndex = page;
   QImage opaqueImg(rendered.size(), QImage::Format_RGB32);
   opaqueImg.fill(Qt::white);
   QPainter painter(&opaqueImg);

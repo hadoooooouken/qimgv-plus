@@ -106,6 +106,7 @@ private:
     // filePath is already removed. Returns true if the image was loaded
     // (synchronous path) or the async task was scheduled successfully.
     bool forceLoad(QString filePath, bool asyncHint);
+    static void synchronizePageOverride(const std::shared_ptr<Image> &img);
 
 private slots:
     void onImageReady(std::shared_ptr<Image> img, const QString &path);

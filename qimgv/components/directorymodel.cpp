@@ -233,6 +233,7 @@ void DirectoryModel::onImageReady(std::shared_ptr<Image> img, const QString &pat
         emit loadFailed(path);
         return;
     }
+    synchronizePageOverride(img);
     cache.remove(path);
     cache.insert(img);
     emit imageReady(img, path);
@@ -398,6 +399,7 @@ bool DirectoryModel::forceLoad(QString filePath, bool asyncHint) {
     }
     auto img = loader.load(filePath);
     if(img && img->isLoaded()) {
+        synchronizePageOverride(img);
         cache.insert(img);
         emit imageReady(img, filePath);
         return true;
@@ -406,8 +408,15 @@ bool DirectoryModel::forceLoad(QString filePath, bool asyncHint) {
     return false;
 }
 
+void DirectoryModel::synchronizePageOverride(const std::shared_ptr<Image> &img) {
+    if (const auto staticImage = std::dynamic_pointer_cast<ImageStatic>(img)) {
+        ImageStatic::setPageOverrideForPath(staticImage->filePath(),
+                                            staticImage->pageIndex());
+    }
+}
+
 // Forces a synchronous re-read of filePath from disk, e.g. after
-// ImageStatic::pageOverride changes for a multi-page document. Always
+// ImageStatic's page override changes for a multi-page document. Always
 // goes through forceLoad() instead of load(), because load() re-emits
 // an already-cached Image unchanged when one is present -- which would
 // silently turn a page-turn reload into a no-op. Returns true only if a
