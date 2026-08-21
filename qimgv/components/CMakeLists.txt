@@ -32,6 +32,9 @@ target_sources(qimgv-plus PRIVATE
     directorymanager/watchers/watcherevent.cpp
     directorymanager/watchers/watcherworker.cpp
 
+    fileoptask/fileopcontroller.cpp
+    fileoptask/fileoptaskrunnable.cpp
+
     batchconverter/batchconverter.cpp
 
     wallpaper/wallpapercontroller.cpp

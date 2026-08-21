@@ -17,6 +17,7 @@
 #include "settings_types.h"
 #include "components/directorymodel.h"
 #include "components/directorypresenter.h"
+#include "components/fileoptask/fileopcontroller.h"
 #include "components/thumbnailer/thumbnailer.h"
 #include "components/scriptmanager/scriptmanager.h"
 #include "gui/mainwindow.h"
@@ -123,9 +124,6 @@ private:
     template<typename... Args>
     void edit_template(bool save, QString actionName, const std::function<QImage(std::shared_ptr<const QImage>, Args...)>& func, Args&&... as);
 
-    void doInteractiveCopy(QString path, QString destDirectory, DialogResult &overwriteAllFiles);
-    void doInteractiveMove(QString path, QString destDirectory, DialogResult &overwriteAllFiles);
-
 private slots:
     void readSettings();
     void nextImage();
@@ -218,6 +216,8 @@ private slots:
     void historyForward();
     void modelDelayLoad();
     void preloadNeighbors();
+    void onFileOpProgress(FileOpProgress progress);
+    void onFileOpFinished(FileOpSummary summary);
 
 private:
     struct AiResizeOperation {
@@ -230,6 +230,7 @@ private:
     std::unique_ptr<class Upscaler> upscaler;
     std::unique_ptr<class WallpaperController> wallpaperController;
     std::unique_ptr<class MimePayloadManager> mimePayloadManager;
+    std::unique_ptr<class FileOpController> fileOpController;
     int aiResizeGeneration = 0;
     std::optional<AiResizeOperation> activeAiResizeOperation;
     bool aiResizeBusyUiActive = false;

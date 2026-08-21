@@ -14,6 +14,7 @@
 #include <QCoreApplication>
 #include <QThreadPool>
 #include <QTimer>
+#include "components/fileoptask/fileopcontroller.h"
 #include "components/upscaler/upscaler.h"
 #include "components/upscaler/upscaylresizerunnable.h"
 #include "components/wallpaper/wallpapercontroller.h"
@@ -306,6 +307,16 @@ Core::Core()
       *currentScale = mw->currentScale();
       *dpr = mw->getDpr();
   });
+
+  // Off-GUI-thread copy/move (see components/fileoptask/). model is a
+  // stable DirectoryModel instance for Core's whole lifetime (attachModel()
+  // is only ever called once, from initComponents()), so handing its raw
+  // pointer to FileOpController here is safe.
+  fileOpController = std::make_unique<FileOpController>(model.get(), mw, this);
+  connect(fileOpController.get(), &FileOpController::progress, this,
+          &Core::onFileOpProgress);
+  connect(fileOpController.get(), &FileOpController::finished, this,
+          &Core::onFileOpFinished);
 
   QVersionNumber lastVersion = settings->lastVersion();
   if (settings->firstRun())
@@ -1452,205 +1463,37 @@ void Core::createDirectory() {
   }
 }
 
-namespace {
-bool isDestinationInsideSource(const QString &srcPath, const QString &destDirectory) {
-  QFileInfo srcFi(srcPath);
-  if (!srcFi.isDir()) {
-    return false;
-  }
-
-  QString cleanSrc = srcFi.canonicalFilePath();
-  if (cleanSrc.isEmpty()) {
-    cleanSrc = QDir::cleanPath(srcFi.absoluteFilePath());
-  }
-
-  QFileInfo dstFi(destDirectory);
-  QString cleanDst = dstFi.canonicalFilePath();
-  if (cleanDst.isEmpty()) {
-    cleanDst = QDir::cleanPath(dstFi.absoluteFilePath());
-  }
-
-  cleanSrc = QDir::cleanPath(cleanSrc);
-  cleanDst = QDir::cleanPath(cleanDst);
-
-  if (cleanSrc.isEmpty() || cleanDst.isEmpty()) {
-    return false;
-  }
-
-  if (QString::compare(cleanSrc, cleanDst, Qt::CaseInsensitive) == 0) {
-    return true;
-  }
-
-  if (!cleanSrc.endsWith(u'/')) {
-    cleanSrc.append(u'/');
-  }
-
-  return cleanDst.startsWith(cleanSrc, Qt::CaseInsensitive);
-}
-} // namespace
-
 void Core::interactiveCopy(QList<QString> paths, QString destDirectory) {
-  DialogResult overwriteFiles;
-  for (const auto &path : std::as_const(paths)) {
-    doInteractiveCopy(path, destDirectory, overwriteFiles);
-    if (overwriteFiles.cancel)
-      return;
-  }
+  // Recursion + I/O now happen off the GUI thread; see
+  // components/fileoptask/. FileOpController::progress()/finished() report
+  // back via onFileOpProgress()/onFileOpFinished().
+  if (!fileOpController)
+    return;
+  fileOpController->startCopy(std::move(paths), std::move(destDirectory));
 }
 
-void Core::doInteractiveCopy(QString path, QString destDirectory,
-                             DialogResult &overwriteFiles) {
-  QFileInfo srcFi(path);
-  if (srcFi.isDir() && isDestinationInsideSource(path, destDirectory)) {
-    mw->showError(tr("Cannot copy a directory into itself or a subdirectory of itself."));
+void Core::interactiveMove(QList<QString> paths, QString destDirectory) {
+  if (!fileOpController)
     return;
-  }
-  // SINGLE FILE COPY
-  // ===========================================================================
-  if (!srcFi.isDir()) {
-    FileOpResult result;
-    FileOperations::copyFileTo(path, destDirectory, overwriteFiles, result);
-    if (result == FileOpResult::DESTINATION_FILE_EXISTS) {
-      if (overwriteFiles.all) // skipping all
-        return;
-      overwriteFiles = mw->fileReplaceDialog(
-          srcFi.absoluteFilePath(), destDirectory + "/" + srcFi.fileName(),
-          FILE_TO_FILE, true);
-      if (!overwriteFiles || overwriteFiles.cancel)
-        return;
-      FileOperations::copyFileTo(path, destDirectory, true, result);
-    }
-    if (result != FileOpResult::SUCCESS &&
-        !(result == FileOpResult::DESTINATION_FILE_EXISTS && !overwriteFiles)) {
-      mw->showError(FileOperations::decodeResult(result));
-      qDebug() << FileOperations::decodeResult(result);
-    }
-    if (!overwriteFiles.all) // copy attempt done; reset temporary flag
-      overwriteFiles.yes = false;
-    return;
-  }
-  // DIR COPY (RECURSIVE)
-  // =======================================================================
-  QDir srcDir(srcFi.absoluteFilePath());
-  QFileInfo dstFi(destDirectory + "/" + srcFi.fileName());
-  QDir dstDir(dstFi.absoluteFilePath());
-  if (dstFi.exists() && !dstFi.isDir()) { // overwriting file with a folder
-    if (!overwriteFiles && !overwriteFiles.all) {
-      overwriteFiles =
-          mw->fileReplaceDialog(srcFi.absoluteFilePath(),
-                                dstFi.absoluteFilePath(), DIR_TO_FILE, true);
-      if (!overwriteFiles || overwriteFiles.cancel)
-        return;
-      if (!overwriteFiles.all) // reset temp flag right away
-        overwriteFiles.yes = false;
-    }
-    // remove dst file; give up if not writable
-    FileOpResult result;
-    FileOperations::removeFile(dstFi.absoluteFilePath(), result);
-    if (result != FileOpResult::SUCCESS) {
-      mw->showError(FileOperations::decodeResult(result));
-      qDebug() << FileOperations::decodeResult(result);
-      return;
-    }
-  } else if (!dstDir.mkpath(".")) {
-    mw->showError(tr("Could not create directory ") + dstDir.absolutePath());
-    qDebug() << "Could not create directory " << dstDir.absolutePath();
-    return;
-  }
-  // copy all contents
-  QStringList entryList =
-      srcDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot |
-                       QDir::Hidden | QDir::System);
-  for (const auto &entry : std::as_const(entryList)) {
-    doInteractiveCopy(srcDir.absolutePath() + "/" + entry,
-                      dstDir.absolutePath(), overwriteFiles);
-    if (overwriteFiles.cancel)
-      return;
-  }
+  fileOpController->startMove(std::move(paths), std::move(destDirectory));
 }
 // -----------------------------------------------------------------------------------
 
-void Core::interactiveMove(QList<QString> paths, QString destDirectory) {
-  DialogResult overwriteFiles;
-  for (const auto &path : std::as_const(paths)) {
-    doInteractiveMove(path, destDirectory, overwriteFiles);
-    if (overwriteFiles.cancel) {
-      return;
-    }
-  }
+void Core::onFileOpProgress(FileOpProgress progress) {
+  const QString fileName = QFileInfo(progress.currentPath).fileName();
+  mw->showMessage(progress.isMove
+                       ? tr("Moving: %1 (%2)").arg(fileName).arg(progress.filesDone)
+                       : tr("Copying: %1 (%2)").arg(fileName).arg(progress.filesDone));
 }
 
-void Core::doInteractiveMove(QString path, QString destDirectory,
-                             DialogResult &overwriteFiles) {
-  QFileInfo srcFi(path);
-  if (srcFi.isDir() && isDestinationInsideSource(path, destDirectory)) {
-    mw->showError(tr("Cannot move a directory into itself or a subdirectory of itself."));
+void Core::onFileOpFinished(FileOpSummary summary) {
+  if (summary.cancelled || summary.filesProcessed == 0) {
+    mw->hideMessage();
     return;
   }
-  // SINGLE FILE MOVE
-  // ===========================================================================
-  if (!srcFi.isDir()) {
-    FileOpResult result;
-    model->moveFileTo(path, destDirectory, overwriteFiles, result);
-    if (result == FileOpResult::DESTINATION_FILE_EXISTS) {
-      if (overwriteFiles.all) // skipping all
-        return;
-      overwriteFiles = mw->fileReplaceDialog(
-          srcFi.absoluteFilePath(), destDirectory + "/" + srcFi.fileName(),
-          FILE_TO_FILE, true);
-      if (!overwriteFiles || overwriteFiles.cancel)
-        return;
-      model->moveFileTo(path, destDirectory, true, result);
-    }
-    if (result != FileOpResult::SUCCESS &&
-        !(result == FileOpResult::DESTINATION_FILE_EXISTS && !overwriteFiles)) {
-      mw->showError(FileOperations::decodeResult(result));
-      qDebug() << FileOperations::decodeResult(result);
-    }
-    if (!overwriteFiles.all) // move attempt done; reset temporary flag
-      overwriteFiles.yes = false;
-    return;
-  }
-  // DIR MOVE (RECURSIVE)
-  // =======================================================================
-  QDir srcDir(srcFi.absoluteFilePath());
-  QFileInfo dstFi(destDirectory + "/" + srcFi.fileName());
-  QDir dstDir(dstFi.absoluteFilePath());
-  if (dstFi.exists() && !dstFi.isDir()) { // overwriting file with a folder
-    if (!overwriteFiles && !overwriteFiles.all) {
-      overwriteFiles =
-          mw->fileReplaceDialog(srcFi.absoluteFilePath(),
-                                dstFi.absoluteFilePath(), DIR_TO_FILE, true);
-      if (!overwriteFiles || overwriteFiles.cancel)
-        return;
-      if (!overwriteFiles.all) // reset temp flag right away
-        overwriteFiles.yes = false;
-    }
-    // remove dst file; give up if not writable
-    FileOpResult result;
-    FileOperations::removeFile(dstFi.absoluteFilePath(), result);
-    if (result != FileOpResult::SUCCESS) {
-      mw->showError(FileOperations::decodeResult(result));
-      qDebug() << FileOperations::decodeResult(result);
-      return;
-    }
-  } else if (!dstDir.mkpath(".")) {
-    mw->showError(tr("Could not create directory ") + dstDir.absolutePath());
-    qDebug() << "Could not create directory " << dstDir.absolutePath();
-    return;
-  }
-  // move all contents
-  QStringList entryList =
-      srcDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot |
-                       QDir::Hidden | QDir::System);
-  for (const auto &entry : std::as_const(entryList)) {
-    doInteractiveMove(srcDir.absolutePath() + "/" + entry,
-                      dstDir.absolutePath(), overwriteFiles);
-    if (overwriteFiles.cancel)
-      return;
-  }
-  FileOpResult dirRmRes;
-  model->removeDir(srcDir.absolutePath(), false, false, dirRmRes);
+  mw->showMessageSuccess(summary.isMove
+                              ? tr("Moved %n file(s)", "", summary.filesProcessed)
+                              : tr("Copied %n file(s)", "", summary.filesProcessed));
 }
 
 // -----------------------------------------------------------------------------------
