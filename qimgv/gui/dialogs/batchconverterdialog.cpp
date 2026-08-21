@@ -23,7 +23,7 @@ namespace {
 constexpr int kBatchThumbnailExtent = 48;
 constexpr int kBatchThumbnailCornerRadius = 6;
 constexpr int kBatchDialogWidth = 1048;
-constexpr int kBatchDialogHeight = 1024;
+constexpr int kBatchDialogHeight = 780;
 constexpr qreal kMinimumDevicePixelRatio = 1.0;
 }
 
@@ -310,9 +310,9 @@ void BatchConverterDialog::setupRightPanel(QBoxLayout *mainLayout) {
     setupFormatSection(scrollLayout);
     setupResizeSection(scrollLayout);
     setupTransformSection(scrollLayout);
-    scrollLayout->addSpacerItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Fixed));
+    scrollLayout->addSpacing(6);
     setupColorSection(scrollLayout);
-    scrollLayout->addSpacerItem(new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Fixed));
+    scrollLayout->addSpacing(6);
     setupRenameSection(scrollLayout);
     scrollLayout->addStretch(1);
 
@@ -488,6 +488,12 @@ void BatchConverterDialog::setupColorSection(QVBoxLayout *scrollLayout) {
     colorEnableCheckBox = new QCheckBox(tr("Color adjustments"), this);
     ccLayout->addWidget(colorEnableCheckBox);
 
+    // Everything below the checkbox lives in its own widget so the whole
+    // block can be collapsed (hidden) instead of just grayed out.
+    colorAdjustmentsContent = new QWidget(this);
+    QVBoxLayout *contentLayout = new QVBoxLayout(colorAdjustmentsContent);
+    contentLayout->setContentsMargins(0, 0, 0, 0);
+
     vColorLayout = new QVBoxLayout();
 
     exposureWidget = new LinkedSliderSpin(tr("Exposure:"), -2.0, 2.0, 0.0, 0.01, 2, "", this);
@@ -511,11 +517,11 @@ void BatchConverterDialog::setupColorSection(QVBoxLayout *scrollLayout) {
     tintWidget = new LinkedSliderSpin(tr("Tint:"), -50.0, 50.0, 0.0, 1.0, 0, "", this);
     vColorLayout->addWidget(tintWidget);
 
-    ccLayout->addLayout(vColorLayout);
+    contentLayout->addLayout(vColorLayout);
 
     // Add Reset Color Adjustments button
     QPushButton *resetColorButton = new QPushButton(tr("Reset Color Adjustments"), this);
-    ccLayout->addWidget(resetColorButton);
+    contentLayout->addWidget(resetColorButton);
     connect(resetColorButton, &QPushButton::clicked, this, [this]() {
         exposureWidget->setValue(0.0);
         contrastWidget->setValue(100.0);
@@ -525,6 +531,11 @@ void BatchConverterDialog::setupColorSection(QVBoxLayout *scrollLayout) {
         tempWidget->setValue(0.0);
         tintWidget->setValue(0.0);
     });
+
+    ccLayout->addWidget(colorAdjustmentsContent);
+
+    // Collapsed by default; expands once the checkbox is enabled.
+    colorAdjustmentsContent->setVisible(colorEnableCheckBox->isChecked());
 
     scrollLayout->addWidget(colorContainer);
 }
@@ -1165,6 +1176,8 @@ void BatchConverterDialog::setResizeWidgetsEnabled(bool enabled) {
 
 void BatchConverterDialog::setColorWidgetsEnabled(bool enabled) {
     for (QWidget *w : m_colorWidgets) if (w) w->setEnabled(enabled);
+    // Collapse/expand the slider block itself, not just gray it out.
+    if (colorAdjustmentsContent) colorAdjustmentsContent->setVisible(enabled);
 }
 
 void BatchConverterDialog::onResizeEnabledChanged(bool enabled) {

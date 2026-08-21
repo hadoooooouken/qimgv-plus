@@ -173,6 +173,7 @@ private:
 
     QWidget *colorContainer;
     QCheckBox *colorEnableCheckBox;
+    QWidget *colorAdjustmentsContent = nullptr;
     QVBoxLayout *vColorLayout = nullptr;
     LinkedSliderSpin *exposureWidget;
     LinkedSliderSpin *contrastWidget;
