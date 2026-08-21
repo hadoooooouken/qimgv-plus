@@ -17,6 +17,13 @@ enum class AspectFitMode : uint8_t {
     Height  // Scale is derived from the target height only; width follows proportionally.
 };
 
+enum class RotationAngle : uint16_t {
+    Rotate0 = 0,    // No rotation (default).
+    Rotate90 = 90,
+    Rotate180 = 180,
+    Rotate270 = 270
+};
+
 struct BatchJob {
     QString format;
     int quality = 90;
@@ -29,6 +36,7 @@ struct BatchJob {
     bool useUpscayl = false;
     QString upscaylModel;
     int scalingFilter = 0;
+    RotationAngle rotation = RotationAngle::Rotate0;
     bool flipHorizontal = false;
     bool flipVertical = false;
     float exposure = 0.0f;

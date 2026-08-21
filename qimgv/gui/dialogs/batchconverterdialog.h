@@ -168,6 +168,12 @@ private:
     QComboBox *resComboBox;
     QPushButton *resetButton;
 
+    QButtonGroup *rotationGroup;
+    QRadioButton *rotate0Radio;
+    QRadioButton *rotate90Radio;
+    QRadioButton *rotate180Radio;
+    QRadioButton *rotate270Radio;
+
     QCheckBox *flipHorizontalCheckBox;
     QCheckBox *flipVerticalCheckBox;
 

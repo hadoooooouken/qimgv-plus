@@ -23,7 +23,7 @@ namespace {
 constexpr int kBatchThumbnailExtent = 48;
 constexpr int kBatchThumbnailCornerRadius = 6;
 constexpr int kBatchDialogWidth = 1048;
-constexpr int kBatchDialogHeight = 780;
+constexpr int kBatchDialogHeight = 816;
 constexpr qreal kMinimumDevicePixelRatio = 1.0;
 }
 
@@ -472,6 +472,23 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
 }
 
 void BatchConverterDialog::setupTransformSection(QVBoxLayout *scrollLayout) {
+    QHBoxLayout *rotationLayout = new QHBoxLayout();
+    rotationGroup = new QButtonGroup(this);
+    rotate0Radio = new QRadioButton(tr("0°"), this);
+    rotate0Radio->setChecked(true);
+    rotate90Radio = new QRadioButton(tr("90°"), this);
+    rotate180Radio = new QRadioButton(tr("180°"), this);
+    rotate270Radio = new QRadioButton(tr("270°"), this);
+    rotationGroup->addButton(rotate0Radio, static_cast<int>(RotationAngle::Rotate0));
+    rotationGroup->addButton(rotate90Radio, static_cast<int>(RotationAngle::Rotate90));
+    rotationGroup->addButton(rotate180Radio, static_cast<int>(RotationAngle::Rotate180));
+    rotationGroup->addButton(rotate270Radio, static_cast<int>(RotationAngle::Rotate270));
+    rotationLayout->addWidget(rotate0Radio, 1);
+    rotationLayout->addWidget(rotate90Radio, 1);
+    rotationLayout->addWidget(rotate180Radio, 1);
+    rotationLayout->addWidget(rotate270Radio, 1);
+    scrollLayout->addLayout(rotationLayout);
+
     QHBoxLayout *flipLayout = new QHBoxLayout();
     flipHorizontalCheckBox = new QCheckBox(tr("Flip horizontal"), this);
     flipVerticalCheckBox = new QCheckBox(tr("Flip vertical"), this);
@@ -1062,6 +1079,7 @@ void BatchConverterDialog::startConversion() {
     // Per-file upscaling check for mixed resolution batches lives inside BatchConverter itself.
     job.useUpscayl = job.doResize && useUpscaylCheckBox->isChecked();
     job.upscaylModel = upscaylModelComboBox->currentText();
+    job.rotation = static_cast<RotationAngle>(rotationGroup->checkedId());
     job.flipHorizontal = flipHorizontalCheckBox->isChecked();
     job.flipVertical = flipVerticalCheckBox->isChecked();
 

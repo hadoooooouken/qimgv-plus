@@ -246,6 +246,25 @@ public:
             processedImg = resized;
         }
 
+        if (m_job.rotation != RotationAngle::Rotate0) {
+            if (m_cancelFlag->load()) {
+                notifyStopped();
+                return;
+            }
+            QImage rotatedImg = ImageLib::rotatedRaw(&processedImg, static_cast<int>(m_job.rotation));
+            if (m_cancelFlag->load()) {
+                notifyStopped();
+                return;
+            }
+            if (rotatedImg.isNull()) {
+                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+                               QCoreApplication::translate("BatchConverter", "Transform Error"),
+                               false);
+                return;
+            }
+            processedImg = std::move(rotatedImg);
+        }
+
         if (m_job.flipHorizontal || m_job.flipVertical) {
             if (m_cancelFlag->load()) {
                 notifyStopped();
