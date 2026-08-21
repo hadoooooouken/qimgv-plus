@@ -88,6 +88,7 @@ signals:
     void droppedInto(const QMimeData*, QObject*, int, Qt::DropAction) override;
     void backRequested() override;
     void forwardRequested() override;
+    void typeAheadTextEntered(QString text) override;
     void openSelectedRequested() override;
     void selectionChanged();
 

@@ -62,6 +62,7 @@ signals:
     void draggedOver(int) override;
     void backRequested() override;
     void forwardRequested() override;
+    void typeAheadTextEntered(QString text) override;
     void batchRequested();
     void openSelectedRequested();
 

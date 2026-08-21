@@ -31,6 +31,7 @@ void ThumbnailStripProxy::initEager() {
     connect(thumbnailStrip.get(), &ThumbnailStrip::thumbnailsRequested, this, &ThumbnailStripProxy::thumbnailsRequested);
     connect(thumbnailStrip.get(), &ThumbnailStrip::backRequested, this, &ThumbnailStripProxy::backRequested);
     connect(thumbnailStrip.get(), &ThumbnailStrip::forwardRequested, this, &ThumbnailStripProxy::forwardRequested);
+    connect(thumbnailStrip.get(), &ThumbnailStrip::typeAheadTextEntered, this, &ThumbnailStripProxy::typeAheadTextEntered);
 
     thumbnailStrip->show();
     mNeedsBufferApply = true;

@@ -37,6 +37,7 @@ void FolderViewProxy::init() {
     connect(folderView.get(), &FolderView::draggedOver, this, &FolderViewProxy::draggedOver);
     connect(folderView.get(), &FolderView::backRequested, this, &FolderViewProxy::backRequested);
     connect(folderView.get(), &FolderView::forwardRequested, this, &FolderViewProxy::forwardRequested);
+    connect(folderView.get(), &FolderView::typeAheadTextEntered, this, &FolderViewProxy::typeAheadTextEntered);
     connect(folderView.get(), &FolderView::batchRequested, this, &FolderViewProxy::batchRequested);
     connect(folderView.get(), &FolderView::openSelectedRequested, this, &FolderViewProxy::openSelectedRequested);
 

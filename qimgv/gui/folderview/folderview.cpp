@@ -144,6 +144,7 @@ FolderView::FolderView(QWidget *parent) :
     connect(thumbnailGrid, &FolderGridView::droppedInto,     this, &FolderView::droppedInto);
     connect(thumbnailGrid, &FolderGridView::backRequested,    this, &FolderView::backRequested);
     connect(thumbnailGrid, &FolderGridView::forwardRequested, this, &FolderView::forwardRequested);
+    connect(thumbnailGrid, &FolderGridView::typeAheadTextEntered, this, &FolderView::typeAheadTextEntered);
     connect(thumbnailGrid, &FolderGridView::batchRequested,   this, &FolderView::batchRequested);
     connect(thumbnailGrid, &FolderGridView::openSelectedRequested, this, &FolderView::openSelectedRequested);
 

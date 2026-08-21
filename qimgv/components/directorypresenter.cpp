@@ -20,6 +20,10 @@ constexpr qreal kFolderWindowTopOffset = 0.17;
 constexpr qreal kFolderWindowWidthScale = 0.95;
 constexpr qreal kFolderWindowHeightScale = 0.80;
 constexpr qreal kFolderThumbnailCornerRadius = 4.0;
+// Windows Explorer-style type-ahead: how long the search buffer stays alive
+// between keystrokes before a new keypress starts a fresh search instead of
+// extending the current one.
+constexpr qint64 kTypeAheadResetMs = 1000;
 
 ThumbnailSource thumbnailSourceFromEntry(const FSEntry &entry)
 {
@@ -123,6 +127,8 @@ void DirectoryPresenter::setView(std::shared_ptr<IDirectoryView> _view) {
           SIGNAL(backRequested()));
   connect(dynamic_cast<QObject *>(view.get()), SIGNAL(forwardRequested()), this,
           SIGNAL(forwardRequested()));
+  connect(dynamic_cast<QObject *>(view.get()), SIGNAL(typeAheadTextEntered(QString)), this,
+          SLOT(onTypeAheadTextEntered(QString)));
 }
 
 void DirectoryPresenter::setModel(std::shared_ptr<DirectoryModel> newModel) {
@@ -795,6 +801,63 @@ void DirectoryPresenter::selectAndFocus(int absoluteIndex) {
     return;
   view->select(absoluteIndex);
   view->focusOn(absoluteIndex);
+}
+
+//------------------------------------------------------------------------------
+
+QString DirectoryPresenter::typeAheadNameAt(int absoluteIndex) const {
+  const int dirs = mShowDirs ? model->dirCount() : 0;
+  if (absoluteIndex < dirs)
+    return model->dirNameAt(absoluteIndex);
+  return model->fileNameAt(absoluteIndex - dirs);
+}
+
+int DirectoryPresenter::typeAheadMatchIndex(const QString &prefix, int searchStart, int totalCount) const {
+  for (int offset = 0; offset < totalCount; ++offset) {
+    const int index = (searchStart + offset) % totalCount;
+    if (typeAheadNameAt(index).startsWith(prefix, Qt::CaseInsensitive))
+      return index;
+  }
+  return -1;
+}
+
+void DirectoryPresenter::onTypeAheadTextEntered(QString text) {
+  if (!model || !view || text.isEmpty())
+    return;
+
+  const int totalCount = mShowDirs ? model->totalCount() : model->fileCount();
+  if (totalCount <= 0)
+    return;
+
+  const bool timedOut = !typeAheadTimer.isValid() ||
+                         typeAheadTimer.elapsed() > kTypeAheadResetMs;
+  const bool isRepeatOfSingleChar =
+      !timedOut && typeAheadBuffer.length() == 1 &&
+      typeAheadBuffer.at(0).toCaseFolded() == text.at(0).toCaseFolded();
+
+  const QList<int> selection = view->selection();
+  const int nextAfterSelection = selection.isEmpty() ? 0 : selection.last() + 1;
+
+  int searchStart = 0;
+  if (timedOut) {
+    // New search: only this keystroke matters.
+    typeAheadBuffer = text;
+    searchStart = nextAfterSelection;
+  } else if (isRepeatOfSingleChar) {
+    // Same single character pressed again: cycle to the next match instead
+    // of narrowing the search (mirrors Explorer's "press R repeatedly").
+    searchStart = nextAfterSelection;
+  } else {
+    // A different character within the reset window: narrow the search.
+    typeAheadBuffer += text;
+    searchStart = 0;
+  }
+
+  typeAheadTimer.restart();
+
+  const int match = typeAheadMatchIndex(typeAheadBuffer, searchStart, totalCount);
+  if (match >= 0)
+    selectAndFocus(match);
 }
 
 std::shared_ptr<Thumbnail>

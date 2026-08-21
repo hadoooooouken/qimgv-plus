@@ -39,6 +39,10 @@ public:
     virtual void backRequested() = 0;
     virtual void forwardRequested() = 0;
     virtual void openSelectedRequested() {}
+    // Emitted for a plain printable keypress (no Ctrl/Alt/Meta) so the
+    // presenter can do Explorer-style type-ahead navigation against the
+    // model. text is the character(s) produced by the key event.
+    virtual void typeAheadTextEntered(QString text) = 0;
 };
 
 Q_DECLARE_INTERFACE(IDirectoryView, "IDirectoryView")

@@ -475,7 +475,17 @@ void FolderGridView::keyPressEvent(QKeyEvent *event) {
         selectLast();
         break;
     default:
-        actionManager->processEvent(event);
+        // Windows-Explorer-style type-ahead: a plain printable character
+        // (Ctrl is already handled above; Alt/Meta combos still fall through
+        // to the action shortcuts) jumps to the next matching item name
+        // instead of firing a global action. DirectoryPresenter owns the
+        // actual name matching against the model.
+        if(!(event->modifiers() & (Qt::AltModifier | Qt::MetaModifier)) &&
+           !event->text().isEmpty() && event->text().at(0).isPrint()) {
+            emit typeAheadTextEntered(event->text());
+        } else {
+            actionManager->processEvent(event);
+        }
     }
 }
 
