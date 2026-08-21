@@ -168,8 +168,59 @@ void ActionManager::resetDefaults(QString action) {
 }
 //------------------------------------------------------------------------------
 void ActionManager::adjustFromVersion(QVersionNumber lastVer) {
-  // All legacy version checks and migrations have been removed
-  Q_UNUSED(lastVer);
+  bool changed = false;
+
+  // In 0.9.2 the default bindings for these two actions changed; force
+  // every pre-0.9.2 install onto the new defaults, once, on the upgrade
+  // that crosses that version.
+  if (lastVer < QVersionNumber(0, 9, 2)) {
+    resetDefaults("print");
+    resetDefaults("openSettings");
+    changed = true;
+  }
+
+  // Actions whose default keybinding is force-assigned on the upgrade
+  // that introduces them, and never again afterwards - not on every
+  // startup, and not if the user has already claimed the action or the
+  // key for something else.
+  static const QStringList forceBoundOnIntroduction = {
+      "toggleScalingFilter",
+      "cycleScalingFilter",
+      "copyViewportClipboard",
+      "cycleUpscaylModel",
+  };
+
+  const QMap<QString, QVersionNumber> &actionVersions = appActions->getMap();
+
+  for (const QString &action : forceBoundOnIntroduction) {
+    if (!actionVersions.contains(action))
+      continue;
+
+    // Only relevant on the single upgrade that crosses the action's
+    // introduction version. On any later upgrade the user has already
+    // had a chance to see - and possibly remove - the default, and that
+    // choice must stick.
+    if (lastVer >= actionVersions.value(action))
+      continue;
+
+    const QString key = defaults.key(action, "");
+    if (key.isEmpty())
+      continue;
+
+    // Respect an explicit user choice: bind only if the action has no
+    // shortcut of its own AND the default key is still free.
+    if (shortcuts.key(action, "").isEmpty() && !shortcuts.contains(key)) {
+      shortcuts.insert(key, action);
+      changed = true;
+    }
+  }
+
+  // shortcuts only reaches disk through an explicit save. Without this,
+  // any migration above would be lost on the very next launch, since
+  // adjustFromVersion() will not run again for a version boundary it has
+  // already passed.
+  if (changed)
+    saveShortcuts();
 }
 //------------------------------------------------------------------------------
 void ActionManager::saveShortcuts() {
@@ -252,26 +303,6 @@ void ActionManager::readShortcuts() {
   }
   actionManager->validateShortcuts();
 
-  // If the user doesn't have a shortcut for toggleScalingFilter, and "N" is not bound to anything else,
-  // we bind it to "N" by default.
-  if (shortcuts.key("toggleScalingFilter", "").isEmpty() && !shortcuts.contains("N")) {
-    shortcuts.insert("N", "toggleScalingFilter");
-  }
-
-  // If the user doesn't have a shortcut for cycleScalingFilter, and "Shift+N" is not bound to anything else,
-  // we bind it to "Shift+N" by default.
-  QString shiftN = InputMap::keyNameShift() + "+N";
-  if (shortcuts.key("cycleScalingFilter", "").isEmpty() && !shortcuts.contains(shiftN)) {
-    shortcuts.insert(shiftN, "cycleScalingFilter");
-  }
-
-  // If the user doesn't have a shortcut for copyViewportClipboard, and Shift+C is not bound to anything else,
-  // bind it to Shift+C by default.
-  QString shiftC = InputMap::keyNameShift() + "+C";
-  if (shortcuts.key("copyViewportClipboard", "").isEmpty() && !shortcuts.contains(shiftC)) {
-    shortcuts.insert(shiftC, "copyViewportClipboard");
-  }
-
   // If the user doesn't have a shortcut for prevPage, and comma is not bound, assign it.
   if (shortcuts.key("prevPage", "").isEmpty() && !shortcuts.contains(",")) {
     shortcuts.insert(",", "prevPage");
@@ -287,13 +318,6 @@ void ActionManager::readShortcuts() {
   QString altI = InputMap::keyNameAlt() + "+I";
   if (shortcuts.key("toggleUpscayl", "").isEmpty() && !shortcuts.contains(altI)) {
     shortcuts.insert(altI, "toggleUpscayl");
-  }
-
-  // If the user doesn't have a shortcut for cycleUpscaylModel, and Alt+Shift+I is not bound,
-  // assign it by default.
-  QString altShiftI = InputMap::keyNameAlt() + "+" + InputMap::keyNameShift() + "+I";
-  if (shortcuts.key("cycleUpscaylModel", "").isEmpty() && !shortcuts.contains(altShiftI)) {
-    shortcuts.insert(altShiftI, "cycleUpscaylModel");
   }
 }
 //------------------------------------------------------------------------------

@@ -806,11 +806,6 @@ void Core::loadTranslation() {
 void Core::onUpdate() {
   QVersionNumber lastVer = settings->lastVersion();
 
-  if (lastVer < QVersionNumber(0, 9, 2)) {
-    actionManager->resetDefaults("print");
-    actionManager->resetDefaults("openSettings");
-  }
-
   actionManager->adjustFromVersion(lastVer);
 
   qDebug() << "Updated: " << settings->lastVersion().toString() << ">"
