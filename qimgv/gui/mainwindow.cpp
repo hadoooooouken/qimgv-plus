@@ -447,6 +447,8 @@ void MW::toggleCasSettings() {
 
 
 void MW::toggleScalingFilter() {
+    if(centralWidget->currentViewMode() == MODE_FOLDERVIEW)
+        return;
     ScalingFilter configuredFilter = settings->scalingFilter();
     if(viewerWidget->scalingFilter() == configuredFilter) {
         setFilterNearest();
@@ -457,6 +459,8 @@ void MW::toggleScalingFilter() {
 }
 
 void MW::cycleScalingFilter() {
+    if(centralWidget->currentViewMode() == MODE_FOLDERVIEW)
+        return;
     ScalingFilter currentFilter = viewerWidget->scalingFilter();
     int nextFilterInt = static_cast<int>(currentFilter) + 1;
     if (nextFilterInt > static_cast<int>(QI_FILTER_MKS2021)) {
