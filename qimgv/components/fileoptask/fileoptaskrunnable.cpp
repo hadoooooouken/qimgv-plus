@@ -349,16 +349,29 @@ void FileOperationTask::processMove(const QString &path, const QString &destDire
         if (overwriteFiles.cancel)
             return;
     }
-    // NOTE: dirRmRes is discarded here, same as in the original
-    // Core::doInteractiveMove() - a failed cleanup of the now-empty source
-    // directory is not surfaced to the person. Left as-is; fixing it is a
-    // separate, unrelated change outside this task's scope.
-    FileOpResult dirRmRes;
+    // Clean up the now-empty source directory. FileOperations::removeDir()
+    // only ever returns SUCCESS, SOURCE_DOES_NOT_EXIST, DIRECTORY_NOT_EMPTY,
+    // or OTHER_ERROR - never a "nothing to do" style soft-success - so any
+    // non-SUCCESS result here is a genuine failure worth surfacing, same as
+    // every other FileOpResult check in this file. The original
+    // Core::doInteractiveMove() discarded this result silently; that was a
+    // pre-existing gap, not something Phase 1 needed to preserve.
+    FileOpResult dirRmRes = FileOpResult::OTHER_ERROR;
     if (model) {
         QString dirPath = srcDir.absolutePath();
         QMetaObject::invokeMethod(model, [modelPtr = model, dirPath, &dirRmRes]() {
             if (modelPtr)
                 modelPtr->removeDir(dirPath, false, false, dirRmRes);
         }, Qt::BlockingQueuedConnection);
+    }
+    if (dirRmRes != FileOpResult::SUCCESS) {
+        QString errorText = FileOperations::decodeResult(dirRmRes);
+        if (mw) {
+            QMetaObject::invokeMethod(mw, [mwPtr = mw, errorText]() {
+                if (mwPtr)
+                    mwPtr->showError(errorText);
+            }, Qt::QueuedConnection);
+        }
+        qDebug() << errorText;
     }
 }
