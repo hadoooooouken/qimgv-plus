@@ -1723,12 +1723,12 @@ Staged copy:
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.cpp" line="375"/>
-        <source>BOOKMARKS</source>
+        <source>Bookmarks</source>
         <translation>ЗАКЛАДКИ</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.cpp" line="401"/>
-        <source>FILESYSTEM</source>
+        <source>Filesystem</source>
         <translation>ФАЙЛОВА СИСТЕМА</translation>
     </message>
     <message>

@@ -1719,12 +1719,12 @@ Staged copy:
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.cpp" line="375"/>
-        <source>BOOKMARKS</source>
+        <source>Bookmarks</source>
         <translation>Marcadores</translation>
     </message>
     <message>
         <location filename="../../gui/folderview/folderview.cpp" line="401"/>
-        <source>FILESYSTEM</source>
+        <source>Filesystem</source>
         <translation>Mi equipo</translation>
     </message>
     <message>

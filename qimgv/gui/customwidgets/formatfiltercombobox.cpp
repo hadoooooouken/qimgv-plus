@@ -89,6 +89,12 @@ void FormatFilterComboBox::createPopup() {
 
     mAllFormatsCheckBox = new QCheckBox(tr("All formats"), mPopup);
     mAllFormatsCheckBox->setChecked(true);
+    {
+        QFont f = mAllFormatsCheckBox->font();
+        f.setBold(true);
+        f.setPointSize(QGuiApplication::font().pointSize() + 1);
+        mAllFormatsCheckBox->setFont(f);
+    }
     layout->addWidget(mAllFormatsCheckBox);
     connect(mAllFormatsCheckBox, &QCheckBox::clicked, this,
             [this](bool) { handleAllFormatsClicked(); });
@@ -104,6 +110,7 @@ void FormatFilterComboBox::createPopup() {
         auto *categoryCheckBox = new QCheckBox(category.label, mPopup);
         QFont categoryFont = categoryCheckBox->font();
         categoryFont.setBold(true);
+        categoryFont.setPointSize(QGuiApplication::font().pointSize() + 1);
         categoryCheckBox->setFont(categoryFont);
         categoryCheckBox->setTristate(true);
         layout->addWidget(categoryCheckBox);

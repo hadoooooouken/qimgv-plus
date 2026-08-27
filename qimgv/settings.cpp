@@ -281,8 +281,9 @@ void Settings::loadStylesheet() {
     // --- widget sizes ---------------------------------------------
     auto fnt = QGuiApplication::font();
     QFontMetrics fm(fnt);
-    int font_small = qMax((int)(fnt.pointSize() * 0.9f), 8);
-    int font_large = (int)(fnt.pointSize() * 1.8f);
+    int font_small   = qMax((int)(fnt.pointSize() * 0.9f), 8);
+    int font_section  = fnt.pointSize() + 1;
+    int font_large    = (int)(fnt.pointSize() * 1.8f);
     int text_height = fm.height();
     int text_padding = (int)(text_height * 0.10f);
     int text_padding_small = (int)(text_height * 0.05f);
@@ -316,8 +317,9 @@ void Settings::loadStylesheet() {
     // qDebug()<< "dpr=" << qApp->devicePixelRatio() << "pDpr=" << pDpr;
 
     // --- write variables into stylesheet --------------------------
-    styleSheet.replace("%font_small%", QString::number(font_small) + "pt");
-    styleSheet.replace("%font_large%", QString::number(font_large) + "pt");
+    styleSheet.replace("%font_small%",   QString::number(font_small)   + "pt");
+    styleSheet.replace("%font_section%", QString::number(font_section) + "pt");
+    styleSheet.replace("%font_large%",   QString::number(font_large)   + "pt");
     styleSheet.replace("%button_height%",
                        QString::number(button_height) + "px");
     styleSheet.replace("%top_panel_height%",

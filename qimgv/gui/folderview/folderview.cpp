@@ -373,7 +373,7 @@ void FolderView::setupUi() {
     bookmarksLabel->setCursor(Qt::PointingHandCursor);
     bookmarksLabel->setMouseTracking(true);
     bookmarksLabel->setAccessibleName("PanelSectionHeader");
-    bookmarksLabel->setText(tr("BOOKMARKS"));
+    bookmarksLabel->setText(tr("Bookmarks"));
     horizontalLayout_3->addWidget(bookmarksLabel);
     
     newBookmarkButton = new IconButton(placesPanel);
@@ -399,7 +399,7 @@ void FolderView::setupUi() {
     directoriesLabel->setCursor(Qt::PointingHandCursor);
     directoriesLabel->setMouseTracking(true);
     directoriesLabel->setAccessibleName("PanelSectionHeader");
-    directoriesLabel->setText(tr("FILESYSTEM"));
+    directoriesLabel->setText(tr("Filesystem"));
     horizontalLayout_6->addWidget(directoriesLabel);
     
     QHBoxLayout *horizontalLayout_8 = new QHBoxLayout();

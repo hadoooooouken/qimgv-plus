@@ -2,7 +2,7 @@
 
 const QVector<FormatCategory> &allFormatCategories() {
     static const QVector<FormatCategory> categories = {
-        { "COMMON", {
+        { "Common", {
             { "JPG", {"jpg", "jpeg"} },
             { "PNG", {"png", "apng"} },
             { "WEBP", {"webp"} },
@@ -14,7 +14,7 @@ const QVector<FormatCategory> &allFormatCategories() {
             { "JXL", {"jxl"} },
             { "QOI", {"qoi"} },
         } },
-        { "SPECIALIZED", {
+        { "Specialized", {
             { "RAW", {
                 "3fr",
                 "arw",
@@ -39,7 +39,7 @@ const QVector<FormatCategory> &allFormatCategories() {
             { "JPEG 2000", {"jp2", "j2k", "jpf", "jpx", "jpc", "jph"} },
             { "JXR", {"jxr", "hdp"} },
         } },
-        { "VECTOR / DESIGN", {
+        { "Vector / Design", {
             { "SVG", {"svg"} },
             { "AI", {"ai"} },
             { "PSD", {"psd"} },
@@ -47,13 +47,13 @@ const QVector<FormatCategory> &allFormatCategories() {
             { "KRA", {"kra"} },
             { "ORA", {"ora"} },
         } },
-        { "DOCUMENTS / ARCHIVES", {
+        { "Documents / Archives", {
             { "PDF", {"pdf"} },
             { "DjVu", {"djvu", "djv"} },
             { "CBZ", {"cbz"} },
             { "ZIP", {"zip"} },
         } },
-        { "OTHER", {
+        { "Other", {
             { "ICO", {"ico"} },
             { "BLEND", {"blend"} },
             { "Fonts", {"ttf", "otf", "ttc"} },

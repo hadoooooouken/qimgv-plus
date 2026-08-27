@@ -916,7 +916,8 @@ BookmarksItem [accessibleName="BookmarksItemRemoveLabel"][pressed="true"] {
 
 [accessibleName="PanelSectionHeader"] {
     color: %text_hc%;
-    font: bold;
+    font-weight: bold;
+    font-size: %font_section%;
 }
 
 [accessibleName="PanelSectionHeader"]:hover {
