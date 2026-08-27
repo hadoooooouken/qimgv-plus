@@ -28,7 +28,7 @@ protected:
     void hidePopup() override;
 
 private:
-    QFrame *mPopup;
+    QWidget *mPopup;
     QCheckBox *mAllFormatsCheckBox;
     QVector<QCheckBox *> mFormatCheckBoxes;
     QVector<QStringList> mFormatExtensions;
@@ -36,13 +36,15 @@ private:
     QVector<QVector<int>> mCategoryFormatIndexes;
     QString mDisplayText;
 
-    static constexpr int kTextLeftPadding = 9;
-    static constexpr int kTextIconSpacingPx = 4;
-    static constexpr int kPopupMarginPx = 10;
-    static constexpr int kPopupSpacingPx = 8;
+    static constexpr int kTextLeftPadding    = 9;
+    static constexpr int kTextIconSpacingPx  = 4;
+    static constexpr int kPopupMarginPx      = 10;
+    static constexpr int kPopupSpacingPx     = 8;
     static constexpr int kFormatColumnWidthPx = 128;
-    static constexpr int kFormatColumns = 4;
+    static constexpr int kFormatColumns      = 4;
     static constexpr int kFormatGridIndentPx = 20;
+    static constexpr int kPopupTopGapPx      = 10;
+    static constexpr int kPopupRightGapPx    = 20;
 
     bool anyFormatChecked() const;
     void createPopup();

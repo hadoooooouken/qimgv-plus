@@ -1,16 +1,72 @@
 #include "formatfiltercombobox.h"
 
-#include <QFrame>
+#include <QBitmap>
 #include <QGridLayout>
 #include <QGuiApplication>
 #include <QPainter>
+#include <QPainterPath>
 #include <QScreen>
 #include <QSet>
 #include <QSizePolicy>
 #include <QStyle>
+#include <QStyleOption>
 #include <QVBoxLayout>
 
 #include "utils/formatgroups.h"
+#include "settings.h"
+
+namespace {
+
+// A plain widget that renders a QSS-styled rounded background.
+// WA_TranslucentBackground clips the window to the painted shape so
+// the OS compositor shows nothing outside the rounded rect.
+class FormatFilterPopupFrame : public QWidget
+{
+public:
+    explicit FormatFilterPopupFrame(QWidget *parent = nullptr)
+        : QWidget(parent, Qt::Popup | Qt::FramelessWindowHint)
+    {
+        setAttribute(Qt::WA_TranslucentBackground, true);
+        setAttribute(Qt::WA_NoMousePropagation, true);
+    }
+
+protected:
+    void resizeEvent(QResizeEvent *e) override {
+        QWidget::resizeEvent(e);
+        // Clip all child widget rendering to the rounded shape.
+        // The 1-bit mask handles child clipping; antialiased edges
+        // are provided by paintEvent on the translucent compositor layer.
+        QBitmap mask(size());
+        mask.fill(Qt::color0);
+        QPainter mp(&mask);
+        mp.setRenderHint(QPainter::Antialiasing);
+        mp.setBrush(Qt::color1);
+        mp.setPen(Qt::NoPen);
+        mp.drawRoundedRect(rect(), kCornerRadius, kCornerRadius);
+        setMask(mask);
+    }
+
+    void paintEvent(QPaintEvent *) override {
+        QStyleOption opt;
+        opt.initFrom(this);
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        // Use the QSS-provided background and border colors.
+        const QColor bg     = opt.palette.color(QPalette::Window);
+        const QColor border = settings->colorScheme().widget_border;
+        const QRectF r = QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5);
+        QPainterPath path;
+        path.addRoundedRect(r, kCornerRadius, kCornerRadius);
+        p.fillPath(path, bg);
+        p.setPen(border);
+        p.drawPath(path);
+    }
+
+private:
+    static constexpr qreal kCornerRadius = 8.0;
+};
+
+} // namespace
 
 FormatFilterComboBox::FormatFilterComboBox(QWidget *parent)
     : StyledComboBox(parent),
@@ -78,9 +134,7 @@ bool FormatFilterComboBox::anyFormatChecked() const {
 }
 
 void FormatFilterComboBox::createPopup() {
-    mPopup = new QFrame(this, Qt::Popup | Qt::FramelessWindowHint);
-    mPopup->setFrameShape(QFrame::StyledPanel);
-    mPopup->setFrameShadow(QFrame::Plain);
+    mPopup = new FormatFilterPopupFrame(this);
 
     auto *layout = new QVBoxLayout(mPopup);
     layout->setContentsMargins(kPopupMarginPx, kPopupMarginPx,
@@ -101,7 +155,12 @@ void FormatFilterComboBox::createPopup() {
 
     auto *separator = new QFrame(mPopup);
     separator->setFrameShape(QFrame::HLine);
-    separator->setFrameShadow(QFrame::Sunken);
+    separator->setFrameShadow(QFrame::Plain);
+    {
+        QPalette pal = separator->palette();
+        pal.setColor(QPalette::WindowText, settings->colorScheme().widget_border);
+        separator->setPalette(pal);
+    }
     layout->addWidget(separator);
 
     const QVector<FormatCategory> &categories = allFormatCategories();
@@ -298,11 +357,11 @@ void FormatFilterComboBox::showPopup() {
 
     const QPoint comboTopLeft = mapToGlobal(QPoint(0, 0));
     const QPoint belowCombo = mapToGlobal(QPoint(0, height()));
-    const int maximumX = availableGeometry.right() - popupSize.width() + 1;
+    const int maximumX = availableGeometry.right() - popupSize.width() + 1 - kPopupRightGapPx;
     const int maximumY = availableGeometry.bottom() - popupSize.height() + 1;
     const int preferredY = availableGeometry.bottom() - belowCombo.y() + 1 >= popupSize.height()
-        ? belowCombo.y()
-        : comboTopLeft.y() - popupSize.height();
+        ? belowCombo.y() + kPopupTopGapPx
+        : comboTopLeft.y() - popupSize.height() - kPopupTopGapPx;
     const int popupX = qBound(availableGeometry.left(), belowCombo.x(), maximumX);
     const int popupY = qBound(availableGeometry.top(), preferredY, maximumY);
 
