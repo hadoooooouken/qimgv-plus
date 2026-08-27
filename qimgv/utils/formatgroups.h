@@ -9,5 +9,10 @@ struct FormatGroup {
     QStringList extensions; // lowercase extensions without the dot, e.g. {"heif", "heic"}
 };
 
-// Fixed, ordered list of format groups shown in the format filter dropdown.
-const QVector<FormatGroup> &allFormatGroups();
+struct FormatCategory {
+    QString label;
+    QVector<FormatGroup> groups;
+};
+
+// Fixed, ordered format categories shown in the format filter popup.
+const QVector<FormatCategory> &allFormatCategories();

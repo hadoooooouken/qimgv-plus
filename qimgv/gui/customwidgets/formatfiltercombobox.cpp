@@ -1,84 +1,66 @@
 #include "formatfiltercombobox.h"
 
-#include <QAbstractItemView>
-#include <QMouseEvent>
+#include <QFrame>
+#include <QGridLayout>
+#include <QGuiApplication>
 #include <QPainter>
+#include <QScreen>
 #include <QSet>
+#include <QSizePolicy>
 #include <QStyle>
+#include <QVBoxLayout>
 
 #include "utils/formatgroups.h"
 
 FormatFilterComboBox::FormatFilterComboBox(QWidget *parent)
     : StyledComboBox(parent),
-      model(new QStandardItemModel(this))
+      mPopup(nullptr),
+      mAllFormatsCheckBox(nullptr)
 {
-    auto *allItem = new QStandardItem(tr("All formats"));
-    allItem->setCheckable(true);
-    allItem->setCheckState(Qt::Checked);
-    allItem->setData(QStringList(), Qt::UserRole);
-    model->appendRow(allItem);
-
-    for (const FormatGroup &group : allFormatGroups()) {
-        auto *item = new QStandardItem(group.label);
-        item->setCheckable(true);
-        item->setCheckState(Qt::Unchecked);
-        item->setData(group.extensions, Qt::UserRole);
-        model->appendRow(item);
-    }
-
-    setModel(model);
-    setCurrentIndex(-1); // no single "current" item; label is drawn manually
-
-    view()->viewport()->installEventFilter(this);
-
+    setCurrentIndex(-1);
+    createPopup();
     setProperty("active", false);
     updateDisplayLabel();
 }
 
 QStringList FormatFilterComboBox::checkedExtensions() const {
-    if (model->item(0)->checkState() == Qt::Checked)
+    if (mAllFormatsCheckBox->isChecked())
         return {};
 
     QStringList result;
-    for (int i = 1; i < model->rowCount(); i++) {
-        if (model->item(i)->checkState() == Qt::Checked)
-            result << model->item(i)->data(Qt::UserRole).toStringList();
+    for (int i = 0; i < mFormatCheckBoxes.size(); ++i) {
+        if (mFormatCheckBoxes.at(i)->isChecked())
+            result << mFormatExtensions.at(i);
     }
     return result;
 }
 
 void FormatFilterComboBox::setCheckedExtensions(QStringList extensions) {
-    blockSignals(true);
-
     QSet<QString> wanted;
     for (const QString &ext : extensions)
         wanted.insert(ext.toLower());
 
     if (wanted.isEmpty()) {
-        model->item(0)->setCheckState(Qt::Checked);
-        for (int i = 1; i < model->rowCount(); i++)
-            model->item(i)->setCheckState(Qt::Unchecked);
+        resetToAllFormats();
     } else {
-        model->item(0)->setCheckState(Qt::Unchecked);
+        mAllFormatsCheckBox->setChecked(false);
         bool matchedAny = false;
-        for (int i = 1; i < model->rowCount(); i++) {
-            QStringList groupExtensions = model->item(i)->data(Qt::UserRole).toStringList();
+        for (int i = 0; i < mFormatCheckBoxes.size(); ++i) {
             bool checked = false;
-            for (const QString &ext : groupExtensions) {
+            for (const QString &ext : mFormatExtensions.at(i)) {
                 if (wanted.contains(ext)) {
                     checked = true;
                     break;
                 }
             }
-            model->item(i)->setCheckState(checked ? Qt::Checked : Qt::Unchecked);
+            mFormatCheckBoxes.at(i)->setChecked(checked);
             matchedAny = matchedAny || checked;
         }
         if (!matchedAny)
-            model->item(0)->setCheckState(Qt::Checked); // nothing matched, fall back
+            resetToAllFormats();
     }
 
-    updateDisplayLabel();
-    blockSignals(false);
+    updateSelectionDisplay();
 }
 
 QSize FormatFilterComboBox::minimumSizeHint() const {
@@ -88,47 +70,164 @@ QSize FormatFilterComboBox::minimumSizeHint() const {
 }
 
 bool FormatFilterComboBox::anyFormatChecked() const {
-    for (int i = 1; i < model->rowCount(); i++) {
-        if (model->item(i)->checkState() == Qt::Checked)
+    for (const QCheckBox *checkBox : mFormatCheckBoxes) {
+        if (checkBox->isChecked())
             return true;
     }
     return false;
 }
 
-void FormatFilterComboBox::toggleItem(int row) {
-    QStandardItem *item = model->item(row);
-    if (!item)
-        return;
+void FormatFilterComboBox::createPopup() {
+    mPopup = new QFrame(this, Qt::Popup | Qt::FramelessWindowHint);
+    mPopup->setFrameShape(QFrame::StyledPanel);
+    mPopup->setFrameShadow(QFrame::Plain);
 
-    if (row == 0) {
-        if (item->checkState() != Qt::Checked) {
-            item->setCheckState(Qt::Checked);
-            for (int i = 1; i < model->rowCount(); i++)
-                model->item(i)->setCheckState(Qt::Unchecked);
+    auto *layout = new QVBoxLayout(mPopup);
+    layout->setContentsMargins(kPopupMarginPx, kPopupMarginPx,
+                               kPopupMarginPx, kPopupMarginPx);
+    layout->setSpacing(kPopupSpacingPx);
+
+    mAllFormatsCheckBox = new QCheckBox(tr("All formats"), mPopup);
+    mAllFormatsCheckBox->setChecked(true);
+    layout->addWidget(mAllFormatsCheckBox);
+    connect(mAllFormatsCheckBox, &QCheckBox::clicked, this,
+            [this](bool) { handleAllFormatsClicked(); });
+
+    auto *separator = new QFrame(mPopup);
+    separator->setFrameShape(QFrame::HLine);
+    separator->setFrameShadow(QFrame::Sunken);
+    layout->addWidget(separator);
+
+    const QVector<FormatCategory> &categories = allFormatCategories();
+    for (int categoryIndex = 0; categoryIndex < categories.size(); ++categoryIndex) {
+        const FormatCategory &category = categories.at(categoryIndex);
+        auto *categoryCheckBox = new QCheckBox(category.label, mPopup);
+        QFont categoryFont = categoryCheckBox->font();
+        categoryFont.setBold(true);
+        categoryCheckBox->setFont(categoryFont);
+        categoryCheckBox->setTristate(true);
+        layout->addWidget(categoryCheckBox);
+        mCategoryCheckBoxes.append(categoryCheckBox);
+        mCategoryFormatIndexes.append(QVector<int>{});
+        connect(categoryCheckBox, &QCheckBox::clicked, this,
+                [this, categoryIndex](bool checked) {
+                    handleCategoryClicked(categoryIndex, checked);
+                });
+
+        auto *grid = new QGridLayout;
+        grid->setContentsMargins(kFormatGridIndentPx, 0, 0, 0);
+        grid->setHorizontalSpacing(kPopupSpacingPx);
+        grid->setVerticalSpacing(kPopupSpacingPx);
+        for (int column = 0; column < kFormatColumns; ++column)
+            grid->setColumnMinimumWidth(column, kFormatColumnWidthPx);
+
+        for (int groupIndex = 0; groupIndex < category.groups.size(); ++groupIndex) {
+            const FormatGroup &group = category.groups.at(groupIndex);
+            const int formatIndex = mFormatCheckBoxes.size();
+            auto *formatCheckBox = new QCheckBox(group.label, mPopup);
+            formatCheckBox->setFixedWidth(kFormatColumnWidthPx);
+            mFormatCheckBoxes.append(formatCheckBox);
+            mFormatExtensions.append(group.extensions);
+            mCategoryFormatIndexes.last().append(formatIndex);
+            connect(formatCheckBox, &QCheckBox::clicked, this,
+                    [this, formatIndex](bool checked) {
+                        handleFormatClicked(formatIndex, checked);
+                    });
+
+            const int row = groupIndex / kFormatColumns;
+            const int column = groupIndex % kFormatColumns;
+            grid->addWidget(formatCheckBox, row, column);
         }
-        // clicking "All formats" while it's already the only checked row is a no-op
-    } else {
-        bool newChecked = (item->checkState() != Qt::Checked);
-        item->setCheckState(newChecked ? Qt::Checked : Qt::Unchecked);
 
-        if (newChecked)
-            model->item(0)->setCheckState(Qt::Unchecked);
+        const int usedColumns = category.groups.size() % kFormatColumns;
+        if (usedColumns != 0) {
+            const int finalRow = category.groups.size() / kFormatColumns;
+            for (int column = usedColumns; column < kFormatColumns; ++column) {
+                auto *emptyCell = new QWidget(mPopup);
+                QSizePolicy sizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+                sizePolicy.setRetainSizeWhenHidden(true);
+                emptyCell->setSizePolicy(sizePolicy);
+                emptyCell->setFixedWidth(kFormatColumnWidthPx);
+                emptyCell->hide();
+                grid->addWidget(emptyCell, finalRow, column);
+            }
+        }
 
-        if (!anyFormatChecked())
-            model->item(0)->setCheckState(Qt::Checked); // never allow an empty selection
+        layout->addLayout(grid);
+    }
+}
+
+void FormatFilterComboBox::resetToAllFormats() {
+    mAllFormatsCheckBox->setChecked(true);
+    for (QCheckBox *checkBox : mFormatCheckBoxes)
+        checkBox->setChecked(false);
+}
+
+void FormatFilterComboBox::updateCategoryCheckStates() {
+    for (int categoryIndex = 0; categoryIndex < mCategoryCheckBoxes.size(); ++categoryIndex) {
+        const QVector<int> &formatIndexes = mCategoryFormatIndexes.at(categoryIndex);
+        int checkedCount = 0;
+        for (int formatIndex : formatIndexes) {
+            if (mFormatCheckBoxes.at(formatIndex)->isChecked())
+                ++checkedCount;
+        }
+
+        QCheckBox *categoryCheckBox = mCategoryCheckBoxes.at(categoryIndex);
+        if (checkedCount == 0)
+            categoryCheckBox->setCheckState(Qt::Unchecked);
+        else if (checkedCount == formatIndexes.size())
+            categoryCheckBox->setCheckState(Qt::Checked);
+        else
+            categoryCheckBox->setCheckState(Qt::PartiallyChecked);
+    }
+}
+
+void FormatFilterComboBox::updateSelectionDisplay() {
+    updateCategoryCheckStates();
+    updateDisplayLabel();
+}
+
+void FormatFilterComboBox::applySelection() {
+    updateSelectionDisplay();
+    emit formatSelectionChanged(checkedExtensions());
+}
+
+void FormatFilterComboBox::handleAllFormatsClicked() {
+    resetToAllFormats();
+    applySelection();
+}
+
+void FormatFilterComboBox::handleFormatClicked(int formatIndex, bool checked) {
+    if (mAllFormatsCheckBox->isChecked()) {
+        mAllFormatsCheckBox->setChecked(false);
+        for (int index = 0; index < mFormatCheckBoxes.size(); ++index)
+            mFormatCheckBoxes.at(index)->setChecked(index == formatIndex && checked);
     }
 
-    updateDisplayLabel();
-    emit formatSelectionChanged(checkedExtensions());
+    if (!anyFormatChecked())
+        resetToAllFormats();
+
+    applySelection();
+}
+
+void FormatFilterComboBox::handleCategoryClicked(int categoryIndex, bool checked) {
+    mAllFormatsCheckBox->setChecked(false);
+    for (int formatIndex : mCategoryFormatIndexes.at(categoryIndex))
+        mFormatCheckBoxes.at(formatIndex)->setChecked(checked);
+
+    if (!anyFormatChecked())
+        resetToAllFormats();
+
+    applySelection();
 }
 
 void FormatFilterComboBox::updateDisplayLabel() {
     int checkedFormats = 0;
-    int lastCheckedRow = -1;
-    for (int i = 1; i < model->rowCount(); i++) {
-        if (model->item(i)->checkState() == Qt::Checked) {
-            checkedFormats++;
-            lastCheckedRow = i;
+    int lastCheckedIndex = -1;
+    for (int i = 0; i < mFormatCheckBoxes.size(); ++i) {
+        if (mFormatCheckBoxes.at(i)->isChecked()) {
+            ++checkedFormats;
+            lastCheckedIndex = i;
         }
     }
 
@@ -137,7 +236,7 @@ void FormatFilterComboBox::updateDisplayLabel() {
         mDisplayText = tr("All formats");
         active = false;
     } else if (checkedFormats == 1) {
-        mDisplayText = model->item(lastCheckedRow)->text();
+        mDisplayText = mFormatCheckBoxes.at(lastCheckedIndex)->text();
         active = true;
     } else {
         mDisplayText = tr("Custom");
@@ -149,56 +248,66 @@ void FormatFilterComboBox::updateDisplayLabel() {
     style()->polish(this);
     refreshIcon();
     updateGeometry();
+    update();
 }
 
 void FormatFilterComboBox::paintEvent(QPaintEvent *e) {
     StyledComboBox::paintEvent(e);
 
-    QPainter p(this);
+    QPainter painter(this);
     const int trailingWidth = iconAreaWidth() + kTextIconSpacingPx;
     QRect textRect = rect().adjusted(kTextLeftPadding, 0, -trailingWidth, 0);
-    p.setPen(palette().color(QPalette::ButtonText));
-    p.drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft,
-               fontMetrics().elidedText(mDisplayText, Qt::ElideRight, textRect.width()));
+    painter.setPen(palette().color(QPalette::ButtonText));
+    painter.drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft,
+                     fontMetrics().elidedText(mDisplayText, Qt::ElideRight, textRect.width()));
 }
 
 void FormatFilterComboBox::showPopup() {
-    mPressedIndex = QPersistentModelIndex();
-    const int popupFrameWidth = view()->frameWidth();
-    const int popupContentWidth = view()->sizeHintForColumn(modelColumn());
-    view()->setMinimumWidth(qMax(width(), popupContentWidth
-        + popupFrameWidth * 2));
-    StyledComboBox::showPopup();
+    if (mPopup->isVisible()) {
+        mPopup->hide();
+        return;
+    }
+
+    mPopup->adjustSize();
+    QSize popupSize = mPopup->sizeHint();
+    popupSize.setWidth(qMax(popupSize.width(), width()));
+
+    QScreen *popupScreen = QGuiApplication::screenAt(mapToGlobal(rect().center()));
+    if (!popupScreen)
+        popupScreen = screen();
+    if (!popupScreen)
+        popupScreen = QGuiApplication::primaryScreen();
+    if (!popupScreen) {
+        qWarning("Format filter popup could not find an available screen");
+        return;
+    }
+
+    const QRect availableGeometry = popupScreen->availableGeometry();
+    if (popupSize.width() > availableGeometry.width()
+        || popupSize.height() > availableGeometry.height()) {
+        qWarning("Format filter popup does not fit within the available screen geometry");
+        return;
+    }
+
+    const QPoint comboTopLeft = mapToGlobal(QPoint(0, 0));
+    const QPoint belowCombo = mapToGlobal(QPoint(0, height()));
+    const int maximumX = availableGeometry.right() - popupSize.width() + 1;
+    const int maximumY = availableGeometry.bottom() - popupSize.height() + 1;
+    const int preferredY = availableGeometry.bottom() - belowCombo.y() + 1 >= popupSize.height()
+        ? belowCombo.y()
+        : comboTopLeft.y() - popupSize.height();
+    const int popupX = qBound(availableGeometry.left(), belowCombo.x(), maximumX);
+    const int popupY = qBound(availableGeometry.top(), preferredY, maximumY);
+
+    mPopup->resize(popupSize);
+    mPopup->move(popupX, popupY);
+    mPopup->show();
 }
 
-bool FormatFilterComboBox::eventFilter(QObject *watched, QEvent *event) {
-    if (watched == view()->viewport()
-        && event->type() == QEvent::MouseButtonPress) {
-        auto *mouseEvent = static_cast<QMouseEvent*>(event);
-        if (mouseEvent->button() == Qt::LeftButton)
-            mPressedIndex = view()->indexAt(mouseEvent->position().toPoint());
-        else
-            mPressedIndex = QPersistentModelIndex();
-    } else if (watched == view()->viewport()
-               && event->type() == QEvent::MouseButtonRelease) {
-        auto *mouseEvent = static_cast<QMouseEvent*>(event);
-        const QModelIndex releasedIndex = view()->indexAt(
-            mouseEvent->position().toPoint());
-        const bool shouldToggle = mouseEvent->button() == Qt::LeftButton
-            && mPressedIndex.isValid()
-            && releasedIndex == mPressedIndex;
-        mPressedIndex = QPersistentModelIndex();
-
-        if (shouldToggle)
-            toggleItem(releasedIndex.row());
-
-        if (mouseEvent->button() == Qt::LeftButton) {
-            // Keep the popup open and swallow the release that originally
-            // opened it, since that release has no matching viewport press.
-            return true;
-        }
-    }
-    return StyledComboBox::eventFilter(watched, event);
+void FormatFilterComboBox::hidePopup() {
+    if (mPopup)
+        mPopup->hide();
+    StyledComboBox::hidePopup();
 }
 
 QColor FormatFilterComboBox::iconColor() const {
@@ -209,13 +318,9 @@ QColor FormatFilterComboBox::iconColor() const {
 
 int FormatFilterComboBox::widestDisplayTextWidth() const {
     int widestWidth = fontMetrics().horizontalAdvance(tr("Custom"));
-    for (int row = 0; row < model->rowCount(); ++row) {
-        const QStandardItem *item = model->item(row);
-        if (item) {
-            widestWidth = qMax(
-                widestWidth, fontMetrics().horizontalAdvance(item->text()));
-        }
-    }
+    widestWidth = qMax(widestWidth, fontMetrics().horizontalAdvance(tr("All formats")));
+    for (const QCheckBox *checkBox : mFormatCheckBoxes)
+        widestWidth = qMax(widestWidth, fontMetrics().horizontalAdvance(checkBox->text()));
     return widestWidth;
 }
 
