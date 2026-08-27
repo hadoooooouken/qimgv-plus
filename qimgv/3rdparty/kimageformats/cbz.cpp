@@ -27,7 +27,7 @@ constexpr qint64 kMaximumImageDimension = 300'000;
 constexpr quint64 kMaximumSourcePixels = 128ULL * 1024ULL * 1024ULL;
 constexpr quint64 kMaximumDecodedImageBytes = 512ULL * kBytesPerMebibyte;
 
-struct CbzPageEntry
+struct ArchivePageEntry
 {
     quint32 index = 0;
     QString path;
@@ -106,7 +106,7 @@ bool isHiddenOrJunkPath(QString path)
     return false;
 }
 
-bool naturalPathLessThan(const CbzPageEntry &left, const CbzPageEntry &right)
+bool naturalPathLessThan(const ArchivePageEntry &left, const ArchivePageEntry &right)
 {
     static thread_local QCollator collator = [] {
         QCollator value;
@@ -199,7 +199,7 @@ public:
             return true;
         }
 
-        const CbzPageEntry &page = pages.at(currentPage);
+        const ArchivePageEntry &page = pages.at(currentPage);
         QByteArray extracted;
         if (!zipReader.extractEntry(page.index, page.uncompressedSize, extracted,
                                     page.compressedSize)) {
@@ -241,7 +241,7 @@ public:
     mutable bool indexAttempted = false;
     mutable QimgvZipInternal::DeviceReadContext readContext;
     mutable QimgvZipInternal::ZipReader zipReader;
-    mutable QVector<CbzPageEntry> pages;
+    mutable QVector<ArchivePageEntry> pages;
     mutable int currentPage = 0;
     mutable QByteArray pageData;
     mutable int cachedPage = -1;
@@ -261,7 +261,8 @@ bool CbzHandler::canRead() const
     if (!d->ensureIndex(device())) {
         return false;
     }
-    setFormat("cbz");
+    const QByteArray requestedFormat = format().toLower();
+    setFormat(requestedFormat == "zip" ? QByteArrayLiteral("zip") : QByteArrayLiteral("cbz"));
     return true;
 }
 
@@ -365,12 +366,13 @@ void CbzHandler::setOption(ImageOption option, const QVariant &value)
 
 QImageIOPlugin::Capabilities CbzPlugin::capabilities(QIODevice *, const QByteArray &format) const
 {
-    if (format == "cbz" || format == "CBZ") {
+    if (format.compare("cbz", Qt::CaseInsensitive) == 0
+        || format.compare("zip", Qt::CaseInsensitive) == 0) {
         return Capabilities(CanRead);
     }
 
-    // CBZ has the same PK ZIP signature as KRA, ORA, EPUB, DOCX and ordinary ZIP
-    // archives. Never claim an untyped ZIP based on magic alone.
+    // ZIP-based image archives have the same PK signature as KRA, ORA, EPUB and DOCX.
+    // Never claim an untyped ZIP based on magic alone.
     return {};
 }
 
@@ -378,7 +380,7 @@ QImageIOHandler *CbzPlugin::create(QIODevice *device, const QByteArray &format) 
 {
     auto *handler = new CbzHandler;
     handler->setDevice(device);
-    handler->setFormat(format.isEmpty() ? QByteArray("cbz") : format);
+    handler->setFormat(format.isEmpty() ? QByteArrayLiteral("cbz") : format);
     return handler;
 }
 

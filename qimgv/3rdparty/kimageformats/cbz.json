@@ -1,4 +1,4 @@
 {
-    "Keys": [ "cbz" ],
-    "MimeTypes": [ "application/vnd.comicbook+zip" ]
+    "Keys": [ "cbz", "zip" ],
+    "MimeTypes": [ "application/vnd.comicbook+zip", "application/zip" ]
 }
