@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QCoreApplication>
 #include <QString>
 #include <QStringList>
 #include <QVector>
@@ -14,5 +15,6 @@ struct FormatCategory {
     QVector<FormatGroup> groups;
 };
 
-// Fixed, ordered format categories shown in the format filter popup.
-const QVector<FormatCategory> &allFormatCategories();
+// Returns the ordered format categories with translated labels.
+// Called once at popup-creation time; the cost is negligible.
+QVector<FormatCategory> allFormatCategories();
