@@ -4,6 +4,7 @@
 #include "themestore.h"
 #include "utils/script.h"
 #include <QApplication>
+#include <QStyleHints>
 #include <QColor>
 #include <QDebug>
 #include <QDir>

@@ -194,19 +194,17 @@ void Settings::loadStylesheet() {
     // --- color scheme ---------------------------------------------
     auto colors = settings->colorScheme();
     // tint color for system windows
-    QPalette p;
-    QColor sys_text = p.text().color();
-    QColor sys_window = p.window().color();
-
     ThemeMode themeModeVal = settings->themeMode();
     bool isDark = false;
     if (themeModeVal == THEME_AUTO) {
-      if (sys_window.valueF() <= 0.45f) {
-        isDark = true;
-      }
+      isDark = QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
     } else if (themeModeVal == THEME_DARK) {
       isDark = true;
     }
+
+    QPalette p;
+    QColor sys_text = p.text().color();
+    QColor sys_window = p.window().color();
 
     if (isDark) {
       sys_window = QColor(37, 37, 37);
@@ -433,8 +431,7 @@ void Settings::loadTheme() {
   ColorSchemes baseSchemeName = COLORS_DARK; // Default to dark
 
   if (mode == THEME_AUTO) {
-    QPalette p;
-    if (p.window().color().valueF() <= 0.45f) {
+    if (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark) {
       baseSchemeName = COLORS_DARK;
     } else {
       baseSchemeName = COLORS_LIGHT;
