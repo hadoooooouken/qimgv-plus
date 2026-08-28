@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QDirIterator>
+#include <QImageReader>
 #include <QRegularExpression>
 #include <QSet>
 
@@ -84,9 +85,16 @@ void DirectoryExpandWorker::run() {
             if (isCancellationRequested())
                 break;
             QString filePath = QDir::fromNativeSeparators(it.next());
-            if (regex.match(it.fileName()).hasMatch() && !tryAdd(filePath)) {
-                limitWasExceeded = true;
-                break;
+            const QString fileName = it.fileName();
+            if (regex.match(fileName).hasMatch()) {
+                if ((fileName.endsWith(u".zip", Qt::CaseInsensitive) || fileName.endsWith(u".cbz", Qt::CaseInsensitive))
+                    && !QImageReader(filePath, fileName.endsWith(u".zip", Qt::CaseInsensitive) ? "zip" : "cbz").canRead()) {
+                    continue;
+                }
+                if (!tryAdd(filePath)) {
+                    limitWasExceeded = true;
+                    break;
+                }
             }
         }
     }

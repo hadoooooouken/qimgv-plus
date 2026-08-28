@@ -117,10 +117,15 @@ void DocumentInfo::detectFormat() {
         exifLoaded = true; // Font files have no Exiv2 metadata path.
     } else if(suffix == "cbz" || suffix == "zip") {
         // CBZ and ZIP use the same image-archive handler. Recognize them only
-        // by explicit extension; application/zip alone is not sufficient.
-        mFormat = QString::fromLatin1(suffix);
-        mDocumentType = DocumentType::STATIC;
-        exifLoaded = true;
+        // by explicit extension and only if they contain at least one readable image.
+        QImageReader reader(fileInfo.filePath(), suffix);
+        if(reader.canRead()) {
+            mFormat = QString::fromLatin1(suffix);
+            mDocumentType = DocumentType::STATIC;
+            exifLoaded = true;
+        } else {
+            mDocumentType = DocumentType::NONE;
+        }
     } else if(mimeName == "image/jpeg") {
         mFormat = "jpg";
         mDocumentType = DocumentType::STATIC;

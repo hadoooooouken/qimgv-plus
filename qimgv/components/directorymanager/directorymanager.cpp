@@ -2,6 +2,7 @@
 #include "settings.h"
 #include "utils/fileoperations.h"
 
+#include <QImageReader>
 #include <QThreadPool>
 #include <QRunnable>
 #include <QPointer>
@@ -10,6 +11,16 @@
 #include <memory>
 
 namespace fs = std::filesystem;
+
+namespace {
+bool isCandidateFileSupported(const QString &name, const QString &path) {
+    if (name.endsWith(u".zip", Qt::CaseInsensitive) || name.endsWith(u".cbz", Qt::CaseInsensitive)) {
+        QImageReader reader(path, name.endsWith(u".zip", Qt::CaseInsensitive) ? "zip" : "cbz");
+        return reader.canRead();
+    }
+    return true;
+}
+}
 
 class DirectoryScanner : public QRunnable {
 public:
@@ -69,7 +80,7 @@ public:
                 }
 
                 auto match = regex.match(name);
-                if (match.hasMatch()) {
+                if (match.hasMatch() && isCandidateFileSupported(name, path)) {
                     FSEntry newEntry;
                     try {
                         newEntry.name = name;
@@ -127,18 +138,20 @@ public:
                                 continue;
                             }
                         }
-                        FSEntry newEntry;
-                        try {
-                            newEntry.name = name;
-                            newEntry.path = path;
-                            newEntry.isDirectory = false;
-                            newEntry.size = entry.file_size();
-                            newEntry.modifyTime = entry.last_write_time();
-                        } catch (...) {
-                            it.increment(ec);
-                            continue;
+                        if (isCandidateFileSupported(name, path)) {
+                            FSEntry newEntry;
+                            try {
+                                newEntry.name = name;
+                                newEntry.path = path;
+                                newEntry.isDirectory = false;
+                                newEntry.size = entry.file_size();
+                                newEntry.modifyTime = entry.last_write_time();
+                            } catch (...) {
+                                it.increment(ec);
+                                continue;
+                            }
+                            files.emplace_back(newEntry);
                         }
-                        files.emplace_back(newEntry);
                     }
                 }
                 it.increment(ec);
@@ -547,7 +560,9 @@ QDateTime DirectoryManager::lastModified(QString filePath) const {
 
 inline
 bool DirectoryManager::isSupportedFile(QString path) const {
-    return ( isFile(path) && regex.match(path).hasMatch() );
+    if (!isFile(path) || !regex.match(path).hasMatch())
+        return false;
+    return isCandidateFileSupported(path, path);
 }
 
 bool DirectoryManager::isFile(QString path) const {
@@ -634,18 +649,20 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
                     if(attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN))
                         continue;
                 }
-                FSEntry newEntry;
-                try {
-                    newEntry.name = name;
-                    newEntry.path = path;
-                    newEntry.isDirectory = false;
-                    newEntry.size = entry.file_size();
-                    newEntry.modifyTime = entry.last_write_time();
-                } catch (const std::filesystem::filesystem_error &err) {
-                    qWarning() << "[DirectoryManager]" << err.what();
-                    continue;
+                if(isCandidateFileSupported(name, path)) {
+                    FSEntry newEntry;
+                    try {
+                        newEntry.name = name;
+                        newEntry.path = path;
+                        newEntry.isDirectory = false;
+                        newEntry.size = entry.file_size();
+                        newEntry.modifyTime = entry.last_write_time();
+                    } catch (const std::filesystem::filesystem_error &err) {
+                        qWarning() << "[DirectoryManager]" << err.what();
+                        continue;
+                    }
+                    entryVec.emplace_back(newEntry);
                 }
-                entryVec.emplace_back(newEntry);
             }
         }
     }
@@ -676,18 +693,20 @@ void DirectoryManager::addEntriesFromDirectoryRecursive(std::vector<FSEntry> &en
         match = regex.match(name);
         if(match.hasMatch()) {
             QString path = QString::fromStdWString(entry.path().generic_wstring());
-            FSEntry newEntry;
-            try {
-                newEntry.name = name;
-                newEntry.path = path;
-                newEntry.isDirectory = false;
-                newEntry.size = entry.file_size();
-                newEntry.modifyTime = entry.last_write_time();
-            } catch (const std::filesystem::filesystem_error &err) {
-                qWarning() << "[DirectoryManager]" << err.what();
-                continue;
+            if(isCandidateFileSupported(name, path)) {
+                FSEntry newEntry;
+                try {
+                    newEntry.name = name;
+                    newEntry.path = path;
+                    newEntry.isDirectory = false;
+                    newEntry.size = entry.file_size();
+                    newEntry.modifyTime = entry.last_write_time();
+                } catch (const std::filesystem::filesystem_error &err) {
+                    qWarning() << "[DirectoryManager]" << err.what();
+                    continue;
+                }
+                entryVec.emplace_back(newEntry);
             }
-            entryVec.emplace_back(newEntry);
         }
     }
 }
