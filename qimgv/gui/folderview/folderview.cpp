@@ -9,6 +9,7 @@
 #include <QHBoxLayout>
 #include <QSpacerItem>
 #include <QLabel>
+#include <QLineEdit>
 #include <QPushButton>
 #include <QSlider>
 #include <cmath>
@@ -25,6 +26,8 @@ namespace {
 constexpr int kActionIconSizePx = UiMetrics::kStandardIconSizePx;
 constexpr int kCaptionControlSpacingPx = 7;
 constexpr int kTopBarRightMarginPx = 5;
+constexpr int kNameFilterDelayMs = 150;
+constexpr int kNameFilterWidthPx = 163;
 // sortingComboBox / folderSortingComboBox / formatFilterComboBox (their own
 // StyledComboBox icon, not the dropdown chevron).
 constexpr int kCompactIconSizePx = UiMetrics::kCompactIconSizePx;
@@ -160,6 +163,12 @@ FolderView::FolderView(QWidget *parent) :
     connect(sortingComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &FolderView::onSortingSelected);
     connect(folderSortingComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &FolderView::onFolderSortingSelected);
     connect(formatFilterComboBox, &FormatFilterComboBox::formatSelectionChanged, this, &FolderView::formatFilterSelected);
+    connect(nameFilterEdit, &QLineEdit::textChanged, this, &FolderView::onNameFilterTextChanged);
+    nameFilterTimer.setSingleShot(true);
+    nameFilterTimer.setInterval(kNameFilterDelayMs);
+    connect(&nameFilterTimer, &QTimer::timeout, this, [this]() {
+        emit nameFilterSelected(nameFilterEdit->text());
+    });
     connect(togglePlacesPanelButton, &ActionButton::toggled, this, &FolderView::onPlacesPanelButtonChecked);
 
 
@@ -305,6 +314,19 @@ void FolderView::setupUi() {
     formatFilterComboBox->setContextMenuPopupStyle(true);
     formatFilterComboBox->setToolTip(tr("Filter by file format"));
     horizontalLayout_5->addWidget(formatFilterComboBox);
+
+    horizontalSpacer_nameFilter = new QSpacerItem(
+        4, 20, QSizePolicy::Fixed, QSizePolicy::Minimum);
+    horizontalLayout_5->addSpacerItem(horizontalSpacer_nameFilter);
+
+    nameFilterEdit = new QLineEdit(topBar);
+    nameFilterEdit->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::MinimumExpanding);
+    nameFilterEdit->setFixedWidth(kNameFilterWidthPx);
+    nameFilterEdit->setPlaceholderText(tr("Name filter"));
+    nameFilterEdit->setClearButtonEnabled(true);
+    nameFilterEdit->setAccessibleName("FolderViewNameFilter");
+    nameFilterEdit->setToolTip(tr("Filter images by name"));
+    horizontalLayout_5->addWidget(nameFilterEdit);
     
     QSpacerItem *horizontalSpacer_2 = new QSpacerItem(8, 20, QSizePolicy::Fixed, QSizePolicy::Minimum);
     horizontalLayout_5->addSpacerItem(horizontalSpacer_2);
@@ -475,6 +497,10 @@ void FolderView::readSettings() {
     QList<int> sizes;
     sizes << settings->placesPanelWidth() << 1;
     splitter->setSizes(sizes);
+}
+
+void FolderView::onNameFilterTextChanged(const QString &) {
+    nameFilterTimer.start();
 }
 
 void FolderView::onSplitterMoved() {

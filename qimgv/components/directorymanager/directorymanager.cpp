@@ -20,20 +20,26 @@ bool isCandidateFileSupported(const QString &name, const QString &path) {
     }
     return true;
 }
+
+bool matchesNameFilter(const QString &name, const QString &nameFilter) {
+    return nameFilter.isEmpty() || name.contains(nameFilter, Qt::CaseInsensitive);
+}
+
+struct DirectoryScanRequest {
+    QString directoryPath;
+    bool recursive = false;
+    bool showHiddenFiles = false;
+    QRegularExpression formatRegex;
+    QString nameFilter;
+};
 }
 
 class DirectoryScanner : public QRunnable {
 public:
-    DirectoryScanner(QString directoryPath,
-                     bool recursive,
-                     bool showHiddenFiles,
-                     QRegularExpression regex,
+    DirectoryScanner(DirectoryScanRequest request,
                      QPointer<DirectoryManager> manager,
                      std::shared_ptr<std::atomic<bool>> cancelled)
-        : directoryPath(directoryPath),
-          recursive(recursive),
-          showHiddenFiles(showHiddenFiles),
-          regex(regex),
+        : request(std::move(request)),
           manager(manager),
           cancelled(cancelled) {
         setAutoDelete(true);
@@ -47,9 +53,9 @@ public:
         std::vector<FSEntry> files;
         std::vector<FSEntry> dirs;
         std::error_code ec;
-        auto stdPath = toStdString(directoryPath);
+        auto stdPath = toStdString(request.directoryPath);
 
-        if (recursive) {
+        if (request.recursive) {
             fs::recursive_directory_iterator it(stdPath, ec);
             fs::recursive_directory_iterator end;
             while (it != end) {
@@ -69,7 +75,7 @@ public:
                 }
 
                 if (isDir) {
-                    if (!showHiddenFiles) {
+                    if (!request.showHiddenFiles) {
                         DWORD attributes = GetFileAttributes(entry.path().c_str());
                         if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN)) {
                             it.disable_recursion_pending();
@@ -79,8 +85,9 @@ public:
                     continue;
                 }
 
-                auto match = regex.match(name);
-                if (match.hasMatch() && isCandidateFileSupported(name, path)) {
+                auto match = request.formatRegex.match(name);
+                if (match.hasMatch() && matchesNameFilter(name, request.nameFilter) &&
+                    isCandidateFileSupported(name, path)) {
                     FSEntry newEntry;
                     try {
                         newEntry.name = name;
@@ -116,7 +123,7 @@ public:
                 }
 
                 if (isDir) {
-                    if (!showHiddenFiles) {
+                    if (!request.showHiddenFiles) {
                         DWORD attributes = GetFileAttributes(entry.path().c_str());
                         if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN)) {
                             it.increment(ec);
@@ -129,9 +136,9 @@ public:
                     newEntry.isDirectory = true;
                     dirs.emplace_back(newEntry);
                 } else {
-                    auto match = regex.match(name);
-                    if (match.hasMatch()) {
-                        if (!showHiddenFiles) {
+                    auto match = request.formatRegex.match(name);
+                    if (match.hasMatch() && matchesNameFilter(name, request.nameFilter)) {
+                        if (!request.showHiddenFiles) {
                             DWORD attributes = GetFileAttributes(entry.path().c_str());
                             if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN)) {
                                 it.increment(ec);
@@ -161,7 +168,7 @@ public:
         if (cancelled && cancelled->load()) return;
 
         QPointer<DirectoryManager> mgr = manager;
-        QMetaObject::invokeMethod(mgr, [mgr, path = directoryPath, files = std::move(files), dirs = std::move(dirs), cancelled = this->cancelled]() mutable {
+        QMetaObject::invokeMethod(mgr, [mgr, path = request.directoryPath, files = std::move(files), dirs = std::move(dirs), cancelled = this->cancelled]() mutable {
             if (mgr && (!cancelled || !cancelled->load())) {
                 mgr->handleScanFinished(path, std::move(files), std::move(dirs));
             }
@@ -169,10 +176,7 @@ public:
     }
 
 private:
-    QString directoryPath;
-    bool recursive;
-    bool showHiddenFiles;
-    QRegularExpression regex;
+    DirectoryScanRequest request;
     QPointer<DirectoryManager> manager;
     std::shared_ptr<std::atomic<bool>> cancelled;
 };
@@ -293,6 +297,10 @@ void DirectoryManager::setFormatFilter(QStringList extensions) {
     rebuildRegex();
 }
 
+void DirectoryManager::setNameFilter(QString nameFilter) {
+    mNameFilter = std::move(nameFilter);
+}
+
 void DirectoryManager::rebuildRegex() {
     QString pattern;
     if (mFormatFilter.isEmpty()) {
@@ -356,14 +364,9 @@ bool DirectoryManager::setDirectory(QString dirPath) {
     currentScanCancelled = std::make_shared<std::atomic<bool>>(false);
     isScanning = true;
 
-    auto scanner = new DirectoryScanner(
-        dirPath,
-        false, // recursive
-        settings->showHiddenFiles(),
-        regex,
-        this,
-        currentScanCancelled
-    );
+    DirectoryScanRequest scanRequest{dirPath, false, settings->showHiddenFiles(), regex,
+                                     mNameFilter};
+    auto scanner = new DirectoryScanner(scanRequest, this, currentScanCancelled);
     QThreadPool::globalInstance()->start(scanner);
 
     return true;
@@ -398,14 +401,9 @@ bool DirectoryManager::setDirectoryRecursive(QString dirPath) {
     currentScanCancelled = std::make_shared<std::atomic<bool>>(false);
     isScanning = true;
 
-    auto scanner = new DirectoryScanner(
-        dirPath,
-        true, // recursive
-        settings->showHiddenFiles(),
-        regex,
-        this,
-        currentScanCancelled
-    );
+    DirectoryScanRequest scanRequest{dirPath, true, settings->showHiddenFiles(), regex,
+                                     mNameFilter};
+    auto scanner = new DirectoryScanner(scanRequest, this, currentScanCancelled);
     QThreadPool::globalInstance()->start(scanner);
 
     return true;
@@ -560,7 +558,9 @@ QDateTime DirectoryManager::lastModified(QString filePath) const {
 
 inline
 bool DirectoryManager::isSupportedFile(QString path) const {
-    if (!isFile(path) || !regex.match(path).hasMatch())
+    const QString fileName = QFileInfo(path).fileName();
+    if (!isFile(path) || !regex.match(fileName).hasMatch() ||
+        !matchesNameFilter(fileName, mNameFilter))
         return false;
     return isCandidateFileSupported(path, path);
 }

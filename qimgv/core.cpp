@@ -572,6 +572,7 @@ void Core::connectComponents() {
   connect(mw, &MW::sortingSelected, this, &Core::sortBy);
   connect(mw, &MW::folderSortingSelected, this, &Core::onFolderSortingSelected);
   connect(mw, &MW::formatFilterSelected, this, &Core::onFormatFilterSelected);
+  connect(mw, &MW::nameFilterSelected, this, &Core::onNameFilterSelected);
   connect(mw, &MW::showFoldersChanged, this, &Core::setFoldersDisplay);
   connect(mw, &MW::discardEditsRequested, this, &Core::discardEdits);
   connect(mw, &MW::draggedOut, this, qOverload<>(&Core::onDraggedOut));
@@ -2411,6 +2412,10 @@ void Core::onFolderSortingSelected(SortingMode mode) {
 void Core::onFormatFilterSelected(QStringList extensions) {
   settings->setFormatFilter(extensions);
   model->setFormatFilter(extensions);
+}
+
+void Core::onNameFilterSelected(QString nameFilter) {
+  model->setNameFilter(std::move(nameFilter));
 }
 
 void Core::guiSetImage(std::shared_ptr<Image> img) {

@@ -139,10 +139,28 @@ void DirectoryModel::setSortingMode(SortingMode mode) {
 
 void DirectoryModel::setFormatFilter(QStringList extensions) {
     dirManager.setFormatFilter(extensions);
-    if (dirManager.source() == SOURCE_DIRECTORY) {
-        QString path = dirManager.directoryPath();
-        if (!path.isEmpty())
-            dirManager.setDirectory(path); // rescan with the new filter, keep decode cache and watcher intact
+    reloadDirectorySource();
+}
+
+void DirectoryModel::setNameFilter(QString nameFilter) {
+    dirManager.setNameFilter(std::move(nameFilter));
+    reloadDirectorySource();
+}
+
+void DirectoryModel::reloadDirectorySource() {
+    const QString path = dirManager.directoryPath();
+    if (path.isEmpty())
+        return;
+
+    switch (dirManager.source()) {
+    case SOURCE_DIRECTORY:
+        dirManager.setDirectory(path);
+        break;
+    case SOURCE_DIRECTORY_RECURSIVE:
+        dirManager.setDirectoryRecursive(path);
+        break;
+    case SOURCE_LIST:
+        break;
     }
 }
 

@@ -28,6 +28,7 @@ void FolderViewProxy::init() {
     connect(folderView.get(), &FolderView::sortingSelected, this, &FolderViewProxy::sortingSelected);
     connect(folderView.get(), &FolderView::folderSortingSelected, this, &FolderViewProxy::folderSortingSelected);
     connect(folderView.get(), &FolderView::formatFilterSelected, this, &FolderViewProxy::formatFilterSelected);
+    connect(folderView.get(), &FolderView::nameFilterSelected, this, &FolderViewProxy::nameFilterSelected);
     connect(folderView.get(), &FolderView::showFoldersChanged, this, &FolderViewProxy::showFoldersChanged);
     connect(folderView.get(), &FolderView::directorySelected, this, &FolderViewProxy::directorySelected);
     connect(folderView.get(), &FolderView::draggedOut, this, &FolderViewProxy::draggedOut);

@@ -56,6 +56,7 @@ public:
     void setSortingMode(SortingMode mode);
     SortingMode sortingMode() const;
     void setFormatFilter(QStringList extensions);
+    void setNameFilter(QString nameFilter);
 
     QString directoryPath() const;
     void unload(QString filePath);
@@ -106,6 +107,7 @@ private:
     // filePath is already removed. Returns true if the image was loaded
     // (synchronous path) or the async task was scheduled successfully.
     bool forceLoad(QString filePath, bool asyncHint);
+    void reloadDirectorySource();
     static void synchronizePageOverride(const std::shared_ptr<Image> &img);
 
 private slots:

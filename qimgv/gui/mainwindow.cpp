@@ -97,6 +97,7 @@ void MW::setupUi() {
     connect(folderView.get(), &FolderViewProxy::sortingSelected, this, &MW::sortingSelected);
     connect(folderView.get(), &FolderViewProxy::folderSortingSelected, this, &MW::folderSortingSelected);
     connect(folderView.get(), &FolderViewProxy::formatFilterSelected, this, &MW::formatFilterSelected);
+    connect(folderView.get(), &FolderViewProxy::nameFilterSelected, this, &MW::nameFilterSelected);
     connect(folderView.get(), &FolderViewProxy::directorySelected, this, &MW::opened);
     connect(folderView.get(), &FolderViewProxy::copyUrlsRequested, this, &MW::copyUrlsRequested);
     connect(folderView.get(), &FolderViewProxy::moveUrlsRequested, this, &MW::moveUrlsRequested);

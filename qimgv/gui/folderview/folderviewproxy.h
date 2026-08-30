@@ -54,6 +54,7 @@ signals:
     void sortingSelected(SortingMode);
     void folderSortingSelected(SortingMode);
     void formatFilterSelected(QStringList);
+    void nameFilterSelected(QString);
     void showFoldersChanged(bool mode);
     void directorySelected(QString);
     void copyUrlsRequested(QList<QString>, QString path);

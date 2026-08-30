@@ -6,6 +6,7 @@
 #include <QFileSystemModel>
 #include <QFileDialog>
 #include <QElapsedTimer>
+#include <QTimer>
 #include "gui/customwidgets/floatingwidgetcontainer.h"
 #include "gui/idirectoryview.h"
 #include "gui/folderview/foldergridview.h"
@@ -18,6 +19,7 @@
 class ClickableLabel;
 class QSplitter;
 class QLabel;
+class QLineEdit;
 class QSlider;
 class QPushButton;
 class TreeViewCustom;
@@ -75,6 +77,7 @@ signals:
     void sortingSelected(SortingMode);
     void folderSortingSelected(SortingMode);
     void formatFilterSelected(QStringList);
+    void nameFilterSelected(QString);
     void directorySelected(QString path);
     void showFoldersChanged(bool mode);
     void copyUrlsRequested(QList<QString>, QString path);
@@ -90,6 +93,7 @@ signals:
 private slots:
     void onSortingSelected(int);
     void onFolderSortingSelected(int);
+    void onNameFilterTextChanged(const QString &text);
     void readSettings();
 
     void onTreeViewClicked(QModelIndex index);
@@ -113,6 +117,7 @@ private:
     QString m_pendingScrollPath;
     int lastThumbnailResolution = 256;
     int dirCount = 0;
+    QTimer nameFilterTimer;
     FileSystemModelCustom *dirModel;
     QElapsedTimer popupTimerClutch;
 
@@ -133,6 +138,8 @@ private:
     StyledComboBox *sortingComboBox;
     QSpacerItem *horizontalSpacer_formatFilter;
     FormatFilterComboBox *formatFilterComboBox;
+    QSpacerItem *horizontalSpacer_nameFilter;
+    QLineEdit *nameFilterEdit;
     ActionButton *docViewButton;
     ActionButton *settingsButton;
     QSpacerItem *panelRightEdgeSpacer;

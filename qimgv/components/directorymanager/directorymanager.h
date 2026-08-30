@@ -74,6 +74,7 @@ public:
     void setSortingMode(SortingMode mode);
     SortingMode sortingMode() const;
     void setFormatFilter(QStringList extensions);
+    void setNameFilter(QString nameFilter);
     bool isFile(QString path) const;
     bool isDir(QString path) const;
 
@@ -183,6 +184,7 @@ private:
     void rebuildRegex();
     SortingMode mSortingMode;
     QStringList mFormatFilter;
+    QString mNameFilter;
     FileListSource mListSource;
     void loadEntryList(QString directoryPath, bool recursive);
 
