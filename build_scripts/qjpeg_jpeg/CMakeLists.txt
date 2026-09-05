@@ -24,7 +24,7 @@ set(CMAKE_AUTOMOC ON)
 # ---------------------------------------------------------------------------
 # Unlike the TIFF plugin, the stock JPEG plugin lives in qtbase (not
 # qtimageformats) -- see qtbase/src/plugins/imageformats/jpeg.
-set(QT_JPEG_HANDLER_SRC_DIR "E:/Qt/6.11.1/Src/qtbase/src/plugins/imageformats/jpeg"
+set(QT_JPEG_HANDLER_SRC_DIR "E:/Qt/6.11.2/Src/qtbase/src/plugins/imageformats/jpeg"
     CACHE PATH "Path to Qt JPEG handler source directory")
 
 # ---------------------------------------------------------------------------

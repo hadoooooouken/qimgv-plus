@@ -18,9 +18,9 @@ set(CMAKE_AUTOMOC ON)
 # ---------------------------------------------------------------------------
 # Qt SDK source paths (adjust if your Qt source location differs)
 # ---------------------------------------------------------------------------
-set(QT_TIFF_HANDLER_SRC_DIR "E:/Qt/6.11.1/Src/qtimageformats/src/plugins/imageformats/tiff"
+set(QT_TIFF_HANDLER_SRC_DIR "E:/Qt/6.11.2/Src/qtimageformats/src/plugins/imageformats/tiff"
     CACHE PATH "Path to Qt TIFF handler source directory")
-set(QT_BUNDLED_LIBTIFF_DIR  "E:/Qt/6.11.1/Src/qtimageformats/src/3rdparty/libtiff/libtiff"
+set(QT_BUNDLED_LIBTIFF_DIR  "E:/Qt/6.11.2/Src/qtimageformats/src/3rdparty/libtiff/libtiff"
     CACHE PATH "Path to Qt's bundled libtiff headers (used only for reference, NOT linked)")
 
 # ---------------------------------------------------------------------------

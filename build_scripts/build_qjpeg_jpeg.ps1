@@ -50,7 +50,7 @@ $ROOT        = (Resolve-Path "$PSScriptRoot\..").Path
 $FORMATS_DIR = Join-Path $ROOT "formats"
 $SCRIPT_DIR  = $PSScriptRoot
 
-$QT_DIR      = "E:\Qt\6.11.1\msvc2022_64"
+$QT_DIR      = "E:\Qt\6.11.2\msvc2022_64"
 $QT_SDK_IMAGEFORMATS = Join-Path $QT_DIR "plugins\imageformats"
 
 $JPEG_INSTALL    = Join-Path $FORMATS_DIR "libjpeg-turbo\install"
