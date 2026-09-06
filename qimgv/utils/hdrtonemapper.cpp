@@ -311,24 +311,6 @@ inline void applyToneMapOperator(ToneMapOperator op, float &r, float &g, float &
     }
 }
 
-// Returns true for QImage floating-point pixel formats (16-bit half float or
-// 32-bit float, with or without alpha). Plugins that decode HDR data as
-// linear scRGB-style samples (JXR, OpenEXR, Radiance HDR, PFM) use these
-// formats regardless of whether they also set HDR_* text tags.
-inline bool isFloatingPointFormat(QImage::Format format) {
-    switch (format) {
-    case QImage::Format_RGBX16FPx4:
-    case QImage::Format_RGBA16FPx4:
-    case QImage::Format_RGBA16FPx4_Premultiplied:
-    case QImage::Format_RGBX32FPx4:
-    case QImage::Format_RGBA32FPx4:
-    case QImage::Format_RGBA32FPx4_Premultiplied:
-        return true;
-    default:
-        return false;
-    }
-}
-
 class ToneMapTask : public QRunnable {
 public:
     ToneMapTask(int yStart, int yEnd, const QImage &src, QImage &dst,
@@ -506,6 +488,24 @@ private:
 
 } // namespace
 
+// Returns true for QImage floating-point pixel formats (16-bit half float or
+// 32-bit float, with or without alpha). Plugins that decode HDR data as
+// linear scRGB-style samples (JXR, OpenEXR, Radiance HDR, PFM) use these
+// formats regardless of whether they also set HDR_* text tags.
+bool HdrToneMapper::isLinearFloatFormat(QImage::Format format) {
+    switch (format) {
+    case QImage::Format_RGBX16FPx4:
+    case QImage::Format_RGBA16FPx4:
+    case QImage::Format_RGBA16FPx4_Premultiplied:
+    case QImage::Format_RGBX32FPx4:
+    case QImage::Format_RGBA32FPx4:
+    case QImage::Format_RGBA32FPx4_Premultiplied:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool HdrToneMapper::isHdr(const QImage &image) {
     if (image.isNull()) {
         return false;
@@ -520,7 +520,7 @@ bool HdrToneMapper::isHdr(const QImage &image) {
     // Floating-point pixel storage is HDR-range data regardless of which
     // plugin produced it (JXR, OpenEXR, Radiance HDR, PFM all decode into
     // these formats without necessarily setting HDR_* text tags).
-    if (isFloatingPointFormat(image.format())) {
+    if (isLinearFloatFormat(image.format())) {
         return true;
     }
 
@@ -606,7 +606,7 @@ QImage HdrToneMapper::applyToneMapping(const QImage &srcImage, const HdrToneMapP
         transfer = InputTransfer::HLG;
     } else if (transferText.compare(QStringLiteral("Linear"), Qt::CaseInsensitive) == 0 ||
                (cs.isValid() && cs.transferFunction() == QColorSpace::TransferFunction::Linear) ||
-               (!cs.isValid() && isFloatingPointFormat(srcImage.format()))) {
+               (!cs.isValid() && isLinearFloatFormat(srcImage.format()))) {
         // Linear scRGB-style float buffers (JXR, OpenEXR, Radiance HDR, PFM).
         // Fall back to treating untagged floating-point sources as linear
         // rather than silently defaulting to PQ, which would misdecode raw

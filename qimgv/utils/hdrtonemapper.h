@@ -23,6 +23,14 @@ public:
     // pixel format, or HDR text attributes).
     static bool isHdr(const QImage &image);
 
+    // Checks whether the given pixel format stores raw linear-light samples in
+    // floating point, i.e. the format the JXR/EXR/HDR/PFM plugins decode into.
+    // This is narrower than isHdr(): PQ/HLG-tagged HDR images are HDR but are
+    // NOT linear, so callers that need to know "is this raw data linear light"
+    // (e.g. before re-tagging a cached image's color space) should use this,
+    // not isHdr().
+    static bool isLinearFloatFormat(QImage::Format format);
+
     // Returns a human-readable HDR profile description (e.g. "Rec.2100 PQ (HDR10)", "BT.2100 HLG"),
     // or an empty QString if the image is SDR.
     static QString detectHdrProfile(const QImage &image);

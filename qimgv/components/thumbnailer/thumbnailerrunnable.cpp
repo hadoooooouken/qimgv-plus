@@ -4,6 +4,7 @@
 #include "utils/colormanager.h"
 #include "utils/djvureader.h"
 #include "utils/fontpreview.h"
+#include "utils/hdrtonemapper.h"
 #include "utils/imagelib.h"
 #include <QDebug>
 #include <QFileInfo>
@@ -96,10 +97,6 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
           std::nullopt};
     }
     const QString format = imgInfo.format();
-    const bool requiresLinearColorSpace =
-        format == QLatin1String("hdr") ||
-        format == QLatin1String("exr") ||
-        format == QLatin1String("pfm");
     isPdf = format == QLatin1String("pdf");
     const QByteArray formatName = format.toLatin1();
     std::pair<QImage, QSize> pair;
@@ -137,6 +134,12 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
           !request.decodeContext.isCancellationRequested()) {
         if (originalSize.width() > settings->thumbnailResolution() ||
             originalSize.height() > settings->thumbnailResolution()) {
+          // Derived from the actual decoded pixel format rather than the
+          // filename/format string, so any plugin that decodes into a
+          // linear float QImage format (currently JXR/EXR/HDR/PFM) is
+          // covered automatically, with no per-format list to keep in sync.
+          const bool requiresLinearColorSpace =
+              HdrToneMapper::isLinearFloatFormat(image->format());
           cacheCandidate = ThumbnailCacheCandidate{
               *image, thumbnailId, *sourceStamp,
               requiresLinearColorSpace, request.cacheGeneration};
