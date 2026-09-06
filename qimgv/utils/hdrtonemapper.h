@@ -19,7 +19,8 @@ struct HdrToneMapParams {
 
 class HdrToneMapper {
 public:
-    // Checks whether the given image is an HDR image (via color space or HDR text attributes).
+    // Checks whether the given image is an HDR image (via color space, floating-point
+    // pixel format, or HDR text attributes).
     static bool isHdr(const QImage &image);
 
     // Returns a human-readable HDR profile description (e.g. "Rec.2100 PQ (HDR10)", "BT.2100 HLG"),

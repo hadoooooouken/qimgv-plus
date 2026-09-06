@@ -1,6 +1,7 @@
 #include "hdrtonemapper.h"
 
 #include <QColorSpace>
+#include <QFloat16>
 #include <QRgba64>
 #include <QThreadPool>
 #include <QRunnable>
@@ -25,6 +26,10 @@ constexpr float kHlgA = 0.17883277f;
 constexpr float kHlgB = 1.0f - 4.0f * kHlgA; // 0.28466892f
 constexpr float kHlgC = 0.55991073f;
 constexpr float kHlgPeakLuminanceNits = 1000.0f;
+
+// scRGB (IEC 61966-2-2) reference white: a linear sample value of 1.0
+// corresponds to this many nits of SDR reference white.
+constexpr float kScRgbReferenceWhiteNits = 80.0f;
 
 // Rec.709 / sRGB Luminance Coefficients
 constexpr float kLumaR = 0.2126f;
@@ -76,6 +81,10 @@ constexpr float kEpsilon = 1e-6f;
 // Size of 16-bit EOTF lookup table
 constexpr int kLutSize16 = 65536;
 
+// Components per pixel in the kimageformats float plugins' buffer layout
+// (R, G, B, A), used when reading JXR/EXR/HDR/PFM float scanlines directly.
+constexpr int kFloatChannelsPerPixel = 4;
+
 enum class InputTransfer {
     PQ,
     HLG,
@@ -110,6 +119,31 @@ inline float decodeHlg(float n, float targetWhiteNits) {
         linearNorm = (std::exp((v - kHlgC) / kHlgA) + kHlgB) / 12.0f;
     }
     return (linearNorm * kHlgPeakLuminanceNits) / targetWhiteNits;
+}
+
+inline float decodeLinear(float n, float targetWhiteNits) {
+    // scRGB-style linear samples (JXR/EXR/HDR/PFM). Unlike decodePq()/
+    // decodeHlg(), values above 1.0 are not clamped: they represent real
+    // highlight information above SDR white, which the tone-map operator
+    // is responsible for compressing back into range.
+    if (n <= 0.0f) return 0.0f;
+    return (n * kScRgbReferenceWhiteNits) / targetWhiteNits;
+}
+
+inline float decodeTransfer(InputTransfer transfer, float n, float targetWhiteNits) {
+    switch (transfer) {
+    case InputTransfer::PQ:
+        return decodePq(n, targetWhiteNits);
+    case InputTransfer::HLG:
+        return decodeHlg(n, targetWhiteNits);
+    case InputTransfer::Linear:
+        return decodeLinear(n, targetWhiteNits);
+    case InputTransfer::Gamma:
+        // Not yet resolved by applyToneMapping(); keep the pre-existing
+        // default (PQ) so behavior is unchanged if this becomes reachable.
+        break;
+    }
+    return decodePq(n, targetWhiteNits);
 }
 
 inline float linearToSrgb(float val) {
@@ -260,6 +294,41 @@ inline void applyOperatorHable(float &r, float &g, float &b) {
     }
 }
 
+inline void applyToneMapOperator(ToneMapOperator op, float &r, float &g, float &b) {
+    switch (op) {
+    case ToneMapOperator::Bt2408:
+        applyOperatorBt2408(r, g, b);
+        break;
+    case ToneMapOperator::ReinhardJodie:
+        applyOperatorReinhardJodie(r, g, b);
+        break;
+    case ToneMapOperator::AcesFilmic:
+        applyOperatorAcesFilmic(r, g, b);
+        break;
+    case ToneMapOperator::Hable:
+        applyOperatorHable(r, g, b);
+        break;
+    }
+}
+
+// Returns true for QImage floating-point pixel formats (16-bit half float or
+// 32-bit float, with or without alpha). Plugins that decode HDR data as
+// linear scRGB-style samples (JXR, OpenEXR, Radiance HDR, PFM) use these
+// formats regardless of whether they also set HDR_* text tags.
+inline bool isFloatingPointFormat(QImage::Format format) {
+    switch (format) {
+    case QImage::Format_RGBX16FPx4:
+    case QImage::Format_RGBA16FPx4:
+    case QImage::Format_RGBA16FPx4_Premultiplied:
+    case QImage::Format_RGBX32FPx4:
+    case QImage::Format_RGBA32FPx4:
+    case QImage::Format_RGBA32FPx4_Premultiplied:
+        return true;
+    default:
+        return false;
+    }
+}
+
 class ToneMapTask : public QRunnable {
 public:
     ToneMapTask(int yStart, int yEnd, const QImage &src, QImage &dst,
@@ -275,14 +344,88 @@ public:
 
     void run() override {
         const int width = m_src.width();
-        const bool is16Bit = (m_src.format() == QImage::Format_RGBA64 ||
-                              m_src.format() == QImage::Format_RGBX64 ||
-                              m_src.format() == QImage::Format_RGBA64_Premultiplied);
+        const QImage::Format srcFormat = m_src.format();
+        const bool is16Bit = (srcFormat == QImage::Format_RGBA64 ||
+                              srcFormat == QImage::Format_RGBX64 ||
+                              srcFormat == QImage::Format_RGBA64_Premultiplied);
+        const bool isHalfFloat = (srcFormat == QImage::Format_RGBX16FPx4 ||
+                                  srcFormat == QImage::Format_RGBA16FPx4 ||
+                                  srcFormat == QImage::Format_RGBA16FPx4_Premultiplied);
+        const bool isFullFloat = (srcFormat == QImage::Format_RGBX32FPx4 ||
+                                  srcFormat == QImage::Format_RGBA32FPx4 ||
+                                  srcFormat == QImage::Format_RGBA32FPx4_Premultiplied);
+        const bool isPremultipliedFloat = (srcFormat == QImage::Format_RGBA16FPx4_Premultiplied ||
+                                           srcFormat == QImage::Format_RGBA32FPx4_Premultiplied);
 
         for (int y = m_yStart; y < m_yEnd; ++y) {
             uint32_t *dstLine = reinterpret_cast<uint32_t *>(m_dst.scanLine(y));
 
-            if (is16Bit) {
+            if (isHalfFloat) {
+                // Linear (or otherwise transfer-tagged) half-float scanlines, read
+                // directly to avoid the precision loss and highlight clipping that
+                // QImage::pixel()/convertToFormat() would introduce by first
+                // collapsing the buffer through 8-bit ARGB32. Channel order mirrors
+                // the kimageformats float plugins (JXR/EXR/HDR/PFM): R, G, B, A.
+                const qfloat16 *srcLine = reinterpret_cast<const qfloat16 *>(m_src.constScanLine(y));
+                for (int x = 0; x < width; ++x) {
+                    const int base = x * kFloatChannelsPerPixel;
+                    float r = static_cast<float>(srcLine[base + 0]);
+                    float g = static_cast<float>(srcLine[base + 1]);
+                    float b = static_cast<float>(srcLine[base + 2]);
+                    float a = static_cast<float>(srcLine[base + 3]);
+
+                    if (isPremultipliedFloat) {
+                        if (a > kEpsilon) {
+                            r /= a;
+                            g /= a;
+                            b /= a;
+                        } else {
+                            r = g = b = 0.0f;
+                        }
+                    }
+
+                    r = decodeTransfer(m_transfer, r, m_targetWhiteNits);
+                    g = decodeTransfer(m_transfer, g, m_targetWhiteNits);
+                    b = decodeTransfer(m_transfer, b, m_targetWhiteNits);
+
+                    transformPrimaries(r, g, b, m_primaries);
+                    compressGamut(r, g, b);
+                    applyToneMapOperator(m_op, r, g, b);
+
+                    const uint8_t alphaByte = static_cast<uint8_t>(std::clamp(a, 0.0f, 1.0f) * 255.0f + 0.5f);
+                    dstLine[x] = qRgba(floatToByte(r), floatToByte(g), floatToByte(b), alphaByte);
+                }
+            } else if (isFullFloat) {
+                const float *srcLine = reinterpret_cast<const float *>(m_src.constScanLine(y));
+                for (int x = 0; x < width; ++x) {
+                    const int base = x * kFloatChannelsPerPixel;
+                    float r = srcLine[base + 0];
+                    float g = srcLine[base + 1];
+                    float b = srcLine[base + 2];
+                    float a = srcLine[base + 3];
+
+                    if (isPremultipliedFloat) {
+                        if (a > kEpsilon) {
+                            r /= a;
+                            g /= a;
+                            b /= a;
+                        } else {
+                            r = g = b = 0.0f;
+                        }
+                    }
+
+                    r = decodeTransfer(m_transfer, r, m_targetWhiteNits);
+                    g = decodeTransfer(m_transfer, g, m_targetWhiteNits);
+                    b = decodeTransfer(m_transfer, b, m_targetWhiteNits);
+
+                    transformPrimaries(r, g, b, m_primaries);
+                    compressGamut(r, g, b);
+                    applyToneMapOperator(m_op, r, g, b);
+
+                    const uint8_t alphaByte = static_cast<uint8_t>(std::clamp(a, 0.0f, 1.0f) * 255.0f + 0.5f);
+                    dstLine[x] = qRgba(floatToByte(r), floatToByte(g), floatToByte(b), alphaByte);
+                }
+            } else if (is16Bit) {
                 const QRgba64 *srcLine = reinterpret_cast<const QRgba64 *>(m_src.constScanLine(y));
                 for (int x = 0; x < width; ++x) {
                     const QRgba64 px = srcLine[x];
@@ -319,15 +462,9 @@ public:
                     float gNorm = qGreen(px) / 255.0f;
                     float bNorm = qBlue(px) / 255.0f;
 
-                    float r = (m_transfer == InputTransfer::PQ)
-                        ? decodePq(rNorm, m_targetWhiteNits)
-                        : decodeHlg(rNorm, m_targetWhiteNits);
-                    float g = (m_transfer == InputTransfer::PQ)
-                        ? decodePq(gNorm, m_targetWhiteNits)
-                        : decodeHlg(gNorm, m_targetWhiteNits);
-                    float b = (m_transfer == InputTransfer::PQ)
-                        ? decodePq(bNorm, m_targetWhiteNits)
-                        : decodeHlg(bNorm, m_targetWhiteNits);
+                    float r = decodeTransfer(m_transfer, rNorm, m_targetWhiteNits);
+                    float g = decodeTransfer(m_transfer, gNorm, m_targetWhiteNits);
+                    float b = decodeTransfer(m_transfer, bNorm, m_targetWhiteNits);
 
                     transformPrimaries(r, g, b, m_primaries);
                     compressGamut(r, g, b);
@@ -377,6 +514,13 @@ bool HdrToneMapper::isHdr(const QImage &image) {
     // Check explicit metadata attributes
     if (image.text(QStringLiteral("HDR_IsHDR")) == QStringLiteral("true") ||
         !image.text(QStringLiteral("HDR_Profile")).isEmpty()) {
+        return true;
+    }
+
+    // Floating-point pixel storage is HDR-range data regardless of which
+    // plugin produced it (JXR, OpenEXR, Radiance HDR, PFM all decode into
+    // these formats without necessarily setting HDR_* text tags).
+    if (isFloatingPointFormat(image.format())) {
         return true;
     }
 
@@ -460,6 +604,14 @@ QImage HdrToneMapper::applyToneMapping(const QImage &srcImage, const HdrToneMapP
     if (transferText.compare(QStringLiteral("HLG"), Qt::CaseInsensitive) == 0 ||
         (cs.isValid() && cs.transferFunction() == QColorSpace::TransferFunction::Hlg)) {
         transfer = InputTransfer::HLG;
+    } else if (transferText.compare(QStringLiteral("Linear"), Qt::CaseInsensitive) == 0 ||
+               (cs.isValid() && cs.transferFunction() == QColorSpace::TransferFunction::Linear) ||
+               (!cs.isValid() && isFloatingPointFormat(srcImage.format()))) {
+        // Linear scRGB-style float buffers (JXR, OpenEXR, Radiance HDR, PFM).
+        // Fall back to treating untagged floating-point sources as linear
+        // rather than silently defaulting to PQ, which would misdecode raw
+        // linear samples.
+        transfer = InputTransfer::Linear;
     }
 
     // Determine Primaries
@@ -480,9 +632,7 @@ QImage HdrToneMapper::applyToneMapping(const QImage &srcImage, const HdrToneMapP
     std::vector<float> eotfLut(kLutSize16);
     for (int i = 0; i < kLutSize16; ++i) {
         const float norm = static_cast<float>(i) / (kLutSize16 - 1);
-        eotfLut[i] = (transfer == InputTransfer::PQ)
-            ? decodePq(norm, targetWhite)
-            : decodeHlg(norm, targetWhite);
+        eotfLut[i] = decodeTransfer(transfer, norm, targetWhite);
     }
 
     const int width = srcImage.width();

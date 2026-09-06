@@ -128,6 +128,21 @@ void ImageStatic::loadGeneric() {
       ImageLib::exifRotated(std::move(img), mDocInfo.get()->exifOrientation());
 
   if (HdrToneMapper::isHdr(*img)) {
+    // Guarantees that every isHdr()==true image leaves this function as an
+    // integer sRGB QImage, whether tone-mapping succeeds, is disabled, or
+    // HdrToneMapper fails to produce an image (e.g. an allocation failure).
+    auto sdrFallbackConvert = [](const QImage &src) {
+      QImage::Format fallbackFmt = src.hasAlphaChannel() ? QImage::Format_ARGB32 : QImage::Format_RGB32;
+      QImage converted = src.convertToFormat(fallbackFmt);
+      converted.setColorSpace(QColorSpace(QColorSpace::SRgb));
+      for (const QString &key : src.textKeys()) {
+        if (!key.startsWith(QStringLiteral("HDR_"))) {
+          converted.setText(key, src.text(key));
+        }
+      }
+      return converted;
+    };
+
     if (settings && settings->hdrToneMappingEnabled()) {
       HdrToneMapParams params = {
           .enabled = true,
@@ -137,18 +152,12 @@ void ImageStatic::loadGeneric() {
       QImage toneMapped = HdrToneMapper::applyToneMapping(*img, params);
       if (!toneMapped.isNull()) {
         img = std::make_unique<const QImage>(std::move(toneMapped));
+      } else {
+        img = std::make_unique<const QImage>(sdrFallbackConvert(*img));
       }
     } else {
       // Fallback SDR conversion when HDR tone-mapping is disabled
-      QImage::Format fallbackFmt = img->hasAlphaChannel() ? QImage::Format_ARGB32 : QImage::Format_RGB32;
-      QImage converted = img->convertToFormat(fallbackFmt);
-      converted.setColorSpace(QColorSpace(QColorSpace::SRgb));
-      for (const QString &key : img->textKeys()) {
-        if (!key.startsWith(QStringLiteral("HDR_"))) {
-          converted.setText(key, img->text(key));
-        }
-      }
-      img = std::make_unique<const QImage>(std::move(converted));
+      img = std::make_unique<const QImage>(sdrFallbackConvert(*img));
     }
   }
 
@@ -160,14 +169,7 @@ void ImageStatic::loadGeneric() {
     image.reset(imgConverted);
   } else {
     // set image
-    if (img->format() == QImage::Format_RGBX32FPx4 ||
-        img->format() == QImage::Format_RGBX16FPx4) {
-      QImage *imgConverted = new QImage();
-      *imgConverted = img->convertToFormat(QImage::Format_RGBA64);
-      image.reset(imgConverted);
-    } else {
-      image = std::move(img);
-    }
+    image = std::move(img);
   }
   if (image) {
     imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
