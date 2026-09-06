@@ -1,7 +1,7 @@
 # qimgv root
 cmake_minimum_required(VERSION 3.25)
 project(qimgv-plus
-    VERSION 3.5.1.0
+    VERSION 3.5.2.0
     HOMEPAGE_URL "https://github.com/hadoooooouken/qimgv-plus"
     LANGUAGES C CXX RC)
 
