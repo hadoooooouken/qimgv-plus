@@ -142,8 +142,11 @@ void ImageStatic::loadGeneric() {
       // Fallback SDR conversion when HDR tone-mapping is disabled
       QImage::Format fallbackFmt = img->hasAlphaChannel() ? QImage::Format_ARGB32 : QImage::Format_RGB32;
       QImage converted = img->convertToFormat(fallbackFmt);
+      converted.setColorSpace(QColorSpace(QColorSpace::SRgb));
       for (const QString &key : img->textKeys()) {
-        converted.setText(key, img->text(key));
+        if (!key.startsWith(QStringLiteral("HDR_"))) {
+          converted.setText(key, img->text(key));
+        }
       }
       img = std::make_unique<const QImage>(std::move(converted));
     }

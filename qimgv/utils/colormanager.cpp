@@ -1,5 +1,4 @@
 #include "colormanager.h"
-#include "hdrtonemapper.h"
 #include "../settings.h"
 #include <QMutex>
 #include <QMutexLocker>
@@ -110,37 +109,25 @@ public:
     QImage applyColorManagement(const QImage &srcImage) override {
         if (srcImage.isNull()) return srcImage;
 
-        QImage img = srcImage;
-        if (settings && settings->hdrToneMappingEnabled() && HdrToneMapper::isHdr(img)) {
-            HdrToneMapParams params = {
-                .enabled = true,
-                .op = static_cast<ToneMapOperator>(settings->hdrToneMappingOperator()),
-                .targetWhiteNits = static_cast<float>(settings->hdrTargetWhiteLevel())
-            };
-            QImage toneMapped = HdrToneMapper::applyToneMapping(img, params);
-            if (!toneMapped.isNull()) {
-                img = toneMapped;
-            }
-        }
-
         if (!settings || !settings->colorManagementEnabled()) {
-            return img;
+            return srcImage;
         }
 
         QColorSpace targetSpace = getTargetColorSpace();
 
         if (targetSpace.isValid()) {
-            QColorSpace srcSpace = img.colorSpace();
+            QColorSpace srcSpace = srcImage.colorSpace();
             // If the source image doesn't have a valid color space, assume sRGB (industry standard)
             if (!srcSpace.isValid()) {
                 srcSpace = QColorSpace(QColorSpace::SRgb);
             }
             if (srcSpace != targetSpace) {
+                QImage img = srcImage;
                 img.setColorSpace(srcSpace);
                 return img.convertedToColorSpace(targetSpace);
             }
         }
-        return img;
+        return srcImage;
     }
 
 private:

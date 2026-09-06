@@ -515,9 +515,11 @@ QImage HdrToneMapper::applyToneMapping(const QImage &srcImage, const HdrToneMapP
     // Set standard sRGB color space
     dstImage.setColorSpace(QColorSpace(QColorSpace::SRgb));
 
-    // Preserve all metadata text keys (including HDR tags, Exif, XMP)
+    // Preserve non-HDR metadata text keys (Exif, XMP, etc.), skipping HDR_* tags
     for (const QString &key : srcImage.textKeys()) {
-        dstImage.setText(key, srcImage.text(key));
+        if (!key.startsWith(QStringLiteral("HDR_"))) {
+            dstImage.setText(key, srcImage.text(key));
+        }
     }
 
     return dstImage;
