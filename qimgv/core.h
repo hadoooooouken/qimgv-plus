@@ -283,6 +283,9 @@ private:
     bool lastCMEnabled = false;
     QString lastCMType = "";
     QString lastCMPath = "";
+    bool lastHdrEnabled = true;
+    int lastHdrOp = 0;
+    int lastHdrWhite = 203;
     int lastThumbnailResolution = 0;
     bool lastShowSubfoldersInPanel = false;
     bool lastSquareThumbnails = false;

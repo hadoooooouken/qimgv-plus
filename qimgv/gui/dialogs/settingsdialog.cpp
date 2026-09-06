@@ -483,6 +483,54 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   // Run update to set initial visibility/enabled states
   updateCMControls();
 
+  // --- HDR Tone-Mapping GroupBox ---
+  hdrGroupBox = new QGroupBox(tr("HDR Tone-Mapping"), this);
+  QVBoxLayout *hdrLayout = new QVBoxLayout(hdrGroupBox);
+  hdrLayout->setContentsMargins(10, 10, 10, 10);
+  hdrLayout->setSpacing(8);
+
+  hdrToneMappingCheckBox = new QCheckBox(tr("Enable HDR Tone-Mapping"), this);
+  hdrLayout->addWidget(hdrToneMappingCheckBox);
+
+  // Tone-Mapping Operator row
+  QHBoxLayout *operatorRowLayout = new QHBoxLayout();
+  QLabel *operatorLabel = new QLabel(tr("Tone-mapping operator:"), this);
+  hdrOperatorComboBox = new QComboBox(this);
+  hdrOperatorComboBox->addItem(tr("ITU-R BT.2408 (Recommended)"), 0);
+  hdrOperatorComboBox->addItem(tr("Reinhard-Jodie"), 1);
+  hdrOperatorComboBox->addItem(tr("ACES Filmic"), 2);
+  hdrOperatorComboBox->addItem(tr("Hable (Uncharted 2)"), 3);
+  operatorRowLayout->addWidget(operatorLabel);
+  operatorRowLayout->addWidget(hdrOperatorComboBox);
+  operatorRowLayout->addStretch(1);
+  hdrLayout->addLayout(operatorRowLayout);
+
+  // Target White Level row
+  QHBoxLayout *whiteLevelRowLayout = new QHBoxLayout();
+  QLabel *whiteLevelLabel = new QLabel(tr("Target white level:"), this);
+  hdrTargetWhiteComboBox = new QComboBox(this);
+  hdrTargetWhiteComboBox->addItem(tr("203 nits (ITU-R BT.2408 Default)"), 203);
+  hdrTargetWhiteComboBox->addItem(tr("100 nits (Standard sRGB)"), 100);
+  hdrTargetWhiteComboBox->addItem(tr("80 nits (Dim Environment)"), 80);
+  hdrTargetWhiteComboBox->addItem(tr("300 nits (Bright Room)"), 300);
+  whiteLevelRowLayout->addWidget(whiteLevelLabel);
+  whiteLevelRowLayout->addWidget(hdrTargetWhiteComboBox);
+  whiteLevelRowLayout->addStretch(1);
+  hdrLayout->addLayout(whiteLevelRowLayout);
+
+  if (scrollAreaWidgetContents_3->layout()) {
+    scrollAreaWidgetContents_3->layout()->addWidget(hdrGroupBox);
+  }
+
+  auto updateHdrControls = [this]() {
+    bool hdrEnabled = hdrToneMappingCheckBox->isChecked();
+    hdrOperatorComboBox->setEnabled(hdrEnabled);
+    hdrTargetWhiteComboBox->setEnabled(hdrEnabled);
+  };
+
+  connect(hdrToneMappingCheckBox, &QCheckBox::toggled, this, updateHdrControls);
+  updateHdrControls();
+
   connect(this, &SettingsDialog::settingsChanged, settings,
           &Settings::sendChangeNotification);
   readSettings();
@@ -752,6 +800,24 @@ void SettingsDialog::readSettings() {
   colorManagementCheckBox->blockSignals(false);
   monitorProfileComboBox->blockSignals(false);
 
+  hdrToneMappingCheckBox->blockSignals(true);
+  hdrOperatorComboBox->blockSignals(true);
+  hdrTargetWhiteComboBox->blockSignals(true);
+
+  hdrToneMappingCheckBox->setChecked(settings->hdrToneMappingEnabled());
+  int opIdx = hdrOperatorComboBox->findData(settings->hdrToneMappingOperator());
+  hdrOperatorComboBox->setCurrentIndex(opIdx != -1 ? opIdx : 0);
+  int whiteIdx = hdrTargetWhiteComboBox->findData(settings->hdrTargetWhiteLevel());
+  hdrTargetWhiteComboBox->setCurrentIndex(whiteIdx != -1 ? whiteIdx : 0);
+
+  bool hdrEnabled = hdrToneMappingCheckBox->isChecked();
+  hdrOperatorComboBox->setEnabled(hdrEnabled);
+  hdrTargetWhiteComboBox->setEnabled(hdrEnabled);
+
+  hdrToneMappingCheckBox->blockSignals(false);
+  hdrOperatorComboBox->blockSignals(false);
+  hdrTargetWhiteComboBox->blockSignals(false);
+
   readColorScheme();
   readShortcuts();
   readScripts();
@@ -891,6 +957,10 @@ void SettingsDialog::saveSettings() {
   settings->setMonitorColorProfileType(
       monitorProfileComboBox->currentData().toString());
   settings->setMonitorColorProfilePath(customProfilePathEdit->text());
+
+  settings->setHdrToneMappingEnabled(hdrToneMappingCheckBox->isChecked());
+  settings->setHdrToneMappingOperator(hdrOperatorComboBox->currentData().toInt());
+  settings->setHdrTargetWhiteLevel(hdrTargetWhiteComboBox->currentData().toInt());
 
   int oldRes = settings->thumbnailResolution();
   int newRes = thumbnailResolutionSlider->value();

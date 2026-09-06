@@ -85,6 +85,9 @@ void Settings::initCache() {
                  .toLongLong()),
       std::memory_order_relaxed);
   mCachedColorManagementEnabled.store(settingsConf->value("colorManagementEnabled", false).toBool(), std::memory_order_relaxed);
+  mCachedHdrToneMappingEnabled.store(settingsConf->value("hdrToneMappingEnabled", true).toBool(), std::memory_order_relaxed);
+  mCachedHdrToneMappingOperator.store(settingsConf->value("hdrToneMappingOperator", 0).toInt(), std::memory_order_relaxed);
+  mCachedHdrTargetWhiteLevel.store(settingsConf->value("hdrTargetWhiteLevel", 203).toInt(), std::memory_order_relaxed);
   mCachedJxlAnimation.store(settingsConf->value("jxlAnimation", false).toBool(), std::memory_order_relaxed);
 
   mCachedPngSaveQuality.store(std::clamp(settingsConf->value("pngSaveQuality", 3).toInt(), 0, 9), std::memory_order_relaxed);
@@ -1004,6 +1007,33 @@ void Settings::setMonitorColorProfilePath(const QString &path) {
     QWriteLocker locker(&mProfileLock);
     mCachedMonitorColorProfilePath = path;
   }
+}
+
+bool Settings::hdrToneMappingEnabled() {
+  return mCachedHdrToneMappingEnabled.load(std::memory_order_relaxed);
+}
+
+void Settings::setHdrToneMappingEnabled(bool enabled) {
+  settings->settingsConf->setValue("hdrToneMappingEnabled", enabled);
+  mCachedHdrToneMappingEnabled.store(enabled, std::memory_order_relaxed);
+}
+
+int Settings::hdrToneMappingOperator() {
+  return mCachedHdrToneMappingOperator.load(std::memory_order_relaxed);
+}
+
+void Settings::setHdrToneMappingOperator(int op) {
+  settings->settingsConf->setValue("hdrToneMappingOperator", op);
+  mCachedHdrToneMappingOperator.store(op, std::memory_order_relaxed);
+}
+
+int Settings::hdrTargetWhiteLevel() {
+  return mCachedHdrTargetWhiteLevel.load(std::memory_order_relaxed);
+}
+
+void Settings::setHdrTargetWhiteLevel(int nits) {
+  settings->settingsConf->setValue("hdrTargetWhiteLevel", nits);
+  mCachedHdrTargetWhiteLevel.store(nits, std::memory_order_relaxed);
 }
 
 //------------------------------------------------------------------------------

@@ -24,6 +24,7 @@
 #include <windows.h>
 #include <psapi.h>
 #include "utils/colormanager.h"
+#include "utils/hdrtonemapper.h"
 #include <QGuiApplication>
 #include <QScreen>
 #include <QThread>
@@ -198,6 +199,9 @@ Core::Core()
   lastCMEnabled = settings->colorManagementEnabled();
   lastCMType = settings->monitorColorProfileType();
   lastCMPath = settings->monitorColorProfilePath();
+  lastHdrEnabled = settings->hdrToneMappingEnabled();
+  lastHdrOp = settings->hdrToneMappingOperator();
+  lastHdrWhite = settings->hdrTargetWhiteLevel();
   lastThumbnailResolution = settings->thumbnailResolution();
   lastShowSubfoldersInPanel = settings->showSubfoldersInPanel();
   lastSquareThumbnails = settings->squareThumbnails();
@@ -587,20 +591,34 @@ void Core::connectComponents() {
       bool cmEnabled = settings->colorManagementEnabled();
       QString cmType = settings->monitorColorProfileType();
       QString cmPath = settings->monitorColorProfilePath();
+      bool hdrEnabled = settings->hdrToneMappingEnabled();
+      int hdrOp = settings->hdrToneMappingOperator();
+      int hdrWhite = settings->hdrTargetWhiteLevel();
 
       bool cmChanged = (cmEnabled != lastCMEnabled) ||
                        (cmType != lastCMType) ||
                        (cmPath != lastCMPath);
+      bool hdrChanged = (hdrEnabled != lastHdrEnabled) ||
+                        (hdrOp != lastHdrOp) ||
+                        (hdrWhite != lastHdrWhite);
 
-      if (cmChanged) {
+      if (cmChanged || hdrChanged) {
           lastCMEnabled = cmEnabled;
           lastCMType = cmType;
           lastCMPath = cmPath;
+          lastHdrEnabled = hdrEnabled;
+          lastHdrOp = hdrOp;
+          lastHdrWhite = hdrWhite;
 
           ColorManager::invalidateCache();
           if (state.hasActiveImage && state.currentImg) {
               model->clearScaler();
+              if (hdrChanged) {
+                  model->reload(state.currentFilePath);
+                  state.currentImg = model->getImage(state.currentFilePath);
+              }
               guiSetImage(state.currentImg);
+              updateInfoString();
           }
       }
 
@@ -2441,6 +2459,20 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
   // but generation info does — QList<QPair<>> is used there instead of
   // QMap specifically to keep that order intact through to the UI.
   QList<QPair<QString, QString>> info;
+  auto qimg = img->getImage();
+  if (qimg) {
+    QString hdrProfile = HdrToneMapper::detectHdrProfile(*qimg);
+    if (!hdrProfile.isEmpty()) {
+      info.append({ tr("HDR Profile"), hdrProfile });
+      QString maxCll = qimg->text(QStringLiteral("HDR_MaxCLL"));
+      QString maxPall = qimg->text(QStringLiteral("HDR_MaxPALL"));
+      if (!maxCll.isEmpty() || !maxPall.isEmpty()) {
+        QString clli = QStringLiteral("%1 / %2 nits").arg(maxCll.isEmpty() ? QStringLiteral("-") : maxCll,
+                                                           maxPall.isEmpty() ? QStringLiteral("-") : maxPall);
+        info.append({ tr("MaxCLL / MaxFALL"), clli });
+      }
+    }
+  }
   const QMap<QString, QString> exifTags = img->getExifTags();
   for (auto it = exifTags.constBegin(); it != exifTags.constEnd(); ++it)
     info.append({ it.key(), it.value() });
@@ -2508,29 +2540,34 @@ void Core::updateInfoString() {
       format = img->format();
       auto qimg = img->getImage();
       if (qimg) {
-        QColorSpace cs = qimg->colorSpace();
-        if (cs.isValid()) {
-          QString desc = cs.description();
-          if (desc.isEmpty()) {
-            if (cs == QColorSpace(QColorSpace::SRgb)) {
-              desc = "sRGB";
-            } else if (cs == QColorSpace(QColorSpace::SRgbLinear)) {
-              desc = "Linear sRGB";
-            } else if (cs == QColorSpace(QColorSpace::AdobeRgb)) {
-              desc = "Adobe RGB";
-            } else if (cs == QColorSpace(QColorSpace::DisplayP3)) {
-              desc = "Display P3";
+        QString hdrProfile = HdrToneMapper::detectHdrProfile(*qimg);
+        if (!hdrProfile.isEmpty()) {
+          colorProfile = hdrProfile;
+        } else {
+          QColorSpace cs = qimg->colorSpace();
+          if (cs.isValid()) {
+            QString desc = cs.description();
+            if (desc.isEmpty()) {
+              if (cs == QColorSpace(QColorSpace::SRgb)) {
+                desc = "sRGB";
+              } else if (cs == QColorSpace(QColorSpace::SRgbLinear)) {
+                desc = "Linear sRGB";
+              } else if (cs == QColorSpace(QColorSpace::AdobeRgb)) {
+                desc = "Adobe RGB";
+              } else if (cs == QColorSpace(QColorSpace::DisplayP3)) {
+                desc = "Display P3";
 #if QT_VERSION >= QT_VERSION_CHECK(6, 1, 0)
-            } else if (cs == QColorSpace(QColorSpace::ProPhotoRgb)) {
-              desc = "ProPhoto RGB";
-            } else if (cs == QColorSpace(QColorSpace::Bt2020)) {
-              desc = "BT.2020";
+              } else if (cs == QColorSpace(QColorSpace::ProPhotoRgb)) {
+                desc = "ProPhoto RGB";
+              } else if (cs == QColorSpace(QColorSpace::Bt2020)) {
+                desc = "BT.2020";
 #endif
-            } else {
-              desc = "Custom";
+              } else {
+                desc = "Custom";
+              }
             }
+            colorProfile = desc;
           }
-          colorProfile = desc;
         }
       }
     }

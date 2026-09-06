@@ -541,6 +541,40 @@ bool QAVIFHandler::decode_one_frame()
         m_current_image.setText(QStringLiteral(META_KEY_XMP_ADOBE), QString::fromUtf8(ba));
     }
 
+    const uint16_t transfer = m_decoder->image->transferCharacteristics;
+    const uint16_t primaries = m_decoder->image->colorPrimaries;
+    const bool isPq = (transfer == 16);  // AVIF_TRANSFER_CHARACTERISTICS_PQ
+    const bool isHlg = (transfer == 18); // AVIF_TRANSFER_CHARACTERISTICS_HLG
+
+    if (isPq || isHlg) {
+        m_current_image.setText(QStringLiteral("HDR_IsHDR"), QStringLiteral("true"));
+        m_current_image.setText(QStringLiteral("HDR_Transfer"), isPq ? QStringLiteral("PQ") : QStringLiteral("HLG"));
+
+        QString profileName;
+        QString primariesName;
+
+        if (primaries == 9) { // AVIF_COLOR_PRIMARIES_BT2100
+            primariesName = QStringLiteral("BT.2020");
+            profileName = isPq ? QStringLiteral("Rec.2100 PQ (HDR10)") : QStringLiteral("BT.2100 HLG");
+        } else if (primaries == 12) { // AVIF_COLOR_PRIMARIES_DCI_P3
+            primariesName = QStringLiteral("Display P3");
+            profileName = isPq ? QStringLiteral("Display P3 PQ") : QStringLiteral("Display P3 HLG");
+        } else {
+            primariesName = QStringLiteral("sRGB");
+            profileName = isPq ? QStringLiteral("SMPTE ST 2084 (PQ)") : QStringLiteral("ARIB STD-B67 (HLG)");
+        }
+
+        m_current_image.setText(QStringLiteral("HDR_Primaries"), primariesName);
+        m_current_image.setText(QStringLiteral("HDR_Profile"), profileName);
+
+        if (m_decoder->image->clli.maxCLL > 0) {
+            m_current_image.setText(QStringLiteral("HDR_MaxCLL"), QString::number(m_decoder->image->clli.maxCLL));
+        }
+        if (m_decoder->image->clli.maxPALL > 0) {
+            m_current_image.setText(QStringLiteral("HDR_MaxPALL"), QString::number(m_decoder->image->clli.maxPALL));
+        }
+    }
+
     m_estimated_dimensions = m_current_image.size();
 
     m_must_jump_to_next_image = false;

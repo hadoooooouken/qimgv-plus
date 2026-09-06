@@ -35,6 +35,8 @@ target_sources(qimgv-plus PRIVATE
     pngwriter.cpp
     iconfontmanager.cpp
     displayutils.cpp
+    hdrtonemapper.cpp
+    hdrtonemapper.h
 )
 
 target_sources(qimgv-plus PRIVATE

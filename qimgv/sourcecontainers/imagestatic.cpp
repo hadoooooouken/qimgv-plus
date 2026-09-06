@@ -4,6 +4,7 @@
 #include "utils/colormanager.h"
 #include "utils/djvureader.h"
 #include "utils/fontpreview.h"
+#include "utils/hdrtonemapper.h"
 #include <QMutexLocker>
 #include <QPainter>
 #include <QPdfDocument>
@@ -125,6 +126,29 @@ void ImageStatic::loadGeneric() {
   std::unique_ptr<const QImage> img(tmp);
   img =
       ImageLib::exifRotated(std::move(img), mDocInfo.get()->exifOrientation());
+
+  if (HdrToneMapper::isHdr(*img)) {
+    if (settings && settings->hdrToneMappingEnabled()) {
+      HdrToneMapParams params = {
+          .enabled = true,
+          .op = static_cast<ToneMapOperator>(settings->hdrToneMappingOperator()),
+          .targetWhiteNits = static_cast<float>(settings->hdrTargetWhiteLevel())
+      };
+      QImage toneMapped = HdrToneMapper::applyToneMapping(*img, params);
+      if (!toneMapped.isNull()) {
+        img = std::make_unique<const QImage>(std::move(toneMapped));
+      }
+    } else {
+      // Fallback SDR conversion when HDR tone-mapping is disabled
+      QImage::Format fallbackFmt = img->hasAlphaChannel() ? QImage::Format_ARGB32 : QImage::Format_RGB32;
+      QImage converted = img->convertToFormat(fallbackFmt);
+      for (const QString &key : img->textKeys()) {
+        converted.setText(key, img->text(key));
+      }
+      img = std::make_unique<const QImage>(std::move(converted));
+    }
+  }
+
   // scaling this format via qt results in transparent background
   // it rare enough so lets just convert it to the closest working thing
   if (img->format() == QImage::Format_Mono) {

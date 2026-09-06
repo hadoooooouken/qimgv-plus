@@ -521,5 +521,11 @@ private:
     QPushButton *customProfileBrowseButton = nullptr;
     QWidget *customProfileContainer = nullptr;
     QGroupBox *colorManagementGroupBox = nullptr;
+
+    QGroupBox *hdrGroupBox = nullptr;
+    QCheckBox *hdrToneMappingCheckBox = nullptr;
+    QComboBox *hdrOperatorComboBox = nullptr;
+    QComboBox *hdrTargetWhiteComboBox = nullptr;
+
     QCheckBox *useCustomAccentCheckBox = nullptr;
 };

@@ -232,6 +232,13 @@ public:
   QString monitorColorProfilePath();
   void setMonitorColorProfilePath(const QString &path);
 
+  bool hdrToneMappingEnabled();
+  void setHdrToneMappingEnabled(bool enabled);
+  int hdrToneMappingOperator();
+  void setHdrToneMappingOperator(int op);
+  int hdrTargetWhiteLevel();
+  void setHdrTargetWhiteLevel(int nits);
+
 
 
   bool printLandscape();
@@ -335,6 +342,9 @@ private:
   std::atomic<qint64> mCachedThumbnailCacheMaxEntries{
       DefaultThumbnailCacheMaxEntries};
   std::atomic<bool> mCachedColorManagementEnabled{false};
+  std::atomic<bool> mCachedHdrToneMappingEnabled{true};
+  std::atomic<int> mCachedHdrToneMappingOperator{0};
+  std::atomic<int> mCachedHdrTargetWhiteLevel{203};
   std::atomic<bool> mCachedJxlAnimation{false};
   std::atomic<int> mCachedPngSaveQuality{3};
   std::atomic<int> mCachedJPEGSaveQuality{95};
