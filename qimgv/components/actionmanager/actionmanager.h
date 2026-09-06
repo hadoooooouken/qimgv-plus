@@ -123,6 +123,7 @@ signals:
     void casSettings();
     void toggleUpscayl();
     void cycleUpscaylModel();
+    void toggleHdrToneMapping();
 };
 
 extern ActionManager *actionManager;

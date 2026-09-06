@@ -521,6 +521,18 @@ void MW::toggleUpscayl() {
     }
 }
 
+void MW::toggleHdrToneMapping() {
+    bool enabled = !settings->hdrToneMappingEnabled();
+    settings->setHdrToneMappingEnabled(enabled);
+    // Core already listens for settingsChanged and re-renders the current
+    // image when hdrToneMappingEnabled/Operator/TargetWhiteLevel differ from
+    // their last-seen values (see the lambda wired up in
+    // Core::connectComponents), which is the same path the settings dialog
+    // checkbox uses.
+    settings->sendChangeNotification();
+    showMessage(enabled ? tr("HDR Tone-Mapping: ON") : tr("HDR Tone-Mapping: OFF"), 600);
+}
+
 void MW::cycleUpscaylModel() {
     const QStringList models = settings->availableUpscaylModels();
     if (models.isEmpty())

@@ -106,6 +106,7 @@ void ActionManager::initDefaults() {
                                  "togglePanorama");
   actionManager->defaults.insert(InputMap::keyNameAlt() + "+I", "toggleUpscayl");
   actionManager->defaults.insert(InputMap::keyNameAlt() + "+" + InputMap::keyNameShift() + "+I", "cycleUpscaylModel");
+  actionManager->defaults.insert(InputMap::keyNameAlt() + "+H", "toggleHdrToneMapping");
 }
 //------------------------------------------------------------------------------
 void ActionManager::initShortcuts() {
@@ -188,6 +189,7 @@ void ActionManager::adjustFromVersion(QVersionNumber lastVer) {
       "cycleScalingFilter",
       "copyViewportClipboard",
       "cycleUpscaylModel",
+      "toggleHdrToneMapping",
   };
 
   const QMap<QString, QVersionNumber> &actionVersions = appActions->getMap();
@@ -318,6 +320,13 @@ void ActionManager::readShortcuts() {
   QString altI = InputMap::keyNameAlt() + "+I";
   if (shortcuts.key("toggleUpscayl", "").isEmpty() && !shortcuts.contains(altI)) {
     shortcuts.insert(altI, "toggleUpscayl");
+  }
+
+  // If the user doesn't have a shortcut for toggleHdrToneMapping, and Alt+H is not bound to anything else,
+  // we bind it to Alt+H by default.
+  QString altH = InputMap::keyNameAlt() + "+H";
+  if (shortcuts.key("toggleHdrToneMapping", "").isEmpty() && !shortcuts.contains(altH)) {
+    shortcuts.insert(altH, "toggleHdrToneMapping");
   }
 }
 //------------------------------------------------------------------------------

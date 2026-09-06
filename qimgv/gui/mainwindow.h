@@ -265,6 +265,7 @@ public slots:
   void togglePanorama();
   void toggleUpscayl();
   void cycleUpscaylModel();
+  void toggleHdrToneMapping();
   void showBatchConverter(const QList<QString> &paths);
   void adaptToWindowState();
 

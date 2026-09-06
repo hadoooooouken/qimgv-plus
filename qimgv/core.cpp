@@ -767,6 +767,8 @@ void Core::initActions() {
           &MW::toggleUpscayl);
   connect(actionManager, &ActionManager::cycleUpscaylModel, mw,
           &MW::cycleUpscaylModel);
+  connect(actionManager, &ActionManager::toggleHdrToneMapping, mw,
+          &MW::toggleHdrToneMapping);
   connect(actionManager, &ActionManager::showInDirectory, this,
           &Core::showInDirectory);
   connect(actionManager, &ActionManager::createDirectory, this,
