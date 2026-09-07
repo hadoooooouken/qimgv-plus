@@ -286,21 +286,42 @@ bool QJpegXLHandler::countALLFrames()
 
     bool is_gray = m_basicinfo.num_color_channels == 1 && m_basicinfo.alpha_bits == 0;
     JxlColorEncoding color_encoding;
-    if (m_basicinfo.uses_original_profile == JXL_FALSE && m_basicinfo.have_animation == JXL_FALSE) {
-        if (!is_gray) {
-            const JxlCmsInterface *jxlcms = JxlGetDefaultCms();
-            if (jxlcms) {
-                status = JxlDecoderSetCms(m_decoder, *jxlcms);
-                if (status != JXL_DEC_SUCCESS) {
-                    qCWarning(LOG_JXLPLUGIN, "JxlDecoderSetCms ERROR");
-                }
-            } else {
-                qCWarning(LOG_JXLPLUGIN, "No JPEG XL CMS Interface");
-            }
-        }
 
-        JxlColorEncodingSetToSRGB(&color_encoding, is_gray ? JXL_TRUE : JXL_FALSE);
-        JxlDecoderSetPreferredColorProfile(m_decoder, &color_encoding);
+    // Probe the source image's color encoding to detect HDR transfer functions
+    // (PQ / HLG). This must be done before requesting an sRGB output profile,
+    // because the sRGB conversion would crush HDR highlight information.
+    m_haveOriginalEncoding = false;
+    m_isHdrTransfer = false;
+    if (!is_gray) {
+        JxlDecoderStatus origStatus = JxlDecoderGetColorAsEncodedProfile(
+            m_decoder, JXL_COLOR_PROFILE_TARGET_ORIGINAL, &m_originalEncoding);
+        if (origStatus == JXL_DEC_SUCCESS) {
+            m_haveOriginalEncoding = true;
+            m_isHdrTransfer =
+                (m_originalEncoding.transfer_function == JXL_TRANSFER_FUNCTION_PQ
+              || m_originalEncoding.transfer_function == JXL_TRANSFER_FUNCTION_HLG);
+        }
+    }
+
+    // For SDR images, request sRGB output so libjxl's CMS handles the
+    // conversion. For HDR images, skip this so raw PQ/HLG values are preserved.
+    if (!m_isHdrTransfer) {
+        if (m_basicinfo.uses_original_profile == JXL_FALSE && m_basicinfo.have_animation == JXL_FALSE) {
+            if (!is_gray) {
+                const JxlCmsInterface *jxlcms = JxlGetDefaultCms();
+                if (jxlcms) {
+                    status = JxlDecoderSetCms(m_decoder, *jxlcms);
+                    if (status != JXL_DEC_SUCCESS) {
+                        qCWarning(LOG_JXLPLUGIN, "JxlDecoderSetCms ERROR");
+                    }
+                } else {
+                    qCWarning(LOG_JXLPLUGIN, "No JPEG XL CMS Interface");
+                }
+            }
+
+            JxlColorEncodingSetToSRGB(&color_encoding, is_gray ? JXL_TRUE : JXL_FALSE);
+            JxlDecoderSetPreferredColorProfile(m_decoder, &color_encoding);
+        }
     }
 
     bool loadalpha = false;
@@ -317,6 +338,13 @@ bool QJpegXLHandler::countALLFrames()
 #else
         bool is_fp = m_basicinfo.exponent_bits_per_sample > 0 && m_basicinfo.num_color_channels == 3;
 #endif
+
+        // HDR images (PQ/HLG) must be decoded into floating-point buffers even
+        // when the source uses integer storage (e.g. 10-bit PQ). libjxl handles
+        // the integer-to-float promotion internally.
+        if (m_isHdrTransfer && !is_gray) {
+            is_fp = true;
+        }
 
         m_input_pixel_format.num_channels = 4;
 
@@ -339,6 +367,16 @@ bool QJpegXLHandler::countALLFrames()
             else
                 m_target_image_format = is_fp ? QImage::Format_RGBX16FPx4 : QImage::Format_RGBX64;
         }
+    } else if (m_isHdrTransfer && !is_gray) {
+        // HDR image stored at 8-bit depth (unusual but valid for PQ/HLG).
+        // Promote to half-float so the HDR pipeline receives floating-point data.
+        m_input_pixel_format.data_type = JXL_TYPE_FLOAT16;
+        m_input_pixel_format.num_channels = 4;
+        m_input_image_format = QImage::Format_RGBA16FPx4;
+        if (loadalpha)
+            m_target_image_format = QImage::Format_RGBA16FPx4;
+        else
+            m_target_image_format = QImage::Format_RGBX16FPx4;
     } else { // 8bit depth
         m_input_pixel_format.data_type = JXL_TYPE_UINT8;
 
@@ -358,31 +396,52 @@ bool QJpegXLHandler::countALLFrames()
         }
     }
 
-    status = JxlDecoderGetColorAsEncodedProfile(m_decoder, JXL_COLOR_PROFILE_TARGET_DATA, &color_encoding);
+    // For HDR images, construct a QColorSpace from the source encoding so that
+    // HdrToneMapper can detect the transfer function and primaries via
+    // QColorSpace::transferFunction()/primaries().
+    if (m_isHdrTransfer && m_haveOriginalEncoding) {
+        QColorSpace::TransferFunction qtTf =
+            (m_originalEncoding.transfer_function == JXL_TRANSFER_FUNCTION_PQ)
+                ? QColorSpace::TransferFunction::St2084
+                : QColorSpace::TransferFunction::Hlg;
 
-    if (status == JXL_DEC_SUCCESS && color_encoding.color_space == JXL_COLOR_SPACE_RGB && color_encoding.white_point == JXL_WHITE_POINT_D65
-        && color_encoding.primaries == JXL_PRIMARIES_SRGB && color_encoding.transfer_function == JXL_TRANSFER_FUNCTION_SRGB) {
-        m_colorspace = QColorSpace(QColorSpace::SRgb);
+        QColorSpace::Primaries qtPrimaries;
+        if (m_originalEncoding.primaries == JXL_PRIMARIES_2100)
+            qtPrimaries = QColorSpace::Primaries::Bt2020;
+        else if (m_originalEncoding.primaries == JXL_PRIMARIES_P3)
+            qtPrimaries = QColorSpace::Primaries::DciP3D65;
+        else
+            qtPrimaries = QColorSpace::Primaries::SRgb;
+
+        m_colorspace = QColorSpace(qtPrimaries, qtTf);
     } else {
-        size_t icc_size = 0;
-        if (JxlDecoderGetICCProfileSize(m_decoder, JXL_COLOR_PROFILE_TARGET_DATA, &icc_size) == JXL_DEC_SUCCESS) {
-            if (icc_size > 0) {
-                QByteArray icc_data(icc_size, 0);
-                if (JxlDecoderGetColorAsICCProfile(m_decoder, JXL_COLOR_PROFILE_TARGET_DATA, reinterpret_cast<uint8_t *>(icc_data.data()), icc_data.size())
-                    == JXL_DEC_SUCCESS) {
-                    m_colorspace = QColorSpace::fromIccProfile(icc_data);
+        // SDR path: determine the output color space from the decoded data profile.
+        status = JxlDecoderGetColorAsEncodedProfile(m_decoder, JXL_COLOR_PROFILE_TARGET_DATA, &color_encoding);
 
-                    if (!m_colorspace.isValid()) {
-                        qCWarning(LOG_JXLPLUGIN, "JXL image has Qt-unsupported or invalid ICC profile!");
+        if (status == JXL_DEC_SUCCESS && color_encoding.color_space == JXL_COLOR_SPACE_RGB && color_encoding.white_point == JXL_WHITE_POINT_D65
+            && color_encoding.primaries == JXL_PRIMARIES_SRGB && color_encoding.transfer_function == JXL_TRANSFER_FUNCTION_SRGB) {
+            m_colorspace = QColorSpace(QColorSpace::SRgb);
+        } else {
+            size_t icc_size = 0;
+            if (JxlDecoderGetICCProfileSize(m_decoder, JXL_COLOR_PROFILE_TARGET_DATA, &icc_size) == JXL_DEC_SUCCESS) {
+                if (icc_size > 0) {
+                    QByteArray icc_data(icc_size, 0);
+                    if (JxlDecoderGetColorAsICCProfile(m_decoder, JXL_COLOR_PROFILE_TARGET_DATA, reinterpret_cast<uint8_t *>(icc_data.data()), icc_data.size())
+                        == JXL_DEC_SUCCESS) {
+                        m_colorspace = QColorSpace::fromIccProfile(icc_data);
+
+                        if (!m_colorspace.isValid()) {
+                            qCWarning(LOG_JXLPLUGIN, "JXL image has Qt-unsupported or invalid ICC profile!");
+                        }
+                    } else {
+                        qCWarning(LOG_JXLPLUGIN, "Failed to obtain data from JPEG XL decoder");
                     }
                 } else {
-                    qCWarning(LOG_JXLPLUGIN, "Failed to obtain data from JPEG XL decoder");
+                    qCWarning(LOG_JXLPLUGIN, "Empty ICC data");
                 }
             } else {
-                qCWarning(LOG_JXLPLUGIN, "Empty ICC data");
+                qCWarning(LOG_JXLPLUGIN, "no ICC, other color profile");
             }
-        } else {
-            qCWarning(LOG_JXLPLUGIN, "no ICC, other color profile");
         }
     }
 

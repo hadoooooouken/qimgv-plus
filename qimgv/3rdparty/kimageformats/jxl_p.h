@@ -17,6 +17,7 @@
 #include <QList>
 #include <QVariant>
 
+#include <jxl/color_encoding.h>
 #include <jxl/decode.h>
 
 class QJpegXLHandler : public QImageIOHandler
@@ -89,6 +90,10 @@ private:
     QImage::Format m_target_image_format;
 
     JxlPixelFormat m_input_pixel_format;
+
+    bool m_isHdrTransfer = false;
+    bool m_haveOriginalEncoding = false;
+    JxlColorEncoding m_originalEncoding{};
 };
 
 class QJpegXLPlugin : public QImageIOPlugin
