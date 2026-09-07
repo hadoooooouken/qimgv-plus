@@ -881,6 +881,39 @@ bool QJpegXLHandler::decode_one_frame()
         exif.updateImageMetadata(m_current_image);
     }
 
+    // Tag HDR images with the metadata contract consumed by HdrToneMapper.
+    // This follows the same pattern established by the AVIF decoder.
+    if (m_isHdrTransfer && m_haveOriginalEncoding) {
+        const bool isPq = (m_originalEncoding.transfer_function == JXL_TRANSFER_FUNCTION_PQ);
+
+        m_current_image.setText(QStringLiteral("HDR_IsHDR"), QStringLiteral("true"));
+        m_current_image.setText(QStringLiteral("HDR_Transfer"),
+                                isPq ? QStringLiteral("PQ") : QStringLiteral("HLG"));
+
+        QString primariesName;
+        QString profileName;
+        if (m_originalEncoding.primaries == JXL_PRIMARIES_2100) {
+            primariesName = QStringLiteral("BT.2020");
+            profileName = isPq ? QStringLiteral("Rec.2100 PQ (HDR10)")
+                                : QStringLiteral("BT.2100 HLG");
+        } else if (m_originalEncoding.primaries == JXL_PRIMARIES_P3) {
+            primariesName = QStringLiteral("Display P3");
+            profileName = isPq ? QStringLiteral("Display P3 PQ")
+                                : QStringLiteral("Display P3 HLG");
+        } else {
+            primariesName = QStringLiteral("sRGB");
+            profileName = isPq ? QStringLiteral("SMPTE ST 2084 (PQ)")
+                                : QStringLiteral("ARIB STD-B67 (HLG)");
+        }
+        m_current_image.setText(QStringLiteral("HDR_Primaries"), primariesName);
+        m_current_image.setText(QStringLiteral("HDR_Profile"), profileName);
+
+        if (m_basicinfo.intensity_target > 0.0f) {
+            m_current_image.setText(QStringLiteral("HDR_IntensityTarget"),
+                                    QString::number(static_cast<double>(m_basicinfo.intensity_target)));
+        }
+    }
+
     m_next_image_delay = m_framedelays[m_currentimage_index];
     m_previousimage_index = m_currentimage_index;
 

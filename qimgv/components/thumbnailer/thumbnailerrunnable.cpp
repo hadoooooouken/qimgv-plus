@@ -122,6 +122,41 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
       image = ImageLib::exifRotated(std::move(image), imgInfo.exifOrientation());
     }
 
+    // Tone-map HDR images to SDR before thumbnailing, mirroring the
+    // logic in ImageStatic::loadGeneric(). Without this, raw PQ/HLG/
+    // linear-float pixel values would be interpreted as SDR by the
+    // scaler and color manager, producing extremely dark thumbnails.
+    if (image && HdrToneMapper::isHdr(*image)) {
+      auto sdrFallbackConvert = [](const QImage &src) {
+        QImage::Format fallbackFmt = src.hasAlphaChannel()
+            ? QImage::Format_ARGB32 : QImage::Format_RGB32;
+        QImage converted = src.convertToFormat(fallbackFmt);
+        converted.setColorSpace(QColorSpace(QColorSpace::SRgb));
+        for (const QString &key : src.textKeys()) {
+          if (!key.startsWith(QStringLiteral("HDR_"))) {
+            converted.setText(key, src.text(key));
+          }
+        }
+        return converted;
+      };
+
+      if (settings && settings->hdrToneMappingEnabled()) {
+        HdrToneMapParams params = {
+            .enabled = true,
+            .op = static_cast<ToneMapOperator>(settings->hdrToneMappingOperator()),
+            .targetWhiteNits = static_cast<float>(settings->hdrTargetWhiteLevel())
+        };
+        QImage toneMapped = HdrToneMapper::applyToneMapping(*image, params);
+        if (!toneMapped.isNull()) {
+          image = std::make_unique<QImage>(std::move(toneMapped));
+        } else {
+          image = std::make_unique<QImage>(sdrFallbackConvert(*image));
+        }
+      } else {
+        image = std::make_unique<QImage>(sdrFallbackConvert(*image));
+      }
+    }
+
     if (image) {
       // put in image info
       image->setText(QStringLiteral("originalWidth"), QString::number(originalSize.width()));
