@@ -2,7 +2,6 @@
 #include "settings.h"
 #include <thread>
 #include <vector>
-#include <array>
 #include <cmath>
 #include <algorithm>
 #include <ranges>
@@ -12,11 +11,9 @@
 #include <QRunnable>
 #include <QSemaphore>
 #include <QCoreApplication>
-#include <QFloat16>
 #include <functional>
 #include <QIcon>
 #include <QPixmap>
-#include <QColorSpace>
 
 namespace {
 
@@ -417,638 +414,7 @@ QThreadPool* getScalingThreadPool() {
     }();
     return pool;
 }
-
-// -----------------------------------------------------------------------------
-// FP16 support
-// -----------------------------------------------------------------------------
-
-inline bool isHalfFloatFormat(QImage::Format format) {
-  switch (format) {
-  case QImage::Format_RGBX16FPx4:
-  case QImage::Format_RGBA16FPx4:
-  case QImage::Format_RGBA16FPx4_Premultiplied:
-    return true;
-  default:
-    return false;
-  }
 }
-
-inline const qfloat16* fp16ScanLine(const QImage& img, int y) {
-  return reinterpret_cast<const qfloat16*>(img.constScanLine(y));
-}
-
-inline qfloat16* fp16ScanLine(QImage& img, int y) {
-  return reinterpret_cast<qfloat16*>(img.scanLine(y));
-}
-
-struct Fp16Pixel {
-  float r, g, b, a;
-};
-
-inline Fp16Pixel loadFp16Pixel(const QImage& img, int x, int y) {
-  const qfloat16* line = fp16ScanLine(img, y);
-  const int i = x * 4;
-  return {
-      static_cast<float>(line[i + 0]),
-      static_cast<float>(line[i + 1]),
-      static_cast<float>(line[i + 2]),
-      img.hasAlphaChannel() ? static_cast<float>(line[i + 3]) : 1.0f
-  };
-}
-
-inline void storeFp16Pixel(QImage& img, int x, int y,
-                           const Fp16Pixel& p) {
-  qfloat16* line = fp16ScanLine(img, y);
-  const int i = x * 4;
-  line[i + 0] = qfloat16(p.r);
-  line[i + 1] = qfloat16(p.g);
-  line[i + 2] = qfloat16(p.b);
-  line[i + 3] = qfloat16(p.a);
-}
-
-QImage makeFp16Premultiplied(const QImage& source,
-                             bool& wasStraightAlpha) {
-  wasStraightAlpha =
-      source.format() == QImage::Format_RGBA16FPx4;
-
-  if (source.format() == QImage::Format_RGBA16FPx4_Premultiplied ||
-      source.format() == QImage::Format_RGBX16FPx4) {
-    return source;
-  }
-
-  if (source.format() != QImage::Format_RGBA16FPx4)
-    return QImage();
-
-  QImage result(source.size(),
-                QImage::Format_RGBA16FPx4_Premultiplied);
-  result.setColorSpace(source.colorSpace());
-
-  for (int y = 0; y < source.height(); ++y) {
-    const qfloat16* src = fp16ScanLine(source, y);
-    qfloat16* dst = fp16ScanLine(result, y);
-
-    for (int x = 0; x < source.width(); ++x) {
-      const int i = x * 4;
-      float r = static_cast<float>(src[i + 0]);
-      float g = static_cast<float>(src[i + 1]);
-      float b = static_cast<float>(src[i + 2]);
-      float a = std::clamp(static_cast<float>(src[i + 3]), 0.0f, 1.0f);
-
-      r *= a;
-      g *= a;
-      b *= a;
-
-      dst[i + 0] = qfloat16(r);
-      dst[i + 1] = qfloat16(g);
-      dst[i + 2] = qfloat16(b);
-      dst[i + 3] = qfloat16(a);
-    }
-  }
-  return result;
-}
-
-QImage restoreFp16StraightAlpha(QImage image,
-                                bool wasStraightAlpha) {
-  if (!wasStraightAlpha)
-    return image;
-
-  QImage result(image.size(), QImage::Format_RGBA16FPx4);
-  result.setColorSpace(image.colorSpace());
-
-  for (int y = 0; y < image.height(); ++y) {
-    const qfloat16* src = fp16ScanLine(image, y);
-    qfloat16* dst = fp16ScanLine(result, y);
-
-    for (int x = 0; x < image.width(); ++x) {
-      const int i = x * 4;
-      float r = static_cast<float>(src[i + 0]);
-      float g = static_cast<float>(src[i + 1]);
-      float b = static_cast<float>(src[i + 2]);
-      float a = std::clamp(static_cast<float>(src[i + 3]), 0.0f, 1.0f);
-
-      if (a > 0.0f) {
-        r /= a;
-        g /= a;
-        b /= a;
-      } else {
-        r = 0.0f;
-        g = 0.0f;
-        b = 0.0f;
-      }
-
-      dst[i + 0] = qfloat16(r);
-      dst[i + 1] = qfloat16(g);
-      dst[i + 2] = qfloat16(b);
-      dst[i + 3] = qfloat16(a);
-    }
-  }
-  return result;
-}
-
-inline void clampFp16Alpha(QImage& image) {
-  if (!image.hasAlphaChannel())
-    return;
-
-  for (int y = 0; y < image.height(); ++y) {
-    qfloat16* line = fp16ScanLine(image, y);
-    for (int x = 0; x < image.width(); ++x) {
-      const int i = x * 4;
-      float a = std::clamp(static_cast<float>(line[i + 3]), 0.0f, 1.0f);
-      line[i + 3] = qfloat16(a);
-    }
-  }
-}
-
-// -----------------------------------------------------------------------------
-// FP16 Smart
-// -----------------------------------------------------------------------------
-
-QImage scaledSmartHalfFloat(std::shared_ptr<const QImage> source,
-                            QSize destSize) {
-  if (!source || source->isNull())
-    return QImage();
-
-  if (!isHalfFloatFormat(source->format()))
-    return QImage();
-
-  const int W_src = source->width();
-  const int H_src = source->height();
-  const int W_dst = destSize.width();
-  const int H_dst = destSize.height();
-
-  if (W_dst <= 0 || H_dst <= 0)
-    return QImage();
-
-  if (W_dst == W_src && H_dst == H_src)
-    return source->copy();
-
-  const bool hasAlpha = source->hasAlphaChannel();
-
-  bool wasStraightAlpha = false;
-  QImage srcImg = makeFp16Premultiplied(*source, wasStraightAlpha);
-  if (srcImg.isNull())
-    return QImage();
-
-  const QImage::Format fpFormat =
-      hasAlpha
-          ? QImage::Format_RGBA16FPx4_Premultiplied
-          : QImage::Format_RGBX16FPx4;
-
-  if (srcImg.format() != fpFormat)
-    srcImg = srcImg.convertToFormat(fpFormat);
-
-  srcImg.setColorSpace(source->colorSpace());
-
-  const bool isUpscaling =
-      (W_dst > W_src) || (H_dst > H_src);
-
-  QThreadPool* pool = getScalingThreadPool();
-
-  int numThreads = std::thread::hardware_concurrency();
-  if (numThreads <= 0)
-    numThreads = 4;
-
-  numThreads = std::max(1, std::min(numThreads, H_src));
-  if (H_dst > 0)
-    numThreads = std::min(numThreads, H_dst);
-
-  // Bicubic weights for both axes
-  const double s_x = static_cast<double>(W_src) / W_dst;
-  const double s_y = static_cast<double>(H_src) / H_dst;
-
-  struct HorizWeight {
-    int x0, x1, x2, x3;
-    float w0, w1, w2, w3;
-  };
-  struct VertWeight {
-    int y0, y1, y2, y3;
-    float w0, w1, w2, w3;
-  };
-
-  std::vector<HorizWeight> hWeights(W_dst);
-  std::vector<VertWeight> vWeights(H_dst);
-
-  for (int x = 0; x < W_dst; ++x) {
-    double u = x * s_x;
-    int xin = static_cast<int>(std::floor(u));
-    float dx = static_cast<float>(u - xin);
-    hWeights[x] = {
-        std::clamp(xin - 1, 0, W_src - 1),
-        std::clamp(xin,     0, W_src - 1),
-        std::clamp(xin + 1, 0, W_src - 1),
-        std::clamp(xin + 2, 0, W_src - 1),
-        BicubicWeights::w0(dx),
-        BicubicWeights::w1(dx),
-        BicubicWeights::w2(dx),
-        BicubicWeights::w3(dx)
-    };
-  }
-
-  for (int y = 0; y < H_dst; ++y) {
-    double v = y * s_y;
-    int yin = static_cast<int>(std::floor(v));
-    float dy = static_cast<float>(v - yin);
-    vWeights[y] = {
-        std::clamp(yin - 1, 0, H_src - 1),
-        std::clamp(yin,     0, H_src - 1),
-        std::clamp(yin + 1, 0, H_src - 1),
-        std::clamp(yin + 2, 0, H_src - 1),
-        BicubicWeights::w0(dy),
-        BicubicWeights::w1(dy),
-        BicubicWeights::w2(dy),
-        BicubicWeights::w3(dy)
-    };
-  }
-
-  auto bicubicScaleFp16 = [&](const QImage& input,
-                              const std::vector<HorizWeight>& hw,
-                              const std::vector<VertWeight>& vw) {
-    QImage temp(W_dst, H_src, fpFormat);
-    QImage output(W_dst, H_dst, fpFormat);
-    temp.setColorSpace(input.colorSpace());
-    output.setColorSpace(input.colorSpace());
-
-    // Horizontal pass
-    {
-      QSemaphore sem;
-      int rowsPerThread = std::max(1, H_src / numThreads);
-      int numTasks = 0;
-      for (int i = 0; i < numThreads; ++i) {
-        int y_start = i * rowsPerThread;
-        int y_end = (i == numThreads - 1) ? H_src : std::min(H_src, (i + 1) * rowsPerThread);
-        if (y_start >= H_src) break;
-        ++numTasks;
-        pool->start(new ScalerTask([&, y_start, y_end]() {
-          for (int y = y_start; y < y_end; ++y) {
-            const qfloat16* srcLine = fp16ScanLine(input, y);
-            qfloat16* dstLine = fp16ScanLine(temp, y);
-            for (int x = 0; x < W_dst; ++x) {
-              const auto& w = hw[x];
-              const int i0 = w.x0 * 4, i1 = w.x1 * 4, i2 = w.x2 * 4, i3 = w.x3 * 4;
-              const int o = x * 4;
-              float r = static_cast<float>(srcLine[i0+0])*w.w0 + static_cast<float>(srcLine[i1+0])*w.w1 + static_cast<float>(srcLine[i2+0])*w.w2 + static_cast<float>(srcLine[i3+0])*w.w3;
-              float g = static_cast<float>(srcLine[i0+1])*w.w0 + static_cast<float>(srcLine[i1+1])*w.w1 + static_cast<float>(srcLine[i2+1])*w.w2 + static_cast<float>(srcLine[i3+1])*w.w3;
-              float b = static_cast<float>(srcLine[i0+2])*w.w0 + static_cast<float>(srcLine[i1+2])*w.w1 + static_cast<float>(srcLine[i2+2])*w.w2 + static_cast<float>(srcLine[i3+2])*w.w3;
-              dstLine[o+0] = qfloat16(r);
-              dstLine[o+1] = qfloat16(g);
-              dstLine[o+2] = qfloat16(b);
-              if (hasAlpha) {
-                float a = static_cast<float>(srcLine[i0+3])*w.w0 + static_cast<float>(srcLine[i1+3])*w.w1 + static_cast<float>(srcLine[i2+3])*w.w2 + static_cast<float>(srcLine[i3+3])*w.w3;
-                dstLine[o+3] = qfloat16(std::clamp(a, 0.0f, 1.0f));
-              } else {
-                dstLine[o+3] = qfloat16(1.0f);
-              }
-            }
-          }
-          sem.release(1);
-        }));
-      }
-      sem.acquire(numTasks);
-    }
-
-    // Vertical pass
-    {
-      QSemaphore sem;
-      int rowsPerThread = std::max(1, H_dst / numThreads);
-      int numTasks = 0;
-      for (int i = 0; i < numThreads; ++i) {
-        int y_start = i * rowsPerThread;
-        int y_end = (i == numThreads - 1) ? H_dst : std::min(H_dst, (i + 1) * rowsPerThread);
-        if (y_start >= H_dst) break;
-        ++numTasks;
-        pool->start(new ScalerTask([&, y_start, y_end]() {
-          for (int y = y_start; y < y_end; ++y) {
-            const auto& w = vw[y];
-            const qfloat16* r0 = fp16ScanLine(temp, w.y0);
-            const qfloat16* r1 = fp16ScanLine(temp, w.y1);
-            const qfloat16* r2 = fp16ScanLine(temp, w.y2);
-            const qfloat16* r3 = fp16ScanLine(temp, w.y3);
-            qfloat16* dstLine = fp16ScanLine(output, y);
-            for (int x = 0; x < W_dst; ++x) {
-              const int i = x * 4;
-              float r = static_cast<float>(r0[i+0])*w.w0 + static_cast<float>(r1[i+0])*w.w1 + static_cast<float>(r2[i+0])*w.w2 + static_cast<float>(r3[i+0])*w.w3;
-              float g = static_cast<float>(r0[i+1])*w.w0 + static_cast<float>(r1[i+1])*w.w1 + static_cast<float>(r2[i+1])*w.w2 + static_cast<float>(r3[i+1])*w.w3;
-              float b = static_cast<float>(r0[i+2])*w.w0 + static_cast<float>(r1[i+2])*w.w1 + static_cast<float>(r2[i+2])*w.w2 + static_cast<float>(r3[i+2])*w.w3;
-              dstLine[i+0] = qfloat16(r);
-              dstLine[i+1] = qfloat16(g);
-              dstLine[i+2] = qfloat16(b);
-              if (hasAlpha) {
-                float a = static_cast<float>(r0[i+3])*w.w0 + static_cast<float>(r1[i+3])*w.w1 + static_cast<float>(r2[i+3])*w.w2 + static_cast<float>(r3[i+3])*w.w3;
-                dstLine[i+3] = qfloat16(std::clamp(a, 0.0f, 1.0f));
-              } else {
-                dstLine[i+3] = qfloat16(1.0f);
-              }
-            }
-          }
-          sem.release(1);
-        }));
-      }
-      sem.acquire(numTasks);
-    }
-    return output;
-  };
-
-  QImage baseScaled = bicubicScaleFp16(srcImg, hWeights, vWeights);
-
-  if (isUpscaling) {
-    // Cross-kernel sharpening (same as 8-bit Smart upscale)
-    QImage destImg(W_dst, H_dst, fpFormat);
-    destImg.setColorSpace(source->colorSpace());
-
-    {
-      QSemaphore semaphore;
-      int rowsPerThread = std::max(1, H_dst / numThreads);
-      int numTasks = 0;
-
-      for (int i = 0; i < numThreads; ++i) {
-        int y_start = i * rowsPerThread;
-        int y_end = (i == numThreads - 1) ? H_dst : std::min(H_dst, (i + 1) * rowsPerThread);
-        if (y_start >= H_dst) break;
-        ++numTasks;
-
-        pool->start(new ScalerTask([&, y_start, y_end]() {
-          auto sharpen = [](float c, float t, float b, float l, float r) {
-            return c + (4.0f * c - t - b - l - r) * (1.0f / 16.0f);
-          };
-          for (int y = y_start; y < y_end; ++y) {
-            const int topY = std::max(y - 1, 0);
-            const int bottomY = std::min(y + 1, H_dst - 1);
-            const qfloat16* top = fp16ScanLine(baseScaled, topY);
-            const qfloat16* center = fp16ScanLine(baseScaled, y);
-            const qfloat16* bottom = fp16ScanLine(baseScaled, bottomY);
-            qfloat16* dst = fp16ScanLine(destImg, y);
-
-            for (int x = 0; x < W_dst; ++x) {
-              const int leftX = std::max(x - 1, 0);
-              const int rightX = std::min(x + 1, W_dst - 1);
-              const int i = x * 4;
-              const int l = leftX * 4;
-              const int r = rightX * 4;
-
-              Fp16Pixel out{};
-              out.r = sharpen(static_cast<float>(center[i+0]), static_cast<float>(top[i+0]), static_cast<float>(bottom[i+0]), static_cast<float>(center[l+0]), static_cast<float>(center[r+0]));
-              out.g = sharpen(static_cast<float>(center[i+1]), static_cast<float>(top[i+1]), static_cast<float>(bottom[i+1]), static_cast<float>(center[l+1]), static_cast<float>(center[r+1]));
-              out.b = sharpen(static_cast<float>(center[i+2]), static_cast<float>(top[i+2]), static_cast<float>(bottom[i+2]), static_cast<float>(center[l+2]), static_cast<float>(center[r+2]));
-              if (hasAlpha) {
-                out.a = std::clamp(sharpen(static_cast<float>(center[i+3]), static_cast<float>(top[i+3]), static_cast<float>(bottom[i+3]), static_cast<float>(center[l+3]), static_cast<float>(center[r+3])), 0.0f, 1.0f);
-              } else {
-                out.a = 1.0f;
-              }
-              dst[i+0] = qfloat16(out.r);
-              dst[i+1] = qfloat16(out.g);
-              dst[i+2] = qfloat16(out.b);
-              dst[i+3] = qfloat16(out.a);
-            }
-          }
-          semaphore.release(1);
-        }));
-      }
-      semaphore.acquire(numTasks);
-    }
-
-    clampFp16Alpha(destImg);
-    if (wasStraightAlpha)
-      return restoreFp16StraightAlpha(destImg, true);
-    return destImg;
-  } else {
-    // Downscaling: apply Gaussian blur + unsharp mask to baseScaled
-    QImage destImg(W_dst, H_dst, fpFormat);
-    destImg.setColorSpace(source->colorSpace());
-
-    {
-      QSemaphore semaphore;
-      int rowsPerThread = std::max(1, H_dst / numThreads);
-      int numTasks = 0;
-
-      for (int i = 0; i < numThreads; ++i) {
-        int y_start = i * rowsPerThread;
-        int y_end = (i == numThreads - 1) ? H_dst : std::min(H_dst, (i + 1) * rowsPerThread);
-        if (y_start >= H_dst) break;
-        ++numTasks;
-
-        pool->start(new ScalerTask([&, y_start, y_end]() {
-          std::vector<std::vector<float>> rowBuffers(kGaussianKernelSize, std::vector<float>(W_dst * 4));
-
-          auto blurRowHorizontal = [&](int yd, int bufIdx) {
-            int y = std::clamp(yd, 0, H_dst - 1);
-            const qfloat16* srcLine = fp16ScanLine(baseScaled, y);
-            float* out = rowBuffers[bufIdx].data();
-            for (int x = 0; x < W_dst; ++x) {
-              float sumR = 0.0f, sumG = 0.0f, sumB = 0.0f, sumA = 0.0f;
-              for (int k = -kGaussianHalfWidth; k <= kGaussianHalfWidth; ++k) {
-                int sx = std::clamp(x + k, 0, W_dst - 1);
-                const int i = sx * 4;
-                const float w = kGaussianWeights[k + kGaussianHalfWidth];
-                sumR += static_cast<float>(srcLine[i + 0]) * w;
-                sumG += static_cast<float>(srcLine[i + 1]) * w;
-                sumB += static_cast<float>(srcLine[i + 2]) * w;
-                sumA += static_cast<float>(srcLine[i + 3]) * w;
-              }
-              float* outPtr = out + x * 4;
-              outPtr[0] = sumR;
-              outPtr[1] = sumG;
-              outPtr[2] = sumB;
-              outPtr[3] = sumA;
-            }
-          };
-
-          for (int r = 0; r < kGaussianKernelSize; ++r)
-            blurRowHorizontal(y_start - kGaussianHalfWidth + r, r);
-
-          for (int y = y_start; y < y_end; ++y) {
-            const qfloat16* origLine = fp16ScanLine(baseScaled, y);
-            qfloat16* dstLine = fp16ScanLine(destImg, y);
-            for (int x = 0; x < W_dst; ++x) {
-              float blurR = 0.0f, blurG = 0.0f, blurB = 0.0f, blurA = 0.0f;
-              for (int k = 0; k < kGaussianKernelSize; ++k) {
-                int bufIdx = (y - y_start + k) % kGaussianKernelSize;
-                const float* p = rowBuffers[bufIdx].data() + x * 4;
-                const float w = kGaussianWeights[k];
-                blurR += p[0] * w;
-                blurG += p[1] * w;
-                blurB += p[2] * w;
-                blurA += p[3] * w;
-              }
-              const int i = x * 4;
-              float outR = kUnsharpSharpStrength * static_cast<float>(origLine[i + 0]) - kUnsharpBlurStrength * blurR;
-              float outG = kUnsharpSharpStrength * static_cast<float>(origLine[i + 1]) - kUnsharpBlurStrength * blurG;
-              float outB = kUnsharpSharpStrength * static_cast<float>(origLine[i + 2]) - kUnsharpBlurStrength * blurB;
-              float outA = hasAlpha ? kUnsharpSharpStrength * static_cast<float>(origLine[i + 3]) - kUnsharpBlurStrength * blurA : 1.0f;
-              dstLine[i + 0] = qfloat16(outR);
-              dstLine[i + 1] = qfloat16(outG);
-              dstLine[i + 2] = qfloat16(outB);
-              dstLine[i + 3] = hasAlpha ? qfloat16(std::clamp(outA, 0.0f, 1.0f)) : qfloat16(1.0f);
-            }
-            if (y < H_dst - 1) {
-              int replaceIdx = (y - y_start) % kGaussianKernelSize;
-              blurRowHorizontal(y + 5, replaceIdx);
-            }
-          }
-          semaphore.release(1);
-        }));
-      }
-      semaphore.acquire(numTasks);
-    }
-
-    clampFp16Alpha(destImg);
-    if (wasStraightAlpha)
-      return restoreFp16StraightAlpha(destImg, true);
-    return destImg;
-  }
-}
-
-// -----------------------------------------------------------------------------
-// FP16 MKS2021
-// -----------------------------------------------------------------------------
-
-QImage scaledMksHalfFloat(std::shared_ptr<const QImage> source,
-                          QSize destSize) {
-  if (!source || source->isNull())
-    return QImage();
-
-  if (!isHalfFloatFormat(source->format()))
-    return QImage();
-
-  const int W_src = source->width();
-  const int H_src = source->height();
-  const int W_dst = destSize.width();
-  const int H_dst = destSize.height();
-
-  if (W_dst <= 0 || H_dst <= 0)
-    return QImage();
-
-  if (W_dst == W_src && H_dst == H_src)
-    return source->copy();
-
-  const bool hasAlpha = source->hasAlphaChannel();
-
-  bool wasStraightAlpha = false;
-  QImage srcImg = makeFp16Premultiplied(*source, wasStraightAlpha);
-  if (srcImg.isNull())
-    return QImage();
-
-  const QImage::Format fpFormat =
-      hasAlpha
-          ? QImage::Format_RGBA16FPx4_Premultiplied
-          : QImage::Format_RGBX16FPx4;
-
-  if (srcImg.format() != fpFormat)
-    srcImg = srcImg.convertToFormat(fpFormat);
-
-  srcImg.setColorSpace(source->colorSpace());
-
-  std::vector<MksAxisTap> hTaps, vTaps;
-  std::vector<float> hWeightPool, vWeightPool;
-  buildMksAxisTaps(W_src, W_dst, hTaps, hWeightPool);
-  buildMksAxisTaps(H_src, H_dst, vTaps, vWeightPool);
-
-  QImage intermediate(W_dst, H_src, fpFormat);
-  QImage destImg(W_dst, H_dst, fpFormat);
-
-  intermediate.setColorSpace(source->colorSpace());
-  destImg.setColorSpace(source->colorSpace());
-
-  QThreadPool* pool = getScalingThreadPool();
-
-  int numThreads = std::thread::hardware_concurrency();
-  if (numThreads <= 0)
-    numThreads = 4;
-  numThreads = std::max(1, std::min(numThreads, H_src));
-  numThreads = std::min(numThreads, H_dst);
-
-  // Horizontal pass
-  {
-    QSemaphore semaphore;
-    int rowsPerThread = std::max(1, H_src / numThreads);
-    int numTasks = 0;
-
-    for (int i = 0; i < numThreads; ++i) {
-      int y_start = i * rowsPerThread;
-      int y_end = (i == numThreads - 1) ? H_src : std::min(H_src, (i + 1) * rowsPerThread);
-      if (y_start >= H_src) break;
-      ++numTasks;
-
-      pool->start(new ScalerTask([&, y_start, y_end]() {
-        for (int y = y_start; y < y_end; ++y) {
-          const qfloat16* srcLine = fp16ScanLine(srcImg, y);
-          qfloat16* dstLine = fp16ScanLine(intermediate, y);
-
-          for (int x = 0; x < W_dst; ++x) {
-            const MksAxisTap& tap = hTaps[x];
-            float r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
-            for (int t = 0; t < tap.count; ++t) {
-              const int srcX = std::clamp(tap.left + t, 0, W_src - 1);
-              const int i = srcX * 4;
-              const float w = hWeightPool[tap.weightOffset + t];
-              r += static_cast<float>(srcLine[i + 0]) * w;
-              g += static_cast<float>(srcLine[i + 1]) * w;
-              b += static_cast<float>(srcLine[i + 2]) * w;
-              a += static_cast<float>(srcLine[i + 3]) * w;
-            }
-            const int o = x * 4;
-            dstLine[o + 0] = qfloat16(r);
-            dstLine[o + 1] = qfloat16(g);
-            dstLine[o + 2] = qfloat16(b);
-            dstLine[o + 3] = hasAlpha ? qfloat16(std::clamp(a, 0.0f, 1.0f)) : qfloat16(1.0f);
-          }
-        }
-        semaphore.release(1);
-      }));
-    }
-    semaphore.acquire(numTasks);
-  }
-
-  // Vertical pass
-  {
-    QSemaphore semaphore;
-    int rowsPerThread = std::max(1, H_dst / numThreads);
-    int numTasks = 0;
-
-    for (int i = 0; i < numThreads; ++i) {
-      int y_start = i * rowsPerThread;
-      int y_end = (i == numThreads - 1) ? H_dst : std::min(H_dst, (i + 1) * rowsPerThread);
-      if (y_start >= H_dst) break;
-      ++numTasks;
-
-      pool->start(new ScalerTask([&, y_start, y_end]() {
-        for (int y = y_start; y < y_end; ++y) {
-          const MksAxisTap& tap = vTaps[y];
-          qfloat16* dstLine = fp16ScanLine(destImg, y);
-
-          for (int x = 0; x < W_dst; ++x) {
-            float r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
-            for (int t = 0; t < tap.count; ++t) {
-              const int srcY = std::clamp(tap.left + t, 0, H_src - 1);
-              const qfloat16* srcLine = fp16ScanLine(intermediate, srcY);
-              const int i = x * 4;
-              const float w = vWeightPool[tap.weightOffset + t];
-              r += static_cast<float>(srcLine[i + 0]) * w;
-              g += static_cast<float>(srcLine[i + 1]) * w;
-              b += static_cast<float>(srcLine[i + 2]) * w;
-              a += static_cast<float>(srcLine[i + 3]) * w;
-            }
-            const int o = x * 4;
-            dstLine[o + 0] = qfloat16(r);
-            dstLine[o + 1] = qfloat16(g);
-            dstLine[o + 2] = qfloat16(b);
-            dstLine[o + 3] = hasAlpha ? qfloat16(std::clamp(a, 0.0f, 1.0f)) : qfloat16(1.0f);
-          }
-        }
-        semaphore.release(1);
-      }));
-    }
-    semaphore.acquire(numTasks);
-  }
-
-  clampFp16Alpha(destImg);
-
-  if (wasStraightAlpha)
-    return restoreFp16StraightAlpha(destImg, true);
-
-  return destImg;
-}
-
-} // namespace
 
 void ImageLib::recolor(QPixmap &pixmap, QColor color) {
   QPainter p(&pixmap);
@@ -1067,11 +433,11 @@ QImage ImageLib::rotatedRaw(const QImage *src, int grad) {
   img = src->transformed(transform, Qt::SmoothTransformation);
   return img;
 }
-
+//------------------------------------------------------------------------------
 QImage ImageLib::rotated(std::shared_ptr<const QImage> src, int grad) {
   return rotatedRaw(src.get(), grad);
 }
-
+//------------------------------------------------------------------------------
 QImage ImageLib::croppedRaw(const QImage *src, QRect newRect) {
   if (src && src->rect().contains(newRect, false)) {
     return src->copy(newRect);
@@ -1079,95 +445,95 @@ QImage ImageLib::croppedRaw(const QImage *src, QRect newRect) {
     return QImage();
   }
 }
-
+//------------------------------------------------------------------------------
 QImage ImageLib::cropped(std::shared_ptr<const QImage> src, QRect newRect) {
   return croppedRaw(src.get(), newRect);
 }
-
+//------------------------------------------------------------------------------
 QImage ImageLib::flippedHRaw(const QImage *src) {
   if (!src)
     return QImage();
   else
     return src->mirrored(true, false);
 }
-
+//------------------------------------------------------------------------------
 QImage ImageLib::flippedH(std::shared_ptr<const QImage> src) {
   return flippedHRaw(src.get());
 }
-
+//------------------------------------------------------------------------------
 QImage ImageLib::flippedVRaw(const QImage *src) {
   if (!src)
     return QImage();
   else
     return src->mirrored(false, true);
 }
-
+//------------------------------------------------------------------------------
 QImage ImageLib::flippedV(std::shared_ptr<const QImage> src) {
   return flippedVRaw(src.get());
 }
-
+//------------------------------------------------------------------------------
 std::unique_ptr<const QImage>
 ImageLib::exifRotated(std::unique_ptr<const QImage> src, int orientation) {
   switch (orientation) {
-  case 1:
+  case 1: {
     src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
-    break;
-  case 2:
+  } break;
+  case 2: {
     src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
-    break;
-  case 3:
+  } break;
+  case 3: {
     src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
     src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
-    break;
-  case 4:
+  } break;
+  case 4: {
     src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
-    break;
-  case 5:
+  } break;
+  case 5: {
     src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
     src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
-    break;
-  case 6:
+  } break;
+  case 6: {
     src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
     src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
-    break;
-  case 7:
+  } break;
+  case 7: {
     src.reset(new QImage(ImageLib::rotatedRaw(src.get(), -90)));
-    break;
-  default:
-    break;
+  } break;
+  default: {
+  } break;
   }
   return src;
 }
-
+//------------------------------------------------------------------------------
 std::unique_ptr<QImage> ImageLib::exifRotated(std::unique_ptr<QImage> src,
                                               int orientation) {
   switch (orientation) {
-  case 1:
+  case 1: {
     src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
-    break;
-  case 2:
+  } break;
+  case 2: {
     src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
-    break;
-  case 3:
+  } break;
+  case 3: {
     src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
     src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
-    break;
-  case 4:
+  } break;
+  case 4: {
     src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
-    break;
-  case 5:
+  } break;
+  case 5: {
     src.reset(new QImage(ImageLib::flippedHRaw(src.get())));
     src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
-    break;
-  case 6:
+  } break;
+  case 6: {
     src.reset(new QImage(ImageLib::flippedVRaw(src.get())));
     src.reset(new QImage(ImageLib::rotatedRaw(src.get(), 90)));
-    break;
-  case 7:
+  } break;
+  case 7: {
     src.reset(new QImage(ImageLib::rotatedRaw(src.get(), -90)));
-    break;
-  default:
-    break;
+  } break;
+  default: {
+  } break;
   }
   return src;
 }
@@ -1177,26 +543,13 @@ QImage ImageLib::scaled(std::shared_ptr<const QImage> source, QSize destSize,
   int maxDim = 12288;
   qint64 maxPixels = 100000000;
   if (settings->useUpscayl() || settings->resizeUseUpscayl()) {
-    maxDim = 16384;
-    maxPixels = 268435456;
+    maxDim = 16384;         // Cap to GPU max texture size / GDI memory safety limit (16384)
+    maxPixels = 268435456;  // Cap to 256 Megapixels (~1.07 GB RAM) to prevent drawing allocations crashes
   }
 
   if (!source || destSize.width() > maxDim || destSize.height() > maxDim ||
       (qint64)destSize.width() * destSize.height() > maxPixels)
     return QImage();
-
-  // FP16 dispatch
-  if (isHalfFloatFormat(source->format())) {
-    switch (filter) {
-    case QI_FILTER_SMART:
-      return scaledSmartHalfFloat(source, destSize);
-    case QI_FILTER_MKS2021:
-      return scaledMksHalfFloat(source, destSize);
-    default:
-      break; // for other filters, proceed to Qt path (which preserves FP16)
-    }
-  }
-
   auto scaleTarget = source;
   if (source->format() == QImage::Format_Indexed8) {
     auto newFmt = QImage::Format_RGB32;
@@ -1222,40 +575,17 @@ QImage ImageLib::scaled_Qt(std::shared_ptr<const QImage> source,
                            QSize destSize, bool smooth) {
   if (!source)
     return QImage();
-
-  // FP16 path: call QImage::scaled but ensure we keep FP16
-  if (isHalfFloatFormat(source->format())) {
-    QImage work = *source;
-    const bool wasStraightAlpha =
-        smooth && work.format() == QImage::Format_RGBA16FPx4;
-
-    if (wasStraightAlpha) {
-      work = work.convertToFormat(QImage::Format_RGBA16FPx4_Premultiplied);
-      work.setColorSpace(source->colorSpace());
-    }
-
-    QImage dest =
-        work.scaled(destSize.width(), destSize.height(),
-                    Qt::IgnoreAspectRatio,
-                    smooth ? Qt::SmoothTransformation : Qt::FastTransformation);
-
-    if (dest.isNull() || !isHalfFloatFormat(dest.format()))
-      return QImage();
-
-    dest.setColorSpace(source->colorSpace());
-
-    if (wasStraightAlpha)
-      return restoreFp16StraightAlpha(dest, true);
-
-    return dest;
-  }
-
-  // 8-bit path (original)
   QImage dest;
   Qt::TransformationMode mode =
       smooth ? Qt::SmoothTransformation : Qt::FastTransformation;
 
   if (smooth && source->hasAlphaChannel()) {
+    // Qt::SmoothTransformation interpolates QImage::Format_ARGB32 as straight
+    // (non-premultiplied) alpha, so RGB baked into fully-transparent source
+    // pixels (e.g. black, as exported by most design tools) bleeds a dark/light
+    // fringe into neighboring opaque pixels. Converting to premultiplied alpha
+    // first makes the RGB of transparent pixels 0, so they contribute nothing
+    // to the blend regardless of what color was stored there.
     QImage premult = source->convertToFormat(QImage::Format_ARGB32_Premultiplied);
     dest = premult.scaled(destSize.width(), destSize.height(),
                           Qt::IgnoreAspectRatio, mode);
@@ -1267,13 +597,12 @@ QImage ImageLib::scaled_Qt(std::shared_ptr<const QImage> source,
   return dest;
 }
 
+
+
 QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
-                              QSize destSize) {
+                               QSize destSize) {
   if (!source || source->isNull())
     return QImage();
-
-  if (isHalfFloatFormat(source->format()))
-    return scaledSmartHalfFloat(source, destSize);
 
   int W_src = source->width();
   int H_src = source->height();
@@ -1283,11 +612,26 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
   if (W_dst <= 0 || H_dst <= 0)
     return QImage();
 
+  // Degenerate case: requested size matches the source, so there is nothing
+  // to resample. Skip straight to the format conversion this function would
+  // have produced anyway.
   if (W_dst == W_src && H_dst == H_src) {
     return source->convertToFormat(source->hasAlphaChannel() ? QImage::Format_ARGB32
                                                                : QImage::Format_RGB32);
   }
 
+  // Convert source to a 32-bit format we can interpolate directly.
+  // All the weighted-sum math below (bicubic, Gaussian blur, unsharp mask)
+  // operates per-channel on raw R/G/B/A bytes, including alpha itself, with no
+  // knowledge of alpha weighting. If the image has an alpha channel we must
+  // work in *premultiplied* alpha (Format_ARGB32_Premultiplied) rather than
+  // straight alpha (Format_ARGB32): with straight alpha, a fully-transparent
+  // texel can still carry an arbitrary baked-in RGB color (most exporters
+  // render transparent regions on a black backdrop), and that color gets
+  // averaged into neighboring opaque pixels near an edge, producing a dark or
+  // light fringe. With premultiplied alpha, fully-transparent texels are
+  // exactly (0,0,0,0), so they contribute nothing to the weighted sum
+  // regardless of what was stored there, and the fringe disappears.
   QImage srcImg = *source.get();
   bool workingPremultiplied = srcImg.hasAlphaChannel();
   QImage::Format workFmt = workingPremultiplied ? QImage::Format_ARGB32_Premultiplied
@@ -1303,6 +647,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
     double s_x = (double)W_src / W_dst;
     double s_y = (double)H_src / H_dst;
 
+    // Precompute horizontal weights and clamp indices
     struct HorizWeight {
       int x0, x1, x2, x3;
       float w0, w1, w2, w3;
@@ -1322,6 +667,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
       hWeights[x].w3 = BicubicWeights::w3(dx);
     }
 
+    // Precompute vertical weights and clamp indices
     struct VertWeight {
       int y0, y1, y2, y3;
       float w0, w1, w2, w3;
@@ -1341,8 +687,10 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
       vWeights[y].w3 = BicubicWeights::w3(dy);
     }
 
+    // Horizontal pass: W_src x H_src -> W_dst x H_src
     QImage interImg(W_dst, H_src, srcImg.format());
-
+    
+    // Determine thread count
     int numThreads = std::thread::hardware_concurrency();
     if (numThreads <= 0) numThreads = 4;
 
@@ -1433,6 +781,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
       semaphore.acquire(numTasks);
     }
 
+    // Vertical pass + Cross-kernel Sharpening combined in one step
     QImage destImg(W_dst, H_dst, srcImg.format());
 
     {
@@ -1448,6 +797,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
 
         numTasks++;
         pool->start(new ScalerTask([&interImg, &destImg, &vWeights, W_dst, H_dst, y_start, y_end, &semaphore]() {
+          // Thread-local sliding window buffer
           std::vector<std::vector<uint32_t>> rowBuffers(kSlidingWindowSize, std::vector<uint32_t>(W_dst));
 
           auto fillRowBuffer = [&](int yd, int bufIdx) {
@@ -1517,6 +867,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
             }
           };
 
+          // Prime window
           fillRowBuffer(y_start - 1, 0);
           fillRowBuffer(y_start, 1);
           fillRowBuffer(y_start + 1, 2);
@@ -1578,6 +929,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               __m256i R_lo = _mm256_unpacklo_epi8(reg_R, zero);
               __m256i R_hi = _mm256_unpackhi_epi8(reg_R, zero);
 
+              // Parallelizing additions to reduce latency
               __m256i TB_lo = _mm256_add_epi16(T_lo, B_lo);
               __m256i LR_lo = _mm256_add_epi16(L_lo, R_lo);
               __m256i env_lo = _mm256_add_epi16(TB_lo, LR_lo);
@@ -1598,6 +950,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               _mm256_storeu_si256((__m256i*)&dstRow[x], res_pack);
             }
 
+            // Scalar fallback
             for (; x < W_dst; ++x) {
               uint32_t c = rowC[x];
               uint32_t t = rowT[x];
@@ -1617,6 +970,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               dstRow[x] = res;
             }
 
+            // Advance window
             if (y < H_dst - 1) {
               fillRowBuffer(y + 2, idxT);
             }
@@ -1633,10 +987,13 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
 
   } else {
     // --- 2. Downscaling ---
+    // Base resize using Qt bilinear scaling (srcImg is already premultiplied
+    // when it has alpha, so this inherits the same fringe-free interpolation)
     QImage scaledImg = srcImg.scaled(destSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
     QImage destImg(W_dst, H_dst, srcImg.format());
 
+    // Determine thread count
     int numThreads = std::thread::hardware_concurrency();
     if (numThreads <= 0) numThreads = 4;
 
@@ -1655,6 +1012,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
 
         numTasks++;
         pool->start(new ScalerTask([&scaledImg, &destImg, W_dst, H_dst, y_start, y_end, &semaphore]() {
+          // Thread-local sliding window buffer: stores 9 rows of horizontally blurred floats
           std::vector<std::vector<float>> rowBuffers(kGaussianKernelSize, std::vector<float>(W_dst * 4));
 
           __m256 vGaussWeights256[kGaussianKernelSize];
@@ -1687,6 +1045,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               }
               _mm256_storeu_ps(&outRow[x * 4], sum);
             }
+            // Scalar/SSE tail for an odd trailing pixel
             if (x < W_dst) {
               __m128 sum = _mm_setzero_ps();
               for (int k = -kGaussianHalfWidth; k <= kGaussianHalfWidth; ++k) {
@@ -1698,6 +1057,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
             }
           };
 
+          // Prime window
           for (int r = 0; r < kGaussianKernelSize; ++r) {
             blurRowHorizontal(y_start - kGaussianHalfWidth + r, rowBuffers[r].data());
           }
@@ -1706,6 +1066,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
             auto dstRow  = scanlineSpan(destImg, y);
             auto origRow = constScanlineSpan(scaledImg, y);
 
+            // Compute vertical Gaussian blur + Unsharp Mask blending on the fly
             int x = 0;
             for (; x + 1 < W_dst; x += 2) {
               __m256 sum = _mm256_setzero_ps();
@@ -1718,6 +1079,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               __m128i orig_loaded = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(&origRow[x]));
               __m256 orig_f = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(orig_loaded));
 
+              // strength: 0.15 unsharp mask -> 1.15 * original - 0.15 * blurred
               __m256 final_f = _mm256_fmsub_ps(vSharp256, orig_f, _mm256_mul_ps(vBlur256, sum));
 
               __m256 rounded = _mm256_add_ps(final_f, vRound256);
@@ -1730,6 +1092,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               dstRow[x]     = _mm_cvtsi128_si32(_mm256_castsi256_si128(packed_8));
               dstRow[x + 1] = _mm_cvtsi128_si32(_mm256_extractf128_si256(packed_8, 1));
             }
+            // Scalar/SSE tail for an odd trailing pixel
             if (x < W_dst) {
               __m128 sum = _mm_setzero_ps();
               for (int k = 0; k < kGaussianKernelSize; ++k) {
@@ -1752,6 +1115,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               dstRow[x] = _mm_cvtsi128_si32(packed_8);
             }
 
+            // Advance window
             if (y < H_dst - 1) {
               int idx_to_replace = (y - y_start) % kGaussianKernelSize;
               blurRowHorizontal(y + 5, rowBuffers[idx_to_replace].data());
@@ -1774,9 +1138,6 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
   if (!source || source->isNull())
     return QImage();
 
-  if (isHalfFloatFormat(source->format()))
-    return scaledMksHalfFloat(source, destSize);
-
   int W_src = source->width();
   int H_src = source->height();
   int W_dst = destSize.width();
@@ -1785,11 +1146,17 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
   if (W_dst <= 0 || H_dst <= 0)
     return QImage();
 
+  // Degenerate case: no resampling to do at all. Skip straight to a format
+  // conversion matching this function's normal output contract (ARGB32 if
+  // the source has alpha, RGB32 otherwise) instead of running the taps
+  // through an identity resample.
   if (W_dst == W_src && H_dst == H_src) {
     return source->convertToFormat(source->hasAlphaChannel() ? QImage::Format_ARGB32
                                                                : QImage::Format_RGB32);
   }
 
+  // Same premultiplied-alpha handling as scaled_Smart: avoids a dark/light
+  // fringe from RGB baked into fully-transparent source texels.
   QImage srcImg = *source.get();
   bool workingPremultiplied = srcImg.hasAlphaChannel();
   QImage::Format workFmt = workingPremultiplied ? QImage::Format_ARGB32_Premultiplied
@@ -1798,11 +1165,17 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
     srcImg = srcImg.convertToFormat(workFmt);
   }
 
+  // Build resampling taps once per axis; identical logic handles upscaling
+  // and downscaling (the kernel is simply widened for the latter).
   std::vector<MksAxisTap> hTaps, vTaps;
   std::vector<float> hWeightPool, vWeightPool;
   buildMksAxisTaps(W_src, W_dst, hTaps, hWeightPool);
   buildMksAxisTaps(H_src, H_dst, vTaps, vWeightPool);
 
+  // Per axis, use the AVX2 fixed-11-tap fast path whenever every tap in that
+  // axis actually fits (true for upscale / 1:1, per the invariant documented
+  // on kMksFixedTaps); fall back to the variable-tap path only where the
+  // widened downscale kernel genuinely needs more taps than that.
   bool hUseFixed = std::ranges::all_of(
       hTaps, [](const MksAxisTap &t) { return t.count <= kMksFixedTaps; });
   bool vUseFixed = std::ranges::all_of(
@@ -1818,6 +1191,7 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
   if (numThreads <= 0) numThreads = 4;
   QThreadPool *pool = getScalingThreadPool();
 
+  // --- Horizontal pass: W_src x H_src -> W_dst x H_src ---
   QImage interImg(W_dst, H_src, srcImg.format());
   {
     QSemaphore semaphore;
@@ -1844,6 +1218,7 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
     semaphore.acquire(numTasks);
   }
 
+  // --- Vertical pass: W_dst x H_src -> W_dst x H_dst ---
   QImage destImg(W_dst, H_dst, srcImg.format());
   {
     QSemaphore semaphore;
@@ -1876,6 +1251,7 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
 }
 
 ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
+  // Helper to multiply A and B (3x3 matrices), storing result in C
   auto multiply = [](const float A[3][3], const float B[3][3], float C[3][3]) {
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 3; ++j) {
@@ -1884,6 +1260,7 @@ ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, f
     }
   };
 
+  // 1 & 2. White balance (Temperature & Tint) & Exposure
   float factor = std::pow(2.0f, exposure);
   float w_r = (1.0f + temperature + tint * 0.5f) * factor;
   float w_g = (1.0f - tint) * factor;
@@ -1895,6 +1272,7 @@ ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, f
     {0.0f, 0.0f, w_b }
   };
 
+  // 3. Hue rotate
   if (std::abs(hue) > kAdjustEpsilon) {
     float hueRad = hue * static_cast<float>(ImageLib::kPi) / 180.0f;
     float cosAngle = std::cos(hueRad);
@@ -1915,6 +1293,7 @@ ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, f
     }
   }
 
+  // 4. Saturation
   if (std::abs(saturation - 1.0f) > kAdjustEpsilon) {
     float rWeight = 0.2126f * (1.0f - saturation);
     float gWeight = 0.7152f * (1.0f - saturation);
@@ -1933,6 +1312,7 @@ ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, f
     }
   }
 
+  // 5 & 6. Contrast & Brightness
   ColorMatrix result;
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
@@ -1954,6 +1334,7 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
   int height = dst.height();
   int width = dst.width();
 
+  // Set up AVX2 constants
   __m256i mask_b_i = _mm256_set1_epi32(0x000000FF);
   __m256i mask_g_i = _mm256_set1_epi32(0x0000FF00);
   __m256i mask_r_i = _mm256_set1_epi32(0x00FF0000);
@@ -1974,6 +1355,7 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
   __m256 v_m21 = _mm256_set1_ps(cm.m[2][1]);
   __m256 v_m22 = _mm256_set1_ps(cm.m[2][2]);
 
+  // Pre-scale offset to avoid doing it per pixel
   __m256 v_offset_scaled = _mm256_set1_ps(cm.offset * 255.0f + 0.5f);
 
   dst.detach();
@@ -2012,27 +1394,33 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
           for (; x <= avx_end; x += 8) {
             __m256i pix = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&line[x]));
 
+            // Extract channels as 32-bit integers
             __m256i b_i = _mm256_and_si256(pix, mask_b_i);
             __m256i g_i = _mm256_srli_epi32(_mm256_and_si256(pix, mask_g_i), 8);
             __m256i r_i = _mm256_srli_epi32(_mm256_and_si256(pix, mask_r_i), 16);
             __m256i a_i = _mm256_and_si256(pix, mask_a_i);
 
+            // Convert to float in [0.0, 255.0] range directly without inverse division
             __m256 b_f = _mm256_cvtepi32_ps(b_i);
             __m256 g_f = _mm256_cvtepi32_ps(g_i);
             __m256 r_f = _mm256_cvtepi32_ps(r_i);
 
+            // Apply matrix: out = M * in + pre_scaled_offset
             __m256 out_r = _mm256_fmadd_ps(v_m00, r_f, _mm256_fmadd_ps(v_m01, g_f, _mm256_fmadd_ps(v_m02, b_f, v_offset_scaled)));
             __m256 out_g = _mm256_fmadd_ps(v_m10, r_f, _mm256_fmadd_ps(v_m11, g_f, _mm256_fmadd_ps(v_m12, b_f, v_offset_scaled)));
             __m256 out_b = _mm256_fmadd_ps(v_m20, r_f, _mm256_fmadd_ps(v_m21, g_f, _mm256_fmadd_ps(v_m22, b_f, v_offset_scaled)));
 
+            // Clamp to [0, 255]
             out_r = _mm256_min_ps(_mm256_max_ps(out_r, v_zero), v_255);
             out_g = _mm256_min_ps(_mm256_max_ps(out_g, v_zero), v_255);
             out_b = _mm256_min_ps(_mm256_max_ps(out_b, v_zero), v_255);
 
+            // Convert back to integers
             __m256i out_r_i = _mm256_cvtps_epi32(out_r);
             __m256i out_g_i = _mm256_cvtps_epi32(out_g);
             __m256i out_b_i = _mm256_cvtps_epi32(out_b);
 
+            // Repack channels into ARGB format
             __m256i out_r_shifted = _mm256_slli_epi32(out_r_i, 16);
             __m256i out_g_shifted = _mm256_slli_epi32(out_g_i, 8);
 
@@ -2041,6 +1429,7 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(&line[x]), out_pix);
           }
 
+          // Scalar fallback loop for remaining pixels
           for (; x < width; ++x) {
             QRgb pixel = line[x];
             unsigned int a = pixel & 0xFF000000;

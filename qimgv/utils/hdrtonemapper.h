@@ -35,14 +35,7 @@ public:
     // or an empty QString if the image is SDR.
     static QString detectHdrProfile(const QImage &image);
 
-    // Tone-maps an HDR image into an SDR image in standard sRGB color space.
-    // Output is Format_RGBA16FPx4/RGBX16FPx4 (straight alpha) when the
-    // source has more than 8 bits of real per-channel precision (16-bit
-    // integer or floating-point pixel formats), preserving that precision
-    // rather than collapsing it to 8 bits; otherwise output is
-    // Format_ARGB32/RGB32, matching the source's existing 8-bit precision.
-    // If the input image is not HDR or tone-mapping fails, returns a
-    // fallback copy converted to ARGB32/RGB32 (always 8-bit: see
-    // ImageStatic::loadGeneric()'s sdrFallbackConvert()).
+    // Tone-maps an HDR image into an 8-bit SDR image in standard sRGB color space.
+    // If the input image is not HDR or tone-mapping fails, returns a fallback copy converted to ARGB32.
     static QImage applyToneMapping(const QImage &srcImage, const HdrToneMapParams &params);
 };

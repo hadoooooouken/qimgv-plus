@@ -159,45 +159,6 @@ inline uint8_t floatToByte(float val) {
     return static_cast<uint8_t>(std::clamp(ival, 0, 255));
 }
 
-// Writes one tone-mapped RGBA pixel into an FP16 destination scanline.
-// r/g/b are linear-light values in the same [0,1]-clamped-by-linearToSrgb()
-// convention floatToByte() already relies on; alphaNorm is a straight
-// (non-premultiplied) alpha already normalized to [0,1]. Channel order and
-// packing (R,G,B,A, tightly packed qfloat16 quads) mirror the kimageformats
-// float plugins' own layout, matching how the isHalfFloat/isFullFloat read
-// paths above already interpret their source scanlines.
-inline void writeFp16Pixel(qfloat16 *dstLine, int x, float r, float g, float b, float alphaNorm) {
-    const int base = x * kFloatChannelsPerPixel;
-    dstLine[base + 0] = qfloat16(linearToSrgb(r));
-    dstLine[base + 1] = qfloat16(linearToSrgb(g));
-    dstLine[base + 2] = qfloat16(linearToSrgb(b));
-    dstLine[base + 3] = qfloat16(std::clamp(alphaNorm, 0.0f, 1.0f));
-}
-
-// Sources with more than 8 bits of real per-channel precision, reachable
-// only via applyToneMapping() (i.e. only once HdrToneMapper::isHdr() has
-// already classified the image as HDR). These are the only source classes
-// worth preserving past this function as FP16 rather than 8-bit: the
-// 8-bit-sourced "general path" below has no extra precision to protect
-// even when it carries HDR metadata (e.g. an 8-bit PQ-tagged still), so it
-// intentionally keeps producing 8-bit output unchanged.
-inline bool sourceHasExtraPrecision(QImage::Format format) {
-    switch (format) {
-    case QImage::Format_RGBX16FPx4:
-    case QImage::Format_RGBA16FPx4:
-    case QImage::Format_RGBA16FPx4_Premultiplied:
-    case QImage::Format_RGBX32FPx4:
-    case QImage::Format_RGBA32FPx4:
-    case QImage::Format_RGBA32FPx4_Premultiplied:
-    case QImage::Format_RGBA64:
-    case QImage::Format_RGBX64:
-    case QImage::Format_RGBA64_Premultiplied:
-        return true;
-    default:
-        return false;
-    }
-}
-
 inline void transformPrimaries(float &r, float &g, float &b, InputPrimaries primaries) {
     if (primaries == InputPrimaries::Bt2020) {
         float rOut = kBt2020ToSrgb[0][0] * r + kBt2020ToSrgb[0][1] * g + kBt2020ToSrgb[0][2] * b;
@@ -379,6 +340,7 @@ public:
                                            srcFormat == QImage::Format_RGBA32FPx4_Premultiplied);
 
         for (int y = m_yStart; y < m_yEnd; ++y) {
+            uint32_t *dstLine = reinterpret_cast<uint32_t *>(m_dst.scanLine(y));
 
             if (isHalfFloat) {
                 // Linear (or otherwise transfer-tagged) half-float scanlines, read
@@ -386,11 +348,7 @@ public:
                 // QImage::pixel()/convertToFormat() would introduce by first
                 // collapsing the buffer through 8-bit ARGB32. Channel order mirrors
                 // the kimageformats float plugins (JXR/EXR/HDR/PFM): R, G, B, A.
-                // sourceHasExtraPrecision() guarantees m_dst is FP16 whenever this
-                // branch runs, so the tone-mapped result is written at full
-                // half-float precision instead of being quantized to 8 bits here.
                 const qfloat16 *srcLine = reinterpret_cast<const qfloat16 *>(m_src.constScanLine(y));
-                qfloat16 *dstLine = reinterpret_cast<qfloat16 *>(m_dst.scanLine(y));
                 for (int x = 0; x < width; ++x) {
                     const int base = x * kFloatChannelsPerPixel;
                     float r = static_cast<float>(srcLine[base + 0]);
@@ -416,11 +374,11 @@ public:
                     compressGamut(r, g, b);
                     applyToneMapOperator(m_op, r, g, b);
 
-                    writeFp16Pixel(dstLine, x, r, g, b, a);
+                    const uint8_t alphaByte = static_cast<uint8_t>(std::clamp(a, 0.0f, 1.0f) * 255.0f + 0.5f);
+                    dstLine[x] = qRgba(floatToByte(r), floatToByte(g), floatToByte(b), alphaByte);
                 }
             } else if (isFullFloat) {
                 const float *srcLine = reinterpret_cast<const float *>(m_src.constScanLine(y));
-                qfloat16 *dstLine = reinterpret_cast<qfloat16 *>(m_dst.scanLine(y));
                 for (int x = 0; x < width; ++x) {
                     const int base = x * kFloatChannelsPerPixel;
                     float r = srcLine[base + 0];
@@ -446,40 +404,40 @@ public:
                     compressGamut(r, g, b);
                     applyToneMapOperator(m_op, r, g, b);
 
-                    writeFp16Pixel(dstLine, x, r, g, b, a);
+                    const uint8_t alphaByte = static_cast<uint8_t>(std::clamp(a, 0.0f, 1.0f) * 255.0f + 0.5f);
+                    dstLine[x] = qRgba(floatToByte(r), floatToByte(g), floatToByte(b), alphaByte);
                 }
             } else if (is16Bit) {
-                // Genuine 16-bit-per-channel source (e.g. a 16-bit TIFF/PNG or
-                // RAW output carrying an embedded HDR/PQ/HLG color space) that
-                // HdrToneMapper::isHdr() has already classified as HDR. Real
-                // extra source precision is present here too, so - exactly
-                // like the float branches above - the tone-mapped result is
-                // written at FP16 precision rather than collapsed to 8 bits.
-                // Alpha is read from the full 16-bit channel directly instead
-                // of truncating to 8 bits first, since there is no longer an
-                // 8-bit output stage forcing that truncation.
                 const QRgba64 *srcLine = reinterpret_cast<const QRgba64 *>(m_src.constScanLine(y));
-                qfloat16 *dstLine = reinterpret_cast<qfloat16 *>(m_dst.scanLine(y));
                 for (int x = 0; x < width; ++x) {
                     const QRgba64 px = srcLine[x];
                     float r = m_lut[px.red()];
                     float g = m_lut[px.green()];
                     float b = m_lut[px.blue()];
-                    const float a = static_cast<float>(px.alpha()) / 65535.0f;
+                    const uint8_t a = static_cast<uint8_t>(px.alpha() >> 8);
 
                     transformPrimaries(r, g, b, m_primaries);
                     compressGamut(r, g, b);
-                    applyToneMapOperator(m_op, r, g, b);
 
-                    writeFp16Pixel(dstLine, x, r, g, b, a);
+                    switch (m_op) {
+                    case ToneMapOperator::Bt2408:
+                        applyOperatorBt2408(r, g, b);
+                        break;
+                    case ToneMapOperator::ReinhardJodie:
+                        applyOperatorReinhardJodie(r, g, b);
+                        break;
+                    case ToneMapOperator::AcesFilmic:
+                        applyOperatorAcesFilmic(r, g, b);
+                        break;
+                    case ToneMapOperator::Hable:
+                        applyOperatorHable(r, g, b);
+                        break;
+                    }
+
+                    dstLine[x] = qRgba(floatToByte(r), floatToByte(g), floatToByte(b), a);
                 }
             } else {
-                // 32-bit fallback / general path. The source here is already
-                // 8-bit-per-channel (this branch runs only when the image is
-                // classified HDR via metadata/color-space alone, not via a
-                // higher-precision pixel format), so there is no extra
-                // precision to protect - output stays 8-bit, unchanged.
-                uint32_t *dstLine = reinterpret_cast<uint32_t *>(m_dst.scanLine(y));
+                // 32-bit fallback / general path
                 for (int x = 0; x < width; ++x) {
                     const QRgb px = m_src.pixel(x, y);
                     float rNorm = qRed(px) / 255.0f;
@@ -679,10 +637,9 @@ QImage HdrToneMapper::applyToneMapping(const QImage &srcImage, const HdrToneMapP
 
     const int width = srcImage.width();
     const int height = srcImage.height();
-    const bool preservePrecision = sourceHasExtraPrecision(srcImage.format());
-    const QImage::Format dstFormat = preservePrecision
-        ? (srcImage.hasAlphaChannel() ? QImage::Format_RGBA16FPx4 : QImage::Format_RGBX16FPx4)
-        : (srcImage.hasAlphaChannel() ? QImage::Format_ARGB32 : QImage::Format_RGB32);
+    const QImage::Format dstFormat = srcImage.hasAlphaChannel()
+        ? QImage::Format_ARGB32
+        : QImage::Format_RGB32;
 
     QImage dstImage(width, height, dstFormat);
     if (dstImage.isNull()) {

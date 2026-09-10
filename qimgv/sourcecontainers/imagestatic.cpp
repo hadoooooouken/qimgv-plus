@@ -129,14 +129,8 @@ void ImageStatic::loadGeneric() {
 
   if (HdrToneMapper::isHdr(*img)) {
     // Guarantees that every isHdr()==true image leaves this function as an
-    // sRGB-tagged QImage, whether tone-mapping succeeds, is disabled, or
+    // integer sRGB QImage, whether tone-mapping succeeds, is disabled, or
     // HdrToneMapper fails to produce an image (e.g. an allocation failure).
-    // On success, HdrToneMapper::applyToneMapping() itself decides between
-    // FP16 (Format_RGBA16FPx4/RGBX16FPx4) output - for sources with more
-    // than 8 bits of real per-channel precision - and 8-bit integer output
-    // for everything else; the disabled/failure fallback below always
-    // produces 8-bit integer output, since there is nothing precise to
-    // preserve in that path (see sdrFallbackConvert()).
     auto sdrFallbackConvert = [](const QImage &src) {
       QImage::Format fallbackFmt = src.hasAlphaChannel() ? QImage::Format_ARGB32 : QImage::Format_RGB32;
       QImage converted = src.convertToFormat(fallbackFmt);
