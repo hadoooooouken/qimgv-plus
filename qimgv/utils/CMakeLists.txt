@@ -37,6 +37,8 @@ target_sources(qimgv-plus PRIVATE
     displayutils.cpp
     hdrtonemapper.cpp
     hdrtonemapper.h
+    glimagetexture.cpp
+    glimagetexture.h
 )
 
 target_sources(qimgv-plus PRIVATE

@@ -1,5 +1,6 @@
 #include "filterpixmapitem.h"
 #include "utils/imagelib.h"
+#include "utils/glimagetexture.h"
 #include <QPainter>
 #include <QOpenGLWidget>
 #include <QMatrix4x4>
@@ -43,6 +44,15 @@ void FilterPixmapItem::setImage(const QImage &image) {
     mImagePremultiplied = mImage.hasAlphaChannel()
                                ? mImage.convertToFormat(QImage::Format_ARGB32_Premultiplied)
                                : QImage();
+    // Alpha-bearing FP16 images additionally get a same-precision
+    // premultiplied copy for GL upload, so they never pass through the
+    // 8-bit mImagePremultiplied conversion above on their way to the GPU.
+    // Format_RGBA16FPx4_Premultiplied is a first-class QImage format Qt
+    // converts to natively (mirroring the ARGB32_Premultiplied conversion
+    // above exactly), so no hand-written premultiply arithmetic is needed.
+    mImagePremultipliedFp16 = (GlImageTexture::isFp16Format(mImage.format()) && mImage.hasAlphaChannel())
+                                   ? mImage.convertToFormat(QImage::Format_RGBA16FPx4_Premultiplied)
+                                   : QImage();
     if (mImage.isNull()) {
         releaseGlResources(false);
     }
@@ -212,24 +222,32 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     bool needMips = (sourceToDeviceScaleX < kDownscaleThreshold ||
                      sourceToDeviceScaleY < kDownscaleThreshold ||
                      activeSmartGpu);
-    bool canReuse = mTexture &&
-                    mTexture->width() == mImage.width() &&
-                    mTexture->height() == mImage.height() &&
-                    (!needMips || mTexture->mipLevels() > 1);
 
-    // mImagePremultiplied (kept in sync in setImage()) avoids feeding GL_LINEAR
-    // / mipmap filtering straight-alpha data, which would let RGB baked into
-    // fully-transparent texels bleed a fringe into opaque neighbors.
-    const QImage &texData = mImagePremultiplied.isNull() ? mImage : mImagePremultiplied;
+    // mImagePremultiplied/mImagePremultipliedFp16 (kept in sync in
+    // setImage()) avoid feeding GL_LINEAR / mipmap filtering straight-alpha
+    // data, which would let RGB baked into fully-transparent texels bleed a
+    // fringe into opaque neighbors. The FP16-precision copy takes priority
+    // for alpha-bearing FP16 images so they never pass through the 8-bit
+    // mImagePremultiplied conversion on their way to the GPU.
+    const QImage &texData = !mImagePremultipliedFp16.isNull() ? mImagePremultipliedFp16
+                           : !mImagePremultiplied.isNull()    ? mImagePremultiplied
+                                                               : mImage;
+
+    // isCompatible() extends the plain width/height/mip-level check this
+    // used to be with a GPU precision-tier check: without it, a same-size
+    // FP16 HDR image following a same-size SDR image (e.g. next/previous
+    // navigation in a mixed folder) would incorrectly reuse a texture still
+    // allocated as RGBA8_UNorm, silently feeding it half-float source data.
+    bool canReuse = GlImageTexture::isCompatible(mTexture.get(), texData, needMips);
 
     if (canReuse) {
         if (mLastImage.cacheKey() != mImage.cacheKey()) {
-            mTexture->setData(texData, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
+            GlImageTexture::update(mTexture.get(), texData, needMips);
             mLastImage = mImage;
         }
     } else {
         mTexture.reset();
-        mTexture = std::make_unique<QOpenGLTexture>(texData, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
+        mTexture = GlImageTexture::create(texData, needMips);
         mTexture->setWrapMode(QOpenGLTexture::ClampToEdge);
         mLastImage = mImage;
     }

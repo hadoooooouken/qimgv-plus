@@ -56,14 +56,26 @@ private:
     std::unique_ptr<QOpenGLTexture> mTexture;
 
     QImage mImage;
-    // Premultiplied-alpha copy of mImage, kept in sync in setImage(). Both the
-    // GL texture upload and the CPU fallbackPaint() smooth draw use this
-    // instead of mImage directly: interpolating straight (non-premultiplied)
-    // alpha lets RGB baked into fully-transparent source pixels bleed a
-    // dark/light fringe into opaque neighbors, while premultiplied alpha
-    // makes those transparent pixels exactly (0,0,0,0). Left null for images
-    // with no alpha channel, where premultiplication is a no-op.
+    // Premultiplied-alpha copy of mImage, kept in sync in setImage(). Used by
+    // the CPU fallbackPaint() smooth draw, and by the GL texture upload for
+    // every image except alpha-bearing FP16 ones (see mImagePremultipliedFp16
+    // below): interpolating straight (non-premultiplied) alpha lets RGB baked
+    // into fully-transparent source pixels bleed a dark/light fringe into
+    // opaque neighbors, while premultiplied alpha makes those transparent
+    // pixels exactly (0,0,0,0). Left null for images with no alpha channel,
+    // where premultiplication is a no-op. Always Format_ARGB32_Premultiplied,
+    // even when mImage is FP16 - this copy exists purely for the CPU raster
+    // fallback path, which is not part of the precision this class otherwise
+    // protects for FP16 sources (see setImage()).
     QImage mImagePremultiplied;
+    // FP16-precision counterpart of mImagePremultiplied, populated only when
+    // mImage is an alpha-bearing FP16 format (Format_RGBA16FPx4 /
+    // _Premultiplied). Used as the GL upload source instead of
+    // mImagePremultiplied so alpha-bearing HDR images never pass through an
+    // 8-bit premultiply step before reaching the GPU. Always
+    // Format_RGBA16FPx4_Premultiplied when non-null. Left null whenever
+    // mImage is not an alpha-bearing FP16 image.
+    QImage mImagePremultipliedFp16;
     QImage mLastImage;
     QPointF mOffset;
     Qt::TransformationMode mTransformationMode = Qt::SmoothTransformation;
@@ -72,4 +84,3 @@ private:
     void releaseGlResources(bool forceRelease = false);
     class QOpenGLWidget* findGlWidget() const;
 };
-
