@@ -37,12 +37,18 @@ DecodedThumbnailCache::LookupResult DecodedThumbnailCache::lookup(
     return {
         std::make_unique<QImage>(entry->image),
         entry->requiresLinearColorSpace,
-        accessTouchRequired};
+        accessTouchRequired,
+        entry->toneMapDependent,
+        entry->toneMapEnabled,
+        entry->toneMapOperator,
+        entry->toneMapWhiteLevel};
 }
 
 void DecodedThumbnailCache::insert(
     const QString &id, const ThumbnailSourceStamp &sourceStamp,
-    const QImage &image, bool requiresLinearColorSpace, qint64 lastAccessed)
+    const QImage &image, bool requiresLinearColorSpace, qint64 lastAccessed,
+    std::optional<bool> toneMapDependent, bool toneMapEnabled,
+    int toneMapOperator, int toneMapWhiteLevel)
 {
     if (id.isEmpty() || sourceStamp.normalizedPath.isEmpty() ||
         sourceStamp.size < 0 || image.isNull() || lastAccessed < 0) {
@@ -73,7 +79,11 @@ void DecodedThumbnailCache::insert(
             recency.begin(),
             byteCost,
             lastAccessed,
-            requiresLinearColorSpace});
+            requiresLinearColorSpace,
+            toneMapDependent,
+            toneMapEnabled,
+            toneMapOperator,
+            toneMapWhiteLevel});
     currentBytes += byteCost;
 }
 

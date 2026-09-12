@@ -12,6 +12,7 @@
 #include <deque>
 #include <memory>
 #include <mutex>
+#include <optional>
 
 struct ThumbnailCacheCandidate {
     QImage image;
@@ -19,6 +20,10 @@ struct ThumbnailCacheCandidate {
     ThumbnailSourceStamp sourceStamp;
     bool requiresLinearColorSpace = false;
     quint64 generation = 0;
+    std::optional<bool> toneMapDependent;
+    bool toneMapEnabled = false;
+    int toneMapOperator = 0;
+    int toneMapWhiteLevel = 0;
 };
 
 class ThumbnailCacheWriter final : public QObject

@@ -622,6 +622,18 @@ void Core::connectComponents() {
           }
       }
 
+      if (hdrChanged) {
+          // Re-request thumbnails for whatever is currently on screen so
+          // already-rendered folder view / thumbnail panel icons pick up
+          // the new tone-map settings without requiring the folder to be
+          // re-entered. This does not touch the on-disk cache itself -
+          // ThumbnailerRunnable's own staleness check (see
+          // isToneMapCacheStale) decides per item, on this re-request,
+          // whether a fresh decode is actually needed.
+          thumbPanelPresenter.reloadModel();
+          folderViewPresenter.reloadModel();
+      }
+
       int newThumbnailResolution = settings->thumbnailResolution();
       bool newShowSubfoldersInPanel = settings->showSubfoldersInPanel();
       bool newSquareThumbnails = settings->squareThumbnails();

@@ -9,6 +9,7 @@
 #include <QSqlQuery>
 #include <QStringList>
 #include <QThread>
+#include <QVariant>
 #include <algorithm>
 #include <limits>
 
@@ -147,6 +148,10 @@ bool ThumbnailCache::initializeDatabaseSchema(QSqlDatabase &db)
                 "source_mtime INTEGER, "
                 "source_size INTEGER, "
                 "requires_linear_color_space INTEGER NOT NULL DEFAULT 0, "
+                "tone_map_dependent INTEGER, "
+                "tone_map_enabled INTEGER NOT NULL DEFAULT 0, "
+                "tone_map_operator INTEGER NOT NULL DEFAULT 0, "
+                "tone_map_white_level INTEGER NOT NULL DEFAULT 0, "
                 "last_accessed INTEGER NOT NULL DEFAULT 0"
                 ");"),
             QStringLiteral("Failed to create thumbnail cache table"))) {
@@ -206,6 +211,51 @@ bool ThumbnailCache::initializeDatabaseSchema(QSqlDatabase &db)
                 "requires_linear_color_space INTEGER NOT NULL DEFAULT 0;"),
             QStringLiteral(
                 "Failed to add thumbnail color-space metadata column"))) {
+        return failSchemaTransaction();
+    }
+    // tone_map_dependent is deliberately left nullable with no DEFAULT:
+    // rows written before this column existed have no way of recording
+    // whether their pixels depended on HDR tone-map settings, so they come
+    // back as NULL and readThumbnail() treats that the same as true
+    // (conservatively stale) until the entry is rewritten with a real value.
+    if (!existingColumns.contains(QStringLiteral("tone_map_dependent")) &&
+        !executeSchemaStatement(
+            db,
+            QStringLiteral(
+                "ALTER TABLE thumbnails ADD COLUMN tone_map_dependent "
+                "INTEGER;"),
+            QStringLiteral(
+                "Failed to add thumbnail tone-map dependency column"))) {
+        return failSchemaTransaction();
+    }
+    if (!existingColumns.contains(QStringLiteral("tone_map_enabled")) &&
+        !executeSchemaStatement(
+            db,
+            QStringLiteral(
+                "ALTER TABLE thumbnails ADD COLUMN "
+                "tone_map_enabled INTEGER NOT NULL DEFAULT 0;"),
+            QStringLiteral(
+                "Failed to add thumbnail tone-map enabled column"))) {
+        return failSchemaTransaction();
+    }
+    if (!existingColumns.contains(QStringLiteral("tone_map_operator")) &&
+        !executeSchemaStatement(
+            db,
+            QStringLiteral(
+                "ALTER TABLE thumbnails ADD COLUMN "
+                "tone_map_operator INTEGER NOT NULL DEFAULT 0;"),
+            QStringLiteral(
+                "Failed to add thumbnail tone-map operator column"))) {
+        return failSchemaTransaction();
+    }
+    if (!existingColumns.contains(QStringLiteral("tone_map_white_level")) &&
+        !executeSchemaStatement(
+            db,
+            QStringLiteral(
+                "ALTER TABLE thumbnails ADD COLUMN "
+                "tone_map_white_level INTEGER NOT NULL DEFAULT 0;"),
+            QStringLiteral(
+                "Failed to add thumbnail tone-map white-level column"))) {
         return failSchemaTransaction();
     }
 
@@ -377,11 +427,15 @@ bool ThumbnailCache::saveThumbnails(const QList<WriteEntry> &entries)
             "INSERT INTO thumbnails "
             "(id, last_modified, original_width, original_height, label, "
             " data, source_path, source_mtime, source_size, "
-            " requires_linear_color_space, last_accessed) "
+            " requires_linear_color_space, tone_map_dependent, "
+            " tone_map_enabled, tone_map_operator, tone_map_white_level, "
+            " last_accessed) "
             "VALUES "
             "(:id, :last_modified, :original_width, :original_height, "
             " :label, :data, :source_path, :source_mtime, :source_size, "
-            " :requires_linear_color_space, :last_accessed) "
+            " :requires_linear_color_space, :tone_map_dependent, "
+            " :tone_map_enabled, :tone_map_operator, :tone_map_white_level, "
+            " :last_accessed) "
             "ON CONFLICT(id) DO UPDATE SET "
             "last_modified = excluded.last_modified, "
             "original_width = excluded.original_width, "
@@ -393,6 +447,10 @@ bool ThumbnailCache::saveThumbnails(const QList<WriteEntry> &entries)
             "source_size = excluded.source_size, "
             "requires_linear_color_space = "
             "    excluded.requires_linear_color_space, "
+            "tone_map_dependent = excluded.tone_map_dependent, "
+            "tone_map_enabled = excluded.tone_map_enabled, "
+            "tone_map_operator = excluded.tone_map_operator, "
+            "tone_map_white_level = excluded.tone_map_white_level, "
             "last_accessed = excluded.last_accessed;"))) {
         qWarning() << "Failed to prepare thumbnail cache batch UPSERT:"
                    << query.lastError().text();
@@ -420,6 +478,23 @@ bool ThumbnailCache::saveThumbnails(const QList<WriteEntry> &entries)
                         entry->sourceStamp.size);
         query.bindValue(QStringLiteral(":requires_linear_color_space"),
                         entry->requiresLinearColorSpace);
+        if (entry->toneMapDependent.has_value()) {
+            query.bindValue(QStringLiteral(":tone_map_dependent"),
+                            *entry->toneMapDependent);
+        } else {
+            // Explicit NULL: this row's tone-map dependency is unknown
+            // at write time (should not normally happen for a freshly
+            // generated thumbnail, but keeps the column's meaning
+            // consistent with pre-migration rows that never set it).
+            query.bindValue(QStringLiteral(":tone_map_dependent"),
+                            QVariant());
+        }
+        query.bindValue(QStringLiteral(":tone_map_enabled"),
+                        entry->toneMapEnabled);
+        query.bindValue(QStringLiteral(":tone_map_operator"),
+                        entry->toneMapOperator);
+        query.bindValue(QStringLiteral(":tone_map_white_level"),
+                        entry->toneMapWhiteLevel);
         query.bindValue(QStringLiteral(":last_accessed"),
                         lastAccessed);
 
@@ -596,7 +671,11 @@ ThumbnailCache::ReadResult ThumbnailCache::readThumbnail(
         return {
             std::move(decodedResult.image),
             decodedResult.requiresLinearColorSpace,
-            std::move(accessTouch)};
+            std::move(accessTouch),
+            decodedResult.toneMapDependent,
+            decodedResult.toneMapEnabled,
+            decodedResult.toneMapOperator,
+            decodedResult.toneMapWhiteLevel};
     }
 
     QSqlDatabase db = getDatabaseConnection();
@@ -617,7 +696,9 @@ ThumbnailCache::ReadResult ThumbnailCache::readThumbnail(
     QSqlQuery query(db);
     if (!query.prepare(QStringLiteral(
             "SELECT original_width, original_height, label, data, "
-            "last_accessed, requires_linear_color_space "
+            "last_accessed, requires_linear_color_space, "
+            "tone_map_dependent, tone_map_enabled, tone_map_operator, "
+            "tone_map_white_level "
             "FROM thumbnails "
             "WHERE id = :id "
             "  AND source_path = :source_path COLLATE NOCASE "
@@ -650,6 +731,12 @@ ThumbnailCache::ReadResult ThumbnailCache::readThumbnail(
     encodedThumbnail = query.value(3).toByteArray();
     lastAccessed = query.value(4).toLongLong();
     requiresLinearColorSpace = query.value(5).toBool();
+    std::optional<bool> toneMapDependent;
+    if (!query.value(6).isNull())
+        toneMapDependent = query.value(6).toBool();
+    const bool toneMapEnabled = query.value(7).toBool();
+    const int toneMapOperator = query.value(8).toInt();
+    const int toneMapWhiteLevel = query.value(9).toInt();
     query.finish();
 
     auto thumbnail = std::make_unique<QImage>();
@@ -661,14 +748,20 @@ ThumbnailCache::ReadResult ThumbnailCache::readThumbnail(
                            QString::number(originalHeight));
         thumbnail->setText(QStringLiteral("label"), label);
         decodedCache.insert(id, sourceStamp, *thumbnail,
-                            requiresLinearColorSpace, lastAccessed);
+                            requiresLinearColorSpace, lastAccessed,
+                            toneMapDependent, toneMapEnabled,
+                            toneMapOperator, toneMapWhiteLevel);
         std::optional<AccessTouch> accessTouch;
         if (lastAccessed < now - kAccessTouchIntervalSeconds)
             accessTouch = AccessTouch{id, now, 0};
         return {
             std::move(thumbnail),
             requiresLinearColorSpace,
-            std::move(accessTouch)};
+            std::move(accessTouch),
+            toneMapDependent,
+            toneMapEnabled,
+            toneMapOperator,
+            toneMapWhiteLevel};
     }
 
     std::lock_guard lock(sDatabaseWriteMutex);
@@ -681,11 +774,14 @@ ThumbnailCache::ReadResult ThumbnailCache::readThumbnail(
 
 void ThumbnailCache::storeDecodedThumbnail(
     const QString &id, const ThumbnailSourceStamp &sourceStamp,
-    const QImage &image, bool requiresLinearColorSpace)
+    const QImage &image, bool requiresLinearColorSpace,
+    std::optional<bool> toneMapDependent, bool toneMapEnabled,
+    int toneMapOperator, int toneMapWhiteLevel)
 {
     decodedCache.insert(
         id, sourceStamp, image, requiresLinearColorSpace,
-        QDateTime::currentSecsSinceEpoch());
+        QDateTime::currentSecsSinceEpoch(), toneMapDependent,
+        toneMapEnabled, toneMapOperator, toneMapWhiteLevel);
 }
 
 bool ThumbnailCache::clear()

@@ -28,6 +28,14 @@ public:
         QString label;
         QByteArray encodedData;
         bool requiresLinearColorSpace = false;
+        // Whether this thumbnail's pixels depend on the current HDR
+        // tone-mapping settings (i.e. HdrToneMapper::isHdr() was true for
+        // the decoded source). toneMapEnabled/Operator/WhiteLevel are only
+        // meaningful when this is true and are otherwise left at defaults.
+        std::optional<bool> toneMapDependent;
+        bool toneMapEnabled = false;
+        int toneMapOperator = 0;
+        int toneMapWhiteLevel = 0;
     };
 
     struct AccessTouch {
@@ -40,6 +48,12 @@ public:
         std::unique_ptr<QImage> image;
         bool requiresLinearColorSpace = false;
         std::optional<AccessTouch> accessTouch;
+        // std::nullopt means the stored row predates tone-map tracking -
+        // callers should treat that the same as true (conservatively stale).
+        std::optional<bool> toneMapDependent;
+        bool toneMapEnabled = false;
+        int toneMapOperator = 0;
+        int toneMapWhiteLevel = 0;
     };
 
     explicit ThumbnailCache();
@@ -54,7 +68,10 @@ public:
     void storeDecodedThumbnail(const QString &id,
                                const ThumbnailSourceStamp &sourceStamp,
                                const QImage &image,
-                               bool requiresLinearColorSpace);
+                               bool requiresLinearColorSpace,
+                               std::optional<bool> toneMapDependent,
+                               bool toneMapEnabled, int toneMapOperator,
+                               int toneMapWhiteLevel);
     QString thumbnailPath(QString id);
     bool exists(QString id);
     [[nodiscard]] bool clear();

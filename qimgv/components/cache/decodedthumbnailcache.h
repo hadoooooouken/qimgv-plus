@@ -8,6 +8,7 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <optional>
 
 class DecodedThumbnailCache final
 {
@@ -16,6 +17,13 @@ public:
         std::unique_ptr<QImage> image;
         bool requiresLinearColorSpace = false;
         bool accessTouchRequired = false;
+        // std::nullopt means "unknown" (entry predates tone-map tracking,
+        // or the cache missed) - callers should treat that conservatively,
+        // i.e. the same as true. See ThumbnailCache::ReadResult.
+        std::optional<bool> toneMapDependent;
+        bool toneMapEnabled = false;
+        int toneMapOperator = 0;
+        int toneMapWhiteLevel = 0;
     };
 
     explicit DecodedThumbnailCache(qint64 maximumBytes);
@@ -25,7 +33,9 @@ public:
            qint64 accessedAt, qint64 accessTouchInterval);
     void insert(const QString &id, const ThumbnailSourceStamp &sourceStamp,
                 const QImage &image, bool requiresLinearColorSpace,
-                qint64 lastAccessed);
+                qint64 lastAccessed, std::optional<bool> toneMapDependent,
+                bool toneMapEnabled, int toneMapOperator,
+                int toneMapWhiteLevel);
     void clear();
 
 private:
@@ -36,6 +46,10 @@ private:
         qint64 byteCost = 0;
         qint64 lastAccessed = 0;
         bool requiresLinearColorSpace = false;
+        std::optional<bool> toneMapDependent;
+        bool toneMapEnabled = false;
+        int toneMapOperator = 0;
+        int toneMapWhiteLevel = 0;
     };
 
     [[nodiscard]] static bool

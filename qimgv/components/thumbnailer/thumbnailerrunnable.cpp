@@ -84,6 +84,13 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
       *image =
           image->convertedToColorSpace(QColorSpace(QColorSpace::SRgbLinear));
     }
+    // std::nullopt (entry predates this check) is treated the same as true:
+    // we don't know whether it was tone-map dependent, so assume the worst
+    // and let it fall through to a fresh decode below.
+    if (image && isToneMapCacheStale(cacheResult)) {
+      image.reset();
+      accessTouch.reset();
+    }
   }
 
   if (request.decodeContext.isCancellationRequested())
@@ -126,7 +133,8 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
     // logic in ImageStatic::loadGeneric(). Without this, raw PQ/HLG/
     // linear-float pixel values would be interpreted as SDR by the
     // scaler and color manager, producing extremely dark thumbnails.
-    if (image && HdrToneMapper::isHdr(*image)) {
+    const bool sourceWasHdr = image && HdrToneMapper::isHdr(*image);
+    if (sourceWasHdr) {
       auto sdrFallbackConvert = [](const QImage &src) {
         QImage::Format fallbackFmt = src.hasAlphaChannel()
             ? QImage::Format_ARGB32 : QImage::Format_RGB32;
@@ -169,18 +177,46 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
           !request.decodeContext.isCancellationRequested()) {
         if (originalSize.width() > settings->thumbnailResolution() ||
             originalSize.height() > settings->thumbnailResolution()) {
-          // Derived from the actual decoded pixel format rather than the
-          // filename/format string, so any plugin that decodes into a
-          // linear float QImage format (currently JXR/EXR/HDR/PFM) is
-          // covered automatically, with no per-format list to keep in sync.
-          const bool requiresLinearColorSpace =
-              HdrToneMapper::isLinearFloatFormat(image->format());
+          // Always false at this point: the HDR branch above (sourceWasHdr)
+          // unconditionally converts to Format_ARGB32/RGB32 before we get
+          // here, so a linear float pixel format can never survive to this
+          // check. Kept as an explicit constant - rather than the format
+          // check that used to compute it - because it reads as "this is
+          // known not to require it", not as a no-op left by accident. This
+          // predates tone-mapping being applied at generation time; back
+          // when HDR thumbnails were cached as raw linear data and
+          // converted on read, the format check here was meaningful.
+          constexpr bool requiresLinearColorSpace = false;
+
+          // toneMapDependent records whether this cached thumbnail's
+          // pixels depend on the current HDR tone-map settings - a
+          // property of the persisted thumbnail, not of the decoded
+          // source. sourceWasHdr answers a different question (was the
+          // source HDR data that needed tone-mapping at all). In the
+          // current pipeline every tone-mapped source yields a dependent
+          // thumbnail and every non-HDR source does not, so the two
+          // happen to coincide, but they are conceptually distinct.
+          const std::optional<bool> toneMapDependent = sourceWasHdr;
+          bool toneMapEnabled = false;
+          int toneMapOperator = 0;
+          int toneMapWhiteLevel = 0;
+          if (sourceWasHdr) {
+            toneMapEnabled = settings->hdrToneMappingEnabled();
+            if (toneMapEnabled) {
+              toneMapOperator = settings->hdrToneMappingOperator();
+              toneMapWhiteLevel = settings->hdrTargetWhiteLevel();
+            }
+          }
+
           cacheCandidate = ThumbnailCacheCandidate{
               *image, thumbnailId, *sourceStamp,
-              requiresLinearColorSpace, request.cacheGeneration};
+              requiresLinearColorSpace, request.cacheGeneration,
+              toneMapDependent, toneMapEnabled, toneMapOperator,
+              toneMapWhiteLevel};
           activeCache->storeDecodedThumbnail(
               thumbnailId, *sourceStamp, *image,
-              requiresLinearColorSpace);
+              requiresLinearColorSpace, toneMapDependent,
+              toneMapEnabled, toneMapOperator, toneMapWhiteLevel);
         }
       }
     }
@@ -254,6 +290,23 @@ ThumbnailerRunnable::generate(const ThumbnailRequest &request) {
       std::make_shared<Thumbnail>(fileName, label, size, colorManaged),
       std::move(cacheCandidate),
       std::move(accessTouch)};
+}
+
+bool ThumbnailerRunnable::isToneMapCacheStale(
+    const ThumbnailCache::ReadResult &cacheResult) {
+  if (!cacheResult.toneMapDependent.has_value())
+    return true;
+  if (!*cacheResult.toneMapDependent)
+    return false;
+
+  const bool currentEnabled = settings->hdrToneMappingEnabled();
+  if (cacheResult.toneMapEnabled != currentEnabled)
+    return true;
+  if (!currentEnabled)
+    return false;
+
+  return cacheResult.toneMapOperator != settings->hdrToneMappingOperator() ||
+         cacheResult.toneMapWhiteLevel != settings->hdrTargetWhiteLevel();
 }
 
 QSize ThumbnailerRunnable::noUpscaleScaledSize(QSize originalSize, int size,

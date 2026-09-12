@@ -262,6 +262,10 @@ void ThumbnailCacheWriter::processBatch(
         entry.encodedData = std::move(encodedThumbnail);
         entry.requiresLinearColorSpace =
             candidate.requiresLinearColorSpace;
+        entry.toneMapDependent = candidate.toneMapDependent;
+        entry.toneMapEnabled = candidate.toneMapEnabled;
+        entry.toneMapOperator = candidate.toneMapOperator;
+        entry.toneMapWhiteLevel = candidate.toneMapWhiteLevel;
         entries.push_back(std::move(entry));
     }
 

@@ -76,6 +76,10 @@ private:
     // that is already smaller than the target box - avoids blurry upscaled
     // thumbnails for tiny source images (icons, small screenshots, etc).
     static QSize noUpscaleScaledSize(QSize originalSize, int size, Qt::AspectRatioMode mode);
+    // Whether a cache hit's tone-map metadata (as recorded at generation
+    // time) still matches the current HDR tone-mapping settings. Returns
+    // true (stale) when the entry predates this metadata entirely.
+    static bool isToneMapCacheStale(const ThumbnailCache::ReadResult &cacheResult);
     ThumbnailRequest request;
     ThumbnailTaskNotifier &notifier;
     ThumbnailTaskCompletion completion;
