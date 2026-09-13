@@ -641,9 +641,26 @@ void ImageViewerV2::requestSettledFramePresentation() {
 // pixmapItem, which only spends the extra one-shot precise-downsample GPU
 // pass (FilterPixmapItem::buildPreciseDownsample) while settled, keeping
 // interactive pan/zoom performance identical to before that feature existed.
+//
+// mRenderingSettled itself (and the renderingSettled() signal, emitted
+// separately by onViewportFrameSwapped()) keep their existing meaning and
+// still report settled == true during animation playback -- other
+// consumers of isRenderingSettled()/renderingSettled() are unrelated to
+// this GPU pass and shouldn't change behavior. Only what's forwarded to
+// pixmapItem is gated here, and specifically on mAnimationActive (frames
+// are actually being advanced by animationTimer right now) rather than on
+// movie being non-null (this file happens to be an animated container):
+// while frames are actively advancing, onMovieFrameChanged() hands
+// pixmapItem a brand-new QImage (with a new cacheKey()) on every decoded
+// frame, so if pixmapItem were told "settled" during that it would rebuild
+// the precise downsample on every single animation frame -- exactly the
+// per-frame GPU cost this settle-gate exists to avoid. Once playback is
+// paused (or the container only has one frame, so it never started),
+// mImage stops changing, so pixmapItem can still get the precise pass like
+// any other static image.
 void ImageViewerV2::setRenderingSettled(bool settled) {
   mRenderingSettled = settled;
-  pixmapItem.setSettled(settled);
+  pixmapItem.setSettled(settled && !mAnimationActive);
 }
 
 void ImageViewerV2::onViewportFrameSwapped() {
