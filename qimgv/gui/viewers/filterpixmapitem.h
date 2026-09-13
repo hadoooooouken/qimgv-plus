@@ -8,6 +8,8 @@
 #include <memory>
 #include "settings_types.h"
 
+class QOpenGLFramebufferObject;
+
 class FilterPixmapItem : public QGraphicsItem, protected QOpenGLFunctions {
 public:
     explicit FilterPixmapItem(QGraphicsItem *parent = nullptr);
@@ -27,6 +29,14 @@ public:
     void setCasSettings(float sharpening, float contrast);
     void setScalingFilter(ScalingFilter filter);
 
+    // Tells the item whether the view is currently settled (not actively
+    // panning/zooming/resizing). Only while settled will the item spend the
+    // extra one-shot GPU pass to build an exact-ratio downsample (see
+    // buildPreciseDownsample()) instead of relying purely on hardware
+    // box-mip trilinear minification. Driven by ImageViewerV2's existing
+    // settle tracking; false by default (today's behavior, unchanged).
+    void setSettled(bool settled);
+
     QRectF boundingRect() const override;
 
 protected:
@@ -38,6 +48,8 @@ private:
     static constexpr double kMinimumTransformScale = 0.001;
     static constexpr double kOneToOneScaleTolerance = 0.001;
     static constexpr qreal kMinimumDevicePixelRatio = 1.0;
+
+    bool mSettled = false;
 
     float mExposure = 0.0f;    // -3.0f to 3.0f
     float mContrast = 1.0f;   // 0.0f to 3.0f
@@ -55,6 +67,17 @@ private:
     std::unique_ptr<QOpenGLShaderProgram> mProgram;
     std::unique_ptr<QOpenGLTexture> mTexture;
 
+    // Settle-triggered exact-ratio GPU box downsample (see
+    // buildPreciseDownsample()). Rebuilt lazily in paint() whenever it goes
+    // stale (target size or source image changed) while mSettled is true.
+    // While not settled, or if it has never been built for the current
+    // scale, paint() falls back to mTexture's ordinary box-mip/trilinear
+    // minification exactly as before this feature existed.
+    bool mReduceProgramFailed = false;
+    std::unique_ptr<QOpenGLShaderProgram> mReduceProgram;
+    std::unique_ptr<QOpenGLFramebufferObject> mPreciseDownsampleFbo;
+    qint64 mPreciseDownsampleSourceCacheKey = -1;
+
     QImage mImage;
     // Premultiplied-alpha copy of mImage, kept in sync in setImage(). Both the
     // GL texture upload and the CPU fallbackPaint() smooth draw use this
@@ -69,7 +92,8 @@ private:
     Qt::TransformationMode mTransformationMode = Qt::SmoothTransformation;
 
     void initShader();
+    void ensureReduceProgram();
+    void buildPreciseDownsample(int targetW, int targetH);
     void releaseGlResources(bool forceRelease = false);
     class QOpenGLWidget* findGlWidget() const;
 };
-

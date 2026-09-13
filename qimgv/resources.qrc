@@ -11,6 +11,8 @@
         <file>res/shaders/panorama.frag</file>
         <file>res/shaders/filter.vert</file>
         <file>res/shaders/filter.frag</file>
+        <file>res/shaders/boxreduce.vert</file>
+        <file>res/shaders/boxreduce.frag</file>
         <file>res/fonts/FluentSystemIcons-Custom.ttf</file>
     </qresource>
 </RCC>

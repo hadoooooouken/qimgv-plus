@@ -579,7 +579,7 @@ void ImageViewerV2::showImage(std::shared_ptr<const QImage> _image,
 
 // reset state, remove image & stop animation
 void ImageViewerV2::reset() {
-  mRenderingSettled = false;
+  setRenderingSettled(false);
   mFramePresentationPending = false;
   stopPosAnimation();
   pixmapItemScaled.setImage(QImage());
@@ -637,12 +637,21 @@ void ImageViewerV2::requestSettledFramePresentation() {
   viewport()->update();
 }
 
+// Single point of truth for mRenderingSettled: also forwards the state to
+// pixmapItem, which only spends the extra one-shot precise-downsample GPU
+// pass (FilterPixmapItem::buildPreciseDownsample) while settled, keeping
+// interactive pan/zoom performance identical to before that feature existed.
+void ImageViewerV2::setRenderingSettled(bool settled) {
+  mRenderingSettled = settled;
+  pixmapItem.setSettled(settled);
+}
+
 void ImageViewerV2::onViewportFrameSwapped() {
   if (!mFramePresentationPending)
     return;
 
   mFramePresentationPending = false;
-  mRenderingSettled = true;
+  setRenderingSettled(true);
   emit renderingSettled();
 }
 
@@ -717,7 +726,7 @@ void ImageViewerV2::hide() {
 }
 
 void ImageViewerV2::requestScaling() {
-  mRenderingSettled = false;
+  setRenderingSettled(false);
   mFramePresentationPending = false;
   bool isAt100 = std::abs(pixmapItem.scale() - 1.0) < kScaleEpsilon;
   if (mSvgMode || !image || isAt100 ||
@@ -1069,7 +1078,7 @@ void ImageViewerV2::showEvent(QShowEvent *event) {
   // reapply fitmode to fix viewport position
   if (imageFitMode == FIT_ORIGINAL)
     applyFitMode();
-  mRenderingSettled = false;
+  setRenderingSettled(false);
   mFramePresentationPending = false;
   scaleTimer->start();
 }
@@ -1417,7 +1426,7 @@ void ImageViewerV2::resizeEvent(QResizeEvent *event) {
   // Qt emits some unnecessary resizeEvents on startup
   // so we try to ignore them
   if (parentWidget()->isVisible()) {
-    mRenderingSettled = false;
+    setRenderingSettled(false);
     mFramePresentationPending = false;
     stopPosAnimation();
     updateMinScale();

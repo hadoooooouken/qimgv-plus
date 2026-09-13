@@ -212,6 +212,7 @@ private:
     void applyFitMode();
     void requestSettledFramePresentation();
     void onViewportFrameSwapped();
+    void setRenderingSettled(bool settled);
     void onMovieFrameChanged(int frameNumber);
 
     QTimeLine *scrollTimeLineX, *scrollTimeLineY;
