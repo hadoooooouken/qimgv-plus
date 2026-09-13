@@ -76,6 +76,15 @@ public:
     bool exists(QString id);
     [[nodiscard]] bool clear();
 
+    // Path of the sqlite database backing the cache, derived from
+    // Settings::thumbnailCacheDir(). Static so callers (e.g. Preferences UI)
+    // can query cache location/size without needing a live instance.
+    [[nodiscard]] static QString databaseFilePath();
+    // Read-only on-disk footprint of the cache (db + WAL + SHM), for display
+    // purposes. Safe to call from the GUI thread; does not touch the live
+    // instance's SQL connections.
+    [[nodiscard]] static qint64 currentDiskUsageBytes();
+
 private:
     class ThreadLocalConnection {
     public:

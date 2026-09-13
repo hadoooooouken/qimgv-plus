@@ -388,6 +388,11 @@ private:
     QLabel *thumbnailCacheQuotaLabel;
     QSpinBox *thumbnailCacheQuotaSpinBox;
     QSpacerItem *horizontalSpacer_thumbCacheQuota;
+    QHBoxLayout *horizontalLayout_thumbCacheSize;
+    QLabel *thumbnailCacheSizeLabel;
+    QLabel *thumbnailCacheSizeValueLabel;
+    QSpacerItem *horizontalSpacer_thumbCacheSize;
+    QPushButton *clearThumbnailCacheButton;
     QLabel *labelExcludedCachePaths;
     QLineEdit *excludedCachePathsLineEdit;
     QCheckBox *unloadThumbsCheckBox;
@@ -469,6 +474,7 @@ private:
     void setupSidebar();
     void removeShortcutAt(int row);
     void adjustSizeToContents();
+    void updateThumbnailCacheSizeLabel();
     QMap<QString, QString> langs; // <"en_US", "English">
     QButtonGroup fitModeGrp, folderEndGrp, zoomIndGrp;
 
@@ -501,8 +507,14 @@ private slots:
     void onThumbnailResolutionSliderChanged(int value);
 
     void resetZoomLevels();
+    void onClearThumbnailCacheClicked();
 signals:
     void settingsChanged();
+    // Emitted when the user requests clearing the on-disk thumbnail cache.
+    // The live cache is owned by Core (via Thumbnailer), so this dialog only
+    // requests the action; MainWindow forwards it to Core, which performs
+    // the actual clear.
+    void clearThumbnailCacheRequested();
 private:
     QSlider *pngQualitySlider = nullptr;
     QLabel *pngQualityLabel = nullptr;

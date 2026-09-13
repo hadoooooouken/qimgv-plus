@@ -16,11 +16,20 @@
 std::mutex ThumbnailCache::sDatabaseWriteMutex;
 
 ThumbnailCache::ThumbnailCache()
-    : databasePath(settings->thumbnailCacheDir() +
-                   QStringLiteral("thumbnails.db")),
+    : databasePath(databaseFilePath()),
       maintenance(databasePath),
       decodedCache(kDecodedCacheMaximumBytes)
 {
+}
+
+QString ThumbnailCache::databaseFilePath()
+{
+    return settings->thumbnailCacheDir() + QStringLiteral("thumbnails.db");
+}
+
+qint64 ThumbnailCache::currentDiskUsageBytes()
+{
+    return ThumbnailCacheMaintenance::databaseFootprintBytes(databaseFilePath());
 }
 
 ThumbnailCache::~ThumbnailCache()

@@ -38,6 +38,12 @@ public:
     [[nodiscard]] Result inspect(QSqlDatabase &db, const Quota &quota) const;
     [[nodiscard]] Result run(QSqlDatabase &db, const Request &request) const;
 
+    // Read-only on-disk footprint (main db file + WAL + SHM) for the
+    // database at the given path. Does not require an open connection or a
+    // live instance, so it is safe to call from any thread, including the
+    // GUI thread, purely for display purposes.
+    [[nodiscard]] static qint64 databaseFootprintBytes(const QString &databasePath);
+
 private:
     struct PageUsage {
         qint64 pageCount = 0;

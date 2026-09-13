@@ -1,11 +1,13 @@
 #include "settingsdialog.h"
 #include "settings.h"
+#include "components/cache/thumbnailcache.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QLocale>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -727,6 +729,7 @@ void SettingsDialog::readSettings() {
   onThumbnailResolutionSliderChanged(thumbnailResolutionSlider->value());
 
   thumbnailCacheQuotaSpinBox->setValue(settings->thumbnailCacheMaxSizeMB());
+  updateThumbnailCacheSizeLabel();
 
   memoryLimitSpinBox->setValue(settings->memoryAllocationLimit());
   excludedCachePathsLineEdit->setText(settings->excludedCachePaths());
@@ -1207,6 +1210,20 @@ void SettingsDialog::resetShortcuts() {
 //------------------------------------------------------------------------------
 void SettingsDialog::resetZoomLevels() {
   zoomLevels->setText(settings->defaultZoomLevels());
+}
+//------------------------------------------------------------------------------
+void SettingsDialog::updateThumbnailCacheSizeLabel() {
+  const qint64 bytes = ThumbnailCache::currentDiskUsageBytes();
+  thumbnailCacheSizeValueLabel->setText(QLocale().formattedDataSize(bytes));
+}
+//------------------------------------------------------------------------------
+void SettingsDialog::onClearThumbnailCacheClicked() {
+  // The live cache is owned by Core; this dialog only requests the clear.
+  // MainWindow forwards the request to Core, which performs it
+  // synchronously (same-thread direct connection), so the label can be
+  // refreshed immediately after the signal is emitted.
+  emit clearThumbnailCacheRequested();
+  updateThumbnailCacheSizeLabel();
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onExpandLimitSliderChanged(int value) {
@@ -3551,6 +3568,31 @@ void SettingsDialog::setupUi() {
 
         verticalLayout_34->addLayout(horizontalLayout_thumbCacheQuota);
 
+        horizontalLayout_thumbCacheSize = new QHBoxLayout();
+        horizontalLayout_thumbCacheSize->setObjectName("horizontalLayout_thumbCacheSize");
+        horizontalLayout_thumbCacheSize->setContentsMargins(0, 0, 0, 0);
+        thumbnailCacheSizeLabel = new QLabel(advancedGroup);
+        thumbnailCacheSizeLabel->setObjectName("thumbnailCacheSizeLabel");
+
+        horizontalLayout_thumbCacheSize->addWidget(thumbnailCacheSizeLabel);
+
+        thumbnailCacheSizeValueLabel = new QLabel(advancedGroup);
+        thumbnailCacheSizeValueLabel->setObjectName("thumbnailCacheSizeValueLabel");
+
+        horizontalLayout_thumbCacheSize->addWidget(thumbnailCacheSizeValueLabel);
+
+        clearThumbnailCacheButton = new QPushButton(advancedGroup);
+        clearThumbnailCacheButton->setObjectName("clearThumbnailCacheButton");
+
+        horizontalLayout_thumbCacheSize->addWidget(clearThumbnailCacheButton);
+
+        horizontalSpacer_thumbCacheSize = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        horizontalLayout_thumbCacheSize->addItem(horizontalSpacer_thumbCacheSize);
+
+
+        verticalLayout_34->addLayout(horizontalLayout_thumbCacheSize);
+
         labelExcludedCachePaths = new QLabel(advancedGroup);
         labelExcludedCachePaths->setObjectName("labelExcludedCachePaths");
 
@@ -3980,6 +4022,7 @@ void SettingsDialog::setupUi() {
         QObject::connect(expandLimitSlider, &QSlider::valueChanged, this, &SettingsDialog::onExpandLimitSliderChanged);
         QObject::connect(pushButton_9, &QPushButton::clicked, this, &SettingsDialog::addScript);
         QObject::connect(resetZoomLevelsButton, &QPushButton::clicked, this, &SettingsDialog::resetZoomLevels);
+        QObject::connect(clearThumbnailCacheButton, &QPushButton::clicked, this, &SettingsDialog::onClearThumbnailCacheClicked);
         QObject::connect(autoResizeLimitSlider, &QSlider::valueChanged, this, &SettingsDialog::onAutoResizeLimitSliderChanged);
         QObject::connect(pushButton_3, &QPushButton::clicked, this, &SettingsDialog::resetShortcuts);
         QObject::connect(zoomStepSlider, &QSlider::valueChanged, this, &SettingsDialog::onZoomStepSliderChanged);
@@ -4199,6 +4242,8 @@ void SettingsDialog::retranslateUi() {
         thumbnailResolutionLabel->setText(QCoreApplication::translate("SettingsDialog", "Thumbnail cache resolution:", nullptr));
         thumbnailResolutionValueLabel->setText(QCoreApplication::translate("SettingsDialog", "256 px", nullptr));
         thumbnailCacheQuotaLabel->setText(QCoreApplication::translate("SettingsDialog", "Thumbnail cache size limit:", nullptr));
+        thumbnailCacheSizeLabel->setText(QCoreApplication::translate("SettingsDialog", "Current cache size:", nullptr));
+        clearThumbnailCacheButton->setText(QCoreApplication::translate("SettingsDialog", "Clear", nullptr));
         labelExcludedCachePaths->setText(QCoreApplication::translate("SettingsDialog", "Exclude paths from caching (separated by semicolon ';'):", nullptr));
 #if QT_CONFIG(tooltip)
         excludedCachePathsLineEdit->setToolTip(QCoreApplication::translate("SettingsDialog", "Paths to folders that should not be cached, separated by ';'.\n"

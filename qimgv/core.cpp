@@ -571,6 +571,8 @@ void Core::connectComponents() {
   connect(mw, &MW::saveRequested, this, &Core::saveCurrentFile);
   connect(mw, &MW::saveAsRequested, this, &Core::saveCurrentFileAs);
   connect(mw, &MW::resizeRequested, this, &Core::resize);
+  connect(mw, &MW::clearThumbnailCacheRequested, this,
+          &Core::onClearThumbnailCacheRequested);
   connect(mw, &MW::batchRequested, this, &Core::showBatchConverter);
   connect(mw, &MW::renameRequested, this, &Core::renameCurrentSelection);
   connect(mw, &MW::sortingSelected, this, &Core::sortBy);
@@ -1522,6 +1524,14 @@ void Core::onFileOpFinished(FileOpSummary summary) {
   mw->showMessageSuccess(summary.isMove
                               ? tr("Moved %n file(s)", "", summary.filesProcessed)
                               : tr("Copied %n file(s)", "", summary.filesProcessed));
+}
+
+// -----------------------------------------------------------------------------------
+
+void Core::onClearThumbnailCacheRequested() {
+  if (!thumbnailer->clearCache()) {
+      mw->showError(tr("Failed to clear thumbnail cache"));
+  }
 }
 
 // -----------------------------------------------------------------------------------

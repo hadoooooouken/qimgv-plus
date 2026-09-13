@@ -173,6 +173,7 @@ signals:
   void moveUrlsRequested(QList<QString>, QString);
   void showFoldersChanged(bool);
   void resizeRequested(QSize, ScalingFilter, bool, QString);
+  void clearThumbnailCacheRequested();
   void renameRequested(QString);
   void cropRequested(QRect);
   void cropAndSaveRequested(QRect);

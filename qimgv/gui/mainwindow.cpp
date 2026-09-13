@@ -866,6 +866,8 @@ void MW::showSettings() {
     if(viewerWidget)
         viewerWidget->hideContextMenu();
     SettingsDialog settingsDialog(this);
+    connect(&settingsDialog, &SettingsDialog::clearThumbnailCacheRequested,
+            this, &MW::clearThumbnailCacheRequested);
     settingsDialog.exec();
 }
 
@@ -874,6 +876,8 @@ void MW::showScriptSettings() {
     if(viewerWidget)
         viewerWidget->hideContextMenu();
     SettingsDialog settingsDialog(this);
+    connect(&settingsDialog, &SettingsDialog::clearThumbnailCacheRequested,
+            this, &MW::clearThumbnailCacheRequested);
     settingsDialog.switchToPage(4);
     settingsDialog.exec();
 }

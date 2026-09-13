@@ -219,6 +219,7 @@ private slots:
     void preloadNeighbors();
     void onFileOpProgress(FileOpProgress progress);
     void onFileOpFinished(FileOpSummary summary);
+    void onClearThumbnailCacheRequested();
 
 private:
     struct AiResizeOperation {

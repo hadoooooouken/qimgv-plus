@@ -506,11 +506,17 @@ bool ThumbnailCacheMaintenance::isWithinQuota(
 
 qint64 ThumbnailCacheMaintenance::databaseFootprintBytes() const
 {
+    return databaseFootprintBytes(mDatabasePath);
+}
+
+qint64 ThumbnailCacheMaintenance::databaseFootprintBytes(
+    const QString &databasePath)
+{
     qint64 totalBytes = 0;
     const QStringList paths{
-        mDatabasePath,
-        mDatabasePath + QStringLiteral("-wal"),
-        mDatabasePath + QStringLiteral("-shm"),
+        databasePath,
+        databasePath + QStringLiteral("-wal"),
+        databasePath + QStringLiteral("-shm"),
     };
     for (const QString &path : paths) {
         const QFileInfo info(path);
