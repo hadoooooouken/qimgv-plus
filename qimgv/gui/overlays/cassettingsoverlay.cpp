@@ -56,7 +56,7 @@ void CasSettingsOverlay::setupUi()
     formLayout->setFormAlignment(Qt::AlignLeft);
     formLayout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 
-    addSliderRow(formLayout, tr("Sharpening"), m_sharpenSlider, m_sharpenValLabel, 0, 100,
+    addSliderRow(formLayout, tr("Sharpening"), m_sharpenSlider, m_sharpenValLabel, 1, 100,
                  qRound(settings->casSharpening() * 100.0f));
     addSliderRow(formLayout, tr("Contrast"),   m_contrastSlider, m_contrastValLabel, 0, 100,
                  qRound(settings->casContrast() * 100.0f));

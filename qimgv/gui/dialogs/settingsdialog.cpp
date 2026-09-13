@@ -268,7 +268,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
   QLabel *sharpLabel = new QLabel(tr("Sharpness:"), this);
   casSharpeningSlider = new QSlider(Qt::Horizontal, this);
-  casSharpeningSlider->setRange(0, 100);
+  casSharpeningSlider->setRange(1, 100);
   casSharpeningSlider->setFixedWidth(170);
   casSharpeningLabel = new QLabel(this);
   casSharpeningLabel->setFixedWidth(30);
