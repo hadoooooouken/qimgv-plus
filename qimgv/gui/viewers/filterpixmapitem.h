@@ -93,6 +93,10 @@ private:
 
     void initShader();
     void ensureReduceProgram();
+    // Uploads mImagePremultiplied to mTexture as raw premultiplied bytes,
+    // bypassing QOpenGLTexture's QImage-based overloads (see .cpp for why:
+    // they always convert to straight-alpha Format_RGBA8888 before upload).
+    void uploadPremultipliedTexture(bool generateMips);
     void buildPreciseDownsample(int targetW, int targetH);
     void releaseGlResources(bool forceRelease = false);
     class QOpenGLWidget* findGlWidget() const;

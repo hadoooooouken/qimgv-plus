@@ -9,6 +9,27 @@ uniform highp float casSharpening;
 uniform int sharpenMode;
 uniform int isDownscaling;
 
+// Rec.709 luma weights, used to collapse CAS/SmartSharpen's per-channel
+// contrast/amplitude estimation down to a single scalar. The original
+// per-channel (vec3) math derives an independent amplitude/weight for R, G
+// and B, so a saturated edge (e.g. red-orange) gets a different sharpening
+// amount per channel, which shifts hue. Deriving one scalar from luma and
+// applying it identically to all three channels preserves hue, since hue
+// depends only on the ratios/differences between channels, not their
+// absolute values.
+const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
+
+// Floor used wherever a luma value is about to be divided by or fed into
+// inversesqrt(), to avoid a divide-by-zero / Inf on a fully black window.
+const highp float kMinLuma = 1e-5;
+
+// Sharpening is only applied above this alpha (see main()). Below it, the
+// CAS/SmartSharpen taps would mix premultiplied RGB from neighboring texels
+// carrying their own, different alpha -- meaningless on a soft edge and
+// actively harmful on fully transparent texels, where premultiplied RGB is
+// (0,0,0) and contributes only noise.
+const highp float kOpaqueAlphaThreshold = 0.9999;
+
 vec3 applyCAS(vec2 uv) {
     vec2 offX = vec2(pixelSize.x, 0.0);
     vec2 offY = vec2(0.0, pixelSize.y);
@@ -44,16 +65,22 @@ vec3 applyCAS(vec2 uv) {
         vec3 mxRGB2 = max(mxRGB, max(max(a, c), max(g, i)));
         mxRGB += mxRGB2;
 
-        vec3 rcpMRGB = 1.0 / mxRGB;
-        vec3 ampRGB = clamp(min(mnRGB, 2.0 - mxRGB) * rcpMRGB, 0.0, 1.0);
-        ampRGB = inversesqrt(ampRGB);
+        // Amplitude and sharpening weight are derived from luma alone (see
+        // the LUMA comment above) instead of per-channel, so all three
+        // channels get the same weight and hue is preserved on saturated
+        // edges.
+        float mnL = dot(mnRGB, LUMA);
+        float mxL = dot(mxRGB, LUMA);
+        float rcpM = 1.0 / max(mxL, kMinLuma);
+        float amp = clamp(min(mnL, 2.0 - mxL) * rcpM, 0.0, 1.0);
+        amp = inversesqrt(max(amp, kMinLuma));
 
         float peak = -3.0 * casContrast + 8.0;
-        vec3 wRGB = -1.0 / (ampRGB * peak);
-        vec3 rcpWeightRGB = 1.0 / (4.0 * wRGB + 1.0);
+        float w = -1.0 / (amp * peak);
+        float rcpWeight = 1.0 / (4.0 * w + 1.0);
 
         vec3 window = (b + d) + (f + h);
-        vec3 outColor = clamp((window * wRGB + e) * rcpWeightRGB, 0.0, 1.0);
+        vec3 outColor = clamp((window * w + e) * rcpWeight, 0.0, 1.0);
 
         return mix(e, outColor, casSharpening);
     }
@@ -77,16 +104,18 @@ vec3 applyCAS(vec2 uv) {
     vec3 mxRGB2 = max(mxRGB, max(max(a, c), max(g, i)));
     mxRGB += mxRGB2;
 
-    vec3 rcpMRGB = 1.0 / mxRGB;
-    vec3 ampRGB = clamp(min(mnRGB, 2.0 - mxRGB) * rcpMRGB, 0.0, 1.0);
-    ampRGB = inversesqrt(ampRGB);
+    float mnL = dot(mnRGB, LUMA);
+    float mxL = dot(mxRGB, LUMA);
+    float rcpM = 1.0 / max(mxL, kMinLuma);
+    float amp = clamp(min(mnL, 2.0 - mxL) * rcpM, 0.0, 1.0);
+    amp = inversesqrt(max(amp, kMinLuma));
 
     float peak = -3.0 * casContrast + 8.0;
-    vec3 wRGB = -1.0 / (ampRGB * peak);
-    vec3 rcpWeightRGB = 1.0 / (4.0 * wRGB + 1.0);
+    float w = -1.0 / (amp * peak);
+    float rcpWeight = 1.0 / (4.0 * w + 1.0);
 
     vec3 window = (b + d) + (f + h);
-    vec3 outColor = clamp((window * wRGB + e) * rcpWeightRGB, 0.0, 1.0);
+    vec3 outColor = clamp((window * w + e) * rcpWeight, 0.0, 1.0);
 
     return mix(e, outColor, casSharpening);
 }
@@ -105,8 +134,27 @@ vec3 applySmartSharpenGPU(vec2 uv) {
         vec3 b2 = texture2D(tex, uv + 2.8 * offY, bias).rgb;
         vec3 l2 = texture2D(tex, uv - 2.8 * offX, bias).rgb;
         vec3 r2 = texture2D(tex, uv + 2.8 * offX, bias).rgb;
-        vec3 blurred = center * 0.17 + (t1 + b1 + l1 + r1) * 0.14 + (t2 + b2 + l2 + r2) * 0.0675;
-        vec3 sharpened = center + 0.18 * (center - blurred);
+
+        // Blur and the resulting delta are computed on luma only; the
+        // scalar delta is then added identically to all three channels,
+        // which is what keeps this hue-preserving (see the LUMA comment
+        // above).
+        float lc  = dot(center, LUMA);
+        float lT1 = dot(t1, LUMA);
+        float lB1 = dot(b1, LUMA);
+        float lL1 = dot(l1, LUMA);
+        float lR1 = dot(r1, LUMA);
+        float lT2 = dot(t2, LUMA);
+        float lB2 = dot(b2, LUMA);
+        float lL2 = dot(l2, LUMA);
+        float lR2 = dot(r2, LUMA);
+
+        float blurredL = lc * 0.17
+                       + (lT1 + lB1 + lL1 + lR1) * 0.14
+                       + (lT2 + lB2 + lL2 + lR2) * 0.0675;
+        float deltaL = 0.18 * (lc - blurredL);
+
+        vec3 sharpened = center + deltaL;
         return clamp(sharpened, 0.0, 1.0);
     } else {
         vec2 offX = vec2(pixelSize.x, 0.0);
@@ -116,7 +164,15 @@ vec3 applySmartSharpenGPU(vec2 uv) {
         vec3 b = texture2D(tex, uv + offY).rgb;
         vec3 l = texture2D(tex, uv - offX).rgb;
         vec3 r = texture2D(tex, uv + offX).rgb;
-        vec3 sharpened = c + (4.0 * c - t - b - l - r) * 0.0625;
+
+        float lc = dot(c, LUMA);
+        float lt = dot(t, LUMA);
+        float lb = dot(b, LUMA);
+        float ll = dot(l, LUMA);
+        float lr = dot(r, LUMA);
+        float lap = 4.0 * lc - lt - lb - ll - lr;
+        vec3 sharpened = c + lap * 0.0625;
+
         return clamp(sharpened, 0.0, 1.0);
     }
 }
@@ -131,10 +187,16 @@ void main() {
     highp vec4 color = texture2D(tex, texCoord);
     highp float a = color.a;
     highp vec3 rgb = color.rgb;
-    if (sharpenMode == 3 && casSharpening > kAdjustEpsilon) {
-        rgb = applyCAS(texCoord);
-    } else if (sharpenMode == 4) {
-        rgb = applySmartSharpenGPU(texCoord);
+
+    // Sharpening is gated to fully opaque pixels (see kOpaqueAlphaThreshold
+    // above main()): on a soft edge the CAS/SmartSharpen taps would mix
+    // premultiplied RGB from neighbors carrying their own, different alpha.
+    if (a >= kOpaqueAlphaThreshold) {
+        if (sharpenMode == 3 && casSharpening > kAdjustEpsilon) {
+            rgb = applyCAS(texCoord);
+        } else if (sharpenMode == 4) {
+            rgb = applySmartSharpenGPU(texCoord);
+        }
     }
 
     // colorMatrix/colorOffset (exposure, contrast, brightness, etc.) are

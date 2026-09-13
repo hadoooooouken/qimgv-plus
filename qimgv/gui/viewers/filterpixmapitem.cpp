@@ -414,26 +414,51 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     bool needMips = (sourceToDeviceScaleX < kDownscaleThreshold ||
                      sourceToDeviceScaleY < kDownscaleThreshold ||
                      activeSmartGpu);
-    bool canReuse = mTexture &&
-                    mTexture->width() == mImage.width() &&
-                    mTexture->height() == mImage.height() &&
-                    (!needMips || mTexture->mipLevels() > 1);
 
     // mImagePremultiplied (kept in sync in setImage()) avoids feeding GL_LINEAR
     // / mipmap filtering straight-alpha data, which would let RGB baked into
-    // fully-transparent texels bleed a fringe into opaque neighbors.
-    const QImage &texData = mImagePremultiplied.isNull() ? mImage : mImagePremultiplied;
+    // fully-transparent texels bleed a fringe into opaque neighbors -- but
+    // only if the premultiplied bytes actually reach the GPU. They are
+    // routed through uploadPremultipliedTexture() below rather than through
+    // QOpenGLTexture's QImage-based constructor/setData(): those overloads
+    // unconditionally convert their input to QImage::Format_RGBA8888 before
+    // upload (documented Qt6 behavior), which is a straight-alpha format and
+    // would silently re-introduce the exact straight-alpha bleeding this
+    // class exists to avoid. Non-alpha images have no such format subtlety
+    // and keep using the ordinary QImage-based path unchanged.
+    const bool hasPremultipliedAlpha = !mImagePremultiplied.isNull();
 
-    if (canReuse) {
-        if (mLastImage.cacheKey() != mImage.cacheKey()) {
-            mTexture->setData(texData, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
+    if (hasPremultipliedAlpha) {
+        // Reuse is not attempted here: this branch only re-uploads when the
+        // image's cache key actually changes or the mip requirement grows
+        // (i.e. on image navigation/zoom-mode changes, not every paint()
+        // call), so recreating the texture object is not a per-frame cost.
+        const bool alphaTextureStale =
+            !mTexture ||
+            mTexture->width() != mImagePremultiplied.width() ||
+            mTexture->height() != mImagePremultiplied.height() ||
+            (needMips && mTexture->mipLevels() <= 1) ||
+            mLastImage.cacheKey() != mImage.cacheKey();
+        if (alphaTextureStale) {
+            uploadPremultipliedTexture(needMips);
             mLastImage = mImage;
         }
     } else {
-        mTexture.reset();
-        mTexture = std::make_unique<QOpenGLTexture>(texData, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
-        mTexture->setWrapMode(QOpenGLTexture::ClampToEdge);
-        mLastImage = mImage;
+        bool canReuse = mTexture &&
+                        mTexture->width() == mImage.width() &&
+                        mTexture->height() == mImage.height() &&
+                        (!needMips || mTexture->mipLevels() > 1);
+        if (canReuse) {
+            if (mLastImage.cacheKey() != mImage.cacheKey()) {
+                mTexture->setData(mImage, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
+                mLastImage = mImage;
+            }
+        } else {
+            mTexture.reset();
+            mTexture = std::make_unique<QOpenGLTexture>(mImage, needMips ? QOpenGLTexture::GenerateMipMaps : QOpenGLTexture::DontGenerateMipMaps);
+            mTexture->setWrapMode(QOpenGLTexture::ClampToEdge);
+            mLastImage = mImage;
+        }
     }
 
     // Match filtering to transformationMode
@@ -601,6 +626,40 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     mProgram->release();
 
     painter->endNativePainting();
+}
+
+// Uploads mImagePremultiplied to mTexture as premultiplied-alpha bytes,
+// bypassing every QOpenGLTexture overload that takes a QImage directly.
+// Those overloads (the QImage constructor and setData(const QImage&, ...))
+// unconditionally call image.convertToFormat(QImage::Format_RGBA8888)
+// before upload -- documented Qt6 behavior, not specific to this codebase.
+// Format_RGBA8888 is straight alpha, so that conversion would silently
+// un-premultiply mImagePremultiplied's data right before it reaches the
+// GPU, which is exactly the straight-alpha bleeding/hue-shift on soft edges
+// that premultiplying at load time (see setImage()) is meant to prevent.
+//
+// The fix is to allocate storage manually and upload raw bytes via the
+// mip-level setData() overload, which performs no QImage conversion at all.
+// Format_RGBA8888_Premultiplied's in-memory byte order (R,G,B,A, one byte
+// each) matches GL_RGBA/GL_UNSIGNED_BYTE exactly, so converting to it from
+// mImagePremultiplied's native Format_ARGB32_Premultiplied is a plain
+// byte-order permute -- both formats are already premultiplied, so this is
+// not a second premultiply/un-premultiply pass.
+void FilterPixmapItem::uploadPremultipliedTexture(bool generateMips) {
+    mTexture.reset();
+    mTexture = std::make_unique<QOpenGLTexture>(QOpenGLTexture::Target2D);
+    mTexture->setFormat(QOpenGLTexture::RGBA8_UNorm);
+    mTexture->setSize(mImagePremultiplied.width(), mImagePremultiplied.height());
+    mTexture->setMipLevels(generateMips ? mTexture->maximumMipLevels() : 1);
+    mTexture->allocateStorage();
+    mTexture->setWrapMode(QOpenGLTexture::ClampToEdge);
+
+    const QImage glReadyImage =
+        mImagePremultiplied.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
+    mTexture->setData(0, QOpenGLTexture::RGBA, QOpenGLTexture::UInt8, glReadyImage.constBits());
+    if (generateMips) {
+        mTexture->generateMipMaps();
+    }
 }
 
 QVariant FilterPixmapItem::itemChange(GraphicsItemChange change, const QVariant &value) {
