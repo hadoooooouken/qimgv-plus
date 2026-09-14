@@ -30,6 +30,8 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 
 - **Display Color Management**: Dynamic source-to-target color mapping that queries the system's primary monitor ICC profile. Supports standard preset spaces (sRGB, Adobe RGB, Display P3, etc.) or custom ICC/ICM files.
 
+- **HDR Tone-Mapping**: Built-in tone-mapping pipeline for high-dynamic-range images (including 10-bit/12-bit AVIF HDR with Rec.2100 PQ or HLG transfer, OpenEXR, and Radiance HDR). Supports ITU-R BT.2408, Reinhard-Jodie, ACES Filmic, and Hable (Uncharted 2) operators with configurable target white levels (80, 100, 203, 300 nits).
+
 - **Fully Configurable**: Highly customizable keyboard shortcuts, theme modes (System Auto, Dark, Light), custom accent colors, and background preferences.
 
 - **Basic Image Editing**: Quick crop, rotate, and resize operations.
@@ -90,6 +92,7 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 | Cycle scaling filter | Shift+N |
 | Toggle Use Upscayl | Alt+I |
 | Cycle upscaler models | Alt+Shift+I |
+| Toggle HDR Tone-Mapping | Alt+H |
 | Settings  | P |
 | Exit application | Ctrl+Q / Alt+X |
 | Toggle panorama mode | Shift+P |
@@ -189,6 +192,20 @@ Color space translation between source image and active display:
   * **Preset spaces**: `sRGB`, `Display P3`, `Adobe RGB`, `Rec. 2020`, `ProPhoto RGB`, and `Linear sRGB`.
   * **Custom target**: Browse and load custom `.icc` or `.icm` files from disk.
 - **Mapping**: Reads embedded source ICC profile (assumes standard `sRGB` if missing) and converts it to the display space.
+
+## HDR Tone-Mapping
+
+Advanced tone-mapping pipeline to accurately view High Dynamic Range (HDR) content on SDR displays:
+
+- **Activation**: Toggle in **Settings > View > HDR Tone-Mapping** or instantly via hotkey (**`Alt + H`**).
+- **Supported Formats & Profiles**: Detects and decodes HDR metadata across formats, including **AVIF HDR** (10-bit / 12-bit Rec.2100 PQ / HDR10, BT.2100 HLG, Display P3 PQ/HLG, MaxCLL / MaxPALL), **OpenEXR (EXR)**, and **Radiance HDR (.hdr)**.
+- **Tone-Mapping Operators**:
+  * **ITU-R BT.2408 (Default / Recommended)**: Broadcast-standard tone mapping providing accurate color and luminance reproduction.
+  * **Reinhard-Jodie**: Luminance-preserving Reinhard variant retaining highlight details without oversaturating bright areas.
+  * **ACES Filmic**: Academy Color Encoding System filmic curve delivering cinematic contrast and highlight roll-off.
+  * **Hable (Uncharted 2)**: Popular game industry filmic operator offering smooth highlight rolloff and rich shadows.
+- **Target White Level**: Adjustable reference white luminance tailored to your viewing environment (**203 nits** ITU-R BT.2408 default, **100 nits** standard sRGB, **80 nits** dim room, or **300 nits** bright room).
+- **High Performance**: Multi-threaded chunked processing with precomputed 16-bit EOTF LUTs and gamut compression for fast rendering.
 
 # Supported Image Formats
 
