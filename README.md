@@ -227,6 +227,10 @@ qimgv-plus is optimized exclusively for **Windows (64-bit)** to deliver maximum 
 
 Grab the latest version from the [latest release](https://github.com/hadoooooouken/qimgv-plus/releases/latest) or browse the [releases page](https://github.com/hadoooooouken/qimgv-plus/releases).
 
+## Building from Source
+
+If you want to compile qimgv-plus yourself, see the **[Building from Source](BUILDING.md)** guide for full instructions, including dependency setup, build order, and path configuration.
+
 # Donate
 
 If you wish to give me a few bucks, please consider donating to the Ukrainian Army instead:
