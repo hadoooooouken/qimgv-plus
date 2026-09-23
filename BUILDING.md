@@ -32,7 +32,7 @@ git clone https://github.com/hadoooooouken/qimgv-plus.git
 cd qimgv-plus
 
 # 2. Run the dependency setup script (clones all deps + applies patches)
-.\scripts\setup-deps.ps1
+.\build_scripts\setup-deps.ps1
 
 # 3. Manually download exiv2 and NASM (see "Manual Downloads" below)
 
@@ -115,13 +115,12 @@ qimgv-plus/
 │   ├── build_qpng_spng.ps1
 │   ├── build_qjpeg_jpeg.ps1
 │   ├── build_ffmpeg_msvc.py
-│   └── deploy-plugins.ps1
+│   ├── deploy-plugins.ps1
+│   └── setup-deps.ps1
 ├── patches/                   # Local patch files for dependencies
 │   ├── *.patch                # Single-file patches
 │   ├── kimageformats/         # Patch series (10 commits past v6.26.0)
 │   └── openjpeg/              # Patch series (15 commits past v2.5.4)
-└── scripts/
-    └── setup-deps.ps1         # Automated dependency setup
 ```
 
 ---
@@ -179,7 +178,7 @@ qimgv-plus/
 
 ## Patch Descriptions
 
-All patches are in the `patches/` directory. They are applied automatically by `scripts/setup-deps.ps1`.
+All patches are in the `patches/` directory. They are applied automatically by `build_scripts/setup-deps.ps1`.
 
 | Patch File | Library | Description |
 |------------|---------|-------------|
