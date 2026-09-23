@@ -1,0 +1,25 @@
+From 3488077d8d41ffaa2b44386bd3082bdb351459a3 Mon Sep 17 00:00:00 2001
+From: Mirco Miranda <mirco.miranda@systemceramics.com>
+Date: Mon, 4 May 2026 08:51:34 +0200
+Subject: [PATCH 05/10] Fix uninitialized value
+
+---
+ src/imageformats/jxr.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/imageformats/jxr.cpp b/src/imageformats/jxr.cpp
+index 7bcaa07..5b09390 100644
+--- a/src/imageformats/jxr.cpp
++++ b/src/imageformats/jxr.cpp
+@@ -996,7 +996,7 @@ private:
+             return true;
+         }
+ 
+-        DESCRIPTIVEMETADATA meta;
++        DESCRIPTIVEMETADATA meta = {};
+         if (pDecoder->GetDescriptiveMetadata(pDecoder, &meta)) {
+             return false;
+         }
+-- 
+2.50.1.windows.1
+

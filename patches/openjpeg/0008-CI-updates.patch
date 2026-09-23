@@ -1,0 +1,31 @@
+From 4a53030004b45342973e106c64ceedb3821a08fe Mon Sep 17 00:00:00 2001
+From: Even Rouault <even.rouault@spatialys.com>
+Date: Sun, 5 Apr 2026 13:29:19 +0200
+Subject: [PATCH 08/15] CI updates
+
+---
+ .github/workflows/build.yml                                     | 2 +-
+ ...=> knownfailures-macOS14.8-xcode15.4-arm64-Release-3rdP.txt} | 0
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename tools/travis-ci/{knownfailures-macOS14.7-xcode15.4-arm64-Release-3rdP.txt => knownfailures-macOS14.8-xcode15.4-arm64-Release-3rdP.txt} (100%)
+
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+index 9faa411f..e2f27f12 100644
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -104,7 +104,7 @@ jobs:
+             OPJ_NONCOMMERCIAL: 1
+ 
+   macos_x86_64:
+-    runs-on: macos-13
++    runs-on: macos-15-intel
+     if: "!contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
+     steps:
+       - name: Checkout
+diff --git a/tools/travis-ci/knownfailures-macOS14.7-xcode15.4-arm64-Release-3rdP.txt b/tools/travis-ci/knownfailures-macOS14.8-xcode15.4-arm64-Release-3rdP.txt
+similarity index 100%
+rename from tools/travis-ci/knownfailures-macOS14.7-xcode15.4-arm64-Release-3rdP.txt
+rename to tools/travis-ci/knownfailures-macOS14.8-xcode15.4-arm64-Release-3rdP.txt
+-- 
+2.50.1.windows.1
+

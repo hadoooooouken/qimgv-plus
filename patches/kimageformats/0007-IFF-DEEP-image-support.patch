@@ -1,0 +1,1339 @@
+From 49a8fd38c82609c78a43718d35cc99a8c8315526 Mon Sep 17 00:00:00 2001
+From: Mirco Miranda <mirco.miranda@systemceramics.com>
+Date: Wed, 6 May 2026 15:12:14 +0200
+Subject: [PATCH 07/10] IFF: DEEP image support
+
+---
+ README.md                           |   1 +
+ autotests/read/iff/sv5_unc_deep.iff | Bin 0 -> 53762 bytes
+ autotests/read/iff/sv5_unc_deep.png | Bin 0 -> 6809 bytes
+ src/imageformats/chunks.cpp         | 512 ++++++++++++++++++++++++++++
+ src/imageformats/chunks_p.h         | 289 +++++++++++++++-
+ src/imageformats/iff.cpp            |  67 ++++
+ src/imageformats/iff_p.h            |   2 +
+ 7 files changed, 867 insertions(+), 4 deletions(-)
+ create mode 100644 autotests/read/iff/sv5_unc_deep.iff
+ create mode 100644 autotests/read/iff/sv5_unc_deep.png
+
+diff --git a/README.md b/README.md
+index a42a642..ee08f9c 100644
+--- a/README.md
++++ b/README.md
+@@ -403,6 +403,7 @@ The plugin supports the following image data:
+ - FORM IMAG (Compact Disc-Interactive): It supports CLut4, CLut7, CLut8, Rle7
+   and DYuv formats.
+ - FORM RGFX: It supports uncompressed images only.
++- FORM DEEP: It supports uncompressed, RLE and TVDC images.
+ - FOR4 CIMG (Maya Image File Format): It supports 24/48-bit RGB and 32/64-bit 
+   RGBA images.
+ 
+diff --git a/autotests/read/iff/sv5_unc_deep.iff b/autotests/read/iff/sv5_unc_deep.iff
+new file mode 100644
+index 0000000000000000000000000000000000000000..d8bb39d324c1f4b9a4f0d6cc3bed4fefb1747619
+GIT binary patch
+literal 53762
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/autotests/read/iff/sv5_unc_deep.png b/autotests/read/iff/sv5_unc_deep.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..3874ccec1eed42322c0fca5be4ffaaa630ebba3f
+GIT binary patch
+literal 6809
+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
+P*M_1jN~T=OB=G+LPA%ax
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/imageformats/chunks.cpp b/src/imageformats/chunks.cpp
+index ccecd89..82e9e0f 100644
+--- a/src/imageformats/chunks.cpp
++++ b/src/imageformats/chunks.cpp
+@@ -295,6 +295,14 @@ IFFChunk::ChunkList IFFChunk::innerFromDevice(QIODevice *d, bool *ok, IFFChunk *
+             chunk = QSharedPointer<IFFChunk>(new CTBLChunk());
+         } else if (cid == DATE_CHUNK) {
+             chunk = QSharedPointer<IFFChunk>(new DATEChunk());
++        } else if (cid == DBOD_CHUNK) {
++            chunk = QSharedPointer<IFFChunk>(new DBODChunk());
++        } else if (cid == DGBL_CHUNK) {
++            chunk = QSharedPointer<IFFChunk>(new DGBLChunk());
++        } else if (cid == DLOC_CHUNK) {
++            chunk = QSharedPointer<IFFChunk>(new DLOCChunk());
++        } else if (cid == DPEL_CHUNK) {
++            chunk = QSharedPointer<IFFChunk>(new DPELChunk());
+         } else if (cid == DPI__CHUNK) {
+             chunk = QSharedPointer<IFFChunk>(new DPIChunk());
+         } else if (cid == EXIF_CHUNK) {
+@@ -341,6 +349,8 @@ IFFChunk::ChunkList IFFChunk::innerFromDevice(QIODevice *d, bool *ok, IFFChunk *
+             chunk = QSharedPointer<IFFChunk>(new SHAMChunk());
+         } else if (cid == TBHD_CHUNK) {
+             chunk = QSharedPointer<IFFChunk>(new TBHDChunk());
++        } else if (cid == TVDC_CHUNK) {
++            chunk = QSharedPointer<IFFChunk>(new TVDCChunk());
+         } else if (cid == VDAT_CHUNK) {
+             chunk = QSharedPointer<IFFChunk>(new VDATChunk());
+         } else if (cid == VERS_CHUNK) {
+@@ -1468,6 +1478,8 @@ bool FORMChunk::innerReadStructure(QIODevice *d)
+         setChunks(IFFChunk::innerFromDevice(d, &ok, this));
+     } else if (_type == RGFX_FORM_TYPE) {
+         setChunks(IFFChunk::innerFromDevice(d, &ok, this));
++    } else if (_type == DEEP_FORM_TYPE || _type == TVPP_FORM_TYPE) {
++        setChunks(IFFChunk::innerFromDevice(d, &ok, this));
+     }
+     return ok;
+ }
+@@ -1585,6 +1597,72 @@ QImage::Format FORMChunk::rgfxFormat() const
+     return QImage::Format_Invalid;
+ }
+ 
++QImage::Format FORMChunk::deepFormat() const
++{
++    auto pels = IFFChunk::searchT<DPELChunk>(chunks());
++    if (pels.isEmpty()) {
++        return QImage::Format_Invalid;
++    }
++    auto list = pels.first()->elements();
++
++    // support for same depth on all elements
++    auto depth = -1;
++    for (auto &&el : list) {
++        if (depth < 0)
++            depth = el.depth;
++        if (depth != el.depth)
++            return QImage::Format_Invalid;
++    }
++
++    // calculate the image format
++    if (list.size() == 4) {
++        if (list.at(0).type == DPELChunk::Red &&
++            list.at(1).type == DPELChunk::Green &&
++            list.at(2).type == DPELChunk::Blue &&
++            list.at(3).type == DPELChunk::Alpha) {
++            if (depth == 8)
++                return FORMAT_RGBA_8BIT;
++            else if (depth == 16)
++                return QImage::Format_RGBA64;
++        } else if (list.at(0).type == DPELChunk::Cyan &&
++                   list.at(1).type == DPELChunk::Magenta &&
++                   list.at(2).type == DPELChunk::Yellow &&
++                   list.at(3).type == DPELChunk::Black) {
++            if (depth == 8)
++                return QImage::Format_CMYK8888;
++        } else if (list.at(0).type == DPELChunk::Red &&
++                   list.at(1).type == DPELChunk::Green &&
++                   list.at(2).type == DPELChunk::Blue) {
++            // unknown type of channel 4 -> ignoring it
++            if (depth == 8)
++                return QImage::Format_RGBX8888;
++            else if (depth == 16)
++                return QImage::Format_RGBX64;
++        }
++    } else if (list.size() == 3) {
++        if (list.at(0).type == DPELChunk::Red &&
++            list.at(1).type == DPELChunk::Green &&
++            list.at(2).type == DPELChunk::Blue) {
++            if (depth == 8)
++                return FORMAT_RGB_8BIT;
++        } else if (list.at(0).type == DPELChunk::Blue &&
++                   list.at(1).type == DPELChunk::Green &&
++                   list.at(2).type == DPELChunk::Red) {
++            if (depth == 8)
++                return QImage::Format_BGR888;
++        }
++    } else if (list.size() == 1) {
++        if (depth == 1)
++            return QImage::Format_Mono;
++        else if (depth == 8)
++            return QImage::Format_Grayscale8;
++        else if (depth == 16)
++            return QImage::Format_Grayscale16;
++    }
++
++    return QImage::Format_Invalid;
++}
++
+ QByteArray FORMChunk::formType() const
+ {
+     return _type;
+@@ -1596,6 +1674,8 @@ QImage::Format FORMChunk::format() const
+         return cdiFormat();
+     } else if (formType() == RGFX_FORM_TYPE) {
+         return rgfxFormat();
++    } else if (formType() == DEEP_FORM_TYPE || formType() == TVPP_FORM_TYPE) {
++        return deepFormat();
+     }
+     return iffFormat();
+ }
+@@ -1612,6 +1692,15 @@ QSize FORMChunk::size() const
+         if (!rghds.isEmpty()) {
+             return rghds.first()->size();
+         }
++    } else if (formType() == DEEP_FORM_TYPE || formType() == TVPP_FORM_TYPE) {
++        auto dlocs = IFFChunk::searchT<DLOCChunk>(chunks());
++        if (!dlocs.isEmpty()) {
++            return dlocs.first()->size();
++        }
++        auto dgbls = IFFChunk::searchT<DGBLChunk>(chunks());
++        if (!dgbls.isEmpty()) {
++            return dgbls.first()->size();
++        }
+     } else {
+         auto bmhds = IFFChunk::searchT<BMHDChunk>(chunks());
+         if (!bmhds.isEmpty()) {
+@@ -1735,6 +1824,8 @@ bool CATChunk::innerReadStructure(QIODevice *d)
+         setChunks(IFFChunk::innerFromDevice(d, &ok, this));
+     } else if (_type == RGFX_FORM_TYPE) {
+         setChunks(IFFChunk::innerFromDevice(d, &ok, this));
++    } else if (_type == DEEP_FORM_TYPE || _type == TVPP_FORM_TYPE) {
++        setChunks(IFFChunk::innerFromDevice(d, &ok, this));
+     }
+     return ok;
+ }
+@@ -3574,6 +3665,427 @@ quint32 RBODChunk::strideSize(const RGHDChunk *header) const
+ }
+ 
+ 
++/* ******************
++ * *** DGBL Chunk ***
++ * ****************** */
++
++DGBLChunk::~DGBLChunk()
++{
++
++}
++
++DGBLChunk::DGBLChunk()
++    : IFFChunk()
++{
++
++}
++
++DGBLChunk::Compression DGBLChunk::compression() const
++{
++    if (!isValid()) {
++        return Compression::Uncompressed;
++    }
++    return Compression(ui16(data(), 4));
++
++}
++
++qint32 DGBLChunk::width() const
++{
++    if (!isValid()) {
++        return 0;
++    }
++    return qint32(ui16(data(), 0));
++}
++
++qint32 DGBLChunk::height() const
++{
++    if (!isValid()) {
++        return 0;
++    }
++    return qint32(ui16(data(), 2));
++}
++
++quint8 DGBLChunk::xAspectRatio() const
++{
++    if (!isValid()) {
++        return 0;
++    }
++    return quint8(data().at(6));
++}
++
++quint8 DGBLChunk::yAspectRatio() const
++{
++    if (!isValid()) {
++        return 0;
++    }
++    return quint8(data().at(7));
++}
++
++bool DGBLChunk::isValid() const
++{
++    if (dataBytes() < 8) {
++        return false;
++    }
++    return chunkId() == DGBLChunk::defaultChunkId();
++}
++
++bool DGBLChunk::innerReadStructure(QIODevice *d)
++{
++    return cacheData(d);
++}
++
++
++/* ******************
++ * *** DPEL Chunk ***
++ * ****************** */
++
++DPELChunk::~DPELChunk()
++{
++
++}
++
++DPELChunk::DPELChunk()
++    : IFFChunk()
++{
++
++}
++
++qint32 DPELChunk::count() const
++{
++    if (dataBytes() < 4) {
++        return 0;
++    }
++    auto cnt = i32(data(), 0);
++    if (cnt < 0 || cnt > 128) {
++        // an image should have 3, 4 or 5 channels:
++        // 128 is enough to give an error.
++        cnt = 0;
++    }
++    return cnt;
++}
++
++qint32 DPELChunk::depth() const
++{
++    auto depth = 0;
++    auto list = elements();
++    for (auto &&el : list) {
++        depth += el.depth;
++    }
++    return depth;
++}
++
++QList<DPELChunk::Element> DPELChunk::elements() const
++{
++    QList<DPELChunk::Element> list;
++    if (isValid()) {
++        for (auto n = count(), i = 0; i < n; ++i) {
++            auto idx = 4 + i * 4;
++            list << DPELChunk::Element(DataType(ui16(data(), idx)),
++                                       ui16(data(), idx + 2));
++        }
++    }
++    return list;
++}
++
++bool DPELChunk::isValid() const
++{
++    if (dataBytes() < quint32(4 + count() * 4)) {
++        return false;
++    }
++    return chunkId() == DPELChunk::defaultChunkId();
++}
++
++bool DPELChunk::innerReadStructure(QIODevice *d)
++{
++    return cacheData(d);
++}
++
++
++/* ******************
++ * *** DLOC Chunk ***
++ * ****************** */
++
++DLOCChunk::~DLOCChunk()
++{
++
++}
++
++DLOCChunk::DLOCChunk()
++    : IFFChunk()
++{
++
++}
++
++qint32 DLOCChunk::width() const
++{
++    if (!isValid()) {
++        return 0;
++    }
++    return qint32(ui16(data(), 0));
++}
++
++qint32 DLOCChunk::height() const
++{
++    if (!isValid()) {
++        return 0;
++    }
++    return qint32(ui16(data(), 2));
++}
++
++QSize DLOCChunk::size() const
++{
++    return QSize(width(), height());
++}
++
++qint32 DLOCChunk::xOffset() const
++{
++    if (!isValid()) {
++        return 0;
++    }
++    return qint32(i16(data(), 4));
++}
++
++qint32 DLOCChunk::yOffset() const
++{
++    if (!isValid()) {
++        return 0;
++    }
++    return qint32(i16(data(), 6));
++}
++
++bool DLOCChunk::isValid() const
++{
++    if (dataBytes() < 8) {
++        return false;
++    }
++    return chunkId() == DLOCChunk::defaultChunkId();
++}
++
++bool DLOCChunk::innerReadStructure(QIODevice *d)
++{
++    return cacheData(d);
++}
++
++
++/* ******************
++ * *** TVDC Chunk ***
++ * ****************** */
++
++TVDCChunk::~TVDCChunk()
++{
++
++}
++
++TVDCChunk::TVDCChunk()
++    : IFFChunk()
++{
++
++}
++
++qint32 TVDCChunk::count() const
++{
++    if (!isValid()) {
++        return 0;
++    }
++    return dataBytes() / 2;
++}
++
++QList<quint16> TVDCChunk::table() const
++{
++    QList<quint16> list;
++    if (isValid()) {
++        for (auto n = count(), i = 0; i < n; ++i) {
++            list << ui16(data(), i * 2);
++        }
++    }
++    return list;
++}
++
++bool TVDCChunk::isValid() const
++{
++    if (dataBytes() < 32) {
++        return false;
++    }
++    return chunkId() == TVDCChunk::defaultChunkId();
++}
++
++bool TVDCChunk::innerReadStructure(QIODevice *d)
++{
++    return cacheData(d);
++}
++
++
++/* ******************
++ * *** DBOD Chunk ***
++ * ****************** */
++
++DBODChunk::~DBODChunk()
++{
++
++}
++
++DBODChunk::DBODChunk()
++    : IFFChunk()
++{
++
++}
++
++bool DBODChunk::isValid() const
++{
++    return chunkId() == DBODChunk::defaultChunkId();
++}
++
++/*!
++ * \brief rleDeepDecompress
++ * Each run contains a pixel (all components)
++ */
++inline qint64 rleDeepDecompress(QIODevice *input, char *output, qint64 olen, qint32 pixelBytes)
++{
++    qint64 j = 0;
++    pixelBytes = std::max(1, pixelBytes);
++    for (qint64 rr = 0, available = olen; j < olen; available = olen - j) {
++        char n;
++
++        // check the output buffer space for the next run
++        if (available < 129 * pixelBytes) {
++            if (input->peek(&n, 1) != 1) { // end of data (or error)
++                break;
++            }
++            if ((static_cast<signed char>(n) >= 0 ? qint64(n) + 1 : qint64(1 - n)) * pixelBytes > available)
++                break;
++        }
++
++        // decompress
++        if (input->read(&n, 1) != 1) { // end of data (or error)
++            break;
++        }
++
++        if (static_cast<signed char>(n) >= 0) {
++            rr = input->read(output + j, (qint64(n) + 1) * pixelBytes);
++            if (rr == -1) {
++                return -1;
++            }
++        }
++        else {
++            auto buf = input->read(pixelBytes);
++            if (buf.size() != pixelBytes) {
++                break;
++            }
++            rr = qint64(1 - static_cast<signed char>(n));
++            for (qint64 i = 0; i < rr; ++i) {
++                std::memcpy(output + j + i * pixelBytes, buf.data(), buf.size());
++            }
++            rr *= pixelBytes;
++        }
++
++        j += rr;
++    }
++    return j;
++}
++
++/*!
++ * \brief tvdcDeepDecompress
++ * the compression is made line by line for each elementof the chunk DPEL.
++ * For RGBA for example we have a Red line, a Green line, and so on.
++ */
++inline qint64 tvdcDeepDecompress(QIODevice *input, char *output, qint64 olen, const QList<quint16>& table)
++{
++    if (table.size() != 16) {
++        return -1;
++    }
++
++    quint8 v = 0;
++    quint8 last = 0;
++    for (qint64 i = 0, pos = 0, lastRead = -1; i < olen; ++i) {
++        if ((pos >> 1) != lastRead) {
++            char n;
++            if (input->read(&n, 1) != 1) {
++                return -1;
++            }
++            lastRead = (pos >> 1);
++            last = quint8(n);
++        }
++        quint8 d = last;
++        if (pos++ & 1) {
++            d &= 0xf;
++        } else {
++            d >>= 4;
++        }
++        v += table.at(d);
++        output[i] = char(v);
++        if (!table.at(d)) {
++            if ((pos >> 1) != lastRead) {
++                char n;
++                if (input->read(&n, 1) != 1) {
++                    return -1;
++                }
++                lastRead = (pos >> 1);
++                last = quint8(n);
++            }
++            d = last;
++            if (pos++ & 1) {
++                d &= 0xf;
++            } else {
++                d >>= 4;
++            }
++            while (d--) {
++                if (i < olen - 1) {
++                    output[++i] = char(v);
++                    continue;
++                }
++                return -1;
++            }
++        }
++    }
++    return olen;
++}
++
++QByteArray DBODChunk::strideRead(QIODevice *d, qint32, const DGBLChunk *header, const DPELChunk *pel, const DLOCChunk *loc, const TVDCChunk *tvdc) const
++{
++    auto size = strideSize(header, pel, loc);
++    if (size == 0) {
++        return {};
++    }
++
++    qint64 rr = 0;
++    QByteArray planes(size, char());
++    if (header->compression() == DGBLChunk::Compression::Uncompressed) {
++        rr = d->read(planes.data(), planes.size());
++    } else if (header->compression() == DGBLChunk::Compression::Rle) {
++        rr = rleDeepDecompress(d, planes.data(), planes.size(), pel->depth() / 8);
++    } else if (header->compression() == DGBLChunk::Compression::TvDeepCompression) {
++        if (tvdc) { // TVDC is planar, so I have to convert to chunky
++            auto table = tvdc->table();
++            for (auto i = 0, n = pel->count(); i < n; ++i) {
++                QByteArray ba(size / n, char());
++                rr += tvdcDeepDecompress(d, ba.data(), ba.size(), tvdc->table());
++                for (auto j = 0, m = int(ba.size()); j < m; ++j) {
++                    planes[i + j * n] = ba.at(j);
++                }
++            }
++        }
++    } else {
++        qCDebug(LOG_IFFPLUGIN) << "DBODChunk::strideRead(): unknown compression" << header->compression();
++    }
++
++    // Uncompressed, Rle and TvDeepCompression: one line at a time.
++    if (rr != size)
++        return {};
++    return planes;
++}
++
++bool DBODChunk::resetStrideRead(QIODevice *d) const
++{
++    return seek(d);
++}
++
++quint32 DBODChunk::strideSize(const DGBLChunk *header, const DPELChunk *pel, const DLOCChunk *loc) const
++{
++    auto width = loc ? loc->width() : header->width();
++    return (width * pel->depth() + 7) / 8;
++}
++
++
+ /* ******************
+  * *** BEAM Chunk ***
+  * ****************** */
+diff --git a/src/imageformats/chunks_p.h b/src/imageformats/chunks_p.h
+index df7835e..0a7ba46 100644
+--- a/src/imageformats/chunks_p.h
++++ b/src/imageformats/chunks_p.h
+@@ -55,6 +55,10 @@ Q_DECLARE_LOGGING_CATEGORY(LOG_IFFPLUGIN)
+ #define CAMG_CHUNK QByteArray("CAMG")
+ #define CMAP_CHUNK QByteArray("CMAP")
+ #define CMYK_CHUNK QByteArray("CMYK") // https://wiki.amigaos.net/wiki/ILBM_IFF_Interleaved_Bitmap#ILBM.CMYK
++#define DBOD_CHUNK QByteArray("DBOD")
++#define DGBL_CHUNK QByteArray("DGBL")
++#define DLOC_CHUNK QByteArray("DLOC")
++#define DPEL_CHUNK QByteArray("DPEL")
+ #define DPI__CHUNK QByteArray("DPI ")
+ #define IDAT_CHUNK QByteArray("IDAT")
+ #define IHDR_CHUNK QByteArray("IHDR")
+@@ -65,6 +69,7 @@ Q_DECLARE_LOGGING_CATEGORY(LOG_IFFPLUGIN)
+ #define RFLG_CHUNK QByteArray("RFLG")
+ #define RGHD_CHUNK QByteArray("RGHD")
+ #define RSCM_CHUNK QByteArray("RSCM")
++#define TVDC_CHUNK QByteArray("TVDC")
+ #define XBMI_CHUNK QByteArray("XBMI")
+ #define YUVS_CHUNK QByteArray("YUVS")
+ 
+@@ -96,12 +101,14 @@ Q_DECLARE_LOGGING_CATEGORY(LOG_IFFPLUGIN)
+ 
+ // FORM types
+ #define ACBM_FORM_TYPE QByteArray("ACBM")
++#define DEEP_FORM_TYPE QByteArray("DEEP")
+ #define ILBM_FORM_TYPE QByteArray("ILBM")
+ #define IMAG_FORM_TYPE QByteArray("IMAG")
+ #define PBM__FORM_TYPE QByteArray("PBM ")
+ #define RGB8_FORM_TYPE QByteArray("RGB8")
+ #define RGBN_FORM_TYPE QByteArray("RGBN")
+ #define RGFX_FORM_TYPE QByteArray("RGFX")
++#define TVPP_FORM_TYPE QByteArray("TVPP") // same as DEEP
+ 
+ #define CIMG_FOR4_TYPE QByteArray("CIMG")
+ #define TBMP_FOR4_TYPE QByteArray("TBMP")
+@@ -642,11 +649,23 @@ class CAMGChunk : public IFFChunk
+ {
+ public:
+     enum ModeId {
+-        LoResLace = 0x0004,
++        GenLockVideo = 0x0002,
++        InterlacedDisplay = 0x0004,
++        DoubleScan = 0x0008,
++        SuperHighResolution = 0x0020,
++        PlayfieldBitplaneAdjust = 0x0040,
+         HalfBrite = 0x0080,
+-        LoResDpf = 0x0400,
+-        Ham = 0x0800,
+-        HiRes = 0x8000
++        GenLockAudio = 0x0100,
++        DualPlayfield = 0x0400,
++        HoldAndModify = 0x0800,
++        ExtendedMode = 0x1000,
++        ViewPortHide = 0x2000,
++        Sprites = 0x4000,
++        HighResolution = 0x8000,
++
++        // aliases
++        Lace = InterlacedDisplay,
++        Ham = HoldAndModify
+     };
+ 
+     Q_DECLARE_FLAGS(ModeIds, ModeId)
+@@ -946,6 +965,8 @@ private:
+     QImage::Format cdiFormat() const;
+ 
+     QImage::Format rgfxFormat() const;
++
++    QImage::Format deepFormat() const;
+ };
+ 
+ 
+@@ -1946,6 +1967,266 @@ private:
+ };
+ 
+ 
++/*!
++ * *** DEEP IFF CHUNKS ***
++ */
++
++/*!
++ * \brief The DGBLChunk class
++ */
++class DGBLChunk : public IFFChunk
++{
++public:
++    enum Compression : quint16 {
++        Uncompressed = 0,
++        Rle = 1,
++        Huffman = 2,
++        DynamicHuffman = 3,
++        Jpeg = 4,
++        TvDeepCompression = 5
++    };
++
++    virtual ~DGBLChunk() override;
++    DGBLChunk();
++    DGBLChunk(const DGBLChunk& other) = default;
++    DGBLChunk& operator =(const DGBLChunk& other) = default;
++
++    /*!
++     * \brief compression
++     * \return The type of compression used.
++     */
++    Compression compression() const;
++
++    /*!
++     * \brief width
++     * \return Width of the source display in pixels.
++     */
++    qint32 width() const;
++
++    /*!
++     * \brief height
++     * \return Height of the source display in pixels.
++     */
++    qint32 height() const;
++
++    /*!
++     * \brief size
++     * \return Size of the source display in pixels.
++     */
++    QSize size() const
++    {
++        return QSize(width(), height());
++    }
++
++    /*!
++     * \brief xAspectRatio
++     * \return X pixel aspect.
++     */
++    quint8 xAspectRatio() const;
++
++    /*!
++     * \brief yAspectRatio
++     * \return Y pixel aspect.
++     */
++    quint8 yAspectRatio() const;
++
++    virtual bool isValid() const override;
++
++    CHUNKID_DEFINE(DGBL_CHUNK)
++
++protected:
++    virtual bool innerReadStructure(QIODevice *d) override;
++};
++
++
++/*!
++ * \brief The DPELChunk class
++ */
++class DPELChunk : public IFFChunk
++{
++public:
++    enum DataType : quint16 {
++        Invalid = 0,
++        Red = 1,
++        Green = 2,
++        Blue = 3,
++        Alpha = 4,
++        Yellow = 5,
++        Cyan = 6,
++        Magenta = 7,
++        Black = 8,
++        Mask = 9,
++        ZBuffer = 10,
++        Opacity = 11,
++        LinearKey = 12,
++        BinaryKey = 13
++    };
++
++    struct Element {
++        Element(const DataType& t = DataType::Invalid, quint16 d = 0) : type(t), depth(d) {}
++        DataType type;
++        quint16 depth;
++    };
++
++    virtual ~DPELChunk() override;
++    DPELChunk();
++    DPELChunk(const DPELChunk& other) = default;
++    DPELChunk& operator =(const DPELChunk& other) = default;
++
++    /*!
++     * \brief count
++     * \return The number of elements
++     */
++    qint32 count() const;
++
++    /*!
++     * \brief depth
++     * \return The pixel depth.
++     */
++    qint32 depth() const;
++
++    /*!
++     * \brief elements
++     * Elements needed to identify the content of every pixel.
++     * Pixels will always be padded to byte boundaries.
++     * \return The list of elements. An empty list on error.
++     */
++    QList<Element> elements() const;
++
++    virtual bool isValid() const override;
++
++    CHUNKID_DEFINE(DPEL_CHUNK)
++
++protected:
++    virtual bool innerReadStructure(QIODevice *d) override;
++};
++
++
++/*!
++ * \brief The DLOCChunk class
++ */
++class DLOCChunk : public IFFChunk
++{
++public:
++    virtual ~DLOCChunk() override;
++    DLOCChunk();
++    DLOCChunk(const DLOCChunk& other) = default;
++    DLOCChunk& operator =(const DLOCChunk& other) = default;
++
++    /*!
++     * \brief width
++     * \return Width of the bitmap in pixels.
++     */
++    qint32 width() const;
++
++    /*!
++     * \brief height
++     * \return Height of the bitmap in pixels.
++     */
++    qint32 height() const;
++
++    /*!
++     * \brief size
++     * \return Size in pixels.
++     */
++    QSize size() const;
++
++    /*!
++     * \brief xOffset
++     * X offset of origin in source image.
++     */
++    qint32 xOffset() const;
++
++    /*!
++     * \brief yOffset
++     * \returnX offset of origin in source image.
++     */
++    qint32 yOffset() const;
++
++    virtual bool isValid() const override;
++
++    CHUNKID_DEFINE(DLOC_CHUNK)
++
++protected:
++    virtual bool innerReadStructure(QIODevice *d) override;
++};
++
++
++/*!
++ * \brief The TVDCChunk class
++ */
++class TVDCChunk : public IFFChunk
++{
++public:
++    virtual ~TVDCChunk() override;
++    TVDCChunk();
++    TVDCChunk(const TVDCChunk& other) = default;
++    TVDCChunk& operator =(const TVDCChunk& other) = default;
++
++    qint32 count() const;
++
++    QList<quint16> table() const;
++
++    virtual bool isValid() const override;
++
++    CHUNKID_DEFINE(TVDC_CHUNK)
++
++protected:
++    virtual bool innerReadStructure(QIODevice *d) override;
++};
++
++
++/*!
++ * \brief The DBODChunk class
++ */
++class DBODChunk : public IFFChunk
++{
++public:
++    virtual ~DBODChunk() override;
++    DBODChunk();
++    DBODChunk(const DBODChunk& other) = default;
++    DBODChunk& operator =(const DBODChunk& other) = default;
++
++    virtual bool isValid() const override;
++
++    CHUNKID_DEFINE(DBOD_CHUNK)
++
++    /*!
++     * \brief readStride
++     * \param d The device.
++     * \param y The current scanline.
++     * \param header The bitmap header.
++     * \param pel The pixel elements info.
++     * \param loc The display location (optional).
++     * \return The scanline as requested for QImage.
++     * \warning Call resetStrideRead() once before this one.
++     */
++    QByteArray strideRead(QIODevice *d,
++                          qint32 y,
++                          const DGBLChunk *header,
++                          const DPELChunk *pel,
++                          const DLOCChunk *loc = nullptr,
++                          const TVDCChunk *tvdc = nullptr) const;
++
++    /*!
++     * \brief resetStrideRead
++     * Reset the stride read set the position at the beginning of the data and reset all buffers.
++     * \param d The device.
++     * \return True on success, otherwise false.
++     * \sa strideRead
++     * \note Must be called once before strideRead().
++     */
++    bool resetStrideRead(QIODevice *d) const;
++
++protected:
++    /*!
++     * \brief strideSize
++     * \return The size of data to have to decode an image row.
++     */
++    quint32 strideSize(const DGBLChunk *header, const DPELChunk *pel, const DLOCChunk *loc = nullptr) const;
++};
++
++
+ /*!
+  * *** UNDOCUMENTED CHUNKS ***
+  */
+diff --git a/src/imageformats/iff.cpp b/src/imageformats/iff.cpp
+index 881f072..d46f094 100644
+--- a/src/imageformats/iff.cpp
++++ b/src/imageformats/iff.cpp
+@@ -607,6 +607,69 @@ bool IFFHandler::readRGFXImage(QImage *image)
+     return true;
+ }
+ 
++bool IFFHandler::readDEEPImage(QImage *image)
++{
++    auto forms = d->searchForms<FORMChunk>();
++    if (forms.isEmpty()) {
++        return false;
++    }
++    auto cin = qBound(0, currentImageNumber(), int(forms.size() - 1));
++    auto &&form = forms.at(cin);
++
++    // show the first one (I don't have a sample with many images)
++    auto headers = IFFChunk::searchT<DGBLChunk>(form);
++    if (headers.isEmpty()) {
++        return false;
++    }
++    // create the image
++    auto &&header = headers.first();
++    auto size = header->size();
++    auto locs = IFFChunk::searchT<DLOCChunk>(form);
++    if (!locs.isEmpty()) {
++        size = locs.first()->size();
++    }
++    auto img = imageAlloc(size, form->format());
++    if (img.isNull()) {
++        qCWarning(LOG_IFFPLUGIN) << "IFFHandler::readDEEPImage(): error while allocating the image";
++        return false;
++    }
++
++    // decoding the image
++    auto bodies = IFFChunk::searchT<DBODChunk>(form);
++    if (bodies.isEmpty()) {
++        img.fill(0);
++    } else {
++        auto &&body = bodies.first();
++        if (!body->resetStrideRead(device())) {
++            qCWarning(LOG_IFFPLUGIN) << "IFFHandler::readDEEPImage(): error while reading image data";
++            return false;
++        }
++        auto pels = IFFChunk::searchT<DPELChunk>(form);
++        if (pels.isEmpty()) {
++            // DPEL is used to calculate the image format, so here should not be empty.
++            return false;
++        }
++        auto tvdcs = IFFChunk::searchT<TVDCChunk>(form);
++        for (auto y = 0, h = img.height(); y < h; ++y) {
++            auto line = reinterpret_cast<char*>(img.scanLine(y));
++            auto ba = body->strideRead(device(), y, header, pels.first(),
++                                       locs.isEmpty() ? nullptr : locs.first(),
++                                       tvdcs.isEmpty() ? nullptr : tvdcs.first());
++            if (ba.isEmpty()) {
++                qCWarning(LOG_IFFPLUGIN) << "IFFHandler::readDEEPImage(): error while reading image scanline";
++                return false;
++            }
++            memcpy(line, ba.constData(), std::min(img.bytesPerLine(), ba.size()));
++        }
++    }
++
++    // set metadata (including image resolution)
++    addMetadata(img, form);
++
++    *image = img;
++    return true;
++}
++
+ bool IFFHandler::read(QImage *image)
+ {
+     if (!d->readStructure(device())) {
+@@ -630,6 +693,10 @@ bool IFFHandler::read(QImage *image)
+         return true;
+     }
+ 
++    if (readDEEPImage(image)) {
++        return true;
++    }
++
+     qCWarning(LOG_IFFPLUGIN) << "IFFHandler::read(): no supported image found";
+     return false;
+ }
+diff --git a/src/imageformats/iff_p.h b/src/imageformats/iff_p.h
+index 145f632..a975962 100644
+--- a/src/imageformats/iff_p.h
++++ b/src/imageformats/iff_p.h
+@@ -39,6 +39,8 @@ private:
+ 
+     bool readRGFXImage(QImage *image);
+ 
++    bool readDEEPImage(QImage *image);
++
+ private:
+     const QScopedPointer<IFFHandlerPrivate> d;
+ };
+-- 
+2.50.1.windows.1
+

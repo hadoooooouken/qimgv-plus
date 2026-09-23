@@ -1,0 +1,24 @@
+From 497e612ad312b36ed790e3fae39b8dd95d4aca96 Mon Sep 17 00:00:00 2001
+From: Nicolas Fella <nicolas.fella@gmx.de>
+Date: Fri, 1 May 2026 22:24:21 +0200
+Subject: [PATCH 01/10] Update version to 6.27.0
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 013b87c..789ce68 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,6 +1,6 @@
+ cmake_minimum_required(VERSION 3.29)
+ 
+-set(KF_VERSION "6.26.0") # handled by release scripts
++set(KF_VERSION "6.27.0") # handled by release scripts
+ set(KF_DEP_VERSION "6.26.0") # handled by release scripts
+ project(KImageFormats VERSION ${KF_VERSION})
+ 
+-- 
+2.50.1.windows.1
+

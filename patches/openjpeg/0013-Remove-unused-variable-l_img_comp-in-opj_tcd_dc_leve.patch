@@ -1,0 +1,46 @@
+From a6ec867c712799e93f4e94705c6b654c1b62d97d Mon Sep 17 00:00:00 2001
+From: Nico Weber <thakis@chromium.org>
+Date: Fri, 24 Apr 2026 11:36:27 -0400
+Subject: [PATCH 13/15] Remove unused variable l_img_comp in
+ opj_tcd_dc_level_shift_encode
+
+This has been unused since this function was added back in 3a78e8010
+(called tcd_dc_level_shift_encode back then, in libopenjpeg/tcd.c
+back then).
+
+Fixes a -Wunused-but-set-variable warning.
+---
+ src/lib/openjp2/tcd.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/src/lib/openjp2/tcd.c b/src/lib/openjp2/tcd.c
+index 8ca259b7..5d466fb4 100644
+--- a/src/lib/openjp2/tcd.c
++++ b/src/lib/openjp2/tcd.c
+@@ -2471,7 +2471,6 @@ static OPJ_BOOL opj_tcd_dc_level_shift_encode(opj_tcd_t *p_tcd)
+     OPJ_UINT32 compno;
+     opj_tcd_tilecomp_t * l_tile_comp = 00;
+     opj_tccp_t * l_tccp = 00;
+-    opj_image_comp_t * l_img_comp = 00;
+     opj_tcd_tile_t * l_tile;
+     OPJ_SIZE_T l_nb_elem, i;
+     OPJ_INT32 * l_current_ptr;
+@@ -2479,7 +2478,6 @@ static OPJ_BOOL opj_tcd_dc_level_shift_encode(opj_tcd_t *p_tcd)
+     l_tile = p_tcd->tcd_image->tiles;
+     l_tile_comp = l_tile->comps;
+     l_tccp = p_tcd->tcp->tccps;
+-    l_img_comp = p_tcd->image->comps;
+ 
+     for (compno = 0; compno < l_tile->numcomps; compno++) {
+         l_current_ptr = l_tile_comp->data;
+@@ -2499,7 +2497,6 @@ static OPJ_BOOL opj_tcd_dc_level_shift_encode(opj_tcd_t *p_tcd)
+             }
+         }
+ 
+-        ++l_img_comp;
+         ++l_tccp;
+         ++l_tile_comp;
+     }
+-- 
+2.50.1.windows.1
+

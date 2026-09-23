@@ -1,0 +1,25 @@
+From 18d0f93d6007736083c5af2d1e2501fb2459790f Mon Sep 17 00:00:00 2001
+From: Nicolas Fella <nicolas.fella@gmx.de>
+Date: Sat, 2 May 2026 15:30:10 +0200
+Subject: [PATCH 02/10] Update CI image
+
+---
+ .gitlab-ci.yml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.gitlab-ci.yml b/.gitlab-ci.yml
+index f917d3c..d7dd8f4 100644
+--- a/.gitlab-ci.yml
++++ b/.gitlab-ci.yml
+@@ -16,7 +16,7 @@ include:
+ 
+ image_json_validate:
+   stage: validate
+-  image: invent-registry.kde.org/sysadmin/ci-images/suse-qt69:latest
++  image: invent-registry.kde.org/sysadmin/ci-images/suse-qt611:latest
+   tags:
+     - Linux
+   script:
+-- 
+2.50.1.windows.1
+

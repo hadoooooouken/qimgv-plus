@@ -1,0 +1,38 @@
+From 6f31fc6fcdd2fea562e12d58a416aeafd11de0f9 Mon Sep 17 00:00:00 2001
+From: Nico Weber <thakis@chromium.org>
+Date: Fri, 24 Apr 2026 11:15:39 -0400
+Subject: [PATCH 12/15] Remove unused function opj_mqc_renorme
+
+It's been unused since 1c5627ee7406f84.
+
+Fixes one -Wunused-function warning.
+---
+ src/lib/openjp2/mqc.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/src/lib/openjp2/mqc.c b/src/lib/openjp2/mqc.c
+index 4cbfabd0..014f1f8e 100644
+--- a/src/lib/openjp2/mqc.c
++++ b/src/lib/openjp2/mqc.c
+@@ -370,11 +370,6 @@ void opj_mqc_erterm_enc(opj_mqc_t *mqc)
+     }
+ }
+ 
+-static INLINE void opj_mqc_renorme(opj_mqc_t *mqc)
+-{
+-    opj_mqc_renorme_macro(mqc, mqc->a, mqc->c, mqc->ct);
+-}
+-
+ /**
+ Encode the most probable symbol
+ @param mqc MQC handle
+@@ -521,4 +516,4 @@ void opj_mqc_byteout(opj_mqc_t *mqc)
+             }
+         }
+     }
+-}
+\ No newline at end of file
++}
+-- 
+2.50.1.windows.1
+

@@ -1,0 +1,23 @@
+From d7c3174fb6f2e5600c0e26fcfa85c918a045d045 Mon Sep 17 00:00:00 2001
+From: Mirco Miranda <mirco.miranda@systemceramics.com>
+Date: Thu, 30 Apr 2026 16:01:40 +0200
+Subject: [PATCH 08/10] DDS: fix mime type
+
+---
+ src/imageformats/dds.json | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/imageformats/dds.json b/src/imageformats/dds.json
+index bc30795..893b22c 100644
+--- a/src/imageformats/dds.json
++++ b/src/imageformats/dds.json
+@@ -1,4 +1,4 @@
+ {
+-    "Keys": [ "dds" ],
+-    "MimeTypes": [ "image/x-dds" ]
++    "Keys": [ "dds", "dds" ],
++    "MimeTypes": [ "image/vnd.ms-dds", "image/x-dds" ]
+ }
+-- 
+2.50.1.windows.1
+

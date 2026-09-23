@@ -1,0 +1,27 @@
+From ea8a4dccdc031093a01a5d8bd324ce5e3ef2677c Mon Sep 17 00:00:00 2001
+From: Laurent Montel <montel@kde.org>
+Date: Sun, 3 May 2026 08:41:08 +0200
+Subject: [PATCH 04/10] GIT_SILENT: Bump kf
+ ecm_set_disabled_deprecation_versions. Make sure that it compiles fine
+ without kf 6.26 deprecated methods
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 359c250..ce03ebb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -107,7 +107,7 @@ add_feature_info(LibJXR LibJXR_FOUND "required for the QImage plugin for JPEG XR
+ 
+ ecm_set_disabled_deprecation_versions(
+     QT 6.11.0
+-    KF 6.23.0
++    KF 6.26.0
+ )
+ 
+ add_subdirectory(src)
+-- 
+2.50.1.windows.1
+

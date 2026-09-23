@@ -1,0 +1,24 @@
+From b3306cb1d911e71f2fc8e7b83dda970eb7c31135 Mon Sep 17 00:00:00 2001
+From: MUGUNDAN <mugunthan.selvanayagam@multicorewareinc.com>
+Date: Wed, 25 Feb 2026 09:48:50 +0530
+Subject: [PATCH 06/15] Add RUNNER_OS environment variable for Windows 2022
+
+---
+ .github/workflows/build.yml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+index 214f5d47..7ca38f86 100644
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -175,6 +175,7 @@ jobs:
+             # We do have specific failures noted in tools/travis-ci/knownfailures-windows-vs2015-x64-avx2-Release-3rdP.txt
+             # not sure why that happens
+             OPJ_CI_INSTRUCTION_SETS: "/arch:AVX2"
++            RUNNER_OS: windows-2022
+ 
+     env:
+         VS_VER: ${{ matrix.VS_VER }}
+-- 
+2.50.1.windows.1
+

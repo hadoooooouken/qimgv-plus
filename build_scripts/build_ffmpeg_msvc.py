@@ -7,11 +7,11 @@ from pathlib import Path
 MSVC_VERSION = "14.51.36231"
 WINDOWS_SDK_VERSION = "10.0.26100.0"
 
-MSVC_BASE = Path("E:/MVSC")
-MSYS2_BIN = Path("E:/MSYS2/usr/bin/bash.exe")
-FFMPEG_SRC = Path("E:/qimgv/formats/ffmpeg")
+MSVC_BASE = Path(os.environ.get("VSINSTALLDIR", "E:/MVSC"))
+MSYS2_BIN = Path(os.environ.get("MSYS2_ROOT", "E:/MSYS2")) / "usr/bin/bash.exe"
+FFMPEG_SRC = Path(os.environ.get("FFMPEG_SRC", "E:/qimgv/formats/ffmpeg"))
 PREFIX = FFMPEG_SRC / "ffmpeg-build-msvc"
-NASM_DIR = Path("E:/qimgv/formats/nasm")
+NASM_DIR = Path(os.environ.get("NASM_DIR", "E:/qimgv/formats/nasm"))
 
 # Hardening / AVX2 flags -- must match rebuild-all.ps1, build_qtiff_jpeg.ps1,
 # build_qpng_spng.ps1 so every static library linked into the final binary
