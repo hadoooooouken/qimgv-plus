@@ -115,6 +115,7 @@ qimgv-plus/
 │   ├── build_qpng_spng.ps1
 │   ├── build_qjpeg_jpeg.ps1
 │   ├── build_ffmpeg_msvc.py
+│   ├── check_deps.py
 │   ├── deploy-plugins.ps1
 │   └── setup-deps.ps1
 ├── patches/                   # Local patch files for dependencies
