@@ -9,7 +9,7 @@ This guide walks you through building qimgv-plus and all its dependencies on Win
 | **Visual Studio** | 2022 (17.x+) | [visualstudio.microsoft.com](https://visualstudio.microsoft.com/) | "Desktop development with C++" workload |
 | **CMake** | 3.25+ | Included with VS or [cmake.org](https://cmake.org/download/) | |
 | **Git** | Latest | [git-scm.com](https://git-scm.com/) | |
-| **Qt SDK** | 6.11+ | [qt.io](https://www.qt.io/download-qt-installer) | Components: Core, Widgets, Network, Svg, SvgWidgets, PrintSupport, OpenGLWidgets, Sql, Pdf, LinguistTools |
+| **Qt SDK** | 6.12+ | [qt.io](https://www.qt.io/download-qt-installer) | Components: Core, Widgets, Network, Svg, SvgWidgets, PrintSupport, OpenGLWidgets, Sql, Pdf, LinguistTools |
 | **Vulkan SDK** | Latest | [vulkan.lunarg.com](https://vulkan.lunarg.com/sdk/home) | Required for upscayl-ncnn (AI upscaling) |
 | **MSYS2** | Latest | [msys2.org](https://www.msys2.org/) | Only needed for building FFmpeg (provides bash/make) |
 | **Python 3** | 3.10+ | [python.org](https://www.python.org/) | Only needed for building FFmpeg |
@@ -165,7 +165,7 @@ qimgv-plus/
 
 | Library | Version | Upstream | Notes |
 |---------|---------|----------|-------|
-| FFmpeg | n9.0.1 | [FFmpeg](https://git.ffmpeg.org/ffmpeg.git) | HEVC decoder only; requires MSYS2 + Python |
+| FFmpeg | n9.0.2 | [FFmpeg](https://git.ffmpeg.org/ffmpeg.git) | HEVC decoder only; requires MSYS2 + Python |
 
 ### Prebuilt / Tools (no compilation needed)
 
@@ -288,7 +288,7 @@ The build scripts and CMake presets reference several SDK installation paths. By
 
 | Purpose | Environment Variable | Default Value |
 |---------|---------------------|---------------|
-| Qt SDK | `QT_DIR` | `E:\Qt\6.11.2\msvc2022_64` |
+| Qt SDK | `QT_DIR` | `E:\Qt\6.12.0\msvc2022_64` |
 | Vulkan SDK | `VULKAN_SDK` | `E:\VULKAN` |
 | Visual Studio | `VSINSTALLDIR` | Auto-detected via `vswhere.exe` |
 | MSYS2 (FFmpeg only) | `MSYS2_ROOT` | `E:\MSYS2` |
@@ -301,7 +301,7 @@ Edit [`CMakePresets.json`](CMakePresets.json) to update these values for your sy
 ```json
 {
   "cacheVariables": {
-    "CMAKE_PREFIX_PATH": "E:/Qt/6.11.2/msvc2022_64;E:/Vulkan"
+    "CMAKE_PREFIX_PATH": "E:/Qt/6.12.0/msvc2022_64;E:/Vulkan"
   },
   "environment": {
     "VULKAN_SDK": "E:/Vulkan"
