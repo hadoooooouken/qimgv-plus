@@ -48,7 +48,7 @@ DEFAULT_DEPS = [
     {"name": "ffmpeg", "url": "https://git.ffmpeg.org/ffmpeg.git", "current": "n9.0.1", "patched": False},
     {"name": "kimageformats", "url": "https://invent.kde.org/frameworks/kimageformats.git", "current": "v6.26.0", "patched": True},
     {"name": "openjpeg", "url": "https://github.com/uclouvain/openjpeg.git", "current": "v2.5.4", "patched": True},
-    {"name": "OpenJPH", "url": "https://github.com/aous72/OpenJPH.git", "current": "0.31.0", "patched": True},
+    {"name": "OpenJPH", "url": "https://github.com/aous72/OpenJPH.git", "current": "0.32.0", "patched": True},
     {"name": "libdeflate", "url": "https://github.com/ebiggers/libdeflate.git", "current": "v1.26", "patched": True},
     {"name": "zlib-ng", "url": "https://github.com/zlib-ng/zlib-ng.git", "current": "2.3.3", "patched": False},
     {"name": "libjpeg-turbo", "url": "https://github.com/libjpeg-turbo/libjpeg-turbo.git", "current": "3.2.0", "patched": False},

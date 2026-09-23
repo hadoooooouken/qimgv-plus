@@ -80,7 +80,7 @@ target_link_libraries(kimg_exr PRIVATE
     "${OPENEXR_ROOT}/lib/Iex-3_4.lib"
     "${OPENEXR_ROOT}/lib/IlmThread-3_4.lib"
     "${IMATH_ROOT}/lib/Imath-3_2.lib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/OpenJPH/install/lib/openjph.0.27.lib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/OpenJPH/install/lib/openjph.0.32.lib"
 )
 
 # LibRaw (Enabled with local build)
@@ -178,10 +178,10 @@ endif()
 
 # OpenJPH (Enabled with local build)
 set(OPENJPH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/OpenJPH/install")
-if(EXISTS "${OPENJPH_ROOT}/lib/openjph.0.27.lib")
+if(EXISTS "${OPENJPH_ROOT}/lib/openjph.0.32.lib")
     kimageformats_add_plugin(kimg_jph SOURCES jph.cpp)
     target_include_directories(kimg_jph SYSTEM PRIVATE "${OPENJPH_ROOT}/include")
-    target_link_libraries(kimg_jph PRIVATE "${OPENJPH_ROOT}/lib/openjph.0.27.lib")
+    target_link_libraries(kimg_jph PRIVATE "${OPENJPH_ROOT}/lib/openjph.0.32.lib")
 endif()
 
 # PNG (Enabled with local build using libspng, read-only decoder)

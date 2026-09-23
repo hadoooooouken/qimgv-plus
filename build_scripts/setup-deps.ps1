@@ -139,7 +139,7 @@ $GIT_DEPS = @(
     @{ Name = "ffmpeg";         Url = "https://git.ffmpeg.org/ffmpeg.git";                         Tag = "n9.0.1"       }
     @{ Name = "kimageformats";  Url = "https://invent.kde.org/frameworks/kimageformats.git";       Tag = "v6.26.0"      }
     @{ Name = "openjpeg";       Url = "https://github.com/uclouvain/openjpeg.git";                 Tag = "v2.5.4"       }
-    @{ Name = "OpenJPH";        Url = "https://github.com/aous72/OpenJPH.git";                     Tag = "0.31.0"       }
+    @{ Name = "OpenJPH";        Url = "https://github.com/aous72/OpenJPH.git";                     Tag = "0.32.0"       }
     @{ Name = "libdeflate";     Url = "https://github.com/ebiggers/libdeflate.git";                Tag = "v1.26"        }
     @{ Name = "zlib-ng";        Url = "https://github.com/zlib-ng/zlib-ng.git";                    Tag = "2.3.3"        }
     @{ Name = "libjpeg-turbo";  Url = "https://github.com/libjpeg-turbo/libjpeg-turbo.git";        Tag = "3.2.0"        }
@@ -153,7 +153,7 @@ $SINGLE_PATCHES = @(
     @{ Dep = "Imath";      Patch = "Imath-v3.2.3-avx2-flags.patch"         }
     @{ Dep = "openexr";    Patch = "openexr-v3.4.15-avx2-flags.patch"      }
     @{ Dep = "libavif";    Patch = "libavif-v1.4.2-avx2-flags.patch"       }
-    @{ Dep = "OpenJPH";    Patch = "OpenJPH-0.31.0-avx2-flags.patch"       }
+    @{ Dep = "OpenJPH";    Patch = "OpenJPH-0.32.0-avx2-flags.patch"       }
     @{ Dep = "libdeflate"; Patch = "libdeflate-1.26-avx2-flags.patch"      }
     @{ Dep = "jxrlib";     Patch = "jxrlib-v2019.10.9-uintptr-fix.patch"   }
     @{ Dep = "LibRaw";     Patch = "LibRaw-0.22.2-vcxproj-toolset.patch"   }

@@ -1,0 +1,22 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4483325..d371ed0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -7,6 +7,17 @@ include(ojph_version.cmake)
+ project (openjph VERSION ${OPENJPH_VERSION} DESCRIPTION "Open source implementation of JPH" LANGUAGES C CXX)
+ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+ 
++# OPTIMIZATIONS
++if(MSVC)
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
++    # Clean Release flags to perfectly map to Visual Studio UI properties
++    set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob2 /Oi /Ot /DNDEBUG")
++    # Enable Whole Program Optimization (/GL) and Link Time Code Generation (/LTCG) natively in MSBuild/VS
++    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
++    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
++    message(STATUS "AVX2, full optimizations (/O2 /Ob2 /Oi /Ot), CRT warnings suppression and LTCG/GL enabled for Release")
++endif()
++
+ ################################################################################################
+ # Building OpenJPH
+ ################################################################################################

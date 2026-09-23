@@ -158,7 +158,7 @@ qimgv-plus/
 |---------|---------|----------|:---:|-------|
 | kimageformats | v6.26.0 + 10 commits | [KDE/kimageformats](https://invent.kde.org/frameworks/kimageformats) | Yes | Qt image format plugins (kimg_*.dll) |
 | OpenJPEG | v2.5.4 + 15 commits | [uclouvain/openjpeg](https://github.com/uclouvain/openjpeg) | Yes | JPEG 2000 codec |
-| OpenJPH | 0.31.0 | [aous72/OpenJPH](https://github.com/aous72/OpenJPH) | Yes | HTJ2K codec |
+| OpenJPH | 0.32.0 | [aous72/OpenJPH](https://github.com/aous72/OpenJPH) | Yes | HTJ2K codec |
 | upscayl-ncnn | (fork) | [hadoooooouken/upscayl-ncnn-qimgv-plus](https://github.com/hadoooooouken/upscayl-ncnn-qimgv-plus) | Fork | AI upscaling engine |
 
 ### Built separately
@@ -186,7 +186,7 @@ All patches are in the `patches/` directory. They are applied automatically by `
 | `Imath-v3.2.3-avx2-flags.patch` | Imath | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
 | `libavif-v1.4.2-avx2-flags.patch` | libavif | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
 | `openexr-v3.4.15-avx2-flags.patch` | OpenEXR | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
-| `OpenJPH-0.31.0-avx2-flags.patch` | OpenJPH | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
+| `OpenJPH-0.32.0-avx2-flags.patch` | OpenJPH | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
 | `libdeflate-1.26-avx2-flags.patch` | libdeflate | Adds MSVC AVX2/LTCG block for standalone builds |
 | `jxrlib-v2019.10.9-uintptr-fix.patch` | jxrlib | Fixes encoding issues and uses portable `uintptr_t` |
 | `LibRaw-0.22.2-vcxproj-toolset.patch` | LibRaw | Updates VS project files to toolset v145 and SDK 10.0 |
