@@ -10,7 +10,7 @@ A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image
 
 * **Simple UI & Fast**: Lightweight and highly responsive interface.
 
-* **High-Quality Image Scaling**: MKS2021 is the default CPU scaling and sharpening filter, optimized with AVX2 for high-quality results and detailed image rendering. A GPU-accelerated FidelityFX CAS filter is also available as an alternative.
+* **High-Quality Image Scaling**: MKS2021 (Magic Kernel Sharp 2021) is the default CPU scaling and sharpening filter, optimized with AVX2 for high-quality results and detailed image rendering. A GPU-accelerated FidelityFX CAS filter is also available as an alternative.
 
 * **Real-Time AI Upscaling (Upscayl)**: Real-time AI image upscaling powered by **[upscayl-ncnn](https://github.com/upscayl/upscayl-ncnn) (NCNN/Vulkan & RealESRGAN)**. Upscales only the visible viewport crop to conserve VRAM, using background threads to keep the UI fully responsive. Includes an optional preloading mechanism to warm up Vulkan shader pipelines and eliminate startup latency.
 
