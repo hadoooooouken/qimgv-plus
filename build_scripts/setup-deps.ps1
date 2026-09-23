@@ -131,7 +131,7 @@ function Apply-PatchSeries {
 # Git-cloned dependencies with their upstream URLs and tags
 $GIT_DEPS = @(
     @{ Name = "Imath";          Url = "https://github.com/AcademySoftwareFoundation/Imath.git";   Tag = "v3.2.3"       }
-    @{ Name = "openexr";        Url = "https://github.com/AcademySoftwareFoundation/openexr.git"; Tag = "v3.4.15"      }
+    @{ Name = "openexr";        Url = "https://github.com/AcademySoftwareFoundation/openexr.git"; Tag = "v3.5.0"       }
     @{ Name = "libavif";        Url = "https://github.com/AOMediaCodec/libavif.git";              Tag = "v1.4.2";     Recursive = $true }
     @{ Name = "libjxl";         Url = "https://github.com/libjxl/libjxl.git";                     Tag = "v0.12.0";    Recursive = $true }
     @{ Name = "jxrlib";         Url = "https://github.com/4creators/jxrlib.git";                   Tag = "v2019.10.9"   }
@@ -151,7 +151,7 @@ $GIT_DEPS = @(
 # Single-file patches (applied with git apply)
 $SINGLE_PATCHES = @(
     @{ Dep = "Imath";      Patch = "Imath-v3.2.3-avx2-flags.patch"         }
-    @{ Dep = "openexr";    Patch = "openexr-v3.4.15-avx2-flags.patch"      }
+    @{ Dep = "openexr";    Patch = "openexr-v3.5.0-avx2-flags.patch"       }
     @{ Dep = "libavif";    Patch = "libavif-v1.4.2-avx2-flags.patch"       }
     @{ Dep = "OpenJPH";    Patch = "OpenJPH-0.32.0-avx2-flags.patch"       }
     @{ Dep = "libdeflate"; Patch = "libdeflate-1.26-avx2-flags.patch"      }

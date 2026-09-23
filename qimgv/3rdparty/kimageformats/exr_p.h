@@ -88,6 +88,7 @@ private:
      * - 9: lossy DCT based compression, in blocks of 256 scanlines. More efficient space wise and faster to decode full frames than DWAA_COMPRESSION.
      * - 10: High-Throughput JPEG2000 (HTJ2K), 256 scanlines (requires OpenEXR 3.4+).
      * - 11: High-Throughput JPEG2000 (HTJ2K), 32 scanlines (requires OpenEXR 3.4+).
+     * - 12: Zstandard (ZSTD) lossless compression (requires OpenEXR 3.5+).
      */
     qint32 m_compressionRatio;
 

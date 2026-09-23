@@ -41,7 +41,7 @@ cd build_scripts
 .\build_qtiff_jpeg.ps1          # zlib-ng -> libjpeg-turbo -> libtiff -> qtiff.dll
 .\build_qpng_spng.ps1           # libspng
 .\build_qjpeg_jpeg.ps1          # qjpeg.dll
-.\rebuild-all.ps1               # Imath, OpenEXR, libavif, libjxl, jxrlib, libdeflate, zstd, LibRaw
+.\rebuild-all.ps1               # zstd, Imath, OpenEXR, libavif, libjxl, jxrlib, libdeflate, LibRaw
 python build_ffmpeg_msvc.py     # FFmpeg HEVC decoder (optional, requires MSYS2)
 cd ..
 
@@ -133,7 +133,7 @@ qimgv-plus/
 | Library | Version | Upstream | Patched | Output |
 |---------|---------|----------|:---:|--------|
 | Imath | v3.2.3 | [AcademySoftwareFoundation/Imath](https://github.com/AcademySoftwareFoundation/Imath) | Yes | Static lib |
-| OpenEXR | v3.4.15 | [AcademySoftwareFoundation/openexr](https://github.com/AcademySoftwareFoundation/openexr) | Yes | Static lib |
+| OpenEXR | v3.5.0 | [AcademySoftwareFoundation/openexr](https://github.com/AcademySoftwareFoundation/openexr) | Yes | Static lib |
 | libavif | v1.4.2 | [AOMediaCodec/libavif](https://github.com/AOMediaCodec/libavif) | Yes | Static lib |
 | libjxl | v0.12.0 | [libjxl/libjxl](https://github.com/libjxl/libjxl) | No | Static lib |
 | jxrlib | v2019.10.9 | [4creators/jxrlib](https://github.com/4creators/jxrlib) | Yes | Static lib |
@@ -185,7 +185,7 @@ All patches are in the `patches/` directory. They are applied automatically by `
 |------------|---------|-------------|
 | `Imath-v3.2.3-avx2-flags.patch` | Imath | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
 | `libavif-v1.4.2-avx2-flags.patch` | libavif | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
-| `openexr-v3.4.15-avx2-flags.patch` | OpenEXR | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
+| `openexr-v3.5.0-avx2-flags.patch` | OpenEXR | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
 | `OpenJPH-0.32.0-avx2-flags.patch` | OpenJPH | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
 | `libdeflate-1.26-avx2-flags.patch` | libdeflate | Adds MSVC AVX2/LTCG block for standalone builds |
 | `jxrlib-v2019.10.9-uintptr-fix.patch` | jxrlib | Fixes encoding issues and uses portable `uintptr_t` |
@@ -244,7 +244,7 @@ Builds a custom qjpeg.dll backed by the shared libjpeg-turbo from Step 1.
 .\rebuild-all.ps1
 ```
 
-Builds all remaining format libraries in dependency order: Imath → OpenEXR → libavif → libjxl → jxrlib → libdeflate → zstd → LibRaw.
+Builds all remaining format libraries in dependency order: zstd → Imath → OpenEXR → libavif → libjxl → jxrlib → libdeflate → LibRaw.
 
 #### Step 5 (Optional): `build_ffmpeg_msvc.py`
 

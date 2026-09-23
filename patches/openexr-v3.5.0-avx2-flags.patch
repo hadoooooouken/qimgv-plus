@@ -1,0 +1,34 @@
+diff --git a/.bazelrc b/.bazelrc
+index ed2cc482..1a5ee024 100644
+--- a/.bazelrc
++++ b/.bazelrc
+@@ -8,5 +8,5 @@ build:linux --cxxopt=-std=c++17
+ build:linux --host_cxxopt=-std=c++17
+ build:macos --cxxopt=-std=c++17
+ build:macos --host_cxxopt=-std=c++17
+-build:windows --cxxopt=/std:c++17
+-build:windows --host_cxxopt=/std:c++17
++build:windows --cxxopt=/std:c++latest
++build:windows --host_cxxopt=/std:c++latest
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 9c366ecc..24e0f801 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -29,7 +29,16 @@ set(OPENEXR_VERSION_PATCH ${CMAKE_MATCH_1})
+ 
+ project(OpenEXR VERSION ${OPENEXR_VERSION_MAJOR}.${OPENEXR_VERSION_MINOR}.${OPENEXR_VERSION_PATCH} LANGUAGES C CXX)
+ 
+-set(OPENEXR_VERSION_RELEASE_TYPE "-dev" CACHE STRING "Extra version tag string for OpenEXR build, such as -dev, -beta1, etc.")
++# === MSVC optimization flags (qimgv) ===
++if(MSVC)
++    add_compile_options(/arch:AVX2)
++    set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob2 /Oi /Ot /DNDEBUG" CACHE STRING "" FORCE)
++    set(CMAKE_C_FLAGS_RELEASE   "/MD /O2 /Ob2 /Oi /Ot /DNDEBUG" CACHE STRING "" FORCE)
++    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
++endif()
++# === end MSVC optimization flags ===
++
++set(OPENEXR_VERSION_RELEASE_TYPE "" CACHE STRING "Extra version tag string for OpenEXR build, such as -dev, -beta1, etc.")
+ 
+ set(OPENEXR_VERSION ${OpenEXR_VERSION})
+ set(OPENEXR_VERSION_API "${OpenEXR_VERSION_MAJOR}_${OpenEXR_VERSION_MINOR}")

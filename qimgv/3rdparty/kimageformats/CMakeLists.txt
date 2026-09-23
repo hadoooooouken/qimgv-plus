@@ -67,6 +67,7 @@ target_link_libraries(kimg_cbz PRIVATE qimgv_miniz)
 # OpenEXR (Enabled with local build)
 set(OPENEXR_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/openexr/install")
 set(IMATH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/Imath/install")
+set(ZSTD_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/zstd/install")
 kimageformats_add_plugin(kimg_exr SOURCES exr.cpp scanlineconverter.cpp)
 target_include_directories(kimg_exr SYSTEM PRIVATE 
     "${OPENEXR_ROOT}/include"
@@ -75,12 +76,13 @@ target_include_directories(kimg_exr SYSTEM PRIVATE
     "${IMATH_ROOT}/include/Imath"
 )
 target_link_libraries(kimg_exr PRIVATE 
-    "${OPENEXR_ROOT}/lib/OpenEXR-3_4.lib"
-    "${OPENEXR_ROOT}/lib/OpenEXRCore-3_4.lib"
-    "${OPENEXR_ROOT}/lib/Iex-3_4.lib"
-    "${OPENEXR_ROOT}/lib/IlmThread-3_4.lib"
+    "${OPENEXR_ROOT}/lib/OpenEXR-3_5.lib"
+    "${OPENEXR_ROOT}/lib/OpenEXRCore-3_5.lib"
+    "${OPENEXR_ROOT}/lib/Iex-3_5.lib"
+    "${OPENEXR_ROOT}/lib/IlmThread-3_5.lib"
     "${IMATH_ROOT}/lib/Imath-3_2.lib"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/OpenJPH/install/lib/openjph.0.32.lib"
+    "${ZSTD_ROOT}/lib/zstd.lib"
 )
 
 # LibRaw (Enabled with local build)

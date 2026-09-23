@@ -15,7 +15,7 @@
     .\rebuild-all.ps1 -Libraries Imath,openexr -FullClean
 #>
 param(
-    [string[]] $Libraries = @("Imath","openexr","libavif","libjxl","jxrlib","libdeflate","zstd","LibRaw"),
+    [string[]] $Libraries = @("zstd","Imath","openexr","libavif","libjxl","jxrlib","libdeflate","LibRaw"),
     [switch]   $FullClean
 )
 
@@ -174,6 +174,7 @@ $ALL_LIBS = [ordered]@{
             -ConfigArgs @(
                 "-DCMAKE_INSTALL_PREFIX=$ROOT\openexr\install",
                 "-DImath_DIR=$ROOT\Imath\install\lib\cmake\Imath",
+                "-Dzstd_DIR=$ROOT\zstd\install\lib\cmake\zstd",
                 "-DBUILD_SHARED_LIBS=OFF",
                 "-DBUILD_TESTING=OFF",
                 "-DOPENEXR_BUILD_TOOLS=OFF",

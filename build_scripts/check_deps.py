@@ -40,7 +40,7 @@ VERSION_TAG_PATTERN = re.compile(
 # Fallback dependency definitions if setup-deps.ps1 cannot be found or parsed
 DEFAULT_DEPS = [
     {"name": "Imath", "url": "https://github.com/AcademySoftwareFoundation/Imath.git", "current": "v3.2.3", "patched": True},
-    {"name": "openexr", "url": "https://github.com/AcademySoftwareFoundation/openexr.git", "current": "v3.4.15", "patched": True},
+    {"name": "openexr", "url": "https://github.com/AcademySoftwareFoundation/openexr.git", "current": "v3.5.0", "patched": True},
     {"name": "libavif", "url": "https://github.com/AOMediaCodec/libavif.git", "current": "v1.4.2", "patched": True},
     {"name": "libjxl", "url": "https://github.com/libjxl/libjxl.git", "current": "v0.12.0", "patched": False},
     {"name": "jxrlib", "url": "https://github.com/4creators/jxrlib.git", "current": "v2019.10.9", "patched": True},
