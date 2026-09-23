@@ -133,6 +133,7 @@ qimgv-plus/
 | Library | Version | Upstream | Patched | Output |
 |---------|---------|----------|:---:|--------|
 | Imath | v3.2.3 | [AcademySoftwareFoundation/Imath](https://github.com/AcademySoftwareFoundation/Imath) | Yes | Static lib |
+| OpenJPH | 0.32.0 | [aous72/OpenJPH](https://github.com/aous72/OpenJPH) | Yes | HTJ2K codec |
 | OpenEXR | v3.5.0 | [AcademySoftwareFoundation/openexr](https://github.com/AcademySoftwareFoundation/openexr) | Yes | Static lib |
 | libavif | v1.4.2 | [AOMediaCodec/libavif](https://github.com/AOMediaCodec/libavif) | Yes | Static lib |
 | libjxl | v0.12.0 | [libjxl/libjxl](https://github.com/libjxl/libjxl) | No | Static lib |
@@ -158,7 +159,6 @@ qimgv-plus/
 |---------|---------|----------|:---:|-------|
 | kimageformats | v6.26.0 + 10 commits | [KDE/kimageformats](https://invent.kde.org/frameworks/kimageformats) | Yes | Qt image format plugins (kimg_*.dll) |
 | OpenJPEG | v2.5.4 + 15 commits | [uclouvain/openjpeg](https://github.com/uclouvain/openjpeg) | Yes | JPEG 2000 codec |
-| OpenJPH | 0.32.0 | [aous72/OpenJPH](https://github.com/aous72/OpenJPH) | Yes | HTJ2K codec |
 | upscayl-ncnn | (fork, qimgv branch) | [hadoooooouken/upscayl-ncnn-qimgv-plus](https://github.com/hadoooooouken/upscayl-ncnn-qimgv-plus) | Fork | AI upscaling engine; uses [ncnn fork](https://github.com/hadoooooouken/ncnn) |
 
 ### Built separately

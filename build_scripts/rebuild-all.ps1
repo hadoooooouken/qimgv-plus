@@ -15,7 +15,7 @@
     .\rebuild-all.ps1 -Libraries Imath,openexr -FullClean
 #>
 param(
-    [string[]] $Libraries = @("zstd","Imath","openexr","libavif","libjxl","jxrlib","libdeflate","LibRaw"),
+    [string[]] $Libraries = @("zstd","Imath","OpenJPH","openexr","libavif","libjxl","jxrlib","libdeflate","LibRaw"),
     [switch]   $FullClean
 )
 
@@ -164,6 +164,19 @@ $ALL_LIBS = [ordered]@{
                 "-DBUILD_SHARED_LIBS=OFF",
                 "-DBUILD_TESTING=OFF"
             )
+    }
+
+    "OpenJPH" = {
+    Build-Library `
+        -SrcDir     "$ROOT\OpenJPH" `
+        -BuildDir   "$ROOT\OpenJPH\build" `
+        -InstallDir "$ROOT\OpenJPH\install" `
+        -ConfigArgs @(
+            "-DCMAKE_INSTALL_PREFIX=$ROOT\OpenJPH\install",
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DOJPH_BUILD_TESTS=OFF",
+            "-DOJPH_BUILD_EXECUTABLES=OFF"
+        )
     }
 
     "openexr" = {
