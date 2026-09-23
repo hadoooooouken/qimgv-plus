@@ -154,15 +154,7 @@ qimgv-plus provides multiple CPU and GPU scaling filters:
 
 * **MKS2021 (CPU, Default)**: The default high-quality scaling and sharpening filter. It is optimized with AVX2 and uses custom separable filtering and sharpening for high-quality image rendering.
 
-  * **Upscaling**: Uses a fixed high-quality filter optimized for enlarged images and fine detail.
-  * **Downscaling**: Uses variable-tap filtering to adapt the filter footprint to the scaling ratio and preserve detail while reducing aliasing.
-  * **High-Quality CPU Processing**: Designed specifically for CPU-based image scaling with AVX2 optimization and multi-threaded processing.
-
 * **FidelityFX Contrast Adaptive Sharpening (CAS)**: A GPU-accelerated scaling and sharpening filter based on AMD's Contrast Adaptive Sharpening. It runs through OpenGL shaders and is available as an alternative to the CPU scaling filters.
-
-  * **Interactive CAS Panel**: A floating overlay for real-time adjustments of sharpening and contrast parameters. Open it via the context menu. Double-click sliders to quickly reset them to default values.
-  * **Apply at 100% Scale**: Enable "Also use filter for 100% scale" under settings to apply CAS even when viewing images at their native 1:1 resolution.
-  * **Improved Downscaling**: Automatic mipmap generation and trilinear filtering in OpenGL mode help reduce aliasing when zooming out.
 
 * **Standard CPU Filters**: Includes Nearest and Bilinear scaling.
 
