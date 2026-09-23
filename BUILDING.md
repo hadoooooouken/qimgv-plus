@@ -159,7 +159,7 @@ qimgv-plus/
 | kimageformats | v6.26.0 + 10 commits | [KDE/kimageformats](https://invent.kde.org/frameworks/kimageformats) | Yes | Qt image format plugins (kimg_*.dll) |
 | OpenJPEG | v2.5.4 + 15 commits | [uclouvain/openjpeg](https://github.com/uclouvain/openjpeg) | Yes | JPEG 2000 codec |
 | OpenJPH | 0.32.0 | [aous72/OpenJPH](https://github.com/aous72/OpenJPH) | Yes | HTJ2K codec |
-| upscayl-ncnn | (fork) | [hadoooooouken/upscayl-ncnn-qimgv-plus](https://github.com/hadoooooouken/upscayl-ncnn-qimgv-plus) | Fork | AI upscaling engine |
+| upscayl-ncnn | (fork, qimgv branch) | [hadoooooouken/upscayl-ncnn-qimgv-plus](https://github.com/hadoooooouken/upscayl-ncnn-qimgv-plus) | Fork | AI upscaling engine; uses [ncnn fork](https://github.com/hadoooooouken/ncnn) |
 
 ### Built separately
 

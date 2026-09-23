@@ -285,7 +285,7 @@ if (-not $PatchOnly) {
         try {
             Clone-Repo `
                 -Url "https://github.com/hadoooooouken/upscayl-ncnn-qimgv-plus.git" `
-                -Tag "20251207-174704" `
+                -Tag "qimgv" `
                 -DestDir $upscaylDir `
                 -Recursive
         } catch {
