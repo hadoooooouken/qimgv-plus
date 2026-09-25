@@ -188,7 +188,7 @@ LinkedSliderSpin::LinkedSliderSpin(const QString &labelText, double minVal, doub
     spinBox = new QDoubleSpinBox(this);
     spinBox->setFixedSize(80, 24);
     spinBox->setAlignment(Qt::AlignCenter);
-    spinBox->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    spinBox->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
     spinBox->setRange(minVal, maxVal);
     spinBox->setSingleStep(decimals > 0 ? 0.1 : 1.0);
     spinBox->setDecimals(decimals);
@@ -334,7 +334,7 @@ void BatchConverterDialog::setupFormatSection(QVBoxLayout *scrollLayout) {
     qualitySlider->setRange(1, 100);
     qualitySlider->setValue(90);
     qualitySpinBox = new QSpinBox(this);
-    qualitySpinBox->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    qualitySpinBox->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
     qualitySpinBox->setAlignment(Qt::AlignCenter);
     qualitySpinBox->setRange(1, 100);
     qualitySpinBox->setValue(90);
@@ -368,7 +368,7 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     percent = new QDoubleSpinBox(this);
     percent->setMinimumSize(0, 30);
     percent->setAlignment(Qt::AlignCenter);
-    percent->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    percent->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
     percent->setRange(1.0, 1600.0);
     percent->setValue(100.0);
     percent->setDecimals(1);
@@ -390,7 +390,7 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     width = new QSpinBox(this);
     width->setMinimumSize(0, 30);
     width->setAlignment(Qt::AlignCenter);
-    width->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    width->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
     width->setRange(1, 65535);
     width->setEnabled(false);
     wLayout->addWidget(lWidth);
@@ -403,7 +403,7 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     height = new QSpinBox(this);
     height->setMinimumSize(0, 30);
     height->setAlignment(Qt::AlignCenter);
-    height->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    height->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
     height->setRange(1, 65535);
     height->setEnabled(false);
     hLayout->addWidget(lHeight);
@@ -632,6 +632,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
                 "QCheckBox:disabled, QRadioButton:disabled { color: %2; }"
                 "QLineEdit, QSpinBox, QDoubleSpinBox { background-color: %5; color: %3; border: 1px solid %4; border-radius: 3px; padding: 3px; }"
                 "QLineEdit:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled { background-color: %1; color: %2; border-color: %4; }"
+                "QSpinBox::up-button, QDoubleSpinBox::up-button, QSpinBox::down-button, QDoubleSpinBox::down-button { max-width: 0px; max-height: 0px; width: 0px; }"
                 "QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover,"
                 "QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus { border-color: %6; }"
                 "QListWidget { background-color: %8; border: 1px solid %4; color: %3; }"

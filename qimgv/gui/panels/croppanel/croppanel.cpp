@@ -109,7 +109,7 @@ void CropPanel::setupUi() {
 
         spinBox = new SpinBoxInputFix(groupBox);
         spinBox->setAlignment(Qt::AlignCenter);
-        spinBox->setButtonSymbols(QAbstractSpinBox::NoButtons);
+        spinBox->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
         spinBox->setKeyboardTracking(false);
         spinBox->setMaximum(65535);
         layout->addWidget(spinBox);
@@ -156,7 +156,7 @@ void CropPanel::setupUi() {
 
     ARX = new QDoubleSpinBox(ARInputWidget);
     ARX->setAlignment(Qt::AlignCenter);
-    ARX->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    ARX->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
     ARX->setKeyboardTracking(false);
     ARX->setDecimals(4);
     ARX->setMinimum(0.0001);
@@ -172,7 +172,7 @@ void CropPanel::setupUi() {
 
     ARY = new QDoubleSpinBox(ARInputWidget);
     ARY->setAlignment(Qt::AlignCenter);
-    ARY->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    ARY->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
     ARY->setKeyboardTracking(false);
     ARY->setDecimals(4);
     ARY->setMinimum(0.0001);

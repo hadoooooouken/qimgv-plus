@@ -43,6 +43,12 @@ ResizeDialog::ResizeDialog(QSize originalSize, QWidget *parent)
               "  border-radius: 3px;"
               "  padding: 3px;"
               "}"
+              "QSpinBox::up-button, QDoubleSpinBox::up-button,"
+              "QSpinBox::down-button, QDoubleSpinBox::down-button {"
+              "  max-width: 0px;"
+              "  max-height: 0px;"
+              "  width: 0px;"
+              "}"
               "QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover,"
               "QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {"
               "  border-color: %6;"
@@ -179,7 +185,7 @@ void ResizeDialog::setupUi() {
 
   percent = new QDoubleSpinBox(this);
   percent->setAlignment(Qt::AlignCenter);
-  percent->setButtonSymbols(QAbstractSpinBox::NoButtons);
+  percent->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
   percent->setMinimum(1.0);
   percent->setMaximum(1600.0);
   percent->setValue(100.0);
@@ -196,7 +202,7 @@ void ResizeDialog::setupUi() {
 
   width = new QSpinBox(this);
   width->setAlignment(Qt::AlignCenter);
-  width->setButtonSymbols(QAbstractSpinBox::NoButtons);
+  width->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
   width->setMinimum(1);
   width->setMaximum(65535);
   sizeGrid->addWidget(width, 0, 1);
@@ -207,7 +213,7 @@ void ResizeDialog::setupUi() {
 
   height = new QSpinBox(this);
   height->setAlignment(Qt::AlignCenter);
-  height->setButtonSymbols(QAbstractSpinBox::NoButtons);
+  height->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
   height->setMinimum(1);
   height->setMaximum(65535);
   sizeGrid->addWidget(height, 1, 1);
