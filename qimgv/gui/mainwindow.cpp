@@ -983,7 +983,7 @@ void MW::showCropPanel() {
         cropOverlay->show();
         activeSidePanel = SIDEPANEL_CROP;
         // reset & lock zoom so CropOverlay won't go crazy
-        viewerWidget->fitWindow();
+        viewerWidget->setFitMode(FIT_WINDOW);
         setInteractionEnabled(false);
         // feed the panel current image info
         updateCropPanelData();

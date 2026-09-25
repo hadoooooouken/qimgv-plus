@@ -260,14 +260,8 @@ bool ViewerWidget::showAnimation(const QString &filePath, const QString &format)
 }
 
 void ViewerWidget::setFitMode(ImageFitMode mode) {
-    if(mode == FIT_WINDOW)
-        emit fitWindow();
-    else if(mode == FIT_WIDTH)
-        emit fitWidth();
-    else if(mode == FIT_ORIGINAL)
-        emit fitOriginal();
-    else if(mode == FIT_HEIGHT)
-        emit fitHeight();
+    if(imageViewer && currentWidget == IMAGEVIEWER)
+        imageViewer->setFitMode(mode);
 }
 
 ImageFitMode ViewerWidget::fitMode() {
