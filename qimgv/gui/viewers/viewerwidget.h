@@ -34,6 +34,7 @@ public:
     void onScalingFinished(QImage scaled);
     void setUpscaledCrop(const QImage &cropImg, QRect origCrop);
     void hideUpscaledCrop();
+    void setExpandSmallImagesInFitMode(bool enabled);
     bool panoramaMode() const { return imageViewer ? imageViewer->panoramaMode() : false; }
     bool isBusyInteracting() const;
     void refreshScaling();

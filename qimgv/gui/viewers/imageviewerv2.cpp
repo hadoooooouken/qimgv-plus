@@ -44,6 +44,7 @@ QPixmap createTransparencyCheckerboard(qreal dpr) {
 ImageViewerV2::ImageViewerV2(QWidget *parent)
     : QGraphicsView(parent), image(nullptr),
       movie(nullptr), transparencyGrid(false), expandImage(false),
+      expandSmallImagesInFitMode(false),
       keepFitMode(false), loopPlayback(true), mIsFullscreen(false),
       scrollBarWorkaround(true), useFixedZoomLevels(false),
       trackpadDetection(true),
@@ -1368,10 +1369,9 @@ void ImageViewerV2::applyFitMode() {
     fitWidth(false);
     break;
   case FIT_WINDOW:
-    // When auto-applying fit mode (e.g. on image load), don't upscale small
-    // images unless expandImage is enabled. The explicit fitWindow() action
-    // (button / context menu) calls fitWindow() directly and always fits.
-    if (imageFits() && !expandImage)
+    // When auto-applying fit mode, don't upscale small images unless Expand
+    // Images is enabled or a caller temporarily requests expansion.
+    if (imageFits() && !expandImage && !expandSmallImagesInFitMode)
       fitNormal();
     else
       fitWindow(false);
@@ -1415,6 +1415,10 @@ void ImageViewerV2::setFitWindow() {
   imageFitMode = FIT_WINDOW;
   fitWindow(true);
   requestScaling();
+}
+
+void ImageViewerV2::setExpandSmallImagesInFitMode(bool enabled) {
+  expandSmallImagesInFitMode = enabled;
 }
 
 // public, sends scale request

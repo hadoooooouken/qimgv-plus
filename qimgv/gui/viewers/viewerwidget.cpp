@@ -264,6 +264,11 @@ void ViewerWidget::setFitMode(ImageFitMode mode) {
         imageViewer->setFitMode(mode);
 }
 
+void ViewerWidget::setExpandSmallImagesInFitMode(bool enabled) {
+    if(imageViewer)
+        imageViewer->setExpandSmallImagesInFitMode(enabled);
+}
+
 ImageFitMode ViewerWidget::fitMode() {
     return imageViewer->fitMode();
 }

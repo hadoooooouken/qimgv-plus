@@ -96,6 +96,7 @@ public slots:
     virtual void setFitWidth();
     virtual void setFitWindow();
     virtual void setFitHeight();
+    void setExpandSmallImagesInFitMode(bool enabled);
     void switchFitMode();
     virtual void zoomIn();
     virtual void zoomOut();
@@ -162,7 +163,7 @@ private:
     QTimer *animationTimer, *scaleTimer;
     QScrollBar *hs, *vs;
     QPoint mouseMoveStartPos, mousePressPos, drawPos;
-    bool transparencyGrid, expandImage, keepFitMode,
+    bool transparencyGrid, expandImage, expandSmallImagesInFitMode, keepFitMode,
          loopPlayback,     mIsFullscreen,  scrollBarWorkaround,
          useFixedZoomLevels, trackpadDetection, mAnimationActive;
     QList<float> zoomLevels;
