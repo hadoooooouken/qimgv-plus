@@ -79,6 +79,7 @@ private slots:
 
 signals:
     void scaleChanged(qreal scale);
+    void imageAreaChanged(QRect imageArea);
     void scalingRequested(QSize, ScalingFilter);
     void renderingSettled();
     void zoomIn();

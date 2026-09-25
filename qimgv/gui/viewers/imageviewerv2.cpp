@@ -1469,6 +1469,7 @@ void ImageViewerV2::centerOnPixmap() {
                (int)(vport.width() - imgRect.width()) / 2);
   vs->setValue(pixmapItem.offset().y() -
                (int)(vport.height() - imgRect.height()) / 2);
+  emit imageAreaChanged(scaledRectR());
 }
 
 void ImageViewerV2::stopPosAnimation() {

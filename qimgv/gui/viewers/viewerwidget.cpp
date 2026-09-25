@@ -41,6 +41,7 @@ ViewerWidget::ViewerWidget(QWidget *parent)
     connect(imageViewer.get(), &ImageViewerV2::renderingSettled,
             this, &ViewerWidget::renderingSettled);
     connect(imageViewer.get(), &ImageViewerV2::scaleChanged, this, &ViewerWidget::onScaleChanged);
+    connect(imageViewer.get(), &ImageViewerV2::imageAreaChanged, this, &ViewerWidget::imageAreaChanged);
     connect(imageViewer.get(), &ImageViewerV2::playbackFinished, this, &ViewerWidget::onAnimationPlaybackFinished);
     connect(this, &ViewerWidget::toggleTransparencyGrid, imageViewer.get(), &ImageViewerV2::toggleTransparencyGrid);
     connect(this, &ViewerWidget::setFilterNearest,       imageViewer.get(), &ImageViewerV2::setFilterNearest);

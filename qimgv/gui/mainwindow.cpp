@@ -143,6 +143,10 @@ void MW::setupCropPanel() {
         return;
     cropOverlay = new CropOverlay(viewerWidget.get());
     cropPanel = new CropPanel(cropOverlay, this);
+    connect(viewerWidget.get(), &ViewerWidget::imageAreaChanged, this, [this](QRect imageArea) {
+        if(activeSidePanel == SIDEPANEL_CROP)
+            cropOverlay->setImageDrawRect(imageArea);
+    });
     connect(cropPanel, &CropPanel::cancel, this, &MW::hideCropPanel);
     connect(cropPanel, &CropPanel::crop,   this, &MW::hideCropPanel);
     connect(cropPanel, &CropPanel::crop,   this, &MW::cropRequested);

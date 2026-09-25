@@ -54,6 +54,9 @@ void CropOverlay::setImageDrawRect(QRect _imageDrawRect) {
     imageDrawRect.setTopLeft(_imageDrawRect.topLeft() * dpr);
     imageDrawRect.setBottomRight(_imageDrawRect.bottomRight() * dpr);
     imageDrawRectDpi = _imageDrawRect;
+    updateSelectionDrawRect();
+    updateHandlePositions();
+    update();
 }
 
 //------------------------------------------------------------------------------
