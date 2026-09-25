@@ -37,7 +37,7 @@ VERSION_TAG_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-# Fallback dependency definitions if setup-deps.ps1 cannot be found or parsed
+# Fallback dependency definitions if setup-deps.ps1 cannot be found or parsed.
 DEFAULT_DEPS = [
     {"name": "Imath", "url": "https://github.com/AcademySoftwareFoundation/Imath.git", "current": "v3.2.3", "patched": True},
     {"name": "openexr", "url": "https://github.com/AcademySoftwareFoundation/openexr.git", "current": "v3.5.0", "patched": True},
@@ -46,7 +46,6 @@ DEFAULT_DEPS = [
     {"name": "jxrlib", "url": "https://github.com/4creators/jxrlib.git", "current": "v2019.10.9", "patched": True},
     {"name": "LibRaw", "url": "https://github.com/LibRaw/LibRaw.git", "current": "0.22.2", "patched": True},
     {"name": "ffmpeg", "url": "https://git.ffmpeg.org/ffmpeg.git", "current": "n9.0.2", "patched": False},
-    {"name": "kimageformats", "url": "https://invent.kde.org/frameworks/kimageformats.git", "current": "v6.26.0", "patched": True},
     {"name": "openjpeg", "url": "https://github.com/uclouvain/openjpeg.git", "current": "v2.5.4", "patched": True},
     {"name": "OpenJPH", "url": "https://github.com/aous72/OpenJPH.git", "current": "0.32.0", "patched": True},
     {"name": "libdeflate", "url": "https://github.com/ebiggers/libdeflate.git", "current": "v1.26", "patched": True},
@@ -57,6 +56,10 @@ DEFAULT_DEPS = [
     {"name": "zstd", "url": "https://github.com/facebook/zstd.git", "current": "v1.5.7", "patched": False},
     {"name": "exiv2", "url": "https://github.com/Exiv2/exiv2.git", "current": "0.28.9", "patched": False},
 ]
+
+EXCLUDED_UPSTREAM_DEPS = {"kimageformats"}
+# kimageformats is intentionally excluded from upstream checks because qimgv-plus
+# pins a patched baseline at v6.26.0 + local patch series, not a clean upstream release.
 
 # ANSI color escape codes
 COLOR_RESET = "\033[0m"
@@ -154,6 +157,8 @@ def parse_setup_deps_script(ps1_path: Path) -> List[Dict[str, object]]:
     )
     for m in dep_pattern.finditer(content):
         name, url, tag = m.groups()
+        if name.lower() in EXCLUDED_UPSTREAM_DEPS:
+            continue
         git_deps.append({
             "name": name,
             "url": url,

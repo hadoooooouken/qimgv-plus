@@ -31,7 +31,7 @@ This guide walks you through building qimgv-plus and all its dependencies on Win
 git clone https://github.com/hadoooooouken/qimgv-plus.git
 cd qimgv-plus
 
-# 2. Run the dependency setup script (clones all deps + applies patches)
+# 2. Run setup (clones kimageformats v6.26.0 + applies its required patches)
 .\build_scripts\setup-deps.ps1
 
 # 3. Manually download exiv2 and NASM (see "Manual Downloads" below)
@@ -49,6 +49,10 @@ cd ..
 cmake --preset qimgv-x64-release
 cmake --build out/build/qimgv-x64-release --config Release
 ```
+
+### kimageformats source requirement
+
+The required upstream baseline is **KDE kimageformats v6.26.0**. qimgv-plus's patch series in `patches/kimageformats/` is made for this exact baseline; do not replace it with `v6.30.0` or another upstream version unless the patches have been rebased and validated. The dependency setup command above clones `v6.26.0` into `formats/kimageformats` and applies the local patches. This source is not vendored in the repository, and no separate download or manual patching is needed.
 
 > [!NOTE]
 > Steps 4-5 require a **Visual Studio Developer Command Prompt** (or running `vcvarsall.bat x64` first) so that `cl.exe`, `link.exe`, and related tools are on PATH.
@@ -157,7 +161,6 @@ qimgv-plus/
 
 | Library | Version | Upstream | Patched | Notes |
 |---------|---------|----------|:---:|-------|
-| kimageformats | v6.26.0 + 10 commits | [KDE/kimageformats](https://invent.kde.org/frameworks/kimageformats) | Yes | Qt image format plugins (kimg_*.dll) |
 | OpenJPEG | v2.5.4 + 15 commits | [uclouvain/openjpeg](https://github.com/uclouvain/openjpeg) | Yes | JPEG 2000 codec |
 | upscayl-ncnn | (fork, qimgv branch) | [hadoooooouken/upscayl-ncnn-qimgv-plus](https://github.com/hadoooooouken/upscayl-ncnn-qimgv-plus) | Fork | AI upscaling engine; uses [ncnn fork](https://github.com/hadoooooouken/ncnn) |
 
@@ -190,7 +193,7 @@ All patches are in the `patches/` directory. They are applied automatically by `
 | `libdeflate-1.26-avx2-flags.patch` | libdeflate | Adds MSVC AVX2/LTCG block for standalone builds |
 | `jxrlib-v2019.10.9-uintptr-fix.patch` | jxrlib | Fixes encoding issues and uses portable `uintptr_t` |
 | `LibRaw-0.22.2-vcxproj-toolset.patch` | LibRaw | Updates VS project files to toolset v145 and SDK 10.0 |
-| `kimageformats/0001-*.patch` ... | kimageformats | 10 upstream commits cherry-picked past v6.26.0 (HEIF transforms, IFF DEEP, Farbfeld support, bug fixes) |
+| `kimageformats/*.patch` | kimageformats | Required local patch series for qimgv-plus's Qt image format plugins |
 | `openjpeg/0001-*.patch` ... | openjpeg | 15 upstream commits past v2.5.4 (bug fixes, NEON optimizations, ARM64 support) |
 
 ---
