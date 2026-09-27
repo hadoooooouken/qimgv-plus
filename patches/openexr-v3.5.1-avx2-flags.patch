@@ -11,14 +11,10 @@ index ed2cc482..1a5ee024 100644
 +build:windows --cxxopt=/std:c++latest
 +build:windows --host_cxxopt=/std:c++latest
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 9c366ecc..24e0f801 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -29,7 +29,16 @@ set(OPENEXR_VERSION_PATCH ${CMAKE_MATCH_1})
+@@ -32,2 +32,11 @@
  
- project(OpenEXR VERSION ${OPENEXR_VERSION_MAJOR}.${OPENEXR_VERSION_MINOR}.${OPENEXR_VERSION_PATCH} LANGUAGES C CXX)
- 
--set(OPENEXR_VERSION_RELEASE_TYPE "-dev" CACHE STRING "Extra version tag string for OpenEXR build, such as -dev, -beta1, etc.")
 +# === MSVC optimization flags (qimgv) ===
 +if(MSVC)
 +    add_compile_options(/arch:AVX2)
@@ -28,7 +24,4 @@ index 9c366ecc..24e0f801 100644
 +endif()
 +# === end MSVC optimization flags ===
 +
-+set(OPENEXR_VERSION_RELEASE_TYPE "" CACHE STRING "Extra version tag string for OpenEXR build, such as -dev, -beta1, etc.")
- 
- set(OPENEXR_VERSION ${OpenEXR_VERSION})
- set(OPENEXR_VERSION_API "${OpenEXR_VERSION_MAJOR}_${OpenEXR_VERSION_MINOR}")
+ set(OPENEXR_VERSION_RELEASE_TYPE "" CACHE STRING "Extra version tag string for OpenEXR build, such as -dev, -beta1, etc.")
