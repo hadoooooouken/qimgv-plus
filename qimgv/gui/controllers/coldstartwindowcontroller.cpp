@@ -9,7 +9,7 @@ ColdStartWindowController::ColdStartWindowController(
     MW &window, FolderViewProxy &folderView)
     : window(&window) {
     maximumWaitTimer.setSingleShot(true);
-    maximumWaitTimer.setInterval(kMaximumWaitMs);
+    maximumWaitTimer.setInterval(kFolderViewReadinessTimeoutMs);
     documentReadyFallbackTimer.setSingleShot(true);
     documentReadyFallbackTimer.setInterval(kDocumentReadyFallbackMs);
 
@@ -29,9 +29,9 @@ ColdStartWindowController::ColdStartWindowController(
     connect(&maximumWaitTimer, &QTimer::timeout, this, [this]() {
         if(state != State::WaitingForFolderView)
             return;
-        qWarning() << "Cold-start folder view is still waiting for visible"
-                      " thumbnails and filesystem contents after"
-                   << kMaximumWaitMs << "ms";
+        qWarning() << "Cold-start folder view did not become ready within"
+                   << kFolderViewReadinessTimeoutMs << "ms";
+        revealWindow();
     });
 }
 

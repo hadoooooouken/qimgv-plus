@@ -30,7 +30,7 @@ private:
         Shown
     };
 
-    static constexpr int kMaximumWaitMs = 30000;
+    static constexpr int kFolderViewReadinessTimeoutMs = 2000;
     static constexpr int kLayoutSettleDelayMs = 0;
     static constexpr int kDocumentReadyFallbackMs = 1000;
     static constexpr qreal kHiddenWindowOpacity = 0.0;
