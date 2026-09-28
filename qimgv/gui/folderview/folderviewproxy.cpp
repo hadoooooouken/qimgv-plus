@@ -25,6 +25,8 @@ void FolderViewProxy::init() {
     connect(folderView.get(), &FolderView::thumbnailsRequested, this, &FolderViewProxy::thumbnailsRequested);
     connect(folderView.get(), &FolderView::visibleThumbnailsReady,
             this, &FolderViewProxy::visibleThumbnailsReady);
+    connect(folderView.get(), &FolderView::filesystemViewReady,
+            this, &FolderViewProxy::filesystemViewReady);
     connect(folderView.get(), &FolderView::sortingSelected, this, &FolderViewProxy::sortingSelected);
     connect(folderView.get(), &FolderView::folderSortingSelected, this, &FolderViewProxy::folderSortingSelected);
     connect(folderView.get(), &FolderView::formatFilterSelected, this, &FolderViewProxy::formatFilterSelected);
@@ -70,6 +72,11 @@ void FolderViewProxy::setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb) {
     if(folderView) {
         folderView->setThumbnail(pos, thumb);
     }
+}
+
+void FolderViewProxy::setThumbnailPending(int pos, bool pending) {
+    if (folderView)
+        folderView->setThumbnailPending(pos, pending);
 }
 
 void FolderViewProxy::setThumbnailUnavailable(int pos, int size) {

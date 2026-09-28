@@ -316,6 +316,7 @@ void DirectoryPresenter::generateThumbnails(QList<int> indexes, int size,
 
       // The prepared default is published before cover discovery is queued,
       // so directory enumeration can never delay the first visible icon.
+      view->setThumbnailPending(i, true);
       view->setThumbnail(
           i, defaultFolderThumbnail(size, model->dirNameAt(i)));
 
@@ -345,11 +346,15 @@ void DirectoryPresenter::onFolderCoverResolved(FolderCoverResult result)
 
   if (result.status == FolderCoverStatus::ReadError) {
     qWarning() << "[FolderCoverResolver]" << result.diagnostic;
-    return;
   }
   if (result.status != FolderCoverStatus::CoverFound ||
-      result.coverPath.isEmpty())
+      result.coverPath.isEmpty()) {
+    const int directoryIndex =
+        directoryIndexForPath(result.request.folderPath);
+    if (directoryIndex >= 0)
+      view->setThumbnailPending(directoryIndex, false);
     return;
+  }
 
   const int directoryIndex =
       directoryIndexForPath(result.request.folderPath);
@@ -418,6 +423,7 @@ void DirectoryPresenter::onThumbnailReady(std::shared_ptr<Thumbnail> thumb,
                 task.thumbnailSize, model->dirNameAt(directoryIndex),
                 *innerPixmap));
       }
+      view->setThumbnailPending(directoryIndex, false);
     }
 
     if (remaining.isEmpty())
@@ -446,8 +452,13 @@ void DirectoryPresenter::onThumbnailFailed(QString filePath, int size) {
     QList<PendingFolderThumbnail> remaining;
     for (const PendingFolderThumbnail &task :
          std::as_const(folderTasks.value())) {
-      if (task.thumbnailSize != size)
+      if (task.thumbnailSize != size) {
         remaining.append(task);
+      } else if (task.generation == folderThumbnailGeneration && mShowDirs) {
+        const int directoryIndex = directoryIndexForPath(task.folderPath);
+        if (directoryIndex >= 0)
+          view->setThumbnailPending(directoryIndex, false);
+      }
     }
     if (remaining.isEmpty())
       dirThumbnailTasks.erase(folderTasks);

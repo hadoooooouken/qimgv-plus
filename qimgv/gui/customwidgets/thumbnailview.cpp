@@ -284,6 +284,7 @@ void ThumbnailView::populate(int newCount) {
     mItemCount = newCount;
     loadedThumbnails.clear();
     pendingThumbnailRequests.clear();
+    pendingFinalThumbnails.clear();
     unavailableThumbnails.clear();
     visibleThumbnailsReadyReported = false;
     resetCachedContent();
@@ -332,6 +333,7 @@ void ThumbnailView::removeItem(int index) {
             unbindWidget(widget);
         loadedThumbnails.remove(index);
         pendingThumbnailRequests.remove(index);
+        pendingFinalThumbnails.remove(index);
         unavailableThumbnails.remove(index);
         shiftCachedItems(index + 1, -1);
         shiftBoundItems(index + 1, -1);
@@ -393,6 +395,17 @@ void ThumbnailView::setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb) {
     }
 }
 
+void ThumbnailView::setThumbnailPending(int pos, bool pending) {
+    if(!checkRange(pos))
+        return;
+
+    if(pending)
+        pendingFinalThumbnails.insert(pos);
+    else
+        pendingFinalThumbnails.remove(pos);
+    notifyIfVisibleThumbnailsReady();
+}
+
 void ThumbnailView::setThumbnailUnavailable(int pos, int size) {
     const int expectedSize = floor(mThumbnailSize * qApp->devicePixelRatio());
     if(size != expectedSize || !checkRange(pos))
@@ -406,6 +419,7 @@ void ThumbnailView::setThumbnailUnavailable(int pos, int size) {
 void ThumbnailView::unloadAllThumbnails() {
     loadedThumbnails.clear();
     pendingThumbnailRequests.clear();
+    pendingFinalThumbnails.clear();
     unavailableThumbnails.clear();
     visibleThumbnailsReadyReported = false;
     for(auto *widget : std::as_const(thumbnails))
@@ -467,8 +481,9 @@ bool ThumbnailView::visibleThumbnailsLoaded() const {
         return itemCount() == 0;
 
     for(int index = range.first; index <= range.second; ++index) {
-        if(!loadedThumbnails.contains(index) &&
-           !unavailableThumbnails.contains(index))
+        if(pendingFinalThumbnails.contains(index) ||
+           (!loadedThumbnails.contains(index) &&
+            !unavailableThumbnails.contains(index)))
             return false;
     }
     return true;
@@ -701,6 +716,12 @@ void ThumbnailView::shiftCachedItems(int firstIndex, int offset) {
     for(const int index : std::as_const(pendingThumbnailRequests))
         shiftedRequests.insert(index >= firstIndex ? index + offset : index);
     pendingThumbnailRequests.swap(shiftedRequests);
+
+    QSet<int> shiftedFinalThumbnails;
+    shiftedFinalThumbnails.reserve(pendingFinalThumbnails.size());
+    for(const int index : std::as_const(pendingFinalThumbnails))
+        shiftedFinalThumbnails.insert(index >= firstIndex ? index + offset : index);
+    pendingFinalThumbnails.swap(shiftedFinalThumbnails);
 
     QSet<int> shiftedUnavailable;
     shiftedUnavailable.reserve(unavailableThumbnails.size());

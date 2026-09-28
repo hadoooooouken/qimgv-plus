@@ -16,6 +16,10 @@ public:
 
     virtual void populate(int) = 0;
     virtual void setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb) = 0;
+    virtual void setThumbnailPending(int pos, bool pending) {
+        Q_UNUSED(pos)
+        Q_UNUSED(pending)
+    }
     virtual void setThumbnailUnavailable(int pos, int size) = 0;
     virtual void select(QList<int>) = 0;
     virtual void select(int) = 0;

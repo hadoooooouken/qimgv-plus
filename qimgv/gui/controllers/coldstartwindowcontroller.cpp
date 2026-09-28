@@ -15,6 +15,8 @@ ColdStartWindowController::ColdStartWindowController(
 
     connect(&folderView, &FolderViewProxy::visibleThumbnailsReady,
             this, &ColdStartWindowController::onVisibleThumbnailsReady);
+    connect(&folderView, &FolderViewProxy::filesystemViewReady,
+            this, &ColdStartWindowController::onFilesystemViewReady);
     connect(&window, &MW::documentRenderingSettled,
             this, &ColdStartWindowController::onDocumentRenderingSettled);
     connect(&documentReadyFallbackTimer, &QTimer::timeout, this, [this]() {
@@ -27,9 +29,9 @@ ColdStartWindowController::ColdStartWindowController(
     connect(&maximumWaitTimer, &QTimer::timeout, this, [this]() {
         if(state != State::WaitingForFolderView)
             return;
-        qWarning() << "Cold-start folder view did not become ready within"
-                   << kMaximumWaitMs << "ms; revealing the window";
-        revealWindow();
+        qWarning() << "Cold-start folder view is still waiting for visible"
+                      " thumbnails and filesystem contents after"
+                   << kMaximumWaitMs << "ms";
     });
 }
 
@@ -77,9 +79,21 @@ void ColdStartWindowController::show() {
     waitForFolderView();
 }
 
+void ColdStartWindowController::onDirectoryModelLoaded() {
+    if(state == State::Shown)
+        return;
+
+    directoryModelLoaded = true;
+    visibleThumbnailsReady = false;
+    if(state == State::RevealScheduled)
+        state = State::WaitingForFolderView;
+}
+
 void ColdStartWindowController::waitForFolderView() {
     documentReadyFallbackTimer.stop();
     state = State::WaitingForFolderView;
+    visibleThumbnailsReady = false;
+    filesystemViewReady = false;
     window->setWindowOpacity(kHiddenWindowOpacity);
     maximumWaitTimer.start();
     window->showDefault();
@@ -99,7 +113,24 @@ void ColdStartWindowController::waitForDocumentLayout() {
 }
 
 void ColdStartWindowController::onVisibleThumbnailsReady() {
+    if(state != State::WaitingForFolderView || !directoryModelLoaded)
+        return;
+
+    visibleThumbnailsReady = true;
+    tryRevealFolderView();
+}
+
+void ColdStartWindowController::onFilesystemViewReady() {
     if(state != State::WaitingForFolderView)
+        return;
+
+    filesystemViewReady = true;
+    tryRevealFolderView();
+}
+
+void ColdStartWindowController::tryRevealFolderView() {
+    if(state != State::WaitingForFolderView ||
+       !visibleThumbnailsReady || !filesystemViewReady)
         return;
 
     state = State::RevealScheduled;

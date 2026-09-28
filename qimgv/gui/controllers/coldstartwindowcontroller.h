@@ -13,9 +13,11 @@ public:
     ColdStartWindowController(MW &window, FolderViewProxy &folderView);
 
     void show();
+    void onDirectoryModelLoaded();
 
 private slots:
     void onVisibleThumbnailsReady();
+    void onFilesystemViewReady();
     void onDocumentRenderingSettled();
     void revealWindow();
 
@@ -36,9 +38,13 @@ private:
 
     void waitForFolderView();
     void waitForDocumentLayout();
+    void tryRevealFolderView();
 
     QPointer<MW> window;
     QTimer maximumWaitTimer;
     QTimer documentReadyFallbackTimer;
     State state = State::Initial;
+    bool directoryModelLoaded = false;
+    bool visibleThumbnailsReady = false;
+    bool filesystemViewReady = false;
 };

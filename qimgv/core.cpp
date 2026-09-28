@@ -924,6 +924,8 @@ void Core::syncRandomizer() {
 }
 
 void Core::onModelLoaded() {
+  if (coldStartWindowController)
+    coldStartWindowController->onDirectoryModelLoaded();
   thumbPanelPresenter.reloadModel();
   folderViewPresenter.reloadModel();
   thumbPanelPresenter.selectAndFocus(state.currentFilePath);

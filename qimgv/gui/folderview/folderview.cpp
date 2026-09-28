@@ -31,6 +31,12 @@ constexpr int kNameFilterWidthPx = 163;
 // sortingComboBox / folderSortingComboBox / formatFilterComboBox (their own
 // StyledComboBox icon, not the dropdown chevron).
 constexpr int kCompactIconSizePx = UiMetrics::kCompactIconSizePx;
+
+QString normalizedFilesystemPath(const QString &path) {
+    if (path.isEmpty())
+        return {};
+    return QDir::cleanPath(QDir::fromNativeSeparators(path)).toCaseFolded();
+}
 } // namespace
 
 class BatchConvertButton : public QPushButton {
@@ -83,9 +89,10 @@ FolderView::FolderView(QWidget *parent) :
     header->hideSection(2); // type
     header->hideSection(3); // mod date
 
-    dirModel->setRootPath("");
     connect(dirModel, &QFileSystemModel::directoryLoaded,
         this, [this](const QString &path) {
+            m_loadedFilesystemDirectories.insert(
+                normalizedFilesystemPath(path));
             if (path == m_pendingScrollPath) {
                 QModelIndex current = dirTreeView->currentIndex();
                 if (current.isValid() && dirModel->filePath(current) == path) {
@@ -93,7 +100,9 @@ FolderView::FolderView(QWidget *parent) :
                 }
                 m_pendingScrollPath.clear();
             }
+            notifyFilesystemViewReady();
         });
+    dirModel->setRootPath("");
     // -------------------------------
     upButton->setAction("goUp");
     upButton->setIcon(FluentIcon::ChevronUp16, kCompactIconSizePx);
@@ -605,8 +614,14 @@ void FolderView::refreshFilesystemModel(const QString &path) {
     if (!dirModel)
         return;
 
+    m_loadedFilesystemDirectories.clear();
+    m_filesystemViewReadyReported = false;
+    m_filesystemDirectoryToLoad = path.isEmpty()
+        ? QString()
+        : normalizedFilesystemPath(QFileInfo(path).absolutePath());
     dirModel->refreshPath(path);
     dirTreeView->viewport()->update();
+    notifyFilesystemViewReady();
 }
 
 FolderView::~FolderView() {
@@ -647,6 +662,10 @@ void FolderView::setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb) {
     thumbnailGrid->setThumbnail(pos, thumb);
 }
 
+void FolderView::setThumbnailPending(int pos, bool pending) {
+    thumbnailGrid->setThumbnailPending(pos, pending);
+}
+
 void FolderView::setThumbnailUnavailable(int pos, int size) {
     thumbnailGrid->setThumbnailUnavailable(pos, size);
 }
@@ -677,6 +696,10 @@ void FolderView::onHomeBtn() {
 
 void FolderView::setDirectoryPath(QString path) {
     pathLabel->setText(path);
+    m_filesystemViewReadyReported = false;
+    m_filesystemDirectoryToLoad = normalizedFilesystemPath(
+        QFileInfo(path).absolutePath());
+    notifyFilesystemViewReady();
 
     if(dirTreeView->currentIndex().data() == path)
         return;
@@ -700,6 +723,24 @@ void FolderView::setDirectoryPath(QString path) {
     } else {
         m_pendingScrollPath = path;
     }
+}
+
+void FolderView::notifyFilesystemViewReady() {
+    if (m_filesystemViewReadyReported)
+        return;
+
+    if (placesPanel->isHidden() || dirTreeView->isHidden()) {
+        m_filesystemViewReadyReported = true;
+        emit filesystemViewReady();
+        return;
+    }
+
+    if (m_filesystemDirectoryToLoad.isEmpty() ||
+        !m_loadedFilesystemDirectories.contains(m_filesystemDirectoryToLoad))
+        return;
+
+    m_filesystemViewReadyReported = true;
+    emit filesystemViewReady();
 }
 
 void FolderView::onTreeViewClicked(QModelIndex index) {

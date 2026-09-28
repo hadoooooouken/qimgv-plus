@@ -6,6 +6,7 @@
 #include <QFileSystemModel>
 #include <QFileDialog>
 #include <QElapsedTimer>
+#include <QSet>
 #include <QTimer>
 #include "gui/customwidgets/floatingwidgetcontainer.h"
 #include "gui/idirectoryview.h"
@@ -38,6 +39,7 @@ public slots:
     void hide();
     virtual void populate(int) override;
     virtual void setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb) override;
+    void setThumbnailPending(int pos, bool pending) override;
     void setThumbnailUnavailable(int pos, int size) override;
     virtual void select(QList<int>) override;
     virtual void select(int) override;
@@ -72,6 +74,7 @@ signals:
     void itemActivated(int) override;
     void thumbnailsRequested(QList<int>, int, bool, bool) override;
     void visibleThumbnailsReady();
+    void filesystemViewReady();
     void draggedOut() override;
     void draggedToBookmarks(QList<int>) override;
     void sortingSelected(SortingMode);
@@ -114,7 +117,11 @@ private slots:
 
 private:
     void setupUi();
+    void notifyFilesystemViewReady();
     QString m_pendingScrollPath;
+    QString m_filesystemDirectoryToLoad;
+    QSet<QString> m_loadedFilesystemDirectories;
+    bool m_filesystemViewReadyReported = false;
     int lastThumbnailResolution = 256;
     int dirCount = 0;
     QTimer nameFilterTimer;

@@ -72,6 +72,7 @@ public slots:
     virtual void focusOnSelection() = 0;
     virtual void populate(int count) override;
     virtual void setThumbnail(int pos, std::shared_ptr<Thumbnail> thumb) override;
+    void setThumbnailPending(int pos, bool pending) override;
     void setThumbnailUnavailable(int pos, int size) override;
     virtual void insertItem(int index) override;
     virtual void removeItem(int index) override;
@@ -193,6 +194,7 @@ private:
     QHash<const ThumbnailWidget*, int> widgetIndices;
     QHash<int, std::shared_ptr<Thumbnail>> loadedThumbnails;
     QSet<int> pendingThumbnailRequests;
+    QSet<int> pendingFinalThumbnails;
     QSet<int> unavailableThumbnails;
     bool layoutUpdateInProgress = false;
     bool visibleThumbnailsReadyReported = false;
