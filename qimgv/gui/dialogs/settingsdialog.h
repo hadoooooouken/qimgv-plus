@@ -407,8 +407,6 @@ private:
     QWidget *widget_25;
     QCheckBox *confirmTrashCheckBox;
     QCheckBox *confirmDeleteCheckBox;
-    QWidget *widget_27;
-    QCheckBox *animatedJxlCheckBox;
     QWidget *widget_multi_instance_sep;
     QCheckBox *multiInstanceCheckBox;
     QWidget *widget_28;

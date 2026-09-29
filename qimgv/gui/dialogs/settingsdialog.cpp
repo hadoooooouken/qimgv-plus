@@ -312,9 +312,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
 
 
-  if (!settings->supportedFormats().contains("jxl"))
-    animatedJxlCheckBox->hide();
-
   setupSidebar();
 
   // setup radioBtn groups
@@ -630,7 +627,6 @@ void SettingsDialog::readSettings() {
     thumbStyleSimple->setChecked(true);
   else
     thumbStyleExtended->setChecked(true);
-  animatedJxlCheckBox->setChecked(settings->jxlAnimation());
   multiInstanceCheckBox->setChecked(settings->multiInstance());
   if (settings->hasUpscaylModels()) {
     useUpscaylCheckBox->setChecked(settings->useUpscayl());
@@ -921,7 +917,6 @@ void SettingsDialog::saveSettings() {
     settings->setThumbPanelStyle(TH_PANEL_SIMPLE);
   else
     settings->setThumbPanelStyle(TH_PANEL_EXTENDED);
-  settings->setJxlAnimation(animatedJxlCheckBox->isChecked());
   settings->setMultiInstance(multiInstanceCheckBox->isChecked());
   settings->setUseUpscayl(useUpscaylCheckBox->isChecked());
   settings->setPreloadUpscayl(preloadUpscaylCheckBox->isChecked());
@@ -3683,19 +3678,6 @@ void SettingsDialog::setupUi() {
 
         verticalLayout_34->addWidget(confirmDeleteCheckBox);
 
-        widget_27 = new QWidget(advancedGroup);
-        widget_27->setObjectName("widget_27");
-#if QT_CONFIG(accessibility)
-        widget_27->setAccessibleName(QString::fromUtf8("SLine"));
-#endif // QT_CONFIG(accessibility)
-
-        verticalLayout_34->addWidget(widget_27);
-
-        animatedJxlCheckBox = new QCheckBox(advancedGroup);
-        animatedJxlCheckBox->setObjectName("animatedJxlCheckBox");
-
-        verticalLayout_34->addWidget(animatedJxlCheckBox);
-
         widget_multi_instance_sep = new QWidget(advancedGroup);
         widget_multi_instance_sep->setObjectName("widget_multi_instance_sep");
 #if QT_CONFIG(accessibility)
@@ -4256,7 +4238,6 @@ void SettingsDialog::retranslateUi() {
         JPEGQualityLabel->setText(QCoreApplication::translate("SettingsDialog", "q", nullptr));
         confirmTrashCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Confirm moving to trash", nullptr));
         confirmDeleteCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Confirm file delete (!)", nullptr));
-        animatedJxlCheckBox->setText(QCoreApplication::translate("SettingsDialog", "JXL animation support (experimental)", nullptr));
         multiInstanceCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Allow multiple instances", nullptr));
         memoryLimitLabel->setText(QCoreApplication::translate("SettingsDialog", "Memory allocation limit per image, MB:", nullptr));
         label_aiUpscaleHeader->setText(QCoreApplication::translate("SettingsDialog", "AI Upscale", nullptr));

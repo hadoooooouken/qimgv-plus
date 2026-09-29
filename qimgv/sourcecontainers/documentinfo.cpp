@@ -146,10 +146,6 @@ void DocumentInfo::detectFormat() {
     } else if(mimeName == "image/jxl") {
         mFormat = "jxl";
         mDocumentType = detectAnimatedJxl() ? DocumentType::ANIMATED : DocumentType::STATIC;
-        if(mDocumentType == DocumentType::ANIMATED && !settings->jxlAnimation()) {
-            mDocumentType = DocumentType::NONE;
-            qInfo() << "animated jxl is off; skipping file";
-        }
     } else if(mimeName == "image/avif") {
         mFormat = "avif";
         mDocumentType = detectAnimatedAvif() ? DocumentType::ANIMATED : DocumentType::STATIC;

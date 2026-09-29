@@ -256,8 +256,6 @@ public:
   ThumbPanelStyle thumbPanelStyle();
   void setThumbPanelStyle(ThumbPanelStyle mode);
 
-  bool jxlAnimation();
-  void setJxlAnimation(bool mode);
   bool absoluteZoomStep();
   void setAbsoluteZoomStep(bool mode);
   bool autoResizeWindow();
@@ -345,7 +343,6 @@ private:
   std::atomic<bool> mCachedHdrToneMappingEnabled{true};
   std::atomic<int> mCachedHdrToneMappingOperator{0};
   std::atomic<int> mCachedHdrTargetWhiteLevel{203};
-  std::atomic<bool> mCachedJxlAnimation{false};
   std::atomic<int> mCachedPngSaveQuality{3};
   std::atomic<int> mCachedJPEGSaveQuality{95};
   std::atomic<int> mCachedModernSaveQuality{90};

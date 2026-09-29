@@ -88,8 +88,6 @@ void Settings::initCache() {
   mCachedHdrToneMappingEnabled.store(settingsConf->value("hdrToneMappingEnabled", true).toBool(), std::memory_order_relaxed);
   mCachedHdrToneMappingOperator.store(settingsConf->value("hdrToneMappingOperator", 0).toInt(), std::memory_order_relaxed);
   mCachedHdrTargetWhiteLevel.store(settingsConf->value("hdrTargetWhiteLevel", 203).toInt(), std::memory_order_relaxed);
-  mCachedJxlAnimation.store(settingsConf->value("jxlAnimation", false).toBool(), std::memory_order_relaxed);
-
   mCachedPngSaveQuality.store(std::clamp(settingsConf->value("pngSaveQuality", 3).toInt(), 0, 9), std::memory_order_relaxed);
   mCachedJPEGSaveQuality.store(std::clamp(settingsConf->value("JPEGSaveQuality", 95).toInt(), 0, 100), std::memory_order_relaxed);
   mCachedModernSaveQuality.store(std::clamp(settingsConf->value("modernSaveQuality", 90).toInt(), 0, 100), std::memory_order_relaxed);
@@ -1509,15 +1507,6 @@ QString Settings::lastPrinter() {
 
 void Settings::setLastPrinter(QString name) {
   stateConf->setValue("lastPrinter", name);
-}
-//------------------------------------------------------------------------------
-bool Settings::jxlAnimation() {
-  return mCachedJxlAnimation.load(std::memory_order_relaxed);
-}
-
-void Settings::setJxlAnimation(bool mode) {
-  settings->settingsConf->setValue("jxlAnimation", mode);
-  mCachedJxlAnimation.store(mode, std::memory_order_relaxed);
 }
 //------------------------------------------------------------------------------
 bool Settings::autoResizeWindow() {
