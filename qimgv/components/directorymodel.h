@@ -31,6 +31,8 @@ public:
     QString prevOf(QString filePath) const;
     QString firstFile() const;
     QString lastFile() const;
+    QString nextSiblingDir(const QString &dirPath) const;
+    QString prevSiblingDir(const QString &dirPath) const;
     QDateTime lastModified(QString filePath) const;
 
     bool forceInsert(QString filePath);

@@ -111,6 +111,14 @@ QString DirectoryModel::lastFile() const {
     return dirManager.lastFile();
 }
 
+QString DirectoryModel::nextSiblingDir(const QString &dirPath) const {
+    return dirManager.nextSiblingDir(dirPath);
+}
+
+QString DirectoryModel::prevSiblingDir(const QString &dirPath) const {
+    return dirManager.prevSiblingDir(dirPath);
+}
+
 QString DirectoryModel::nextOf(QString filePath) const {
     return dirManager.nextOfFile(filePath);
 }

@@ -273,13 +273,16 @@ private:
     // approach in FolderView).
     QString pendingFolderViewSelectPath;
     // When a directory is activated from the thumbnail panel ("Show
-    // subfolders" mode), we navigate into it while staying in document mode.
-    // Because directory scanning is async, the model is empty when
-    // setDirectory() returns.  This flag tells onModelLoaded() to auto-load
-    // the first image once the scan finishes, instead of relying on
-    // loadPath()'s synchronous fileCount() check (which would see 0 and
-    // switch to folder view).
-    bool m_pendingThumbPanelNavigation = false;
+    // subfolders" mode) or adjacent folder navigation, we navigate into it
+    // while staying in document mode. Because directory scanning is async,
+    // the model is empty when setDirectory() returns. This enum tells
+    // onModelLoaded() to auto-load the target image once the scan finishes.
+    enum class PendingDocumentLoad {
+        None,
+        FirstImage,
+        LastImage
+    };
+    PendingDocumentLoad m_pendingDocumentLoad = PendingDocumentLoad::None;
     // modelDelayLoad() displays the already-decoded image before the
     // directory scan has run, so DirectoryModel::updateImage() can't
     // register it in the model's cache yet - containsFile() stays false

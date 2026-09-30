@@ -237,7 +237,7 @@ bool DirectoryManager::size_entry_compare_reverse(const FSEntry& e1, const FSEnt
     return e1.size > e2.size;
 }
 
-CompareFunction DirectoryManager::compareFunction() {
+CompareFunction DirectoryManager::compareFunction() const {
     CompareFunction cmpFn = &DirectoryManager::path_entry_compare;
     if(mSortingMode == SortingMode::SORT_NAME_DESC)
         cmpFn = &DirectoryManager::path_entry_compare_reverse;
@@ -520,6 +520,100 @@ QString DirectoryManager::nextOfDir(QString dirPath) const {
     if(currentIndex >= 0 && currentIndex < dirEntryVec.size() - 1)
         nextDirectoryPath = dirEntryVec.at(currentIndex + 1).path;
     return nextDirectoryPath;
+}
+
+std::vector<FSEntry> DirectoryManager::siblingDirs(const QString &dirPath) const {
+    if (dirPath.isEmpty())
+        return {};
+
+    QFileInfo currentDir(dirPath);
+    if (currentDir.isRoot())
+        return {};
+
+    QFileInfo parentDir(currentDir.absolutePath());
+    if (!parentDir.exists() || !parentDir.isReadable())
+        return {};
+
+    std::error_code ec;
+    auto stdPath = toStdString(parentDir.absoluteFilePath());
+    if (!fs::exists(stdPath, ec) || !fs::is_directory(stdPath, ec))
+        return {};
+
+    bool showHiddenFiles = settings->showHiddenFiles();
+    std::vector<FSEntry> dirs;
+
+    for (const auto &entry : fs::directory_iterator(stdPath, ec)) {
+        if (ec)
+            break;
+
+        bool isDir = false;
+        try {
+            isDir = entry.is_directory();
+        } catch (...) {
+            continue;
+        }
+
+        if (!isDir)
+            continue;
+
+        if (!showHiddenFiles) {
+            DWORD attributes = GetFileAttributes(entry.path().c_str());
+            if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN))
+                continue;
+        }
+
+        QString name = QString::fromStdWString(entry.path().filename().generic_wstring());
+        QString path = QString::fromStdWString(entry.path().generic_wstring());
+
+        FSEntry newEntry;
+        newEntry.name = name;
+        newEntry.path = path;
+        newEntry.isDirectory = true;
+        try {
+            newEntry.modifyTime = entry.last_write_time(ec);
+        } catch (...) {}
+        dirs.emplace_back(std::move(newEntry));
+    }
+
+    if (settings->sortFolders()) {
+        std::ranges::sort(dirs, comparator());
+    } else {
+        std::ranges::sort(dirs, pathComparator());
+    }
+
+    return dirs;
+}
+
+QString DirectoryManager::nextSiblingDir(const QString &dirPath) const {
+    auto dirs = siblingDirs(dirPath);
+    if (dirs.empty())
+        return {};
+
+    QString key = lookupKey(dirPath);
+    for (size_t i = 0; i < dirs.size(); ++i) {
+        if (lookupKey(dirs[i].path) == key) {
+            if (i + 1 < dirs.size())
+                return dirs[i + 1].path;
+            return {};
+        }
+    }
+    return {};
+}
+
+QString DirectoryManager::prevSiblingDir(const QString &dirPath) const {
+    auto dirs = siblingDirs(dirPath);
+    if (dirs.empty())
+        return {};
+
+    QString key = lookupKey(dirPath);
+    for (size_t i = 0; i < dirs.size(); ++i) {
+        if (lookupKey(dirs[i].path) == key) {
+            if (i > 0)
+                return dirs[i - 1].path;
+            return {};
+        }
+    }
+    return {};
 }
 
 bool DirectoryManager::checkFileRange(int index) const {

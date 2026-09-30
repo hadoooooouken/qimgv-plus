@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QDir>
 #include <QHash>
 #include <QCollator>
 #include <QElapsedTimer>
@@ -29,9 +30,7 @@
 #include "utils/stuff.h"
 #include "sourcecontainers/fsentry.h"
 
-#ifdef Q_OS_WIN32
 #include "windows.h"
-#endif
 
 enum FileListSource {
     SOURCE_DIRECTORY,
@@ -66,6 +65,8 @@ public:
     QString nextOfFile(QString filePath) const;
     QString prevOfDir(QString filePath) const;
     QString nextOfDir(QString filePath) const;
+    QString nextSiblingDir(const QString &dirPath) const;
+    QString prevSiblingDir(const QString &dirPath) const;
     void sortEntryLists();
     QDateTime lastModified(QString filePath) const;
 
@@ -149,11 +150,7 @@ private:
     void rebuildFileLookupMap();
     void rebuildDirLookupMap();
     inline QString lookupKey(const QString &path) const {
-#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
-        return path.toLower();
-#else
-        return path;
-#endif
+        return QDir::cleanPath(path).toLower();
     }
 
     // Refcounted so overlapping beginSelfWrite() calls for the same path
@@ -194,9 +191,9 @@ private:
     bool name_entry_compare_reverse(const FSEntry &e1, const FSEntry &e2) const;
     bool date_entry_compare(const FSEntry &e1, const FSEntry &e2) const;
     bool date_entry_compare_reverse(const FSEntry &e1, const FSEntry &e2) const;
-    CompareFunction compareFunction();
-    auto comparator() { auto fn = compareFunction(); return [this, fn](const FSEntry& a, const FSEntry& b) { return (this->*fn)(a, b); }; }
-    auto pathComparator() { return [this](const FSEntry& a, const FSEntry& b) { return path_entry_compare(a, b); }; }
+    CompareFunction compareFunction() const;
+    auto comparator() const { auto fn = compareFunction(); return [this, fn](const FSEntry& a, const FSEntry& b) { return (this->*fn)(a, b); }; }
+    auto pathComparator() const { return [this](const FSEntry& a, const FSEntry& b) { return path_entry_compare(a, b); }; }
     bool size_entry_compare(const FSEntry &e1, const FSEntry &e2) const;
     bool size_entry_compare_reverse(const FSEntry &e1, const FSEntry &e2) const;
     void startFileWatcher(QString directoryPath);
@@ -209,6 +206,7 @@ private:
 
     std::shared_ptr<std::atomic<bool>> currentScanCancelled;
     bool isScanning = false;
+    std::vector<FSEntry> siblingDirs(const QString &dirPath) const;
     void handleScanFinished(const QString &path, std::vector<FSEntry> files, std::vector<FSEntry> dirs);
 
 private slots:

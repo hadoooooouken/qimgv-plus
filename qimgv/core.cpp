@@ -937,17 +937,21 @@ void Core::onModelLoaded() {
     folderViewPresenter.selectAndFocus(pendingFolderViewSelectPath);
     pendingFolderViewSelectPath.clear();
   }
-  // A subfolder was activated from the thumbnail panel: the async directory
-  // scan has finished, so we can now load the first image (if any) while
-  // staying in document mode.  If the folder contains no images the strip
-  // will show its subfolders (when the setting is on) and the main view
-  // simply keeps whatever was displayed before.
+  // A subfolder or adjacent folder was activated in document mode: the async
+  // directory scan has finished, so we can now load the first or last image
+  // (if any) while staying in document mode. If the folder contains no images
+  // the strip will show its subfolders (when the setting is on) and the main
+  // view simply keeps whatever was displayed before.
   // Guard with a view-mode check: if the user manually switched to folder
   // view during the scan, honour that choice instead of forcing an image.
-  if (m_pendingThumbPanelNavigation) {
-    m_pendingThumbPanelNavigation = false;
+  if (m_pendingDocumentLoad != PendingDocumentLoad::None) {
+    auto target = m_pendingDocumentLoad;
+    m_pendingDocumentLoad = PendingDocumentLoad::None;
     if (mw->currentViewMode() == MODE_DOCUMENT && model->fileCount() > 0) {
-      loadFileIndex(0, false, settings->usePreloader());
+      int targetIndex = (target == PendingDocumentLoad::LastImage)
+                            ? (model->fileCount() - 1)
+                            : 0;
+      loadFileIndex(targetIndex, false, settings->usePreloader());
     }
   }
   if (pendingModelImageSync) {
@@ -969,8 +973,8 @@ void Core::onThumbPanelDirActivated(QString dirPath) {
   // Stay in document mode; the thumbnail strip will refresh with the new
   // directory's contents once the async scan finishes (onModelLoaded).
   // We cannot call loadFileIndex() yet because fileCount() is still 0;
-  // the deferred load is handled via m_pendingThumbPanelNavigation.
-  m_pendingThumbPanelNavigation = true;
+  // the deferred load is handled via m_pendingDocumentLoad.
+  m_pendingDocumentLoad = PendingDocumentLoad::FirstImage;
   if (settings->rememberLastFolder())
     settings->setLastFolder(absolutePath);
 }
@@ -2094,6 +2098,7 @@ void Core::reset() {
   state.directoryPath = "";
   state.currentImg.reset();
   autoPageHintShown.clear();
+  m_pendingDocumentLoad = PendingDocumentLoad::None;
   model->clearScaler();
   model->setDirectory("");
 }
@@ -2236,53 +2241,41 @@ void Core::loadParentDir() {
 
 void Core::nextDirectory() {
   if (model->directoryPath().isEmpty() ||
-      mw->currentViewMode() != MODE_DOCUMENT)
+      mw->currentViewMode() != MODE_DOCUMENT ||
+      model->loaderBusy())
     return;
   stopSlideshow();
-  QFileInfo currentDir(model->directoryPath());
-  QFileInfo parentDir(currentDir.absolutePath());
-  if (parentDir.exists() && parentDir.isReadable()) {
-    DirectoryManager dm;
-    if (!dm.setDirectory(parentDir.absoluteFilePath()))
+  QString next = model->nextSiblingDir(model->directoryPath());
+  if (!next.isEmpty()) {
+    if (!setDirectory(next))
       return;
-    QString next = dm.nextOfDir(model->directoryPath());
-    if (!next.isEmpty()) {
-      if (!setDirectory(next))
-        return;
-      QFileInfo fi(next);
-      mw->showMessageDirectory(fi.baseName());
-      if (model->fileCount())
-        loadFileIndex(0, false, true);
-    } else {
-      mw->showMessageDirectoryEnd();
-    }
+    m_pendingDocumentLoad = PendingDocumentLoad::FirstImage;
+    QFileInfo fi(next);
+    mw->showMessageDirectory(fi.baseName());
+    if (settings->rememberLastFolder())
+      settings->setLastFolder(next);
+  } else {
+    mw->showMessageDirectoryEnd();
   }
 }
 
 void Core::prevDirectory(bool selectLast) {
   if (model->directoryPath().isEmpty() ||
-      mw->currentViewMode() != MODE_DOCUMENT)
+      mw->currentViewMode() != MODE_DOCUMENT ||
+      model->loaderBusy())
     return;
-  QFileInfo currentDir(model->directoryPath());
-  QFileInfo parentDir(currentDir.absolutePath());
-  if (parentDir.exists() && parentDir.isReadable()) {
-    DirectoryManager dm;
-    dm.setDirectory(parentDir.absoluteFilePath());
-    QString prev = dm.prevOfDir(model->directoryPath());
-    if (!prev.isEmpty()) {
-      if (!setDirectory(prev))
-        return;
-      QFileInfo fi(prev);
-      mw->showMessageDirectory(fi.baseName());
-      if (model->fileCount()) {
-        if (selectLast)
-          loadFileIndex(model->fileCount() - 1, false, true);
-        else
-          loadFileIndex(0, false, true);
-      }
-    } else {
-      mw->showMessageDirectoryStart();
-    }
+  stopSlideshow();
+  QString prev = model->prevSiblingDir(model->directoryPath());
+  if (!prev.isEmpty()) {
+    if (!setDirectory(prev))
+      return;
+    m_pendingDocumentLoad = selectLast ? PendingDocumentLoad::LastImage : PendingDocumentLoad::FirstImage;
+    QFileInfo fi(prev);
+    mw->showMessageDirectory(fi.baseName());
+    if (settings->rememberLastFolder())
+      settings->setLastFolder(prev);
+  } else {
+    mw->showMessageDirectoryStart();
   }
 }
 
@@ -2306,7 +2299,7 @@ void Core::historyBack() {
     if (mw->currentViewMode() == MODE_DOCUMENT && QFileInfo(path).isDir()) {
       stopSlideshow();
       setDirectory(path);
-      m_pendingThumbPanelNavigation = true;
+      m_pendingDocumentLoad = PendingDocumentLoad::FirstImage;
       if (settings->rememberLastFolder())
         settings->setLastFolder(path);
     } else {
@@ -2326,7 +2319,7 @@ void Core::historyForward() {
     if (mw->currentViewMode() == MODE_DOCUMENT && QFileInfo(path).isDir()) {
       stopSlideshow();
       setDirectory(path);
-      m_pendingThumbPanelNavigation = true;
+      m_pendingDocumentLoad = PendingDocumentLoad::FirstImage;
       if (settings->rememberLastFolder())
         settings->setLastFolder(path);
     } else {
