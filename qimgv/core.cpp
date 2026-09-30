@@ -524,7 +524,7 @@ void Core::connectComponents() {
   connect(&thumbPanelPresenter, &DirectoryPresenter::filesActivated, this,
           &Core::onDirectoryViewFilesActivated);
   connect(&thumbPanelPresenter, &DirectoryPresenter::dirActivated, this,
-          &Core::loadPath);
+          &Core::onThumbPanelDirActivated);
   connect(&thumbPanelPresenter, &DirectoryPresenter::backRequested, this,
           &Core::historyBack);
   connect(&thumbPanelPresenter, &DirectoryPresenter::forwardRequested, this,
@@ -937,6 +937,19 @@ void Core::onModelLoaded() {
     folderViewPresenter.selectAndFocus(pendingFolderViewSelectPath);
     pendingFolderViewSelectPath.clear();
   }
+  // A subfolder was activated from the thumbnail panel: the async directory
+  // scan has finished, so we can now load the first image (if any) while
+  // staying in document mode.  If the folder contains no images the strip
+  // will show its subfolders (when the setting is on) and the main view
+  // simply keeps whatever was displayed before.
+  // Guard with a view-mode check: if the user manually switched to folder
+  // view during the scan, honour that choice instead of forcing an image.
+  if (m_pendingThumbPanelNavigation) {
+    m_pendingThumbPanelNavigation = false;
+    if (mw->currentViewMode() == MODE_DOCUMENT && model->fileCount() > 0) {
+      loadFileIndex(0, false, settings->usePreloader());
+    }
+  }
   if (pendingModelImageSync) {
     model->updateImage(state.currentFilePath, state.currentImg);
     pendingModelImageSync = false;
@@ -944,6 +957,22 @@ void Core::onModelLoaded() {
   if (shuffle)
     syncRandomizer();
   updateInfoString();
+}
+
+void Core::onThumbPanelDirActivated(QString dirPath) {
+  if (dirPath.isEmpty())
+    return;
+  stopSlideshow();
+  QString absolutePath = QDir(dirPath).absolutePath();
+  if (!setDirectory(absolutePath))
+    return;
+  // Stay in document mode; the thumbnail strip will refresh with the new
+  // directory's contents once the async scan finishes (onModelLoaded).
+  // We cannot call loadFileIndex() yet because fileCount() is still 0;
+  // the deferred load is handled via m_pendingThumbPanelNavigation.
+  m_pendingThumbPanelNavigation = true;
+  if (settings->rememberLastFolder())
+    settings->setLastFolder(absolutePath);
 }
 
 void Core::onDirectoryViewFileActivated(QString filePath) {

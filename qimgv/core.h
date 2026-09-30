@@ -194,6 +194,7 @@ private slots:
     void showInDirectory();
     void createDirectory();
     void onDirectoryViewFileActivated(QString filePath);
+    void onThumbPanelDirActivated(QString dirPath);
     void onDirectoryViewFilesActivated(QList<QString> filePaths, QString activePath);
     // Opens the batch converter dialog once folderViewPresenter's background
     // scan (kicked off by showBatchConverter()) has expanded the current
@@ -271,6 +272,14 @@ private:
     // in onModelLoaded() (mirrors the dirTreeView's m_pendingScrollPath
     // approach in FolderView).
     QString pendingFolderViewSelectPath;
+    // When a directory is activated from the thumbnail panel ("Show
+    // subfolders" mode), we navigate into it while staying in document mode.
+    // Because directory scanning is async, the model is empty when
+    // setDirectory() returns.  This flag tells onModelLoaded() to auto-load
+    // the first image once the scan finishes, instead of relying on
+    // loadPath()'s synchronous fileCount() check (which would see 0 and
+    // switch to folder view).
+    bool m_pendingThumbPanelNavigation = false;
     // modelDelayLoad() displays the already-decoded image before the
     // directory scan has run, so DirectoryModel::updateImage() can't
     // register it in the model's cache yet - containsFile() stays false
