@@ -743,7 +743,13 @@ ControlsOverlay {
     background-color: %overlay_rgba%;
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
+    border-bottom-left-radius: 8px;
     border-bottom-right-radius: 0px;
+}
+
+ControlsOverlay #controlsOverlayLeftButton,
+ControlsOverlay #controlsOverlayLeftButton:hover {
+    border-bottom-left-radius: 8px;
 }
 /*----------------------------------------------------------------------------*/
 

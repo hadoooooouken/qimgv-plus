@@ -700,6 +700,9 @@ bool MW::eventFilter(QObject *obj, QEvent *event) {
         if (viewerWidget) {
             viewerWidget->onMouseMoveFullscreen();
         }
+        if (controlsOverlay && controlsOverlay->isVisible() && isActiveWindow()) {
+            controlsOverlay->onPointerMoved();
+        }
     }
     return FloatingWidgetContainer::eventFilter(obj, event);
 }

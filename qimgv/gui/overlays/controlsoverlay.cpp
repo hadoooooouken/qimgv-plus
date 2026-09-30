@@ -1,24 +1,28 @@
 #include "controlsoverlay.h"
 
+namespace {
+constexpr int kControlsHideTimeoutMs = 2000;
+constexpr int kFadeDurationMs = 230;
+} // namespace
+
 ControlsOverlay::ControlsOverlay(FloatingWidgetContainer *parent) :
     FloatingWidget(parent)
 {
     folderViewButton = new ActionButton("folderView", FluentIcon::Grid20, 20, 30);
     folderViewButton->setAccessibleName("ButtonSmall");
+    folderViewButton->setObjectName("controlsOverlayLeftButton");
+    folderViewButton->setColor(Qt::white);
     settingsButton = new ActionButton("openSettings", FluentIcon::Settings20, 20, 30);
     settingsButton->setAccessibleName("ButtonSmall");
+    settingsButton->setColor(Qt::white);
     closeButton = new ActionButton("exit", FluentIcon::Dismiss16, 16, 30);
     closeButton->setAccessibleName("ButtonSmall");
-
-    QWidget *horizontalLineWidget = new QWidget;
-    horizontalLineWidget->setFixedSize(5, 22);
-    horizontalLineWidget->setStyleSheet(QString("background-color: #707070; margin-left: 2px; margin-right: 2px"));
+    closeButton->setColor(Qt::white);
 
     layout.setContentsMargins(0,0,0,0);
     this->setContentsMargins(0,0,0,0);
     layout.setSpacing(0);
     layout.addWidget(folderViewButton);
-    layout.addWidget(horizontalLineWidget);
     layout.addWidget(settingsButton);
     layout.addWidget(closeButton);
     setLayout(&layout);
@@ -28,20 +32,58 @@ ControlsOverlay::ControlsOverlay(FloatingWidgetContainer *parent) :
 
     fadeEffect = new QGraphicsOpacityEffect(this);
     this->setGraphicsEffect(fadeEffect);
-    fadeAnimation = new QPropertyAnimation(fadeEffect, "opacity");
-    fadeAnimation->setDuration(230);
+    fadeAnimation = new QPropertyAnimation(fadeEffect, "opacity", this);
+    fadeAnimation->setDuration(kFadeDurationMs);
     fadeAnimation->setStartValue(1.0f);
-    fadeAnimation->setEndValue(0);
+    fadeAnimation->setEndValue(0.0f);
     fadeAnimation->setEasingCurve(QEasingCurve::OutQuart);
+
+    hideTimer.setSingleShot(true);
+    connect(&hideTimer, &QTimer::timeout, this, &ControlsOverlay::onHideTimeout);
 
     if(parent)
         setContainerSize(parent->size());
-    //this->show();
 }
 
 void ControlsOverlay::show() {
-    fadeEffect->setOpacity(0.0);
+    fadeAnimation->stop();
+    fadeEffect->setOpacity(1.0);
     FloatingWidget::show();
+    hideTimer.start(kControlsHideTimeoutMs);
+}
+
+void ControlsOverlay::hide() {
+    hideTimer.stop();
+    fadeAnimation->stop();
+    FloatingWidget::hide();
+}
+
+void ControlsOverlay::onPointerMoved() {
+    if (!isVisible())
+        return;
+
+    if (fadeAnimation->state() == QAbstractAnimation::Running) {
+        fadeAnimation->stop();
+    }
+    if (fadeEffect->opacity() < 1.0) {
+        fadeEffect->setOpacity(1.0);
+    }
+
+    if (!rect().contains(mapFromGlobal(QCursor::pos()))) {
+        hideTimer.start(kControlsHideTimeoutMs);
+    } else {
+        hideTimer.stop();
+    }
+}
+
+void ControlsOverlay::onHideTimeout() {
+    if (rect().contains(mapFromGlobal(QCursor::pos()))) {
+        return;
+    }
+    fadeAnimation->stop();
+    fadeAnimation->setStartValue(fadeEffect->opacity());
+    fadeAnimation->setEndValue(0.0f);
+    fadeAnimation->start();
 }
 
 QSize ControlsOverlay::contentsSize() {
@@ -64,11 +106,14 @@ void ControlsOverlay::recalculateGeometry() {
 
 void ControlsOverlay::enterEvent(QEnterEvent *event) {
     Q_UNUSED(event)
+    hideTimer.stop();
     fadeAnimation->stop();
     fadeEffect->setOpacity(1.0);
 }
 
 void ControlsOverlay::leaveEvent(QEvent *event) {
     Q_UNUSED(event)
-    fadeAnimation->start();
+    if (isVisible()) {
+        hideTimer.start(kControlsHideTimeoutMs);
+    }
 }
