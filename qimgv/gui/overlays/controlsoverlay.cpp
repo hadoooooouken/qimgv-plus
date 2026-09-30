@@ -40,12 +40,18 @@ ControlsOverlay::ControlsOverlay(FloatingWidgetContainer *parent) :
 
     hideTimer.setSingleShot(true);
     connect(&hideTimer, &QTimer::timeout, this, &ControlsOverlay::onHideTimeout);
+    connect(fadeAnimation, &QPropertyAnimation::finished, this, [this]() {
+        if (qFuzzyIsNull(fadeEffect->opacity())) {
+            setAttribute(Qt::WA_TransparentForMouseEvents, true);
+        }
+    });
 
     if(parent)
         setContainerSize(parent->size());
 }
 
 void ControlsOverlay::show() {
+    setAttribute(Qt::WA_TransparentForMouseEvents, false);
     fadeAnimation->stop();
     fadeEffect->setOpacity(1.0);
     FloatingWidget::show();
@@ -61,6 +67,8 @@ void ControlsOverlay::hide() {
 void ControlsOverlay::onPointerMoved() {
     if (!isVisible())
         return;
+
+    setAttribute(Qt::WA_TransparentForMouseEvents, false);
 
     if (fadeAnimation->state() == QAbstractAnimation::Running) {
         fadeAnimation->stop();
