@@ -16,7 +16,9 @@
 #include <QRunnable>
 #include <QTimer>
 #include <atomic>
+#include <expected>
 #include <memory>
+#include <system_error>
 
 #include <vector>
 #include <string>
@@ -65,8 +67,8 @@ public:
     QString nextOfFile(QString filePath) const;
     QString prevOfDir(QString filePath) const;
     QString nextOfDir(QString filePath) const;
-    QString nextSiblingDir(const QString &dirPath) const;
-    QString prevSiblingDir(const QString &dirPath) const;
+    std::expected<QString, std::error_code> nextSiblingDir(const QString &dirPath) const;
+    std::expected<QString, std::error_code> prevSiblingDir(const QString &dirPath) const;
     void sortEntryLists();
     QDateTime lastModified(QString filePath) const;
 
@@ -206,7 +208,7 @@ private:
 
     std::shared_ptr<std::atomic<bool>> currentScanCancelled;
     bool isScanning = false;
-    std::vector<FSEntry> siblingDirs(const QString &dirPath) const;
+    std::expected<std::vector<FSEntry>, std::error_code> siblingDirs(const QString &dirPath) const;
     void handleScanFinished(const QString &path, std::vector<FSEntry> files, std::vector<FSEntry> dirs);
 
 private slots:

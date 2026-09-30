@@ -522,57 +522,77 @@ QString DirectoryManager::nextOfDir(QString dirPath) const {
     return nextDirectoryPath;
 }
 
-std::vector<FSEntry> DirectoryManager::siblingDirs(const QString &dirPath) const {
+std::expected<std::vector<FSEntry>, std::error_code> DirectoryManager::siblingDirs(const QString &dirPath) const {
     if (dirPath.isEmpty())
-        return {};
+        return std::vector<FSEntry>{};
 
     QFileInfo currentDir(dirPath);
     if (currentDir.isRoot())
-        return {};
+        return std::vector<FSEntry>{};
 
     QFileInfo parentDir(currentDir.absolutePath());
-    if (!parentDir.exists() || !parentDir.isReadable())
-        return {};
-
     std::error_code ec;
     auto stdPath = toStdString(parentDir.absoluteFilePath());
-    if (!fs::exists(stdPath, ec) || !fs::is_directory(stdPath, ec))
-        return {};
+    if (!fs::exists(stdPath, ec)) {
+        if (ec)
+            return std::unexpected(ec);
+        return std::vector<FSEntry>{};
+    }
+    if (!fs::is_directory(stdPath, ec)) {
+        if (ec)
+            return std::unexpected(ec);
+        return std::vector<FSEntry>{};
+    }
 
     bool showHiddenFiles = settings->showHiddenFiles();
+    bool needModifyTime = settings->sortFolders() &&
+                          (mSortingMode == SORT_TIME || mSortingMode == SORT_TIME_DESC);
     std::vector<FSEntry> dirs;
 
-    for (const auto &entry : fs::directory_iterator(stdPath, ec)) {
+    fs::directory_iterator iterator(stdPath, ec);
+    if (ec)
+        return std::unexpected(ec);
+    const fs::directory_iterator end;
+
+    while (iterator != end) {
+        const auto &entry = *iterator;
+        std::error_code entryEc;
+        const bool isDir = entry.is_directory(entryEc);
+        if (entryEc)
+            return std::unexpected(entryEc);
+
+        if (isDir) {
+            bool isHidden = false;
+            if (!showHiddenFiles) {
+                DWORD attributes = GetFileAttributes(entry.path().c_str());
+                isHidden = attributes != INVALID_FILE_ATTRIBUTES &&
+                           (attributes & FILE_ATTRIBUTE_HIDDEN);
+            }
+
+            if (!isHidden) {
+                QString name = QString::fromStdWString(entry.path().filename().generic_wstring());
+                QString path = QString::fromStdWString(entry.path().generic_wstring());
+
+                FSEntry newEntry;
+                newEntry.name = name;
+                newEntry.path = path;
+                newEntry.isDirectory = true;
+                if (needModifyTime) {
+                    std::error_code timeEc;
+                    auto time = entry.last_write_time(timeEc);
+                    newEntry.modifyTime = timeEc
+                                              ? ((mSortingMode == SORT_TIME)
+                                                     ? std::filesystem::file_time_type::max()
+                                                     : std::filesystem::file_time_type::min())
+                                              : time;
+                }
+                dirs.emplace_back(std::move(newEntry));
+            }
+        }
+
+        iterator.increment(ec);
         if (ec)
-            break;
-
-        bool isDir = false;
-        try {
-            isDir = entry.is_directory();
-        } catch (...) {
-            continue;
-        }
-
-        if (!isDir)
-            continue;
-
-        if (!showHiddenFiles) {
-            DWORD attributes = GetFileAttributes(entry.path().c_str());
-            if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_HIDDEN))
-                continue;
-        }
-
-        QString name = QString::fromStdWString(entry.path().filename().generic_wstring());
-        QString path = QString::fromStdWString(entry.path().generic_wstring());
-
-        FSEntry newEntry;
-        newEntry.name = name;
-        newEntry.path = path;
-        newEntry.isDirectory = true;
-        try {
-            newEntry.modifyTime = entry.last_write_time(ec);
-        } catch (...) {}
-        dirs.emplace_back(std::move(newEntry));
+            return std::unexpected(ec);
     }
 
     if (settings->sortFolders()) {
@@ -584,36 +604,42 @@ std::vector<FSEntry> DirectoryManager::siblingDirs(const QString &dirPath) const
     return dirs;
 }
 
-QString DirectoryManager::nextSiblingDir(const QString &dirPath) const {
-    auto dirs = siblingDirs(dirPath);
+std::expected<QString, std::error_code> DirectoryManager::nextSiblingDir(const QString &dirPath) const {
+    auto dirsResult = siblingDirs(dirPath);
+    if (!dirsResult)
+        return std::unexpected(dirsResult.error());
+    const auto &dirs = *dirsResult;
     if (dirs.empty())
-        return {};
+        return QString{};
 
     QString key = lookupKey(dirPath);
     for (size_t i = 0; i < dirs.size(); ++i) {
         if (lookupKey(dirs[i].path) == key) {
             if (i + 1 < dirs.size())
                 return dirs[i + 1].path;
-            return {};
+            return QString{};
         }
     }
-    return {};
+    return QString{};
 }
 
-QString DirectoryManager::prevSiblingDir(const QString &dirPath) const {
-    auto dirs = siblingDirs(dirPath);
+std::expected<QString, std::error_code> DirectoryManager::prevSiblingDir(const QString &dirPath) const {
+    auto dirsResult = siblingDirs(dirPath);
+    if (!dirsResult)
+        return std::unexpected(dirsResult.error());
+    const auto &dirs = *dirsResult;
     if (dirs.empty())
-        return {};
+        return QString{};
 
     QString key = lookupKey(dirPath);
     for (size_t i = 0; i < dirs.size(); ++i) {
         if (lookupKey(dirs[i].path) == key) {
             if (i > 0)
                 return dirs[i - 1].path;
-            return {};
+            return QString{};
         }
     }
-    return {};
+    return QString{};
 }
 
 bool DirectoryManager::checkFileRange(int index) const {

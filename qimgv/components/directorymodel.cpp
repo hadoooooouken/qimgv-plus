@@ -111,11 +111,11 @@ QString DirectoryModel::lastFile() const {
     return dirManager.lastFile();
 }
 
-QString DirectoryModel::nextSiblingDir(const QString &dirPath) const {
+std::expected<QString, std::error_code> DirectoryModel::nextSiblingDir(const QString &dirPath) const {
     return dirManager.nextSiblingDir(dirPath);
 }
 
-QString DirectoryModel::prevSiblingDir(const QString &dirPath) const {
+std::expected<QString, std::error_code> DirectoryModel::prevSiblingDir(const QString &dirPath) const {
     return dirManager.prevSiblingDir(dirPath);
 }
 

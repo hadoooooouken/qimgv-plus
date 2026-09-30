@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <expected>
+#include <system_error>
 #include <QObject>
 #include "cache/cache.h"
 #include "directorymanager/directorymanager.h"
@@ -31,8 +33,8 @@ public:
     QString prevOf(QString filePath) const;
     QString firstFile() const;
     QString lastFile() const;
-    QString nextSiblingDir(const QString &dirPath) const;
-    QString prevSiblingDir(const QString &dirPath) const;
+    std::expected<QString, std::error_code> nextSiblingDir(const QString &dirPath) const;
+    std::expected<QString, std::error_code> prevSiblingDir(const QString &dirPath) const;
     QDateTime lastModified(QString filePath) const;
 
     bool forceInsert(QString filePath);

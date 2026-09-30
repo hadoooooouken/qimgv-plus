@@ -2245,7 +2245,13 @@ void Core::nextDirectory() {
       model->loaderBusy())
     return;
   stopSlideshow();
-  QString next = model->nextSiblingDir(model->directoryPath());
+  auto nextResult = model->nextSiblingDir(model->directoryPath());
+  if (!nextResult) {
+    mw->showError(tr("Could not enumerate sibling folders: ") +
+                  QString::fromStdString(nextResult.error().message()));
+    return;
+  }
+  QString next = *nextResult;
   if (!next.isEmpty()) {
     if (!setDirectory(next))
       return;
@@ -2265,7 +2271,13 @@ void Core::prevDirectory(bool selectLast) {
       model->loaderBusy())
     return;
   stopSlideshow();
-  QString prev = model->prevSiblingDir(model->directoryPath());
+  auto prevResult = model->prevSiblingDir(model->directoryPath());
+  if (!prevResult) {
+    mw->showError(tr("Could not enumerate sibling folders: ") +
+                  QString::fromStdString(prevResult.error().message()));
+    return;
+  }
+  QString prev = *prevResult;
   if (!prev.isEmpty()) {
     if (!setDirectory(prev))
       return;
