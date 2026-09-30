@@ -2300,7 +2300,18 @@ void Core::historyBack() {
     // top instead of where we were.
     if (!childPath.isEmpty())
       pendingFolderViewSelectPath = childPath;
-    loadPath(path);
+    // When in document mode (thumbnail panel with subfolders), stay in
+    // document mode instead of switching to folder view.  loadPath() would
+    // see fileCount()==0 (async scan) and flip to folder view.
+    if (mw->currentViewMode() == MODE_DOCUMENT && QFileInfo(path).isDir()) {
+      stopSlideshow();
+      setDirectory(path);
+      m_pendingThumbPanelNavigation = true;
+      if (settings->rememberLastFolder())
+        settings->setLastFolder(path);
+    } else {
+      loadPath(path);
+    }
     blockHistory = false;
   } else {
     loadParentDir();
@@ -2312,7 +2323,15 @@ void Core::historyForward() {
     QString path = forwardHistory.takeLast();
     backHistory.append(model->directoryPath());
     blockHistory = true;
-    loadPath(path);
+    if (mw->currentViewMode() == MODE_DOCUMENT && QFileInfo(path).isDir()) {
+      stopSlideshow();
+      setDirectory(path);
+      m_pendingThumbPanelNavigation = true;
+      if (settings->rememberLastFolder())
+        settings->setLastFolder(path);
+    } else {
+      loadPath(path);
+    }
     blockHistory = false;
   }
 }
