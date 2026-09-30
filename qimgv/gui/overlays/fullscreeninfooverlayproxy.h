@@ -17,6 +17,7 @@ public:
     void show();
     void showWhenReady();
     void hide();
+    void onPointerMoved();
     void setInfo(QString position, QString fileName, QString info);
 
 private:

@@ -703,6 +703,9 @@ bool MW::eventFilter(QObject *obj, QEvent *event) {
         if (controlsOverlay && controlsOverlay->isVisible() && isActiveWindow()) {
             controlsOverlay->onPointerMoved();
         }
+        if (infoBarFullscreen && isActiveWindow()) {
+            infoBarFullscreen->onPointerMoved();
+        }
     }
     return FloatingWidgetContainer::eventFilter(obj, event);
 }
@@ -1071,6 +1074,8 @@ void MW::setCurrentInfo(int _index, int _fileCount, QString _filePath, QString _
     info.shuffle = shuffle;
     info.edited = edited;
     onInfoUpdated();
+    if(isFullScreen() && showInfoBarFullscreen)
+        infoBarFullscreen->showWhenReady();
 }
 
 void MW::onInfoUpdated() {
