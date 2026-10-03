@@ -21,11 +21,10 @@
 namespace
 {
 
-constexpr quint64 kBytesPerMebibyte = 1024ULL * 1024ULL;
-constexpr quint64 kMaximumPageSourceBytes = 256ULL * kBytesPerMebibyte;
+constexpr quint64 kMaximumPageSourceBytes = 256ULL * QimgvZipInternal::kBytesPerMebibyte;
 constexpr qint64 kMaximumImageDimension = 300'000;
 constexpr quint64 kMaximumSourcePixels = 128ULL * 1024ULL * 1024ULL;
-constexpr quint64 kMaximumDecodedImageBytes = 512ULL * kBytesPerMebibyte;
+constexpr quint64 kMaximumDecodedImageBytes = 512ULL * QimgvZipInternal::kBytesPerMebibyte;
 
 struct ArchivePageEntry
 {
