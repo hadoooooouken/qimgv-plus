@@ -21,11 +21,10 @@
 namespace
 {
 
-constexpr quint64 kBytesPerMebibyte = 1024ULL * 1024ULL;
-constexpr quint64 kMaximumPageSourceBytes = 256ULL * kBytesPerMebibyte;
+constexpr quint64 kMaximumPageSourceBytes = 256ULL * QimgvSevenZipInternal::kBytesPerMebibyte;
 constexpr qint64 kMaximumImageDimension = 300'000;
 constexpr quint64 kMaximumSourcePixels = 128ULL * 1024ULL * 1024ULL;
-constexpr quint64 kMaximumDecodedImageBytes = 512ULL * kBytesPerMebibyte;
+constexpr quint64 kMaximumDecodedImageBytes = 512ULL * QimgvSevenZipInternal::kBytesPerMebibyte;
 
 struct SevenZipPageEntry
 {
@@ -164,7 +163,7 @@ public:
             QString normalizedPath = stat.name;
             normalizedPath.replace(u'\\', u'/');
             const QByteArray format = pageFormat(normalizedPath);
-            if (stat.directory || !stat.supported || format.isEmpty()
+            if (stat.directory || format.isEmpty()
                 || isHiddenOrJunkPath(normalizedPath) || stat.uncompressedSize == 0
                 || stat.uncompressedSize > kMaximumPageSourceBytes) {
                 continue;

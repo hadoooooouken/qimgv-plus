@@ -155,7 +155,8 @@ struct SevenZipReader::Impl
     void close()
     {
         if (solidBuffer) {
-            safeSzFree(nullptr, solidBuffer);
+            ISzAlloc alloc = g_SafeAlloc;
+            ISzAlloc_Free(&alloc, solidBuffer);
             solidBuffer = nullptr;
         }
         solidBufferSize = 0;
@@ -251,7 +252,6 @@ bool SevenZipReader::entryStat(quint32 index, SevenZipEntryStat &result) const
         : QString();
     result.directory = SzArEx_IsDir(&m_impl->db, index) != 0;
     result.uncompressedSize = SzArEx_GetFileSize(&m_impl->db, index);
-    result.supported = true;
     return true;
 }
 
