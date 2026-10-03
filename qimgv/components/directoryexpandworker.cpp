@@ -91,6 +91,10 @@ void DirectoryExpandWorker::run() {
                     && !QImageReader(filePath, fileName.endsWith(u".zip", Qt::CaseInsensitive) ? "zip" : "cbz").canRead()) {
                     continue;
                 }
+                if (fileName.endsWith(u".7z", Qt::CaseInsensitive)
+                    && !QImageReader(filePath, "7z").canRead()) {
+                    continue;
+                }
                 if (!tryAdd(filePath)) {
                     limitWasExceeded = true;
                     break;

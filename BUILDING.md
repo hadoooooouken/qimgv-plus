@@ -83,6 +83,13 @@ Used by CMake presets for the main build.
 1. Download from [Ninja releases](https://github.com/ninja-build/ninja/releases)
 2. Place `ninja.exe` into `formats/ninja/`
 
+### LZMA SDK (source code)
+
+Required by the `kimg_7z` plugin for direct `.7z` image archive extraction.
+
+1. Download LZMA SDK from [7-zip.org](https://www.7-zip.org/sdk.html)
+2. Extract to `formats/lzma/` so that `formats/lzma/C/` is present
+
 ---
 
 ## Repository Layout
@@ -107,6 +114,7 @@ qimgv-plus/
 │   ├── libspng/               # PNG codec (static, links zlib-ng)
 │   ├── ffmpeg/                # FFmpeg (HEVC decoder only)
 │   ├── kimageformats/         # KDE image format plugins
+│   ├── lzma/                  # LZMA SDK (7z archive decoder)
 │   ├── openjpeg/              # JPEG 2000 codec
 │   ├── OpenJPH/               # HTJ2K codec
 │   ├── exiv2/                 # EXIF metadata (prebuilt binary)
@@ -162,6 +170,7 @@ qimgv-plus/
 | Library | Version | Upstream | Patched | Notes |
 |---------|---------|----------|:---:|-------|
 | OpenJPEG | v2.5.4 + 15 commits | [uclouvain/openjpeg](https://github.com/uclouvain/openjpeg) | Yes | JPEG 2000 codec |
+| LZMA SDK | 26.03 | [7-Zip / LZMA SDK](https://www.7-zip.org/sdk.html) | No | ANSI-C 7z decoder for kimg_7z plugin |
 | upscayl-ncnn | (fork, qimgv branch) | [hadoooooouken/upscayl-ncnn-qimgv-plus](https://github.com/hadoooooouken/upscayl-ncnn-qimgv-plus) | Fork | AI upscaling engine; uses [ncnn fork](https://github.com/hadoooooouken/ncnn) |
 
 ### Built separately

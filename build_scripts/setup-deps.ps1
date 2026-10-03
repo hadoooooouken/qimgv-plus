@@ -241,6 +241,17 @@ if (-not $PatchOnly) {
         Write-Info "Place ninja.exe into: $ninjaDir"
         Write-Warn "Automatic download not implemented -- please download manually"
     }
+
+    # LZMA SDK
+    Write-Header "lzma (LZMA SDK)"
+    $lzmaDir = Join-Path $FORMATS "lzma"
+    if (Test-Path (Join-Path $lzmaDir "C\7z.h")) {
+        Write-Info "Already exists, skipping LZMA SDK setup"
+    } else {
+        Write-Info "Download LZMA SDK from: https://www.7-zip.org/sdk.html"
+        Write-Info "Extract to: $lzmaDir (must contain C\ directory)"
+        Write-Warn "Automatic download not implemented -- please extract LZMA SDK manually"
+    }
 }
 
 # ---------------------------------------------------------------------------

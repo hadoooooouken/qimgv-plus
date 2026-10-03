@@ -64,6 +64,41 @@ kimageformats_add_plugin(kimg_ora SOURCES ora.cpp)
 target_link_libraries(kimg_ora PRIVATE qimgv_miniz)
 kimageformats_add_plugin(kimg_cbz SOURCES cbz.cpp)
 target_link_libraries(kimg_cbz PRIVATE qimgv_miniz)
+
+# 7z (LZMA SDK ANSI-C extraction backend)
+set(LZMA_C_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/lzma/C")
+add_library(qimgv_7z_sdk STATIC
+    "${LZMA_C_DIR}/7zAlloc.c"
+    "${LZMA_C_DIR}/7zArcIn.c"
+    "${LZMA_C_DIR}/7zBuf.c"
+    "${LZMA_C_DIR}/7zCrc.c"
+    "${LZMA_C_DIR}/7zCrcOpt.c"
+    "${LZMA_C_DIR}/7zDec.c"
+    "${LZMA_C_DIR}/7zStream.c"
+    "${LZMA_C_DIR}/Bcj2.c"
+    "${LZMA_C_DIR}/Bra.c"
+    "${LZMA_C_DIR}/Bra86.c"
+    "${LZMA_C_DIR}/BraIA64.c"
+    "${LZMA_C_DIR}/CpuArch.c"
+    "${LZMA_C_DIR}/Delta.c"
+    "${LZMA_C_DIR}/LzmaDec.c"
+    "${LZMA_C_DIR}/Lzma2Dec.c"
+    "${LZMA_C_DIR}/Ppmd7.c"
+    "${LZMA_C_DIR}/Ppmd7Dec.c"
+)
+target_include_directories(qimgv_7z_sdk PUBLIC "${LZMA_C_DIR}")
+target_compile_definitions(qimgv_7z_sdk PRIVATE Z7_PPMD_SUPPORT Z7_EXTRACT_ONLY)
+if(MSVC)
+    target_compile_options(qimgv_7z_sdk PRIVATE
+        /MD /O2 /Ob2 /Oi /Ot /DNDEBUG /arch:AVX2 /GS /guard:cf /Qspectre
+    )
+    set_target_properties(qimgv_7z_sdk PROPERTIES
+        INTERPROCEDURAL_OPTIMIZATION_RELEASE ON
+    )
+endif()
+
+kimageformats_add_plugin(kimg_7z SOURCES 7z.cpp sevenzipreader_p.cpp)
+target_link_libraries(kimg_7z PRIVATE qimgv_7z_sdk)
 # OpenEXR (Enabled with local build)
 set(OPENEXR_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/openexr/install")
 set(IMATH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/Imath/install")
@@ -109,7 +144,7 @@ if(MSVC)
     endif()
 endif()
 
-message(STATUS "Plugins configured: ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw kra ora cbz jxr")
+message(STATUS "Plugins configured: ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw kra ora cbz 7z jxr")
 if(MSVC)
     message(STATUS "kimageformats plugins: /arch:AVX2 and LTCG (IPO) enabled for Release")
 endif()

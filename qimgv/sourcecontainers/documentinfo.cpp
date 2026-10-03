@@ -126,6 +126,17 @@ void DocumentInfo::detectFormat() {
         } else {
             mDocumentType = DocumentType::NONE;
         }
+    } else if(suffix == "7z") {
+        // 7z uses a dedicated image-archive handler. Recognize it only
+        // by explicit extension and only if it contains at least one readable image.
+        QImageReader reader(fileInfo.filePath(), "7z");
+        if(reader.canRead()) {
+            mFormat = QStringLiteral("7z");
+            mDocumentType = DocumentType::STATIC;
+            exifLoaded = true;
+        } else {
+            mDocumentType = DocumentType::NONE;
+        }
     } else if(mimeName == "image/jpeg") {
         mFormat = "jpg";
         mDocumentType = DocumentType::STATIC;

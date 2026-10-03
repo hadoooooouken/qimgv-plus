@@ -18,6 +18,10 @@ bool isCandidateFileSupported(const QString &name, const QString &path) {
         QImageReader reader(path, name.endsWith(u".zip", Qt::CaseInsensitive) ? "zip" : "cbz");
         return reader.canRead();
     }
+    if (name.endsWith(u".7z", Qt::CaseInsensitive)) {
+        QImageReader reader(path, "7z");
+        return reader.canRead();
+    }
     return true;
 }
 

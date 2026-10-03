@@ -52,6 +52,7 @@ QVector<FormatCategory> allFormatCategories() {
             { "DjVu",      {"djvu", "djv"} },
             { "CBZ",       {"cbz"} },
             { "ZIP",       {"zip"} },
+            { "7Z",        {"7z"} },
         } },
         { QCoreApplication::translate("FormatFilterComboBox", "Other"), {
             { "ICO",       {"ico"} },
