@@ -6,6 +6,10 @@
 
 // Windows types (HANDLE, LPARAM, CALLBACK, …) must be visible before dll.hpp.
 #define WIN32_LEAN_AND_MEAN
+// Keep windows.h from defining min/max macros: they break std::numeric_limits<T>::max().
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 
 // UnRAR embedded library API (RARDLL mode).

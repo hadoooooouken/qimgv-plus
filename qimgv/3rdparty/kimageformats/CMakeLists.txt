@@ -102,37 +102,41 @@ target_link_libraries(kimg_7z PRIVATE qimgv_7z_sdk)
 
 # UnRAR (RARDLL embedded read-only backend for RAR4 + RAR5)
 set(UNRAR_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/unrar")
+# NOTE: UnRAR is not a one-file-per-TU code base. The following sources are
+# #included by a parent .cpp and MUST NOT be listed here (compiling them standalone
+# fails: they rely on rar.hpp being in scope, and listing them would duplicate symbols):
+#   blake2s.cpp  <- blake2sp.cpp
+#   crypt.cpp    <- crypt1.cpp crypt2.cpp crypt3.cpp crypt5.cpp
+#   extinfo.cpp  <- hardlinks.cpp
+#   unpack.cpp   <- coder.cpp model.cpp unpackinline.cpp unpack15.cpp unpack20.cpp
+#                   unpack30.cpp unpack50.cpp unpack50frag.cpp unpack50mt.cpp
+# consio.cpp, filcreat.cpp, rs.cpp and rs16.cpp are standalone units taken from the
+# official UnRARDll.vcxproj (rs/rs16 are required by recvol.cpp).
 add_library(qimgv_unrar_sdk STATIC
     "${UNRAR_SRC_DIR}/archive.cpp"
     "${UNRAR_SRC_DIR}/arcread.cpp"
     "${UNRAR_SRC_DIR}/blake2s.cpp"
-    "${UNRAR_SRC_DIR}/blake2sp.cpp"
     "${UNRAR_SRC_DIR}/cmddata.cpp"
-    "${UNRAR_SRC_DIR}/coder.cpp"
+    "${UNRAR_SRC_DIR}/consio.cpp"
     "${UNRAR_SRC_DIR}/crc.cpp"
     "${UNRAR_SRC_DIR}/crypt.cpp"
-    "${UNRAR_SRC_DIR}/crypt1.cpp"
-    "${UNRAR_SRC_DIR}/crypt2.cpp"
-    "${UNRAR_SRC_DIR}/crypt3.cpp"
-    "${UNRAR_SRC_DIR}/crypt5.cpp"
     "${UNRAR_SRC_DIR}/dll.cpp"
     "${UNRAR_SRC_DIR}/encname.cpp"
     "${UNRAR_SRC_DIR}/errhnd.cpp"
     "${UNRAR_SRC_DIR}/extinfo.cpp"
     "${UNRAR_SRC_DIR}/extract.cpp"
+    "${UNRAR_SRC_DIR}/filcreat.cpp"
     "${UNRAR_SRC_DIR}/file.cpp"
     "${UNRAR_SRC_DIR}/filefn.cpp"
     "${UNRAR_SRC_DIR}/filestr.cpp"
     "${UNRAR_SRC_DIR}/find.cpp"
     "${UNRAR_SRC_DIR}/getbits.cpp"
     "${UNRAR_SRC_DIR}/global.cpp"
-    "${UNRAR_SRC_DIR}/hardlinks.cpp"
     "${UNRAR_SRC_DIR}/hash.cpp"
     "${UNRAR_SRC_DIR}/headers.cpp"
     "${UNRAR_SRC_DIR}/isnt.cpp"
     "${UNRAR_SRC_DIR}/largepage.cpp"
     "${UNRAR_SRC_DIR}/match.cpp"
-    "${UNRAR_SRC_DIR}/model.cpp"
     "${UNRAR_SRC_DIR}/motw.cpp"
     "${UNRAR_SRC_DIR}/options.cpp"
     "${UNRAR_SRC_DIR}/pathfn.cpp"
@@ -143,6 +147,8 @@ add_library(qimgv_unrar_sdk STATIC
     "${UNRAR_SRC_DIR}/rdwrfn.cpp"
     "${UNRAR_SRC_DIR}/recvol.cpp"
     "${UNRAR_SRC_DIR}/rijndael.cpp"
+    "${UNRAR_SRC_DIR}/rs.cpp"
+    "${UNRAR_SRC_DIR}/rs16.cpp"
     "${UNRAR_SRC_DIR}/resource.cpp"
     "${UNRAR_SRC_DIR}/scantree.cpp"
     "${UNRAR_SRC_DIR}/secpassword.cpp"
@@ -157,13 +163,6 @@ add_library(qimgv_unrar_sdk STATIC
     "${UNRAR_SRC_DIR}/ui.cpp"
     "${UNRAR_SRC_DIR}/unicode.cpp"
     "${UNRAR_SRC_DIR}/unpack.cpp"
-    "${UNRAR_SRC_DIR}/unpack15.cpp"
-    "${UNRAR_SRC_DIR}/unpack20.cpp"
-    "${UNRAR_SRC_DIR}/unpack30.cpp"
-    "${UNRAR_SRC_DIR}/unpack50.cpp"
-    "${UNRAR_SRC_DIR}/unpack50frag.cpp"
-    "${UNRAR_SRC_DIR}/unpack50mt.cpp"
-    "${UNRAR_SRC_DIR}/unpackinline.cpp"
     "${UNRAR_SRC_DIR}/volume.cpp"
 )
 target_include_directories(qimgv_unrar_sdk PUBLIC "${UNRAR_SRC_DIR}")
