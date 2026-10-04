@@ -18,8 +18,14 @@ constexpr quint64 kRarBytesPerMebibyte = 1024ULL * 1024ULL;
 // Maximum allowed uncompressed size of a single image entry (256 MiB).
 constexpr quint64 kRarMaximumPageSourceBytes = 256ULL * kRarBytesPerMebibyte;
 
-// Maximum number of entries scanned from one archive.
-constexpr quint32 kRarMaximumArchiveEntryCount = 100'000U;
+// Maximum number of archive entries (files, directories, junk) that the indexer
+// examines. Scanning stops when this many headers have been read, so an archive
+// with a huge number of non-image entries cannot keep the reader busy.
+constexpr quint32 kRarMaximumScannedEntryCount = 200'000U;
+
+// Maximum number of image entries accepted into the index. Matches the 7z
+// reader's archive entry limit.
+constexpr quint32 kRarMaximumImageEntryCount = 100'000U;
 
 // Per-entry metadata collected during archive indexing.
 struct RarPageEntry {

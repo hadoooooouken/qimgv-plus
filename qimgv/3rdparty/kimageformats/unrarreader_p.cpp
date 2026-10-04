@@ -33,13 +33,14 @@ namespace QimgvRarInternal {
 
 namespace {
 
-// RARHeaderDataEx::FileNameW is a fixed buffer that UnRAR fills with wcsncpyz(),
+// Conservative limitation: the indexer reads names through
+// RARHeaderDataEx::FileNameW, a fixed buffer that UnRAR fills with wcsncpyz(),
 // so longer names are silently truncated to (buffer size - 1) characters.
+// A name that fills the buffer cannot be told apart from a truncated one, so
+// such entries are skipped instead of being matched on a possibly cut-off
+// extension. Supporting longer names would require the FileNameEx buffer.
 constexpr size_t kRarFileNameBufferChars =
     sizeof(RARHeaderDataEx::FileNameW) / sizeof(wchar_t);
-
-// A name that fills the buffer cannot be told apart from a truncated one, so it
-// is not trusted when deciding the extension or the page order.
 constexpr size_t kRarMaximumReliableFileNameChars = kRarFileNameBufferChars - 1;
 
 // Determine an image format tag from a file path.
@@ -269,6 +270,11 @@ bool UnrarReader::initialize(const QString &filePath, quint64 archiveSize)
     quint32 scanOrder = 0;
 
     for (;;) {
+        // Upper bound on the number of headers examined, regardless of how many
+        // of them turn out to be images.
+        if (scanOrder >= kRarMaximumScannedEntryCount)
+            break;
+
         RARHeaderDataEx header{};
         const int readResult = RARReadHeaderEx(handle.get(), &header);
 
@@ -296,9 +302,12 @@ bool UnrarReader::initialize(const QString &filePath, quint64 archiveSize)
         // Encrypted file data cannot be extracted without a password, so the
         // entry is never offered as a page.
         if (header.Flags & RHDF_ENCRYPTED) {
-            // In a solid archive UnRAR must decompress (and therefore decrypt)
-            // every preceding entry to reach a later one, so nothing after an
-            // encrypted entry is extractable. Entries indexed so far stay valid.
+            // In the current implementation extractEntry() reopens the archive
+            // and reaches the target with RAR_SKIP. In a solid archive that
+            // skip may need to process the preceding entries, which is
+            // impossible for an encrypted one without a password. Entries
+            // after it therefore cannot be reliably extracted, so indexing
+            // stops here. Entries indexed so far precede it and stay valid.
             if (isSolidArchive)
                 break;
             ++scanOrder;
@@ -339,11 +348,9 @@ bool UnrarReader::initialize(const QString &filePath, quint64 archiveSize)
             continue;
         }
 
-        // Hard cap on total image entry count.
-        if (m_impl->entries.size() >= static_cast<qsizetype>(kRarMaximumArchiveEntryCount)) {
-            ++scanOrder;
-            continue;
-        }
+        // Hard cap on accepted image entries; nothing more can be added.
+        if (m_impl->entries.size() >= static_cast<qsizetype>(kRarMaximumImageEntryCount))
+            break;
 
         m_impl->entries.push_back({scanOrder, std::move(path), fmt, unpSize});
         ++scanOrder;
