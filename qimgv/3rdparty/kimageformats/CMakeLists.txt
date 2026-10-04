@@ -99,6 +99,103 @@ endif()
 
 kimageformats_add_plugin(kimg_7z SOURCES 7z.cpp sevenzipreader_p.cpp)
 target_link_libraries(kimg_7z PRIVATE qimgv_7z_sdk)
+
+# UnRAR (RARDLL embedded read-only backend for RAR4 + RAR5)
+set(UNRAR_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/unrar")
+add_library(qimgv_unrar_sdk STATIC
+    "${UNRAR_SRC_DIR}/archive.cpp"
+    "${UNRAR_SRC_DIR}/arcread.cpp"
+    "${UNRAR_SRC_DIR}/blake2s.cpp"
+    "${UNRAR_SRC_DIR}/blake2sp.cpp"
+    "${UNRAR_SRC_DIR}/cmddata.cpp"
+    "${UNRAR_SRC_DIR}/coder.cpp"
+    "${UNRAR_SRC_DIR}/crc.cpp"
+    "${UNRAR_SRC_DIR}/crypt.cpp"
+    "${UNRAR_SRC_DIR}/crypt1.cpp"
+    "${UNRAR_SRC_DIR}/crypt2.cpp"
+    "${UNRAR_SRC_DIR}/crypt3.cpp"
+    "${UNRAR_SRC_DIR}/crypt5.cpp"
+    "${UNRAR_SRC_DIR}/dll.cpp"
+    "${UNRAR_SRC_DIR}/encname.cpp"
+    "${UNRAR_SRC_DIR}/errhnd.cpp"
+    "${UNRAR_SRC_DIR}/extinfo.cpp"
+    "${UNRAR_SRC_DIR}/extract.cpp"
+    "${UNRAR_SRC_DIR}/file.cpp"
+    "${UNRAR_SRC_DIR}/filefn.cpp"
+    "${UNRAR_SRC_DIR}/filestr.cpp"
+    "${UNRAR_SRC_DIR}/find.cpp"
+    "${UNRAR_SRC_DIR}/getbits.cpp"
+    "${UNRAR_SRC_DIR}/global.cpp"
+    "${UNRAR_SRC_DIR}/hardlinks.cpp"
+    "${UNRAR_SRC_DIR}/hash.cpp"
+    "${UNRAR_SRC_DIR}/headers.cpp"
+    "${UNRAR_SRC_DIR}/isnt.cpp"
+    "${UNRAR_SRC_DIR}/largepage.cpp"
+    "${UNRAR_SRC_DIR}/match.cpp"
+    "${UNRAR_SRC_DIR}/model.cpp"
+    "${UNRAR_SRC_DIR}/motw.cpp"
+    "${UNRAR_SRC_DIR}/options.cpp"
+    "${UNRAR_SRC_DIR}/pathfn.cpp"
+    "${UNRAR_SRC_DIR}/qopen.cpp"
+    "${UNRAR_SRC_DIR}/rar.cpp"
+    "${UNRAR_SRC_DIR}/rarvm.cpp"
+    "${UNRAR_SRC_DIR}/rawread.cpp"
+    "${UNRAR_SRC_DIR}/rdwrfn.cpp"
+    "${UNRAR_SRC_DIR}/recvol.cpp"
+    "${UNRAR_SRC_DIR}/rijndael.cpp"
+    "${UNRAR_SRC_DIR}/resource.cpp"
+    "${UNRAR_SRC_DIR}/scantree.cpp"
+    "${UNRAR_SRC_DIR}/secpassword.cpp"
+    "${UNRAR_SRC_DIR}/sha1.cpp"
+    "${UNRAR_SRC_DIR}/sha256.cpp"
+    "${UNRAR_SRC_DIR}/smallfn.cpp"
+    "${UNRAR_SRC_DIR}/strfn.cpp"
+    "${UNRAR_SRC_DIR}/strlist.cpp"
+    "${UNRAR_SRC_DIR}/system.cpp"
+    "${UNRAR_SRC_DIR}/threadpool.cpp"
+    "${UNRAR_SRC_DIR}/timefn.cpp"
+    "${UNRAR_SRC_DIR}/ui.cpp"
+    "${UNRAR_SRC_DIR}/unicode.cpp"
+    "${UNRAR_SRC_DIR}/unpack.cpp"
+    "${UNRAR_SRC_DIR}/unpack15.cpp"
+    "${UNRAR_SRC_DIR}/unpack20.cpp"
+    "${UNRAR_SRC_DIR}/unpack30.cpp"
+    "${UNRAR_SRC_DIR}/unpack50.cpp"
+    "${UNRAR_SRC_DIR}/unpack50frag.cpp"
+    "${UNRAR_SRC_DIR}/unpack50mt.cpp"
+    "${UNRAR_SRC_DIR}/unpackinline.cpp"
+    "${UNRAR_SRC_DIR}/volume.cpp"
+)
+target_include_directories(qimgv_unrar_sdk PUBLIC "${UNRAR_SRC_DIR}")
+target_compile_definitions(qimgv_unrar_sdk PRIVATE
+    RARDLL      # Embedded library API (not CLI)
+    UNRAR       # Extraction only — no archive creation
+    SILENT      # Suppress internal console output
+    _WIN_ALL    # Windows target
+    USE_QOPEN   # Enable QOpen read-ahead buffer
+)
+if(MSVC)
+    target_compile_options(qimgv_unrar_sdk PRIVATE
+        /MD /O2 /Ob2 /Oi /Ot /DNDEBUG /arch:AVX2 /GS /guard:cf /EHsc /Qspectre
+        /wd4007   # PASCAL calling-convention specifier in dll.hpp
+        /wd4996   # Deprecated POSIX/CRT function names
+        /wd4267   # size_t narrowed to int (internal UnRAR)
+        /wd4244   # Narrowing integer conversions (internal UnRAR)
+    )
+    set_target_properties(qimgv_unrar_sdk PROPERTIES
+        INTERPROCEDURAL_OPTIMIZATION_RELEASE ON
+    )
+endif()
+
+kimageformats_add_plugin(kimg_rar
+    SOURCES
+        rar.cpp
+        unrarreader_p.cpp
+)
+target_link_libraries(kimg_rar PRIVATE qimgv_unrar_sdk)
+if(MSVC)
+    target_compile_options(kimg_rar PRIVATE /wd4244 /wd4267)
+endif()
 # OpenEXR (Enabled with local build)
 set(OPENEXR_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/openexr/install")
 set(IMATH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/Imath/install")
@@ -144,7 +241,7 @@ if(MSVC)
     endif()
 endif()
 
-message(STATUS "Plugins configured: ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw kra ora cbz 7z jxr")
+message(STATUS "Plugins configured: ani dds ff hdr iff pcx pic pfm psd pxr qoi ras rgb sct tim tga xcf exr raw kra ora cbz 7z rar jxr")
 if(MSVC)
     message(STATUS "kimageformats plugins: /arch:AVX2 and LTCG (IPO) enabled for Release")
 endif()

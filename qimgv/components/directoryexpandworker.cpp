@@ -95,6 +95,10 @@ void DirectoryExpandWorker::run() {
                     && !QImageReader(filePath, "7z").canRead()) {
                     continue;
                 }
+                if (fileName.endsWith(u".rar", Qt::CaseInsensitive)
+                    && !QImageReader(filePath, "rar").canRead()) {
+                    continue;
+                }
                 if (!tryAdd(filePath)) {
                     limitWasExceeded = true;
                     break;

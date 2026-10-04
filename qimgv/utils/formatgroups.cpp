@@ -53,6 +53,7 @@ QVector<FormatCategory> allFormatCategories() {
             { "CBZ",       {"cbz"} },
             { "ZIP",       {"zip"} },
             { "7Z",        {"7z"} },
+            { "RAR",       {"rar"} },
         } },
         { QCoreApplication::translate("FormatFilterComboBox", "Other"), {
             { "ICO",       {"ico"} },

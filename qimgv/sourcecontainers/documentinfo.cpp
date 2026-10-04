@@ -137,6 +137,17 @@ void DocumentInfo::detectFormat() {
         } else {
             mDocumentType = DocumentType::NONE;
         }
+    } else if(suffix == "rar") {
+        // RAR uses a dedicated image-archive handler. Recognize it only
+        // by explicit extension and only if it contains at least one readable image.
+        QImageReader reader(fileInfo.filePath(), "rar");
+        if(reader.canRead()) {
+            mFormat = QStringLiteral("rar");
+            mDocumentType = DocumentType::STATIC;
+            exifLoaded = true;
+        } else {
+            mDocumentType = DocumentType::NONE;
+        }
     } else if(mimeName == "image/jpeg") {
         mFormat = "jpg";
         mDocumentType = DocumentType::STATIC;

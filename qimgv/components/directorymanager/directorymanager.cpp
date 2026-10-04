@@ -22,6 +22,10 @@ bool isCandidateFileSupported(const QString &name, const QString &path) {
         QImageReader reader(path, "7z");
         return reader.canRead();
     }
+    if (name.endsWith(u".rar", Qt::CaseInsensitive)) {
+        QImageReader reader(path, "rar");
+        return reader.canRead();
+    }
     return true;
 }
 
