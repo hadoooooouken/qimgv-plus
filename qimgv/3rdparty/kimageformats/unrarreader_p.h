@@ -21,9 +21,6 @@ constexpr quint64 kRarMaximumPageSourceBytes = 256ULL * kRarBytesPerMebibyte;
 // Maximum number of entries scanned from one archive.
 constexpr quint32 kRarMaximumArchiveEntryCount = 100'000U;
 
-// Maximum Unicode filename length accepted from archive headers.
-constexpr quint32 kRarMaximumFileNameChars = 65'535U;
-
 // Per-entry metadata collected during archive indexing.
 struct RarPageEntry {
     quint32 archiveOrder = 0;     // 0-based sequential scan position (used for extraction)
@@ -53,6 +50,12 @@ public:
 
     // Extracts the entry identified by archiveOrder into data.
     // Aborts if accumulated bytes would exceed maxBytes.
+    //
+    // Known limitation: every call re-opens the archive and walks all entries
+    // that precede the requested one (RAR_SKIP). For non-solid archives this is
+    // a cheap header seek, but for solid archives UnRAR has to decompress every
+    // preceding entry, so extracting page N costs O(N). A persistent session
+    // would avoid this but is intentionally not implemented.
     bool extractEntry(quint32 archiveOrder, quint64 maxBytes, QByteArray &data);
 
     void close();

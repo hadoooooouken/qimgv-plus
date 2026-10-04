@@ -33,6 +33,15 @@ namespace QimgvRarInternal {
 
 namespace {
 
+// RARHeaderDataEx::FileNameW is a fixed buffer that UnRAR fills with wcsncpyz(),
+// so longer names are silently truncated to (buffer size - 1) characters.
+constexpr size_t kRarFileNameBufferChars =
+    sizeof(RARHeaderDataEx::FileNameW) / sizeof(wchar_t);
+
+// A name that fills the buffer cannot be told apart from a truncated one, so it
+// is not trusted when deciding the extension or the page order.
+constexpr size_t kRarMaximumReliableFileNameChars = kRarFileNameBufferChars - 1;
+
 // Determine an image format tag from a file path.
 // Returns an empty QByteArray for unsupported / non-image extensions.
 QByteArray rarPageFormat(const QString &path)
@@ -119,6 +128,13 @@ struct ExtractionContext {
     bool aborted = false;
 };
 
+// Reply to UCM_CHANGEVOLUME[W].  p2 is RAR_VOL_ASK when the next volume could
+// not be found and RAR_VOL_NOTIFY when it was opened successfully.
+int rarVolumeChangeResult(LPARAM p2) noexcept
+{
+    return p2 == RAR_VOL_NOTIFY ? 1 : -1;
+}
+
 // ---------------------------------------------------------------------------
 // UNRARCALLBACK used during entry extraction (RAR_OM_EXTRACT).
 //
@@ -127,9 +143,11 @@ struct ExtractionContext {
 //   Return −1 to signal abort if the size limit is exceeded.
 //
 // UCM_CHANGEVOLUME / UCM_CHANGEVOLUMEW:
-//   Return 1 (allow).  UnRAR will attempt to open the next volume by its
-//   automatic naming convention.  If the file is absent, RARProcessFile
-//   returns ERAR_EOPEN, which we treat as a graceful failure.
+//   RAR_VOL_NOTIFY (next volume opened): return 1 (allow).
+//   RAR_VOL_ASK (next volume is missing): return −1 (abort).  Returning 1 with
+//   an unchanged name means "wait until the volume appears", which makes UnRAR
+//   retry in a busy loop forever.  Aborting makes RARProcessFile return
+//   ERAR_EOPEN, which we treat as a graceful failure.
 //
 // UCM_NEEDPASSWORD / UCM_NEEDPASSWORDW:
 //   Return −1 (reject).  No password UI is provided for encrypted archives.
@@ -166,7 +184,7 @@ int CALLBACK rarExtractionCallback(UINT msg, LPARAM userData, LPARAM p1, LPARAM 
     }
     case UCM_CHANGEVOLUME:
     case UCM_CHANGEVOLUMEW:
-        return 1;
+        return rarVolumeChangeResult(p2);
     case UCM_NEEDPASSWORD:
     case UCM_NEEDPASSWORDW:
         return -1;
@@ -180,12 +198,12 @@ int CALLBACK rarExtractionCallback(UINT msg, LPARAM userData, LPARAM p1, LPARAM 
 // UNRARCALLBACK used during archive listing (RAR_OM_LIST).
 // No data accumulation is needed; only volume / password messages matter.
 // ---------------------------------------------------------------------------
-int CALLBACK rarListingCallbackImpl(UINT msg, LPARAM /*userData*/, LPARAM /*p1*/, LPARAM /*p2*/)
+int CALLBACK rarListingCallbackImpl(UINT msg, LPARAM /*userData*/, LPARAM /*p1*/, LPARAM p2)
 {
     switch (msg) {
     case UCM_CHANGEVOLUME:
     case UCM_CHANGEVOLUMEW:
-        return 1;
+        return rarVolumeChangeResult(p2);
     case UCM_NEEDPASSWORD:
     case UCM_NEEDPASSWORDW:
         return -1;
@@ -202,7 +220,6 @@ int CALLBACK rarListingCallbackImpl(UINT msg, LPARAM /*userData*/, LPARAM /*p1*/
 
 struct UnrarReader::Impl {
     QString filePath;
-    quint64 archiveSize = 0;
     QVector<RarPageEntry> entries; // naturally-sorted image entries
     bool initialized = false;
 };
@@ -247,6 +264,8 @@ bool UnrarReader::initialize(const QString &filePath, quint64 archiveSize)
     if (openData.Flags & ROADF_ENCHEADERS)
         return false;
 
+    const bool isSolidArchive = (openData.Flags & ROADF_SOLID) != 0;
+
     quint32 scanOrder = 0;
 
     for (;;) {
@@ -274,10 +293,25 @@ bool UnrarReader::initialize(const QString &filePath, quint64 archiveSize)
             continue;
         }
 
+        // Encrypted file data cannot be extracted without a password, so the
+        // entry is never offered as a page.
+        if (header.Flags & RHDF_ENCRYPTED) {
+            // In a solid archive UnRAR must decompress (and therefore decrypt)
+            // every preceding entry to reach a later one, so nothing after an
+            // encrypted entry is extractable. Entries indexed so far stay valid.
+            if (isSolidArchive)
+                break;
+            ++scanOrder;
+            continue;
+        }
+
         // Build a normalized, null-safe path string.
-        // RARHeaderDataEx.FileNameW[1024] is always null-terminated by the API.
+        // RARHeaderDataEx.FileNameW is always null-terminated by the API, but
+        // names that fill the buffer may have been truncated (see
+        // kRarMaximumReliableFileNameChars).
         QString path = QString::fromWCharArray(header.FileNameW);
-        if (path.isEmpty() || path.size() > static_cast<int>(kRarMaximumFileNameChars)) {
+        if (path.isEmpty()
+            || static_cast<size_t>(path.size()) >= kRarMaximumReliableFileNameChars) {
             ++scanOrder;
             continue;
         }
@@ -321,7 +355,6 @@ bool UnrarReader::initialize(const QString &filePath, quint64 archiveSize)
     std::sort(m_impl->entries.begin(), m_impl->entries.end(), rarNaturalPathLessThan);
 
     m_impl->filePath = filePath;
-    m_impl->archiveSize = archiveSize;
     m_impl->initialized = true;
     return true;
 }
@@ -428,7 +461,6 @@ void UnrarReader::close()
     m_impl->entries.clear();
     m_impl->entries.squeeze();
     m_impl->filePath.clear();
-    m_impl->archiveSize = 0;
     m_impl->initialized = false;
 }
 
