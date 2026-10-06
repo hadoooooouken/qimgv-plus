@@ -54,6 +54,12 @@ cmake --build out/build/qimgv-x64-release --config Release
 
 The required upstream baseline is **KDE kimageformats v6.26.0**. qimgv-plus's patch series in `patches/kimageformats/` is made for this exact baseline; do not replace it with `v6.30.0` or another upstream version unless the patches have been rebased and validated. The dependency setup command above clones `v6.26.0` into `formats/kimageformats` and applies the local patches. This source is not vendored in the repository, and no separate download or manual patching is needed.
 
+### UnRAR source requirement
+
+The RAR image plugin requires the UnRAR source, available from the [RARLAB UnRAR source download page](https://www.rarlab.com/rar_add.htm). Download the latest source archive and extract it so the source files are directly in `formats/unrar/` (for example, `formats/unrar/archive.cpp`). The version metadata for the currently used source identifies it as UnRAR 7.30 beta 1 in `formats/unrar/version.hpp`. The main CMake build compiles these sources into the static `qimgv_unrar_sdk` library and links it into `kimg_rar`; the embedded `RARDLL` backend is configured for read-only extraction of RAR4 and RAR5 archives. `setup-deps.ps1` prints the download page and expected location but does not download the archive automatically.
+
+UnRAR is not included in `build_scripts/check_deps.py`'s upstream Git-tag checks because it is downloaded as a source archive, not cloned from a Git repository. The license in `formats/unrar/license.txt` permits software to handle RAR archives, but prohibits using the source to create a RAR-compatible archiver or recreate the proprietary RAR compression algorithm. Keep the license with distributed source and binaries. When redistributing modified UnRAR source, the license also requires its notice in the documentation and source-code comments; see `formats/unrar/license.txt` for the full terms.
+
 > [!NOTE]
 > Steps 4-5 require a **Visual Studio Developer Command Prompt** (or running `vcvarsall.bat x64` first) so that `cl.exe`, `link.exe`, and related tools are on PATH.
 
@@ -90,6 +96,13 @@ Required by the `kimg_7z` plugin for direct `.7z` image archive extraction.
 1. Download LZMA SDK from [7-zip.org](https://www.7-zip.org/sdk.html)
 2. Extract to `formats/lzma/` so that `formats/lzma/C/` is present
 
+### UnRAR (source code)
+
+Required by the `kimg_rar` plugin for reading RAR4 and RAR5 archives.
+
+1. Download the latest UnRAR source archive from the [RARLAB UnRAR source download page](https://www.rarlab.com/rar_add.htm)
+2. Extract the source files directly into `formats/unrar/` so that `formats/unrar/archive.cpp` and `formats/unrar/version.hpp` are present
+
 ---
 
 ## Repository Layout
@@ -114,6 +127,7 @@ qimgv-plus/
 │   ├── libspng/               # PNG codec (static, links zlib-ng)
 │   ├── ffmpeg/                # FFmpeg (HEVC decoder only)
 │   ├── kimageformats/         # KDE image format plugins
+│   ├── unrar/                 # UnRAR source for the RAR image plugin
 │   ├── lzma/                  # LZMA SDK (7z archive decoder)
 │   ├── openjpeg/              # JPEG 2000 codec
 │   ├── OpenJPH/               # HTJ2K codec
@@ -171,6 +185,7 @@ qimgv-plus/
 |---------|---------|----------|:---:|-------|
 | OpenJPEG | v2.5.4 + 15 commits | [uclouvain/openjpeg](https://github.com/uclouvain/openjpeg) | Yes | JPEG 2000 codec |
 | LZMA SDK | 26.03 | [7-Zip / LZMA SDK](https://www.7-zip.org/sdk.html) | No | ANSI-C 7z decoder for kimg_7z plugin |
+| UnRAR | 7.30 beta 1 (current source) | [RARLAB](https://www.rarlab.com/rar_add.htm) | No | Downloaded source archive; static read-only backend for the kimg_rar plugin; see `formats/unrar/license.txt` |
 | upscayl-ncnn | (fork, qimgv branch) | [hadoooooouken/upscayl-ncnn-qimgv-plus](https://github.com/hadoooooouken/upscayl-ncnn-qimgv-plus) | Fork | AI upscaling engine; uses [ncnn fork](https://github.com/hadoooooouken/ncnn) |
 
 ### Built separately

@@ -252,6 +252,17 @@ if (-not $PatchOnly) {
         Write-Info "Extract to: $lzmaDir (must contain C\ directory)"
         Write-Warn "Automatic download not implemented -- please extract LZMA SDK manually"
     }
+
+    # UnRAR source
+    Write-Header "unrar (RAR source)"
+    $unrarDir = Join-Path $FORMATS "unrar"
+    if (Test-Path (Join-Path $unrarDir "version.hpp")) {
+        Write-Info "Already exists, skipping UnRAR source setup"
+    } else {
+        Write-Info "Download the latest UnRAR source from: https://www.rarlab.com/rar_add.htm"
+        Write-Info "Extract source files directly into: $unrarDir"
+        Write-Warn "Automatic download not implemented -- please extract UnRAR source manually"
+    }
 }
 
 # ---------------------------------------------------------------------------
