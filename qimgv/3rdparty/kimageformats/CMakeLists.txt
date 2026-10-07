@@ -6,6 +6,8 @@ set(CMAKE_AUTOUIC ON)
 
 # NO_EHCONT_LINK: the plugin links a prebuilt C++ library that was not compiled
 # with /guard:ehcont, which makes a /guard:ehcont link fail with LNK1386.
+# Dependencies rebuilt by build_scripts (msvc-release-policy.json) do carry
+# EH continuation metadata, so no plugin currently needs it.
 function(kimageformats_add_plugin plugin)
     set(options NO_EHCONT_LINK)
     set(oneValueArgs)
@@ -183,8 +185,7 @@ endif()
 set(OPENEXR_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/openexr/install")
 set(IMATH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/Imath/install")
 set(ZSTD_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/zstd/install")
-# OpenEXR/Imath are prebuilt C++ without /guard:ehcont.
-kimageformats_add_plugin(kimg_exr NO_EHCONT_LINK SOURCES exr.cpp scanlineconverter.cpp)
+kimageformats_add_plugin(kimg_exr SOURCES exr.cpp scanlineconverter.cpp)
 target_include_directories(kimg_exr SYSTEM PRIVATE 
     "${OPENEXR_ROOT}/include"
     "${OPENEXR_ROOT}/include/OpenEXR"
@@ -202,8 +203,7 @@ target_link_libraries(kimg_exr PRIVATE
 
 # LibRaw (Enabled with local build)
 set(LIBRAW_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/LibRaw")
-# LibRaw is prebuilt C++ without /guard:ehcont.
-kimageformats_add_plugin(kimg_raw NO_EHCONT_LINK SOURCES raw.cpp scanlineconverter.cpp)
+kimageformats_add_plugin(kimg_raw SOURCES raw.cpp scanlineconverter.cpp)
 target_include_directories(kimg_raw PRIVATE "${LIBRAW_ROOT}")
 target_link_libraries(kimg_raw PRIVATE "${LIBRAW_ROOT}/buildfiles/release-x86_64/libraw_static.lib")
 target_compile_definitions(kimg_raw PRIVATE LIBRAW_NODLL)
@@ -268,8 +268,7 @@ set(BROTLI_ENC_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/libjxl/buil
 set(HWY_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/libjxl/build/third_party/highway/Release/hwy.lib")
 
 if(EXISTS "${JXL_LIBRARY}")
-    # libjxl is prebuilt C++ without /guard:ehcont.
-    kimageformats_add_plugin(kimg_jxl NO_EHCONT_LINK SOURCES jxl.cpp microexif.cpp)
+    kimageformats_add_plugin(kimg_jxl SOURCES jxl.cpp microexif.cpp)
     target_include_directories(kimg_jxl PRIVATE ${JXL_INCLUDE_DIR} ${JXL_BUILD_INCLUDE_DIR})
     target_link_libraries(kimg_jxl PRIVATE
         ${JXL_LIBRARY}
@@ -295,8 +294,7 @@ endif()
 # OpenJPH (Enabled with local build)
 set(OPENJPH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/OpenJPH/install")
 if(EXISTS "${OPENJPH_ROOT}/lib/openjph.0.32.lib")
-    # OpenJPH is prebuilt C++ without /guard:ehcont.
-    kimageformats_add_plugin(kimg_jph NO_EHCONT_LINK SOURCES jph.cpp)
+    kimageformats_add_plugin(kimg_jph SOURCES jph.cpp)
     target_include_directories(kimg_jph SYSTEM PRIVATE "${OPENJPH_ROOT}/include")
     target_link_libraries(kimg_jph PRIVATE "${OPENJPH_ROOT}/lib/openjph.0.32.lib")
 endif()

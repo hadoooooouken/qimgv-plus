@@ -26,8 +26,7 @@ if(MSVC)
     target_compile_options(qimgvshellex PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>")
 endif()
 
-# LibRaw is linked as a prebuilt C++ static library without /guard:ehcont.
-qimgv_apply_msvc_profile(qimgvshellex NO_EHCONT_LINK)
+qimgv_apply_msvc_profile(qimgvshellex)
 qimgv_suppress_crt_deprecation(qimgvshellex)
 
 # Disable Qt version tagging to allow delay-loading (prevents data symbol imports)
