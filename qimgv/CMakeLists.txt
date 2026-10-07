@@ -16,6 +16,8 @@ set_target_properties(djvudec PROPERTIES
     C_STANDARD_REQUIRED ON
     C_EXTENSIONS OFF
 )
+qimgv_apply_msvc_profile(djvudec)
+qimgv_suppress_crt_deprecation(djvudec)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -96,10 +98,15 @@ add_subdirectory(3rdparty/kimageformats)
 target_compile_features(qimgv-plus PRIVATE cxx_std_23)
 
 if(MSVC)
-    target_compile_options(qimgv-plus PRIVATE /std:c++latest)
+    # cxx_std_26 has no MSVC mapping in the current CMake; /std:c++latest is the
+    # C++26 working-draft switch.
+    target_compile_options(qimgv-plus PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>")
 endif()
 
-set_target_properties(qimgv-plus PROPERTIES 
+qimgv_apply_msvc_profile(qimgv-plus)
+qimgv_suppress_crt_deprecation(qimgv-plus)
+
+set_target_properties(qimgv-plus PROPERTIES
     CXX_EXTENSIONS OFF
     RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../release"
 )

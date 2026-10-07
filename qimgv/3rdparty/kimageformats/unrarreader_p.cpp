@@ -5,7 +5,9 @@
 #include "unrarreader_p.h"
 
 // Windows types (HANDLE, LPARAM, CALLBACK, …) must be visible before dll.hpp.
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 // Keep windows.h from defining min/max macros: they break std::numeric_limits<T>::max().
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -13,7 +15,7 @@
 #include <windows.h>
 
 // UnRAR embedded library API (RARDLL mode).
-// Compiled definitions: RARDLL, UNRAR, SILENT, _WIN_ALL are set on qimgv_unrar_sdk,
+// Compiled definitions: RARDLL, UNRAR, SILENT are set on qimgv_unrar_sdk,
 // not on this translation unit.  We only consume the public C API declared here.
 #include "dll.hpp"
 

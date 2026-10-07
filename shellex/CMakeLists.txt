@@ -5,6 +5,9 @@ project(qimgvshellex LANGUAGES C CXX)
 
 set(CMAKE_AUTOMOC ON)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
+include(QimgvMsvcPolicy)
+
 # Find Qt
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Svg)
 
@@ -19,8 +22,13 @@ add_library(qimgvshellex SHARED
 target_compile_features(qimgvshellex PRIVATE cxx_std_23)
 
 if(MSVC)
-    target_compile_options(qimgvshellex PRIVATE /std:c++latest)
+    # djvu.c is part of this target, so the C++ switch is restricted to CXX.
+    target_compile_options(qimgvshellex PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>")
 endif()
+
+# LibRaw is linked as a prebuilt C++ static library without /guard:ehcont.
+qimgv_apply_msvc_profile(qimgvshellex NO_EHCONT_LINK)
+qimgv_suppress_crt_deprecation(qimgvshellex)
 
 # Disable Qt version tagging to allow delay-loading (prevents data symbol imports)
 target_compile_definitions(qimgvshellex PRIVATE QT_NO_VERSION_TAGGING)
@@ -46,10 +54,9 @@ target_link_libraries(qimgvshellex PRIVATE
 )
 target_compile_definitions(qimgvshellex PRIVATE LIBRAW_NODLL)
 
-# Add .def file and delay-loading to MSVC linker flags
+# Delay-loading for MSVC (the .def source already makes CMake pass /DEF)
 if(MSVC)
-    target_link_options(qimgvshellex PRIVATE 
-        "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/qimgvshellex.def"
+    target_link_options(qimgvshellex PRIVATE
         "/DELAYLOAD:Qt6Core.dll"
         "/DELAYLOAD:Qt6Gui.dll"
         "/DELAYLOAD:Qt6Svg.dll"

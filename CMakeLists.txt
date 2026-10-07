@@ -14,30 +14,15 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # OPTIMIZATIONS & HARDENING
+# ISA, IPO, hardening and CRT policy is applied per target through
+# qimgv_apply_msvc_profile() (cmake/QimgvMsvcPolicy.cmake). Only the Release
+# optimization baseline is set here; it is shadowed as a normal variable so a
+# stale cache entry (e.g. one carrying /MD) cannot leak into the build.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(QimgvMsvcPolicy)
 if(MSVC)
-    # Compiler options: AVX2, Buffer Security Check (/GS), Control Flow Guard (/guard:cf), C++ Exception Unwind (/EHsc), Spectre mitigations (/Qspectre)
-    # NOTE: /arch:AVX2 is now added to CMAKE_C_FLAGS as well, not just CMAKE_CXX_FLAGS.
-    # Without it, libdeflate (and any other plain-C code) gets built by MSVC without
-    # any AVX2/AVX-512 code paths at all: unlike GCC/Clang, MSVC has no per-function
-    # target attributes, so a SIMD path only ends up in the binary if the ENTIRE
-    # translation unit is compiled with /arch:AVX2.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2 /GS /guard:cf /EHsc /Qspectre")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /arch:AVX2 /GS /guard:cf /Qspectre")
-
-    # Linker options: Control Flow Guard (/guard:cf), ASLR (/DYNAMICBASE), 64-bit ASLR (/HIGHENTROPYVA), DEP (/NXCOMPAT), CET Shadow Stack (/CETCOMPAT)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT")
-    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT")
-
-    # Clean Release flags to perfectly map to Visual Studio UI properties
-    set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob2 /Oi /Ot /DNDEBUG")
-    set(CMAKE_C_FLAGS_RELEASE "/MD /O2 /Ob2 /Oi /Ot /DNDEBUG")
-
-    # Enable Whole Program Optimization (/GL) and Link Time Code Generation (/LTCG) natively in MSBuild/VS
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    add_compile_options(/wd4005)
-    message(STATUS "AVX2, full optimizations (/O2 /Ob2 /Oi /Ot), security hardening (/GS /guard:cf /DYNAMICBASE /HIGHENTROPYVA), CRT and C4005 warnings suppression and LTCG/GL enabled for Release")
+    set(CMAKE_C_FLAGS_RELEASE "${QIMGV_MSVC_RELEASE_BASELINE_FLAGS}")
+    set(CMAKE_CXX_FLAGS_RELEASE "${QIMGV_MSVC_RELEASE_BASELINE_FLAGS}")
 endif()
 
 # USER OPTIONS
@@ -87,6 +72,31 @@ set(NCNN_VULKAN ON CACHE BOOL "Build NCNN with Vulkan support")
 set(NCNN_VULKAN_ONLINE_SPIRV ON CACHE BOOL "Build NCNN with Vulkan online SPIRV compilation support")
 
 add_subdirectory(upscayl-ncnn/src)
+
+# upscayl-ncnn.dll is shipped by this project and gets the full profile.
+# Its ncnn/glslang static libraries are LTCG IL (the upscayl subproject enables
+# IPO for itself), so the DLL keeps Release IPO to link them without a restart.
+qimgv_apply_msvc_profile(upscayl-ncnn)
+qimgv_suppress_crt_deprecation(upscayl-ncnn)
+
+# ncnn adds /arch:SSE2 to its base TUs and dispatches at runtime to TUs whose
+# source flags end with /arch:AVX, /arch:AVX2 or /arch:AVX512; that strategy is
+# left intact. The application baseline is still placed BEFORE ncnn's own
+# /arch:SSE2 on purpose: MSVC lowers code generation to the last /arch, but
+# keeps __AVX__/__AVX2__ predefined from the earlier /arch:AVX2, and ncnn's x86
+# sources select their AVX/AVX2 intrinsic paths by those macros. Dropping it
+# removed those paths from the base TUs (e.g. convolution_x86.cpp: 6691 ymm
+# instructions -> 0), so this ordering reproduces the established build.
+# glslang has no ISA strategy of its own and gets the regular AVX2 baseline.
+# All of them keep the IPO setting of the upscayl subproject; /guard:ehcont on
+# them is required for the upscayl-ncnn.dll link to accept /guard:ehcont.
+target_compile_options(ncnn BEFORE PRIVATE "$<$<COMPILE_LANGUAGE:C,CXX>:${QIMGV_MSVC_ISA_OPTIONS}>")
+qimgv_apply_msvc_profile(ncnn NO_ARCH NO_IPO)
+foreach(_glslang_target glslang SPIRV MachineIndependent GenericCodeGen OGLCompiler OSDependent)
+    if(TARGET ${_glslang_target})
+        qimgv_apply_msvc_profile(${_glslang_target} NO_IPO)
+    endif()
+endforeach()
 
 add_subdirectory(qimgv)
 add_subdirectory(shellex)

@@ -1,0 +1,6 @@
+{
+  "_comment": "Single MSVC Release policy for dependencies rebuilt by build_scripts. The root CMake graph uses cmake/QimgvMsvcPolicy.cmake. /GS, /DYNAMICBASE, /HIGHENTROPYVA and /NXCOMPAT are toolchain defaults and are intentionally absent; /O2 already implies /Ob2 /Oi /Ot.",
+  "release_baseline": "/MD /O2 /DNDEBUG",
+  "compile": "/arch:AVX2 /guard:cf /Qspectre /guard:ehcont",
+  "link": "/guard:cf /CETCOMPAT /guard:ehcont"
+}

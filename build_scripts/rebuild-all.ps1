@@ -22,6 +22,9 @@ param(
 $ErrorActionPreference = "Stop"
 $ROOT = (Resolve-Path "$PSScriptRoot\..\formats").Path
 
+# Common compiler / linker policy (single source: msvc-release-policy.json)
+. (Join-Path $PSScriptRoot "MsvcPolicy.ps1")
+
 # ---------------------------------------------------------------------------
 # VC dev environment bootstrap
 # ---------------------------------------------------------------------------
@@ -128,12 +131,7 @@ function Build-Library {
     Clear-BuildCache $BuildDir
 
     Write-Info "Configuring..."
-    $hardeningArgs = @(
-        "-DCMAKE_CXX_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /arch:AVX2 /GS /guard:cf /EHsc /Qspectre",
-        "-DCMAKE_C_FLAGS_RELEASE=/MD /O2 /Ob2 /Oi /Ot /DNDEBUG /arch:AVX2 /GS /guard:cf /Qspectre",
-        "-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=/guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT",
-        "-DCMAKE_EXE_LINKER_FLAGS_RELEASE=/guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT"
-    )
+    $hardeningArgs = Get-MsvcPolicyCMakeArgs
     $args = @("-S", $SrcDir, "-B", $BuildDir, "-A", "x64") + $hardeningArgs + $ConfigArgs
     Invoke-CMake $args
 
@@ -294,7 +292,10 @@ $ALL_LIBS = [ordered]@{
         }
 
         Write-Info "Building LibRaw with AVX2, LTCG, OpenMP and hardening flags"
-        cmd.exe /c "call `"$vcvars`" x64 && cd /d `"$librawDir`" && nmake /f Makefile.msvc COPT_OPT=`"/O2 /Ob2 /Oi /Ot /MD /DNDEBUG /arch:AVX2 /GL /openmp /GS /guard:cf /Qspectre`" CFLAGS=`"-DUSE_OPENMP`" LDFLAGS=`"/LTCG /guard:cf /NXCOMPAT /CETCOMPAT`""
+        $policy = Get-MsvcPolicy
+        $librawCopt = "$($policy.release_baseline) /GL /openmp $($policy.compile)"
+        $librawLdflags = "/LTCG $($policy.link)"
+        cmd.exe /c "call `"$vcvars`" x64 && cd /d `"$librawDir`" && nmake /f Makefile.msvc COPT_OPT=`"$librawCopt`" CFLAGS=`"-DUSE_OPENMP`" LDFLAGS=`"$librawLdflags`""
         if ($LASTEXITCODE -ne 0) {
             throw "LibRaw build failed (exit code $LASTEXITCODE)"
         }

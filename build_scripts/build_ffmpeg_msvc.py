@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import sys
@@ -13,11 +14,32 @@ FFMPEG_SRC = Path(os.environ.get("FFMPEG_SRC", "E:/qimgv/formats/ffmpeg"))
 PREFIX = FFMPEG_SRC / "ffmpeg-build-msvc"
 NASM_DIR = Path(os.environ.get("NASM_DIR", "E:/qimgv/formats/nasm"))
 
-# Hardening / AVX2 flags -- must match rebuild-all.ps1, build_qtiff_jpeg.ps1,
-# build_qpng_spng.ps1 so every static library linked into the final binary
-# shares the same codegen and mitigation baseline.
-CL_HARDENING_FLAGS = "-arch:AVX2 -GS -guard:cf -Qspectre"
-LINK_HARDENING_FLAGS = "-guard:cf -DYNAMICBASE -HIGHENTROPYVA -NXCOMPAT -CETCOMPAT"
+# Hardening / AVX2 flags come from the policy file shared with the PowerShell
+# build scripts. FFmpeg's configure adds -O2 itself, so only the CRT selection
+# is taken from the Release baseline: without -MD the static libraries default
+# to the static CRT (/DEFAULTLIB:LIBCMT) while kimg_heif links the DLL CRT.
+MSVC_POLICY_FILE = Path(__file__).resolve().parent / "msvc-release-policy.json"
+MSVC_DLL_CRT_FLAG = "-MD"
+
+
+def to_dash_options(flags):
+    # MSYS2 rewrites arguments that start with "/" into Windows paths, so MSVC
+    # options are passed in their equivalent "-" form.
+    return " ".join("-" + flag[1:] if flag.startswith("/") else flag for flag in flags.split())
+
+
+def load_msvc_policy():
+    with open(MSVC_POLICY_FILE, encoding="utf-8") as policy_file:
+        policy = json.load(policy_file)
+    for key in ("compile", "link"):
+        if not policy.get(key):
+            raise KeyError(f"MSVC policy file {MSVC_POLICY_FILE} is missing '{key}'")
+    return policy
+
+
+MSVC_POLICY = load_msvc_policy()
+CL_HARDENING_FLAGS = f"{MSVC_DLL_CRT_FLAG} {to_dash_options(MSVC_POLICY['compile'])}"
+LINK_HARDENING_FLAGS = to_dash_options(MSVC_POLICY["link"])
 # =========================================================
 
 def run_build():

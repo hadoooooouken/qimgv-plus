@@ -43,20 +43,12 @@ $SPNG_BUILD_DIR = Join-Path $SPNG_SRC_DIR "build_msvc"
 $SPNG_INSTALL   = Join-Path $SPNG_SRC_DIR "install"
 
 # ---------------------------------------------------------------------------
-# Common compiler / linker hardening flags (match build_qtiff_jpeg.ps1 / rebuild-all.ps1)
+# Common compiler / linker policy (single source: msvc-release-policy.json)
 # ---------------------------------------------------------------------------
-$C_FLAGS_RELEASE   = "/arch:AVX2 /MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /Qspectre"
-$CXX_FLAGS_RELEASE = "/arch:AVX2 /MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /EHsc /Qspectre"
-$LINKER_FLAGS      = "/guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT"
+. (Join-Path $PSScriptRoot "MsvcPolicy.ps1")
 
 function Get-HardeningArgs {
-    return @(
-        "-DCMAKE_C_FLAGS_RELEASE=$C_FLAGS_RELEASE",
-        "-DCMAKE_CXX_FLAGS_RELEASE=$CXX_FLAGS_RELEASE",
-        "-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=$LINKER_FLAGS",
-        "-DCMAKE_EXE_LINKER_FLAGS_RELEASE=$LINKER_FLAGS",
-        "-DCMAKE_STATIC_LINKER_FLAGS_RELEASE="
-    )
+    return Get-MsvcPolicyCMakeArgs
 }
 
 # ---------------------------------------------------------------------------

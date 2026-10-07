@@ -67,21 +67,12 @@ $QTIFF_BUILD_DIR  = Join-Path $SCRIPT_DIR "qtiff_jpeg\build"
 $QTIFF_INSTALL    = Join-Path $SCRIPT_DIR "qtiff_jpeg\install"
 
 # ---------------------------------------------------------------------------
-# Common compiler / linker hardening flags (match rebuild-all.ps1)
+# Common compiler / linker policy (single source: msvc-release-policy.json)
 # ---------------------------------------------------------------------------
-$C_FLAGS_RELEASE   = "/arch:AVX2 /MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /Qspectre"
-$CXX_FLAGS_RELEASE = "/arch:AVX2 /MD /O2 /Ob2 /Oi /Ot /DNDEBUG /GS /guard:cf /EHsc /Qspectre"
-$LINKER_FLAGS      = "/guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT"
+. (Join-Path $PSScriptRoot "MsvcPolicy.ps1")
 
 function Get-HardeningArgs {
-    return @(
-        "-DCMAKE_C_FLAGS_RELEASE=$C_FLAGS_RELEASE",
-        "-DCMAKE_CXX_FLAGS_RELEASE=$CXX_FLAGS_RELEASE",
-        "-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=$LINKER_FLAGS",
-        "-DCMAKE_EXE_LINKER_FLAGS_RELEASE=$LINKER_FLAGS",
-        "-DCMAKE_STATIC_LINKER_FLAGS_RELEASE=",
-        "-DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON"
-    )
+    return Get-MsvcPolicyCMakeArgs -Ipo
 }
 
 # ---------------------------------------------------------------------------
