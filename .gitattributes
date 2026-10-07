@@ -1,0 +1,3 @@
+# Patches are applied with git apply / git am and must keep exact LF bytes,
+# independent of core.autocrlf.
+*.patch text eol=lf

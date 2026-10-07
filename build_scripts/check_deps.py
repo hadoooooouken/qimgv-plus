@@ -39,16 +39,16 @@ VERSION_TAG_PATTERN = re.compile(
 
 # Fallback dependency definitions if setup-deps.ps1 cannot be found or parsed.
 DEFAULT_DEPS = [
-    {"name": "Imath", "url": "https://github.com/AcademySoftwareFoundation/Imath.git", "current": "v3.2.3", "patched": True},
-    {"name": "openexr", "url": "https://github.com/AcademySoftwareFoundation/openexr.git", "current": "v3.5.2", "patched": True},
-    {"name": "libavif", "url": "https://github.com/AOMediaCodec/libavif.git", "current": "v1.4.2", "patched": True},
+    {"name": "Imath", "url": "https://github.com/AcademySoftwareFoundation/Imath.git", "current": "v3.2.3", "patched": False},
+    {"name": "openexr", "url": "https://github.com/AcademySoftwareFoundation/openexr.git", "current": "v3.5.2", "patched": False},
+    {"name": "libavif", "url": "https://github.com/AOMediaCodec/libavif.git", "current": "v1.4.2", "patched": False},
     {"name": "libjxl", "url": "https://github.com/libjxl/libjxl.git", "current": "v0.12.0", "patched": False},
     {"name": "jxrlib", "url": "https://github.com/4creators/jxrlib.git", "current": "v2019.10.9", "patched": True},
     {"name": "LibRaw", "url": "https://github.com/LibRaw/LibRaw.git", "current": "0.22.2", "patched": True},
     {"name": "ffmpeg", "url": "https://git.ffmpeg.org/ffmpeg.git", "current": "n9.0.2", "patched": False},
     {"name": "openjpeg", "url": "https://github.com/uclouvain/openjpeg.git", "current": "v2.5.4", "patched": True},
-    {"name": "OpenJPH", "url": "https://github.com/aous72/OpenJPH.git", "current": "0.32.0", "patched": True},
-    {"name": "libdeflate", "url": "https://github.com/ebiggers/libdeflate.git", "current": "v1.26", "patched": True},
+    {"name": "OpenJPH", "url": "https://github.com/aous72/OpenJPH.git", "current": "0.32.0", "patched": False},
+    {"name": "libdeflate", "url": "https://github.com/ebiggers/libdeflate.git", "current": "v1.26", "patched": False},
     {"name": "zlib-ng", "url": "https://github.com/zlib-ng/zlib-ng.git", "current": "2.3.3", "patched": False},
     {"name": "libjpeg-turbo", "url": "https://github.com/libjpeg-turbo/libjpeg-turbo.git", "current": "3.2.0", "patched": False},
     {"name": "libspng", "url": "https://github.com/randy408/libspng.git", "current": "v0.7.4", "patched": False},

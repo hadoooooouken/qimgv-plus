@@ -125,13 +125,16 @@ function Build-Library {
         [string]   $SrcDir,
         [string]   $BuildDir,
         [string[]] $ConfigArgs,
-        [string]   $InstallDir = $null
+        [string]   $InstallDir = $null,
+        # Release IPO (/GL + /LTCG) for static libraries linked into the
+        # LTCG-built qimgv plugins.
+        [switch]   $Ipo
     )
 
     Clear-BuildCache $BuildDir
 
     Write-Info "Configuring..."
-    $hardeningArgs = Get-MsvcPolicyCMakeArgs
+    $hardeningArgs = Get-MsvcPolicyCMakeArgs -Ipo:$Ipo
     $args = @("-S", $SrcDir, "-B", $BuildDir, "-A", "x64") + $hardeningArgs + $ConfigArgs
     Invoke-CMake $args
 
@@ -157,6 +160,7 @@ $ALL_LIBS = [ordered]@{
             -SrcDir     "$ROOT\Imath" `
             -BuildDir   "$ROOT\Imath\build" `
             -InstallDir "$ROOT\Imath\install" `
+            -Ipo `
             -ConfigArgs @(
                 "-DCMAKE_INSTALL_PREFIX=$ROOT\Imath\install",
                 "-DBUILD_SHARED_LIBS=OFF",
@@ -169,6 +173,7 @@ $ALL_LIBS = [ordered]@{
         -SrcDir     "$ROOT\OpenJPH" `
         -BuildDir   "$ROOT\OpenJPH\build" `
         -InstallDir "$ROOT\OpenJPH\install" `
+        -Ipo `
         -ConfigArgs @(
             "-DCMAKE_INSTALL_PREFIX=$ROOT\OpenJPH\install",
             "-DBUILD_SHARED_LIBS=OFF",
@@ -182,6 +187,7 @@ $ALL_LIBS = [ordered]@{
             -SrcDir     "$ROOT\openexr" `
             -BuildDir   "$ROOT\openexr\build" `
             -InstallDir "$ROOT\openexr\install" `
+            -Ipo `
             -ConfigArgs @(
                 "-DCMAKE_INSTALL_PREFIX=$ROOT\openexr\install",
                 "-DImath_DIR=$ROOT\Imath\install\lib\cmake\Imath",
@@ -199,6 +205,7 @@ $ALL_LIBS = [ordered]@{
         Build-Library `
             -SrcDir   "$ROOT\libavif" `
             -BuildDir "$ROOT\libavif\build" `
+            -Ipo `
             -ConfigArgs @(
                 "-DBUILD_SHARED_LIBS=OFF",
                 "-DAVIF_CODEC_AOM=LOCAL",
@@ -235,6 +242,7 @@ $ALL_LIBS = [ordered]@{
             -SrcDir     "$ROOT\jxrlib" `
             -BuildDir   "$ROOT\jxrlib\build" `
             -InstallDir "$ROOT\jxrlib\install" `
+            -Ipo `
             -ConfigArgs @(
                 "-DCMAKE_INSTALL_PREFIX=$ROOT\jxrlib\install",
                 "-DBUILD_SHARED_LIBS=OFF"
@@ -246,8 +254,12 @@ $ALL_LIBS = [ordered]@{
             -SrcDir     "$ROOT\libdeflate" `
             -BuildDir   "$ROOT\libdeflate\build" `
             -InstallDir "$ROOT\libdeflate\install" `
+            -Ipo `
             -ConfigArgs @(
                 "-DCMAKE_INSTALL_PREFIX=$ROOT\libdeflate\install",
+                # Keep upstream from forcing CMAKE_C_FLAGS_RELEASE to "-O2 -DNDEBUG",
+                # which would drop the /MD CRT selection of the policy baseline.
+                "-DLIBDEFLATE_USER_SET_RELEASE_FLAGS=ON",
                 "-DLIBDEFLATE_BUILD_SHARED_LIB=ON",
                 "-DLIBDEFLATE_BUILD_STATIC_LIB=ON",
                 "-DLIBDEFLATE_BUILD_GZIP=OFF",
@@ -260,6 +272,7 @@ $ALL_LIBS = [ordered]@{
             -SrcDir     "$ROOT\zstd\build\cmake" `
             -BuildDir   "$ROOT\zstd\build-msvc" `
             -InstallDir "$ROOT\zstd\install" `
+            -Ipo `
             -ConfigArgs @(
                 "-DCMAKE_INSTALL_PREFIX=$ROOT\zstd\install",
                 "-DZSTD_BUILD_STATIC=OFF",
@@ -267,8 +280,7 @@ $ALL_LIBS = [ordered]@{
                 "-DZSTD_BUILD_PROGRAMS=OFF",
                 "-DZSTD_BUILD_TESTS=OFF",
                 "-DZSTD_BUILD_CONTRIB=OFF",
-                "-DZSTD_USE_STATIC_RUNTIME=OFF",
-                "-DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON"
+                "-DZSTD_USE_STATIC_RUNTIME=OFF"
             )
     }
 

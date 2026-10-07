@@ -206,16 +206,14 @@ qimgv-plus/
 
 ## Patch Descriptions
 
-All patches are in the `patches/` directory. They are applied automatically by `build_scripts/setup-deps.ps1`.
+All patches are in the `patches/` directory. They are applied automatically by `build_scripts/setup-deps.ps1` and are kept as UTF-8 with LF line endings (`.gitattributes`), which `git apply` requires.
+
+Compiler, linker and ISA flags are not patched into upstream sources. The build scripts pass them from `build_scripts/msvc-release-policy.json`.
 
 | Patch File | Library | Description |
 |------------|---------|-------------|
-| `Imath-v3.2.3-avx2-flags.patch` | Imath | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
-| `libavif-v1.4.2-avx2-flags.patch` | libavif | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
-| `openexr-v3.5.0-avx2-flags.patch` | OpenEXR | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
-| `OpenJPH-0.32.0-avx2-flags.patch` | OpenJPH | Adds MSVC AVX2, `/O2` optimization, and LTCG flags |
-| `libdeflate-1.26-avx2-flags.patch` | libdeflate | Adds MSVC AVX2/LTCG block for standalone builds |
-| `jxrlib-v2019.10.9-uintptr-fix.patch` | jxrlib | Fixes encoding issues and uses portable `uintptr_t` |
+| `jxrlib-v2019.10.9-uintptr-fix.patch` | jxrlib | Uses portable `uintptr_t` / `intptr_t` |
+| `jxrlib-v2019.10.9-cmake-build.patch` | jxrlib | Adds the CMake build used by `rebuild-all.ps1` (upstream has none) |
 | `LibRaw-0.22.2-vcxproj-toolset.patch` | LibRaw | Updates VS project files to toolset v145 and SDK 10.0 |
 | `kimageformats/*.patch` | kimageformats | Required local patch series for qimgv-plus's Qt image format plugins |
 | `openjpeg/0001-*.patch` ... | openjpeg | 15 upstream commits past v2.5.4 (bug fixes, NEON optimizations, ARM64 support) |
