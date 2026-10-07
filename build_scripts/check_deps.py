@@ -54,7 +54,7 @@ DEFAULT_DEPS = [
     {"name": "libspng", "url": "https://github.com/randy408/libspng.git", "current": "v0.7.4", "patched": False},
     {"name": "libtiff", "url": "https://gitlab.com/libtiff/libtiff.git", "current": "v4.7.2", "patched": False},
     {"name": "zstd", "url": "https://github.com/facebook/zstd.git", "current": "v1.5.7", "patched": False},
-    {"name": "exiv2", "url": "https://github.com/Exiv2/exiv2.git", "current": "0.28.9", "patched": False},
+    {"name": "exiv2", "url": "https://github.com/Exiv2/exiv2.git", "current": "v0.28.9", "patched": False},
 ]
 
 EXCLUDED_UPSTREAM_DEPS = {"kimageformats"}
@@ -129,7 +129,7 @@ def fetch_remote_tags(url: str, timeout: int = 30) -> List[str]:
 
 def parse_setup_deps_script(ps1_path: Path) -> List[Dict[str, object]]:
     """
-    Extracts Git dependencies, prebuilts, and patch info from setup-deps.ps1.
+    Extracts Git dependencies and patch info from setup-deps.ps1.
     """
     if not ps1_path.is_file():
         return DEFAULT_DEPS
@@ -164,20 +164,6 @@ def parse_setup_deps_script(ps1_path: Path) -> List[Dict[str, object]]:
             "url": url,
             "current": tag,
             "patched": name.lower() in patched_deps,
-        })
-
-    # Parse Exiv2 prebuilt release
-    exiv2_match = re.search(
-        r'\$EXIV2_URL\s*=\s*"https://github\.com/Exiv2/exiv2/releases/download/v?([^/]+)/',
-        content,
-    )
-    if exiv2_match:
-        exiv2_ver = exiv2_match.group(1)
-        git_deps.append({
-            "name": "exiv2",
-            "url": "https://github.com/Exiv2/exiv2.git",
-            "current": exiv2_ver,
-            "patched": False,
         })
 
     return git_deps if git_deps else DEFAULT_DEPS

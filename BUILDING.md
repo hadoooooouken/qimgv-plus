@@ -34,13 +34,14 @@ cd qimgv-plus
 # 2. Run setup (clones kimageformats v6.26.0 + applies its required patches)
 .\build_scripts\setup-deps.ps1
 
-# 3. Manually download exiv2 and NASM (see "Manual Downloads" below)
+# 3. Manually download NASM (see "Manual Downloads" below)
 
 # 4. Build format libraries (from a VS Developer Command Prompt)
 cd build_scripts
 .\build_qtiff_jpeg.ps1          # zlib-ng -> libjpeg-turbo -> libtiff -> qtiff.dll
 .\build_qpng_spng.ps1           # libspng
 .\build_qjpeg_jpeg.ps1          # qjpeg.dll
+.\build_exiv2.ps1               # exiv2 (static, linked into qimgv-plus.exe)
 .\rebuild-all.ps1               # zstd, Imath, OpenEXR, libavif, libjxl, jxrlib, libdeflate, LibRaw
 python build_ffmpeg_msvc.py     # FFmpeg HEVC decoder (optional, requires MSYS2)
 cd ..
@@ -68,12 +69,6 @@ UnRAR is not included in `build_scripts/check_deps.py`'s upstream Git-tag checks
 ## Manual Downloads
 
 These components must be downloaded manually and placed into `formats/`:
-
-### exiv2 (prebuilt binary)
-
-1. Download the official Visual Studio 2022 bundle from the [Exiv2 releases page](https://github.com/Exiv2/exiv2/releases/tag/v0.28.9)
-   - File: `exiv2-0.28.9-2019msvc64.zip`
-2. Extract to `formats/exiv2/` so that `formats/exiv2/bin/exiv2.dll` exists
 
 ### NASM (assembler)
 
@@ -131,7 +126,7 @@ qimgv-plus/
 │   ├── lzma/                  # LZMA SDK (7z archive decoder)
 │   ├── openjpeg/              # JPEG 2000 codec
 │   ├── OpenJPH/               # HTJ2K codec
-│   ├── exiv2/                 # EXIF metadata (prebuilt binary)
+│   ├── exiv2/                 # EXIF metadata (static, linked into the exe)
 │   ├── nasm/                  # NASM assembler (tool binary)
 │   ├── ninja/                 # Ninja build tool (tool binary)
 │   └── magic-kernel-sharp/    # Scaling kernel data
@@ -140,6 +135,7 @@ qimgv-plus/
 │   ├── build_qtiff_jpeg.ps1
 │   ├── build_qpng_spng.ps1
 │   ├── build_qjpeg_jpeg.ps1
+│   ├── build_exiv2.ps1
 │   ├── build_ffmpeg_msvc.py
 │   ├── check_deps.py
 │   ├── deploy-plugins.ps1
@@ -179,6 +175,12 @@ qimgv-plus/
 | qtiff.dll | — | Qt plugin | Custom build | Qt image format plugin |
 | qjpeg.dll | — | Qt plugin | Custom build | Qt image format plugin |
 
+### Built by `build_exiv2.ps1`
+
+| Library | Version | Upstream | Patched | Output |
+|---------|---------|----------|:---:|--------|
+| exiv2 | v0.28.9 | [Exiv2/exiv2](https://github.com/Exiv2/exiv2) | No | Static lib (Release + Debug), linked into `qimgv-plus.exe` |
+
 ### Built as part of main CMake tree
 
 | Library | Version | Upstream | Patched | Notes |
@@ -198,7 +200,6 @@ qimgv-plus/
 
 | Component | Version | Source |
 |-----------|---------|--------|
-| exiv2 | 0.28.9 | [Exiv2 releases](https://github.com/Exiv2/exiv2/releases/tag/v0.28.9) (VS2022 bundle) |
 | NASM | Latest | [nasm.us](https://www.nasm.us/) |
 | Ninja | Latest | [ninja-build/ninja](https://github.com/ninja-build/ninja/releases) |
 
@@ -263,7 +264,20 @@ Builds a custom qjpeg.dll backed by the shared libjpeg-turbo from Step 1.
 
 **Output:** `build_scripts/qjpeg_jpeg/install/` → `qjpeg.dll`
 
-#### Step 4: `rebuild-all.ps1`
+#### Step 4: `build_exiv2.ps1`
+
+```powershell
+.\build_exiv2.ps1
+```
+
+Builds a minimal static exiv2 for EXIF reading: XMP, video, web access, NLS, Brotli, inih and Nikon lens data are disabled; PNG (zlib) and BMFF (HEIF/AVIF/JPEG XL) support stay enabled. Release and Debug are installed into one prefix (Debug as `exiv2d.lib`) so every CMake preset links a library with a matching CRT; use `-Configs Release` to skip Debug. Requires zlib-ng from Step 1.
+
+**Output:** `formats/exiv2/install/` → static lib (no DLL to deploy)
+
+> [!NOTE]
+> `formats/exiv2/` used to hold the official prebuilt bundle. If it still does, delete it before running `setup-deps.ps1` with `-SkipClone`; without that switch the script replaces it with the source checkout.
+
+#### Step 5: `rebuild-all.ps1`
 
 ```powershell
 .\rebuild-all.ps1
@@ -271,7 +285,7 @@ Builds a custom qjpeg.dll backed by the shared libjpeg-turbo from Step 1.
 
 Builds all remaining format libraries in dependency order: zstd → Imath → OpenEXR → libavif → libjxl → jxrlib → libdeflate → LibRaw.
 
-#### Step 5 (Optional): `build_ffmpeg_msvc.py`
+#### Step 6 (Optional): `build_ffmpeg_msvc.py`
 
 ```powershell
 python build_ffmpeg_msvc.py
@@ -375,4 +389,8 @@ E:/Qt/6.x.x/msvc2022_64
 
 ### zlib-ng import library not found
 
-Run `build_scripts\build_qtiff_jpeg.ps1` first — it builds zlib-ng, which is required by both the main application and libspng.
+Run `build_scripts\build_qtiff_jpeg.ps1` first — it builds zlib-ng, which is required by the main application, libspng and exiv2.
+
+### exiv2 not found during CMake configure
+
+Run `build_scripts\build_exiv2.ps1`. The main build links only the static exiv2 from `formats/exiv2/install/`; a shared exiv2 package is rejected at configure time.

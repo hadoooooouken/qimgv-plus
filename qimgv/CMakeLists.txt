@@ -65,13 +65,37 @@ qt_add_lrelease(qimgv-plus TS_FILES ${TS_FILES})
 # reuse ZLIB_IMPORT_LIB/ZLIB_INCLUDE_DIR directly only if this block runs first.
 # This is the single source of truth for the zlib-ng install path; don't
 # re-derive it with a second set() in 3rdparty/kimageformats/CMakeLists.txt.
-set(ZLIB_IMPORT_LIB "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install/lib/zlib.lib")
-set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install/include")
+set(ZLIB_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install")
+set(ZLIB_IMPORT_LIB "${ZLIB_INSTALL_DIR}/lib/zlib.lib")
+set(ZLIB_INCLUDE_DIR "${ZLIB_INSTALL_DIR}/include")
 if(EXISTS "${ZLIB_IMPORT_LIB}")
     target_include_directories(qimgv-plus PRIVATE "${ZLIB_INCLUDE_DIR}")
     target_link_libraries(qimgv-plus PRIVATE "${ZLIB_IMPORT_LIB}")
 else()
     message(SEND_ERROR "zlib-ng import library not found at: ${ZLIB_IMPORT_LIB} - run build_scripts/build_qtiff_jpeg.ps1 first")
+endif()
+
+# exiv2 is built from source as a static library by build_scripts/build_exiv2.ps1
+# (Release and Debug in one install prefix). Its package config resolves the
+# private ZLIB dependency of a static build with find_dependency(ZLIB), which
+# ZLIB_ROOT points at the same zlib-ng install as above.
+if(EXIV2)
+    set(EXIV2_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/exiv2/install")
+    set(ZLIB_ROOT "${ZLIB_INSTALL_DIR}")
+    find_package(exiv2 REQUIRED CONFIG HINTS "${EXIV2_INSTALL_DIR}")
+
+    get_target_property(_exiv2_type Exiv2::exiv2lib TYPE)
+    if(NOT _exiv2_type STREQUAL "STATIC_LIBRARY")
+        message(FATAL_ERROR "exiv2 must be the static build from build_scripts/build_exiv2.ps1 "
+                            "(found ${_exiv2_type} at ${exiv2_DIR})")
+    endif()
+
+    # Only Release and Debug are installed; the remaining configurations use
+    # the Release library, which shares their non-debug CRT.
+    set_target_properties(Exiv2::exiv2lib PROPERTIES
+        MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release
+        MAP_IMPORTED_CONFIG_MINSIZEREL Release
+    )
 endif()
 
 # libdeflate for fast PNG writing in batch converter (pre-built shared dll, loaded at runtime via QLibrary)
@@ -128,7 +152,10 @@ target_link_libraries(qimgv-plus PRIVATE
 # OPTION DEFINITIONS, LINKING
 if(EXIV2)
     target_link_libraries(qimgv-plus PRIVATE Exiv2::exiv2lib)
-    target_compile_definitions(qimgv-plus PRIVATE USE_EXIV2)
+    # exiv2 generates its export header with STATIC_DEFINE exiv2lib_STATIC but
+    # does not propagate that definition to consumers of the static library;
+    # without it EXIV2API expands to __declspec(dllimport).
+    target_compile_definitions(qimgv-plus PRIVATE USE_EXIV2 exiv2lib_STATIC)
 endif()
 
 
@@ -192,13 +219,7 @@ if(WIN32)
         )
     endif()
 
-    # 2. Exiv2
-    if(EXIV2)
-        add_custom_command(TARGET qimgv-plus POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/../formats/exiv2/bin/exiv2.dll" "$<TARGET_FILE_DIR:qimgv-plus>/"
-            COMMENT "Copying Exiv2 DLL..."
-        )
-    endif()
+    # 2. Exiv2 is linked statically into qimgv-plus.exe; nothing to deploy.
 
 
     # 5. kimageformats dependencies (safe check)

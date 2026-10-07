@@ -7,7 +7,8 @@
     qimgv-plus from source. It:
       1. Clones each dependency at the exact required tag/commit
       2. Applies local patch files from the patches/ directory
-      3. Downloads prebuilt binaries (exiv2, NASM, Ninja) when needed
+      3. Prints download instructions for tools and sources that are not
+         cloned (NASM, Ninja, LZMA SDK, UnRAR)
 
     Run this once after cloning the main qimgv-plus repository.
 
@@ -147,6 +148,7 @@ $GIT_DEPS = @(
     @{ Name = "libspng";        Url = "https://github.com/randy408/libspng.git";                   Tag = "v0.7.4"       }
     @{ Name = "libtiff";        Url = "https://gitlab.com/libtiff/libtiff.git";                    Tag = "v4.7.2"       }
     @{ Name = "zstd";           Url = "https://github.com/facebook/zstd.git";                      Tag = "v1.5.7"       }
+    @{ Name = "exiv2";          Url = "https://github.com/Exiv2/exiv2.git";                        Tag = "v0.28.9"      }
 )
 
 # Single-file patches (applied with git apply)
@@ -163,8 +165,7 @@ $PATCH_SERIES = @(
 )
 
 # Prebuilt downloads
-$EXIV2_URL  = "https://github.com/Exiv2/exiv2/releases/download/v0.28.9/exiv2-0.28.9-2019msvc64.zip"
-$NASM_URL   = "https://www.nasm.us/pub/nasm/releasebuilds/2.16.03/win64/nasm-2.16.03-win64.zip"
+$NASM_URL   ="https://www.nasm.us/pub/nasm/releasebuilds/2.16.03/win64/nasm-2.16.03-win64.zip"
 
 # ---------------------------------------------------------------------------
 # Phase 1: Clone dependencies
@@ -202,18 +203,6 @@ if (-not $PatchOnly) {
         Write-Header "magic-kernel-sharp"
         Write-Info "Creating placeholder directory. See BUILDING.md for details."
         New-Item -ItemType Directory -Path $mksDir -Force | Out-Null
-    }
-
-    # Exiv2 prebuilt
-    Write-Header "exiv2 (prebuilt)"
-    $exiv2Dir = Join-Path $FORMATS "exiv2"
-    if (Test-Path $exiv2Dir) {
-        Write-Info "Already exists, skipping exiv2 download"
-    } else {
-        Write-Info "Download exiv2 v0.28.9 prebuilt bundle from:"
-        Write-Info "  $EXIV2_URL"
-        Write-Info "Extract to: $exiv2Dir"
-        Write-Warn "Automatic download not implemented -- please download manually"
     }
 
     # NASM binary
@@ -323,11 +312,12 @@ Write-Host "  Setup complete" -ForegroundColor Cyan
 Write-Host ("=" * 60) -ForegroundColor DarkCyan
 Write-Host ""
 Write-Host "  Next steps:" -ForegroundColor White
-Write-Host "    1. Download exiv2 and NASM if not already present (see above)" -ForegroundColor Gray
+Write-Host "    1. Download NASM if not already present (see above)" -ForegroundColor Gray
 Write-Host "    2. Run build_scripts\build_qtiff_jpeg.ps1" -ForegroundColor Gray
 Write-Host "    3. Run build_scripts\build_qpng_spng.ps1" -ForegroundColor Gray
 Write-Host "    4. Run build_scripts\build_qjpeg_jpeg.ps1" -ForegroundColor Gray
-Write-Host "    5. Run build_scripts\rebuild-all.ps1" -ForegroundColor Gray
-Write-Host "    6. (Optional) Run build_scripts\build_ffmpeg_msvc.py" -ForegroundColor Gray
-Write-Host "    7. Configure and build qimgv-plus (see BUILDING.md)" -ForegroundColor Gray
+Write-Host "    5. Run build_scripts\build_exiv2.ps1" -ForegroundColor Gray
+Write-Host "    6. Run build_scripts\rebuild-all.ps1" -ForegroundColor Gray
+Write-Host "    7. (Optional) Run build_scripts\build_ffmpeg_msvc.py" -ForegroundColor Gray
+Write-Host "    8. Configure and build qimgv-plus (see BUILDING.md)" -ForegroundColor Gray
 Write-Host ""
