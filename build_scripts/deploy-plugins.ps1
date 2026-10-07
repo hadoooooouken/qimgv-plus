@@ -5,10 +5,7 @@
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path $PSScriptRoot -Parent
-$buildDir    = Join-Path $projectRoot "out\build\qimgv-vs\imageformats\Release"
-if (-not (Test-Path $buildDir) -or (Get-ChildItem -Path $buildDir -Filter "kimg_*.dll" -ErrorAction SilentlyContinue).Count -eq 0) {
-    $buildDir = Join-Path $projectRoot "out\build\qimgv-x64-release\imageformats"
-}
+$buildDir    = Join-Path $projectRoot "out\build\qimgv-x64-release\imageformats"
 $releaseDir  = Join-Path $projectRoot "release\imageformats"
 
 if (-not (Test-Path $buildDir)) {
