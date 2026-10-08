@@ -3,8 +3,12 @@
 set(QIMGV_APP_SOURCE_DIR "${PROJECT_SOURCE_DIR}/qimgv")
 
 qt_add_executable(qimgv_tests
+    main.cpp
     tst_qimgv.cpp
+    tst_viewtransform.cpp
     "${QIMGV_APP_SOURCE_DIR}/components/viewmode/viewmodecontroller.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/components/viewtransform/viewtransform.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/components/viewtransform/viewtransformcontroller.cpp"
 )
 
 # Components under test are compiled from the application sources and use

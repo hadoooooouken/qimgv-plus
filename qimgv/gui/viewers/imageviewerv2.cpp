@@ -18,6 +18,26 @@ constexpr int kViewerMultisampleCount = 4;
 constexpr qreal kMinimumDevicePixelRatio = 1.0;
 constexpr QRgb kCheckerboardLightRgb = 0xFF999999;
 constexpr QRgb kCheckerboardDarkRgb = 0xFF666666;
+// Delay before a high-quality rescale after the view stops moving.
+constexpr int kScaleRequestDelayMs = 80;
+// Scene rect; PanoramaGraphicsItem reports it as its bounding rect, so it
+// must cover the viewport.
+constexpr qreal kPanoramaSceneExtent = 200000;
+// The view's own scene rect: smaller than any viewport and top-left aligned,
+// so scene coordinates equal viewport coordinates and the view never scrolls.
+// The image items are positioned where ViewTransform places the image.
+constexpr QRectF kViewSceneRect(0.0, 0.0, 1.0, 1.0);
+// Right-button movement (logical px, scaled by DPR) before it counts as a
+// zoom, and before a horizontal stroke counts as a next/prev gesture.
+constexpr qreal kZoomThresholdPx = 4.0;
+constexpr qreal kGestureThresholdPx = 40.0;
+// Trackpad detection heuristics: wheel notches arrive as multiples of half a
+// notch, and a trackpad stream suppresses wheel detection for a short while.
+constexpr int kWheelNotchAngleDelta = 120;
+constexpr int kWheelHalfNotchAngleDelta = 60;
+constexpr qint64 kTrackpadScrollCooldownMs = 250;
+// Image edge misalignment tolerated by the wheel "is scrollable" check.
+constexpr int kScrollEdgeTolerancePx = 2;
 
 QPixmap createTransparencyCheckerboard(qreal dpr) {
   const qreal effectiveDpr = qMax(dpr, kMinimumDevicePixelRatio);
@@ -43,16 +63,11 @@ QPixmap createTransparencyCheckerboard(qreal dpr) {
 
 ImageViewerV2::ImageViewerV2(QWidget *parent)
     : QGraphicsView(parent), image(nullptr),
-      movie(nullptr), transparencyGrid(false), expandImage(false),
-      expandSmallImagesInFitMode(false),
-      keepFitMode(false), loopPlayback(true), mIsFullscreen(false),
-      scrollBarWorkaround(true), useFixedZoomLevels(false),
+      movie(nullptr), transparencyGrid(false),
+      loopPlayback(true), mIsFullscreen(false),
       trackpadDetection(true),
-      mouseInteraction(MouseInteractionState::MOUSE_NONE), minScale(0.01f),
-      maxScale(40.0f), fitWindowScale(0.125f), fitWidthScale(0.125f), fitHeightScale(0.125f),
-      expandLimit(40.0f),
-      mViewLock(LOCK_NONE), imageFitMode(FIT_WINDOW),
-      mScalingFilter(QI_FILTER_BILINEAR), imageFitModeDefault(FIT_WINDOW),
+      mouseInteraction(MouseInteractionState::MOUSE_NONE),
+      mScalingFilter(QI_FILTER_BILINEAR),
       scene(nullptr), zoomTimeLine(nullptr), zoomStartScale(1.0f),
       zoomTargetScale(1.0f), mAnimationActive(false) {
   setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
@@ -61,9 +76,10 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   setAcceptDrops(false);
 
-  dpr = this->devicePixelRatioF();
-  hs = horizontalScrollBar();
-  vs = verticalScrollBar();
+  // The private IViewSurface base is only reachable from inside the class.
+  viewTransform = std::make_unique<ViewTransformController>(
+      static_cast<const IViewSurface &>(*this));
+  viewTransform->setDevicePixelRatio(this->devicePixelRatioF());
 
   scrollTimeLineY = new QTimeLine(ANIMATION_SPEED, this);
   scrollTimeLineY->setEasingCurve(QEasingCurve::OutSine);
@@ -84,7 +100,7 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   connect(zoomTimeLine, &QTimeLine::valueChanged, this,
           &ImageViewerV2::onZoomTimelineValueChanged);
   connect(zoomTimeLine, &QTimeLine::finished, this,
-          &ImageViewerV2::saveViewportPos);
+          [this]() { viewTransform->saveViewportPosition(); });
   connect(zoomTimeLine, &QTimeLine::finished, this,
           &ImageViewerV2::requestScaling);
 
@@ -93,30 +109,22 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
 
   scaleTimer = new QTimer(this);
   scaleTimer->setSingleShot(true);
-  scaleTimer->setInterval(80);
+  scaleTimer->setInterval(kScaleRequestDelayMs);
 
-  checkerboard = createTransparencyCheckerboard(dpr);
+  checkerboard = createTransparencyCheckerboard(getDpr());
 
   lastTouchpadScroll.start();
-  zoomThreshold = static_cast<int>(dpr * 4.);
-  gestureThreshold = static_cast<int>(dpr * 40.);
+  updateInputThresholds();
 
   pixmapItem.setTransformationMode(Qt::SmoothTransformation);
-  pixmapItem.setScale(1.0f);
-  pixmapItem.setOffset(10000, 10000);
-  pixmapItem.setTransformOriginPoint(10000, 10000);
-  pixmapItemScaled.setScale(1.0f);
-  pixmapItemScaled.setOffset(10000, 10000);
-  pixmapItemScaled.setTransformOriginPoint(10000, 10000);
-  pixmapItemCrop.setScale(1.0f);
-  pixmapItemCrop.setOffset(10000, 10000);
-  pixmapItemCrop.setTransformOriginPoint(10000, 10000);
 
   this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
   scene = new QGraphicsScene(this);
-  scene->setSceneRect(0, 0, 200000, 200000);
+  // The image items move on every pan and zoom; a spatial index only costs.
+  scene->setItemIndexMethod(QGraphicsScene::NoIndex);
+  scene->setSceneRect(0, 0, kPanoramaSceneExtent, kPanoramaSceneExtent);
   scene->setBackgroundBrush(QColor(60, 60, 103));
   scene->addItem(&pixmapItem);
   scene->addItem(&pixmapItemScaled);
@@ -130,6 +138,8 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
 
   this->setFrameShape(QFrame::NoFrame);
   this->setScene(scene);
+  this->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+  this->setSceneRect(kViewSceneRect);
 
   QOpenGLWidget *glViewport = new QOpenGLWidget();
   QSurfaceFormat glFormat = glViewport->format();
@@ -144,18 +154,18 @@ ImageViewerV2::ImageViewerV2(QWidget *parent)
   connect(scrollTimeLineY, &QTimeLine::frameChanged, this,
           &ImageViewerV2::scrollToY);
 
-  connect(hs, &QScrollBar::valueChanged, this, [this]() {
-    if (scaleTimer->isActive())
-      scaleTimer->stop();
-    scaleTimer->start();
-    hideUpscaledCrop();
-  });
-  connect(vs, &QScrollBar::valueChanged, this, [this]() {
-    if (scaleTimer->isActive())
-      scaleTimer->stop();
-    scaleTimer->start();
-    hideUpscaledCrop();
-  });
+  connect(viewTransform.get(), &ViewTransformController::transformChanged,
+          this, &ImageViewerV2::onTransformChanged);
+  connect(viewTransform.get(), &ViewTransformController::scaleChanged,
+          this, &ImageViewerV2::scaleChanged);
+  connect(viewTransform.get(), &ViewTransformController::positionChanged,
+          this, &ImageViewerV2::onViewPositionChanged);
+  connect(viewTransform.get(), &ViewTransformController::imageCentered,
+          this, [this]() { emit imageAreaChanged(scaledRectR()); });
+  connect(viewTransform.get(), &ViewTransformController::anchoredZoomApplied,
+          this, &ImageViewerV2::requestScaling);
+  connect(viewTransform.get(), &ViewTransformController::panoramaChanged,
+          this, &ImageViewerV2::applyPanoramaView);
 
   connect(animationTimer, &QTimer::timeout, this,
           &ImageViewerV2::onAnimationTimer, Qt::UniqueConnection);
@@ -198,61 +208,104 @@ bool ImageViewerV2::event(QEvent *ev) {
 }
 
 void ImageViewerV2::onDPRChanged() {
-  if (dpr == this->devicePixelRatioF())
+  const qreal newDpr = this->devicePixelRatioF();
+  if (viewTransform->transform().devicePixelRatio() == newDpr)
     return;
-  qDebug() << "DPR CHANGED " << dpr << " >> " << this->devicePixelRatioF();
-  dpr = this->devicePixelRatioF();
-  checkerboard = createTransparencyCheckerboard(dpr);
-  zoomThreshold = static_cast<int>(dpr * 4.);
-  gestureThreshold = static_cast<int>(dpr * 40.);
+  qDebug() << "DPR CHANGED " << getDpr() << " >> " << newDpr;
+  viewTransform->setDevicePixelRatio(newDpr);
+  checkerboard = createTransparencyCheckerboard(newDpr);
+  updateInputThresholds();
   if (image) {
-    const_cast<QImage*>(image.get())->setDevicePixelRatio(dpr);
+    const_cast<QImage*>(image.get())->setDevicePixelRatio(newDpr);
     pixmapItem.setImage(*image);
     if (!mSvgMode) {
       pixmapItem.show();
     }
     pixmapItem.update();
-    updateMinScale();
-    applyFitMode();
+    viewTransform->changeDevicePixelRatio(newDpr);
     requestScaling();
     update();
   }
 }
 
+void ImageViewerV2::syncDevicePixelRatio() {
+  // Update DPR just in case an event was missed or not delivered yet
+  const qreal newDpr = this->devicePixelRatioF();
+  if (viewTransform->transform().devicePixelRatio() != newDpr) {
+    viewTransform->setDevicePixelRatio(newDpr);
+    updateInputThresholds();
+  }
+}
+
+void ImageViewerV2::updateInputThresholds() {
+  const qreal dpr = getDpr();
+  zoomThreshold = static_cast<int>(dpr * kZoomThresholdPx);
+  gestureThreshold = static_cast<int>(dpr * kGestureThresholdPx);
+}
+
+QSize ImageViewerV2::viewportSize() const {
+  return viewport()->size();
+}
+
+QPointF ImageViewerV2::pointerPosition() const {
+  return mapFromGlobal(QCursor::pos());
+}
+
+// Places the image items where the view transform puts the image.
+void ImageViewerV2::onTransformChanged() {
+  const ViewTransform &transform = viewTransform->transform();
+  const qreal scale = transform.scale();
+  const QPointF imagePos = transform.imagePosition();
+  const bool scaleDiffers = pixmapItem.scale() != scale;
+  pixmapItem.setPos(imagePos);
+  pixmapItem.setScale(scale);
+  pixmapItemScaled.setPos(imagePos);
+  if (svgItem) {
+    svgItem->setPos(imagePos);
+    svgItem->setScale(scale);
+  }
+  if (scaleDiffers) {
+    pixmapItem.setTransformationMode(selectTransformationMode());
+    swapToOriginalImage();
+  }
+}
+
+// The view moved: the scaled image and upscaled crop no longer match it.
+void ImageViewerV2::onViewPositionChanged() {
+  if (scaleTimer->isActive())
+    scaleTimer->stop();
+  scaleTimer->start();
+  hideUpscaledCrop();
+}
+
+void ImageViewerV2::applyPanoramaView() {
+  const PanoramaView &panorama = viewTransform->panorama();
+  panoramaItem->setViewParameters(panorama.yaw(), panorama.pitch(), panorama.fov());
+}
+
 void ImageViewerV2::readSettings() {
   transparencyGrid = settings->transparencyGrid();
-  bool prevExpandImage = expandImage;
-  expandImage = settings->expandImage();
-  float prevExpandLimit = expandLimit;
-  expandLimit = static_cast<float>(settings->expandLimit());
-  if (expandLimit < 1.0f)
-    expandLimit = maxScale;
-  keepFitMode = settings->keepFitMode();
-  ImageFitMode newFitModeDefault = settings->imageFitMode();
-  bool defaultFitModeChanged = (imageFitModeDefault != newFitModeDefault);
-  imageFitModeDefault = newFitModeDefault;
-  zoomStep = settings->zoomStep();
-  focusIn1to1 = settings->focusPointIn1to1Mode();
+  ViewTransformConfig config;
+  config.expandImage = settings->expandImage();
+  config.expandLimit = static_cast<float>(settings->expandLimit());
+  config.keepFitMode = settings->keepFitMode();
+  config.defaultFitMode = settings->imageFitMode();
+  config.zoomStep = settings->zoomStep();
+  config.focusPoint = settings->focusPointIn1to1Mode();
+  config.useFixedZoomLevels = settings->useFixedZoomLevels();
+  if (config.useFixedZoomLevels)
+    config.zoomLevels = parseZoomLevels(settings->zoomLevels());
+  config.unlockMinZoom = settings->unlockMinZoom();
   trackpadDetection = settings->trackpadDetection();
-  if ((useFixedZoomLevels = settings->useFixedZoomLevels())) {
-    // zoomlevels are stored as a string, parse into list
-    zoomLevels.clear();
-    auto levelsStr = settings->zoomLevels().split(',');
-    for (const auto &i : std::as_const(levelsStr))
-      zoomLevels.append(i.toFloat());
-    std::sort(zoomLevels.begin(), zoomLevels.end());
-  }
   // set bg color
   onFullscreenModeChanged(mIsFullscreen);
-  updateMinScale();
   ScalingFilter prevScalingFilter = mScalingFilter;
   setScalingFilter(settings->scalingFilter());
   bool prevUseUpscayl = mUseUpscayl;
   mUseUpscayl = settings->useUpscayl();
   updateCasSettings();
-  bool fitScaleSettingsChanged = defaultFitModeChanged ||
-                                 expandImage != prevExpandImage ||
-                                 expandLimit != prevExpandLimit;
+  // Re-fits the displayed image when a fit-relevant setting changed.
+  bool fitScaleSettingsChanged = viewTransform->applyConfig(config);
   // Whether anything that affects the *currently displayed* scale/crop
   // changed. Settings notifications fire for a lot of unrelated changes
   // (theme, accent color, panel sizes, etc); without this check, any of
@@ -263,24 +316,11 @@ void ImageViewerV2::readSettings() {
                                 mScalingFilter != prevScalingFilter ||
                                 mUseUpscayl != prevUseUpscayl;
   if (isDisplaying()) {
-    if (imageFitMode == FIT_FREE) {
-      if (currentScale() < minScale) {
-        doZoom(minScale);
-        centerIfNecessary();
-        snapToEdges();
-      }
-    } else if (fitScaleSettingsChanged) {
-      if (defaultFitModeChanged) {
-        imageFitMode = imageFitModeDefault;
-      }
-      applyFitMode();
-    }
-
     if (scalingRelevantChanged) {
       requestScaling();
     }
   } else {
-    setFitMode(imageFitModeDefault);
+    setFitMode(config.defaultFitMode);
   }
 }
 
@@ -410,19 +450,7 @@ void ImageViewerV2::onMovieFrameChanged(int frameNumber) {
 
   if (isFirstFrame) {
     emit durationChanged(movie->frameCount());
-
-    updateMinScale();
-    if (!keepFitMode || imageFitMode == FIT_FREE)
-      imageFitMode = imageFitModeDefault;
-
-    if (mViewLock == LOCK_NONE) {
-      applyFitMode();
-    } else {
-      imageFitMode = FIT_FREE;
-      fitFree(lockedScale);
-      if (mViewLock == LOCK_ALL)
-        applySavedViewportPos();
-    }
+    viewTransform->showImage(image->size());
   }
 
   if (mAnimationActive && movie->frameCount() > 1) {
@@ -432,7 +460,7 @@ void ImageViewerV2::onMovieFrameChanged(int frameNumber) {
 
 void ImageViewerV2::updateImage(std::shared_ptr<const QImage> newImage) {
   image = std::move(newImage);
-  const_cast<QImage*>(image.get())->setDevicePixelRatio(dpr);
+  const_cast<QImage*>(image.get())->setDevicePixelRatio(getDpr());
   pixmapItem.setImage(*image);
   pixmapItem.update();
   if (mPanoramaMode) {
@@ -448,7 +476,7 @@ void ImageViewerV2::updateImage(std::shared_ptr<const QImage> newImage) {
     pixmapItemScaled.hide();
     if (svgItem) {
       svgItem->show();
-      svgItem->setScale(pixmapItem.scale());
+      svgItem->setScale(currentScale());
     }
   } else {
     panoramaItem->hide();
@@ -465,13 +493,7 @@ void ImageViewerV2::showAnimation(const QString &filePath, const QString &format
 
   auto newMovie = std::make_shared<QMovie>(filePath, format.toUtf8());
   if (newMovie && newMovie->isValid()) {
-    // Update DPR just in case an event was missed or not delivered yet
-    float newDpr = this->devicePixelRatioF();
-    if (dpr != newDpr) {
-      dpr = newDpr;
-      zoomThreshold = static_cast<int>(dpr * 4.);
-      gestureThreshold = static_cast<int>(dpr * 40.);
-    }
+    syncDevicePixelRatio();
     movie = newMovie;
     connect(movie.get(), &QMovie::frameChanged, this, &ImageViewerV2::onMovieFrameChanged);
 
@@ -486,38 +508,16 @@ void ImageViewerV2::showAnimation(const QString &filePath, const QString &format
 void ImageViewerV2::showImage(std::shared_ptr<const QImage> _image,
                               QString filePath) {
   if (_image && !_image->isNull()) {
-    // Update DPR just in case an event was missed or not delivered yet
-    float newDpr = this->devicePixelRatioF();
-    if (dpr != newDpr) {
-      dpr = newDpr;
-      zoomThreshold = static_cast<int>(dpr * 4.);
-      gestureThreshold = static_cast<int>(dpr * 40.);
-    }
+    syncDevicePixelRatio();
     bool isSameFile = (!filePath.isEmpty() && filePath == currentFilePath);
     QSize oldSize = sourceSize();
     QSize newSize = _image->size();
     bool isRotationOrMirror = (isSameFile && oldSize.isValid() &&
                                (oldSize.width() * oldSize.height() ==
                                 newSize.width() * newSize.height()));
-                                
-    float prevScale = currentScale();
-    ImageFitMode prevFitMode = imageFitMode;
-    QPointF relativePos(0.5, 0.5);
-
-    if (isRotationOrMirror && isDisplaying()) {
-      FilterPixmapItem *item = &pixmapItem;
-      QPointF sceneCenter =
-          mapToScene(viewport()->rect().center()) + QPointF(1, 1);
-      auto itemRect = item->sceneBoundingRect();
-      if (itemRect.width() > 0 && itemRect.height() > 0) {
-        relativePos.setX(qBound(
-            qreal(0), (sceneCenter.x() - itemRect.left()) / itemRect.width(),
-            qreal(1)));
-        relativePos.setY(qBound(
-            qreal(0), (sceneCenter.y() - itemRect.top()) / itemRect.height(),
-            qreal(1)));
-      }
-    }
+    // Scale or fit mode and relative viewport centre of the current image,
+    // kept across a rotation or mirror.
+    const PreservedView preservedView = viewTransform->preservedView();
 
     reset();
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
@@ -527,7 +527,7 @@ void ImageViewerV2::showImage(std::shared_ptr<const QImage> _image,
     if (filePath.endsWith(".svg", Qt::CaseInsensitive)) {
       svgItem = new QGraphicsSvgItem(filePath);
       if (svgItem->renderer() && svgItem->renderer()->isValid()) {
-        svgItem->setPos(10000, 10000);
+        svgItem->setPos(viewTransform->transform().imagePosition());
         svgItem->setCacheMode(QGraphicsItem::NoCache);
         scene->addItem(svgItem);
         mSvgMode = true;
@@ -541,38 +541,11 @@ void ImageViewerV2::showImage(std::shared_ptr<const QImage> _image,
     }
 
     updateImage(_image);
-    updateMinScale();
 
-    if (isRotationOrMirror) {
-      imageFitMode = prevFitMode;
-      if (imageFitMode == FIT_FREE) {
-        doZoom(prevScale);
-      } else {
-        applyFitMode();
-      }
-
-      // Restore relative viewport center
-      FilterPixmapItem *item = &pixmapItem;
-      auto itemRect = item->sceneBoundingRect();
-      QPointF newScenePos;
-      newScenePos.setX(itemRect.left() + itemRect.width() * relativePos.x());
-      newScenePos.setY(itemRect.top() + itemRect.height() * relativePos.y());
-      centerOn(newScenePos);
-      centerIfNecessary();
-      snapToEdges();
-    } else {
-      if (!keepFitMode || imageFitMode == FIT_FREE)
-        imageFitMode = imageFitModeDefault;
-
-      if (mViewLock == LOCK_NONE) {
-        applyFitMode();
-      } else {
-        imageFitMode = FIT_FREE;
-        fitFree(lockedScale);
-        if (mViewLock == LOCK_ALL)
-          applySavedViewportPos();
-      }
-    }
+    if (isRotationOrMirror)
+      viewTransform->showTransformedImage(newSize, preservedView);
+    else
+      viewTransform->showImage(newSize);
     requestScaling();
     update();
   }
@@ -587,8 +560,6 @@ void ImageViewerV2::reset() {
   pixmapItemCrop.setImage(QImage());
   imageScaled = QImage();
   pixmapItem.setImage(QImage());
-  pixmapItem.setScale(1.0f);
-  pixmapItem.setOffset(10000, 10000);
   if (svgItem) {
     scene->removeItem(svgItem);
     delete svgItem;
@@ -602,7 +573,7 @@ void ImageViewerV2::reset() {
     disconnect(movie.get(), &QMovie::frameChanged, this, &ImageViewerV2::onMovieFrameChanged);
     movie = nullptr;
   }
-  centerOn(10000, 10000);
+  viewTransform->clear();
   // when this view is not in focus this it won't update the background
   // so we force it here
   viewport()->update();
@@ -617,10 +588,10 @@ void ImageViewerV2::reset() {
 void ImageViewerV2::closeImage() { reset(); }
 
 void ImageViewerV2::setScaledImage(QImage newFrame) {
-  if (!movie && newFrame.size() != scaledSizeR() * dpr)
+  if (!movie && newFrame.size() != scaledSizeR() * getDpr())
     return;
   imageScaled = newFrame;
-  imageScaled.setDevicePixelRatio(dpr);
+  imageScaled.setDevicePixelRatio(getDpr());
   pixmapItemScaled.setImage(imageScaled);
   pixmapItem.hide();
   pixmapItemScaled.show();
@@ -726,9 +697,7 @@ Qt::TransformationMode ImageViewerV2::selectTransformationMode() {
 }
 
 void ImageViewerV2::setExpandImage(bool mode) {
-  expandImage = mode;
-  updateMinScale();
-  applyFitMode();
+  viewTransform->setExpandImage(mode);
   requestScaling();
 }
 
@@ -746,10 +715,10 @@ void ImageViewerV2::hide() {
 void ImageViewerV2::requestScaling() {
   setRenderingSettled(false);
   mFramePresentationPending = false;
-  bool isAt100 = std::abs(pixmapItem.scale() - 1.0) < kScaleEpsilon;
+  bool isAt100 = std::abs(currentScale() - 1.0f) < kScaleEpsilon;
   if (mSvgMode || !image || isAt100 ||
-      (mScalingFilter == QI_FILTER_CAS && !(mUseUpscayl && pixmapItem.scale() > 1.0)) ||
-      (mScalingFilter == QI_FILTER_SMART_GPU && !(mUseUpscayl && pixmapItem.scale() > 1.0)) ||
+      (mScalingFilter == QI_FILTER_CAS && !(mUseUpscayl && currentScale() > 1.0f)) ||
+      (mScalingFilter == QI_FILTER_SMART_GPU && !(mUseUpscayl && currentScale() > 1.0f)) ||
       movie) {
     requestSettledFramePresentation();
     return;
@@ -761,7 +730,7 @@ void ImageViewerV2::requestScaling() {
     return;
   }
 
-  QSize targetSize = scaledSizeR() * dpr;
+  QSize targetSize = scaledSizeR() * getDpr();
 
   // Output buffer limits (same as ImageLib::scaled defaults)
   constexpr int    kMaxScaledDimension = 12288;
@@ -781,7 +750,7 @@ void ImageViewerV2::requestScaling() {
   if (scaleTimer->isActive())
     scaleTimer->stop();
 
-  emit scalingRequested(scaledSizeR() * dpr, mScalingFilter);
+  emit scalingRequested(targetSize, mScalingFilter);
 }
 
 void ImageViewerV2::refreshScaling() {
@@ -789,18 +758,11 @@ void ImageViewerV2::refreshScaling() {
 }
 
 bool ImageViewerV2::imageFits() const {
-  if (!image)
-    return true;
-  return (image->width() <= (viewport()->width() * dpr) &&
-          image->height() <= (viewport()->height() * dpr));
+  return viewTransform->transform().imageFits();
 }
 
 bool ImageViewerV2::scaledImageFits() const {
-  if (!image)
-    return true;
-  QSize sz = scaledSizeR();
-  return (sz.width() <= viewport()->width() &&
-          sz.height() <= viewport()->height());
+  return viewTransform->transform().scaledImageFits();
 }
 
 ScalingFilter ImageViewerV2::scalingFilter() const { return mScalingFilter; }
@@ -824,7 +786,7 @@ void ImageViewerV2::mousePressEvent(QMouseEvent *event) {
   mouseMoveStartPos = event->pos();
   mousePressPos = mouseMoveStartPos;
   if (event->button() & Qt::RightButton) {
-    setZoomAnchor(event->pos());
+    viewTransform->setZoomAnchor(event->pos());
   } else {
     QGraphicsView::mousePressEvent(event);
   }
@@ -866,20 +828,7 @@ void ImageViewerV2::mouseMoveEvent(QMouseEvent *event) {
   QWidget::mouseMoveEvent(event);
   onMouseMoveFullscreen();
   if (mPanoramaMode && (event->buttons() & Qt::LeftButton)) {
-    int dx = event->pos().x() - mouseMoveStartPos.x();
-    int dy = event->pos().y() - mouseMoveStartPos.y();
-    float speedMultiplier = 2.0f;
-    mPanoramaYaw -=
-        (float)dx * mPanoramaFov / viewport()->width() * speedMultiplier;
-    mPanoramaPitch -=
-        (float)dy * mPanoramaFov / viewport()->width() * speedMultiplier;
-
-    if (mPanoramaPitch > 89.0f)
-      mPanoramaPitch = 89.0f;
-    if (mPanoramaPitch < -89.0f)
-      mPanoramaPitch = -89.0f;
-
-    panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
+    viewTransform->dragPanorama(event->pos() - mouseMoveStartPos);
     mouseMoveStartPos = event->pos();
     return;
   }
@@ -971,10 +920,7 @@ void ImageViewerV2::mouseReleaseEvent(QMouseEvent *event) {
 
 void ImageViewerV2::mouseDoubleClickEvent(QMouseEvent *event) {
   if (mPanoramaMode && (event->button() == Qt::LeftButton)) {
-    mPanoramaYaw = 0.0f;
-    mPanoramaPitch = 0.0f;
-    mPanoramaFov = 90.0f;
-    panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
+    viewTransform->resetPanorama();
     event->accept();
     return;
   }
@@ -985,13 +931,7 @@ void ImageViewerV2::mouseDoubleClickEvent(QMouseEvent *event) {
 // for some reason in qgraphicsview wheelEvent is followed by moveEvent (wtf?)
 void ImageViewerV2::wheelEvent(QWheelEvent *event) {
   if (mPanoramaMode) {
-    int delta = event->angleDelta().y();
-    mPanoramaFov *= (delta > 0) ? 0.9f : 1.1f;
-    if (mPanoramaFov < 10.0f)
-      mPanoramaFov = 10.0f;
-    if (mPanoramaFov > 140.0f)
-      mPanoramaFov = 140.0f;
-    panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
+    viewTransform->zoomPanoramaByWheel(event->angleDelta().y());
     event->accept();
     return;
   }
@@ -1041,8 +981,9 @@ void ImageViewerV2::wheelEvent(QWheelEvent *event) {
     if (trackpadDetection) {
       // fallback to guesswork
       isWheel = angleDelta.y() &&
-                (abs(angleDelta.y()) >= 120 && !(angleDelta.y() % 60)) &&
-                lastTouchpadScroll.elapsed() > 250;
+                (abs(angleDelta.y()) >= kWheelNotchAngleDelta &&
+                 !(angleDelta.y() % kWheelHalfNotchAngleDelta)) &&
+                lastTouchpadScroll.elapsed() > kTrackpadScrollCooldownMs;
     }
 
     if (!isWheel) {
@@ -1057,10 +998,8 @@ void ImageViewerV2::wheelEvent(QWheelEvent *event) {
                                                            : pixelDelta.x();
         int dy = abs(angleDelta.y()) > abs(pixelDelta.y()) ? angleDelta.y()
                                                            : pixelDelta.y();
-        hs->setValue(hs->value() - dx * TRACKPAD_SCROLL_MULTIPLIER);
-        vs->setValue(vs->value() - dy * TRACKPAD_SCROLL_MULTIPLIER);
-        centerIfNecessary();
-        snapToEdges();
+        viewTransform->scrollBy(QPointF(-dx * TRACKPAD_SCROLL_MULTIPLIER,
+                                        -dy * TRACKPAD_SCROLL_MULTIPLIER));
       }
     } else if (isWheel &&
                settings->imageScrolling() == SCROLL_BY_TRACKPAD_AND_WHEEL) {
@@ -1068,8 +1007,10 @@ void ImageViewerV2::wheelEvent(QWheelEvent *event) {
       bool scrollable = false;
       QRect imgRect = scaledRectR();
       // shift by 2px in case of img edge misalignment
-      if ((event->angleDelta().y() < 0 && imgRect.bottom() > height() + 2) ||
-          (event->angleDelta().y() > 0 && imgRect.top() < -2)) {
+      if ((event->angleDelta().y() < 0 &&
+           imgRect.bottom() > height() + kScrollEdgeTolerancePx) ||
+          (event->angleDelta().y() > 0 &&
+           imgRect.top() < -kScrollEdgeTolerancePx)) {
         event->accept();
         scroll(0,
                -angleDelta.y() * WHEEL_SCROLL_MULTIPLIER *
@@ -1082,7 +1023,7 @@ void ImageViewerV2::wheelEvent(QWheelEvent *event) {
       event->ignore();
       QWidget::wheelEvent(event);
     }
-    saveViewportPos();
+    viewTransform->saveViewportPosition();
   } else {
     event->ignore();
     QWidget::wheelEvent(event);
@@ -1094,8 +1035,8 @@ void ImageViewerV2::showEvent(QShowEvent *event) {
   // ensure we are properly resized
   qApp->processEvents();
   // reapply fitmode to fix viewport position
-  if (imageFitMode == FIT_ORIGINAL)
-    applyFitMode();
+  if (fitMode() == FIT_ORIGINAL)
+    viewTransform->applyFitMode();
   setRenderingSettled(false);
   mFramePresentationPending = false;
   scaleTimer->start();
@@ -1147,7 +1088,7 @@ inline void ImageViewerV2::mousePan(QMouseEvent *event) {
   mouseMoveStartPos -= event->pos();
   scroll(mouseMoveStartPos.x(), mouseMoveStartPos.y(), false);
   mouseMoveStartPos = event->pos();
-  saveViewportPos();
+  viewTransform->saveViewportPosition();
 }
 
 //  zooming while the right button is pressed
@@ -1155,242 +1096,22 @@ inline void ImageViewerV2::mousePan(QMouseEvent *event) {
 //        mid-zoom it is set to FIT_FREE.
 //        FIT_FREE mode does not persist when changing images.
 inline void ImageViewerV2::mouseMoveZoom(QMouseEvent *event) {
-  float stepMultiplier = 0.003f; // this one feels ok
   int currentPos = event->pos().y();
   int moveDistance = mouseMoveStartPos.y() - currentPos;
+  mouseMoveStartPos = event->pos();
 
   if (mPanoramaMode) {
-    // In panorama mode, we decrease FOV to zoom in (moving mouse up decreases
-    // currentPos, increases moveDistance)
-    mPanoramaFov *= (1.0f - stepMultiplier * moveDistance * dpr);
-    if (mPanoramaFov < 10.0f)
-      mPanoramaFov = 10.0f;
-    if (mPanoramaFov > 140.0f)
-      mPanoramaFov = 140.0f;
-    panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
-    mouseMoveStartPos = event->pos();
+    // Moving the mouse up narrows the field of view (zooms in).
+    viewTransform->zoomPanoramaByGesture(moveDistance);
     return;
   }
-
-  float newScale =
-      currentScale() * (1.0f + stepMultiplier * moveDistance * dpr);
-  mouseMoveStartPos = event->pos();
-  imageFitMode = FIT_FREE;
-
-  zoomAnchored(newScale);
-  centerIfNecessary();
-  snapToEdges();
-  if (pixmapItem.scale() == fitWindowScale)
-    imageFitMode = FIT_WINDOW;
-  else if (pixmapItem.scale() == fitWidthScale)
-    imageFitMode = FIT_WIDTH;
-  else if (pixmapItem.scale() == fitHeightScale)
-    imageFitMode = FIT_HEIGHT;
-}
-
-// scale at which current image fills the window
-void ImageViewerV2::updateFitWindowScale() {
-  float scaleFitX = (float)viewport()->width() * dpr / image->width();
-  float scaleFitY = (float)viewport()->height() * dpr / image->height();
-  if (scaleFitX < scaleFitY) {
-    fitWindowScale = scaleFitX;
-  } else {
-    fitWindowScale = scaleFitY;
-  }
-  if (expandImage && fitWindowScale > expandLimit)
-    fitWindowScale = expandLimit;
-}
-
-void ImageViewerV2::updateFitWidthScale() {
-  if (!image)
-    return;
-  fitWidthScale = (float)viewport()->width() * dpr / image->width();
-  if (expandImage && fitWidthScale > expandLimit)
-    fitWidthScale = expandLimit;
-}
-
-void ImageViewerV2::updateFitHeightScale() {
-  if (!image)
-    return;
-
-  float scaleFitY = (float)viewport()->height() * dpr / image->height();
-  fitHeightScale = scaleFitY;
-
-  if (expandImage && fitHeightScale > expandLimit)
-    fitHeightScale = expandLimit;
-}
-
-void ImageViewerV2::updateMinScale() {
-  if (!image)
-    return;
-  updateFitWindowScale();
-  updateFitWidthScale();
-  updateFitHeightScale();
-  if (settings->unlockMinZoom()) {
-    if (!image->isNull())
-      minScale = qMax(10. / image->width(), 10. / image->height());
-    else
-      minScale = 1.0f;
-  } else {
-    if (imageFits())
-      minScale = 1.0f;
-    else
-      minScale = fitWindowScale;
-  }
-  if (mViewLock != LOCK_NONE && lockedScale < minScale)
-    minScale = lockedScale;
-}
-
-void ImageViewerV2::fitWidth(bool force) {
-  if (!image)
-    return;
-  // Capture cursor position in scale-invariant pixmap coordinates BEFORE
-  // doZoom() changes the scale. Doing this after doZoom(), by remapping via
-  // mapToScene(), would mix the new scale with leftover scrollbar values
-  // from the previous fit mode, biasing the result (usually towards the top).
-  if (focusIn1to1 == FOCUS_CURSOR)
-    setZoomAnchor(mapFromGlobal(cursor().pos()));
-  updateFitWidthScale();
-  float targetScale = fitWidthScale;
-  if (force) {
-    targetScale = (float)viewport()->width() * dpr / image->width();
-  }
-  if (currentScale() != targetScale) {
-    swapToOriginalImage();
-    doZoom(targetScale);
-  }
-  centerIfNecessary();
-  if (scaledSizeR().height() > viewport()->height()) {
-    if (focusIn1to1 == FOCUS_TOP) {
-      QPointF centerTarget =
-          mapToScene(viewport()->rect()).boundingRect().center();
-      centerTarget.setY(0);
-      centerOn(centerTarget);
-    } else if (focusIn1to1 == FOCUS_CURSOR) {
-      centerOn(pixmapItem.mapToScene(zoomAnchor.first));
-    } else if (focusIn1to1 == FOCUS_CENTER) {
-      centerOn(pixmapItem.sceneBoundingRect().center());
-    }
-  }
-  snapToEdges();
-}
-
-void ImageViewerV2::fitWindow(bool force) {
-  if (!image)
-    return;
-  float targetScale = fitWindowScale;
-  if (force) {
-    float scaleFitX = (float)viewport()->width() * dpr / image->width();
-    float scaleFitY = (float)viewport()->height() * dpr / image->height();
-    targetScale = qMin(scaleFitX, scaleFitY);
-  }
-  if (currentScale() != targetScale) {
-    swapToOriginalImage();
-    doZoom(targetScale);
-  }
-  // There's either a qt bug or I am misusing something.
-  // First call to scrollbar->setValue() produces wrong results
-  // - unless when called from eventloop
-  if (scrollBarWorkaround) {
-    scrollBarWorkaround = false;
-    QTimer::singleShot(0, this, SLOT(centerOnPixmap()));
-  } else {
-    centerOnPixmap();
-  }
-}
-
-void ImageViewerV2::fitNormal() { fitFree(1.0f); }
-
-void ImageViewerV2::fitHeight(bool force) {
-  if (!image)
-    return;
-
-  // See fitWidth() for why this must happen before doZoom() changes the scale.
-  if (focusIn1to1 == FOCUS_CURSOR)
-    setZoomAnchor(mapFromGlobal(cursor().pos()));
-
-  // Update the stretch scale calculation
-  updateFitHeightScale();
-
-  float targetScale = fitHeightScale;
-  if (force) {
-    targetScale = (float)viewport()->height() * dpr / image->height();
-  }
-
-  if (currentScale() != targetScale) {
-    swapToOriginalImage();
-    doZoom(targetScale);
-  }
-  centerIfNecessary();
-  if (scaledSizeR().width() > viewport()->width()) {
-    if (focusIn1to1 == FOCUS_TOP) {
-      QPointF centerTarget =
-          mapToScene(viewport()->rect()).boundingRect().center();
-      centerTarget.setX(0);
-      centerOn(centerTarget);
-    } else if (focusIn1to1 == FOCUS_CURSOR) {
-      centerOn(pixmapItem.mapToScene(zoomAnchor.first));
-    } else if (focusIn1to1 == FOCUS_CENTER) {
-      centerOn(pixmapItem.sceneBoundingRect().center());
-    }
-  }
-  snapToEdges();
-}
-
-void ImageViewerV2::fitFree(float scale) {
-  if (!image)
-    return;
-  if (focusIn1to1 == FOCUS_TOP) {
-    doZoom(scale);
-    centerIfNecessary();
-    if (scaledSizeR().height() > viewport()->height()) {
-      QPointF centerTarget = pixmapItem.sceneBoundingRect().center();
-      centerTarget.setY(0);
-      centerOn(centerTarget);
-    }
-    snapToEdges();
-  } else {
-    if (focusIn1to1 == FOCUS_CENTER)
-      setZoomAnchor(viewport()->rect().center());
-    else
-      setZoomAnchor(mapFromGlobal(cursor().pos()));
-    zoomAnchored(scale);
-    centerIfNecessary();
-    snapToEdges();
-  }
-}
-
-void ImageViewerV2::applyFitMode() {
-  switch (imageFitMode) {
-  case FIT_ORIGINAL:
-    fitNormal();
-    break;
-  case FIT_WIDTH:
-    fitWidth(false);
-    break;
-  case FIT_WINDOW:
-    // When auto-applying fit mode, don't upscale small images unless Expand
-    // Images is enabled or a caller temporarily requests expansion.
-    if (imageFits() && !expandImage && !expandSmallImagesInFitMode)
-      fitNormal();
-    else
-      fitWindow(false);
-    break;
-  case FIT_HEIGHT:
-    fitHeight(false);
-    break;
-  default:
-    break;
-  }
+  viewTransform->zoomTo(viewTransform->transform().gestureZoomScale(moveDistance));
 }
 
 // public, sends scale request
 void ImageViewerV2::setFitMode(ImageFitMode newMode) {
-  if (scaleTimer->isActive())
-    scaleTimer->stop();
-  stopPosAnimation();
-  imageFitMode = newMode;
-  applyFitMode();
+  stopScaleTimerAndAnimations();
+  viewTransform->setFitMode(newMode);
   requestScaling();
 }
 
@@ -1399,40 +1120,37 @@ void ImageViewerV2::setFitOriginal() { setFitMode(FIT_ORIGINAL); }
 
 // public, sends scale request
 void ImageViewerV2::setFitWidth() {
-  if (scaleTimer->isActive())
-    scaleTimer->stop();
-  stopPosAnimation();
-  imageFitMode = FIT_WIDTH;
-  fitWidth(true);
+  stopScaleTimerAndAnimations();
+  viewTransform->forceFitMode(FIT_WIDTH);
   requestScaling();
 }
 
 // public, sends scale request
 void ImageViewerV2::setFitWindow() {
-  if (scaleTimer->isActive())
-    scaleTimer->stop();
-  stopPosAnimation();
-  imageFitMode = FIT_WINDOW;
-  fitWindow(true);
+  stopScaleTimerAndAnimations();
+  viewTransform->forceFitMode(FIT_WINDOW);
   requestScaling();
 }
 
 void ImageViewerV2::setExpandSmallImagesInFitMode(bool enabled) {
-  expandSmallImagesInFitMode = enabled;
+  viewTransform->setExpandSmallImagesInFitMode(enabled);
 }
 
 // public, sends scale request
 void ImageViewerV2::setFitHeight() {
-  if (scaleTimer->isActive())
-    scaleTimer->stop();
-  stopPosAnimation();
-  imageFitMode = FIT_HEIGHT;
-  fitHeight(true);
+  stopScaleTimerAndAnimations();
+  viewTransform->forceFitMode(FIT_HEIGHT);
   requestScaling();
 }
 
+void ImageViewerV2::stopScaleTimerAndAnimations() {
+  if (scaleTimer->isActive())
+    scaleTimer->stop();
+  stopPosAnimation();
+}
+
 void ImageViewerV2::switchFitMode() {
-  if (imageFitMode == FIT_WINDOW) {
+  if (fitMode() == FIT_WINDOW) {
     setFitMode(FIT_ORIGINAL);
   } else {
     setFitMode(FIT_WINDOW);
@@ -1450,30 +1168,14 @@ void ImageViewerV2::resizeEvent(QResizeEvent *event) {
     setRenderingSettled(false);
     mFramePresentationPending = false;
     stopPosAnimation();
-    updateMinScale();
-    if (imageFitMode == FIT_FREE || imageFitMode == FIT_ORIGINAL) {
-      centerIfNecessary();
-      snapToEdges();
-    } else {
-      scrollBarWorkaround = true;
-      applyFitMode();
-    }
+    viewTransform->refitToViewport();
     update();
     if (scaleTimer->isActive())
       scaleTimer->stop();
     scaleTimer->start();
-    saveViewportPos();
+  } else {
+    viewTransform->syncViewport();
   }
-}
-
-void ImageViewerV2::centerOnPixmap() {
-  auto imgRect = pixmapItem.sceneBoundingRect();
-  auto vport = mapToScene(viewport()->geometry()).boundingRect();
-  hs->setValue(pixmapItem.offset().x() -
-               (int)(vport.width() - imgRect.width()) / 2);
-  vs->setValue(pixmapItem.offset().y() -
-               (int)(vport.height() - imgRect.height()) / 2);
-  emit imageAreaChanged(scaledRectR());
 }
 
 void ImageViewerV2::stopPosAnimation() {
@@ -1497,7 +1199,7 @@ void ImageViewerV2::scrollSmooth(int dx, int dy) {
   const int refreshIntervalMs = DisplayUtils::animationTimerIntervalMs(this);
   if (dx) {
     bool redirect = false;
-    int currentXPos = hs->value();
+    int currentXPos = viewTransform->transform().scrollPosition().x();
     int newEndFrame = currentXPos + static_cast<int>(dx);
     if ((newEndFrame < currentXPos &&
          currentXPos < scrollTimeLineX->endFrame()) ||
@@ -1519,7 +1221,7 @@ void ImageViewerV2::scrollSmooth(int dx, int dy) {
   }
   if (dy) {
     bool redirect = false;
-    int currentYPos = vs->value();
+    int currentYPos = viewTransform->transform().scrollPosition().y();
     int newEndFrame = currentYPos + static_cast<int>(dy);
     if ((newEndFrame < currentYPos &&
          currentYPos < scrollTimeLineY->endFrame()) ||
@@ -1539,37 +1241,32 @@ void ImageViewerV2::scrollSmooth(int dx, int dy) {
     scrollTimeLineY->setUpdateInterval(refreshIntervalMs);
     scrollTimeLineY->start();
   }
-  saveViewportPos();
+  viewTransform->saveViewportPosition();
 }
 
 void ImageViewerV2::scrollPrecise(int dx, int dy) {
   stopPosAnimation();
-  hs->setValue(hs->value() + dx);
-  vs->setValue(vs->value() + dy);
-  centerIfNecessary();
-  snapToEdges();
-  saveViewportPos();
+  viewTransform->scrollBy(QPointF(dx, dy));
+  viewTransform->saveViewportPosition();
 }
 
 // used by scrollTimeLine
 void ImageViewerV2::scrollToX(int x) {
-  hs->setValue(x);
-  centerIfNecessary();
-  snapToEdges();
+  viewTransform->scrollTo(Qt::Horizontal, x);
   update();
   qApp->processEvents();
 }
 
 // used by scrollTimeLine
 void ImageViewerV2::scrollToY(int y) {
-  vs->setValue(y);
-  centerIfNecessary();
-  snapToEdges();
+  viewTransform->scrollTo(Qt::Vertical, y);
   update();
   qApp->processEvents();
 }
 
-void ImageViewerV2::onScrollTimelineFinished() { saveViewportPos(); }
+void ImageViewerV2::onScrollTimelineFinished() {
+  viewTransform->saveViewportPosition();
+}
 
 void ImageViewerV2::swapToOriginalImage() {
   hideUpscaledCrop();
@@ -1604,25 +1301,6 @@ void ImageViewerV2::updateCasSettings() {
   }
 }
 
-void ImageViewerV2::setZoomAnchor(QPoint viewportPos) {
-  zoomAnchor = QPair<QPointF, QPoint>(
-      pixmapItem.mapFromScene(mapToScene(viewportPos)), viewportPos);
-}
-
-void ImageViewerV2::zoomAnchored(float newScale) {
-  if (currentScale() != newScale) {
-    QPointF vportCenter =
-        mapToScene(viewport()->geometry()).boundingRect().center();
-    doZoom(newScale);
-    // calculate shift to adjust viewport center
-    // we do this in viewport coordinates to avoid any rounding errors
-    QPointF diff = zoomAnchor.second -
-                   mapFromScene(pixmapItem.mapToScene(zoomAnchor.first));
-    centerOn(vportCenter - diff);
-    requestScaling();
-  }
-}
-
 // zoom in around viewport center
 void ImageViewerV2::zoomIn() { doZoomIn(false); }
 
@@ -1630,54 +1308,14 @@ void ImageViewerV2::zoomIn() { doZoomIn(false); }
 void ImageViewerV2::zoomInCursor() { doZoomIn(true); }
 
 void ImageViewerV2::doZoomIn(bool atCursor) {
-  if (atCursor && underMouse())
-    setZoomAnchor(mapFromGlobal(cursor().pos()));
-  else
-    setZoomAnchor(viewport()->rect().center());
+  viewTransform->setZoomAnchor(zoomAnchorPosition(atCursor));
 
   float baseScale = currentScale();
   if (settings->enableSmoothZoom() &&
       zoomTimeLine->state() == QTimeLine::Running) {
     baseScale = zoomTargetScale;
   }
-
-  float newScale = baseScale * (1.0f + zoomStep);
-  if (useFixedZoomLevels && zoomLevels.count()) {
-    if (baseScale < zoomLevels.first()) {
-      newScale = qMin(baseScale * (1.0f + zoomStep), zoomLevels.first());
-    } else if (baseScale >= zoomLevels.last()) {
-      newScale = baseScale * (1.0f + zoomStep);
-    } else {
-      for (int i = 0; i < zoomLevels.count(); i++) {
-        float level = zoomLevels.at(i);
-        if (baseScale < level) {
-          newScale = level;
-          break;
-        }
-      }
-    }
-  }
-
-  newScale = qBound(minScale, newScale, maxScale);
-
-  if (settings->enableSmoothZoom()) {
-    zoomStartScale = currentScale();
-    zoomTargetScale = newScale;
-    zoomTimeLine->stop();
-    zoomTimeLine->setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
-    zoomTimeLine->start();
-  } else {
-    zoomAnchored(newScale);
-    centerIfNecessary();
-    snapToEdges();
-    imageFitMode = FIT_FREE;
-    if (pixmapItem.scale() == fitWindowScale)
-      imageFitMode = FIT_WINDOW;
-    else if (pixmapItem.scale() == fitWidthScale)
-      imageFitMode = FIT_WIDTH;
-    else if (pixmapItem.scale() == fitHeightScale)
-      imageFitMode = FIT_HEIGHT;
-  }
+  startZoom(viewTransform->transform().zoomInScale(baseScale));
 }
 
 // zoom out around viewport center
@@ -1687,36 +1325,25 @@ void ImageViewerV2::zoomOut() { doZoomOut(false); }
 void ImageViewerV2::zoomOutCursor() { doZoomOut(true); }
 
 void ImageViewerV2::doZoomOut(bool atCursor) {
-  if (atCursor && underMouse())
-    setZoomAnchor(mapFromGlobal(cursor().pos()));
-  else
-    setZoomAnchor(viewport()->rect().center());
+  viewTransform->setZoomAnchor(zoomAnchorPosition(atCursor));
 
   float baseScale = currentScale();
   if (settings->enableSmoothZoom() &&
       zoomTimeLine->state() == QTimeLine::Running) {
     baseScale = zoomTargetScale;
   }
+  startZoom(viewTransform->transform().zoomOutScale(baseScale));
+}
 
-  float newScale = baseScale / (1.0f + zoomStep);
-  if (useFixedZoomLevels && zoomLevels.count()) {
-    if (baseScale > zoomLevels.last()) {
-      newScale = qMax(zoomLevels.last(), baseScale / (1.0f + zoomStep));
-    } else if (baseScale <= zoomLevels.first()) {
-      newScale = baseScale / (1.0f + zoomStep);
-    } else {
-      for (int i = zoomLevels.count() - 1; i >= 0; i--) {
-        float level = zoomLevels.at(i);
-        if (baseScale > level) {
-          newScale = level;
-          break;
-        }
-      }
-    }
-  }
+// Zooms around the cursor when requested and the cursor is over the view,
+// otherwise around the viewport centre.
+QPointF ImageViewerV2::zoomAnchorPosition(bool atCursor) const {
+  if (atCursor && underMouse())
+    return pointerPosition();
+  return viewport()->rect().center();
+}
 
-  newScale = qBound(minScale, newScale, maxScale);
-
+void ImageViewerV2::startZoom(float newScale) {
   if (settings->enableSmoothZoom()) {
     zoomStartScale = currentScale();
     zoomTargetScale = newScale;
@@ -1724,161 +1351,50 @@ void ImageViewerV2::doZoomOut(bool atCursor) {
     zoomTimeLine->setUpdateInterval(DisplayUtils::animationTimerIntervalMs(this));
     zoomTimeLine->start();
   } else {
-    zoomAnchored(newScale);
-    centerIfNecessary();
-    snapToEdges();
-    imageFitMode = FIT_FREE;
-    if (pixmapItem.scale() == fitWindowScale)
-      imageFitMode = FIT_WINDOW;
-    else if (pixmapItem.scale() == fitWidthScale)
-      imageFitMode = FIT_WIDTH;
-    else if (pixmapItem.scale() == fitHeightScale)
-      imageFitMode = FIT_HEIGHT;
+    viewTransform->zoomTo(newScale);
   }
 }
 
 void ImageViewerV2::toggleLockZoom() {
-  if (!isDisplaying())
-    return;
-  if (mViewLock != LOCK_ZOOM) {
-    mViewLock = LOCK_ZOOM;
-    lockZoom();
-  } else {
-    mViewLock = LOCK_NONE;
-  }
+  viewTransform->toggleLockZoom();
 }
 
-bool ImageViewerV2::lockZoomEnabled() { return (mViewLock == LOCK_ZOOM); }
-
-void ImageViewerV2::lockZoom() {
-  lockedScale = pixmapItem.scale();
-  imageFitMode = FIT_FREE;
-  saveViewportPos();
+bool ImageViewerV2::lockZoomEnabled() {
+  return viewTransform->transform().lock() == ViewLock::Zoom;
 }
 
 void ImageViewerV2::toggleLockView() {
-  if (!isDisplaying())
-    return;
-  if (mViewLock != LOCK_ALL) {
-    mViewLock = LOCK_ALL;
-    lockZoom();
-    saveViewportPos();
-  } else {
-    mViewLock = LOCK_NONE;
-  }
+  viewTransform->toggleLockView();
 }
 
-bool ImageViewerV2::lockViewEnabled() { return (mViewLock == LOCK_ALL); }
-
-// savedViewportPos is [0...1][0...1]
-// values are where viewport center is on the image
-void ImageViewerV2::saveViewportPos() {
-  if (mViewLock != LOCK_ALL)
-    return;
-  FilterPixmapItem *item = &pixmapItem;
-  QPointF sceneCenter = mapToScene(viewport()->rect().center()) + QPointF(1, 1);
-  auto itemRect = item->sceneBoundingRect();
-  savedViewportPos.setX(
-      qBound(qreal(0), (sceneCenter.x() - itemRect.left()) / itemRect.width(),
-             qreal(1)));
-  savedViewportPos.setY(
-      qBound(qreal(0), (sceneCenter.y() - itemRect.top()) / itemRect.height(),
-             qreal(1)));
+bool ImageViewerV2::lockViewEnabled() {
+  return viewTransform->transform().lock() == ViewLock::All;
 }
 
-void ImageViewerV2::applySavedViewportPos() {
-  FilterPixmapItem *item = &pixmapItem;
-  auto itemRect = item->sceneBoundingRect();
-  QPointF newScenePos;
-  newScenePos.setX(itemRect.left() + itemRect.width() * savedViewportPos.x());
-  newScenePos.setY(itemRect.top() + itemRect.height() * savedViewportPos.y());
-  centerOn(newScenePos);
-  centerIfNecessary();
-  snapToEdges();
+ImageFitMode ImageViewerV2::fitMode() const {
+  return viewTransform->transform().fitMode();
 }
-
-void ImageViewerV2::centerIfNecessary() {
-  if (!image)
-    return;
-  QSize sz = scaledSizeR();
-  auto imgRect = pixmapItem.sceneBoundingRect();
-  auto vport = mapToScene(viewport()->geometry()).boundingRect();
-  if (sz.width() <= viewport()->width())
-    hs->setValue(pixmapItem.offset().x() -
-                 (int)(vport.width() - imgRect.width()) / 2);
-  if (sz.height() <= viewport()->height())
-    vs->setValue(pixmapItem.offset().y() -
-                 (int)(vport.height() - imgRect.height()) / 2);
-}
-
-void ImageViewerV2::snapToEdges() {
-  QRect imgRect = scaledRectR();
-  // current vport center
-  QPointF centerTarget = mapToScene(viewport()->rect()).boundingRect().center();
-  qreal xShift = 0;
-  qreal yShift = 0;
-  if (imgRect.width() > width()) {
-    if (imgRect.left() > 0)
-      xShift = imgRect.left();
-    else if (imgRect.right() < width())
-      xShift = imgRect.right() - width();
-  }
-  if (imgRect.height() > height()) {
-    if (imgRect.top() > 0)
-      yShift = imgRect.top();
-    else if (imgRect.bottom() < height())
-      yShift = imgRect.bottom() - height();
-  }
-  centerOn(centerTarget + QPointF(xShift, yShift));
-}
-
-void ImageViewerV2::doZoom(float newScale) {
-  if (!image)
-    return;
-  newScale = qBound(minScale, newScale, maxScale);
-  // fix scene position to integer values
-  auto tl = pixmapItem.sceneBoundingRect().topLeft().toPoint();
-  pixmapItem.setOffset(tl);
-  pixmapItem.setScale(newScale);
-  if (mSvgMode && svgItem) {
-    svgItem->setScale(newScale);
-  }
-
-  pixmapItem.setTransformationMode(selectTransformationMode());
-  swapToOriginalImage();
-  emit scaleChanged(newScale);
-}
-
-ImageFitMode ImageViewerV2::fitMode() const { return imageFitMode; }
 
 // rounds a point in scene coordinates so it stays on the same spot on viewport
 QPointF ImageViewerV2::sceneRoundPos(QPointF scenePoint) const {
   return mapToScene(mapFromScene(scenePoint));
 }
 
-// rounds a rect in scene coordinates so it stays on the same spot on viewport
-// the result is what's actually drawn on screen (incl. size)
-QRectF ImageViewerV2::sceneRoundRect(QRectF sceneRect) const {
-  QRectF rounded = QRectF(sceneRoundPos(sceneRect.topLeft()), sceneRect.size());
-  return QRectF(sceneRoundPos(sceneRect.topLeft()), sceneRect.size());
-}
-
 // size as it appears on screen (rounded)
 QSize ImageViewerV2::scaledSizeR() const {
   if (!image)
     return QSize(0, 0);
-  QRectF pixmapSceneRect = pixmapItem.mapRectToScene(pixmapItem.boundingRect());
-  return sceneRoundRect(pixmapSceneRect).size().toSize();
+  return viewTransform->transform().scaledSize();
 }
 
 // in viewport coords (rounded up)
 QRect ImageViewerV2::scaledRectR() const {
-  QRectF pixmapSceneRect = pixmapItem.mapRectToScene(pixmapItem.boundingRect());
-  return QRect(mapFromScene(pixmapSceneRect.topLeft()),
-               mapFromScene(pixmapSceneRect.bottomRight()));
+  return viewTransform->transform().scaledRect();
 }
 
-float ImageViewerV2::currentScale() const { return pixmapItem.scale(); }
+float ImageViewerV2::currentScale() const {
+  return viewTransform->transform().scale();
+}
 
 QSize ImageViewerV2::sourceSize() const {
   if (!image)
@@ -1893,7 +1409,7 @@ QRect ImageViewerV2::visibleImageRect() const {
   QRectF sceneRect = mapToScene(viewport()->rect()).boundingRect();
   QRectF imageRectF = pixmapItem.mapRectFromScene(sceneRect);
 
-  // Correct for the 10000, 10000 offset in pixmapItem
+  // Item coordinates include the pixmap offset
   imageRectF.translate(-pixmapItem.offset());
 
   QRect imgBounds(0, 0, image->width(), image->height());
@@ -1903,7 +1419,7 @@ QRect ImageViewerV2::visibleImageRect() const {
   if (!imageScaled.isNull()) {
     scaledSize = imageScaled.size();
   } else {
-    QSize tSize = scaledSizeR() * dpr;
+    QSize tSize = scaledSizeR() * getDpr();
     if (tSize.isEmpty())
       return QRect();
     scaledSize = image->size().scaled(tSize, Qt::KeepAspectRatio);
@@ -1932,7 +1448,7 @@ QPixmap ImageViewerV2::currentScaledPixmapCopy() const {
     return QPixmap::fromImage(imageScaled);
   }
 
-  QSize tSize = scaledSizeR() * dpr;
+  QSize tSize = scaledSizeR() * getDpr();
   if (tSize.isEmpty())
     return QPixmap();
 
@@ -1970,7 +1486,9 @@ QImage ImageViewerV2::grabViewportImage() const {
   return image;
 }
 
-float ImageViewerV2::getDpr() const { return dpr; }
+float ImageViewerV2::getDpr() const {
+  return static_cast<float>(viewTransform->transform().devicePixelRatio());
+}
 
 void ImageViewerV2::togglePanorama() {
   if (!isDisplaying())
@@ -1981,7 +1499,7 @@ void ImageViewerV2::togglePanorama() {
     pixmapItem.hide();
     pixmapItemScaled.hide();
     panoramaItem->setImage(image);
-    panoramaItem->setViewParameters(mPanoramaYaw, mPanoramaPitch, mPanoramaFov);
+    applyPanoramaView();
     panoramaItem->show();
   } else {
     panoramaItem->hide();
@@ -1990,7 +1508,7 @@ void ImageViewerV2::togglePanorama() {
     } else {
       pixmapItem.show();
     }
-    applyFitMode();
+    viewTransform->applyFitMode();
   }
   update();
 }
@@ -2014,17 +1532,7 @@ void ImageViewerV2::onZoomTimelineValueChanged(qreal value) {
       (value >= 1.0)
           ? zoomTargetScale
           : zoomStartScale + (zoomTargetScale - zoomStartScale) * value;
-  zoomAnchored(currentAnimScale);
-  centerIfNecessary();
-  snapToEdges();
-
-  imageFitMode = FIT_FREE;
-  if (std::abs(pixmapItem.scale() - fitWindowScale) < kScaleEpsilon)
-    imageFitMode = FIT_WINDOW;
-  else if (std::abs(pixmapItem.scale() - fitWidthScale) < kScaleEpsilon)
-    imageFitMode = FIT_WIDTH;
-  else if (std::abs(pixmapItem.scale() - fitHeightScale) < kScaleEpsilon)
-    imageFitMode = FIT_HEIGHT;
+  viewTransform->zoomTo(currentAnimScale);
 }
 
 QRect ImageViewerV2::visibleOriginalImageRect() const {

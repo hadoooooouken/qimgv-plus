@@ -16,6 +16,7 @@
 #include <memory>
 #include <cmath>
 #include "settings_types.h"
+#include "components/viewtransform/viewtransformcontroller.h"
 
 enum MouseInteractionState {
     MOUSE_NONE,
@@ -27,13 +28,10 @@ enum MouseInteractionState {
     MOUSE_GESTURE
 };
 
-enum ViewLockMode {
-    LOCK_NONE,
-    LOCK_ZOOM,
-    LOCK_ALL
-};
-
-class ImageViewerV2 : public QGraphicsView
+// Widget image viewer. Zoom, pan, fit and panorama camera state live in
+// ViewTransformController; this class renders that state with QGraphicsView
+// items and translates mouse/keyboard input into controller intents.
+class ImageViewerV2 : public QGraphicsView, private IViewSurface
 {
     Q_OBJECT
 public:
@@ -149,30 +147,30 @@ private slots:
     void requestScaling();
     void scrollToX(int x);
     void scrollToY(int y);
-    void centerOnPixmap();
     void onScrollTimelineFinished();
     void onZoomTimelineValueChanged(qreal value);
 
     void onDPRChanged();
 private:
+    // IViewSurface
+    QSize viewportSize() const override;
+    QPointF pointerPosition() const override;
+
     QGraphicsScene *scene;
     std::shared_ptr<const QImage> image;
     QImage imageScaled;
     std::shared_ptr<QMovie> movie;
     FilterPixmapItem pixmapItem, pixmapItemScaled, pixmapItemCrop;
     QTimer *animationTimer, *scaleTimer;
-    QScrollBar *hs, *vs;
     QPoint mouseMoveStartPos, mousePressPos, drawPos;
-    bool transparencyGrid, expandImage, expandSmallImagesInFitMode, keepFitMode,
-         loopPlayback,     mIsFullscreen,  scrollBarWorkaround,
-         useFixedZoomLevels, trackpadDetection, mAnimationActive;
-    QList<float> zoomLevels;
+    bool transparencyGrid, loopPlayback, mIsFullscreen,
+         trackpadDetection, mAnimationActive;
     MouseInteractionState mouseInteraction;
     const int DEFAULT_SCROLL_DISTANCE = 240;
     const qreal TRACKPAD_SCROLL_MULTIPLIER = 0.7;
     const qreal WHEEL_SCROLL_MULTIPLIER = 2.0f;
     const int ANIMATION_SPEED = 150;
-    static constexpr float kScaleEpsilon = 0.001f;
+    static constexpr float kScaleEpsilon = ViewTransform::kScaleEpsilon;
     // how many px you can move while holding RMB until it counts as a zoom attempt
     int zoomThreshold = 4;
     int dragThreshold = 10;
@@ -182,39 +180,29 @@ private:
     bool mRenderingSettled = false;
     bool mFramePresentationPending = false;
 
-    float zoomStep = 0.1f, dpr;
-    float minScale, maxScale, fitWindowScale, fitWidthScale, fitHeightScale, expandLimit, lockedScale;
-    QPointF savedViewportPos;
-    ViewLockMode mViewLock;
-
-    QPair<QPointF, QPoint> zoomAnchor; // [pixmap coords, viewport coords]
+    std::unique_ptr<ViewTransformController> viewTransform;
 
     QElapsedTimer lastTouchpadScroll;
 
-    ImageFitMode imageFitMode, imageFitModeDefault;
-    ImageFocusPoint focusIn1to1;
     ScalingFilter mScalingFilter;
     bool mUseUpscayl = false;
 
     QPixmap checkerboard;
 
-    void zoomAnchored(float newScale);
-    void fitNormal();
-    void fitWidth(bool force = false);
-    void fitWindow(bool force = false);
-    void fitHeight(bool force = false);
-
     void scroll(int dx, int dy, bool animated);
 
-    void mousePanWrapping(QMouseEvent *event);
     void mousePan(QMouseEvent *event);
     void mouseMoveZoom(QMouseEvent *event);
     void reset();
-    void applyFitMode();
     void requestSettledFramePresentation();
     void onViewportFrameSwapped();
     void setRenderingSettled(bool settled);
     void onMovieFrameChanged(int frameNumber);
+    void onTransformChanged();
+    void onViewPositionChanged();
+    void applyPanoramaView();
+    void syncDevicePixelRatio();
+    void updateInputThresholds();
 
     QTimeLine *scrollTimeLineX, *scrollTimeLineY;
     QTimeLine *zoomTimeLine;
@@ -223,33 +211,22 @@ private:
     static qreal smootherstepEasing(qreal t);
     void stopPosAnimation();
     QPointF sceneRoundPos(QPointF scenePoint) const;
-    QRectF sceneRoundRect(QRectF sceneRect) const;
-    void doZoom(float newScale);
     void swapToOriginalImage();
-    void setZoomAnchor(QPoint viewportPos);
     void updateImage(std::shared_ptr<const QImage> newImage);
     Qt::TransformationMode selectTransformationMode();
-    void centerIfNecessary();
-    void snapToEdges();
     void scrollSmooth(int dx, int dy);
     void scrollPrecise(int dx, int dy);
-    void updateFitWindowScale();
-    void updateFitWidthScale();
-    void updateFitHeightScale();
-    void updateMinScale();
-    void fitFree(float scale);
-    void applySavedViewportPos();
-    void saveViewportPos();
-    void lockZoom();
+    void stopScaleTimerAndAnimations();
     void doZoomIn(bool atCursor);
     void doZoomOut(bool atCursor);
+    void startZoom(float newScale);
+    QPointF zoomAnchorPosition(bool atCursor) const;
 
 private:
     class PanoramaGraphicsItem *panoramaItem = nullptr;
     QGraphicsSvgItem *svgItem = nullptr;
     bool mSvgMode = false;
     bool mPanoramaMode = false;
-    float mPanoramaYaw = 0.0f, mPanoramaPitch = 0.0f, mPanoramaFov = 90.0f;
     QString currentFilePath;
     QElapsedTimer lastFullscreenUpdate;
     QTimer *fullscreenUpdateTimer = nullptr;

@@ -309,6 +309,25 @@ functionality as required by `AGENTS.md`.
   to use it (refactor only).
 - **Acceptance:** `ImageViewerV2` behaviour identical; `qimgv_tests` covers
   every fit mode, anchored zoom invariants, lock modes and DPR 1.0/1.5/2.0.
+- **Delivered:**
+  - `ViewTransform` (value type: scale, image position in viewport
+    coordinates, fit/lock state, `ViewTransformConfig` settings struct),
+    `PanoramaView` (yaw/pitch/FOV) and `ViewTransformController`
+    (`QObject`; samples viewport size and pointer through `IViewSurface`
+    at the start of every operation, then emits `transformChanged`,
+    `scaleChanged`, `positionChanged`, `imageCentered`,
+    `anchoredZoomApplied`, `panoramaChanged`).
+  - `ImageViewerV2` no longer scrolls: its view scene rect is top-left
+    aligned so scene coordinates equal viewport coordinates, and the image
+    items are placed at `ViewTransform::imagePosition()`. This removes the
+    10000/10000 item offset, the scroll-bar clamp of very large zoomed
+    images and the first-`fitWindow` scroll-bar workaround.
+  - Fit-mode re-detection after a manual zoom uses
+    `ViewTransform::kScaleEpsilon` everywhere (previously exact `==` in
+    three of four places).
+  - Positions may differ from 3.6.4 by at most one logical pixel (rounding
+    of the former integer scroll offsets).
+  - `qimgv_tests` now runs several suites from `tests/unit/main.cpp`.
 
 #### S0.5 QML bridges for global services
 - **Goal:** QML can read settings, theme and actions through typed,

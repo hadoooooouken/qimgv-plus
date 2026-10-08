@@ -2,6 +2,7 @@
 #include <QTest>
 
 #include "components/viewmode/viewmodecontroller.h"
+#include "testsuites.h"
 
 // Qt Test suite for UI-independent qimgv components. Test cases are added
 // together with the components they cover (docs/QML_MIGRATION_PLAN.md).
@@ -60,6 +61,9 @@ void QimgvTests::viewModeController_notifiesRepeatedRequests() {
   QCOMPARE(applied.count(), 2);
 }
 
-QTEST_GUILESS_MAIN(QimgvTests)
+int runQimgvTests(int argc, char **argv) {
+  QimgvTests tests;
+  return QTest::qExec(&tests, argc, argv);
+}
 
 #include "tst_qimgv.moc"

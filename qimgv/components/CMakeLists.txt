@@ -41,6 +41,9 @@ target_sources(qimgv-plus PRIVATE
 
     viewmode/viewmodecontroller.cpp
 
+    viewtransform/viewtransform.cpp
+    viewtransform/viewtransformcontroller.cpp
+
     mimepayload/mimepayloadmanager.cpp
 
     comfymetadata/comfyksamplerparser.cpp
