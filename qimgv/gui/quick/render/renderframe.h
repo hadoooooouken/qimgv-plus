@@ -40,6 +40,17 @@ enum class Sharpening {
   Smart,
 };
 Q_ENUM_NS(Sharpening)
+
+// Resampling kernel that replaces texture sampling while the view is settled
+// and the image is not shown 1:1.
+enum class Resampling {
+  // Texture sampling (and the exact-ratio downsample below 1:1).
+  None,
+  // Magic Kernel Sharp 2021, separable, same kernel as the CPU
+  // ImageLib::scaled_MKS2021() (the viewer's "MKS2021 (GPU)" filter).
+  Mks2021,
+};
+Q_ENUM_NS(Resampling)
 } // namespace RenderEnums
 
 // Where the image is drawn, in the units of ViewTransform (S0.4).
@@ -71,12 +82,14 @@ struct RenderSettings {
                          const RenderSettings &) = default;
 };
 
-// Per-pixel filtering of the image: sharpening and colour adjustments.
+// Filtering of the image: resampling kernel, sharpening and colour
+// adjustments.
 struct ImageFilter {
   // Defaults of the "casSharpening" / "casContrast" settings.
   static constexpr float kDefaultCasSharpening = 1.0f;
   static constexpr float kDefaultCasContrast = 0.0f;
 
+  RenderEnums::Resampling resampling = RenderEnums::Resampling::None;
   RenderEnums::Sharpening sharpening = RenderEnums::Sharpening::None;
   // CAS strength in [0, 1]; 0 disables CAS.
   float casSharpening = kDefaultCasSharpening;
@@ -98,7 +111,8 @@ struct RenderFrame {
   RenderSettings settings;
   ImageFilter filter;
   // The view is not being zoomed, panned or animated. Only then does the
-  // renderer spend the extra passes of the exact-ratio downsample.
+  // renderer spend the extra passes of the exact-ratio downsample and of the
+  // resampling kernel.
   bool settled = false;
   // QQuickWindow::effectiveDevicePixelRatio() of the item's window.
   qreal devicePixelRatio = 1.0;

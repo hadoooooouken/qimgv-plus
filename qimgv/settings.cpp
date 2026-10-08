@@ -1274,9 +1274,9 @@ void Settings::setModernSaveQuality(int value) {
 }
 //------------------------------------------------------------------------------
 ScalingFilter Settings::scalingFilter() {
-  int mode = settings->settingsConf->value("scalingFilter", QI_FILTER_MKS2021)
+  int mode = settings->settingsConf->value("scalingFilter", QI_FILTER_MKS2021_GPU)
                  .toInt();
-  if (mode < 0 || mode > QI_FILTER_MKS2021)
+  if (mode < 0 || mode > QI_FILTER_MKS2021_GPU)
     mode = QI_FILTER_BILINEAR; // default to Bilinear if out of range
   return static_cast<ScalingFilter>(mode);
 }

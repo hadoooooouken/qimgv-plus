@@ -68,6 +68,13 @@ struct ReferenceScene {
 [[nodiscard]] FloatImage composeOver(const FloatImage &drawn, QSize frameSize,
                                      QPoint origin, const QColor &background);
 
+// ImageLib::scaled_MKS2021() (utils/imagelib.cpp) on premultiplied colour
+// in double precision: a horizontal and a vertical pass with the same taps,
+// each clamped to [0, 1], the intermediate image quantized to 8 bits like the
+// CPU's; the result is clamped to a valid premultiplied colour, as the GPU
+// renderer draws it.
+[[nodiscard]] FloatImage mks2021Resample(const FloatImage &image, QSize target);
+
 // ImageRenderer's exact-ratio downsample: the same chain of exact-area box
 // passes (each at most halving a side, rounding up), in double precision.
 [[nodiscard]] FloatImage exactReduce(const FloatImage &image, QSize target);

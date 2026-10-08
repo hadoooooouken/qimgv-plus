@@ -9,6 +9,7 @@ struct ImageFilterMode {
   RenderEnums::TextureSampling sampling =
       RenderEnums::TextureSampling::Trilinear;
   RenderEnums::Sharpening sharpening = RenderEnums::Sharpening::None;
+  RenderEnums::Resampling resampling = RenderEnums::Resampling::None;
 
   friend bool operator==(const ImageFilterMode &,
                          const ImageFilterMode &) = default;
@@ -18,7 +19,9 @@ struct ImageFilterMode {
 //  - Nearest: nearest texel, no sharpening;
 //  - Bilinear: trilinear minification, no sharpening;
 //  - Cas / SmartGpu: trilinear with CAS / smart sharpening;
-//  - Smart / Mks2021: the CPU display scaling filters. Until their GPU ports
-//    (S1.3) they are shown with trilinear sampling and the exact-ratio
-//    downsample, without sharpening.
+//  - Mks2021Gpu: trilinear while the view moves, the MKS2021 resampling
+//    kernel once it is settled;
+//  - Smart / Mks2021: the CPU display scaling filters of the Scaler
+//    component. The renderer shows them with trilinear sampling and the
+//    exact-ratio downsample, without sharpening.
 [[nodiscard]] ImageFilterMode imageFilterModeFor(ScalingFilter filter);

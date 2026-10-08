@@ -785,7 +785,7 @@ void Core::onFirstRun() {
                       tr(" version ") + appVersion.toString() + "!",
                   4000);
 
-  settings->setScalingFilter(QI_FILTER_MKS2021);
+  settings->setScalingFilter(QI_FILTER_MKS2021_GPU);
   settings->setImageFitMode(FIT_WINDOW);
   settings->setBackgroundOpacity(0.8);
   settings->setThumbnailOpacity(0.6);

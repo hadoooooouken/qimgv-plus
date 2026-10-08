@@ -4,6 +4,7 @@
 #include <QtGlobal>
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 namespace {
 using namespace Qt::StringLiterals;
@@ -154,6 +155,94 @@ int nextReduceStep(int current, int target) {
              : qMax(target, (current + kReduceDivisor - 1) / kReduceDivisor);
 }
 
+// Magic Kernel Sharp 2021 (a = 3, v = 3), copied from utils/imagelib.cpp.
+constexpr double kMks3C0 = 17.0 / 12.0;
+constexpr double kMks3C1 = -35.0 / 144.0;
+constexpr double kMks3C2 = 1.0 / 24.0;
+constexpr double kMks3C3 = -1.0 / 144.0;
+constexpr double kMks2021Support = 4.5;
+
+double magicKernelA3(double x) {
+  if (x <= -1.5 || x >= 1.5)
+    return 0.0;
+  const double x2 = x * x;
+  if (x <= -0.5)
+    return x2 / 2.0 + 1.5 * x + 9.0 / 8.0;
+  if (x <= 0.5)
+    return -x2 + 0.75;
+  return x2 / 2.0 - 1.5 * x + 9.0 / 8.0;
+}
+
+double mks2021Kernel(double x) {
+  if (x <= -kMks2021Support || x >= kMks2021Support)
+    return 0.0;
+  double sum = kMks3C0 * magicKernelA3(x);
+  sum += kMks3C1 * (magicKernelA3(x - 1.0) + magicKernelA3(x + 1.0));
+  sum += kMks3C2 * (magicKernelA3(x - 2.0) + magicKernelA3(x + 2.0));
+  sum += kMks3C3 * (magicKernelA3(x - 3.0) + magicKernelA3(x + 3.0));
+  return sum;
+}
+
+// Normalized taps of one output, as buildMksAxisTaps() builds them.
+struct MksTaps {
+  int first = 0;
+  std::vector<double> weights;
+};
+
+MksTaps mksTaps(int sourceSize, int outputSize, int output) {
+  const double scale = double(sourceSize) / double(outputSize);
+  const double filterScale = std::max(scale, 1.0);
+  const double support = kMks2021Support * filterScale;
+  const double u = (output + kPixelCentre) * scale - kPixelCentre;
+  MksTaps taps;
+  taps.first = int(std::floor(u - support));
+  const int last = std::max(taps.first, int(std::ceil(u + support)));
+  double sum = 0.0;
+  for (int i = taps.first; i <= last; ++i) {
+    const double w = mks2021Kernel((u - i) / filterScale) / filterScale;
+    taps.weights.push_back(w);
+    sum += w;
+  }
+  if (sum != 0.0) {
+    for (double &w : taps.weights)
+      w /= sum;
+  }
+  return taps;
+}
+
+double quantized8Bit(double value) {
+  return std::round(std::clamp(value, 0.0, 1.0) * kMaxLevel) / kMaxLevel;
+}
+
+// One MKS2021 pass along x (horizontal) or y, clamped to the image edges.
+FloatImage mksPass(const FloatImage &image, int outputLength, bool horizontal) {
+  const QSize source = image.size();
+  const int sourceLength = horizontal ? source.width() : source.height();
+  const QSize size = horizontal ? QSize(outputLength, source.height())
+                                : QSize(source.width(), outputLength);
+  FloatImage result(size);
+  for (int o = 0; o < outputLength; ++o) {
+    const MksTaps taps = mksTaps(sourceLength, outputLength, o);
+    const int across = horizontal ? size.height() : size.width();
+    for (int a = 0; a < across; ++a) {
+      Rgba sum{};
+      for (std::size_t t = 0; t < taps.weights.size(); ++t) {
+        const int s = qBound(0, taps.first + int(t), sourceLength - 1);
+        const Rgba &pixel = horizontal ? image.at(s, a) : image.at(a, s);
+        for (int c = 0; c < kChannels; ++c)
+          sum[c] += pixel[c] * taps.weights[t];
+      }
+      for (int c = 0; c < kChannels; ++c)
+        sum[c] = std::clamp(sum[c], 0.0, 1.0);
+      if (horizontal)
+        result.at(o, a) = sum;
+      else
+        result.at(a, o) = sum;
+    }
+  }
+  return result;
+}
+
 Rgba sampleMagnified(const FloatImage &image, int x, int y,
                      const ReferenceScene &scene) {
   const double u = (x + kPixelCentre) / scene.scale.magnification;
@@ -264,6 +353,26 @@ FloatImage exactReduce(const FloatImage &image, QSize target) {
     current = boxReducePass(current, next);
   }
   return current;
+}
+
+FloatImage mks2021Resample(const FloatImage &image, QSize target) {
+  FloatImage rows = mksPass(image, target.width(), true);
+  // The CPU and the GPU keep the intermediate image in 8 bits.
+  for (int y = 0; y < rows.size().height(); ++y) {
+    for (int x = 0; x < rows.size().width(); ++x) {
+      for (int c = 0; c < kChannels; ++c)
+        rows.at(x, y)[c] = quantized8Bit(rows.at(x, y)[c]);
+    }
+  }
+  FloatImage result = mksPass(rows, target.height(), false);
+  for (int y = 0; y < target.height(); ++y) {
+    for (int x = 0; x < target.width(); ++x) {
+      Rgba &pixel = result.at(x, y);
+      for (int c = 0; c < kColorChannels; ++c)
+        pixel[c] = std::min(pixel[c], pixel[kAlpha]);
+    }
+  }
+  return result;
 }
 
 FloatImage filteredMagnified(const FloatImage &image, int magnification,

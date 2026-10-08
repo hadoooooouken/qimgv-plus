@@ -25,7 +25,11 @@ enum ScalingFilter {
   QI_FILTER_SMART,
   QI_FILTER_CAS,
   QI_FILTER_SMART_GPU,
-  QI_FILTER_MKS2021
+  QI_FILTER_MKS2021,
+  // Magic Kernel Sharp 2021 computed by the Qt Quick GPU renderer. Appended
+  // so that the values stored in existing configuration files keep their
+  // meaning.
+  QI_FILTER_MKS2021_GPU
 };
 
 enum ZoomIndicatorMode {

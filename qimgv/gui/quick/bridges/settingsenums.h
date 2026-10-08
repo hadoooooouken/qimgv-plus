@@ -33,6 +33,7 @@ enum class ScalingFilter {
   Cas = QI_FILTER_CAS,
   SmartGpu = QI_FILTER_SMART_GPU,
   Mks2021 = QI_FILTER_MKS2021,
+  Mks2021Gpu = QI_FILTER_MKS2021_GPU,
 };
 Q_ENUM_NS(ScalingFilter)
 

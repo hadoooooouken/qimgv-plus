@@ -495,7 +495,7 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
     `setColorAdjustments()` and the QML properties `sharpening`,
     `casSharpening`, `casContrast`, `settled`. `imageFilterModeFor()` maps
     every `ScalingFilter` to sampling + sharpening (Smart / MKS2021 show as
-    trilinear without sharpening until S1.3); the viewer port applies it in
+    trilinear without sharpening; S1.3 added the GPU MKS2021 mode); the viewer port applies it in
     S1.6. `Main.qml` binds the CAS settings.
   - `image.frag` ports CAS and smart sharpening (plain and downscale taps,
     luma-only weights, opacity gate, off at 1:1) and the colour matrix on
@@ -536,17 +536,80 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
     platform cannot create Vulkan instances). All three pass on the
     reference machine (RTX 3060).
 
-#### S1.3 GPU replacement for CPU display scaling
-- **Goal:** stop the `Scaler` CPU round trip for on-screen display.
-- **Owner:** `ImageRenderer` for display; `Scaler` remains for file
-  output (resize/save/batch).
-- **Scope:** implement `QI_FILTER_SMART` and `QI_FILTER_MKS2021` as
-  separable two-pass shaders (horizontal then vertical into intermediate
-  targets) applied on settle; keep the CPU path selectable as a fallback
-  setting for one release.
-- **Acceptance:** visual comparison against CPU output within a documented
-  tolerance; no `scalingRequested` traffic from the Quick viewer; settle
-  latency measured and not worse than today.
+#### S1.3 GPU Magic Kernel Sharp 2021 display filter
+- **Goal:** a GPU MKS2021 viewing filter, the default for viewing, without
+  the `Scaler` CPU round trip.
+- **Owner:** `ImageRenderer` (render thread) for display. The CPU filters
+  (`ImageLib::scaled_Smart`, `scaled_MKS2021`) and `Scaler` stay unchanged:
+  resize, batch conversion, wallpapers, the AI-upscale resize and the widget
+  viewer use them.
+- **Scope (revised 2026-10-09):** the original scope (porting CPU Smart and
+  MKS2021 to shaders, with a CPU fallback setting) was replaced. The widget UI
+  remains the fallback until S4.1, so no fallback setting is added. The CPU
+  Smart filter is not ported; the GPU filters CAS and Smart (GPU) were already
+  ported in S1.2.
+- **Acceptance:** GPU output matches the CPU MKS2021 kernel within a
+  documented tolerance on D3D11, D3D12 and Vulkan; the Quick viewer needs no
+  `scalingRequested` traffic for the new mode; settle latency measured and
+  not worse than the CPU path.
+- **Delivered:**
+  - New `ScalingFilter` value `QI_FILTER_MKS2021_GPU`, appended (value 6) so
+    stored configurations keep their meaning; it is the default of
+    `Settings::scalingFilter()` and of the first-run settings. Shown as
+    "Magic Kernel Sharp 2021 (GPU)" in the settings dialog, the filter
+    message and the filter cycle; `SettingsEnums::ScalingFilter::Mks2021Gpu`
+    in the QML bridge. The CPU "Magic Kernel Sharp 2021" entry is kept.
+    Resize and batch-converter dialogs are unchanged (file output stays on
+    the CPU).
+  - Widget viewer: the new mode requests the CPU MKS2021 from `Scaler`
+    (identical kernel), so the default works in the widget UI until it is
+    removed in S4.2.
+  - `RenderEnums::Resampling {None, Mks2021}` in `ImageFilter`, QML property
+    `resampling` on `ImageRenderItem`; `imageFilterModeFor()` maps
+    `QI_FILTER_MKS2021_GPU` to trilinear sampling + `Resampling::Mks2021`.
+    CPU Smart / MKS2021 still show as trilinear in the Quick viewer (their
+    `Scaler` display is S1.6 work if it is ever needed).
+  - `res/shaders/rhi/resample.vert/.frag`: one separable pass per axis
+    (horizontal into an intermediate texture of the tile's format, then
+    vertical), premultiplied, clamped to [0, 1] per pass like the CPU, the
+    final pass clamps rgb to alpha. The per-output taps are built on the CPU
+    exactly like `buildMksAxisTaps()` (`Mks2021Axis::weights()` in
+    `gui/quick/render/resamplegrid.*`) and uploaded as an R32F weight table;
+    evaluating the kernel per tap in the shader was ALU-bound and several
+    times slower. Baked for GLSL ES 3.00 / GLSL 3.30 and up (texelFetch and
+    dynamic loops; no GLSL ES 1.00 variant).
+  - Output grid: the image at `round(size * scale)` device pixels, the CPU
+    target size, drawn 1:1 at the snapped image origin. Only the visible
+    outputs are computed, per tile (each output belongs to the tile whose
+    core contains its source centre), so strong magnification of huge images
+    has no size cap (the CPU display path stops at 12288 px / 100 MP). The
+    result is cached per tile until the scale or the visible part changes;
+    it is drawn only while `settled` and not at 1:1, otherwise the mip chain
+    is drawn. Resampling replaces the exact box downsample for this mode.
+    Failures fall back to the mip chain and are reported through
+    `renderError`.
+  - **Limits (documented):** tiled images clamp taps at the 64-texel tile
+    overlap, so below about 1/14 scale the seams can differ slightly from an
+    untiled result; below about 1/1800 scale the weight table would exceed
+    the texture size limit and the mip chain is drawn.
+  - Tests: `qimgv_tests` covers the filter mapping, the tap geometry and
+    weights and the tile partition of the outputs. `qimgv_render_tests`
+    compares against a double-precision copy of the CPU kernel (8-bit
+    intermediate) for opaque and alpha images at 300 / 170 / 50 / 37 / 20 %
+    (tolerance 2 levels), the visible part of a 4x magnified image, tiled vs
+    untiled (1 level), the settled / pan / unsettled cycle and 1:1. All pass
+    on D3D11, D3D12 and Vulkan (RTX 3060).
+  - Settle latency (6000 x 4000 image, 1920 x 1280 frame, RTX 3060, idle
+    GPU; `mks2021SettleLatency`, fastest of 9 rebuilds, extra time of the
+    settled frame over an unsettled one including read-back):
+    | Case | CPU `scaled_MKS2021` | GPU D3D11 | GPU D3D12 | GPU Vulkan |
+    |---|---|---|---|---|
+    | Fit (0.32) | 45 ms | 6.5-7 ms | 6.3-6.5 ms | 5.5-5.6 ms |
+    | 300 % | not shown (over the 12288 px / 100 MP cap; 218 ms for the full image) | 1.5 ms | 1.9 ms | 1.6 ms |
+
+    The CPU value is the unchanged CPU code (median of 5); the CPU path also
+    adds the 80 ms settle delay, colour management and the upload of the
+    result, so the GPU settle is about an order of magnitude faster.
 
 #### S1.4 GPU HDR tone mapping and colour management
 - **Goal:** move `HdrToneMapper` and display colour transforms to the GPU.

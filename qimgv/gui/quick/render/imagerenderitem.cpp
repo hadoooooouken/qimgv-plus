@@ -137,6 +137,16 @@ void ImageRenderItem::setImageFilter(const ImageFilter &filter) {
 
 const ImageFilter &ImageRenderItem::imageFilter() const { return mFilter; }
 
+RenderEnums::Resampling ImageRenderItem::resampling() const {
+  return mFilter.resampling;
+}
+
+void ImageRenderItem::setResampling(RenderEnums::Resampling resampling) {
+  ImageFilter filter = mFilter;
+  filter.resampling = resampling;
+  setImageFilter(filter);
+}
+
 RenderEnums::Sharpening ImageRenderItem::sharpening() const {
   return mFilter.sharpening;
 }

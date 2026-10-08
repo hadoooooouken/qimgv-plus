@@ -5,11 +5,15 @@
 #include <QLatin1StringView>
 #include <QMatrix4x4>
 #include <QRectF>
+#include <QVarLengthArray>
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <utility>
+#include <vector>
 
 #include "gui/quick/render/imagerenderitem.h"
+#include "gui/quick/render/resamplegrid.h"
 #include "gui/quick/render/textureuploadformat.h"
 
 namespace {
@@ -23,6 +27,10 @@ constexpr QLatin1StringView kReduceVertexShaderPath =
     ":/qimgv/render/shaders/boxreduce.vert.qsb"_L1;
 constexpr QLatin1StringView kReduceFragmentShaderPath =
     ":/qimgv/render/shaders/boxreduce.frag.qsb"_L1;
+constexpr QLatin1StringView kResampleVertexShaderPath =
+    ":/qimgv/render/shaders/resample.vert.qsb"_L1;
+constexpr QLatin1StringView kResampleFragmentShaderPath =
+    ":/qimgv/render/shaders/resample.frag.qsb"_L1;
 
 // Unit quad as a triangle strip; image.vert / boxreduce.vert stretch it over
 // the target.
@@ -32,6 +40,7 @@ constexpr quint32 kQuadVertexCount = 4;
 constexpr quint32 kQuadVertexStride = 2 * sizeof(float);
 constexpr int kUniformBinding = 0;
 constexpr int kTextureBinding = 1;
+constexpr int kWeightTableBinding = 2;
 
 // Transparency checkerboard, identical to ImageViewerV2's: 16 logical px
 // square tiles of 2 x 2 cells, light cells #999999, dark cells #666666.
@@ -131,6 +140,69 @@ static_assert(offsetof(ReduceUniforms, dstSize) == 72);
 static_assert(offsetof(ReduceUniforms, ratio) == 80);
 static_assert(sizeof(ReduceUniforms) % 16 == 0);
 
+// std140 mirror of the ResampleParams block in res/shaders/rhi/resample.*.
+struct ResampleUniforms {
+  // Values of the shader's axis.
+  static constexpr qint32 kAxisHorizontal = 0;
+  static constexpr qint32 kAxisVertical = 1;
+  static constexpr qint32 kIntermediatePass = 0;
+  static constexpr qint32 kFinalPass = 1;
+
+  float mvp[16]{};
+  float dstSize[2]{};
+  qint32 axis = kAxisHorizontal;
+  qint32 clampMin = 0;
+  qint32 clampMax = 0;
+  qint32 crossOffset = 0;
+  qint32 finalPass = kIntermediatePass;
+  qint32 tapCount = 0;
+};
+static_assert(offsetof(ResampleUniforms, dstSize) == 64);
+static_assert(offsetof(ResampleUniforms, axis) == 72);
+static_assert(offsetof(ResampleUniforms, clampMin) == 76);
+static_assert(offsetof(ResampleUniforms, clampMax) == 80);
+static_assert(offsetof(ResampleUniforms, crossOffset) == 84);
+static_assert(offsetof(ResampleUniforms, finalPass) == 88);
+static_assert(offsetof(ResampleUniforms, tapCount) == 92);
+static_assert(sizeof(ResampleUniforms) % 16 == 0);
+
+// Weight table of one resampling pass (resample.frag): column d describes
+// destination index d = output firstOutput + d, with its first source texel
+// (relative to the source texture's texel 0, source index sourceBase) in row
+// 0 and its normalized weights in rows 1..taps, zero-padded.
+constexpr int kWeightTableHeaderRows = 1;
+
+struct ResampleWeights {
+  QSize size;
+  int taps = 0;
+  // Row-major, size.width() floats per row.
+  std::vector<float> values;
+};
+
+ResampleWeights resampleWeights(const Mks2021Axis &axis, int firstOutput,
+                                int count, int sourceBase) {
+  std::vector<std::vector<double>> weights(static_cast<std::size_t>(count));
+  int taps = 0;
+  for (int d = 0; d < count; ++d) {
+    weights[d] = axis.weights(firstOutput + d);
+    taps = qMax(taps, static_cast<int>(weights[d].size()));
+  }
+  ResampleWeights table;
+  table.taps = taps;
+  table.size = QSize(count, kWeightTableHeaderRows + taps);
+  table.values.assign(
+      static_cast<std::size_t>(count) * table.size.height(), 0.0f);
+  for (int d = 0; d < count; ++d) {
+    table.values[d] =
+        static_cast<float>(axis.firstTap(firstOutput + d) - sourceBase);
+    for (std::size_t t = 0; t < weights[d].size(); ++t) {
+      const std::size_t row = kWeightTableHeaderRows + t;
+      table.values[row * count + d] = static_cast<float>(weights[d][t]);
+    }
+  }
+  return table;
+}
+
 std::size_t samplingIndex(RenderEnums::TextureSampling sampling) {
   return static_cast<std::size_t>(sampling);
 }
@@ -184,18 +256,25 @@ struct FrameFilter {
   bool sharpen = false;
   // Draw the exact-ratio downsample instead of the mip chain.
   bool exactReduce = false;
+  // Draw the MKS2021 resampling instead of the mip chain.
+  bool resample = false;
 };
 
 FrameFilter frameFilter(const RenderFrame &frame, qreal scale,
-                        bool reduceAvailable) {
+                        bool reduceAvailable, bool resampleAvailable) {
   FrameFilter filter;
   filter.downscaling = scale < kDownscaleThreshold;
+  const bool oneToOne = std::abs(scale - 1.0) < kOneToOneScaleTolerance;
   filter.sharpen =
-      frame.filter.sharpening != RenderEnums::Sharpening::None &&
-      std::abs(scale - 1.0) >= kOneToOneScaleTolerance;
-  filter.exactReduce =
-      reduceAvailable && frame.settled && filter.downscaling &&
+      frame.filter.sharpening != RenderEnums::Sharpening::None && !oneToOne;
+  const bool settledSmooth =
+      frame.settled &&
       frame.settings.sampling != RenderEnums::TextureSampling::Nearest;
+  filter.resample =
+      resampleAvailable && settledSmooth && !oneToOne &&
+      frame.filter.resampling == RenderEnums::Resampling::Mks2021;
+  filter.exactReduce = reduceAvailable && settledSmooth &&
+                       filter.downscaling && !filter.resample;
   return filter;
 }
 
@@ -335,6 +414,7 @@ void ImageRenderer::initialize(QRhiCommandBuffer *cb) {
     mRhi = rhi();
     mDeviceResourcesReady = createDeviceResources(cb);
     mReduceReady = mDeviceResourcesReady && createReduceResources();
+    mResampleReady = mReduceReady && createResampleResources();
   }
   if (mDeviceResourcesReady && !ensurePipeline())
     mPipeline.reset();
@@ -457,6 +537,46 @@ bool ImageRenderer::createReduceResources() {
   return true;
 }
 
+bool ImageRenderer::createResampleResources() {
+  if (!loadShader(kResampleVertexShaderPath, mResampleVertexShader) ||
+      !loadShader(kResampleFragmentShaderPath, mResampleFragmentShader))
+    return false;
+
+  // The weight tables hold one float per entry.
+  if (!mRhi->isTextureFormatSupported(QRhiTexture::R32F)) {
+    reportError(u"The GPU has no R32F textures; MKS2021 resampling is not "
+                u"available"_s);
+    return false;
+  }
+  mResampleLayoutUniforms.reset(mRhi->newBuffer(QRhiBuffer::Dynamic,
+                                                QRhiBuffer::UniformBuffer,
+                                                sizeof(ResampleUniforms)));
+  if (!mResampleLayoutUniforms->create()) {
+    reportError(u"Cannot create the resampling resources"_s);
+    return false;
+  }
+  // resample.frag reads exact texels with texelFetch(); the sampler of the
+  // exact downsample only completes the combined image sampler binding.
+  mResampleLayoutBindings.reset(mRhi->newShaderResourceBindings());
+  mResampleLayoutBindings->setBindings(
+      {QRhiShaderResourceBinding::uniformBuffer(
+           kUniformBinding,
+           QRhiShaderResourceBinding::VertexStage |
+               QRhiShaderResourceBinding::FragmentStage,
+           mResampleLayoutUniforms.get()),
+       QRhiShaderResourceBinding::sampledTexture(
+           kTextureBinding, QRhiShaderResourceBinding::FragmentStage,
+           mLayoutTexture.get(), mReduceSampler.get()),
+       QRhiShaderResourceBinding::sampledTexture(
+           kWeightTableBinding, QRhiShaderResourceBinding::FragmentStage,
+           mLayoutTexture.get(), mReduceSampler.get())});
+  if (!mResampleLayoutBindings->create()) {
+    reportError(u"Cannot create the resampling layout bindings"_s);
+    return false;
+  }
+  return true;
+}
+
 bool ImageRenderer::ensurePipeline() {
   QRhiRenderTarget *target = renderTarget();
   if (!target) {
@@ -504,14 +624,16 @@ bool ImageRenderer::ensurePipeline() {
 }
 
 QRhiGraphicsPipeline *
-ImageRenderer::reducePipeline(QRhiTexture::Format format,
-                              QRhiRenderPassDescriptor *compatiblePass) {
-  for (const ReducePipeline &entry : mReducePipelines) {
-    if (entry.format == format)
+ImageRenderer::passPipeline(PassKind kind, QRhiTexture::Format format,
+                            QRhiRenderPassDescriptor *compatiblePass) {
+  for (const PassPipeline &entry : mPassPipelines) {
+    if (entry.kind == kind && entry.format == format)
       return entry.pipeline.get();
   }
 
-  ReducePipeline entry;
+  const bool reduce = kind == PassKind::BoxReduce;
+  PassPipeline entry;
+  entry.kind = kind;
   entry.format = format;
   entry.renderPass.reset(compatiblePass->newCompatibleRenderPassDescriptor());
   auto pipeline = std::unique_ptr<QRhiGraphicsPipeline>(
@@ -519,27 +641,34 @@ ImageRenderer::reducePipeline(QRhiTexture::Format format,
   // Every destination texel is written once; no blending.
   pipeline->setTopology(QRhiGraphicsPipeline::TriangleStrip);
   pipeline->setShaderStages(
-      {{QRhiShaderStage::Vertex, mReduceVertexShader},
-       {QRhiShaderStage::Fragment, mReduceFragmentShader}});
+      {{QRhiShaderStage::Vertex,
+        reduce ? mReduceVertexShader : mResampleVertexShader},
+       {QRhiShaderStage::Fragment,
+        reduce ? mReduceFragmentShader : mResampleFragmentShader}});
   QRhiVertexInputLayout inputLayout;
   inputLayout.setBindings({{kQuadVertexStride}});
   inputLayout.setAttributes(
       {{0, 0, QRhiVertexInputAttribute::Float2, 0}});
   pipeline->setVertexInputLayout(inputLayout);
-  pipeline->setShaderResourceBindings(mReduceLayoutBindings.get());
+  pipeline->setShaderResourceBindings(reduce ? mReduceLayoutBindings.get()
+                                             : mResampleLayoutBindings.get());
   pipeline->setRenderPassDescriptor(entry.renderPass.get());
   if (pipeline->create())
     entry.pipeline = std::move(pipeline);
   else
-    reportError(u"Cannot create the exact downsample pipeline"_s);
-  mReducePipelines.push_back(std::move(entry));
-  return mReducePipelines.back().pipeline.get();
+    reportError(reduce ? u"Cannot create the exact downsample pipeline"_s
+                       : u"Cannot create the resampling pipeline"_s);
+  mPassPipelines.push_back(std::move(entry));
+  return mPassPipelines.back().pipeline.get();
 }
 
 void ImageRenderer::releaseDeviceResources() {
   releaseTiles();
   mUploadedGeneration.reset();
-  mReducePipelines.clear();
+  mPassPipelines.clear();
+  mResampleLayoutBindings.reset();
+  mResampleLayoutUniforms.reset();
+  mResampleReady = false;
   mReduceLayoutBindings.reset();
   mReduceLayoutUniforms.reset();
   mReduceSampler.reset();
@@ -691,19 +820,19 @@ void ImageRenderer::uploadImage(QRhiResourceUpdateBatch *updates) {
 }
 
 //------------------------------------------------------------------------------
-// Records one exact-area box pass that reduces level 0 of source
-// (sourceSize) into a new single-level texture of size `size`. The pass
-// resources are released with deleteLater() as they are used by the frame
-// being recorded; so is the returned texture unless the caller keeps it.
-ImageRenderer::FrameTexture
-ImageRenderer::recordBoxPass(QRhiCommandBuffer *cb, QRhiTexture *source,
-                             QSize sourceSize, QSize size,
-                             QRhiTexture::Flags extraFlags) {
+// Records one offscreen pass into a new single-level texture of size `size`.
+// The pass resources are released with deleteLater() as they are used by the
+// frame being recorded; so is the returned texture unless the caller keeps
+// it.
+ImageRenderer::FrameTexture ImageRenderer::recordOffscreenPass(
+    QRhiCommandBuffer *cb, const OffscreenPass &pass) {
+  QRhiTexture *source = pass.source;
+  const QSize size = pass.size;
   const QRhiTexture::Format format = source->format();
   FrameTexture texture(mRhi->newTexture(
-      format, size, 1, QRhiTexture::RenderTarget | extraFlags));
+      format, size, 1, QRhiTexture::RenderTarget | pass.extraFlags));
   if (!texture->create()) {
-    reportError(u"Cannot create a %1 x %2 downsample texture"_s.arg(
+    reportError(u"Cannot create a %1 x %2 intermediate texture"_s.arg(
         size.width()).arg(size.height()));
     return {};
   }
@@ -716,30 +845,64 @@ ImageRenderer::recordBoxPass(QRhiCommandBuffer *cb, QRhiTexture *source,
       renderTarget->newCompatibleRenderPassDescriptor());
   renderTarget->setRenderPassDescriptor(renderPass.get());
   FrameResource<QRhiBuffer> uniformBuffer(mRhi->newBuffer(
-      QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, sizeof(ReduceUniforms)));
+      QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, pass.uniformSize));
   if (!renderTarget->create() || !uniformBuffer->create()) {
-    reportError(u"Cannot create a downsample render target"_s);
+    reportError(u"Cannot create an intermediate render target"_s);
     return {};
   }
   FrameResource<QRhiShaderResourceBindings> bindings(
       mRhi->newShaderResourceBindings());
-  bindings->setBindings(
-      {QRhiShaderResourceBinding::uniformBuffer(
-           kUniformBinding,
-           QRhiShaderResourceBinding::VertexStage |
-               QRhiShaderResourceBinding::FragmentStage,
-           uniformBuffer.get()),
-       QRhiShaderResourceBinding::sampledTexture(
-           kTextureBinding, QRhiShaderResourceBinding::FragmentStage, source,
-           mReduceSampler.get())});
+  QVarLengthArray<QRhiShaderResourceBinding, 3> passBindings = {
+      QRhiShaderResourceBinding::uniformBuffer(
+          kUniformBinding,
+          QRhiShaderResourceBinding::VertexStage |
+              QRhiShaderResourceBinding::FragmentStage,
+          uniformBuffer.get()),
+      QRhiShaderResourceBinding::sampledTexture(
+          kTextureBinding, QRhiShaderResourceBinding::FragmentStage, source,
+          mReduceSampler.get())};
+  if (pass.weights) {
+    passBindings.append(QRhiShaderResourceBinding::sampledTexture(
+        kWeightTableBinding, QRhiShaderResourceBinding::FragmentStage,
+        pass.weights, mReduceSampler.get()));
+  }
+  bindings->setBindings(passBindings.cbegin(), passBindings.cend());
   if (!bindings->create()) {
-    reportError(u"Cannot create downsample shader bindings"_s);
+    reportError(u"Cannot create intermediate pass shader bindings"_s);
     return {};
   }
-  QRhiGraphicsPipeline *pipeline = reducePipeline(format, renderPass.get());
+  QRhiGraphicsPipeline *pipeline =
+      passPipeline(pass.kind, format, renderPass.get());
   if (!pipeline)
     return {};
 
+  QRhiResourceUpdateBatch *updates = mRhi->nextResourceUpdateBatch();
+  if (!updates) {
+    reportError(u"No QRhi resource update batch is available"_s);
+    return {};
+  }
+  updates->updateDynamicBuffer(uniformBuffer.get(), 0, pass.uniformSize,
+                               pass.uniforms);
+
+  cb->beginPass(renderTarget.get(), kReduceClearColor,
+                {kClearDepth, kClearStencil}, updates);
+  cb->setGraphicsPipeline(pipeline);
+  cb->setViewport(QRhiViewport(0.0f, 0.0f, static_cast<float>(size.width()),
+                               static_cast<float>(size.height())));
+  cb->setShaderResources(bindings.get());
+  const QRhiCommandBuffer::VertexInput vertexInput(mVertexBuffer.get(), 0);
+  cb->setVertexInput(0, 1, &vertexInput);
+  cb->draw(kQuadVertexCount);
+  cb->endPass();
+  return texture;
+}
+
+// Records one exact-area box pass that reduces level 0 of source
+// (sourceSize) into a new single-level texture of size `size`.
+ImageRenderer::FrameTexture
+ImageRenderer::recordBoxPass(QRhiCommandBuffer *cb, QRhiTexture *source,
+                             QSize sourceSize, QSize size,
+                             QRhiTexture::Flags extraFlags) {
   ReduceUniforms uniforms;
   const QMatrix4x4 mvp = reduceProjection(mRhi, size);
   std::memcpy(uniforms.mvp, mvp.constData(), sizeof(uniforms.mvp));
@@ -751,24 +914,32 @@ ImageRenderer::recordBoxPass(QRhiCommandBuffer *cb, QRhiTexture *source,
       static_cast<float>(size.width()) / static_cast<float>(sourceSize.width());
   uniforms.ratio[1] = static_cast<float>(size.height()) /
                       static_cast<float>(sourceSize.height());
+  return recordOffscreenPass(
+      cb, OffscreenPass{PassKind::BoxReduce, source, nullptr, size, &uniforms,
+                        sizeof(uniforms), extraFlags});
+}
+
+//------------------------------------------------------------------------------
+// Uploads a weight table of one resampling pass into a new R32F texture; the
+// upload is recorded on cb before the pass that reads it.
+ImageRenderer::FrameTexture
+ImageRenderer::uploadWeightTable(QRhiCommandBuffer *cb, QSize size,
+                                 const std::vector<float> &values) {
+  FrameTexture texture(mRhi->newTexture(QRhiTexture::R32F, size));
+  if (!texture->create()) {
+    reportError(u"Cannot create a %1 x %2 resampling weight table"_s.arg(
+        size.width()).arg(size.height()));
+    return {};
+  }
   QRhiResourceUpdateBatch *updates = mRhi->nextResourceUpdateBatch();
   if (!updates) {
     reportError(u"No QRhi resource update batch is available"_s);
     return {};
   }
-  updates->updateDynamicBuffer(uniformBuffer.get(), 0, sizeof(ReduceUniforms),
-                               &uniforms);
-
-  cb->beginPass(renderTarget.get(), kReduceClearColor,
-                {kClearDepth, kClearStencil}, updates);
-  cb->setGraphicsPipeline(pipeline);
-  cb->setViewport(
-      QRhiViewport(0.0f, 0.0f, uniforms.dstSize[0], uniforms.dstSize[1]));
-  cb->setShaderResources(bindings.get());
-  const QRhiCommandBuffer::VertexInput vertexInput(mVertexBuffer.get(), 0);
-  cb->setVertexInput(0, 1, &vertexInput);
-  cb->draw(kQuadVertexCount);
-  cb->endPass();
+  const QRhiTextureSubresourceUploadDescription data(
+      values.data(), static_cast<quint32>(values.size() * sizeof(float)));
+  updates->uploadTexture(texture.get(), QRhiTextureUploadEntry(0, 0, data));
+  cb->resourceUpdate(updates);
   return texture;
 }
 
@@ -819,6 +990,106 @@ void ImageRenderer::buildReducedTile(QRhiCommandBuffer *cb, GpuTile &tile,
   }
   tile.reduced.reset(result.release());
   tile.reducedBindings = std::move(bindings);
+}
+
+//------------------------------------------------------------------------------
+// Builds tile.resampled for the outputs `outputs` of the image shown at
+// scale: a horizontal MKS2021 pass from the tile texture into an
+// intermediate texture that holds every source row the vertical pass reads,
+// then the vertical pass. Taps are clamped to the tile's texture, which
+// matches the CPU's clamp to the image at the image edges.
+void ImageRenderer::buildResampledTile(QRhiCommandBuffer *cb, GpuTile &tile,
+                                       qreal scale, const QRect &outputs) {
+  tile.resampledScale = scale;
+  tile.resampledOutputs = outputs;
+  tile.resampled.reset();
+  tile.resampledBindings.reset();
+
+  const QSize imageSize = mFrame.image->size();
+  const QSize outputSize = ResampleGrid::outputSize(imageSize, scale);
+  const Mks2021Axis xAxis{imageSize.width(), outputSize.width()};
+  const Mks2021Axis yAxis{imageSize.height(), outputSize.height()};
+  const QRect &texture = tile.region.texture;
+  const int firstRow = std::clamp(yAxis.firstTap(outputs.top()),
+                                  texture.top(), texture.bottom());
+  const int lastRow = std::clamp(yAxis.lastTap(outputs.bottom()),
+                                 texture.top(), texture.bottom());
+
+  const QSize horizontalSize(outputs.width(), lastRow - firstRow + 1);
+  const ResampleWeights columns =
+      resampleWeights(xAxis, outputs.left(), outputs.width(), texture.left());
+  // Every vertical tap clamped to the texture lies in [firstRow, lastRow]
+  // (the clamp is monotonic), so clamping to the intermediate rows is the
+  // same clamp.
+  const ResampleWeights rowWeights =
+      resampleWeights(yAxis, outputs.top(), outputs.height(), firstRow);
+  // Far below 1:1 the kernel spans more source pixels than a texture may
+  // be high; the mip chain is drawn instead.
+  const int textureSizeMax = mRhi->resourceLimit(QRhi::TextureSizeMax);
+  if (columns.size.height() > textureSizeMax ||
+      rowWeights.size.height() > textureSizeMax)
+    return;
+  const FrameTexture columnTable =
+      uploadWeightTable(cb, columns.size, columns.values);
+  const FrameTexture rowTable =
+      uploadWeightTable(cb, rowWeights.size, rowWeights.values);
+  if (!columnTable || !rowTable)
+    return;
+
+  ResampleUniforms horizontal;
+  const QMatrix4x4 horizontalMvp = reduceProjection(mRhi, horizontalSize);
+  std::memcpy(horizontal.mvp, horizontalMvp.constData(),
+              sizeof(horizontal.mvp));
+  horizontal.dstSize[0] = static_cast<float>(horizontalSize.width());
+  horizontal.dstSize[1] = static_cast<float>(horizontalSize.height());
+  horizontal.axis = ResampleUniforms::kAxisHorizontal;
+  horizontal.clampMin = 0;
+  horizontal.clampMax = texture.width() - 1;
+  horizontal.crossOffset = firstRow - texture.top();
+  horizontal.tapCount = columns.taps;
+  FrameTexture rows = recordOffscreenPass(
+      cb, OffscreenPass{PassKind::Resample, tile.texture.get(),
+                        columnTable.get(), horizontalSize, &horizontal,
+                        sizeof(horizontal)});
+  if (!rows)
+    return;
+
+  ResampleUniforms vertical;
+  const QMatrix4x4 verticalMvp = reduceProjection(mRhi, outputs.size());
+  std::memcpy(vertical.mvp, verticalMvp.constData(), sizeof(vertical.mvp));
+  vertical.dstSize[0] = static_cast<float>(outputs.width());
+  vertical.dstSize[1] = static_cast<float>(outputs.height());
+  vertical.axis = ResampleUniforms::kAxisVertical;
+  vertical.clampMin = 0;
+  vertical.clampMax = lastRow - firstRow;
+  vertical.crossOffset = 0;
+  vertical.finalPass = ResampleUniforms::kFinalPass;
+  vertical.tapCount = rowWeights.taps;
+  FrameTexture result = recordOffscreenPass(
+      cb, OffscreenPass{PassKind::Resample, rows.get(), rowTable.get(),
+                        outputs.size(), &vertical, sizeof(vertical)});
+  if (!result)
+    return;
+
+  auto bindings = std::unique_ptr<QRhiShaderResourceBindings>(
+      mRhi->newShaderResourceBindings());
+  bindings->setBindings(
+      {QRhiShaderResourceBinding::uniformBuffer(
+           kUniformBinding,
+           QRhiShaderResourceBinding::VertexStage |
+               QRhiShaderResourceBinding::FragmentStage,
+           tile.uniforms.get()),
+       QRhiShaderResourceBinding::sampledTexture(
+           kTextureBinding, QRhiShaderResourceBinding::FragmentStage,
+           result.get(),
+           mSamplers[samplingIndex(RenderEnums::TextureSampling::Nearest)]
+               .get())});
+  if (!bindings->create()) {
+    reportError(u"Cannot create resampling shader bindings"_s);
+    return;
+  }
+  tile.resampled.reset(result.release());
+  tile.resampledBindings = std::move(bindings);
 }
 
 //------------------------------------------------------------------------------
@@ -897,20 +1168,45 @@ void ImageRenderer::render(QRhiCommandBuffer *cb) {
   if (mPipeline && !mTiles.empty() && mFrame.placement.scale > 0.0) {
     const ImageGeometry geometry = imageGeometry(mFrame);
     const FrameFilter filter =
-        frameFilter(mFrame, geometry.scale, mReduceReady);
+        frameFilter(mFrame, geometry.scale, mReduceReady, mResampleReady);
+    const QSize imageSize = mFrame.image ? mFrame.image->size() : QSize();
+    const QSize outputSize = ResampleGrid::outputSize(imageSize, geometry.scale);
+    const QPoint outputOrigin = geometry.origin.toPoint();
 
     struct VisibleTile {
       GpuTile *tile;
       TileRegion region;
+      // Visible outputs of the tile in the resampling grid; empty unless the
+      // frame is resampled.
+      QRect outputs;
     };
     std::vector<VisibleTile> visible;
     for (GpuTile &tile : mTiles) {
-      if (const auto region =
-              visibleTileRegion(tile.region, geometry, targetSize))
-        visible.push_back({&tile, *region});
+      const auto region = visibleTileRegion(tile.region, geometry, targetSize);
+      if (!region)
+        continue;
+      QRect outputs;
+      if (filter.resample) {
+        outputs = ResampleGrid::visibleTileOutputs(
+            tile.region, imageSize, outputSize, outputOrigin, targetSize);
+        // The tile owns no visible output centre; its neighbours draw the
+        // pixels it touches.
+        if (outputs.isEmpty())
+          continue;
+      }
+      visible.push_back({&tile, *region, outputs});
     }
     for (VisibleTile &entry : visible) {
       GpuTile &tile = *entry.tile;
+      if (filter.resample) {
+        if (tile.resampledScale == geometry.scale &&
+            tile.resampledOutputs == entry.outputs)
+          continue;
+        if (!submitUploads())
+          return;
+        buildResampledTile(cb, tile, geometry.scale, entry.outputs);
+        continue;
+      }
       if (!filter.exactReduce || tile.reducedScale == geometry.scale)
         continue;
       if (!submitUploads())
@@ -925,23 +1221,41 @@ void ImageRenderer::render(QRhiCommandBuffer *cb) {
         frameUniforms(mFrame, geometry, mImageHasAlpha, filter, mvp);
     for (const VisibleTile &entry : visible) {
       const GpuTile &tile = *entry.tile;
-      const bool reduced = filter.exactReduce && tile.reduced &&
-                           tile.reducedScale == geometry.scale;
-      setRect(uniforms.targetRect, entry.region.target);
-      setRect(uniforms.texRect, entry.region.texture);
-      // One device pixel in texture coordinates: the reduced texture is
-      // already at device resolution; the mip chain is at source resolution.
-      const QSizeF stepTexels =
-          reduced ? QSizeF(tile.reduced->pixelSize())
-                  : QSizeF(tile.region.texture.size()) * geometry.scale;
+      DrawSource source = DrawSource::MipChain;
+      if (filter.resample && tile.resampled &&
+          tile.resampledScale == geometry.scale &&
+          tile.resampledOutputs == entry.outputs)
+        source = DrawSource::Resampled;
+      else if (filter.exactReduce && tile.reduced &&
+               tile.reducedScale == geometry.scale)
+        source = DrawSource::Reduced;
+
+      QSizeF stepTexels;
+      if (source == DrawSource::Resampled) {
+        // The resampled outputs are whole device pixels: drawn 1:1.
+        setRect(uniforms.targetRect,
+                QRectF(entry.outputs.translated(outputOrigin)));
+        setRect(uniforms.texRect, QRectF(0.0, 0.0, 1.0, 1.0));
+        stepTexels = QSizeF(tile.resampled->pixelSize());
+      } else {
+        setRect(uniforms.targetRect, entry.region.target);
+        setRect(uniforms.texRect, entry.region.texture);
+        // One device pixel in texture coordinates: the reduced texture is
+        // already at device resolution; the mip chain is at source
+        // resolution.
+        stepTexels = source == DrawSource::Reduced
+                         ? QSizeF(tile.reduced->pixelSize())
+                         : QSizeF(tile.region.texture.size()) * geometry.scale;
+      }
       uniforms.texelStep[0] = static_cast<float>(1.0 / stepTexels.width());
       uniforms.texelStep[1] = static_cast<float>(1.0 / stepTexels.height());
-      uniforms.downscaleTaps = filter.downscaling && !reduced
-                                   ? TileUniforms::kEnabled
-                                   : TileUniforms::kDisabled;
+      uniforms.downscaleTaps =
+          filter.downscaling && source == DrawSource::MipChain
+              ? TileUniforms::kEnabled
+              : TileUniforms::kDisabled;
       updates->updateDynamicBuffer(tile.uniforms.get(), 0,
                                    sizeof(TileUniforms), &uniforms);
-      draws.push_back({&tile, reduced});
+      draws.push_back({&tile, source});
     }
   }
 
@@ -955,9 +1269,12 @@ void ImageRenderer::render(QRhiCommandBuffer *cb) {
     const QRhiCommandBuffer::VertexInput vertexInput(mVertexBuffer.get(), 0);
     const std::size_t sampling = samplingIndex(mFrame.settings.sampling);
     for (const TileDraw &draw : draws) {
-      cb->setShaderResources(draw.reduced
-                                 ? draw.tile->reducedBindings.get()
-                                 : draw.tile->bindings[sampling].get());
+      QRhiShaderResourceBindings *bindings = draw.tile->bindings[sampling].get();
+      if (draw.source == DrawSource::Reduced)
+        bindings = draw.tile->reducedBindings.get();
+      else if (draw.source == DrawSource::Resampled)
+        bindings = draw.tile->resampledBindings.get();
+      cb->setShaderResources(bindings);
       cb->setVertexInput(0, 1, &vertexInput);
       cb->draw(kQuadVertexCount);
     }

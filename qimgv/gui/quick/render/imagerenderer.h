@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QQuickRhiItemRenderer>
+#include <QRect>
 #include <QStringList>
 #include <array>
 #include <cstddef>
@@ -30,6 +31,12 @@
 // the result is drawn instead of the mip chain and reused until the scale or
 // the image changes. On Direct3D 12 the same box passes also build the mip
 // chain (see generatesMipsByBoxReduce()).
+//
+// With RenderEnums::Resampling::Mks2021 selected, a settled frame at any
+// scale other than 1:1 instead resamples the visible part of every tile with
+// the Magic Kernel Sharp 2021 kernel (resample.frag, a horizontal and a
+// vertical pass, see ResampleGrid) and draws it 1:1; the result is reused
+// until the scale or the visible part changes.
 //
 // Never touches Core, Settings or GUI-thread objects outside synchronize().
 // Failures are posted to the item's RenderErrorChannel; every failing step
@@ -62,6 +69,13 @@ private:
     std::optional<qreal> reducedScale;
     std::unique_ptr<QRhiTexture> reduced;
     std::unique_ptr<QRhiShaderResourceBindings> reducedBindings;
+    // MKS2021 resampling of the tile's outputs resampledOutputs (output
+    // grid coordinates) at resampledScale, drawn 1:1 with nearest sampling.
+    // Like reducedScale, the key is set even when the build failed.
+    std::optional<qreal> resampledScale;
+    QRect resampledOutputs;
+    std::unique_ptr<QRhiTexture> resampled;
+    std::unique_ptr<QRhiShaderResourceBindings> resampledBindings;
   };
 
   // Releases a QRhi resource once the frame being recorded no longer uses
@@ -73,18 +87,25 @@ private:
   using FrameResource = std::unique_ptr<T, DeferredRhiRelease>;
   using FrameTexture = FrameResource<QRhiTexture>;
 
-  // Pipeline of the box-reduce passes for one render target format.
-  struct ReducePipeline {
+  // Offscreen passes recorded before the main pass.
+  enum class PassKind { BoxReduce, Resample };
+
+  // Pipeline of one kind of offscreen pass for one render target format.
+  struct PassPipeline {
+    PassKind kind = PassKind::BoxReduce;
     QRhiTexture::Format format = QRhiTexture::RGBA8;
     std::unique_ptr<QRhiRenderPassDescriptor> renderPass;
     // Null when its creation failed; not retried for this QRhi.
     std::unique_ptr<QRhiGraphicsPipeline> pipeline;
   };
 
+  // Source of one tile draw in the main pass.
+  enum class DrawSource { MipChain, Reduced, Resampled };
+
   // One draw of the main pass.
   struct TileDraw {
     const GpuTile *tile = nullptr;
-    bool reduced = false;
+    DrawSource source = DrawSource::MipChain;
   };
 
   // Resources that live as long as the QRhi: shaders, the quad vertex
@@ -109,9 +130,33 @@ private:
   // Resources of the exact-ratio downsample; optional: on failure the
   // renderer keeps drawing from the mip chain.
   [[nodiscard]] bool createReduceResources();
+  // Resources of the MKS2021 resampling; optional like the exact
+  // downsample, and built on its sampler.
+  [[nodiscard]] bool createResampleResources();
   [[nodiscard]] QRhiGraphicsPipeline *
-  reducePipeline(QRhiTexture::Format format,
-                 QRhiRenderPassDescriptor *compatiblePass);
+  passPipeline(PassKind kind, QRhiTexture::Format format,
+               QRhiRenderPassDescriptor *compatiblePass);
+  // One offscreen pass: reads source (and, for resampling passes, the
+  // weight table weights) and renders into a new single-level texture of the
+  // source's format and of size `size`; uniforms (uniformSize bytes) fill the
+  // pass's uniform buffer.
+  struct OffscreenPass {
+    PassKind kind = PassKind::BoxReduce;
+    QRhiTexture *source = nullptr;
+    QRhiTexture *weights = nullptr;
+    QSize size;
+    const void *uniforms = nullptr;
+    quint32 uniformSize = 0;
+    QRhiTexture::Flags extraFlags;
+  };
+  // Records pass on cb; null on failure (reported).
+  [[nodiscard]] FrameTexture recordOffscreenPass(QRhiCommandBuffer *cb,
+                                                 const OffscreenPass &pass);
+  // Uploads a resampling weight table (size.width() floats per row) into a
+  // new R32F texture, recorded on cb; null on failure (reported).
+  [[nodiscard]] FrameTexture uploadWeightTable(QRhiCommandBuffer *cb,
+                                               QSize size,
+                                               const std::vector<float> &values);
   // Records one exact-area pass from level 0 of source into a new texture;
   // null on failure (reported).
   [[nodiscard]] FrameTexture recordBoxPass(QRhiCommandBuffer *cb,
@@ -120,6 +165,10 @@ private:
                                            QRhiTexture::Flags extraFlags = {});
   // Records the passes that reduce tile.texture to scale on cb.
   void buildReducedTile(QRhiCommandBuffer *cb, GpuTile &tile, qreal scale);
+  // Records the two passes that resample outputs (output grid coordinates)
+  // of an image shown at scale from tile.texture on cb.
+  void buildResampledTile(QRhiCommandBuffer *cb, GpuTile &tile, qreal scale,
+                          const QRect &outputs);
   // Records the passes of mip levels 1..n of tile.texture on cb and their
   // copies into the texture on copies, which must be submitted before the
   // texture is sampled.
@@ -158,7 +207,14 @@ private:
   std::unique_ptr<QRhiSampler> mReduceSampler;
   std::unique_ptr<QRhiBuffer> mReduceLayoutUniforms;
   std::unique_ptr<QRhiShaderResourceBindings> mReduceLayoutBindings;
-  std::vector<ReducePipeline> mReducePipelines;
+
+  bool mResampleReady = false;
+  QShader mResampleVertexShader;
+  QShader mResampleFragmentShader;
+  std::unique_ptr<QRhiBuffer> mResampleLayoutUniforms;
+  std::unique_ptr<QRhiShaderResourceBindings> mResampleLayoutBindings;
+
+  std::vector<PassPipeline> mPassPipelines;
 
   std::shared_ptr<RenderErrorChannel> mErrorChannel;
   // Errors reported before the first synchronize() supplied the channel.

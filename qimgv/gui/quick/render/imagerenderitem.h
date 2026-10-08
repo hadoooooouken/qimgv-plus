@@ -20,7 +20,9 @@ class QImage;
 //
 // The ImageFilter adds CAS or smart sharpening and colour adjustments. While
 // `settled` is true and the image is shown below 1:1, the renderer replaces
-// the mip chain with an exact-ratio downsample; whoever drives the view sets
+// the mip chain with an exact-ratio downsample; with the MKS2021 resampling
+// kernel selected, it instead resamples the visible part of the image with
+// that kernel at any scale other than 1:1. Whoever drives the view sets
 // settled to false during zoom, pan, resize and animation playback.
 //
 // The item only holds GUI-thread state; ImageRenderer renders on the render
@@ -40,6 +42,7 @@ class ImageRenderItem : public QQuickRhiItem {
   Q_PROPERTY(QPointF imagePosition READ imagePosition WRITE setImagePosition NOTIFY placementChanged FINAL)
   Q_PROPERTY(qreal imageScale READ imageScale WRITE setImageScale NOTIFY placementChanged FINAL)
   Q_PROPERTY(QSize imageSize READ imageSize NOTIFY imageChanged FINAL)
+  Q_PROPERTY(RenderEnums::Resampling resampling READ resampling WRITE setResampling NOTIFY imageFilterChanged FINAL)
   Q_PROPERTY(RenderEnums::Sharpening sharpening READ sharpening WRITE setSharpening NOTIFY imageFilterChanged FINAL)
   Q_PROPERTY(qreal casSharpening READ casSharpening WRITE setCasSharpening NOTIFY imageFilterChanged FINAL)
   Q_PROPERTY(qreal casContrast READ casContrast WRITE setCasContrast NOTIFY imageFilterChanged FINAL)
@@ -71,6 +74,8 @@ public:
 
   void setImageFilter(const ImageFilter &filter);
   [[nodiscard]] const ImageFilter &imageFilter() const;
+  [[nodiscard]] RenderEnums::Resampling resampling() const;
+  void setResampling(RenderEnums::Resampling resampling);
   [[nodiscard]] RenderEnums::Sharpening sharpening() const;
   void setSharpening(RenderEnums::Sharpening sharpening);
   [[nodiscard]] qreal casSharpening() const;

@@ -750,7 +750,11 @@ void ImageViewerV2::requestScaling() {
   if (scaleTimer->isActive())
     scaleTimer->stop();
 
-  emit scalingRequested(targetSize, mScalingFilter);
+  // The GPU port of MKS2021 lives in the Qt Quick renderer; this viewer
+  // shows the identical kernel from the CPU scaler.
+  const ScalingFilter requestFilter =
+      mScalingFilter == QI_FILTER_MKS2021_GPU ? QI_FILTER_MKS2021 : mScalingFilter;
+  emit scalingRequested(targetSize, requestFilter);
 }
 
 void ImageViewerV2::refreshScaling() {

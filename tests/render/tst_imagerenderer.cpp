@@ -1,12 +1,15 @@
 #include <QCoreApplication>
+#include <QElapsedTimer>
 #include <QQuickWindow>
 #include <QRandomGenerator>
 #include <QSGRendererInterface>
 #include <QSignalSpy>
 #include <QTest>
+#include <algorithm>
 #include <memory>
 
 #include "gui/quick/render/imagerenderitem.h"
+#include "gui/quick/render/resamplegrid.h"
 #include "gui/quick/render/textureuploadformat.h"
 #include "gui/quick/render/tilegrid.h"
 #include "offscreenquick.h"
@@ -106,6 +109,40 @@ constexpr QPoint kPanOffset(5, 3);
 const QColor kFlatColor(77, 128, 179);
 // A sharpened noise image differs visibly from the unsharpened one.
 constexpr int kVisibleSharpening = 8;
+
+// MKS2021 resampling: float weights on the GPU, and one 8-bit quantization of
+// the intermediate image whose rounding may flip, amplified by the kernel's
+// negative lobes in the second pass.
+constexpr int kMks2021Tolerance = 2;
+// Upscales (whole and fractional output sizes) and downscales of
+// kTestImageSize that fit into kFrameSize.
+constexpr qreal kMksWholeUpscale = 3.0;
+constexpr qreal kMksFractionalUpscale = 1.7;
+constexpr qreal kMksHalf = 0.5;
+constexpr qreal kMksFractionalReduction = 0.37;
+constexpr qreal kMksStrongReduction = 0.2;
+// Part of a strongly magnified image: only a window of the output is
+// computed and drawn.
+constexpr QSize kMksPartialImageSize(200, 150);
+constexpr qreal kMksPartialScale = 4.0;
+constexpr QSize kMksPartialFrameSize(160, 120);
+constexpr QPoint kMksPartialOrigin(-300, -250);
+// Tiled vs untiled MKS2021 at scales whose kernel stays inside the tile
+// overlap.
+constexpr qreal kMksTiledReduction = 0.5;
+constexpr qreal kMksTiledUpscale = 1.6;
+
+// Settle latency of the MKS2021 resampling, measured on a camera-sized image
+// shown to fit a large window and magnified 3x.
+constexpr QSize kLatencyImageSize(6000, 4000);
+constexpr QSize kLatencyFrameSize(1920, 1280);
+constexpr qreal kLatencyFitScale = 0.32;
+constexpr qreal kLatencyZoomScale = 3.0;
+// The fastest of several runs: other GPU work on the machine only adds time.
+constexpr int kLatencyRuns = 9;
+// Each run changes the scale slightly so that the resampling is rebuilt.
+constexpr qreal kLatencyScaleStep = 0.001;
+constexpr quint32 kRgb32OpaqueBits = 0xFF000000u;
 
 QRhi::Implementation rhiBackend = QRhi::D3D11;
 
@@ -952,6 +989,221 @@ private slots:
         }
       }
     }
+    QCOMPARE(errors.count(), 0);
+  }
+
+  void mks2021MatchesReference_data() {
+    QTest::addColumn<ImageKind>("kind");
+    QTest::addColumn<qreal>("scale");
+    const struct {
+      const char *name;
+      ImageKind kind;
+    } kinds[] = {{"opaque", ImageKind::Opaque}, {"alpha", ImageKind::Alpha}};
+    const struct {
+      const char *name;
+      qreal scale;
+    } scales[] = {{"300%", kMksWholeUpscale},
+                  {"170%", kMksFractionalUpscale},
+                  {"50%", kMksHalf},
+                  {"37%", kMksFractionalReduction},
+                  {"20%", kMksStrongReduction}};
+    for (const auto &kind : kinds) {
+      for (const auto &scale : scales)
+        QTest::addRow("%s %s", kind.name, scale.name) << kind.kind << scale.scale;
+    }
+  }
+
+  // Settled with MKS2021 selected: the image is resampled to its on-screen
+  // size with the CPU's kernel and taps and drawn 1:1.
+  void mks2021MatchesReference() {
+    QFETCH(ImageKind, kind);
+    QFETCH(qreal, scale);
+
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makeTestImage(kind, kTestImageSize);
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Trilinear));
+    scene.item->setResampling(RenderEnums::Resampling::Mks2021);
+    scene.item->setSettled(true);
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), scale});
+    RENDER(scene, frame);
+
+    const FloatImage expected = composeOver(
+        mks2021Resample(uploadedSource(image),
+                        ResampleGrid::outputSize(kTestImageSize, scale)),
+        kFrameSize, kImageOrigin, kBackground);
+    COMPARE_TO_REFERENCE(frame, expected, kMks2021Tolerance);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  // The resampling is only drawn while settled, is rebuilt for a panned view
+  // and is replaced by the mip chain while interacting.
+  void mks2021FollowsSettledState() {
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makeTestImage(ImageKind::Opaque, kTestImageSize);
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Trilinear));
+    scene.item->setPlacement(
+        ImagePlacement{QPointF(kImageOrigin), kMksFractionalUpscale});
+    RENDER(scene, plain);
+    scene.item->setResampling(RenderEnums::Resampling::Mks2021);
+    RENDER(scene, interacting);
+    QCOMPARE(maxDifference(plain, interacting), 0);
+
+    scene.item->setSettled(true);
+    RENDER(scene, settled);
+    QVERIFY(maxDifference(interacting, settled) > 0);
+
+    const FloatImage resampled = mks2021Resample(
+        uploadedSource(image),
+        ResampleGrid::outputSize(kTestImageSize, kMksFractionalUpscale));
+    const QPoint panned = kImageOrigin + kPanOffset;
+    scene.item->setPlacement(
+        ImagePlacement{QPointF(panned), kMksFractionalUpscale});
+    RENDER(scene, pannedFrame);
+    COMPARE_TO_REFERENCE(pannedFrame,
+                         composeOver(resampled, kFrameSize, panned, kBackground),
+                         kMks2021Tolerance);
+
+    scene.item->setSettled(false);
+    scene.item->setPlacement(
+        ImagePlacement{QPointF(kImageOrigin), kMksFractionalUpscale});
+    RENDER(scene, interactingAgain);
+    QCOMPARE(maxDifference(interacting, interactingAgain), 0);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  // At 1:1 nothing is resampled.
+  void mks2021AtOneToOneIsUnfiltered() {
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    scene.item->setImage(shared(makeTestImage(ImageKind::Alpha, kTestImageSize)));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Trilinear));
+    scene.item->setSettled(true);
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 1.0});
+    RENDER(scene, plain);
+    scene.item->setResampling(RenderEnums::Resampling::Mks2021);
+    RENDER(scene, resampled);
+    QCOMPARE(maxDifference(plain, resampled), 0);
+  }
+
+  // A strongly magnified image whose output is far larger than the frame:
+  // only the visible window is computed, at the right position.
+  void mks2021ResamplesVisiblePart() {
+    Scene scene;
+    CREATE_SCENE(scene, kMksPartialFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makeTestImage(ImageKind::Opaque, kMksPartialImageSize);
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Trilinear));
+    scene.item->setResampling(RenderEnums::Resampling::Mks2021);
+    scene.item->setSettled(true);
+    scene.item->setPlacement(
+        ImagePlacement{QPointF(kMksPartialOrigin), kMksPartialScale});
+    RENDER(scene, frame);
+
+    const FloatImage expected = composeOver(
+        mks2021Resample(uploadedSource(image),
+                        ResampleGrid::outputSize(kMksPartialImageSize,
+                                                 kMksPartialScale)),
+        kMksPartialFrameSize, kMksPartialOrigin, kBackground);
+    COMPARE_TO_REFERENCE(frame, expected, kMks2021Tolerance);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  void tiledMks2021MatchesUntiled_data() {
+    QTest::addColumn<qreal>("scale");
+    QTest::newRow("50%") << kMksTiledReduction;
+    QTest::newRow("160%") << kMksTiledUpscale;
+  }
+
+  void tiledMks2021MatchesUntiled() {
+    QFETCH(qreal, scale);
+    const QSize frameSize = (QSizeF(kTiledImageSize) * scale).toSize() +
+                            QSize(2 * kMargin, 2 * kMargin);
+    Scene scene;
+    CREATE_SCENE(scene, frameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    scene.item->setImage(shared(makeTestImage(ImageKind::Alpha, kTiledImageSize)));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), scale});
+    scene.item->setResampling(RenderEnums::Resampling::Mks2021);
+    scene.item->setSettled(true);
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Trilinear));
+    RENDER(scene, untiled);
+    scene.item->setRenderSettings(settingsWith(
+        RenderEnums::TextureSampling::Trilinear, false, kSmallTileLimit));
+    RENDER(scene, tiled);
+    QVERIFY(TileGrid::layout(kTiledImageSize, kSmallTileLimit).size() > 1);
+    QVERIFY2(maxDifference(tiled, untiled) <= kExactTolerance,
+             qPrintable(u"max difference %1"_s.arg(maxDifference(tiled, untiled))));
+    QCOMPARE(errors.count(), 0);
+  }
+
+  void mks2021SettleLatency_data() {
+    QTest::addColumn<qreal>("scale");
+    QTest::newRow("fit") << kLatencyFitScale;
+    QTest::newRow("300%") << kLatencyZoomScale;
+  }
+
+  // Logs the cost of the settled MKS2021 frame over an unsettled one (render
+  // and read back), fastest of several rebuilds.
+  void mks2021SettleLatency() {
+    QFETCH(qreal, scale);
+    Scene scene;
+    CREATE_SCENE(scene, kLatencyFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    QImage image(kLatencyImageSize, QImage::Format_RGB32);
+    QRandomGenerator generator(kImageSeed);
+    for (int y = 0; y < image.height(); ++y) {
+      auto *line = reinterpret_cast<quint32 *>(image.scanLine(y));
+      generator.fillRange(line, image.width());
+      // RGB32 requires 0xFF in the unused byte; it is uploaded as is.
+      for (int x = 0; x < image.width(); ++x)
+        line[x] |= kRgb32OpaqueBits;
+    }
+    scene.item->setImage(shared(std::move(image)));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Trilinear));
+    scene.item->setResampling(RenderEnums::Resampling::Mks2021);
+    scene.item->setPlacement(ImagePlacement{QPointF(), scale});
+    RENDER(scene, warmup);
+
+    QList<qint64> unsettled;
+    QList<qint64> settled;
+    QElapsedTimer timer;
+    for (int run = 0; run < kLatencyRuns; ++run) {
+      scene.item->setSettled(false);
+      scene.item->setPlacement(
+          ImagePlacement{QPointF(), scale + run * kLatencyScaleStep});
+      timer.start();
+      RENDER(scene, moving);
+      unsettled.append(timer.nsecsElapsed());
+      scene.item->setSettled(true);
+      timer.start();
+      RENDER(scene, resampled);
+      settled.append(timer.nsecsElapsed());
+    }
+    constexpr double kNsPerMs = 1e6;
+    const double unsettledMs =
+        *std::min_element(unsettled.begin(), unsettled.end()) / kNsPerMs;
+    const double settledMs =
+        *std::min_element(settled.begin(), settled.end()) / kNsPerMs;
+    qInfo().noquote() << u"MKS2021 %1 x %2 at %3: unsettled frame %4 ms, "
+                         u"settled (resampled) frame %5 ms"_s
+                             .arg(kLatencyImageSize.width())
+                             .arg(kLatencyImageSize.height())
+                             .arg(scale)
+                             .arg(unsettledMs, 0, 'f', 2)
+                             .arg(settledMs, 0, 'f', 2);
     QCOMPARE(errors.count(), 0);
   }
 };

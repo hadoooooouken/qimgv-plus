@@ -262,6 +262,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   scalingQualityComboBox->addItem(tr("Magic Kernel Sharp 2021"), QI_FILTER_MKS2021);
   scalingQualityComboBox->addItem(tr("FidelityFX-CAS (GPU)"), QI_FILTER_CAS);
   scalingQualityComboBox->addItem(tr("Smart sharpen (GPU)"), QI_FILTER_SMART_GPU);
+  scalingQualityComboBox->addItem(tr("Magic Kernel Sharp 2021 (GPU)"), QI_FILTER_MKS2021_GPU);
 
   casContainerWidget = new QWidget(this);
   QGridLayout *casLayout = new QGridLayout(casContainerWidget);
