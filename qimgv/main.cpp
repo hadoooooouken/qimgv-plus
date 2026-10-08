@@ -20,6 +20,7 @@
 #include "appservices.h"
 #include "apptranslator.h"
 #include "appversion.h"
+#include "components/actionmanager/actionmanager.h"
 #include "core.h"
 #include "gui/quick/quickuihost.h"
 #include "gui/widgetui/widgetui.h"
@@ -188,9 +189,12 @@ int main(int argc, char *argv[]) {
                        [&r, path = parser.value("gen-thumbs"), size] { r.generateThumbs(path, size); });
     exitCode = a.exec();
   } else if (*uiMode == UiMode::Quick) {
-    // Empty Qt Quick shell. It does not take part in the single-instance
-    // handshake yet, so it never forwards to a running widget-UI instance.
-    QuickUiHost quickUi;
+    // Qt Quick shell over the application services (settings, theme and
+    // actions bridges); Core is not attached yet. It does not take part in
+    // the single-instance handshake yet, so it never forwards to a running
+    // widget-UI instance.
+    startServices();
+    QuickUiHost quickUi(*settings, *actionManager);
     exitCode = quickUi.start() ? a.exec() : EXIT_FAILURE;
   } else {
     // -----------------------------------------------------------------------------

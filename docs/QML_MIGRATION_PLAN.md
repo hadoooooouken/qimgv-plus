@@ -348,6 +348,50 @@ functionality as required by `AGENTS.md`.
     for menus.
 - **Acceptance:** Qt Quick Test verifies property notifications for a
   settings change and a theme switch; `qmllint` passes on the module.
+- **Delivered:**
+  - New QML module `qimgv.bridges` (`gui/quick/bridges/`, static library
+    imported like `qimgv.ui`). QML names: `AppSettings` (`SettingsBridge`),
+    `Theme` (`ThemeBridge`), `Actions` (`ActionBridge`), plus the enum
+    namespaces `SettingsEnums` and `FluentIcons`.
+  - Push model: the bridges never read the global singletons. They hold
+    snapshots (`UiSettingsSnapshot`, `ThemeSnapshot`) or talk to the
+    `IActionDispatcher` seam, so `qimgv_qml_tests` links them without the
+    application services. The app-side readers live in
+    `gui/quick/adapters/` (`BridgeSnapshots`, `ActionManagerDispatcher`);
+    `QuickUiHost` owns the bridges (declared before the engine so they
+    outlive it), refreshes all three on `Settings::settingsChanged` (which
+    also announces theme switches and shortcut edits) and publishes them with
+    `setExternalSingletonInstance()`. `--ui=quick` now starts `AppServices`.
+  - Settings are grouped into the QML value types `viewerSettings`,
+    `panelSettings`, `folderViewSettings` and `overlaySettings`, one notify
+    signal per group, emitted only when that group changed. Enum-typed
+    settings use the scoped `SettingsEnums.*` mirrors, whose values are taken
+    from `settings_types.h`.
+  - `Theme`: `colors` (all 44 `ColorScheme` colours, camelCase), `fonts`
+    (`base`, `compact`, `section`, `large`), `dark`, `iconFontFamily`,
+    constant `compactIconSize`/`standardIconSize`, and
+    `glyph(FluentIcons.X)`.
+  - `Actions`: `invoke()`, `shortcutFor()`, `handleKeyEvent()` /
+    `handleWheelEvent()` (rebuild `QKeyEvent`/`QWheelEvent` from the QML
+    event's properties for `ActionManager::processEvent()`), and `actions`, a
+    `QRangeModelAdapter` list with `name`/`shortcut` roles that is reset only
+    when a shortcut actually changed.
+  - Refactors needed by the bridges: `FluentIcon` and its codepoint table
+    moved to `utils/fluenticon.{h,cpp}` (`Q_NAMESPACE FluentIcons`, a
+    using-declaration keeps `FluentIcon::X`) in the static library
+    `qimgv_fluenticons`, so its meta-object exists once; `IconFontManager`
+    gained `family()`. The text-style point sizes moved from
+    `Settings::loadStylesheet()` into `UiMetrics::typographyFor()`, shared by
+    the stylesheet and `Theme.fonts`.
+  - `Main.qml` binds its background to `Theme.colors.background`.
+    `qimgv_qml_tests` is also the `qimgv.tests` module, whose `Fixture`
+    singleton provides per-engine bridges over a fake dispatcher;
+    `tst_bridges.qml` covers per-group notification, no notification on an
+    unchanged snapshot, binding updates, enums, a theme switch, glyph lookup,
+    invoke/shortcut lookup, the model, and key and wheel forwarding.
+  - Flagged, not changed: `Settings::absoluteZoomStep()` /
+    `setAbsoluteZoomStep()` are declared in `settings.h` but never defined, so
+    the bridge does not expose them.
 
 ### Phase 1: GPU image renderer (the core of the GPU goal)
 

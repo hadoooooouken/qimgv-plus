@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "gui/uimetrics.h"
 #include "utils/formatregistry.h"
 
 #include <algorithm>
@@ -280,9 +281,10 @@ void Settings::loadStylesheet() {
     // --- widget sizes ---------------------------------------------
     auto fnt = QGuiApplication::font();
     QFontMetrics fm(fnt);
-    int font_small   = qMax((int)(fnt.pointSize() * 0.9f), 8);
-    int font_section  = fnt.pointSize() + 1;
-    int font_large    = (int)(fnt.pointSize() * 1.8f);
+    const UiMetrics::Typography typography = UiMetrics::typographyFor(fnt);
+    int font_small   = typography.smallPointSize;
+    int font_section  = typography.sectionPointSize;
+    int font_large    = typography.largePointSize;
     int text_height = fm.height();
     int text_padding = (int)(text_height * 0.10f);
     int text_padding_small = (int)(text_height * 0.05f);

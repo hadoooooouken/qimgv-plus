@@ -12,5 +12,6 @@ set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/qml")
 # need the same compile profile as the explicitly created module targets.
 qimgv_apply_msvc_directory_profile()
 
+add_subdirectory(bridges)
 add_subdirectory(render)
 add_subdirectory(ui)

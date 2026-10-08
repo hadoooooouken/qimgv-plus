@@ -94,6 +94,8 @@ target_sources(qimgv-plus PRIVATE
     folderview/bookmarksitem.cpp
 
     quick/quickuihost.cpp
+    quick/adapters/actionmanagerdispatcher.cpp
+    quick/adapters/bridgesnapshots.cpp
 )
 
 add_subdirectory(quick)

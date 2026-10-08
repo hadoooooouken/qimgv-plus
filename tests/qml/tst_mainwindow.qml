@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import qimgv.bridges
 
 TestCase {
     id: testCase
@@ -16,5 +17,6 @@ TestCase {
         verify(window !== null, "qimgv.ui/Main could not be instantiated");
         compare(window.width, window.initialWidth);
         compare(window.height, window.initialHeight);
+        verify(Qt.colorEqual(window.color, Theme.colors.background));
     }
 }

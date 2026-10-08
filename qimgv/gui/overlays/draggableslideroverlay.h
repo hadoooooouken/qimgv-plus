@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/customwidgets/overlaywidget.h"
+#include "utils/fluenticon.h"
 #include <QPoint>
 #include <QString>
 
@@ -8,7 +9,6 @@ class QFormLayout;
 class QSlider;
 class QLabel;
 class QHBoxLayout;
-enum class FluentIcon;
 
 class DraggableSliderOverlay : public OverlayWidget {
     Q_OBJECT

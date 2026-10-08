@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls.Basic
+import qimgv.bridges
 
 // Main window of the Qt Quick UI (--ui=quick). The Basic style is imported
 // explicitly: it is the base of the application style and lets qmlsc compile
@@ -16,4 +17,5 @@ ApplicationWindow {
     height: initialHeight
     visible: true
     title: Qt.application.name
+    color: Theme.colors.background
 }

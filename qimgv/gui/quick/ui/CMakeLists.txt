@@ -6,11 +6,15 @@ qt_add_library(qimgv_ui STATIC)
 
 qt_add_qml_module(qimgv_ui
     URI qimgv.ui
+    IMPORTS qimgv.bridges
     QML_FILES
         Main.qml
 )
 
+# qmlcachegen compiles the bindings on the bridge singletons to C++ that
+# calls them directly, so the module links the bridge library.
 target_link_libraries(qimgv_ui PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
+    qimgv_bridges
 )

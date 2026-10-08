@@ -19,6 +19,21 @@ set_target_properties(djvudec PROPERTIES
 qimgv_apply_msvc_profile(djvudec)
 qimgv_suppress_crt_deprecation(djvudec)
 
+# Fluent icon catalogue (FluentIcon enum and its codepoints). A library of its
+# own because qimgv-plus, the qimgv.bridges QML module and the tests all use
+# it, and its Q_NAMESPACE meta-object must be generated exactly once.
+add_library(qimgv_fluenticons STATIC
+    utils/fluenticon.cpp
+    utils/fluenticon.h
+)
+target_include_directories(qimgv_fluenticons PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_features(qimgv_fluenticons PUBLIC cxx_std_23)
+target_link_libraries(qimgv_fluenticons PUBLIC Qt6::Core)
+# The qimgv.bridges module registers the enum with QML_FOREIGN_NAMESPACE;
+# qmltyperegistrar reads it from these metatypes.
+qt_extract_metatypes(qimgv_fluenticons)
+qimgv_apply_msvc_profile(qimgv_fluenticons)
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # TRANSLATIONS
@@ -119,7 +134,7 @@ add_subdirectory(utils)
 qt_add_lupdate(
     LUPDATE_TARGET qimgv-plus_lupdate
     TS_FILES ${TS_FILES}
-    SOURCE_TARGETS qimgv-plus qimgv_ui qimgv_render
+    SOURCE_TARGETS qimgv-plus qimgv_ui qimgv_render qimgv_bridges
 )
 qt_add_lrelease(qimgv-plus TS_FILES ${TS_FILES})
 
@@ -162,8 +177,10 @@ target_link_libraries(qimgv-plus PRIVATE
 # Qt Quick UI: static QML modules, imported through their static plugins
 # (Q_IMPORT_QML_PLUGIN in gui/quick/quickuihost.cpp).
 target_link_libraries(qimgv-plus PRIVATE
+    qimgv_bridgesplugin
     qimgv_uiplugin
     qimgv_renderplugin
+    qimgv_fluenticons
 )
 
 # OPTION DEFINITIONS, LINKING
