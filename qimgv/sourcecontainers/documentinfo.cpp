@@ -3,8 +3,20 @@
 #include "components/comfymetadata/comfyksamplerparser.h"
 
 #include <array>
+#include <memory>
 #include <string_view>
 #include <utility>
+
+#ifdef USE_EXIV2
+// exiv2/config.h disables C4996 and C4251 without restoring them; keep that
+// out of the rest of this translation unit.
+#pragma warning(push)
+#include <exiv2/basicio.hpp>
+#include <exiv2/error.hpp>
+#include <exiv2/exif.hpp>
+#include <exiv2/image.hpp>
+#pragma warning(pop)
+#endif
 
 namespace {
 constexpr int kRiffHeaderSizeBytes = 12;
@@ -418,12 +430,6 @@ void DocumentInfo::loadExifTags() {
             exifTags.insert(QObject::tr("UserComment"), comment);
         }
     }
-#if !EXIV2_TEST_VERSION(0, 28, 0)
-    catch (Exiv2::BasicError<wchar_t>& e) {
-        qWarning() << "Caught Exiv2::BasicError exception:\n" << e.what() << "\n";
-        return;
-    }
-#endif
     catch (Exiv2::Error& e) {
         qWarning() << "Caught Exiv2 exception:\n" << e.what() << "\n";
         return;

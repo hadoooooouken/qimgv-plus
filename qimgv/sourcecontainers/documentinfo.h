@@ -10,14 +10,6 @@
 #include <cmath>
 #include <cstring>
 #include "utils/stuff.h"
-#ifdef USE_EXIV2
-
-#include <exiv2/exiv2.hpp>
-#include <iostream>
-#include <iomanip>
-#include <cassert>
-
-#endif
 
 #include <QImageReader>
 

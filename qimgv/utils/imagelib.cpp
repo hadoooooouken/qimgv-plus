@@ -1,5 +1,6 @@
 #include "imagelib.h"
 #include "settings.h"
+#include <array>
 #include <thread>
 #include <vector>
 #include <cmath>
