@@ -147,21 +147,13 @@ public:
             targetSize = QSize(qRound(srcImg.width() * scale), qRound(srcImg.height() * scale));
         }
 
-        bool colorModified = (std::abs(m_job.brightness) > ImageLib::kAdjustEpsilon ||
-                              std::abs(m_job.contrast - 1.0f) > ImageLib::kAdjustEpsilon ||
-                              std::abs(m_job.saturation - 1.0f) > ImageLib::kAdjustEpsilon ||
-                              std::abs(m_job.temp) > ImageLib::kAdjustEpsilon ||
-                              std::abs(m_job.tint) > ImageLib::kAdjustEpsilon ||
-                              std::abs(m_job.exposure) > ImageLib::kAdjustEpsilon ||
-                              std::abs(m_job.hue) > ImageLib::kAdjustEpsilon);
-        if (colorModified) {
+        if (m_job.colorAdjustments.hasAdjustments()) {
             if (m_cancelFlag->load()) {
                 notifyStopped();
                 return;
             }
             std::shared_ptr<const QImage> srcPtr = std::make_shared<const QImage>(processedImg);
-            QImage adj = ImageLib::applyColorAdjustments(
-                srcPtr, m_job.exposure, m_job.contrast, m_job.brightness, m_job.temp, m_job.tint, m_job.saturation, m_job.hue);
+            QImage adj = ImageLib::applyColorAdjustments(srcPtr, m_job.colorAdjustments);
             if (!adj.isNull()) {
                 processedImg = adj;
             }

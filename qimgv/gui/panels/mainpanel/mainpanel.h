@@ -26,8 +26,11 @@ private slots:
     void onPinClicked();
 
 private:
-    QVBoxLayout buttonsLayout;
+    // buttonsWidget must be declared before buttonsLayout: the layout is
+    // destroyed first and detaches itself, otherwise ~QWidget would delete
+    // the non-heap layout member.
     QWidget buttonsWidget;
+    QVBoxLayout buttonsLayout;
     std::shared_ptr<ThumbnailStripProxy> thumbnailStrip;
     ActionButton *settingsButton, *exitButton, *folderViewButton, *pinButton;
 

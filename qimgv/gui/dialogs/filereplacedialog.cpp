@@ -103,7 +103,7 @@ void FileReplaceDialog::setMulti(bool _multi) {
     applyAllCheckBox->setVisible(multi);
 }
 
-DialogResult FileReplaceDialog::getResult() {
+FileReplaceDecision FileReplaceDialog::getResult() {
     return result;
 }
 

@@ -1,5 +1,4 @@
 #include "components/wallpaper/wallpapercontroller.h"
-#include "gui/mainwindow.h"
 #include "settings.h"
 #include "components/upscaler/upscaler.h"
 #include "utils/imagelib.h"
@@ -251,17 +250,29 @@ bool WallpaperController::cleanupFile(const QString &path,
     return false;
 }
 
-void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage, MW *mw) {
-    if (!sourceImage || sourceImage->isNull() || !mw) {
-        if (mw) {
-            mw->showMessage(tr("Set wallpaper: failed to get image"));
-        }
+void WallpaperController::postNotification(const NotificationRequest &request) {
+    const bool queued = QMetaObject::invokeMethod(
+        this,
+        [this, request]() {
+            emit notificationRequested(request);
+        },
+        Qt::QueuedConnection);
+    if (!queued) {
+        qWarning() << "Failed to queue wallpaper notification:" << request.text;
+    }
+}
+
+void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage) {
+    if (!sourceImage || sourceImage->isNull()) {
+        emit notificationRequested({tr("Set wallpaper: failed to get image"),
+                                    NotificationKind::Info, std::nullopt});
         return;
     }
 
     QScreen *screen = QGuiApplication::primaryScreen();
     if (!screen) {
-        mw->showMessage(tr("Set wallpaper: screen not found"));
+        emit notificationRequested({tr("Set wallpaper: screen not found"),
+                                    NotificationKind::Info, std::nullopt});
         return;
     }
 
@@ -282,15 +293,12 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
     const QString appDir = QCoreApplication::applicationDirPath();
     const QString modelName = settings->upscaylModel();
 
-    mw->showMessage(tr("Setting wallpaper..."),
-                    WallpaperProgressMessageDurationMs);
-
-    QPointer<MW> mwPointer = mw;
+    emit notificationRequested({tr("Setting wallpaper..."), NotificationKind::Info,
+                                WallpaperProgressMessageDurationMs});
 
     m_workerThread.reset(QThread::create([this,
                                           sourceImage,
                                           monitorSize,
-                                          mwPointer,
                                           appDir,
                                           modelName,
                                           request]() {
@@ -322,11 +330,8 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
         int monitorHeight = monitorSize.height();
 
         if (monitorWidth <= 0 || monitorHeight <= 0) {
-            QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-                if (mwPointer) {
-                    mwPointer->showMessage(tr("Set wallpaper: invalid monitor size"));
-                }
-            }, Qt::QueuedConnection);
+            postNotification({tr("Set wallpaper: invalid monitor size"),
+                              NotificationKind::Info, std::nullopt});
             finishRequest(std::nullopt);
             return;
         }
@@ -367,11 +372,8 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
         }
 
         if (croppedImage.isNull()) {
-            QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-                if (mwPointer) {
-                    mwPointer->showMessage(tr("Set wallpaper: cropping failed"));
-                }
-            }, Qt::QueuedConnection);
+            postNotification({tr("Set wallpaper: cropping failed"),
+                              NotificationKind::Info, std::nullopt});
             finishRequest(std::nullopt);
             return;
         }
@@ -386,13 +388,8 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
                 return;
             }
 
-            QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-                if (mwPointer) {
-                    mwPointer->showMessageAiUpscale(
-                        tr("AI upscaling..."),
-                        AiUpscaleProgressMessageDurationMs);
-                }
-            }, Qt::QueuedConnection);
+            postNotification({tr("AI upscaling..."),
+                              NotificationKind::AiUpscale, AiUpscaleProgressMessageDurationMs});
 
             UpscaylScaler *upscaler = UpscaylScaler::getInstance();
             if (upscaler) {
@@ -440,21 +437,15 @@ void WallpaperController::setWallpaper(std::shared_ptr<const QImage> sourceImage
         }
 
         if (scaledImg.isNull()) {
-            QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-                if (mwPointer) {
-                    mwPointer->showMessage(tr("Set wallpaper: scaling failed"));
-                }
-            }, Qt::QueuedConnection);
+            postNotification({tr("Set wallpaper: scaling failed"),
+                              NotificationKind::Info, std::nullopt});
             finishRequest(std::nullopt);
             return;
         }
 
         if (!scaledImg.save(request->wallpaperPath, WallpaperImageFormat)) {
-            QMetaObject::invokeMethod(mwPointer, [mwPointer]() {
-                if (mwPointer) {
-                    mwPointer->showMessage(tr("Set wallpaper: failed to save PNG"));
-                }
-            }, Qt::QueuedConnection);
+            postNotification({tr("Set wallpaper: failed to save PNG"),
+                              NotificationKind::Info, std::nullopt});
             finishRequest(std::nullopt);
             return;
         }

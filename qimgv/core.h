@@ -9,7 +9,6 @@
 #include <QQueue>
 #include <QFileSystemModel>
 #include <QDesktopServices>
-#include <QTranslator>
 #include <QSet>
 #include <QTimer>
 #include <optional>
@@ -20,11 +19,11 @@
 #include "components/fileoptask/fileopcontroller.h"
 #include "components/thumbnailer/thumbnailer.h"
 #include "components/scriptmanager/scriptmanager.h"
-#include "gui/mainwindow.h"
-#include "gui/controllers/coldstartwindowcontroller.h"
+#include "gui/ports/uiports.h"
+#include "utils/coloradjustments.h"
 #include "utils/randomizer.h"
-#include "gui/dialogs/printdialog.h"
 
+class ColdStartWindowController;
 class ImageStatic;
 
 struct State {
@@ -38,7 +37,8 @@ struct State {
 class Core : public QObject {
     Q_OBJECT
 public:
-    Core();
+    // The user interface behind `ports` must outlive this Core.
+    explicit Core(const UiPorts &ports);
     ~Core();
     void showGui();
     bool hasActiveState() const;
@@ -55,18 +55,17 @@ public slots:
 private:
     QElapsedTimer t;
 
-    void initGui();
     void initComponents();
     void connectComponents();
+    void connectUiEvents();
     void initActions();
-    void loadTranslation();
     void onUpdate();
     void onFirstRun();
     void processRaiseWindowRequest(const QString &pathReceived);
     void drainRaiseWindowRequests();
 
     // ui stuff
-    MW *mw;
+    UiPorts ui;
     std::unique_ptr<ColdStartWindowController> coldStartWindowController;
 
     State state;
@@ -89,7 +88,6 @@ private:
     bool setDirectory(QString path);
 
     QDrag *mDrag;
-    std::unique_ptr<QTranslator> translator;
 
     Randomizer randomizer;
     void syncRandomizer();
@@ -154,13 +152,13 @@ private slots:
     void onFileModified(QString filePath);
     void showResizeDialog();
     void showBatchConverter();
-    void resize(QSize size, ScalingFilter filter, bool useUpscayl = false, QString upscaylModel = "");
+    void resize(const ResizeRequest &request);
     void flipH();
     void flipV();
     void crop(QRect rect);
     void cropAndSave(QRect rect);
     void discardEdits();
-    void applyColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
+    void applyColorAdjustments(const ColorAdjustments &adjustments);
     void toggleCropPanel();
     void toggleFullscreenInfoBar();
     void requestSavePath();

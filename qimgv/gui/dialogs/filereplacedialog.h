@@ -1,29 +1,7 @@
 #pragma once
 #include <QDialog>
 
-struct DialogResult {
-    bool yes = false;
-    bool all = false;
-    bool cancel = false;
-    /*DIALOG_YES,
-    DIALOG_YESTOALL,
-    DIALOG_NO,
-    DIALOG_NOTOALL,
-    DIALOG_CANCEL*/
-    bool operator==(bool const &cmp) const {
-        return yes == cmp;
-    }
-    operator bool() {
-        return yes;
-    }
-};
-
-enum FileReplaceMode {
-    FILE_TO_FILE,
-    DIR_TO_DIR,
-    FILE_TO_DIR,
-    DIR_TO_FILE
-};
+#include "gui/ports/dialogport.h"
 
 class QLabel;
 class QCheckBox;
@@ -38,7 +16,7 @@ public:
 
     void setMode(FileReplaceMode mode);
     void setMulti(bool);
-    DialogResult getResult();
+    FileReplaceDecision getResult();
 
     void setSource(QString src);
     void setDestination(QString dst);
@@ -59,5 +37,5 @@ private:
     QPushButton *cancelButton = nullptr;
 
     bool multi;
-    DialogResult result;
+    FileReplaceDecision result;
 };

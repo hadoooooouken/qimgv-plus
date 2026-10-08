@@ -32,9 +32,14 @@
 #include "gui/panels/croppanel/croppanel.h"
 #include "gui/panels/mainpanel/thumbnailstrip.h"
 #include "gui/panels/sidepanel/sidepanel.h"
+#include "gui/ports/dialogport.h"
+#include "gui/ports/notificationport.h"
+#include "gui/ports/shellport.h"
 #include "gui/viewers/documentwidget.h"
 #include "gui/viewers/viewerwidget.h"
 #include "settings_types.h"
+#include "utils/coloradjustments.h"
+#include <optional>
 
 struct CurrentInfo {
   int index;
@@ -77,10 +82,7 @@ public:
   bool isDocumentRenderingSettled() const;
   void refreshScaling();
 
-  void setCurrentInfo(int fileIndex, int fileCount, QString filePath,
-                      QString fileName, QSize imageSize, qint64 fileSize,
-                      QString format, QString colorProfile, bool slideshow, bool shuffle,
-                      bool edited);
+  void setCurrentInfo(const ShellFileInfo &currentInfo);
   void setExifInfo(QList<QPair<QString, QString>>);
   std::shared_ptr<FolderViewProxy> getFolderView();
   std::shared_ptr<ThumbnailStripProxy> getThumbnailPanel();
@@ -88,8 +90,10 @@ public:
   ViewMode currentViewMode();
 
   bool showConfirmation(QString title, QString msg);
-  DialogResult fileReplaceDialog(QString source, QString target,
-                                 FileReplaceMode mode, bool multiple);
+  FileReplaceDecision fileReplaceDialog(const FileReplaceRequest &request);
+  // std::nullopt when cancelled or when the size was left unchanged.
+  std::optional<ResizeRequest> showResizeDialog(QSize initialSize);
+  void showNotification(const NotificationRequest &request);
 
   void saveWindowGeometry();
   void restoreWindowGeometry();
@@ -172,7 +176,6 @@ signals:
   void copyUrlsRequested(QList<QString>, QString);
   void moveUrlsRequested(QList<QString>, QString);
   void showFoldersChanged(bool);
-  void resizeRequested(QSize, ScalingFilter, bool, QString);
   void clearThumbnailCacheRequested();
   void renameRequested(QString);
   void cropRequested(QRect);
@@ -180,12 +183,11 @@ signals:
   void discardEditsRequested();
   void saveAsClicked();
   void saveRequested();
-  void saveAsRequested(QString);
   void sortingSelected(SortingMode);
   void folderSortingSelected(SortingMode);
   void formatFilterSelected(QStringList);
   void nameFilterSelected(QString);
-  void colorAdjustmentsApplyRequested(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
+  void colorAdjustmentsApplyRequested(ColorAdjustments adjustments);
   void batchRequested();
   void suspendRequested();
 
@@ -214,9 +216,7 @@ public slots:
   void toggleFolderView();
   void enableFolderView();
   void enableDocumentView();
-  void showSaveDialog(QString filePath);
   QString getSaveFileName(QString fileName);
-  void showResizeDialog(QSize initialSize);
   void showSettings();
   void triggerFullScreen();
   void showMessageDirectory(QString dirName);
@@ -267,7 +267,6 @@ public slots:
   void toggleUpscayl();
   void cycleUpscaylModel();
   void toggleHdrToneMapping();
-  void showBatchConverter(const QList<QString> &paths);
   void adaptToWindowState();
 
 };

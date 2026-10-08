@@ -1995,19 +1995,12 @@ void ImageViewerV2::togglePanorama() {
   update();
 }
 
-void ImageViewerV2::setColorAdjustments(float exposure, float contrast,
-                                       float brightness, float temperature,
-                                       float tint, float saturation,
-                                       float hue) {
-  pixmapItem.setColorAdjustments(exposure, contrast, brightness, temperature,
-                                 tint, saturation, hue);
-  pixmapItemScaled.setColorAdjustments(exposure, contrast, brightness, temperature,
-                                       tint, saturation, hue);
-  pixmapItemCrop.setColorAdjustments(exposure, contrast, brightness, temperature,
-                                     tint, saturation, hue);
+void ImageViewerV2::setColorAdjustments(const ColorAdjustments &adjustments) {
+  pixmapItem.setColorAdjustments(adjustments);
+  pixmapItemScaled.setColorAdjustments(adjustments);
+  pixmapItemCrop.setColorAdjustments(adjustments);
   if (panoramaItem) {
-    panoramaItem->setColorAdjustments(exposure, contrast, brightness, temperature,
-                                      tint, saturation, hue);
+    panoramaItem->setColorAdjustments(adjustments);
   }
   updateCasSettings();
 }

@@ -103,16 +103,14 @@ void ColorAdjustmentsOverlay::setupUi()
     // Connections
     connect(resetButton, &QPushButton::clicked, this, &ColorAdjustmentsOverlay::resetAdjustments);
     connect(applyButton, &QPushButton::clicked, this, [this]() {
-        emit applyRequested(exposure(), contrast(), brightness(),
-                            temperature(), tint(), saturation(), hue());
+        emit applyRequested(adjustments());
         resetAdjustments();
     });
     connect(compareButton, &QPushButton::pressed, this, [this]() {
-        emit adjustmentsChanged(0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+        emit adjustmentsChanged(ColorAdjustments{});
     });
     connect(compareButton, &QPushButton::released, this, [this]() {
-        emit adjustmentsChanged(exposure(), contrast(), brightness(),
-                                temperature(), tint(), saturation(), hue());
+        emit adjustmentsChanged(adjustments());
     });
 
     // Double-click reset
@@ -149,6 +147,18 @@ float ColorAdjustmentsOverlay::hue()       const { return m_hueSlider->value(); 
 float ColorAdjustmentsOverlay::exposure()  const { return m_exposureSlider->value()  / 100.0f; }
 float ColorAdjustmentsOverlay::temperature()const { return m_temperatureSlider->value() / 100.0f; }
 float ColorAdjustmentsOverlay::tint()      const { return m_tintSlider->value() / 100.0f; }
+
+ColorAdjustments ColorAdjustmentsOverlay::adjustments() const {
+    ColorAdjustments result;
+    result.exposure = exposure();
+    result.contrast = contrast();
+    result.brightness = brightness();
+    result.temperature = temperature();
+    result.tint = tint();
+    result.saturation = saturation();
+    result.hue = hue();
+    return result;
+}
 
 void ColorAdjustmentsOverlay::show()
 {
@@ -190,7 +200,7 @@ void ColorAdjustmentsOverlay::resetAdjustments()
 
     updateValueLabels();
 
-    emit adjustmentsChanged(0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    emit adjustmentsChanged(ColorAdjustments{});
 }
 
 void ColorAdjustmentsOverlay::onSliderValueChanged()
@@ -206,14 +216,12 @@ void ColorAdjustmentsOverlay::onSliderValueChanged()
                     m_tintSlider->isSliderDown();
 
     if (!dragging) {
-        emit adjustmentsChanged(exposure(), contrast(), brightness(),
-                                temperature(), tint(), saturation(), hue());
+        emit adjustmentsChanged(adjustments());
         m_pendingUpdate = false;
         m_updateTimer->stop();
     } else {
         if (!m_updateTimer->isActive()) {
-            emit adjustmentsChanged(exposure(), contrast(), brightness(),
-                                    temperature(), tint(), saturation(), hue());
+            emit adjustmentsChanged(adjustments());
             m_updateTimer->start();
             m_pendingUpdate = false;
         } else {
@@ -225,8 +233,7 @@ void ColorAdjustmentsOverlay::onSliderValueChanged()
 void ColorAdjustmentsOverlay::onTimerTimeout()
 {
     if (m_pendingUpdate) {
-        emit adjustmentsChanged(exposure(), contrast(), brightness(),
-                                temperature(), tint(), saturation(), hue());
+        emit adjustmentsChanged(adjustments());
         m_pendingUpdate = false;
     }
 }
@@ -234,8 +241,7 @@ void ColorAdjustmentsOverlay::onTimerTimeout()
 void ColorAdjustmentsOverlay::onSliderReleased()
 {
     if (m_pendingUpdate) {
-        emit adjustmentsChanged(exposure(), contrast(), brightness(),
-                                temperature(), tint(), saturation(), hue());
+        emit adjustmentsChanged(adjustments());
         m_pendingUpdate = false;
     }
     m_updateTimer->stop();

@@ -18,9 +18,11 @@
 #include <windows.h>
 
 #include "appservices.h"
+#include "apptranslator.h"
 #include "appversion.h"
 #include "core.h"
 #include "gui/quick/quickuihost.h"
+#include "gui/widgetui/widgetui.h"
 #include "proxystyle.h"
 #include "settings.h"
 #include "utils/cmdoptionsrunner.h"
@@ -241,7 +243,11 @@ int main(int argc, char *argv[]) {
 
     {
       QApplication::setQuitOnLastWindowClosed(false);
-      Core core;
+      // Installed before the widgets are built so that their strings are
+      // translated; destroyed last, after the UI and Core.
+      AppTranslator translator;
+      WidgetUi widgetUi;
+      Core core(widgetUi.ports());
 
       if (server) {
         QLocalServer *localServer = server.get();

@@ -11,11 +11,11 @@
 #include <atomic>
 #include <memory>
 
-#include "gui/dialogs/filereplacedialog.h"
+#include "gui/ports/dialogport.h"
 #include "utils/fileoperations.h"
 
 class DirectoryModel;
-class MW;
+class FileOpController;
 
 // A single copy/move request submitted to FileOpController. paths are the
 // top-level items the person selected (files and/or directories); directory
@@ -59,17 +59,19 @@ public:
     // May be called by pool threads; receivers must use queued connections.
     void reportProgress(FileOpProgress progress);
     void reportFinished(FileOpSummary summary);
+    void reportError(QString message);
 
 signals:
     void progressReported(FileOpProgress progress);
     void operationFinished(FileOpSummary summary);
+    void errorReported(QString message);
 };
 
 // Recursively copies or moves FileOpRequest::paths into destDirectory on a
 // QThreadPool worker thread.
 //
 // GUI-owned state is never touched directly from run(): the file-replace
-// confirmation dialog (MW::fileReplaceDialog()) and the DirectoryModel calls
+// prompt (FileOpController::resolveFileReplace()) and the DirectoryModel calls
 // that also perform DirectoryManager bookkeeping (moveFileTo(), removeDir())
 // are marshalled back onto the GUI thread via QMetaObject::invokeMethod(...,
 // Qt::BlockingQueuedConnection), which blocks this worker thread until they
@@ -81,7 +83,7 @@ class FileOperationTask final : public QRunnable {
 public:
     FileOperationTask(FileOpRequest request,
                       QPointer<DirectoryModel> model,
-                      QPointer<MW> mw,
+                      QPointer<FileOpController> controller,
                       FileOpTaskNotifier &notifier,
                       std::shared_ptr<std::atomic<bool>> cancelled);
 
@@ -89,14 +91,18 @@ public:
 
 private:
     void processCopy(const QString &path, const QString &destDirectory,
-                     DialogResult &overwriteFiles);
+                     FileReplaceDecision &overwriteFiles);
     void processMove(const QString &path, const QString &destDirectory,
-                     DialogResult &overwriteFiles);
+                     FileReplaceDecision &overwriteFiles);
     [[nodiscard]] bool isCancelled() const;
+    // Blocks this worker until the person answers the replace prompt on the
+    // GUI thread.
+    [[nodiscard]] FileReplaceDecision requestReplaceDecision(
+        const FileReplaceRequest &replaceRequest);
 
     FileOpRequest request;
     QPointer<DirectoryModel> model;
-    QPointer<MW> mw;
+    QPointer<FileOpController> controller;
     FileOpTaskNotifier &notifier;
     std::shared_ptr<std::atomic<bool>> cancelled;
     int filesProcessed = 0;

@@ -10,7 +10,7 @@
 #include "fileoptaskrunnable.h"
 
 class DirectoryModel;
-class MW;
+class IDialogPort;
 
 // Runs interactive copy/move requests (Core::interactiveCopy()/
 // interactiveMove()) off the GUI thread via a single-worker QThreadPool, so
@@ -20,24 +20,30 @@ class MW;
 class FileOpController final : public QObject {
     Q_OBJECT
 public:
-    explicit FileOpController(QPointer<DirectoryModel> model, QPointer<MW> mw,
-                              QObject *parent = nullptr);
+    FileOpController(QPointer<DirectoryModel> model, IDialogPort &dialogs,
+                     QObject *parent = nullptr);
     ~FileOpController() override;
 
     void startCopy(QList<QString> paths, QString destDirectory);
     void startMove(QList<QString> paths, QString destDirectory);
+
+    // Asks the person how to resolve a name collision. GUI thread only;
+    // FileOperationTask reaches it through a blocking queued call.
+    [[nodiscard]] FileReplaceDecision resolveFileReplace(const FileReplaceRequest &request);
 
 signals:
     // Emitted after each individual file is copied/moved.
     void progress(FileOpProgress progress);
     // Emitted once per submitted request, when it completes or is cancelled.
     void finished(FileOpSummary summary);
+    // Emitted for each item that could not be copied or moved.
+    void operationFailed(QString message);
 
 private:
     void submit(FileOpRequest request);
 
     QPointer<DirectoryModel> model;
-    QPointer<MW> mw;
+    IDialogPort &dialogs;
     std::unique_ptr<QThreadPool> pool;
     FileOpTaskNotifier notifier;
     // Flipped to true only when FileOpController is destroyed, so any

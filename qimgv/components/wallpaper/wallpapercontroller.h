@@ -11,7 +11,7 @@
 #include <memory>
 #include <atomic>
 
-class MW;
+#include "gui/ports/notificationport.h"
 
 enum class WallpaperApplyError {
     None,
@@ -40,12 +40,15 @@ public:
     explicit WallpaperController(QObject *parent = nullptr);
     ~WallpaperController() override;
 
-    void setWallpaper(std::shared_ptr<const QImage> sourceImage, MW *mw);
+    void setWallpaper(std::shared_ptr<const QImage> sourceImage);
     void cancelActiveTask();
 
 signals:
     void wallpaperApplyFinished(WallpaperApplyResult result);
     void wallpaperFileCleanupFailed(QString path);
+    // Progress and early-failure messages for the person. Always emitted on
+    // the GUI thread.
+    void notificationRequested(NotificationRequest request);
 
 private:
     struct WallpaperRequestState;
@@ -53,6 +56,8 @@ private:
     std::unique_ptr<QThread> m_workerThread;
     std::shared_ptr<WallpaperRequestState> m_activeRequest;
 
+    // Thread-safe: queues notificationRequested() onto this object's thread.
+    void postNotification(const NotificationRequest &request);
     void stopActiveTask(bool reportCleanupFailure);
     bool finalizeRequest(const std::shared_ptr<WallpaperRequestState> &request,
                          bool reportCleanupFailure);

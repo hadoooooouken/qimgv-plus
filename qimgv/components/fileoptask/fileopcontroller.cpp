@@ -2,6 +2,8 @@
 
 #include <utility>
 
+#include "gui/ports/dialogport.h"
+
 namespace {
 // Serializes copy/move requests so a second one queues behind the first
 // instead of racing it on overlapping source/destination trees - mirrors
@@ -9,11 +11,11 @@ namespace {
 constexpr int kFileOpThreadCount = 1;
 } // namespace
 
-FileOpController::FileOpController(QPointer<DirectoryModel> model, QPointer<MW> mw,
+FileOpController::FileOpController(QPointer<DirectoryModel> model, IDialogPort &dialogs,
                                    QObject *parent)
     : QObject(parent),
       model(model),
-      mw(mw),
+      dialogs(dialogs),
       cancelled(std::make_shared<std::atomic<bool>>(false)) {
     pool = std::make_unique<QThreadPool>();
     pool->setMaxThreadCount(kFileOpThreadCount);
@@ -23,6 +25,8 @@ FileOpController::FileOpController(QPointer<DirectoryModel> model, QPointer<MW> 
             &FileOpController::progress, Qt::QueuedConnection);
     connect(&notifier, &FileOpTaskNotifier::operationFinished, this,
             &FileOpController::finished, Qt::QueuedConnection);
+    connect(&notifier, &FileOpTaskNotifier::errorReported, this,
+            &FileOpController::operationFailed, Qt::QueuedConnection);
 }
 
 FileOpController::~FileOpController() {
@@ -46,9 +50,13 @@ void FileOpController::startMove(QList<QString> paths, QString destDirectory) {
     submit(std::move(request));
 }
 
+FileReplaceDecision FileOpController::resolveFileReplace(const FileReplaceRequest &request) {
+    return dialogs.resolveFileReplace(request);
+}
+
 void FileOpController::submit(FileOpRequest request) {
     if (request.paths.isEmpty())
         return;
-    auto *task = new FileOperationTask(std::move(request), model, mw, notifier, cancelled);
+    auto *task = new FileOperationTask(std::move(request), model, this, notifier, cancelled);
     pool->start(task);
 }

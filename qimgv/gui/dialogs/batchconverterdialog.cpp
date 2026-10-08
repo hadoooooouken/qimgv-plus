@@ -1091,13 +1091,15 @@ void BatchConverterDialog::startConversion() {
     job.scalingFilter = filterComboBox->currentData().toInt();
     bool doColor = colorEnableCheckBox->isChecked();
 
-    job.exposure = doColor ? static_cast<float>(exposureWidget->value()) : 0.0f;
-    job.contrast = doColor ? static_cast<float>(contrastWidget->value() / 100.0) : 1.0f;
-    job.brightness = doColor ? static_cast<float>(brightnessWidget->value() / 100.0) : 0.0f;
-    job.saturation = doColor ? static_cast<float>(saturationWidget->value() / 100.0) : 1.0f;
-    job.hue = doColor ? static_cast<float>(hueWidget->value()) : 0.0f;
-    job.temp = doColor ? static_cast<float>(tempWidget->value() / 100.0) : 0.0f;
-    job.tint = doColor ? static_cast<float>(tintWidget->value() / 100.0) : 0.0f;
+    if (doColor) {
+        job.colorAdjustments.exposure = static_cast<float>(exposureWidget->value());
+        job.colorAdjustments.contrast = static_cast<float>(contrastWidget->value() / 100.0);
+        job.colorAdjustments.brightness = static_cast<float>(brightnessWidget->value() / 100.0);
+        job.colorAdjustments.saturation = static_cast<float>(saturationWidget->value() / 100.0);
+        job.colorAdjustments.hue = static_cast<float>(hueWidget->value());
+        job.colorAdjustments.temperature = static_cast<float>(tempWidget->value() / 100.0);
+        job.colorAdjustments.tint = static_cast<float>(tintWidget->value() / 100.0);
+    }
 
     job.pattern = patternEdit->text();
     job.overwrite = overwriteCheckBox->isChecked();

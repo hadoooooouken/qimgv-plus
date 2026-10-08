@@ -52,7 +52,7 @@ public:
     virtual bool isDisplaying() const;
     bool panoramaMode() const { return mPanoramaMode; }
     bool isBusyInteracting() const;
-    void setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
+    void setColorAdjustments(const ColorAdjustments &adjustments);
     void updateCasSettings();
     void onMouseMoveFullscreen();
     void refreshScaling();

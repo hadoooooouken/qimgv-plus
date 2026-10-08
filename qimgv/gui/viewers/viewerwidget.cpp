@@ -17,14 +17,7 @@ ViewerWidget::ViewerWidget(QWidget *parent)
       contextMenu(nullptr),
       currentWidget(UNSET),
       mInteractionEnabled(false),
-      mIsFullscreen(false),
-      mExposure(0.0f),
-      mContrast(1.0f),
-      mBrightness(0.0f),
-      mTemperature(0.0f),
-      mTint(0.0f),
-      mSaturation(1.0f),
-      mHue(0.0f)
+      mIsFullscreen(false)
 {
     setAttribute(Qt::WA_TranslucentBackground, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
@@ -127,13 +120,9 @@ bool ViewerWidget::copyCurrentViewportToClipboard() const {
         return false;
 
     // Apply color adjustments on CPU
-    bool hasAdjustments = (qAbs(mBrightness) > ImageLib::kAdjustEpsilon || qAbs(mContrast - 1.0f) > ImageLib::kAdjustEpsilon || qAbs(mSaturation - 1.0f) > ImageLib::kAdjustEpsilon ||
-                           qAbs(mHue) > ImageLib::kAdjustEpsilon || qAbs(mExposure) > ImageLib::kAdjustEpsilon || qAbs(mTemperature) > ImageLib::kAdjustEpsilon || qAbs(mTint) > ImageLib::kAdjustEpsilon);
-    if (hasAdjustments) {
+    if (mColorAdjustments.hasAdjustments()) {
         QImage adjusted = ImageLib::applyColorAdjustments(
-            std::make_shared<const QImage>(image),
-            mExposure, mContrast, mBrightness, mTemperature, mTint, mSaturation, mHue
-        );
+            std::make_shared<const QImage>(image), mColorAdjustments);
         if (!adjusted.isNull()) {
             image = adjusted;
             image.setDevicePixelRatio(dpr);
@@ -542,16 +531,10 @@ void ViewerWidget::togglePanorama() {
     }
 }
 
-void ViewerWidget::setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
-    mExposure = exposure;
-    mContrast = contrast;
-    mBrightness = brightness;
-    mTemperature = temperature;
-    mTint = tint;
-    mSaturation = saturation;
-    mHue = hue;
+void ViewerWidget::setColorAdjustments(const ColorAdjustments &adjustments) {
+    mColorAdjustments = adjustments;
     if(imageViewer)
-        imageViewer->setColorAdjustments(exposure, contrast, brightness, temperature, tint, saturation, hue);
+        imageViewer->setColorAdjustments(adjustments);
 }
 
 void ViewerWidget::updateCasSettings() {

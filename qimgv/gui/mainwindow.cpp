@@ -8,6 +8,9 @@ namespace {
 constexpr int MIN_WINDOW_WIDTH = 256;
 constexpr int MIN_WINDOW_HEIGHT = 256;
 constexpr int kDefaultMessageDurationMs = 1500;
+constexpr int kErrorMessageDurationMs = 2800;
+constexpr int kDirectoryMessageDurationMs = 1700;
+constexpr int kDirectoryEdgeMessageDurationMs = 600;
 }
 
 
@@ -80,6 +83,15 @@ MW::~MW() {
     if (floatingMessageFolderView) {
         delete floatingMessageFolderView;
     }
+    // docWidget and folderView are Qt children of centralWidget, and
+    // viewerWidget is a Qt child inside docWidget, while the shared_ptr
+    // members below also own them. Drop MW's own references first, so that
+    // destroying centralWidget releases the last references while the
+    // children are still alive and each widget is deleted exactly once.
+    folderView.reset();
+    docWidget.reset();
+    viewerWidget.reset();
+    centralWidget.reset();
 }
 
 /*                                                             |--[ImageViewer]
@@ -418,8 +430,8 @@ void MW::toggleColorAdjustments() {
     if(!colorAdjustmentsOverlay) {
         colorAdjustmentsOverlay = new ColorAdjustmentsOverlayProxy(viewerWidget.get());
         connect(colorAdjustmentsOverlay, &ColorAdjustmentsOverlayProxy::adjustmentsChanged,
-                this, [this](float exp, float c, float b, float temp, float tint, float s, float h) {
-            viewerWidget->setColorAdjustments(exp, c, b, temp, tint, s, h);
+                this, [this](const ColorAdjustments &adjustments) {
+            viewerWidget->setColorAdjustments(adjustments);
         });
         connect(colorAdjustmentsOverlay, &ColorAdjustmentsOverlayProxy::applyRequested,
                 this, &MW::colorAdjustmentsApplyRequested);
@@ -812,12 +824,6 @@ void MW::showDefault() {
     }
 }
 
-void MW::showSaveDialog(QString filePath) {
-    QString newFilePath = getSaveFileName(filePath);
-    if(!newFilePath.isEmpty())
-        emit saveAsRequested(newFilePath);
-}
-
 QString MW::getSaveFileName(QString filePath) {
     docWidget->hideFloatingPanel();
     QStringList filters;
@@ -847,24 +853,24 @@ QString MW::getSaveFileName(QString filePath) {
 }
 
 
-void MW::showResizeDialog(QSize initialSize) {
+std::optional<ResizeRequest> MW::showResizeDialog(QSize initialSize) {
+    std::optional<ResizeRequest> selected;
     ResizeDialog dialog(initialSize, this);
-    connect(&dialog, &ResizeDialog::sizeSelected, this, &MW::resizeRequested);
+    connect(&dialog, &ResizeDialog::sizeSelected, this,
+            [&selected](QSize size, ScalingFilter filter, bool useUpscayl, QString upscaylModel) {
+        selected = ResizeRequest{size, filter, useUpscayl, std::move(upscaylModel)};
+    });
     dialog.exec();
+    return selected;
 }
 
-void MW::showBatchConverter(const QList<QString> &paths) {
-    BatchConverterDialog dialog(paths, this);
-    dialog.exec();
-}
-
-DialogResult MW::fileReplaceDialog(QString src, QString dst, FileReplaceMode mode, bool multiple) {
+FileReplaceDecision MW::fileReplaceDialog(const FileReplaceRequest &request) {
     FileReplaceDialog dialog(this);
     dialog.setModal(true);
-    dialog.setSource(src);
-    dialog.setDestination(dst);
-    dialog.setMode(mode);
-    dialog.setMulti(multiple);
+    dialog.setSource(request.sourcePath);
+    dialog.setDestination(request.targetPath);
+    dialog.setMode(request.mode);
+    dialog.setMulti(request.multiple);
 
     dialog.exec();
 
@@ -1061,18 +1067,18 @@ void MW::closeFullScreenOrExit() {
     }
 }
 
-void MW::setCurrentInfo(int _index, int _fileCount, QString _filePath, QString _fileName, QSize _imageSize, qint64 _fileSize, QString _format, QString _colorProfile, bool slideshow, bool shuffle, bool edited) {
-    info.index = _index;
-    info.fileCount = _fileCount;
-    info.fileName = _fileName;
-    info.filePath = _filePath;
-    info.imageSize = _imageSize;
-    info.fileSize = _fileSize;
-    info.format = _format;
-    info.colorProfile = _colorProfile;
-    info.slideshow = slideshow;
-    info.shuffle = shuffle;
-    info.edited = edited;
+void MW::setCurrentInfo(const ShellFileInfo &currentInfo) {
+    info.index = currentInfo.index;
+    info.fileCount = currentInfo.fileCount;
+    info.fileName = currentInfo.fileName;
+    info.filePath = currentInfo.filePath;
+    info.imageSize = currentInfo.imageSize;
+    info.fileSize = currentInfo.fileSize;
+    info.format = currentInfo.format;
+    info.colorProfile = currentInfo.colorProfile;
+    info.slideshow = currentInfo.slideshow;
+    info.shuffle = currentInfo.shuffle;
+    info.edited = currentInfo.edited;
     onInfoUpdated();
     if(isFullScreen() && showInfoBarFullscreen)
         infoBarFullscreen->showWhenReady();
@@ -1209,16 +1215,56 @@ FloatingMessageProxy *MW::activeFloatingMessage() {
     return floatingMessage;
 }
 
+void MW::showNotification(const NotificationRequest &request) {
+    struct Presentation {
+        FloatingMessageIcon icon;
+        int defaultDurationMs;
+    };
+    QString text = request.text;
+    Presentation presentation{FloatingMessageIcon::ICON_INFO, kDefaultMessageDurationMs};
+    switch(request.kind) {
+        case NotificationKind::Info:
+            break;
+        case NotificationKind::Success:
+            presentation = {FloatingMessageIcon::ICON_SUCCESS, kDefaultMessageDurationMs};
+            break;
+        case NotificationKind::Warning:
+            presentation = {FloatingMessageIcon::ICON_WARNING, kDefaultMessageDurationMs};
+            break;
+        case NotificationKind::Error:
+            presentation = {FloatingMessageIcon::ICON_ERROR, kErrorMessageDurationMs};
+            break;
+        case NotificationKind::AiUpscale:
+            presentation = {FloatingMessageIcon::ICON_AI_UPSCALE, kDefaultMessageDurationMs};
+            break;
+        case NotificationKind::Directory:
+            presentation = {FloatingMessageIcon::ICON_DIRECTORY, kDirectoryMessageDurationMs};
+            break;
+        case NotificationKind::DirectoryStart:
+            if(text.isEmpty())
+                text = tr("Start of directory");
+            presentation = {FloatingMessageIcon::ICON_LEFT_EDGE, kDirectoryEdgeMessageDurationMs};
+            break;
+        case NotificationKind::DirectoryEnd:
+            if(text.isEmpty())
+                text = tr("End of directory");
+            presentation = {FloatingMessageIcon::ICON_RIGHT_EDGE, kDirectoryEdgeMessageDurationMs};
+            break;
+    }
+    activeFloatingMessage()->showMessage(text, presentation.icon,
+                                         request.durationMs.value_or(presentation.defaultDurationMs));
+}
+
 void MW::showMessageDirectory(QString dirName) {
-    activeFloatingMessage()->showMessage(dirName, FloatingMessageIcon::ICON_DIRECTORY, 1700);
+    showNotification({dirName, NotificationKind::Directory, std::nullopt});
 }
 
 void MW::showMessageDirectoryEnd() {
-    activeFloatingMessage()->showMessage(tr("End of directory"), FloatingMessageIcon::ICON_RIGHT_EDGE, 600);
+    showNotification({QString(), NotificationKind::DirectoryEnd, std::nullopt});
 }
 
 void MW::showMessageDirectoryStart() {
-    activeFloatingMessage()->showMessage(tr("Start of directory"), FloatingMessageIcon::ICON_LEFT_EDGE, 600);
+    showNotification({QString(), NotificationKind::DirectoryStart, std::nullopt});
 }
 
 void MW::showMessage(QString text) {
@@ -1255,7 +1301,7 @@ void MW::showWarning(QString text) {
 }
 
 void MW::showError(QString text) {
-    activeFloatingMessage()->showMessage(text,  FloatingMessageIcon::ICON_ERROR, 2800);
+    activeFloatingMessage()->showMessage(text,  FloatingMessageIcon::ICON_ERROR, kErrorMessageDurationMs);
 }
 
 bool MW::showConfirmation(QString title, QString msg) {

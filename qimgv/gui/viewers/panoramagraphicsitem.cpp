@@ -56,15 +56,9 @@ void PanoramaGraphicsItem::setViewParameters(float yaw, float pitch, float fov)
     update();
 }
 
-void PanoramaGraphicsItem::setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue)
+void PanoramaGraphicsItem::setColorAdjustments(const ColorAdjustments &adjustments)
 {
-    mExposure = exposure;
-    mContrast = contrast;
-    mBrightness = brightness;
-    mTemperature = temperature;
-    mTint = tint;
-    mSaturation = saturation;
-    mHue = hue;
+    mColorAdjustments = adjustments;
     update();
 }
 
@@ -180,7 +174,7 @@ void PanoramaGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsIt
     mProgram->setUniformValue("fov", fovRad);
     mProgram->setUniformValue("aspect", aspect);
 
-    ColorMatrix cm = ImageLib::getColorAdjustmentMatrix(mExposure, mContrast, mBrightness, mTemperature, mTint, mSaturation, mHue);
+    ColorMatrix cm = ImageLib::getColorAdjustmentMatrix(mColorAdjustments);
     float cmData[9] = {
         cm.m[0][0], cm.m[0][1], cm.m[0][2],
         cm.m[1][0], cm.m[1][1], cm.m[1][2],

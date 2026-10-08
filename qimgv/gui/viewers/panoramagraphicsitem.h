@@ -7,6 +7,7 @@
 #include <memory>
 #include <QVector2D>
 #include <QVector3D>
+#include "utils/coloradjustments.h"
 
 class PanoramaGraphicsItem : public QGraphicsObject, protected QOpenGLFunctions
 {
@@ -18,7 +19,7 @@ public:
     void setImage(std::shared_ptr<const QImage> image);
     
     void setViewParameters(float yaw, float pitch, float fov);
-    void setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
+    void setColorAdjustments(const ColorAdjustments &adjustments);
     
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -42,11 +43,5 @@ private:
     float mPitch = 0.0f;
     float mFov = 90.0f;
 
-    float mExposure = 0.0f;
-    float mContrast = 1.0f;
-    float mBrightness = 0.0f;
-    float mTemperature = 0.0f;
-    float mTint = 0.0f;
-    float mSaturation = 1.0f;
-    float mHue = 0.0f;
+    ColorAdjustments mColorAdjustments;
 };

@@ -6,7 +6,7 @@
 #include <utility>
 
 #include "components/directorymodel.h"
-#include "gui/mainwindow.h"
+#include "components/fileoptask/fileopcontroller.h"
 
 namespace {
 
@@ -55,14 +55,18 @@ void FileOpTaskNotifier::reportFinished(FileOpSummary summary) {
     emit operationFinished(std::move(summary));
 }
 
+void FileOpTaskNotifier::reportError(QString message) {
+    emit errorReported(std::move(message));
+}
+
 FileOperationTask::FileOperationTask(FileOpRequest request,
                                      QPointer<DirectoryModel> model,
-                                     QPointer<MW> mw,
+                                     QPointer<FileOpController> controller,
                                      FileOpTaskNotifier &notifier,
                                      std::shared_ptr<std::atomic<bool>> cancelled)
     : request(std::move(request)),
       model(model),
-      mw(mw),
+      controller(controller),
       notifier(notifier),
       cancelled(std::move(cancelled)) {
     setAutoDelete(true);
@@ -72,8 +76,23 @@ bool FileOperationTask::isCancelled() const {
     return cancelled && cancelled->load();
 }
 
+FileReplaceDecision FileOperationTask::requestReplaceDecision(
+    const FileReplaceRequest &replaceRequest) {
+    FileReplaceDecision decision;
+    if (!controller) {
+        qWarning() << "File operation controller is gone; skipping"
+                   << replaceRequest.targetPath;
+        return decision;
+    }
+    QMetaObject::invokeMethod(controller, [controllerPtr = controller, replaceRequest, &decision]() {
+        if (controllerPtr)
+            decision = controllerPtr->resolveFileReplace(replaceRequest);
+    }, Qt::BlockingQueuedConnection);
+    return decision;
+}
+
 void FileOperationTask::run() {
-    DialogResult overwriteFiles;
+    FileReplaceDecision overwriteFiles;
     for (const auto &path : std::as_const(request.paths)) {
         if (isCancelled())
             break;
@@ -93,24 +112,19 @@ void FileOperationTask::run() {
 }
 
 // SINGLE FILE / DIR COPY, recursive.
-// Direct port of the former Core::doInteractiveCopy(); only the calls that
-// touch GUI-owned objects (fileReplaceDialog(), showError()) are wrapped to
-// run on the GUI thread instead of this worker thread.
+// Direct port of the former Core::doInteractiveCopy(); the file-replace
+// prompt runs on the GUI thread through FileOpController, and errors are
+// reported through FileOpTaskNotifier instead of from this worker thread.
 void FileOperationTask::processCopy(const QString &path, const QString &destDirectory,
-                                    DialogResult &overwriteFiles) {
+                                    FileReplaceDecision &overwriteFiles) {
     if (isCancelled())
         return;
 
     QFileInfo srcFi(path);
     if (srcFi.isDir() && isDestinationInsideSource(path, destDirectory)) {
-        if (mw) {
-            QMetaObject::invokeMethod(mw, [mwPtr = mw]() {
-                if (mwPtr)
-                    mwPtr->showError(QCoreApplication::translate(
-                        "FileOperationTask",
-                        "Cannot copy a directory into itself or a subdirectory of itself."));
-            }, Qt::QueuedConnection);
-        }
+        notifier.reportError(QCoreApplication::translate(
+            "FileOperationTask",
+            "Cannot copy a directory into itself or a subdirectory of itself."));
         return;
     }
     // SINGLE FILE COPY
@@ -121,15 +135,10 @@ void FileOperationTask::processCopy(const QString &path, const QString &destDire
         if (result == FileOpResult::DESTINATION_FILE_EXISTS) {
             if (overwriteFiles.all) // skipping all
                 return;
-            DialogResult dialogResult;
+            FileReplaceDecision dialogResult;
             QString srcPath = srcFi.absoluteFilePath();
             QString dstPath = destDirectory + "/" + srcFi.fileName();
-            if (mw) {
-                QMetaObject::invokeMethod(mw, [mwPtr = mw, srcPath, dstPath, &dialogResult]() {
-                    if (mwPtr)
-                        dialogResult = mwPtr->fileReplaceDialog(srcPath, dstPath, FILE_TO_FILE, true);
-                }, Qt::BlockingQueuedConnection);
-            }
+            dialogResult = requestReplaceDecision({srcPath, dstPath, FILE_TO_FILE, true});
             overwriteFiles = dialogResult;
             if (!overwriteFiles || overwriteFiles.cancel)
                 return;
@@ -138,12 +147,7 @@ void FileOperationTask::processCopy(const QString &path, const QString &destDire
         if (result != FileOpResult::SUCCESS &&
             !(result == FileOpResult::DESTINATION_FILE_EXISTS && !overwriteFiles)) {
             QString errorText = FileOperations::decodeResult(result);
-            if (mw) {
-                QMetaObject::invokeMethod(mw, [mwPtr = mw, errorText]() {
-                    if (mwPtr)
-                        mwPtr->showError(errorText);
-                }, Qt::QueuedConnection);
-            }
+            notifier.reportError(errorText);
             qDebug() << errorText;
         }
         if (result == FileOpResult::SUCCESS) {
@@ -161,15 +165,10 @@ void FileOperationTask::processCopy(const QString &path, const QString &destDire
     QDir dstDir(dstFi.absoluteFilePath());
     if (dstFi.exists() && !dstFi.isDir()) { // overwriting file with a folder
         if (!overwriteFiles && !overwriteFiles.all) {
-            DialogResult dialogResult;
+            FileReplaceDecision dialogResult;
             QString srcPath = srcFi.absoluteFilePath();
             QString dstPath = dstFi.absoluteFilePath();
-            if (mw) {
-                QMetaObject::invokeMethod(mw, [mwPtr = mw, srcPath, dstPath, &dialogResult]() {
-                    if (mwPtr)
-                        dialogResult = mwPtr->fileReplaceDialog(srcPath, dstPath, DIR_TO_FILE, true);
-                }, Qt::BlockingQueuedConnection);
-            }
+            dialogResult = requestReplaceDecision({srcPath, dstPath, DIR_TO_FILE, true});
             overwriteFiles = dialogResult;
             if (!overwriteFiles || overwriteFiles.cancel)
                 return;
@@ -181,24 +180,14 @@ void FileOperationTask::processCopy(const QString &path, const QString &destDire
         FileOperations::removeFile(dstFi.absoluteFilePath(), result);
         if (result != FileOpResult::SUCCESS) {
             QString errorText = FileOperations::decodeResult(result);
-            if (mw) {
-                QMetaObject::invokeMethod(mw, [mwPtr = mw, errorText]() {
-                    if (mwPtr)
-                        mwPtr->showError(errorText);
-                }, Qt::QueuedConnection);
-            }
+            notifier.reportError(errorText);
             qDebug() << errorText;
             return;
         }
     } else if (!dstDir.mkpath(".")) {
         QString dirPath = dstDir.absolutePath();
-        if (mw) {
-            QMetaObject::invokeMethod(mw, [mwPtr = mw, dirPath]() {
-                if (mwPtr)
-                    mwPtr->showError(QCoreApplication::translate(
-                        "FileOperationTask", "Could not create directory ") + dirPath);
-            }, Qt::QueuedConnection);
-        }
+        notifier.reportError(QCoreApplication::translate(
+            "FileOperationTask", "Could not create directory ") + dirPath);
         qDebug() << "Could not create directory " << dirPath;
         return;
     }
@@ -216,26 +205,21 @@ void FileOperationTask::processCopy(const QString &path, const QString &destDire
 }
 
 // SINGLE FILE / DIR MOVE, recursive.
-// Direct port of the former Core::doInteractiveMove(). In addition to
-// fileReplaceDialog()/showError(), model->moveFileTo() and model->removeDir()
+// Direct port of the former Core::doInteractiveMove(). In addition to the
+// file-replace prompt, model->moveFileTo() and model->removeDir()
 // both also mutate DirectoryManager bookkeeping (see DirectoryModel::
 // moveFileTo()'s "chew through watcher events" comment) and so are wrapped
 // the same way as the dialog calls, not left to run on this worker thread.
 void FileOperationTask::processMove(const QString &path, const QString &destDirectory,
-                                    DialogResult &overwriteFiles) {
+                                    FileReplaceDecision &overwriteFiles) {
     if (isCancelled())
         return;
 
     QFileInfo srcFi(path);
     if (srcFi.isDir() && isDestinationInsideSource(path, destDirectory)) {
-        if (mw) {
-            QMetaObject::invokeMethod(mw, [mwPtr = mw]() {
-                if (mwPtr)
-                    mwPtr->showError(QCoreApplication::translate(
-                        "FileOperationTask",
-                        "Cannot move a directory into itself or a subdirectory of itself."));
-            }, Qt::QueuedConnection);
-        }
+        notifier.reportError(QCoreApplication::translate(
+            "FileOperationTask",
+            "Cannot move a directory into itself or a subdirectory of itself."));
         return;
     }
     // SINGLE FILE MOVE
@@ -252,15 +236,10 @@ void FileOperationTask::processMove(const QString &path, const QString &destDire
         if (result == FileOpResult::DESTINATION_FILE_EXISTS) {
             if (overwriteFiles.all) // skipping all
                 return;
-            DialogResult dialogResult;
+            FileReplaceDecision dialogResult;
             QString srcPath = srcFi.absoluteFilePath();
             QString dstPath = destDirectory + "/" + srcFi.fileName();
-            if (mw) {
-                QMetaObject::invokeMethod(mw, [mwPtr = mw, srcPath, dstPath, &dialogResult]() {
-                    if (mwPtr)
-                        dialogResult = mwPtr->fileReplaceDialog(srcPath, dstPath, FILE_TO_FILE, true);
-                }, Qt::BlockingQueuedConnection);
-            }
+            dialogResult = requestReplaceDecision({srcPath, dstPath, FILE_TO_FILE, true});
             overwriteFiles = dialogResult;
             if (!overwriteFiles || overwriteFiles.cancel)
                 return;
@@ -274,12 +253,7 @@ void FileOperationTask::processMove(const QString &path, const QString &destDire
         if (result != FileOpResult::SUCCESS &&
             !(result == FileOpResult::DESTINATION_FILE_EXISTS && !overwriteFiles)) {
             QString errorText = FileOperations::decodeResult(result);
-            if (mw) {
-                QMetaObject::invokeMethod(mw, [mwPtr = mw, errorText]() {
-                    if (mwPtr)
-                        mwPtr->showError(errorText);
-                }, Qt::QueuedConnection);
-            }
+            notifier.reportError(errorText);
             qDebug() << errorText;
         }
         if (result == FileOpResult::SUCCESS) {
@@ -297,15 +271,10 @@ void FileOperationTask::processMove(const QString &path, const QString &destDire
     QDir dstDir(dstFi.absoluteFilePath());
     if (dstFi.exists() && !dstFi.isDir()) { // overwriting file with a folder
         if (!overwriteFiles && !overwriteFiles.all) {
-            DialogResult dialogResult;
+            FileReplaceDecision dialogResult;
             QString srcPath = srcFi.absoluteFilePath();
             QString dstPath = dstFi.absoluteFilePath();
-            if (mw) {
-                QMetaObject::invokeMethod(mw, [mwPtr = mw, srcPath, dstPath, &dialogResult]() {
-                    if (mwPtr)
-                        dialogResult = mwPtr->fileReplaceDialog(srcPath, dstPath, DIR_TO_FILE, true);
-                }, Qt::BlockingQueuedConnection);
-            }
+            dialogResult = requestReplaceDecision({srcPath, dstPath, DIR_TO_FILE, true});
             overwriteFiles = dialogResult;
             if (!overwriteFiles || overwriteFiles.cancel)
                 return;
@@ -317,24 +286,14 @@ void FileOperationTask::processMove(const QString &path, const QString &destDire
         FileOperations::removeFile(dstFi.absoluteFilePath(), result);
         if (result != FileOpResult::SUCCESS) {
             QString errorText = FileOperations::decodeResult(result);
-            if (mw) {
-                QMetaObject::invokeMethod(mw, [mwPtr = mw, errorText]() {
-                    if (mwPtr)
-                        mwPtr->showError(errorText);
-                }, Qt::QueuedConnection);
-            }
+            notifier.reportError(errorText);
             qDebug() << errorText;
             return;
         }
     } else if (!dstDir.mkpath(".")) {
         QString dirPath = dstDir.absolutePath();
-        if (mw) {
-            QMetaObject::invokeMethod(mw, [mwPtr = mw, dirPath]() {
-                if (mwPtr)
-                    mwPtr->showError(QCoreApplication::translate(
-                        "FileOperationTask", "Could not create directory ") + dirPath);
-            }, Qt::QueuedConnection);
-        }
+        notifier.reportError(QCoreApplication::translate(
+            "FileOperationTask", "Could not create directory ") + dirPath);
         qDebug() << "Could not create directory " << dirPath;
         return;
     }
@@ -366,12 +325,7 @@ void FileOperationTask::processMove(const QString &path, const QString &destDire
     }
     if (dirRmRes != FileOpResult::SUCCESS) {
         QString errorText = FileOperations::decodeResult(dirRmRes);
-        if (mw) {
-            QMetaObject::invokeMethod(mw, [mwPtr = mw, errorText]() {
-                if (mwPtr)
-                    mwPtr->showError(errorText);
-            }, Qt::QueuedConnection);
-        }
+        notifier.reportError(errorText);
         qDebug() << errorText;
     }
 }

@@ -84,7 +84,8 @@ main.cpp
      ├─ AppServices (owns singletons via std::unique_ptr, replaces cleanupSingletons)
      ├─ Core (mediator, unchanged responsibilities; talks to UI ports only)
      ├─ UI ports (pure C++ interfaces, implemented twice during transition):
-     │    INotificationPort, IDialogPort, IViewerPort, IViewModePort
+     │    INotificationPort, IDialogPort, IViewerPort, IShellPort,
+     │    IWindowPort, IViewModePort (outbound) + UiEvents (inbound signals)
      ├─ Widgets UI (legacy, until S4.2)        ─┐
      └─ Quick UI (QQmlApplicationEngine)        ─┴─ selected at startup
           ├─ QML module  qimgv.ui       (QML_ELEMENT C++ types + .qml files)
@@ -221,29 +222,80 @@ functionality as required by `AGENTS.md`.
 - **Goal:** `Core` no longer includes or names any widget class.
 - **Owner:** `Core` keeps its responsibilities; new interfaces live in
   `gui/ports/` (header-only, no Qt Widgets includes).
-- **Scope:**
-  - `INotificationPort`: `showMessage`, `showSuccess`, `showWarning`,
-    `showError`, `hideMessage`, directory start/end messages, AI-upscale
-    message. Parameters grouped into a `NotificationRequest` struct
-    (text, kind, duration).
-  - `IDialogPort`: confirmation, file replace, save path, resize request,
-    rename, batch converter, settings, print. Returns results through
-    value objects (`ConfirmationResult`, `FileReplaceDecision`, ...).
-  - `IViewerPort`: `showImage`, `showAnimation`, `closeImage`, scaling
-    result delivery, upscaled crop, `visibleOriginalImageRect`,
-    `currentScale`, `isBusyInteracting`, `isRenderingSettled`,
-    `panoramaMode`.
-  - `IViewModePort` plus a new `ViewModeController` (`QObject`) that
-    **owns** document/folder mode state, so `Core` stops querying the window
-    (24 call sites).
-  - `MW` implements the ports by delegation. `Core` receives the ports by
-    reference/`QPointer` instead of `MW *`.
-  - Replace the 7-float colour adjustment signatures with a
-    `ColorAdjustments` struct across `Core`, `MW`, `ViewerWidget`,
-    `ImageViewerV2`, `FilterPixmapItem`, `PanoramaGraphicsItem`.
-- **Acceptance:** `core.h` has no `gui/` include except the port headers;
-  `ColdStartWindowController` depends on ports, not `MW`; behaviour
-  unchanged.
+- **Split:** the stage is too large for one reviewable unit, so it is
+  organised as sub-stages S0.3a–S0.3e. They are delivered together in one
+  commit; each sub-stage below states its own scope.
+- **Acceptance (whole stage):** `core.h` has no `gui/` include except the
+  port headers; `ColdStartWindowController` depends on ports, not `MW`;
+  no component under `components/` names `MW`; behaviour unchanged.
+
+##### S0.3a `ColorAdjustments` value type
+- `utils/coloradjustments.h` replaces the 7-float colour adjustment
+  signatures across `Core`, `MW`, `ViewerWidget`, `ImageViewerV2`,
+  `FilterPixmapItem`, `PanoramaGraphicsItem`, the colour adjustments
+  overlay, `ImageLib::applyColorAdjustments()`/`getColorAdjustmentMatrix()`
+  and `BatchConversionJob`. `hasAdjustments()` replaces the four
+  duplicated epsilon checks.
+
+##### S0.3b `INotificationPort`
+- `showNotification(NotificationRequest)` (text, kind, optional duration)
+  plus `hideNotifications()`; convenience helpers (`showMessage`,
+  `showSuccess`, `showWarning`, `showError`, `showAiUpscale`,
+  `showDirectory`, `showDirectoryStart/End`) are non-virtual.
+- Components no longer reach the window from worker threads:
+  `WallpaperController` emits `notificationRequested()` on the GUI
+  thread; `FileOperationTask` reports errors through `FileOpTaskNotifier`
+  and `FileOpController::operationFailed()`. `Core` forwards both to the
+  port.
+
+##### S0.3c `IDialogPort`
+- Modal dialogs with value-object results: `confirm` →
+  `ConfirmationResult`, `resolveFileReplace` → `FileReplaceDecision`
+  (formerly `DialogResult`), `requestSavePath` → `SavePathResult`,
+  `requestResize` → `std::optional<ResizeRequest>`, `requestText` →
+  `TextInputResult` (create folder), `runBatchConverter` →
+  `BatchConversionResult`, `print(PrintRequest)`.
+- `FileOperationTask` asks `FileOpController::resolveFileReplace()`
+  through a blocking queued call; the controller owns the `IDialogPort`
+  reference.
+- Settings stays a UI-internal action (the UI host routes
+  `openSettings`); the rename prompt is non-modal and lives on
+  `IShellPort`.
+
+##### S0.3d `IViewerPort`, `IShellPort`, `IWindowPort`, `IViewModePort`
+- `IViewerPort`: displayed image/animation, scaled image and upscaled
+  crop delivery, view queries (`visibleOriginalImageRect`,
+  `currentScale`, `devicePixelRatio`, `isBusyInteracting`,
+  `isRenderingSettled`, `panoramaMode`).
+- `IShellPort` (added; not in the original stage text): directory path,
+  `ShellFileInfo` (replaces the 11-argument `setCurrentInfo`), metadata,
+  sorting notifications, folder tree refresh, save overlay, crop panel,
+  fullscreen info bar, rename prompt.
+- `IWindowPort` (added): show/hide, visibility, conceal/reveal (opacity),
+  raise/activate, native handle, geometry save, update suspension. Used by
+  `Core::raiseWindow()`/standby and `ColdStartWindowController`.
+- `IViewModePort` is implemented by the new `ViewModeController`
+  (`components/viewmode/`), which owns the document/folder mode;
+  `viewModeApplied()` drives the widget UI. Covered by `qimgv_tests`.
+- `UiEvents` (`gui/ports/uievents.h`) is the inbound side: the user
+  intents and readiness signals (`documentRenderingSettled`,
+  `visibleThumbnailsReady`, `filesystemViewReady`) `Core` and
+  `ColdStartWindowController` connect to.
+
+##### S0.3e Widget UI composition root
+- `WidgetUi` (`gui/widgetui/`) owns `MW` (`std::unique_ptr`), the
+  `ViewModeController`, `UiEvents` and the port adapters
+  (`widgetportadapters.*`), forwards `MW` signals into `UiEvents` and
+  connects the window-only `ActionManager` actions (zoom, fit, scroll,
+  fullscreen, overlays, settings).
+- `Core(const UiPorts &)` receives the ports and the two `IDirectoryView`
+  views grouped in `UiPorts`; `main.cpp` builds `AppTranslator` →
+  `WidgetUi` → `Core`. Translation loading moved out of `Core` into
+  `AppTranslator` so it still precedes widget construction.
+- `MW` is now destroyed at exit. This exposed a latent teardown bug in
+  `MainPanel` (member order let `~QWidget` delete a non-heap layout) and
+  required an explicit release order of the shared widget pointers in
+  `~MW`.
 
 #### S0.4 Extract view-transform math from `ImageViewerV2`
 - **Goal:** a UI-independent, unit-tested model of zoom/pan/fit that both

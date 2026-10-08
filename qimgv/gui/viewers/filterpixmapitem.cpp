@@ -76,14 +76,8 @@ QRectF FilterPixmapItem::boundingRect() const {
     return QRectF(mOffset, QSizeF(mImage.width() / dpr, mImage.height() / dpr));
 }
 
-void FilterPixmapItem::setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
-    mExposure = exposure;
-    mContrast = contrast;
-    mBrightness = brightness;
-    mTemperature = temperature;
-    mTint = tint;
-    mSaturation = saturation;
-    mHue = hue;
+void FilterPixmapItem::setColorAdjustments(const ColorAdjustments &adjustments) {
+    mColorAdjustments = adjustments;
     update();
 }
 
@@ -381,8 +375,7 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     };
 
     // 1. Fallback to default paint if there are no adjustments
-    if (qAbs(mBrightness) < ImageLib::kAdjustEpsilon && qAbs(mContrast - 1.0f) < ImageLib::kAdjustEpsilon && qAbs(mSaturation - 1.0f) < ImageLib::kAdjustEpsilon && qAbs(mHue) < ImageLib::kAdjustEpsilon &&
-        qAbs(mExposure) < ImageLib::kAdjustEpsilon && qAbs(mTemperature) < ImageLib::kAdjustEpsilon && qAbs(mTint) < ImageLib::kAdjustEpsilon &&
+    if (!mColorAdjustments.hasAdjustments() &&
         activeCasSharpening < ImageLib::kAdjustEpsilon && !activeSmartGpu) {
         // releaseGlResources(false); Avoid releasing GL texture on every no-effects paint call to prevent recreate thrashing near 1:1 zoom
         fallbackPaint(painter);
@@ -562,7 +555,7 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     mProgram->setUniformValue("matrix", matrix);
     mProgram->setUniformValue("tex", 0);
-    ColorMatrix cm = ImageLib::getColorAdjustmentMatrix(mExposure, mContrast, mBrightness, mTemperature, mTint, mSaturation, mHue);
+    ColorMatrix cm = ImageLib::getColorAdjustmentMatrix(mColorAdjustments);
     float cmData[9] = {
         cm.m[0][0], cm.m[0][1], cm.m[0][2],
         cm.m[1][0], cm.m[1][1], cm.m[1][2],

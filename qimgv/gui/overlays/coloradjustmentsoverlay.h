@@ -1,6 +1,7 @@
 #pragma once
 
 #include "draggableslideroverlay.h"
+#include "utils/coloradjustments.h"
 
 class QSlider;
 class QLabel;
@@ -20,12 +21,11 @@ public:
     float exposure() const;
     float temperature() const;
     float tint() const;
+    ColorAdjustments adjustments() const;
 
 signals:
-    void adjustmentsChanged(float exposure, float contrast, float brightness,
-                            float temperature, float tint, float saturation, float hue);
-    void applyRequested(float exposure, float contrast, float brightness,
-                        float temperature, float tint, float saturation, float hue);
+    void adjustmentsChanged(const ColorAdjustments &adjustments);
+    void applyRequested(const ColorAdjustments &adjustments);
 
 public slots:
     void show();

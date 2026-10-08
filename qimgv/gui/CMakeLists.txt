@@ -8,6 +8,18 @@ target_sources(qimgv-plus PRIVATE
 
     controllers/coldstartwindowcontroller.cpp
 
+    ports/dialogport.h
+    ports/notificationport.h
+    ports/shellport.h
+    ports/uievents.h
+    ports/uiports.h
+    ports/viewerport.h
+    ports/viewmodeport.h
+    ports/windowport.h
+
+    widgetui/widgetportadapters.cpp
+    widgetui/widgetui.cpp
+
     customwidgets/actionbutton.cpp
     customwidgets/clickablelabel.cpp
     customwidgets/contextmenuitem.cpp

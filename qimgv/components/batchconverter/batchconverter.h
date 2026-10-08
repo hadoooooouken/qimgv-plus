@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <memory>
 
+#include "utils/coloradjustments.h"
+
 enum class AspectFitMode : uint8_t {
     Auto,   // Fit into the target box, constrained by whichever side is tighter (per file).
     Width,  // Scale is derived from the target width only; height follows proportionally.
@@ -39,13 +41,7 @@ struct BatchJob {
     RotationAngle rotation = RotationAngle::Rotate0;
     bool flipHorizontal = false;
     bool flipVertical = false;
-    float exposure = 0.0f;
-    float contrast = 1.0f;
-    float brightness = 0.0f;
-    float temp = 0.0f;
-    float tint = 0.0f;
-    float saturation = 1.0f;
-    float hue = 0.0f;
+    ColorAdjustments colorAdjustments;
     QString pattern;
     bool overwrite = false;
     QString outputDir;

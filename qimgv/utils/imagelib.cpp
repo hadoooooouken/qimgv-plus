@@ -1251,7 +1251,15 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
   return destImg;
 }
 
-ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
+ColorMatrix ImageLib::getColorAdjustmentMatrix(const ColorAdjustments &adjustments) {
+  const float exposure = adjustments.exposure;
+  const float contrast = adjustments.contrast;
+  const float brightness = adjustments.brightness;
+  const float temperature = adjustments.temperature;
+  const float tint = adjustments.tint;
+  const float saturation = adjustments.saturation;
+  const float hue = adjustments.hue;
+
   // Helper to multiply A and B (3x3 matrices), storing result in C
   auto multiply = [](const float A[3][3], const float B[3][3], float C[3][3]) {
     for (int i = 0; i < 3; ++i) {
@@ -1325,12 +1333,12 @@ ColorMatrix ImageLib::getColorAdjustmentMatrix(float exposure, float contrast, f
   return result;
 }
 
-QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
+QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, const ColorAdjustments &adjustments) {
   if (!source)
     return QImage();
 
   QImage dst = source->convertToFormat(QImage::Format_ARGB32);
-  ColorMatrix cm = getColorAdjustmentMatrix(exposure, contrast, brightness, temperature, tint, saturation, hue);
+  ColorMatrix cm = getColorAdjustmentMatrix(adjustments);
 
   int height = dst.height();
   int width = dst.width();

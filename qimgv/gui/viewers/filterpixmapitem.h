@@ -7,6 +7,7 @@
 #include <QImage>
 #include <memory>
 #include "settings_types.h"
+#include "utils/coloradjustments.h"
 
 class QOpenGLFramebufferObject;
 
@@ -25,7 +26,7 @@ public:
     void setTransformationMode(Qt::TransformationMode mode);
     Qt::TransformationMode transformationMode() const { return mTransformationMode; }
 
-    void setColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
+    void setColorAdjustments(const ColorAdjustments &adjustments);
     void setCasSettings(float sharpening, float contrast);
     void setScalingFilter(ScalingFilter filter);
 
@@ -51,13 +52,7 @@ private:
 
     bool mSettled = false;
 
-    float mExposure = 0.0f;    // -3.0f to 3.0f
-    float mContrast = 1.0f;   // 0.0f to 3.0f
-    float mBrightness = 0.0f; // -1.0f to 1.0f
-    float mTemperature = 0.0f; // -0.5f to 0.5f
-    float mTint = 0.0f;        // -0.5f to 0.5f
-    float mSaturation = 1.0f; // 0.0f to 2.0f
-    float mHue = 0.0f;        // -180.0f to 180.0f (degrees)
+    ColorAdjustments mColorAdjustments;
     float mCasSharpening = 0.0f;
     float mCasContrast = 0.0f;
     ScalingFilter mScalingFilter = QI_FILTER_BILINEAR;

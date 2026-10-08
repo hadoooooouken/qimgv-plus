@@ -1,23 +1,28 @@
 #include "coldstartwindowcontroller.h"
 
-#include "gui/folderview/folderviewproxy.h"
-#include "gui/mainwindow.h"
+#include "gui/ports/uievents.h"
+#include "gui/ports/viewerport.h"
+#include "gui/ports/viewmodeport.h"
+#include "gui/ports/windowport.h"
 
 #include <QDebug>
 
 ColdStartWindowController::ColdStartWindowController(
-    MW &window, FolderViewProxy &folderView)
-    : window(&window) {
+    IWindowPort &window, IViewModePort &viewMode, IViewerPort &viewer,
+    UiEvents &events)
+    : window(window),
+      viewMode(viewMode),
+      viewer(viewer) {
     maximumWaitTimer.setSingleShot(true);
     maximumWaitTimer.setInterval(kFolderViewReadinessTimeoutMs);
     documentReadyFallbackTimer.setSingleShot(true);
     documentReadyFallbackTimer.setInterval(kDocumentReadyFallbackMs);
 
-    connect(&folderView, &FolderViewProxy::visibleThumbnailsReady,
+    connect(&events, &UiEvents::visibleThumbnailsReady,
             this, &ColdStartWindowController::onVisibleThumbnailsReady);
-    connect(&folderView, &FolderViewProxy::filesystemViewReady,
+    connect(&events, &UiEvents::filesystemViewReady,
             this, &ColdStartWindowController::onFilesystemViewReady);
-    connect(&window, &MW::documentRenderingSettled,
+    connect(&events, &UiEvents::documentRenderingSettled,
             this, &ColdStartWindowController::onDocumentRenderingSettled);
     connect(&documentReadyFallbackTimer, &QTimer::timeout, this, [this]() {
         if(state != State::WaitingForDocumentLayout)
@@ -36,22 +41,16 @@ ColdStartWindowController::ColdStartWindowController(
 }
 
 void ColdStartWindowController::show() {
-    if(!window) {
-        qWarning() << "Cannot show the application window: the window was"
-                      " destroyed";
-        return;
-    }
-
     if(state == State::WaitingForFolderView) {
-        if(window->currentViewMode() != MODE_FOLDERVIEW)
+        if(viewMode.currentViewMode() != MODE_FOLDERVIEW)
             waitForDocumentLayout();
         return;
     }
 
     if(state == State::WaitingForDocumentLayout) {
-        if(window->currentViewMode() == MODE_FOLDERVIEW)
+        if(viewMode.currentViewMode() == MODE_FOLDERVIEW)
             waitForFolderView();
-        else if(window->isDocumentRenderingSettled())
+        else if(viewer.isRenderingSettled())
             onDocumentRenderingSettled();
         else
             documentReadyFallbackTimer.start();
@@ -59,19 +58,19 @@ void ColdStartWindowController::show() {
     }
 
     if(state == State::RevealScheduled) {
-        if(window->currentViewMode() != MODE_FOLDERVIEW &&
-           !window->isDocumentRenderingSettled())
+        if(viewMode.currentViewMode() != MODE_FOLDERVIEW &&
+           !viewer.isRenderingSettled())
             waitForDocumentLayout();
         return;
     }
 
-    if(state != State::Initial || window->isVisible()) {
+    if(state != State::Initial || window.isWindowVisible()) {
         state = State::Shown;
-        window->showDefault();
+        window.showWindow();
         return;
     }
 
-    if(window->currentViewMode() != MODE_FOLDERVIEW) {
+    if(viewMode.currentViewMode() != MODE_FOLDERVIEW) {
         waitForDocumentLayout();
         return;
     }
@@ -94,18 +93,18 @@ void ColdStartWindowController::waitForFolderView() {
     state = State::WaitingForFolderView;
     visibleThumbnailsReady = false;
     filesystemViewReady = false;
-    window->setWindowOpacity(kHiddenWindowOpacity);
+    window.setWindowConcealed(true);
     maximumWaitTimer.start();
-    window->showDefault();
+    window.showWindow();
 }
 
 void ColdStartWindowController::waitForDocumentLayout() {
     maximumWaitTimer.stop();
     state = State::WaitingForDocumentLayout;
-    window->setWindowOpacity(kHiddenWindowOpacity);
-    window->showDefault();
+    window.setWindowConcealed(true);
+    window.showWindow();
     if(state == State::WaitingForDocumentLayout &&
-       window->isDocumentRenderingSettled()) {
+       viewer.isRenderingSettled()) {
         onDocumentRenderingSettled();
     } else if(state == State::WaitingForDocumentLayout) {
         documentReadyFallbackTimer.start();
@@ -149,11 +148,11 @@ void ColdStartWindowController::onDocumentRenderingSettled() {
     QTimer::singleShot(kLayoutSettleDelayMs, this, [this]() {
         if(state != State::RevealScheduled)
             return;
-        if(window && window->currentViewMode() == MODE_FOLDERVIEW) {
+        if(viewMode.currentViewMode() == MODE_FOLDERVIEW) {
             waitForFolderView();
             return;
         }
-        if(window && !window->isDocumentRenderingSettled()) {
+        if(!viewer.isRenderingSettled()) {
             waitForDocumentLayout();
             return;
         }
@@ -170,10 +169,5 @@ void ColdStartWindowController::revealWindow() {
     maximumWaitTimer.stop();
     documentReadyFallbackTimer.stop();
     state = State::Shown;
-    if(window) {
-        window->setWindowOpacity(kVisibleWindowOpacity);
-    } else {
-        qWarning() << "Cannot reveal the application window: the window was"
-                      " destroyed";
-    }
+    window.setWindowConcealed(false);
 }

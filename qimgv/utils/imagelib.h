@@ -9,6 +9,7 @@
 #include <QProcess>
 #include "sourcecontainers/documentinfo.h"
 #include "settings_types.h"
+#include "utils/coloradjustments.h"
 
 
 struct ColorMatrix {
@@ -19,7 +20,7 @@ struct ColorMatrix {
 
 class ImageLib {
     public:
-        static constexpr float kAdjustEpsilon = 0.001f;
+        static constexpr float kAdjustEpsilon = kColorAdjustmentEpsilon;
         static constexpr double kPi = std::numbers::pi;
 
         static QImage rotatedRaw(const QImage *src, int grad);
@@ -51,8 +52,8 @@ class ImageLib {
         static std::unique_ptr<const QImage> exifRotated(std::unique_ptr<const QImage> src, int orientation);
         static std::unique_ptr<QImage> exifRotated(std::unique_ptr<QImage> src, int orientation);
         static void recolor(QPixmap &pixmap, QColor color);
-        static ColorMatrix getColorAdjustmentMatrix(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
-        static QImage applyColorAdjustments(std::shared_ptr<const QImage> source, float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue);
+        static ColorMatrix getColorAdjustmentMatrix(const ColorAdjustments &adjustments);
+        static QImage applyColorAdjustments(std::shared_ptr<const QImage> source, const ColorAdjustments &adjustments);
         static QImage loadICO(const QString &path);
 };
 

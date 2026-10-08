@@ -8,15 +8,19 @@
 #include "core.h"
 #include "settings.h"
 #include <QDir>
-#include <QInputDialog>
+#include <QGuiApplication>
+#include <QMimeDatabase>
+#include <QProcess>
 #include <algorithm>
 #include <QRegularExpression>
 #include <QCoreApplication>
 #include <QThreadPool>
 #include <QTimer>
+#include "components/actionmanager/actionmanager.h"
 #include "components/fileoptask/fileopcontroller.h"
 #include "components/upscaler/upscaler.h"
 #include "components/upscaler/upscaylresizerunnable.h"
+#include "gui/controllers/coldstartwindowcontroller.h"
 #include "components/wallpaper/wallpapercontroller.h"
 #include "components/mimepayload/mimepayloadmanager.h"
 #include <QColorSpace>
@@ -25,7 +29,7 @@
 #include <psapi.h>
 #include "utils/colormanager.h"
 #include "utils/hdrtonemapper.h"
-#include <QGuiApplication>
+#include "utils/imagelib.h"
 #include <QScreen>
 #include <QThread>
 #include "sourcecontainers/imagestatic.h"
@@ -187,13 +191,12 @@ QString mimePayloadFailureMessage(MimePayloadError error) {
 }
 }
 
-Core::Core()
-    : QObject(), folderEndAction(FOLDER_END_NO_ACTION), loopSlideshow(false),
-      mDrag(nullptr), slideshow(false), shuffle(false) {
-  loadTranslation();
-  initGui();
+Core::Core(const UiPorts &ports)
+    : QObject(), ui(ports), folderEndAction(FOLDER_END_NO_ACTION),
+      loopSlideshow(false), mDrag(nullptr), slideshow(false), shuffle(false) {
   initComponents();
   connectComponents();
+  connectUiEvents();
   initActions();
   readSettings();
   lastCMEnabled = settings->colorManagementEnabled();
@@ -213,9 +216,9 @@ Core::Core()
   slideshowTimer.setSingleShot(true);
   preloadTimer.setSingleShot(true);
   m_raiseWindowRevealTimer.setSingleShot(true);
-  connect(&m_raiseWindowRevealTimer, &QTimer::timeout, mw, [this]() {
+  connect(&m_raiseWindowRevealTimer, &QTimer::timeout, this, [this]() {
     if (m_raiseWindowDocumentRenderingSettled &&
-        !mw->isDocumentRenderingSettled()) {
+        !ui.viewer.isRenderingSettled()) {
       m_raiseWindowDocumentRenderingSettled = false;
       m_raiseWindowAwaitingDocumentRendering = true;
       m_raiseWindowRevealTimer.start(DocumentReadyFallbackMs);
@@ -228,9 +231,9 @@ Core::Core()
     m_raiseWindowAwaitingDocumentRendering = false;
     m_raiseWindowDocumentRenderingSettled = false;
     m_raiseWindowConcealed = false;
-    mw->setWindowOpacity(1.0);
+    ui.window.setWindowConcealed(false);
   });
-  connect(mw, &MW::documentRenderingSettled, this, [this]() {
+  connect(&ui.events, &UiEvents::documentRenderingSettled, this, [this]() {
     if (!m_raiseWindowConcealed ||
         !m_raiseWindowAwaitingDocumentRendering) {
       return;
@@ -249,13 +252,19 @@ Core::Core()
   // modelChanged result is not actionable here (unlike in Core::readSettings()).
   (void)upscaler->readSettings();
   wallpaperController = std::make_unique<WallpaperController>(this);
+  connect(wallpaperController.get(),
+          &WallpaperController::notificationRequested,
+          this,
+          [this](const NotificationRequest &request) {
+            ui.notifications.showNotification(request);
+          });
   mimePayloadManager =
       std::make_unique<MimePayloadManager>(settings->tmpDir(), this);
   connect(mimePayloadManager.get(),
           &MimePayloadManager::payloadCleanupFailed,
           this,
           [this](const QString &path) {
-            mw->showError(
+            ui.notifications.showError(
                 tr("Failed to clean up temporary image-transfer data: %1")
                     .arg(QDir::toNativeSeparators(path)));
           });
@@ -264,63 +273,67 @@ Core::Core()
           this,
           [this](const WallpaperApplyResult &result) {
             if (result.succeeded()) {
-              mw->showMessageSuccess(tr("Wallpaper set"));
+              ui.notifications.showSuccess(tr("Wallpaper set"));
               return;
             }
 
-            mw->showError(wallpaperApplyFailureMessage(result));
+            ui.notifications.showError(wallpaperApplyFailureMessage(result));
           },
           Qt::QueuedConnection);
   connect(wallpaperController.get(),
           &WallpaperController::wallpaperFileCleanupFailed,
           this,
           [this](const QString &path) {
-            mw->showError(
+            ui.notifications.showError(
                 tr("Set wallpaper: failed to clean up wallpaper file: %1")
                     .arg(QDir::toNativeSeparators(path)));
           },
           Qt::QueuedConnection);
   connect(upscaler.get(), &Upscaler::upscaleStarted, this, [this]() {
-      mw->showMessageAiUpscale(tr("AI Upscaling..."), 3600000);
+      ui.notifications.showAiUpscale(tr("AI Upscaling..."), 3600000);
   });
   connect(upscaler.get(), &Upscaler::upscaleFinished, this,
       [this](QImage cropImg, QRect origCrop, QString path, QSize) {
-          mw->hideMessage();
-          if (mw->panoramaMode()) {
-              mw->hideUpscaledCrop();
+          ui.notifications.hideNotifications();
+          if (ui.viewer.panoramaMode()) {
+              ui.viewer.hideUpscaledCrop();
               return;
           }
           if (state.hasActiveImage && path == state.currentFilePath)
-              mw->onUpscaleFinished(cropImg, origCrop);
+              ui.viewer.showUpscaledCrop(cropImg, origCrop);
       });
-  connect(upscaler.get(), &Upscaler::upscaleAborted, mw, &MW::hideMessage);
+  connect(upscaler.get(), &Upscaler::upscaleAborted, this,
+          [this]() { ui.notifications.hideNotifications(); });
   connect(upscaler.get(), &Upscaler::upscaleFailed, this, [this](const QString &error) {
-      mw->hideMessage();
-      mw->showError(error);
+      ui.notifications.hideNotifications();
+      ui.notifications.showError(error);
   });
-  connect(upscaler.get(), &Upscaler::previewInvalidated, mw,
-          &MW::hideUpscaledCrop);
+  connect(upscaler.get(), &Upscaler::previewInvalidated, this,
+          [this]() { ui.viewer.hideUpscaledCrop(); });
 
   connect(upscaler.get(), &Upscaler::requestUpscaleParams, this, [this](const QString &path, bool *ok, QRect *visibleRect, double *currentScale, double *dpr) {
-      if (!state.hasActiveImage || path != state.currentFilePath || mw->panoramaMode() || mw->isBusyInteracting()) {
+      if (!state.hasActiveImage || path != state.currentFilePath || ui.viewer.panoramaMode() || ui.viewer.isBusyInteracting()) {
           *ok = false;
           return;
       }
       *ok = true;
-      *visibleRect = mw->visibleOriginalImageRect();
-      *currentScale = mw->currentScale();
-      *dpr = mw->getDpr();
+      *visibleRect = ui.viewer.visibleOriginalImageRect();
+      *currentScale = ui.viewer.currentScale();
+      *dpr = ui.viewer.devicePixelRatio();
   });
 
   // Off-GUI-thread copy/move (see components/fileoptask/). model is a
   // stable DirectoryModel instance for Core's whole lifetime (attachModel()
   // is only ever called once, from initComponents()), so handing its raw
   // pointer to FileOpController here is safe.
-  fileOpController = std::make_unique<FileOpController>(model.get(), mw, this);
+  fileOpController =
+      std::make_unique<FileOpController>(model.get(), ui.dialogs, this);
   connect(fileOpController.get(), &FileOpController::progress, this,
           &Core::onFileOpProgress);
   connect(fileOpController.get(), &FileOpController::finished, this,
           &Core::onFileOpFinished);
+  connect(fileOpController.get(), &FileOpController::operationFailed, this,
+          [this](const QString &message) { ui.notifications.showError(message); });
 
   QVersionNumber lastVersion = settings->lastVersion();
   if (settings->firstRun())
@@ -329,19 +342,16 @@ Core::Core()
     onUpdate();
 }
 
-Core::~Core() {
-  if (translator)
-    QApplication::removeTranslator(translator.get());
-}
+Core::~Core() = default;
 
 void Core::readSettings() {
   if (upscaler) {
       const bool upscaylModelChanged = upscaler->readSettings();
       if (!settings->useUpscayl()) {
           upscaler->reset();
-          mw->hideUpscaledCrop();
+          ui.viewer.hideUpscaledCrop();
       } else if (upscaylModelChanged) {
-          mw->refreshScaling();
+          ui.viewer.refreshScaling();
       }
   }
   loopSlideshow = settings->loopSlideshow();
@@ -366,19 +376,10 @@ void Core::showGui() {
 
     qWarning() << "Cold-start window controller is unavailable; showing the"
                   " window immediately";
-    if (!mw) {
-      qCritical() << "Cannot show the application window: main window is null";
-      return;
-    }
-    mw->showDefault();
+    ui.window.showWindow();
 }
 
 void Core::raiseWindow(const QString &pathReceived) {
-  if (!mw) {
-    qCritical() << "Cannot raise the application window: main window is null";
-    return;
-  }
-
   m_pendingRaiseWindowRequests.enqueue(pathReceived);
   if (m_raiseWindowActive) return;
 
@@ -394,20 +395,20 @@ void Core::raiseWindow(const QString &pathReceived) {
   // fully transparent for the duration of that dance and only revealing
   // it once everything has settled hides that frame regardless of its
   // cause (same technique ColdStartWindowController uses on first launch).
-  const bool needsDelayedReveal = !mw->isVisible() || m_raiseWindowConcealed;
+  const bool needsDelayedReveal = !ui.window.isWindowVisible() || m_raiseWindowConcealed;
   if (needsDelayedReveal) {
     m_raiseWindowRevealTimer.stop();
     m_raiseWindowAwaitingDocumentRendering = false;
     m_raiseWindowDocumentRenderingSettled = false;
     m_raiseWindowConcealed = true;
-    mw->setWindowOpacity(0.0);
+    ui.window.setWindowConcealed(true);
   }
 
   drainRaiseWindowRequests();
 
   showGui();
 
-  HWND hwnd = (HWND)mw->winId();
+  HWND hwnd = reinterpret_cast<HWND>(ui.window.nativeWindowHandle());
   if (IsIconic(hwnd)) {
     ShowWindow(hwnd, SW_RESTORE);
   }
@@ -418,8 +419,7 @@ void Core::raiseWindow(const QString &pathReceived) {
 
   SetForegroundWindow(hwnd);
   SetActiveWindow(hwnd);
-  mw->raise();
-  mw->activateWindow();
+  ui.window.raiseAndActivateWindow();
 
   if (needsDelayedReveal) {
     // The native restore/topmost-toggle sequence above can itself trigger
@@ -432,9 +432,9 @@ void Core::raiseWindow(const QString &pathReceived) {
     drainRaiseWindowRequests();
 
     const bool waitsForDocumentRendering =
-        mw->currentViewMode() == MODE_DOCUMENT;
+        ui.viewMode.currentViewMode() == MODE_DOCUMENT;
     m_raiseWindowAwaitingDocumentRendering = waitsForDocumentRendering;
-    if (waitsForDocumentRendering && mw->isDocumentRenderingSettled())
+    if (waitsForDocumentRendering && ui.viewer.isRenderingSettled())
       m_raiseWindowDocumentRenderingSettled = true;
     if (!waitsForDocumentRendering) {
       m_raiseWindowDocumentRenderingSettled = false;
@@ -458,9 +458,9 @@ void Core::processRaiseWindowRequest(const QString &pathReceived) {
           loadDefaultPath();
       } else {
           if (m_lastViewMode == MODE_FOLDERVIEW) {
-              mw->enableFolderView();
+              ui.viewMode.enableFolderView();
           } else {
-              mw->enableDocumentView();
+              ui.viewMode.enableDocumentView();
           }
           if (m_lastViewMode == MODE_DOCUMENT && !m_lastFilePath.isEmpty()) {
               loadPath(m_lastFilePath);
@@ -485,14 +485,8 @@ void Core::drainRaiseWindowRequests() {
   do {
     while (!m_pendingRaiseWindowRequests.isEmpty())
       processRaiseWindowRequest(m_pendingRaiseWindowRequests.dequeue());
-    qApp->processEvents();
+    QCoreApplication::processEvents();
   } while (!m_pendingRaiseWindowRequests.isEmpty());
-}
-
-// create MainWindow and all widgets
-void Core::initGui() {
-  mw = new MW();
-  mw->hide();
 }
 
 void Core::attachModel(DirectoryModel *_model) {
@@ -514,11 +508,11 @@ void Core::initComponents() {
   folderViewPresenter.setThumbnailer(thumbnailer);
   attachModel(new DirectoryModel());
   coldStartWindowController = std::make_unique<ColdStartWindowController>(
-      *mw, *mw->getFolderView());
+      ui.window, ui.viewMode, ui.viewer, ui.events);
 }
 
 void Core::connectComponents() {
-  thumbPanelPresenter.setView(mw->getThumbnailPanel());
+  thumbPanelPresenter.setView(ui.thumbnailPanelView);
   connect(&thumbPanelPresenter, &DirectoryPresenter::fileActivated, this,
           &Core::onDirectoryViewFileActivated);
   connect(&thumbPanelPresenter, &DirectoryPresenter::filesActivated, this,
@@ -529,10 +523,10 @@ void Core::connectComponents() {
           &Core::historyBack);
   connect(&thumbPanelPresenter, &DirectoryPresenter::forwardRequested, this,
           &Core::historyForward);
-  connect(&thumbPanelPresenter, &DirectoryPresenter::selectionExpansionFailed, mw,
-          &MW::showError);
+  connect(&thumbPanelPresenter, &DirectoryPresenter::selectionExpansionFailed,
+          this, [this](const QString &error) { ui.notifications.showError(error); });
 
-  folderViewPresenter.setView(mw->getFolderView());
+  folderViewPresenter.setView(ui.folderView);
   connect(&folderViewPresenter, &DirectoryPresenter::fileActivated, this,
           &Core::onDirectoryViewFileActivated);
   connect(&folderViewPresenter, &DirectoryPresenter::filesActivated, this,
@@ -552,40 +546,12 @@ void Core::connectComponents() {
 
   connect(&folderViewPresenter, &DirectoryPresenter::expandedSelectedPathsReady, this,
           &Core::onBatchConverterPathsReady);
-  connect(&folderViewPresenter, &DirectoryPresenter::selectionExpansionFailed, mw,
-          &MW::showError);
+  connect(&folderViewPresenter, &DirectoryPresenter::selectionExpansionFailed,
+          this, [this](const QString &error) { ui.notifications.showError(error); });
 
-  connect(scriptManager, &ScriptManager::error, mw, &MW::showError);
+  connect(scriptManager, &ScriptManager::error, this,
+          [this](const QString &error) { ui.notifications.showError(error); });
 
-  connect(mw, &MW::opened, this, &Core::loadPath);
-  connect(mw, &MW::droppedIn, this, &Core::onDropIn);
-  connect(mw, &MW::copyRequested, this, &Core::copyCurrentFile);
-  connect(mw, &MW::moveRequested, this, &Core::moveCurrentFile);
-  connect(mw, &MW::copyUrlsRequested, this,
-          qOverload<QList<QString>, QString>(&Core::copyPathsTo));
-  connect(mw, &MW::moveUrlsRequested, this, &Core::movePathsTo);
-  connect(mw, &MW::cropRequested, this, &Core::crop);
-  connect(mw, &MW::cropAndSaveRequested, this, &Core::cropAndSave);
-  connect(mw, &MW::colorAdjustmentsApplyRequested, this, &Core::applyColorAdjustments);
-  connect(mw, &MW::saveAsClicked, this, &Core::requestSavePath);
-  connect(mw, &MW::saveRequested, this, &Core::saveCurrentFile);
-  connect(mw, &MW::saveAsRequested, this, &Core::saveCurrentFileAs);
-  connect(mw, &MW::resizeRequested, this, &Core::resize);
-  connect(mw, &MW::clearThumbnailCacheRequested, this,
-          &Core::onClearThumbnailCacheRequested);
-  connect(mw, &MW::batchRequested, this, &Core::showBatchConverter);
-  connect(mw, &MW::renameRequested, this, &Core::renameCurrentSelection);
-  connect(mw, &MW::sortingSelected, this, &Core::sortBy);
-  connect(mw, &MW::folderSortingSelected, this, &Core::onFolderSortingSelected);
-  connect(mw, &MW::formatFilterSelected, this, &Core::onFormatFilterSelected);
-  connect(mw, &MW::nameFilterSelected, this, &Core::onNameFilterSelected);
-  connect(mw, &MW::showFoldersChanged, this, &Core::setFoldersDisplay);
-  connect(mw, &MW::discardEditsRequested, this, &Core::discardEdits);
-  connect(mw, &MW::draggedOut, this, qOverload<>(&Core::onDraggedOut));
-  connect(mw, &MW::nextImageRequested, this, &Core::nextImage);
-  connect(mw, &MW::prevImageRequested, this, &Core::prevImage);
-
-  connect(mw, &MW::scalingRequested, this, &Core::scalingRequest);
   connect(model.get(), &DirectoryModel::scalingFinished, this,
           &Core::onScalingFinished);
 
@@ -657,7 +623,7 @@ void Core::connectComponents() {
                            (newThumbPanelStyle != lastThumbPanelStyle);
 
       if (thumbnailResolutionChanged && !thumbnailer->clearCache()) {
-          mw->showError(tr("Failed to clear thumbnail cache"));
+          ui.notifications.showError(tr("Failed to clear thumbnail cache"));
       }
 
       if (layoutChanged) {
@@ -673,7 +639,7 @@ void Core::connectComponents() {
           lastThumbPanelStyle = newThumbPanelStyle;
 
           if (folderSortingChanged) {
-              mw->onFolderSortingChanged(newFolderIconSortingMode);
+              ui.shell.notifyFolderSortingChanged(newFolderIconSortingMode);
           }
 
           thumbPanelPresenter.reloadModel();
@@ -699,30 +665,50 @@ void Core::connectComponents() {
 
   connect(&slideshowTimer, &QTimer::timeout, this, &Core::nextImageSlideshow);
   connect(&preloadTimer, &QTimer::timeout, this, &Core::preloadNeighbors);
-  connect(mw, &MW::suspendRequested, this, &Core::suspendToStandby);
+}
+
+void Core::connectUiEvents() {
+  UiEvents *events = &ui.events;
+  connect(events, &UiEvents::pathOpened, this, &Core::loadPath);
+  connect(events, &UiEvents::droppedIn, this, &Core::onDropIn);
+  connect(events, &UiEvents::copyRequested, this, &Core::copyCurrentFile);
+  connect(events, &UiEvents::moveRequested, this, &Core::moveCurrentFile);
+  connect(events, &UiEvents::copyUrlsRequested, this,
+          qOverload<QList<QString>, QString>(&Core::copyPathsTo));
+  connect(events, &UiEvents::moveUrlsRequested, this, &Core::movePathsTo);
+  connect(events, &UiEvents::cropRequested, this, &Core::crop);
+  connect(events, &UiEvents::cropAndSaveRequested, this, &Core::cropAndSave);
+  connect(events, &UiEvents::colorAdjustmentsApplyRequested, this,
+          &Core::applyColorAdjustments);
+  connect(events, &UiEvents::saveAsRequested, this, &Core::requestSavePath);
+  connect(events, &UiEvents::saveRequested, this, &Core::saveCurrentFile);
+  connect(events, &UiEvents::clearThumbnailCacheRequested, this,
+          &Core::onClearThumbnailCacheRequested);
+  connect(events, &UiEvents::batchConversionRequested, this,
+          &Core::showBatchConverter);
+  connect(events, &UiEvents::renameRequested, this,
+          &Core::renameCurrentSelection);
+  connect(events, &UiEvents::sortingSelected, this, &Core::sortBy);
+  connect(events, &UiEvents::folderSortingSelected, this,
+          &Core::onFolderSortingSelected);
+  connect(events, &UiEvents::formatFilterSelected, this,
+          &Core::onFormatFilterSelected);
+  connect(events, &UiEvents::nameFilterSelected, this,
+          &Core::onNameFilterSelected);
+  connect(events, &UiEvents::showFoldersChanged, this,
+          &Core::setFoldersDisplay);
+  connect(events, &UiEvents::discardEditsRequested, this, &Core::discardEdits);
+  connect(events, &UiEvents::draggedOut, this,
+          qOverload<>(&Core::onDraggedOut));
+  connect(events, &UiEvents::nextImageRequested, this, &Core::nextImage);
+  connect(events, &UiEvents::prevImageRequested, this, &Core::prevImage);
+  connect(events, &UiEvents::scalingRequested, this, &Core::scalingRequest);
+  connect(events, &UiEvents::suspendRequested, this, &Core::suspendToStandby);
 }
 
 void Core::initActions() {
   connect(actionManager, &ActionManager::nextImage, this, &Core::nextImage);
   connect(actionManager, &ActionManager::prevImage, this, &Core::prevImage);
-  connect(actionManager, &ActionManager::fitWindow, mw, &MW::fitWindow);
-  connect(actionManager, &ActionManager::fitWidth, mw, &MW::fitWidth);
-  connect(actionManager, &ActionManager::fitNormal, mw, &MW::fitOriginal);
-  connect(actionManager, &ActionManager::fitHeight, mw,
-          &MW::fitHeight);
-  connect(actionManager, &ActionManager::toggleFitMode, mw, &MW::switchFitMode);
-  connect(actionManager, &ActionManager::toggleFullscreen, mw,
-          &MW::triggerFullScreen);
-  connect(actionManager, &ActionManager::lockZoom, mw, &MW::toggleLockZoom);
-  connect(actionManager, &ActionManager::lockView, mw, &MW::toggleLockView);
-  connect(actionManager, &ActionManager::zoomIn, mw, &MW::zoomIn);
-  connect(actionManager, &ActionManager::zoomOut, mw, &MW::zoomOut);
-  connect(actionManager, &ActionManager::zoomInCursor, mw, &MW::zoomInCursor);
-  connect(actionManager, &ActionManager::zoomOutCursor, mw, &MW::zoomOutCursor);
-  connect(actionManager, &ActionManager::scrollUp, mw, &MW::scrollUp);
-  connect(actionManager, &ActionManager::scrollDown, mw, &MW::scrollDown);
-  connect(actionManager, &ActionManager::scrollLeft, mw, &MW::scrollLeft);
-  connect(actionManager, &ActionManager::scrollRight, mw, &MW::scrollRight);
   connect(actionManager, &ActionManager::resize, this, &Core::showResizeDialog);
   connect(actionManager, &ActionManager::flipH, this, &Core::flipH);
   connect(actionManager, &ActionManager::flipV, this, &Core::flipV);
@@ -730,20 +716,15 @@ void Core::initActions() {
   connect(actionManager, &ActionManager::rotateRight, this, &Core::rotateRight);
   connect(actionManager, &ActionManager::nextPage, this, &Core::nextPage);
   connect(actionManager, &ActionManager::prevPage, this, &Core::prevPage);
-  connect(actionManager, &ActionManager::openSettings, mw, &MW::showSettings);
   connect(actionManager, &ActionManager::crop, this, &Core::toggleCropPanel);
   connect(actionManager, &ActionManager::setWallpaper, this,
           &Core::setWallpaper);
   connect(actionManager, &ActionManager::save, this, &Core::saveCurrentFile);
   connect(actionManager, &ActionManager::saveAs, this, &Core::requestSavePath);
   connect(actionManager, &ActionManager::exit, this, &Core::forceExit);
-  connect(actionManager, &ActionManager::closeFullScreenOrExit, mw,
-          &MW::closeFullScreenOrExit);
   connect(actionManager, &ActionManager::removeFile, this,
           &Core::removePermanent);
   connect(actionManager, &ActionManager::moveToTrash, this, &Core::moveToTrash);
-  connect(actionManager, &ActionManager::copyFile, mw, &MW::triggerCopyOverlay);
-  connect(actionManager, &ActionManager::moveFile, mw, &MW::triggerMoveOverlay);
   connect(actionManager, &ActionManager::jumpToFirst, this, &Core::jumpToFirst);
   connect(actionManager, &ActionManager::jumpToLast, this, &Core::jumpToLast);
   connect(actionManager, &ActionManager::runScript, this, &Core::runScript);
@@ -757,32 +738,15 @@ void Core::initActions() {
           qOverload<>(&Core::reloadImage));
   connect(actionManager, &ActionManager::copyFileClipboard, this,
           &Core::copyFileClipboard);
-  connect(actionManager, &ActionManager::copyViewportClipboard, mw,
-          &MW::copyViewportToClipboard);
   connect(actionManager, &ActionManager::copyPathClipboard, this,
           &Core::copyPathClipboard);
   connect(actionManager, &ActionManager::renameFile, this,
           &Core::showRenameDialog);
-  connect(actionManager, &ActionManager::contextMenu, mw, &MW::showContextMenu);
-  connect(actionManager, &ActionManager::toggleTransparencyGrid, mw,
-          &MW::toggleTransparencyGrid);
   connect(actionManager, &ActionManager::sortByName, this, &Core::sortByName);
   connect(actionManager, &ActionManager::sortByTime, this, &Core::sortByTime);
   connect(actionManager, &ActionManager::sortBySize, this, &Core::sortBySize);
-  connect(actionManager, &ActionManager::toggleImageInfo, mw,
-          &MW::toggleImageInfoOverlay);
   connect(actionManager, &ActionManager::toggleShuffle, this,
           &Core::toggleShuffle);
-  connect(actionManager, &ActionManager::toggleScalingFilter, mw,
-          &MW::toggleScalingFilter);
-  connect(actionManager, &ActionManager::cycleScalingFilter, mw,
-          &MW::cycleScalingFilter);
-  connect(actionManager, &ActionManager::toggleUpscayl, mw,
-          &MW::toggleUpscayl);
-  connect(actionManager, &ActionManager::cycleUpscaylModel, mw,
-          &MW::cycleUpscaylModel);
-  connect(actionManager, &ActionManager::toggleHdrToneMapping, mw,
-          &MW::toggleHdrToneMapping);
   connect(actionManager, &ActionManager::showInDirectory, this,
           &Core::showInDirectory);
   connect(actionManager, &ActionManager::createDirectory, this,
@@ -801,41 +765,6 @@ void Core::initActions() {
           &Core::toggleFullscreenInfoBar);
   connect(actionManager, &ActionManager::pasteFile, this,
           &Core::openFromClipboard);
-  connect(actionManager, &ActionManager::togglePanorama, mw,
-          &MW::togglePanorama);
-  connect(actionManager, &ActionManager::colorAdjustments, mw,
-          &MW::toggleColorAdjustments);
-  connect(actionManager, &ActionManager::casSettings, mw,
-          &MW::toggleCasSettings);
-}
-
-void Core::loadTranslation() {
-  if (!translator)
-    translator = std::make_unique<QTranslator>();
-  QString trPathFallback =
-      QCoreApplication::applicationDirPath() + "/translations";
-#ifdef TRANSLATIONS_PATH
-  QString trPath = QString(TRANSLATIONS_PATH);
-#else
-  QString trPath = trPathFallback;
-#endif
-  QString localeName = settings->language();
-  if (localeName == "system")
-    localeName = QLocale::system().name();
-  if (localeName.isEmpty() || localeName == "en_US") {
-    QApplication::removeTranslator(translator.get());
-    return;
-  }
-  QString trFile = trPath + "/" + localeName;
-  QString trFileFallback = trPathFallback + "/" + localeName;
-  if (!translator->load(trFile)) {
-    qWarning() << "Could not load translation file: " << trFile;
-    if (!translator->load(trFileFallback)) {
-      qWarning() << "Could not load translation file: " << trFileFallback;
-      return;
-    }
-  }
-  QApplication::installTranslator(translator.get());
 }
 
 void Core::onUpdate() {
@@ -845,15 +774,14 @@ void Core::onUpdate() {
 
   qDebug() << "Updated: " << settings->lastVersion().toString() << ">"
            << appVersion.toString();
-  mw->showMessage(tr("Updated: ") + settings->lastVersion().toString() + " > " +
+  ui.notifications.showMessage(tr("Updated: ") + settings->lastVersion().toString() + " > " +
                       appVersion.toString(),
                   4000);
   settings->setLastVersion(appVersion);
 }
 
 void Core::onFirstRun() {
-  // mw->showSomeSortOfWelcomeScreen();
-  mw->showMessage(tr("Welcome to ") + qApp->applicationName() +
+  ui.notifications.showMessage(tr("Welcome to ") + QCoreApplication::applicationName() +
                       tr(" version ") + appVersion.toString() + "!",
                   4000);
 
@@ -872,10 +800,10 @@ void Core::onFirstRun() {
 
 void Core::toggleShuffle() {
   if (shuffle) {
-    mw->showMessage(tr("Shuffle mode: OFF"));
+    ui.notifications.showMessage(tr("Shuffle mode: OFF"));
   } else {
     syncRandomizer();
-    mw->showMessage(tr("Shuffle mode: ON"));
+    ui.notifications.showMessage(tr("Shuffle mode: ON"));
   }
   shuffle = !shuffle;
   updateInfoString();
@@ -884,11 +812,11 @@ void Core::toggleShuffle() {
 void Core::toggleSlideshow() {
   if (slideshow) {
     stopSlideshow();
-    mw->showMessage(tr("Slideshow: OFF"));
+    ui.notifications.showMessage(tr("Slideshow: OFF"));
 
   } else {
     startSlideshow();
-    mw->showMessage(tr("Slideshow: ON"));
+    ui.notifications.showMessage(tr("Slideshow: ON"));
   }
 }
 
@@ -947,7 +875,7 @@ void Core::onModelLoaded() {
   if (m_pendingDocumentLoad != PendingDocumentLoad::None) {
     auto target = m_pendingDocumentLoad;
     m_pendingDocumentLoad = PendingDocumentLoad::None;
-    if (mw->currentViewMode() == MODE_DOCUMENT && model->fileCount() > 0) {
+    if (ui.viewMode.currentViewMode() == MODE_DOCUMENT && model->fileCount() > 0) {
       int targetIndex = (target == PendingDocumentLoad::LastImage)
                             ? (model->fileCount() - 1)
                             : 0;
@@ -981,12 +909,12 @@ void Core::onThumbPanelDirActivated(QString dirPath) {
 
 void Core::onDirectoryViewFileActivated(QString filePath) {
   // we aren`t using async load so it won't flicker with empty view
-  mw->enableDocumentView();
+  ui.viewMode.enableDocumentView();
   loadPath(filePath);
 }
 
 void Core::onDirectoryViewFilesActivated(QList<QString> filePaths, QString activePath) {
-  mw->enableDocumentView();
+  ui.viewMode.enableDocumentView();
   loadFileList(filePaths, activePath);
 }
 
@@ -1086,7 +1014,7 @@ void Core::removePermanent() {
       else
         msg = tr("Delete file permanently?");
     }
-    if (!mw->showConfirmation(tr("Delete permanently"), msg))
+    if (!ui.dialogs.confirm({tr("Delete permanently"), msg}).accepted)
       return;
   }
   FileOpResult result;
@@ -1103,24 +1031,22 @@ void Core::removePermanent() {
   if (paths.count() == 1) {
     if (result == FileOpResult::SUCCESS) {
       if (dirCount > 0) {
-        auto folderView = mw->getFolderView();
-        if (folderView)
-          folderView->refreshFilesystemModel(QFileInfo(paths.first()).absolutePath());
-        mw->showMessageSuccess(tr("Folder removed"));
+        ui.shell.refreshFolderTree(QFileInfo(paths.first()).absolutePath());
+        ui.notifications.showSuccess(tr("Folder removed"));
       } else
-        mw->showMessageSuccess(tr("File removed"));
+        ui.notifications.showSuccess(tr("File removed"));
     } else {
       outputError(result);
     }
   } else if (paths.count() > 1) {
     if (dirCount > 0 && fileCount == 0) {
-      mw->showMessageSuccess(tr("Removed: ") + QString::number(successCount) +
+      ui.notifications.showSuccess(tr("Removed: ") + QString::number(successCount) +
                              tr(" folders"));
     } else if (fileCount > 0 && dirCount == 0) {
-      mw->showMessageSuccess(tr("Removed: ") + QString::number(successCount) +
+      ui.notifications.showSuccess(tr("Removed: ") + QString::number(successCount) +
                              tr(" files"));
     } else {
-      mw->showMessageSuccess(tr("Removed: ") + QString::number(successCount) +
+      ui.notifications.showSuccess(tr("Removed: ") + QString::number(successCount) +
                              tr(" items"));
     }
   }
@@ -1157,7 +1083,7 @@ void Core::moveToTrash() {
       else
         msg = tr("Move file to trash?");
     }
-    if (!mw->showConfirmation(tr("Move to trash"), msg))
+    if (!ui.dialogs.confirm({tr("Move to trash"), msg}).accepted)
       return;
   }
   FileOpResult result;
@@ -1174,24 +1100,22 @@ void Core::moveToTrash() {
   if (paths.count() == 1) {
     if (result == FileOpResult::SUCCESS) {
       if (dirCount > 0) {
-        auto folderView = mw->getFolderView();
-        if (folderView)
-          folderView->refreshFilesystemModel(QFileInfo(paths.first()).absolutePath());
-        mw->showMessageSuccess(tr("Folder moved to trash"));
+        ui.shell.refreshFolderTree(QFileInfo(paths.first()).absolutePath());
+        ui.notifications.showSuccess(tr("Folder moved to trash"));
       } else
-        mw->showMessageSuccess(tr("Moved to trash"));
+        ui.notifications.showSuccess(tr("Moved to trash"));
     } else {
       outputError(result);
     }
   } else if (paths.count() > 1) {
     if (dirCount > 0 && fileCount == 0) {
-      mw->showMessageSuccess(tr("Moved to trash: ") +
+      ui.notifications.showSuccess(tr("Moved to trash: ") +
                              QString::number(successCount) + tr(" folders"));
     } else if (fileCount > 0 && dirCount == 0) {
-      mw->showMessageSuccess(tr("Moved to trash: ") +
+      ui.notifications.showSuccess(tr("Moved to trash: ") +
                              QString::number(successCount) + tr(" files"));
     } else {
-      mw->showMessageSuccess(tr("Moved to trash: ") +
+      ui.notifications.showSuccess(tr("Moved to trash: ") +
                              QString::number(successCount) + tr(" items"));
     }
   }
@@ -1206,7 +1130,7 @@ void Core::reloadImage(QString filePath) {
 }
 
 void Core::enableFolderView() {
-  if (mw->currentViewMode() == MODE_FOLDERVIEW)
+  if (ui.viewMode.currentViewMode() == MODE_FOLDERVIEW)
     return;
   stopSlideshow();
   
@@ -1225,14 +1149,14 @@ void Core::enableFolderView() {
       }
   }
   
-  mw->enableFolderView();
+  ui.viewMode.enableFolderView();
 }
 
 void Core::enableDocumentView() {
-  if (mw->currentViewMode() == MODE_DOCUMENT)
+  if (ui.viewMode.currentViewMode() == MODE_DOCUMENT)
     return;
   const auto selectedPaths = folderViewPresenter.selectedPaths();
-  mw->enableDocumentView();
+  ui.viewMode.enableDocumentView();
   if (!model || !model->fileCount())
     return;
 
@@ -1247,7 +1171,7 @@ void Core::enableDocumentView() {
 }
 
 void Core::toggleFolderView() {
-  if (mw->currentViewMode() == MODE_FOLDERVIEW)
+  if (ui.viewMode.currentViewMode() == MODE_FOLDERVIEW)
     enableDocumentView();
   else
     enableFolderView();
@@ -1260,7 +1184,7 @@ void Core::copyFileClipboard() {
   MimePayloadResult payloadResult = mimePayloadManager->createPayload(
       {model->getImage(selectedPath()), MimePayloadTarget::Clipboard});
   if (!payloadResult.succeeded()) {
-    mw->showError(mimePayloadFailureMessage(payloadResult.error));
+    ui.notifications.showError(mimePayloadFailureMessage(payloadResult.error));
     return;
   }
 
@@ -1271,20 +1195,20 @@ void Core::copyFileClipboard() {
       QByteArray("copy\n").append(QUrl(mimeData->text()).toEncoded());
   mimeData->setData("x-special/gnome-copied-files", gnomeFormat);
 
-  QApplication::clipboard()->setMimeData(mimeData);
-  mw->showMessage(tr("File copied"));
+  QGuiApplication::clipboard()->setMimeData(mimeData);
+  ui.notifications.showMessage(tr("File copied"));
 }
 
 void Core::copyPathClipboard() {
   if (model->isEmpty())
     return;
-  QApplication::clipboard()->setText(selectedPath());
-  mw->showMessage(tr("Path copied"));
+  QGuiApplication::clipboard()->setText(selectedPath());
+  ui.notifications.showMessage(tr("Path copied"));
 }
 
 // open from clipboard
 void Core::openFromClipboard() {
-  auto cb = QApplication::clipboard();
+  auto cb = QGuiApplication::clipboard();
   auto mimeData = cb->mimeData();
   if (!mimeData)
     return;
@@ -1317,7 +1241,7 @@ void Core::openFromClipboard() {
     else
       destPath = QDir::homePath() + "/";
     destPath.append("clipboard.png");
-    destPath = mw->getSaveFileName(destPath);
+    destPath = ui.dialogs.requestSavePath({destPath}).path;
     if (destPath.isEmpty())
       return;
 
@@ -1339,9 +1263,9 @@ void Core::openFromClipboard() {
     if (saveResult.succeeded()) {
       loadPath(destPath);
       if (!saveResult.retainedBackupPath.isEmpty())
-        mw->showWarning(retainedBackupWarningMessage(saveResult));
+        ui.notifications.showWarning(retainedBackupWarningMessage(saveResult));
     } else {
-      mw->showError(imageSaveFailureMessage(saveResult));
+      ui.notifications.showError(imageSaveFailureMessage(saveResult));
     }
   }
 }
@@ -1375,7 +1299,7 @@ void Core::onDraggedOut(QList<QString> paths) {
     MimePayloadResult payloadResult = mimePayloadManager->createPayload(
         {model->getImage(paths.constLast()), MimePayloadTarget::Drop});
     if (!payloadResult.succeeded()) {
-      mw->showError(mimePayloadFailureMessage(payloadResult.error));
+      ui.notifications.showError(mimePayloadFailureMessage(payloadResult.error));
       return;
     }
     mimeData = payloadResult.mimeData.release();
@@ -1408,13 +1332,13 @@ void Core::renameCurrentSelection(QString newName) {
   FileOpResult result;
   model->renameEntry(selectedPath(), newName, false, result);
   if (result == FileOpResult::DESTINATION_DIR_EXISTS) {
-    mw->toggleRenameOverlay(newName);
+    ui.shell.toggleRenamePrompt(newName);
   } else if (result == FileOpResult::DESTINATION_FILE_EXISTS) {
-    if (mw->showConfirmation(tr("File exists"), tr("Overwrite file?"))) {
+    if (ui.dialogs.confirm({tr("File exists"), tr("Overwrite file?")}).accepted) {
       model->renameEntry(selectedPath(), newName, true, result);
     } else {
       // show rename dialog again
-      mw->toggleRenameOverlay(newName);
+      ui.shell.toggleRenamePrompt(newName);
     }
   }
   outputError(result);
@@ -1429,7 +1353,7 @@ FileOpResult Core::removeFile(QString filePath, bool trash) {
   if (state.currentFilePath == filePath) {
     img = model->getImage(filePath);
     if (img->type() == ANIMATED) {
-      mw->closeImage();
+      ui.viewer.closeImage();
       reopen = true;
     }
   }
@@ -1443,13 +1367,13 @@ FileOpResult Core::removeFile(QString filePath, bool trash) {
 void Core::onFileRemoved(QString filePath, int index) {
   // no files left
   if (model->isEmpty()) {
-    mw->closeImage();
+    ui.viewer.closeImage();
     state.hasActiveImage = false;
     state.currentFilePath = "";
   }
   // image mode && removed current file
   if (state.currentFilePath == filePath) {
-    if (mw->currentViewMode() == MODE_DOCUMENT) {
+    if (ui.viewMode.currentViewMode() == MODE_DOCUMENT) {
       if (!loadFileIndex(index, true, settings->usePreloader()))
         loadFileIndex(--index, true, settings->usePreloader());
     } else {
@@ -1481,7 +1405,7 @@ void Core::onFileModified(QString filePath) { Q_UNUSED(filePath) }
 void Core::outputError(const FileOpResult &error) const {
   if (error == FileOpResult::SUCCESS || error == FileOpResult::NOTHING_TO_DO)
     return;
-  mw->showError(FileOperations::decodeResult(error));
+  ui.notifications.showError(FileOperations::decodeResult(error));
   qDebug() << FileOperations::decodeResult(error);
 }
 
@@ -1504,27 +1428,24 @@ void Core::createDirectory() {
   if (currentDirPath.isEmpty())
     return;
 
-  bool ok;
-  QString newFolderName = QInputDialog::getText(mw, tr("Add folder"),
-                                                tr("Folder name:"), QLineEdit::Normal,
-                                                "", &ok);
-  if (!ok || newFolderName.trimmed().isEmpty())
+  const TextInputResult input =
+      ui.dialogs.requestText({tr("Add folder"), tr("Folder name:"), QString()});
+  const QString newFolderName = input.text;
+  if (!input.accepted || newFolderName.trimmed().isEmpty())
     return;
 
   QDir currentDir(currentDirPath);
   if (currentDir.exists(newFolderName)) {
-    mw->showError(tr("Folder already exists"));
+    ui.notifications.showError(tr("Folder already exists"));
     return;
   }
 
   if (currentDir.mkdir(newFolderName)) {
     QString newDirPath = currentDir.absoluteFilePath(newFolderName);
     model->insertDir(newDirPath);
-    auto folderView = mw->getFolderView();
-    if (folderView)
-      folderView->refreshFilesystemModel(currentDirPath);
+    ui.shell.refreshFolderTree(currentDirPath);
   } else {
-    mw->showError(tr("Failed to create folder"));
+    ui.notifications.showError(tr("Failed to create folder"));
   }
 }
 
@@ -1546,17 +1467,17 @@ void Core::interactiveMove(QList<QString> paths, QString destDirectory) {
 
 void Core::onFileOpProgress(FileOpProgress progress) {
   const QString fileName = QFileInfo(progress.currentPath).fileName();
-  mw->showMessage(progress.isMove
+  ui.notifications.showMessage(progress.isMove
                        ? tr("Moving: %1 (%2)").arg(fileName).arg(progress.filesDone)
                        : tr("Copying: %1 (%2)").arg(fileName).arg(progress.filesDone));
 }
 
 void Core::onFileOpFinished(FileOpSummary summary) {
   if (summary.cancelled || summary.filesProcessed == 0) {
-    mw->hideMessage();
+    ui.notifications.hideNotifications();
     return;
   }
-  mw->showMessageSuccess(summary.isMove
+  ui.notifications.showSuccess(summary.isMove
                               ? tr("Moved %n file(s)", "", summary.filesProcessed)
                               : tr("Copied %n file(s)", "", summary.filesProcessed));
 }
@@ -1565,7 +1486,7 @@ void Core::onFileOpFinished(FileOpSummary summary) {
 
 void Core::onClearThumbnailCacheRequested() {
   if (!thumbnailer->clearCache()) {
-      mw->showError(tr("Failed to clear thumbnail cache"));
+      ui.notifications.showError(tr("Failed to clear thumbnail cache"));
   }
 }
 
@@ -1591,16 +1512,16 @@ void Core::moveCurrentFile(QString destDirectory) {
   if (model->isEmpty())
     return;
   // pause updates to avoid flicker
-  mw->setUpdatesEnabled(false);
+  ui.window.setWindowUpdatesSuspended(true);
   // move fails during file playback, so we close it temporarily
-  mw->closeImage();
+  ui.viewer.closeImage();
   FileOpResult result;
   model->moveFileTo(selectedPath(), destDirectory, false, result);
   if (result == FileOpResult::SUCCESS) {
-    mw->showMessageSuccess(tr("File moved."));
+    ui.notifications.showSuccess(tr("File moved."));
   } else if (result == FileOpResult::DESTINATION_FILE_EXISTS) {
-    if (mw->showConfirmation(tr("File exists"),
-                             tr("Destination file exists. Overwrite?")))
+    if (ui.dialogs.confirm({tr("File exists"),
+                            tr("Destination file exists. Overwrite?")}).accepted)
       model->moveFileTo(selectedPath(), destDirectory, true, result);
   }
   if (result != FileOpResult::SUCCESS) {
@@ -1609,8 +1530,7 @@ void Core::moveCurrentFile(QString destDirectory) {
     if (result != FileOpResult::DESTINATION_FILE_EXISTS)
       outputError(result);
   }
-  mw->setUpdatesEnabled(true);
-  mw->repaint();
+  ui.window.setWindowUpdatesSuspended(false);
 }
 
 void Core::copyCurrentFile(QString destDirectory) {
@@ -1619,10 +1539,10 @@ void Core::copyCurrentFile(QString destDirectory) {
   FileOpResult result;
   model->copyFileTo(selectedPath(), destDirectory, false, result);
   if (result == FileOpResult::SUCCESS) {
-    mw->showMessageSuccess(tr("File copied."));
+    ui.notifications.showSuccess(tr("File copied."));
   } else if (result == FileOpResult::DESTINATION_FILE_EXISTS) {
-    if (mw->showConfirmation(tr("File exists"),
-                             tr("Destination file exists. Overwrite?")))
+    if (ui.dialogs.confirm({tr("File exists"),
+                            tr("Destination file exists. Overwrite?")}).accepted)
       model->copyFileTo(selectedPath(), destDirectory, true, result);
   }
   if (result != FileOpResult::SUCCESS &&
@@ -1633,27 +1553,32 @@ void Core::copyCurrentFile(QString destDirectory) {
 void Core::toggleCropPanel() {
   if (model->isEmpty())
     return;
-  if (mw->isCropPanelActive()) {
-    mw->triggerCropPanel();
+  if (ui.shell.isCropPanelActive()) {
+    ui.shell.toggleCropPanel();
   } else if (state.hasActiveImage) {
-    mw->triggerCropPanel();
+    ui.shell.toggleCropPanel();
   }
 }
 
-void Core::toggleFullscreenInfoBar() { mw->toggleFullscreenInfoBar(); }
+void Core::toggleFullscreenInfoBar() { ui.shell.toggleFullscreenInfoBar(); }
 
 void Core::requestSavePath() {
   if (model->isEmpty())
     return;
-  mw->showSaveDialog(selectedPath());
+  const SavePathResult result = ui.dialogs.requestSavePath({selectedPath()});
+  if (result.accepted())
+    saveCurrentFileAs(result.path);
 }
 
 void Core::showResizeDialog() {
   if (model->isEmpty())
     return;
   auto img = model->getImage(selectedPath());
-  if (img)
-    mw->showResizeDialog(img->size());
+  if (!img)
+    return;
+  const std::optional<ResizeRequest> request = ui.dialogs.requestResize(img->size());
+  if (request)
+    resize(*request);
 }
 
 void Core::showBatchConverter() {
@@ -1674,9 +1599,9 @@ void Core::onBatchConverterPathsReady(QList<QString> filePaths, QString defaultO
     return;
 
   QString currentDirPath = model->directoryPath();
-  BatchConverterDialog dialog(filePaths, mw, defaultOutputDir);
-  dialog.exec();
-  if (dialog.conversionWasStarted() && !currentDirPath.isEmpty()) {
+  const BatchConversionResult result =
+      ui.dialogs.runBatchConverter({filePaths, defaultOutputDir});
+  if (result.conversionStarted && !currentDirPath.isEmpty()) {
     model->setDirectory(currentDirPath);
   }
 }
@@ -1696,9 +1621,9 @@ void Core::edit_template(
     Args &&...as) {
   if (model->isEmpty())
     return;
-  if (save && !mw->showConfirmation(
+  if (save && !ui.dialogs.confirm({
                   action, tr("Perform action \"") + action + "\"? \n\n" +
-                              tr("Changes will be saved immediately.")))
+                              tr("Changes will be saved immediately.")}).accepted)
     return;
   const auto selection = currentSelection();
   for (const auto &path : selection) {
@@ -1718,27 +1643,29 @@ void Core::edit_template(
 }
 
 void Core::flipH() {
-  edit_template((mw->currentViewMode() == MODE_FOLDERVIEW),
+  edit_template((ui.viewMode.currentViewMode() == MODE_FOLDERVIEW),
                 tr("Flip horizontal"), {ImageLib::flippedH});
 }
 
 void Core::flipV() {
-  edit_template((mw->currentViewMode() == MODE_FOLDERVIEW), tr("Flip vertical"),
+  edit_template((ui.viewMode.currentViewMode() == MODE_FOLDERVIEW), tr("Flip vertical"),
                 {ImageLib::flippedV});
 }
 
 void Core::rotateByDegrees(int degrees) {
-  edit_template((mw->currentViewMode() == MODE_FOLDERVIEW), tr("Rotate"),
+  edit_template((ui.viewMode.currentViewMode() == MODE_FOLDERVIEW), tr("Rotate"),
                 {ImageLib::rotated}, degrees);
 }
 
-void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString upscaylModel) {
-  if (useUpscayl) {
+void Core::resize(const ResizeRequest &resizeRequest) {
+  const QSize size = resizeRequest.size;
+  const ScalingFilter filter = resizeRequest.filter;
+  if (resizeRequest.useUpscayl) {
     if (model->isEmpty())
       return;
 
     if (activeAiResizeOperation.has_value()) {
-      mw->showMessageAiUpscale(tr("AI resize is already running."));
+      ui.notifications.showAiUpscale(tr("AI resize is already running."));
       return;
     }
 
@@ -1747,20 +1674,20 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
       return;
 
     if (selection.size() > 1) {
-      mw->showWarning(tr("AI resize supports one image at a time."));
+      ui.notifications.showWarning(tr("AI resize supports one image at a time."));
       return;
     }
 
     const QString path = selection.constFirst();
     auto img = getEditableImage(path);
     if (!img) {
-      mw->showError(tr("Could not resize image."));
+      ui.notifications.showError(tr("Could not resize image."));
       return;
     }
 
     std::shared_ptr<const QImage> source = img->getImage();
     if (!source || source->isNull()) {
-      mw->showError(tr("Could not resize image."));
+      ui.notifications.showError(tr("Could not resize image."));
       return;
     }
 
@@ -1778,15 +1705,15 @@ void Core::resize(QSize size, ScalingFilter filter, bool useUpscayl, QString ups
     request.path = path;
     request.targetSize = size;
     request.filter = filter;
-    request.modelName = upscaylModel;
+    request.modelName = resizeRequest.upscaylModel;
     request.sourceImage = source;
     request.generation = ++aiResizeGeneration;
 
     activeAiResizeOperation = AiResizeOperation{
         request.generation, path, img->contentRevision(), img};
-    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QGuiApplication::setOverrideCursor(Qt::WaitCursor);
     aiResizeBusyUiActive = true;
-    mw->showMessageAiUpscale(tr("AI resizing..."), 3600000);
+    ui.notifications.showAiUpscale(tr("AI resizing..."), 3600000);
 
     auto task = new UpscaylResizeRunnable(request);
     task->setAutoDelete(false);
@@ -1804,8 +1731,8 @@ void Core::clearAiResizeBusyUi() {
     return;
 
   aiResizeBusyUiActive = false;
-  QApplication::restoreOverrideCursor();
-  mw->hideMessage();
+  QGuiApplication::restoreOverrideCursor();
+  ui.notifications.hideNotifications();
 }
 
 void Core::onAiResizeFinished(int generation, QString path, QImage image, bool success, QString error) {
@@ -1821,25 +1748,25 @@ void Core::onAiResizeFinished(int generation, QString path, QImage image, bool s
     return;
 
   if (!success || image.isNull()) {
-    mw->showError(error.isEmpty() ? tr("AI resize failed.") : error);
+    ui.notifications.showError(error.isEmpty() ? tr("AI resize failed.") : error);
     return;
   }
 
   if (!model->containsFile(path)) {
-    mw->showWarning(tr("AI resize finished, but the image is no longer in the list."));
+    ui.notifications.showWarning(tr("AI resize finished, but the image is no longer in the list."));
     return;
   }
 
   auto img = getEditableImage(path);
   if (!img) {
-    mw->showError(tr("Could not apply AI resize."));
+    ui.notifications.showError(tr("Could not apply AI resize."));
     return;
   }
 
   const std::shared_ptr<ImageStatic> sourceImage = operation.sourceImage.lock();
   if (!sourceImage || img != sourceImage ||
       img->contentRevision() != operation.sourceRevision) {
-    mw->showWarning(tr("AI resize finished, but the image has changed."));
+    ui.notifications.showWarning(tr("AI resize finished, but the image has changed."));
     return;
   }
 
@@ -1848,27 +1775,27 @@ void Core::onAiResizeFinished(int generation, QString path, QImage image, bool s
 
   if (state.hasActiveImage && path == state.currentFilePath) {
     updateInfoString();
-    mw->showMessageSuccess(tr("AI resize finished."));
+    ui.notifications.showSuccess(tr("AI resize finished."));
   } else {
-    mw->showMessageSuccess(tr("AI resize finished for %1.").arg(QFileInfo(path).fileName()));
+    ui.notifications.showSuccess(tr("AI resize finished for %1.").arg(QFileInfo(path).fileName()));
   }
 }
 
 void Core::crop(QRect rect) {
-  if (mw->currentViewMode() == MODE_FOLDERVIEW)
+  if (ui.viewMode.currentViewMode() == MODE_FOLDERVIEW)
     return;
   edit_template(false, tr("Crop"), {ImageLib::cropped}, rect);
 }
 
 void Core::cropAndSave(QRect rect) {
-  if (mw->currentViewMode() == MODE_FOLDERVIEW)
+  if (ui.viewMode.currentViewMode() == MODE_FOLDERVIEW)
     return;
   edit_template(false, tr("Crop"), {ImageLib::cropped}, rect);
   (void)saveFile(selectedPath());
   updateInfoString();
 }
 
-void Core::applyColorAdjustments(float exposure, float contrast, float brightness, float temperature, float tint, float saturation, float hue) {
+void Core::applyColorAdjustments(const ColorAdjustments &adjustments) {
   if (model->isEmpty())
     return;
 
@@ -1877,17 +1804,10 @@ void Core::applyColorAdjustments(float exposure, float contrast, float brightnes
   if (!img)
     return;
 
-  bool hasAdjustments = (std::abs(brightness) > ImageLib::kAdjustEpsilon ||
-                         std::abs(contrast - 1.0f) > ImageLib::kAdjustEpsilon ||
-                         std::abs(saturation - 1.0f) > ImageLib::kAdjustEpsilon ||
-                         std::abs(hue) > ImageLib::kAdjustEpsilon ||
-                         std::abs(exposure) > ImageLib::kAdjustEpsilon ||
-                         std::abs(temperature) > ImageLib::kAdjustEpsilon ||
-                         std::abs(tint) > ImageLib::kAdjustEpsilon);
-  if (!hasAdjustments)
+  if (!adjustments.hasAdjustments())
     return;
 
-  QImage adjusted = ImageLib::applyColorAdjustments(img->getImage(), exposure, contrast, brightness, temperature, tint, saturation, hue);
+  QImage adjusted = ImageLib::applyColorAdjustments(img->getImage(), adjustments);
   if (adjusted.isNull())
     return;
 
@@ -1906,16 +1826,16 @@ ImageSaveResult Core::saveFile(const QString &filePath) {
 ImageSaveResult Core::saveFile(const QString &filePath, const QString &newPath) {
   const ImageSaveResult saveResult = model->saveFile(filePath, newPath);
   if (!saveResult.succeeded()) {
-    mw->showError(imageSaveFailureMessage(saveResult));
+    ui.notifications.showError(imageSaveFailureMessage(saveResult));
     return saveResult;
   }
   if (!saveResult.retainedBackupPath.isEmpty())
-    mw->showWarning(retainedBackupWarningMessage(saveResult));
-  mw->hideSaveOverlay();
+    ui.notifications.showWarning(retainedBackupWarningMessage(saveResult));
+  ui.shell.setSaveOverlayVisible(false);
   // switch to the new file
   if (model->containsFile(newPath) && state.currentFilePath != newPath) {
     discardEdits();
-    if (mw->currentViewMode() == MODE_DOCUMENT)
+    if (ui.viewMode.currentViewMode() == MODE_DOCUMENT)
       loadPath(newPath);
   }
   return saveResult;
@@ -1929,7 +1849,7 @@ void Core::saveCurrentFileAs(QString destPath) {
   const ImageSaveResult saveResult = saveFile(selectedPath(), destPath);
   if (saveResult.succeeded()) {
     if (saveResult.retainedBackupPath.isEmpty())
-      mw->showMessageSuccess(tr("File saved"));
+      ui.notifications.showSuccess(tr("File saved"));
     updateInfoString();
   }
 }
@@ -1944,13 +1864,13 @@ void Core::discardEdits() {
     imgStatic->discardEditedImage();
     model->updateImage(selectedPath(), img);
   }
-  mw->hideSaveOverlay();
+  ui.shell.setSaveOverlayVisible(false);
 }
 
 QString Core::selectedPath() {
   if (!model)
     return "";
-  else if (mw->currentViewMode() == MODE_FOLDERVIEW) {
+  else if (ui.viewMode.currentViewMode() == MODE_FOLDERVIEW) {
     auto paths = folderViewPresenter.selectedPaths();
     return paths.isEmpty() ? QString() : paths.constLast();
   }
@@ -1961,7 +1881,7 @@ QString Core::selectedPath() {
 QList<QString> Core::currentSelection() {
   if (!model)
     return QList<QString>();
-  else if (mw->currentViewMode() == MODE_FOLDERVIEW)
+  else if (ui.viewMode.currentViewMode() == MODE_FOLDERVIEW)
     return folderViewPresenter.selectedPaths();
   else
     return QList<QString>() << state.currentFilePath;
@@ -1994,7 +1914,7 @@ void Core::showRenameDialog() {
   if (selectedPath().isEmpty())
     return;
   QFileInfo fi(selectedPath());
-  mw->toggleRenameOverlay(fi.fileName());
+  ui.shell.toggleRenamePrompt(fi.fileName());
 }
 
 void Core::runScript(const QString &scriptName) {
@@ -2008,47 +1928,44 @@ void Core::setWallpaper() {
     return;
   auto img = model->getImage(selectedPath());
   if (!img || img->type() != DocumentType::STATIC) {
-    mw->showMessage(tr("Set wallpaper: file not supported"));
+    ui.notifications.showMessage(tr("Set wallpaper: file not supported"));
     return;
   }
 
   auto imgStatic = std::dynamic_pointer_cast<ImageStatic>(img);
   if (!imgStatic) {
-    mw->showMessage(tr("Set wallpaper: file not supported"));
+    ui.notifications.showMessage(tr("Set wallpaper: file not supported"));
     return;
   }
 
   auto sourceImage = imgStatic->getImage();
   if (!sourceImage || sourceImage->isNull()) {
-    mw->showMessage(tr("Set wallpaper: failed to get image"));
+    ui.notifications.showMessage(tr("Set wallpaper: failed to get image"));
     return;
   }
 
-  wallpaperController->setWallpaper(sourceImage, mw);
+  wallpaperController->setWallpaper(sourceImage);
 }
 
 void Core::print() {
   if (model->isEmpty())
     return;
-  PrintDialog p(mw);
   auto img = model->getImage(selectedPath());
   if (!img) {
-    mw->showError(tr("Could not open image"));
+    ui.notifications.showError(tr("Could not open image"));
     return;
   }
   if (img->type() != DocumentType::STATIC) {
-    mw->showError(tr("Can only print static images"));
+    ui.notifications.showError(tr("Can only print static images"));
     return;
   }
   QString pdfPath = model->directoryPath() + "/" + img->baseName() + ".pdf";
-  p.setImage(img->getImage());
-  p.setOutputPath(pdfPath);
-  p.exec();
+  ui.dialogs.print({img->getImage(), pdfPath});
 }
 
 void Core::scalingRequest(QSize size, ScalingFilter filter) {
   // filter out an unnecessary scale request at statup
-  if (mw->isVisible() && state.hasActiveImage) {
+  if (ui.window.isWindowVisible() && state.hasActiveImage) {
     std::shared_ptr<Image> forScale = model->getImage(state.currentFilePath);
     if (forScale) {
       model->requestScaled(
@@ -2059,16 +1976,16 @@ void Core::scalingRequest(QSize size, ScalingFilter filter) {
 
 void Core::onScalingFinished(QImage scaled, ScalerRequest req) {
   if (state.hasActiveImage && req.path == state.currentFilePath) {
-    mw->onScalingFinished(scaled);
-    if (mw->panoramaMode()) {
-      mw->hideUpscaledCrop();
+    ui.viewer.showScaledImage(scaled);
+    if (ui.viewer.panoramaMode()) {
+      ui.viewer.hideUpscaledCrop();
       upscaler->reset();
     } else if (settings->useUpscayl() && req.image &&
         req.image->type() == DocumentType::STATIC) {
 
       bool limitExceeded = true;
       if (settings->upscaylLimitEnabled()) {
-        float currentZoom = mw->currentScale() * 100.0f;
+        float currentZoom = ui.viewer.currentScale() * 100.0f;
         if (currentZoom <= settings->upscaylLimitValue()) {
           limitExceeded = false;
         }
@@ -2082,7 +1999,7 @@ void Core::onScalingFinished(QImage scaled, ScalerRequest req) {
         }
       }
     } else if (!settings->useUpscayl()) {
-      mw->hideUpscaledCrop();
+      ui.viewer.hideUpscaledCrop();
     }
   }
 }
@@ -2123,7 +2040,7 @@ bool Core::loadPath(QString path) {
       state.delayModel = true;
     }
   } else {
-    mw->showError(tr("Could not open path: ") + path);
+    ui.notifications.showError(tr("Could not open path: ") + path);
     qDebug() << "Could not open path: " << path;
     return false;
   }
@@ -2162,13 +2079,13 @@ bool Core::loadPath(QString path) {
         }
       }
     }
-    mw->enableDocumentView();
+    ui.viewMode.enableDocumentView();
     success = loadFileIndex(index, false, settings->usePreloader());
   } else {
-    if (mw->currentViewMode() == MODE_DOCUMENT && model->fileCount() > 0) {
+    if (ui.viewMode.currentViewMode() == MODE_DOCUMENT && model->fileCount() > 0) {
       success = loadFileIndex(0, false, settings->usePreloader());
     } else {
-      mw->enableFolderView();
+      ui.viewMode.enableFolderView();
       success = true;
     }
   }
@@ -2188,10 +2105,10 @@ bool Core::setDirectory(QString path) {
     }
     this->reset();
     if (!model->setDirectory(path)) {
-      mw->showError(tr("Could not load folder: ") + path);
+      ui.notifications.showError(tr("Could not load folder: ") + path);
       return false;
     }
-    mw->setDirectoryPath(path);
+    ui.shell.setDirectoryPath(path);
     state.directoryPath = path;
   }
   return true;
@@ -2214,7 +2131,7 @@ bool Core::loadFileIndex(int index, bool async, bool preload) {
 }
 
 void Core::loadParentDir() {
-  if (mw->currentViewMode() != MODE_FOLDERVIEW)
+  if (ui.viewMode.currentViewMode() != MODE_FOLDERVIEW)
     return;
   if (model->directoryPath().isEmpty()) {
       if (model->source() == SOURCE_LIST) {
@@ -2241,13 +2158,13 @@ void Core::loadParentDir() {
 
 void Core::nextDirectory() {
   if (model->directoryPath().isEmpty() ||
-      mw->currentViewMode() != MODE_DOCUMENT ||
+      ui.viewMode.currentViewMode() != MODE_DOCUMENT ||
       model->loaderBusy())
     return;
   stopSlideshow();
   auto nextResult = model->nextSiblingDir(model->directoryPath());
   if (!nextResult) {
-    mw->showError(tr("Could not enumerate sibling folders: ") +
+    ui.notifications.showError(tr("Could not enumerate sibling folders: ") +
                   QString::fromStdString(nextResult.error().message()));
     return;
   }
@@ -2257,23 +2174,23 @@ void Core::nextDirectory() {
       return;
     m_pendingDocumentLoad = PendingDocumentLoad::FirstImage;
     QFileInfo fi(next);
-    mw->showMessageDirectory(fi.baseName());
+    ui.notifications.showDirectory(fi.baseName());
     if (settings->rememberLastFolder())
       settings->setLastFolder(next);
   } else {
-    mw->showMessageDirectoryEnd();
+    ui.notifications.showDirectoryEnd();
   }
 }
 
 void Core::prevDirectory(bool selectLast) {
   if (model->directoryPath().isEmpty() ||
-      mw->currentViewMode() != MODE_DOCUMENT ||
+      ui.viewMode.currentViewMode() != MODE_DOCUMENT ||
       model->loaderBusy())
     return;
   stopSlideshow();
   auto prevResult = model->prevSiblingDir(model->directoryPath());
   if (!prevResult) {
-    mw->showError(tr("Could not enumerate sibling folders: ") +
+    ui.notifications.showError(tr("Could not enumerate sibling folders: ") +
                   QString::fromStdString(prevResult.error().message()));
     return;
   }
@@ -2283,11 +2200,11 @@ void Core::prevDirectory(bool selectLast) {
       return;
     m_pendingDocumentLoad = selectLast ? PendingDocumentLoad::LastImage : PendingDocumentLoad::FirstImage;
     QFileInfo fi(prev);
-    mw->showMessageDirectory(fi.baseName());
+    ui.notifications.showDirectory(fi.baseName());
     if (settings->rememberLastFolder())
       settings->setLastFolder(prev);
   } else {
-    mw->showMessageDirectoryStart();
+    ui.notifications.showDirectoryStart();
   }
 }
 
@@ -2308,7 +2225,7 @@ void Core::historyBack() {
     // When in document mode (thumbnail panel with subfolders), stay in
     // document mode instead of switching to folder view.  loadPath() would
     // see fileCount()==0 (async scan) and flip to folder view.
-    if (mw->currentViewMode() == MODE_DOCUMENT && QFileInfo(path).isDir()) {
+    if (ui.viewMode.currentViewMode() == MODE_DOCUMENT && QFileInfo(path).isDir()) {
       stopSlideshow();
       setDirectory(path);
       m_pendingDocumentLoad = PendingDocumentLoad::FirstImage;
@@ -2328,7 +2245,7 @@ void Core::historyForward() {
     QString path = forwardHistory.takeLast();
     backHistory.append(model->directoryPath());
     blockHistory = true;
-    if (mw->currentViewMode() == MODE_DOCUMENT && QFileInfo(path).isDir()) {
+    if (ui.viewMode.currentViewMode() == MODE_DOCUMENT && QFileInfo(path).isDir()) {
       stopSlideshow();
       setDirectory(path);
       m_pendingDocumentLoad = PendingDocumentLoad::FirstImage;
@@ -2342,7 +2259,7 @@ void Core::historyForward() {
 }
 
 void Core::nextImage() {
-  if (mw->currentViewMode() == MODE_FOLDERVIEW) {
+  if (ui.viewMode.currentViewMode() == MODE_FOLDERVIEW) {
     historyForward();
     return;
   }
@@ -2363,7 +2280,7 @@ void Core::nextImage() {
       return;
     } else {
       if (!model->loaderBusy())
-        mw->showMessageDirectoryEnd();
+        ui.notifications.showDirectoryEnd();
       return;
     }
   }
@@ -2371,7 +2288,7 @@ void Core::nextImage() {
 }
 
 void Core::prevImage() {
-  if (mw->currentViewMode() == MODE_FOLDERVIEW) {
+  if (ui.viewMode.currentViewMode() == MODE_FOLDERVIEW) {
     historyBack();
     return;
   }
@@ -2393,7 +2310,7 @@ void Core::prevImage() {
       return;
     } else {
       if (!model->loaderBusy())
-        mw->showMessageDirectoryStart();
+        ui.notifications.showDirectoryStart();
       return;
     }
   }
@@ -2401,7 +2318,7 @@ void Core::prevImage() {
 }
 
 void Core::nextImageSlideshow() {
-  if (model->isEmpty() || mw->currentViewMode() == MODE_FOLDERVIEW)
+  if (model->isEmpty() || ui.viewMode.currentViewMode() == MODE_FOLDERVIEW)
     return;
   if (shuffle) {
     loadFileIndex(randomizer.next(), false, false);
@@ -2412,7 +2329,7 @@ void Core::nextImageSlideshow() {
         newIndex = 0;
       } else {
         stopSlideshow();
-        mw->showMessage(tr("End of directory."));
+        ui.notifications.showMessage(tr("End of directory."));
         return;
       }
     }
@@ -2434,7 +2351,7 @@ void Core::jumpToFirst() {
     return;
   stopSlideshow();
   loadFileIndex(0, true, settings->usePreloader());
-  mw->showMessageDirectoryStart();
+  ui.notifications.showDirectoryStart();
 }
 
 void Core::jumpToLast() {
@@ -2442,14 +2359,14 @@ void Core::jumpToLast() {
     return;
   stopSlideshow();
   loadFileIndex(model->fileCount() - 1, true, settings->usePreloader());
-  mw->showMessageDirectoryEnd();
+  ui.notifications.showDirectoryEnd();
 }
 
 void Core::onLoadFailed(const QString &path) {
-  mw->showMessage(tr("Load failed: ") + path);
+  ui.notifications.showMessage(tr("Load failed: ") + path);
   model->clearScaler();
   if (path == state.currentFilePath)
-    mw->closeImage();
+    ui.viewer.closeImage();
 }
 
 void Core::onModelItemReady(std::shared_ptr<Image> img, const QString &path) {
@@ -2473,7 +2390,7 @@ void Core::onModelItemReady(std::shared_ptr<Image> img, const QString &path) {
 void Core::modelDelayLoad() {
   model->clearScaler();
   model->setDirectory(state.directoryPath);
-  mw->setDirectoryPath(state.directoryPath);
+  ui.shell.setDirectoryPath(state.directoryPath);
   pendingModelImageSync = true;
 }
 
@@ -2493,7 +2410,7 @@ void Core::onModelItemUpdated(QString filePath) {
 
 void Core::onModelSortingChanged(SortingMode mode) {
   settings->setSortingMode(mode);
-  mw->onSortingChanged(mode);
+  ui.shell.notifySortingChanged(mode);
   thumbPanelPresenter.reloadModel();
   thumbPanelPresenter.selectAndFocus(state.currentFilePath);
   folderViewPresenter.reloadModel();
@@ -2502,7 +2419,7 @@ void Core::onModelSortingChanged(SortingMode mode) {
 
 void Core::onFolderSortingSelected(SortingMode mode) {
   settings->setFolderIconSortingMode(mode);
-  mw->onFolderSortingChanged(mode);
+  ui.shell.notifyFolderSortingChanged(mode);
   folderViewPresenter.reloadModel();
 }
 
@@ -2518,21 +2435,21 @@ void Core::onNameFilterSelected(QString nameFilter) {
 void Core::guiSetImage(std::shared_ptr<Image> img) {
   state.hasActiveImage = true;
   if (!img) {
-    mw->showMessage(tr("Error: could not load image."));
+    ui.notifications.showMessage(tr("Error: could not load image."));
     return;
   }
   DocumentType type = img->type();
   if (type == STATIC) {
     auto displayImage = img->getDisplayImage();
     if (!displayImage) {
-      mw->showMessage(tr("Error: could not load image."));
+      ui.notifications.showMessage(tr("Error: could not load image."));
       return;
     }
-    mw->showImage(displayImage, img->filePath());
+    ui.viewer.showImage(displayImage, img->filePath());
   } else if (type == ANIMATED) {
-    mw->showAnimation(img->filePath(), img->format(), img->size());
+    ui.viewer.showAnimation(img->filePath(), img->format(), img->size());
   }
-  img->isEdited() ? mw->showSaveOverlay() : mw->hideSaveOverlay();
+  img->isEdited() ? ui.shell.setSaveOverlayVisible(true) : ui.shell.setSaveOverlayVisible(false);
 
   // EXIF tags don't have a meaningful display order (alphabetical is fine),
   // but generation info does — QList<QPair<>> is used there instead of
@@ -2556,7 +2473,7 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
   for (auto it = exifTags.constBegin(); it != exifTags.constEnd(); ++it)
     info.append({ it.key(), it.value() });
   info.append(img->getGenerationInfo());
-  mw->setExifInfo(info);
+  ui.shell.setMetadata(info);
 }
 
 // Shows a one-time "this document has multiple pages" hint the first time
@@ -2576,7 +2493,7 @@ void Core::maybeShowPageHint(const std::shared_ptr<Image> &img) {
   autoPageHintShown.insert(path);
 
   int page = ImageStatic::pageOverrideForPath(path) + 1;
-  mw->showMessage(tr("Page %1/%2").arg(page).arg(img->frameCount()),
+  ui.notifications.showMessage(tr("Page %1/%2").arg(page).arg(img->frameCount()),
                    PageChangeMessageDurationMs);
 }
 
@@ -2599,7 +2516,7 @@ void Core::showPageChangeMessage(const QString &path) {
     return;
 
   int page = ImageStatic::pageOverrideForPath(path) + 1;
-  mw->showMessage(tr("Page %1/%2").arg(page).arg(state.currentImg->frameCount()),
+  ui.notifications.showMessage(tr("Page %1/%2").arg(page).arg(state.currentImg->frameCount()),
                    PageChangeMessageDurationMs);
 }
 
@@ -2652,22 +2569,32 @@ void Core::updateInfoString() {
     }
   }
   int index = model->indexOfFile(state.currentFilePath);
-  mw->setCurrentInfo(index, model->fileCount(), model->filePathAt(index),
-                     model->fileNameAt(index), imageSize, fileSize, format,
-                     colorProfile, slideshow, shuffle, edited);
+  ShellFileInfo info;
+  info.index = index;
+  info.fileCount = model->fileCount();
+  info.filePath = model->filePathAt(index);
+  info.fileName = model->fileNameAt(index);
+  info.imageSize = imageSize;
+  info.fileSize = fileSize;
+  info.format = format;
+  info.colorProfile = colorProfile;
+  info.slideshow = slideshow;
+  info.shuffle = shuffle;
+  info.edited = edited;
+  ui.shell.setCurrentInfo(info);
 }
 
 void Core::suspendToStandby() {
     m_resumeFromStandby = true;
-    m_lastViewMode = mw->currentViewMode();
+    m_lastViewMode = ui.viewMode.currentViewMode();
     stopSlideshow();
     preloadTimer.stop();
-    mw->closeImage();
+    ui.viewer.closeImage();
     this->reset();
-    mw->setDirectoryPath("");
+    ui.shell.setDirectoryPath("");
 
-    mw->saveWindowGeometry();
-    mw->hide();
+    ui.window.saveWindowGeometry();
+    ui.window.hideWindow();
     EmptyWorkingSet(GetCurrentProcess());
 }
 
@@ -2689,5 +2616,5 @@ void Core::loadDefaultPath() {
 }
 
 void Core::forceExit() {
-    QApplication::quit();
+    QCoreApplication::quit();
 }

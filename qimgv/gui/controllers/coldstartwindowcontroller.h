@@ -1,16 +1,22 @@
 #pragma once
 
 #include <QObject>
-#include <QPointer>
 #include <QTimer>
 
-class FolderViewProxy;
-class MW;
+class IViewerPort;
+class IViewModePort;
+class IWindowPort;
+class UiEvents;
 
+// Keeps the main window concealed on first show until the initial view
+// (folder view thumbnails or the first document) has been laid out, then
+// reveals it. Talks to the UI only through ports; the referenced ports must
+// outlive this controller.
 class ColdStartWindowController final : public QObject {
     Q_OBJECT
 public:
-    ColdStartWindowController(MW &window, FolderViewProxy &folderView);
+    ColdStartWindowController(IWindowPort &window, IViewModePort &viewMode,
+                              IViewerPort &viewer, UiEvents &events);
 
     void show();
     void onDirectoryModelLoaded();
@@ -33,14 +39,14 @@ private:
     static constexpr int kFolderViewReadinessTimeoutMs = 2000;
     static constexpr int kLayoutSettleDelayMs = 0;
     static constexpr int kDocumentReadyFallbackMs = 1000;
-    static constexpr qreal kHiddenWindowOpacity = 0.0;
-    static constexpr qreal kVisibleWindowOpacity = 1.0;
 
     void waitForFolderView();
     void waitForDocumentLayout();
     void tryRevealFolderView();
 
-    QPointer<MW> window;
+    IWindowPort &window;
+    IViewModePort &viewMode;
+    IViewerPort &viewer;
     QTimer maximumWaitTimer;
     QTimer documentReadyFallbackTimer;
     State state = State::Initial;
