@@ -4,3 +4,4 @@
 // test class with QTest::qExec() and returns its exit code.
 int runQimgvTests(int argc, char **argv);
 int runViewTransformTests(int argc, char **argv);
+int runTileGridTests(int argc, char **argv);

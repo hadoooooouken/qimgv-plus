@@ -9,6 +9,7 @@
 // The qimgv.* QML modules are static; see gui/quick/quickuihost.cpp.
 Q_IMPORT_QML_PLUGIN(qimgv_bridgesPlugin)
 Q_IMPORT_QML_PLUGIN(qimgv_uiPlugin)
+Q_IMPORT_QML_PLUGIN(qimgv_renderPlugin)
 
 namespace {
 using namespace Qt::StringLiterals;

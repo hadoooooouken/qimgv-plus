@@ -31,9 +31,13 @@ option(QIMGV_BUILD_TESTS "Build the Qt Test and Qt Quick Test suites" ON)
 
 # FIND PACKAGES
 set(QT_VERSION_MAJOR 6)
+# GuiPrivate (QRhi) is used deliberately by qimgv.render; see its CMakeLists.
+set(QT_NO_PRIVATE_MODULE_WARNING ON)
 find_package(Qt6 6.12 REQUIRED COMPONENTS
     Core Widgets Network Svg SvgWidgets PrintSupport OpenGLWidgets Sql Pdf
     Qml Quick QuickControls2 QuickDialogs2 ShaderTools
+    # QRhi headers (<rhi/qrhi.h>) for the qimgv.render module.
+    GuiPrivate
     Test QuickTest)
 
 # Qt CMake policies are opted into individually instead of through

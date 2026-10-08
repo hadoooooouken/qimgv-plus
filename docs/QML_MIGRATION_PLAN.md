@@ -418,6 +418,57 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
   50 %, 25 %, 300 % on opaque, alpha and 16-bit test images; a 32000 x 8000
   image renders without CPU fallback; no GUI-thread access from the
   renderer.
+- **Delivered:**
+  - `qimgv.render` (`gui/quick/render/`): `ImageRenderItem`
+    (`QQuickRhiItem`, `QML_ELEMENT`) holds GUI-thread state only;
+    `ImageRenderer` copies an immutable `RenderFrame` in `synchronize()`
+    (`std::shared_ptr<const QImage>` + image generation, `ImagePlacement`,
+    `RenderSettings`, DPR). C++ API: `setImage()`, `setPlacement()`,
+    `setRenderSettings()`; QML properties `sampling`
+    (`RenderEnums.TextureSampling.Nearest/Bilinear/Trilinear`),
+    `backgroundColor`, `transparencyGrid`, `imagePosition`, `imageScale`
+    (device px per source px, as in `ViewTransform`), `imageSize`.
+    `ImagePlacement` does not include `viewtransform.h`; the
+    `ViewTransform` -> `ImagePlacement` adapter belongs to `QuickViewerPort`
+    (S1.6).
+  - One pass, one pipeline (`res/shaders/rhi/image.vert/.frag`, GLSL 440 via
+    `qt_add_shaders`): clear to the premultiplied background, then one quad
+    per tile, clipped to the item on the CPU in double precision. The
+    checkerboard (same 16 px / `#999999` / `#666666` pattern as
+    `ImageViewerV2`) is composited under the image in the fragment shader.
+    The image origin is snapped to whole device pixels so 1:1 is
+    texel-exact at fractional DPR.
+  - Upload: `RGB32` / `ARGB32_Premultiplied` as `BGRA8` and
+    `RGBA8888_Premultiplied` / `RGBX8888` as `RGBA8` without conversion;
+    other 8-bit formats are converted per tile to premultiplied RGBA8.
+    **Deviation (approved):** formats above 8 bits per channel go to
+    `RGBA16F` premultiplied when supported (better than the 8-bit parity
+    baseline). Mips are generated on every upload; conversion runs on the
+    render thread, never on the GUI thread.
+  - **Deviation (approved):** tiles overlap by `TileGrid::kOverlap` = 64
+    texels with texture origins aligned to 64, instead of one texel, so mip
+    levels 0..6 match the whole-image pyramid and trilinear is seamless down
+    to 1/64 scale; below that, slight seams are possible.
+  - Errors (shader load, resource `create()`, untileable size, missing
+    update batch) are reported once per distinct message through
+    `RenderErrorChannel` -> `renderError(QString)` on the GUI thread
+    (queued `invokeMethod`). `QQuickRhiItemRenderer::update()` does not
+    re-run `synchronize()`, so errors cannot be handed over there. A new
+    `QRhi` in `initialize()` (window change, device loss) drops all
+    resources and re-uploads from the retained image.
+  - `Main.qml` contains an `ImageRenderItem` bound to the theme background
+    and the transparency-grid setting; it gets images from `Core` in S2.1.
+  - Tests: `qimgv_tests` gained the `TileGrid` suite. New
+    `qimgv_render_tests` renders headless through `QQuickRenderControl` on
+    Direct3D 11 and compares against CPU references (box averages = exact
+    mip levels, nearest / bilinear magnification) for opaque, alpha and
+    16-bit images at 100 / 50 / 25 / 300 %, plus checkerboard, tiled vs
+    untiled, a 32000 x 8000 image (two tiles on D3D11, no CPU path), error
+    reporting and moving the item to another `QRhi`. The comparison is
+    against these CPU references, not an automated capture of the widget
+    viewer.
+  - `Qt6::GuiPrivate` is now required (QRhi headers);
+    `QQuickRhiItem` is still a technology preview in 6.12.
 
 #### S1.2 Shader port: colour adjustments, sharpening, exact downsample
 - **Goal:** feature parity with `filter.frag` and `boxreduce.*` on all RHI

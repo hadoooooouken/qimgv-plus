@@ -27,6 +27,7 @@ target_link_libraries(qimgv_qml_tests PRIVATE
     qimgv_bridges
     qimgv_bridgesplugin
     qimgv_uiplugin
+    qimgv_renderplugin
 )
 
 qimgv_configure_test(qimgv_qml_tests)

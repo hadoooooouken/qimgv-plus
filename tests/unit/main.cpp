@@ -9,5 +9,6 @@ int main(int argc, char **argv) {
   int status = 0;
   status |= runQimgvTests(argc, argv);
   status |= runViewTransformTests(argc, argv);
+  status |= runTileGridTests(argc, argv);
   return status;
 }

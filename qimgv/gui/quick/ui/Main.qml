@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import qimgv.bridges
+import qimgv.render
 
 // Main window of the Qt Quick UI (--ui=quick). The Basic style is imported
 // explicitly: it is the base of the application style and lets qmlsc compile
@@ -18,4 +19,14 @@ ApplicationWindow {
     visible: true
     title: Qt.application.name
     color: Theme.colors.background
+
+    // GPU image view. Images are supplied from C++ once Core drives the Quick
+    // UI (S2.1); until then it shows the viewer background only.
+    ImageRenderItem {
+        id: imageView
+
+        anchors.fill: parent
+        backgroundColor: Theme.colors.background
+        transparencyGrid: AppSettings.viewer.transparencyGrid
+    }
 }

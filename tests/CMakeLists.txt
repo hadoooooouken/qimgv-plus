@@ -1,6 +1,7 @@
 ## QIMGV TESTS
 # qimgv_tests      Qt Test suite for UI-independent components.
 # qimgv_qml_tests  Qt Quick Test suite for the QML modules.
+# qimgv_render_tests  Qt Test pixel tests of the qimgv.render GPU renderer.
 
 # Tests run from the build tree without windeployqt: Qt's bin directory
 # provides the DLLs, and QLibraryInfo then resolves the Qt plugin and QML
@@ -29,3 +30,4 @@ endfunction()
 
 add_subdirectory(unit)
 add_subdirectory(qml)
+add_subdirectory(render)
