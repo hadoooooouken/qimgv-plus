@@ -40,6 +40,7 @@ set_source_files_properties(${TS_FILES} PROPERTIES OUTPUT_LOCATION ${PROJECT_BIN
 
 # ADD EXECUTABLE
 add_executable(qimgv-plus
+    appservices.cpp
     appversion.cpp
     core.cpp
     main.cpp

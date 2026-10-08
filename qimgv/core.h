@@ -27,10 +27,6 @@
 
 class ImageStatic;
 
-#ifdef __GLIBC__
-#include <malloc.h>
-#endif
-
 struct State {
     bool hasActiveImage = false;
     bool delayModel = false;

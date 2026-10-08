@@ -12,23 +12,18 @@
 #include <QStandardPaths>
 
 #include <cstdlib>
+#include <memory>
 #include <optional>
 
-#ifdef _WIN32
 #include <windows.h>
-#endif
 
+#include "appservices.h"
 #include "appversion.h"
-#include "components/actionmanager/actionmanager.h"
 #include "core.h"
 #include "gui/quick/quickuihost.h"
 #include "proxystyle.h"
 #include "settings.h"
-#include "sharedresources.h"
-#include "utils/actions.h"
 #include "utils/cmdoptionsrunner.h"
-#include "utils/iconfontmanager.h"
-#include "utils/inputmap.h"
 
 //------------------------------------------------------------------------------
 ProxyStyleColors proxyStyleColors(const ColorScheme &colors) {
@@ -42,41 +37,14 @@ ProxyStyleColors proxyStyleColors(const ColorScheme &colors) {
   };
 }
 //------------------------------------------------------------------------------
-void initSingletons(ProxyStyle &proxyStyle) {
-  // Must run before any IconWidget/StyledComboBox is constructed, since
-  // both resolve glyphs through IconFontManager::pixmap() during their
-  // first paint. Safe to call unconditionally: init() is idempotent and
-  // a failed font load just means glyph rendering will log a warning and
-  // return null pixmaps instead of crashing.
-  IconFontManager::init();
-  inputMap = InputMap::getInstance();
-  appActions = Actions::getInstance();
-  settings = Settings::getInstance();
-  proxyStyle.setColors(proxyStyleColors(settings->colorScheme()));
-  Settings *appSettings = settings;
-  QObject::connect(appSettings, &Settings::settingsChanged, &proxyStyle,
-                   [appSettings, &proxyStyle]() {
+// Keeps the application style in sync with the current colour scheme.
+void bindProxyStyleToSettings(ProxyStyle &proxyStyle, Settings &appSettings) {
+  proxyStyle.setColors(proxyStyleColors(appSettings.colorScheme()));
+  QObject::connect(&appSettings, &Settings::settingsChanged, &proxyStyle,
+                   [&appSettings, &proxyStyle]() {
                      proxyStyle.setColors(
-                         proxyStyleColors(appSettings->colorScheme()));
+                         proxyStyleColors(appSettings.colorScheme()));
                    });
-  scriptManager = ScriptManager::getInstance();
-  actionManager = ActionManager::getInstance();
-  shrRes = SharedResources::getInstance();
-}
-//------------------------------------------------------------------------------
-void cleanupSingletons() {
-  delete actionManager;
-  actionManager = nullptr;
-  delete scriptManager;
-  scriptManager = nullptr;
-  delete settings;
-  settings = nullptr;
-  delete inputMap;
-  inputMap = nullptr;
-  delete appActions;
-  appActions = nullptr;
-  delete shrRes;
-  shrRes = nullptr;
 }
 //------------------------------------------------------------------------------
 QDataStream &operator<<(QDataStream &out, const Script &v) {
@@ -100,6 +68,9 @@ using namespace Qt::StringLiterals;
 constexpr QLatin1StringView uiOptionName = "ui"_L1;
 constexpr QLatin1StringView uiModeWidgetsName = "widgets"_L1;
 constexpr QLatin1StringView uiModeQuickName = "quick"_L1;
+
+constexpr int singleInstanceConnectTimeoutMs = 500;
+constexpr int singleInstanceWriteTimeoutMs = 1000;
 } // namespace
 
 std::optional<UiMode> uiModeFromName(QStringView name) {
@@ -122,9 +93,21 @@ int main(int argc, char *argv[]) {
                                     << QCoreApplication::applicationDirPath());
 
   // use some style workarounds with platform-independent Fusion base to prevent
-  // uxtheme clashes in Windows 11
+  // uxtheme clashes in Windows 11.
+  // Ownership: ProxyStyle owns the Fusion base style, and setStyle() makes
+  // QApplication the owner of ProxyStyle, which deletes it on destruction.
+  // proxyStyle is a non-owning handle that stays valid for all of main().
   auto *proxyStyle = new ProxyStyle(QStyleFactory::create("fusion"));
   a.setStyle(proxyStyle);
+
+  // Declared after the QApplication so it is destroyed first, while the
+  // style and the event loop objects still exist. Engaged only on the paths
+  // that need the services.
+  std::optional<AppServices> services;
+  const auto startServices = [&services, proxyStyle]() {
+    services.emplace();
+    bindProxyStyleToSettings(*proxyStyle, *settings);
+  };
 
   QCoreApplication::setOrganizationName("qimgv-plus");
   QCoreApplication::setOrganizationDomain(
@@ -186,13 +169,13 @@ int main(int argc, char *argv[]) {
 
   int exitCode = 0;
   if (parser.isSet("build-options")) {
-    initSingletons(*proxyStyle);
+    startServices();
 
     CmdOptionsRunner r;
     QTimer::singleShot(0, &r, &CmdOptionsRunner::showBuildOptions);
     exitCode = a.exec();
   } else if (parser.isSet("gen-thumbs")) {
-    initSingletons(*proxyStyle);
+    startServices();
 
     int size = settings->folderViewIconSize();
     if (parser.isSet("gen-thumbs-size"))
@@ -225,12 +208,15 @@ int main(int argc, char *argv[]) {
                          QCryptographicHash::hash(QDir::tempPath().toUtf8(),
                                                   QCryptographicHash::Md5)
                              .toHex();
-    QLocalServer *server = nullptr;
+    // Outlives Core. Its connections use Core as the context object, so they
+    // are dropped when Core is destroyed; pending client sockets are children
+    // of the server and go with it.
+    std::unique_ptr<QLocalServer> server;
 
     if (!isMultiInstance) {
       QLocalSocket socket;
       socket.connectToServer(serverName);
-      if (socket.waitForConnected(500)) {
+      if (socket.waitForConnected(singleInstanceConnectTimeoutMs)) {
         QByteArray data;
         QDataStream out(&data, QIODevice::WriteOnly);
         QString pathToSend;
@@ -239,36 +225,36 @@ int main(int argc, char *argv[]) {
               QFileInfo(parser.positionalArguments().at(0)).absoluteFilePath();
         }
         out << pathToSend;
-#ifdef _WIN32
         AllowSetForegroundWindow(ASFW_ANY);
-#endif
         socket.write(data);
-        socket.waitForBytesWritten(1000);
+        socket.waitForBytesWritten(singleInstanceWriteTimeoutMs);
         socket.disconnectFromServer();
         return 0;
       }
 
       QLocalServer::removeServer(serverName);
-      server = new QLocalServer(&a);
+      server = std::make_unique<QLocalServer>();
     }
 
-    // Primary instance, initialize all singletons
-    initSingletons(*proxyStyle);
+    // Primary instance, initialize all services
+    startServices();
 
     {
       QApplication::setQuitOnLastWindowClosed(false);
       Core core;
 
       if (server) {
+        QLocalServer *localServer = server.get();
         QObject::connect(
-            server, &QLocalServer::newConnection, [server, &core]() {
-              QLocalSocket *clientSocket = server->nextPendingConnection();
+            localServer, &QLocalServer::newConnection, &core,
+            [localServer, &core]() {
+              QLocalSocket *clientSocket = localServer->nextPendingConnection();
               if (!clientSocket)
                 return;
               QObject::connect(clientSocket, &QLocalSocket::disconnected,
                                clientSocket, &QLocalSocket::deleteLater);
               QObject::connect(clientSocket, &QLocalSocket::readyRead,
-                               [clientSocket, &core]() {
+                               clientSocket, [clientSocket, &core]() {
                                  QDataStream in(clientSocket);
                                  in.startTransaction();
                                  QString pathReceived;
@@ -302,6 +288,5 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  cleanupSingletons();
   return exitCode;
 }
