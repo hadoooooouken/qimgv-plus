@@ -1251,94 +1251,12 @@ QImage ImageLib::scaled_MKS2021(std::shared_ptr<const QImage> source,
   return destImg;
 }
 
-ColorMatrix ImageLib::getColorAdjustmentMatrix(const ColorAdjustments &adjustments) {
-  const float exposure = adjustments.exposure;
-  const float contrast = adjustments.contrast;
-  const float brightness = adjustments.brightness;
-  const float temperature = adjustments.temperature;
-  const float tint = adjustments.tint;
-  const float saturation = adjustments.saturation;
-  const float hue = adjustments.hue;
-
-  // Helper to multiply A and B (3x3 matrices), storing result in C
-  auto multiply = [](const float A[3][3], const float B[3][3], float C[3][3]) {
-    for (int i = 0; i < 3; ++i) {
-      for (int j = 0; j < 3; ++j) {
-        C[i][j] = A[i][0] * B[0][j] + A[i][1] * B[1][j] + A[i][2] * B[2][j];
-      }
-    }
-  };
-
-  // 1 & 2. White balance (Temperature & Tint) & Exposure
-  float factor = std::pow(2.0f, exposure);
-  float w_r = (1.0f + temperature + tint * 0.5f) * factor;
-  float w_g = (1.0f - tint) * factor;
-  float w_b = (1.0f - temperature + tint * 0.5f) * factor;
-
-  float M_current[3][3] = {
-    {w_r,  0.0f, 0.0f},
-    {0.0f, w_g,  0.0f},
-    {0.0f, 0.0f, w_b }
-  };
-
-  // 3. Hue rotate
-  if (std::abs(hue) > kAdjustEpsilon) {
-    float hueRad = hue * static_cast<float>(ImageLib::kPi) / 180.0f;
-    float cosAngle = std::cos(hueRad);
-    float sinAngle = std::sin(hueRad);
-    float k = 0.57735f;
-    float cosInv = 1.0f - cosAngle;
-
-    float M_hue[3][3] = {
-      { cosAngle + k * k * cosInv,      -k * sinAngle + k * k * cosInv,  k * sinAngle + k * k * cosInv },
-      { k * sinAngle + k * k * cosInv,  cosAngle + k * k * cosInv,       -k * sinAngle + k * k * cosInv },
-      { -k * sinAngle + k * k * cosInv, k * sinAngle + k * k * cosInv,   cosAngle + k * k * cosInv }
-    };
-
-    float M_temp[3][3];
-    multiply(M_hue, M_current, M_temp);
-    for (int i = 0; i < 3; ++i) {
-      for (int j = 0; j < 3; ++j) M_current[i][j] = M_temp[i][j];
-    }
-  }
-
-  // 4. Saturation
-  if (std::abs(saturation - 1.0f) > kAdjustEpsilon) {
-    float rWeight = 0.2126f * (1.0f - saturation);
-    float gWeight = 0.7152f * (1.0f - saturation);
-    float bWeight = 0.0722f * (1.0f - saturation);
-
-    float M_sat[3][3] = {
-      { saturation + rWeight, gWeight,                bWeight },
-      { rWeight,              saturation + gWeight,   bWeight },
-      { rWeight,              gWeight,                saturation + bWeight }
-    };
-
-    float M_temp[3][3];
-    multiply(M_sat, M_current, M_temp);
-    for (int i = 0; i < 3; ++i) {
-      for (int j = 0; j < 3; ++j) M_current[i][j] = M_temp[i][j];
-    }
-  }
-
-  // 5 & 6. Contrast & Brightness
-  ColorMatrix result;
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      result.m[i][j] = M_current[i][j] * contrast;
-    }
-  }
-  result.offset = brightness * contrast + 0.5f * (1.0f - contrast);
-
-  return result;
-}
-
 QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, const ColorAdjustments &adjustments) {
   if (!source)
     return QImage();
 
   QImage dst = source->convertToFormat(QImage::Format_ARGB32);
-  ColorMatrix cm = getColorAdjustmentMatrix(adjustments);
+  ColorMatrix cm = colorAdjustmentMatrix(adjustments);
 
   int height = dst.height();
   int width = dst.width();

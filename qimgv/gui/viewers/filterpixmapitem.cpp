@@ -555,7 +555,7 @@ void FilterPixmapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     mProgram->setUniformValue("matrix", matrix);
     mProgram->setUniformValue("tex", 0);
-    ColorMatrix cm = ImageLib::getColorAdjustmentMatrix(mColorAdjustments);
+    ColorMatrix cm = colorAdjustmentMatrix(mColorAdjustments);
     float cmData[9] = {
         cm.m[0][0], cm.m[0][1], cm.m[0][2],
         cm.m[1][0], cm.m[1][1], cm.m[1][2],

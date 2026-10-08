@@ -7,6 +7,8 @@
 #include <QtQml/qqmlregistration.h>
 #include <memory>
 
+#include "utils/coloradjustments.h"
+
 // Value types handed from ImageRenderItem (GUI thread) to ImageRenderer
 // (render thread) in QQuickRhiItemRenderer::synchronize().
 
@@ -26,6 +28,18 @@ enum class TextureSampling {
   Trilinear,
 };
 Q_ENUM_NS(TextureSampling)
+
+// Sharpening applied while sampling the image (ports of the widget viewer's
+// res/shaders/filter.frag). Never applied at 1:1 scale or to pixels that are
+// not fully opaque.
+enum class Sharpening {
+  None,
+  // AMD FidelityFX Contrast Adaptive Sharpening (the viewer's "CAS" filter).
+  Cas,
+  // Luma unsharp mask (the viewer's "Smart (GPU)" filter).
+  Smart,
+};
+Q_ENUM_NS(Sharpening)
 } // namespace RenderEnums
 
 // Where the image is drawn, in the units of ViewTransform (S0.4).
@@ -57,6 +71,22 @@ struct RenderSettings {
                          const RenderSettings &) = default;
 };
 
+// Per-pixel filtering of the image: sharpening and colour adjustments.
+struct ImageFilter {
+  // Defaults of the "casSharpening" / "casContrast" settings.
+  static constexpr float kDefaultCasSharpening = 1.0f;
+  static constexpr float kDefaultCasContrast = 0.0f;
+
+  RenderEnums::Sharpening sharpening = RenderEnums::Sharpening::None;
+  // CAS strength in [0, 1]; 0 disables CAS.
+  float casSharpening = kDefaultCasSharpening;
+  // CAS contrast adaptation in [0, 1].
+  float casContrast = kDefaultCasContrast;
+  ColorAdjustments colorAdjustments;
+
+  friend bool operator==(const ImageFilter &, const ImageFilter &) = default;
+};
+
 // Everything one frame of ImageRenderer depends on.
 struct RenderFrame {
   // Immutable and shared with the GUI thread; null when no image is shown.
@@ -66,6 +96,10 @@ struct RenderFrame {
   quint64 imageGeneration = 0;
   ImagePlacement placement;
   RenderSettings settings;
+  ImageFilter filter;
+  // The view is not being zoomed, panned or animated. Only then does the
+  // renderer spend the extra passes of the exact-ratio downsample.
+  bool settled = false;
   // QQuickWindow::effectiveDevicePixelRatio() of the item's window.
   qreal devicePixelRatio = 1.0;
 };

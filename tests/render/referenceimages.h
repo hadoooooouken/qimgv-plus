@@ -6,7 +6,10 @@
 #include <QSize>
 #include <QString>
 #include <array>
+#include <optional>
 #include <vector>
+
+#include "utils/coloradjustments.h"
 
 // CPU references for the GPU renderer's pixel tests. All colours are
 // premultiplied RGBA in [0, 1].
@@ -59,6 +62,33 @@ struct ReferenceScene {
 // clamp-to-edge bilinear sampling at pixel centres.
 [[nodiscard]] FloatImage expectedFrame(const FloatImage &source,
                                        const ReferenceScene &scene);
+
+// The image drawn over an opaque background with its top-left corner at
+// origin; drawn holds device pixels (premultiplied).
+[[nodiscard]] FloatImage composeOver(const FloatImage &drawn, QSize frameSize,
+                                     QPoint origin, const QColor &background);
+
+// ImageRenderer's exact-ratio downsample: the same chain of exact-area box
+// passes (each at most halving a side, rounding up), in double precision.
+[[nodiscard]] FloatImage exactReduce(const FloatImage &image, QSize target);
+
+enum class ReferenceSharpening { None, Cas, Smart };
+
+// Per-pixel filter of the tile shader (image.frag) with its plain taps.
+struct ReferenceFilterParams {
+  ReferenceSharpening sharpening = ReferenceSharpening::None;
+  double casSharpening = 0.0;
+  double casContrast = 0.0;
+  std::optional<ColorMatrix> color;
+};
+
+// The image magnified by an integer factor with clamp-to-edge bilinear
+// sampling (factor 1: the texels themselves), sharpened with taps one device
+// pixel apart and colour adjusted, as image.frag does above 1:1 and on the
+// exact downsample.
+[[nodiscard]] FloatImage filteredMagnified(const FloatImage &image,
+                                           int magnification,
+                                           const ReferenceFilterParams &params);
 
 // Largest difference in 8-bit levels between any channel of actual
 // (Format_RGBA8888_Premultiplied) and expected; describes the first worst

@@ -174,7 +174,7 @@ void PanoramaGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsIt
     mProgram->setUniformValue("fov", fovRad);
     mProgram->setUniformValue("aspect", aspect);
 
-    ColorMatrix cm = ImageLib::getColorAdjustmentMatrix(mColorAdjustments);
+    ColorMatrix cm = colorAdjustmentMatrix(mColorAdjustments);
     float cmData[9] = {
         cm.m[0][0], cm.m[0][1], cm.m[0][2],
         cm.m[1][0], cm.m[1][1], cm.m[1][2],

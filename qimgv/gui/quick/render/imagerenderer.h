@@ -22,6 +22,15 @@
 // as premultiplied alpha with a full mip chain whenever the item's image
 // generation or the effective tile size limit changes.
 //
+// The tile shader applies the ImageFilter of the frame: CAS or smart
+// sharpening and the colour adjustment matrix (ports of the widget viewer's
+// filter.frag). While the frame is settled and the image is shown below 1:1,
+// each visible tile is first reduced to its on-screen size by a chain of
+// exact-area box passes into intermediate render targets (boxreduce.frag);
+// the result is drawn instead of the mip chain and reused until the scale or
+// the image changes. On Direct3D 12 the same box passes also build the mip
+// chain (see generatesMipsByBoxReduce()).
+//
 // Never touches Core, Settings or GUI-thread objects outside synchronize().
 // Failures are posted to the item's RenderErrorChannel; every failing step
 // leaves the renderer in a state that still clears to the background.
@@ -47,6 +56,35 @@ private:
     // One binding set per RenderEnums::TextureSampling.
     std::array<std::unique_ptr<QRhiShaderResourceBindings>, kSamplingCount>
         bindings;
+    // Exact-ratio downsample of `texture` for reducedScale, sampled
+    // bilinearly. reducedScale is set even when the build failed or needed
+    // no pass (texture null), so that it is not retried every frame.
+    std::optional<qreal> reducedScale;
+    std::unique_ptr<QRhiTexture> reduced;
+    std::unique_ptr<QRhiShaderResourceBindings> reducedBindings;
+  };
+
+  // Releases a QRhi resource once the frame being recorded no longer uses
+  // it (QRhiResource::deleteLater()).
+  struct DeferredRhiRelease {
+    void operator()(QRhiResource *resource) const { resource->deleteLater(); }
+  };
+  template <typename T>
+  using FrameResource = std::unique_ptr<T, DeferredRhiRelease>;
+  using FrameTexture = FrameResource<QRhiTexture>;
+
+  // Pipeline of the box-reduce passes for one render target format.
+  struct ReducePipeline {
+    QRhiTexture::Format format = QRhiTexture::RGBA8;
+    std::unique_ptr<QRhiRenderPassDescriptor> renderPass;
+    // Null when its creation failed; not retried for this QRhi.
+    std::unique_ptr<QRhiGraphicsPipeline> pipeline;
+  };
+
+  // One draw of the main pass.
+  struct TileDraw {
+    const GpuTile *tile = nullptr;
+    bool reduced = false;
   };
 
   // Resources that live as long as the QRhi: shaders, the quad vertex
@@ -61,8 +99,32 @@ private:
   [[nodiscard]] int effectiveTileSizeLimit() const;
   [[nodiscard]] bool needsUpload() const;
   void uploadImage(QRhiResourceUpdateBatch *updates);
+  // True when the mip chain is rendered with box-reduce passes instead of
+  // QRhiResourceUpdateBatch::generateMips().
+  [[nodiscard]] bool generatesMipsByBoxReduce() const;
+  [[nodiscard]] QRhiTexture::Flags tileTextureFlags() const;
   [[nodiscard]] bool createTile(GpuTile &tile, QRhiTexture::Format format);
   void releaseTiles();
+
+  // Resources of the exact-ratio downsample; optional: on failure the
+  // renderer keeps drawing from the mip chain.
+  [[nodiscard]] bool createReduceResources();
+  [[nodiscard]] QRhiGraphicsPipeline *
+  reducePipeline(QRhiTexture::Format format,
+                 QRhiRenderPassDescriptor *compatiblePass);
+  // Records one exact-area pass from level 0 of source into a new texture;
+  // null on failure (reported).
+  [[nodiscard]] FrameTexture recordBoxPass(QRhiCommandBuffer *cb,
+                                           QRhiTexture *source,
+                                           QSize sourceSize, QSize size,
+                                           QRhiTexture::Flags extraFlags = {});
+  // Records the passes that reduce tile.texture to scale on cb.
+  void buildReducedTile(QRhiCommandBuffer *cb, GpuTile &tile, qreal scale);
+  // Records the passes of mip levels 1..n of tile.texture on cb and their
+  // copies into the texture on copies, which must be submitted before the
+  // texture is sampled.
+  void generateTileMips(QRhiCommandBuffer *cb, GpuTile &tile,
+                        QRhiResourceUpdateBatch *copies);
 
   void reportError(const QString &message);
 
@@ -89,6 +151,14 @@ private:
   std::unique_ptr<QRhiGraphicsPipeline> mPipeline;
 
   std::vector<GpuTile> mTiles;
+
+  bool mReduceReady = false;
+  QShader mReduceVertexShader;
+  QShader mReduceFragmentShader;
+  std::unique_ptr<QRhiSampler> mReduceSampler;
+  std::unique_ptr<QRhiBuffer> mReduceLayoutUniforms;
+  std::unique_ptr<QRhiShaderResourceBindings> mReduceLayoutBindings;
+  std::vector<ReducePipeline> mReducePipelines;
 
   std::shared_ptr<RenderErrorChannel> mErrorChannel;
   // Errors reported before the first synchronize() supplied the channel.

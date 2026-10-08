@@ -10,5 +10,6 @@ int main(int argc, char **argv) {
   status |= runQimgvTests(argc, argv);
   status |= runViewTransformTests(argc, argv);
   status |= runTileGridTests(argc, argv);
+  status |= runImageFilterTests(argc, argv);
   return status;
 }

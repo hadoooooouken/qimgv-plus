@@ -2,7 +2,8 @@
 # GPU image rendering for the Qt Quick UI (Phase 1 of
 # docs/QML_MIGRATION_PLAN.md): ImageRenderItem (QQuickRhiItem) and its
 # render-thread ImageRenderer, drawing through QRhi with the RHI shaders in
-# res/shaders/rhi.
+# res/shaders/rhi (tile drawing with sharpening and colour adjustments, and
+# the exact-ratio box downsample).
 
 qt_add_library(qimgv_render STATIC)
 
@@ -10,6 +11,8 @@ qt_add_qml_module(qimgv_render
     URI qimgv.render
     DEPENDENCIES QtQuick
     SOURCES
+        imagefiltermode.cpp
+        imagefiltermode.h
         imagerenderer.cpp
         imagerenderer.h
         imagerenderitem.cpp
@@ -32,6 +35,8 @@ qt_add_shaders(qimgv_render "qimgv_render_shaders"
     FILES
         "${QIMGV_RHI_SHADER_DIR}/image.vert"
         "${QIMGV_RHI_SHADER_DIR}/image.frag"
+        "${QIMGV_RHI_SHADER_DIR}/boxreduce.vert"
+        "${QIMGV_RHI_SHADER_DIR}/boxreduce.frag"
 )
 
 # Headers include each other relative to the application root.

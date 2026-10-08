@@ -28,5 +28,9 @@ ApplicationWindow {
         anchors.fill: parent
         backgroundColor: Theme.colors.background
         transparencyGrid: AppSettings.viewer.transparencyGrid
+        // The scaling filter -> sampling / sharpening mapping
+        // (imageFilterModeFor) is applied by the viewer port in S1.6.
+        casSharpening: AppSettings.viewer.casSharpening
+        casContrast: AppSettings.viewer.casContrast
     }
 }

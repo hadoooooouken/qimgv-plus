@@ -12,12 +12,6 @@
 #include "utils/coloradjustments.h"
 
 
-struct ColorMatrix {
-    float m[3][3];
-    float offset;
-};
-
-
 class ImageLib {
     public:
         static constexpr float kAdjustEpsilon = kColorAdjustmentEpsilon;
@@ -52,7 +46,6 @@ class ImageLib {
         static std::unique_ptr<const QImage> exifRotated(std::unique_ptr<const QImage> src, int orientation);
         static std::unique_ptr<QImage> exifRotated(std::unique_ptr<QImage> src, int orientation);
         static void recolor(QPixmap &pixmap, QColor color);
-        static ColorMatrix getColorAdjustmentMatrix(const ColorAdjustments &adjustments);
         static QImage applyColorAdjustments(std::shared_ptr<const QImage> source, const ColorAdjustments &adjustments);
         static QImage loadICO(const QString &path);
 };

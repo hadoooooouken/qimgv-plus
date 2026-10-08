@@ -8,7 +8,38 @@
 namespace {
 using namespace Qt::StringLiterals;
 constexpr int kSingleSample = 1;
+constexpr char kBackendVariable[] = "QSG_RHI_BACKEND";
+
+struct BackendName {
+  QRhi::Implementation backend;
+  QLatin1StringView name;
+};
+constexpr BackendName kBackendNames[] = {
+    {QRhi::D3D11, "d3d11"_L1},
+    {QRhi::D3D12, "d3d12"_L1},
+    {QRhi::Vulkan, "vulkan"_L1},
+};
 } // namespace
+
+std::optional<QRhi::Implementation> testRhiBackend() {
+  const QString requested =
+      qEnvironmentVariable(kBackendVariable).trimmed().toLower();
+  if (requested.isEmpty())
+    return QRhi::D3D11;
+  for (const BackendName &entry : kBackendNames) {
+    if (requested == entry.name)
+      return entry.backend;
+  }
+  return std::nullopt;
+}
+
+QString rhiBackendName(QRhi::Implementation backend) {
+  for (const BackendName &entry : kBackendNames) {
+    if (entry.backend == backend)
+      return entry.name;
+  }
+  return u"unsupported"_s;
+}
 
 OffscreenQuick::~OffscreenQuick() {
   // The window's scene graph uses the render control and the QRhi; release
@@ -20,6 +51,7 @@ OffscreenQuick::~OffscreenQuick() {
   mDepthStencil.reset();
   mColorBuffer.reset();
   mRhi.reset();
+  mVulkanInstance.reset();
 }
 
 bool OffscreenQuick::fail(const QString &message) {
@@ -35,15 +67,41 @@ QQuickItem *OffscreenQuick::contentItem() const {
   return mWindow ? mWindow->contentItem() : nullptr;
 }
 
-bool OffscreenQuick::create(QSize size) {
+bool OffscreenQuick::create(QSize size, QRhi::Implementation backend) {
   mSize = size;
-  QRhiD3D11InitParams params;
-  mRhi.reset(QRhi::create(QRhi::D3D11, &params));
+  switch (backend) {
+  case QRhi::D3D11: {
+    QRhiD3D11InitParams params;
+    mRhi.reset(QRhi::create(QRhi::D3D11, &params));
+    break;
+  }
+  case QRhi::D3D12: {
+    QRhiD3D12InitParams params;
+    mRhi.reset(QRhi::create(QRhi::D3D12, &params));
+    break;
+  }
+  case QRhi::Vulkan: {
+    mVulkanInstance = std::make_unique<QVulkanInstance>();
+    mVulkanInstance->setExtensions(
+        QRhiVulkanInitParams::preferredInstanceExtensions());
+    if (!mVulkanInstance->create())
+      return fail(u"Cannot create a Vulkan instance (the offscreen QPA "
+                  u"platform has no Vulkan support; use QT_QPA_PLATFORM=windows)"_s);
+    QRhiVulkanInitParams params;
+    params.inst = mVulkanInstance.get();
+    mRhi.reset(QRhi::create(QRhi::Vulkan, &params));
+    break;
+  }
+  default:
+    return fail(u"Unsupported QRhi backend %1"_s.arg(int(backend)));
+  }
   if (!mRhi)
-    return fail(u"Cannot create a Direct3D 11 QRhi"_s);
+    return fail(u"Cannot create a %1 QRhi"_s.arg(rhiBackendName(backend)));
 
   mControl = std::make_unique<QQuickRenderControl>();
   mWindow = std::make_unique<QQuickWindow>(mControl.get());
+  if (mVulkanInstance)
+    mWindow->setVulkanInstance(mVulkanInstance.get());
   mWindow->setGraphicsDevice(QQuickGraphicsDevice::fromRhi(mRhi.get()));
   if (!mControl->initialize())
     return fail(u"QQuickRenderControl::initialize() failed"_s);

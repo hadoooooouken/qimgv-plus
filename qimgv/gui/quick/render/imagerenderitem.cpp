@@ -127,12 +127,68 @@ void ImageRenderItem::applySettings(const RenderSettings &settings) {
 }
 
 //------------------------------------------------------------------------------
+void ImageRenderItem::setImageFilter(const ImageFilter &filter) {
+  if (mFilter == filter)
+    return;
+  mFilter = filter;
+  update();
+  emit imageFilterChanged();
+}
+
+const ImageFilter &ImageRenderItem::imageFilter() const { return mFilter; }
+
+RenderEnums::Sharpening ImageRenderItem::sharpening() const {
+  return mFilter.sharpening;
+}
+
+void ImageRenderItem::setSharpening(RenderEnums::Sharpening sharpening) {
+  ImageFilter filter = mFilter;
+  filter.sharpening = sharpening;
+  setImageFilter(filter);
+}
+
+qreal ImageRenderItem::casSharpening() const { return mFilter.casSharpening; }
+
+void ImageRenderItem::setCasSharpening(qreal sharpening) {
+  ImageFilter filter = mFilter;
+  filter.casSharpening = static_cast<float>(sharpening);
+  setImageFilter(filter);
+}
+
+qreal ImageRenderItem::casContrast() const { return mFilter.casContrast; }
+
+void ImageRenderItem::setCasContrast(qreal contrast) {
+  ImageFilter filter = mFilter;
+  filter.casContrast = static_cast<float>(contrast);
+  setImageFilter(filter);
+}
+
+void ImageRenderItem::setColorAdjustments(const ColorAdjustments &adjustments) {
+  ImageFilter filter = mFilter;
+  filter.colorAdjustments = adjustments;
+  setImageFilter(filter);
+}
+
+//------------------------------------------------------------------------------
+bool ImageRenderItem::isSettled() const { return mSettled; }
+
+void ImageRenderItem::setSettled(bool settled) {
+  if (mSettled == settled)
+    return;
+  mSettled = settled;
+  update();
+  emit settledChanged();
+}
+
+//------------------------------------------------------------------------------
 RenderFrame ImageRenderItem::frameSnapshot() const {
   RenderFrame frame;
   frame.image = mImage;
   frame.imageGeneration = mImageGeneration;
   frame.placement = mPlacement;
   frame.settings = mSettings;
+  frame.filter = mFilter;
+  frame.settled = mSettled;
   if (const QQuickWindow *itemWindow = window())
     frame.devicePixelRatio = itemWindow->effectiveDevicePixelRatio();
   return frame;

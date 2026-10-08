@@ -8,17 +8,28 @@ layout(location = 0) in vec2 corner;
 layout(location = 0) out vec2 texCoord;
 layout(location = 1) out vec2 devicePos;
 
-// Mirrored by TileUniforms in gui/quick/render/imagerenderer.cpp.
+// Mirrored by TileUniforms in gui/quick/render/imagerenderer.cpp; identical
+// in image.frag.
 layout(std140, binding = 0) uniform TileParams {
     mat4 mvp;
     vec4 targetRect;
     vec4 texRect;
     vec4 checkerLight;
     vec4 checkerDark;
+    vec4 colorRow0;
+    vec4 colorRow1;
+    vec4 colorRow2;
     vec2 checkerOrigin;
+    vec2 texelStep;
     float checkerTile;
     float checkerFirstCell;
+    float colorOffset;
+    float casSharpening;
+    float casContrast;
     int checkerEnabled;
+    int colorEnabled;
+    int sharpenMode;
+    int downscaleTaps;
 };
 
 void main()

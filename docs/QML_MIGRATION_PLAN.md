@@ -483,6 +483,58 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
 - **Acceptance:** visual parity with the widget viewer for every
   `ScalingFilter` GPU mode; D3D11, D3D12 and Vulkan backends verified via
   `QSG_RHI_BACKEND`.
+- **Delivered:**
+  - `ColorMatrix` and the `ColorAdjustments` -> matrix derivation moved from
+    `ImageLib::getColorAdjustmentMatrix()` to the header-only
+    `colorAdjustmentMatrix()` in `utils/coloradjustments.h`, shared by the
+    CPU path, the widget viewer and the renderer (the matrix math is
+    unchanged).
+  - `ImageFilter` value type in `RenderFrame` (`RenderEnums.Sharpening`
+    `None/Cas/Smart`, CAS strength/contrast, `ColorAdjustments`) and a
+    `settled` flag. `ImageRenderItem` gained `setImageFilter()`,
+    `setColorAdjustments()` and the QML properties `sharpening`,
+    `casSharpening`, `casContrast`, `settled`. `imageFilterModeFor()` maps
+    every `ScalingFilter` to sampling + sharpening (Smart / MKS2021 show as
+    trilinear without sharpening until S1.3); the viewer port applies it in
+    S1.6. `Main.qml` binds the CAS settings.
+  - `image.frag` ports CAS and smart sharpening (plain and downscale taps,
+    luma-only weights, opacity gate, off at 1:1) and the colour matrix on
+    straight colour, with the original constants named. An identity
+    adjustment skips the colour math, so unfiltered rendering is unchanged
+    from S1.1. The sharpened colour is computed in uniform control flow
+    (implicit derivatives of the biased taps stay defined on every backend).
+    The uniform block is mirrored by `std140` C++ structs with `static_assert`
+    offsets and named defaults.
+  - Exact-ratio downsample (`boxreduce.vert/.frag`): while settled below 1:1,
+    every visible tile is reduced to its on-screen size by a chain of
+    exact-area passes into `QRhiTextureRenderTarget`s (sides halved rounding
+    up, ratios in [0.5, 1]) in the tile's own format, then drawn bilinearly
+    with the plain sharpening taps. Cached per tile until the scale or the
+    image changes, so panning reuses it; while not settled the mip chain is
+    drawn. Intermediate targets are still used by the frame being
+    recorded and are released with `QRhiResource::deleteLater()`. The caller
+    (S1.6) must clear `settled` during zoom, pan, resize and animation
+    playback, as `ImageViewerV2` does for `FilterPixmapItem`.
+  - **Deviation (approved): exact downsample on tiled images** is built per
+    tile from its overlapping texture, so seams match the untiled result; the
+    sharpening taps near a seam clamp to the 64-texel overlap below about
+    1/23 scale.
+  - **Found and worked around: Qt 6.12 Direct3D 12 `generateMips()` is wrong
+    from mip level 5 on** (the compute generator works in batches of four;
+    the second batch produces wrong data). Pre-existing since S1.1, found by
+    the new backend runs. On D3D12 the renderer builds the mip chain with the
+    box-reduce pipeline (each level rendered and copied into the mip level);
+    the other backends keep `generateMips()`. Revisit when Qt fixes it.
+  - Tests: `qimgv_tests` gained `ImageFilterTests` (matrix derivation,
+    filter mapping). `qimgv_render_tests` gained CPU references for the
+    colour matrix, plain CAS / smart sharpening and the exact reduce chain,
+    property tests for the downscale taps (flat image unchanged, grey stays
+    grey, visible sharpening), the settled / pan / unsettled cycle, tiled vs
+    untiled exact downsample and a per-level mip chain check. The harness
+    selects the backend through `QSG_RHI_BACKEND`; CTest runs D3D11, D3D12
+    and Vulkan (Vulkan on the `windows` QPA platform, because the offscreen
+    platform cannot create Vulkan instances). All three pass on the
+    reference machine (RTX 3060).
 
 #### S1.3 GPU replacement for CPU display scaling
 - **Goal:** stop the `Scaler` CPU round trip for on-screen display.
