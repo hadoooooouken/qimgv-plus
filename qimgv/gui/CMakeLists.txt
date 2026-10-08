@@ -80,4 +80,8 @@ target_sources(qimgv-plus PRIVATE
     folderview/treeviewcustom.cpp
     folderview/bookmarkswidget.cpp
     folderview/bookmarksitem.cpp
+
+    quick/quickuihost.cpp
 )
+
+add_subdirectory(quick)

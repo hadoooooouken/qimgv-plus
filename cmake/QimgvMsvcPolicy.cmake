@@ -79,6 +79,26 @@ function(qimgv_apply_msvc_profile target)
     set_property(TARGET ${target} PROPERTY MSVC_RUNTIME_LIBRARY "${QIMGV_MSVC_RUNTIME_LIBRARY}")
 endfunction()
 
+# qimgv_apply_msvc_directory_profile()
+#
+# Applies the compile-side profile (ISA, hardening, Release IPO, CRT) to every
+# target created afterwards in the calling directory and its subdirectories.
+# Qt's CMake API generates helper targets for each QML module (static plugin,
+# plugin init, resource and cache object libraries) that are not visible to
+# the caller but are linked into qimgv-plus; without /guard:ehcont on them the
+# executable fails to link with /guard:ehcont. Link-side options stay with
+# qimgv_apply_msvc_profile() on the linking executable. A macro, so that the
+# CMAKE_* variables land in the caller's directory scope.
+macro(qimgv_apply_msvc_directory_profile)
+    if(MSVC)
+        add_compile_options(
+            "$<$<COMPILE_LANGUAGE:C,CXX>:${QIMGV_MSVC_ISA_OPTIONS}>"
+            "$<$<COMPILE_LANGUAGE:C,CXX>:${QIMGV_MSVC_SECURITY_COMPILE_OPTIONS}>")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "${QIMGV_MSVC_RUNTIME_LIBRARY}")
+    endif()
+endmacro()
+
 # Silences C4996 CRT deprecation warnings for first-party targets only; it is
 # deliberately not a directory-wide definition, because glslang defines the
 # same macro without a guard and a global -D turns that into C4005.

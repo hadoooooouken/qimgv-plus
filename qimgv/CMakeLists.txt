@@ -53,10 +53,6 @@ add_executable(qimgv-plus
     ${QM_FILES}
 )
 
-# update .ts, compile .qm
-qt_add_lupdate(qimgv-plus TS_FILES ${TS_FILES})
-qt_add_lrelease(qimgv-plus TS_FILES ${TS_FILES})
-
 # zlib for PngTextChunkReader (zTXt inflate), qtiff.dll, and kimg_png.
 # All three use the shared zlib-ng DLL, so only the import library is needed.
 # NOTE: this is set() *before* add_subdirectory(3rdparty/kimageformats) below
@@ -115,6 +111,16 @@ add_subdirectory(sourcecontainers)
 add_subdirectory(gui)
 add_subdirectory(utils)
 
+# update .ts, compile .qm
+# Placed after the source subdirectories so that the QML module targets
+# created under gui/quick exist; they contribute their .qml files to lupdate.
+qt_add_lupdate(
+    LUPDATE_TARGET qimgv-plus_lupdate
+    TS_FILES ${TS_FILES}
+    SOURCE_TARGETS qimgv-plus qimgv_ui qimgv_render
+)
+qt_add_lrelease(qimgv-plus TS_FILES ${TS_FILES})
+
 add_subdirectory(3rdparty/miniz)
 add_subdirectory(3rdparty/kimageformats)
 
@@ -146,7 +152,16 @@ target_link_libraries(qimgv-plus PRIVATE
     Qt6::OpenGLWidgets 
     Qt6::SvgWidgets
     Qt6::Pdf
+    Qt6::Qml
+    Qt6::Quick
     djvudec
+)
+
+# Qt Quick UI: static QML modules, imported through their static plugins
+# (Q_IMPORT_QML_PLUGIN in gui/quick/quickuihost.cpp).
+target_link_libraries(qimgv-plus PRIVATE
+    qimgv_uiplugin
+    qimgv_renderplugin
 )
 
 # OPTION DEFINITIONS, LINKING
@@ -188,7 +203,7 @@ if(WIN32)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6Core_DIR}/../../../bin")
     if(WINDEPLOYQT_EXECUTABLE)
         add_custom_command(TARGET qimgv-plus POST_BUILD
-            COMMAND ${WINDEPLOYQT_EXECUTABLE} --no-translations --no-compiler-runtime --no-opengl-sw "$<TARGET_FILE:qimgv-plus>"
+            COMMAND ${WINDEPLOYQT_EXECUTABLE} --no-translations --no-compiler-runtime --no-opengl-sw --qmldir "${CMAKE_CURRENT_SOURCE_DIR}/gui/quick" "$<TARGET_FILE:qimgv-plus>"
             COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE_DIR:qimgv-plus>/vc_redist.x64.exe"
             COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:qimgv-plus>/tls"
             COMMENT "Deploying Qt dependencies and cleaning up redistributable..."

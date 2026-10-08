@@ -27,10 +27,25 @@ endif()
 
 # USER OPTIONS
 option(EXIV2 "For reading/writing exif tags" ON)
+option(QIMGV_BUILD_TESTS "Build the Qt Test and Qt Quick Test suites" ON)
 
 # FIND PACKAGES
 set(QT_VERSION_MAJOR 6)
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Network Svg SvgWidgets PrintSupport OpenGLWidgets Sql Pdf)
+find_package(Qt6 6.12 REQUIRED COMPONENTS
+    Core Widgets Network Svg SvgWidgets PrintSupport OpenGLWidgets Sql Pdf
+    Qml Quick QuickControls2 QuickDialogs2 ShaderTools
+    Test QuickTest)
+
+# Qt CMake policies are opted into individually instead of through
+# qt_standard_project_setup(REQUIRES 6.12): on Windows that command also sets
+# CMAKE_RUNTIME_OUTPUT_DIRECTORY, which would move qimgv-plus and the DLLs it
+# deploys next to itself out of their established output directories.
+# QTP0006..QTP0008 cover Wayland and deploy scripts and do not apply here.
+qt_policy(SET QTP0001 NEW)
+qt_policy(SET QTP0002 NEW)
+qt_policy(SET QTP0003 NEW)
+qt_policy(SET QTP0004 NEW)
+qt_policy(SET QTP0005 NEW)
 # exiv2 is looked up in qimgv/CMakeLists.txt, next to the zlib-ng install
 # its static package config depends on.
 
@@ -91,3 +106,8 @@ endforeach()
 
 add_subdirectory(qimgv)
 add_subdirectory(shellex)
+
+if(QIMGV_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()

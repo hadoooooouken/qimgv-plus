@@ -11,6 +11,9 @@
 #include <QSettings>
 #include <QStandardPaths>
 
+#include <cstdlib>
+#include <optional>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -18,6 +21,7 @@
 #include "appversion.h"
 #include "components/actionmanager/actionmanager.h"
 #include "core.h"
+#include "gui/quick/quickuihost.h"
 #include "proxystyle.h"
 #include "settings.h"
 #include "sharedresources.h"
@@ -86,6 +90,26 @@ QDataStream &operator>>(QDataStream &in, Script &v) {
   return in;
 }
 //------------------------------------------------------------------------------
+// User interface selected at startup with --ui. The widget UI stays the
+// default until the Qt Quick UI reaches parity (docs/QML_MIGRATION_PLAN.md).
+enum class UiMode { Widgets, Quick };
+
+namespace {
+using namespace Qt::StringLiterals;
+
+constexpr QLatin1StringView uiOptionName = "ui"_L1;
+constexpr QLatin1StringView uiModeWidgetsName = "widgets"_L1;
+constexpr QLatin1StringView uiModeQuickName = "quick"_L1;
+} // namespace
+
+std::optional<UiMode> uiModeFromName(QStringView name) {
+  if (name == uiModeWidgetsName)
+    return UiMode::Widgets;
+  if (name == uiModeQuickName)
+    return UiMode::Quick;
+  return std::nullopt;
+}
+//------------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
 
   // force some env variables
@@ -141,7 +165,24 @@ int main(int argc, char *argv[]) {
       {"build-options",
        QCoreApplication::translate("main", "Show build options.")},
   });
+  const QCommandLineOption uiOption(
+      uiOptionName,
+      QCoreApplication::translate("main",
+                                  "User interface: %1 (default) or %2.")
+          .arg(uiModeWidgetsName, uiModeQuickName),
+      QCoreApplication::translate("main", "ui"), uiModeWidgetsName);
+  parser.addOption(uiOption);
   parser.process(a);
+
+  const std::optional<UiMode> uiMode =
+      uiModeFromName(parser.value(uiOption));
+  if (!uiMode) {
+    parser.showMessageAndExit(
+        QCommandLineParser::MessageType::Error,
+        QCoreApplication::translate("main", "Unknown user interface: %1")
+            .arg(parser.value(uiOption)),
+        EXIT_FAILURE);
+  }
 
   int exitCode = 0;
   if (parser.isSet("build-options")) {
@@ -161,6 +202,11 @@ int main(int argc, char *argv[]) {
     QTimer::singleShot(0, &r,
                        [&r, path = parser.value("gen-thumbs"), size] { r.generateThumbs(path, size); });
     exitCode = a.exec();
+  } else if (*uiMode == UiMode::Quick) {
+    // Empty Qt Quick shell. It does not take part in the single-instance
+    // handshake yet, so it never forwards to a running widget-UI instance.
+    QuickUiHost quickUi;
+    exitCode = quickUi.start() ? a.exec() : EXIT_FAILURE;
   } else {
     // -----------------------------------------------------------------------------
 
