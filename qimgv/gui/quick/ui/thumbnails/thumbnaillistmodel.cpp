@@ -121,6 +121,7 @@ void ThumbnailListModel::populate(int count) {
     mUnavailable.clear();
     mReadyReported = false;
     mScrollDirection = ScrollDirection::Forwards;
+    mRangeAnchor.clear();
     endResetModel();
     emit countChanged();
     emit selectionChanged();
@@ -196,7 +197,7 @@ void ThumbnailListModel::deselect(int index) {
 void ThumbnailListModel::focusOn(int index) {
     if (!checkRange(index) || mExtent <= 0.0 || mScroll.itemExtent <= 0)
         return;
-    const qreal start = static_cast<qreal>(index) * mScroll.itemExtent;
+    const qreal start = itemStart(index);
     const qreal extent = mScroll.itemExtent;
     if (mScroll.centerSelection) {
         const qreal targetCenter = start + extent / 2.0;
@@ -209,7 +210,8 @@ void ThumbnailListModel::focusOn(int index) {
     } else {
         // Shows part of the next thumbnail when there is room
         // (QGraphicsView::ensureVisible() with a margin).
-        const qreal margin = mExtent > extent * 2.0 ? extent / 2.0 : 0.0;
+        const qreal margin =
+            mScroll.focusShowsNeighbours && mExtent > extent * 2.0 ? extent / 2.0 : 0.0;
         if (start - margin < mOffset)
             scrollTo(start - margin);
         else if (start + extent + margin > mOffset + mExtent)
@@ -342,6 +344,43 @@ void ThumbnailListModel::setLoadingBlocked(bool blocked) {
         loadVisibleThumbnails();
 }
 
+void ThumbnailListModel::setItemActivation(ItemActivation activation) {
+    mActivation = activation;
+}
+
+//------------------------------------------------------------------------------
+// Selection and scrolling
+
+// ThumbnailView::keyPressEvent(): the selection held when Shift went down
+// anchors the range.
+void ThumbnailListModel::beginRangeSelection() {
+    mRangeAnchor = mSelection;
+    mRangeSelection = true;
+}
+
+void ThumbnailListModel::endRangeSelection() {
+    mRangeSelection = false;
+}
+
+bool ThumbnailListModel::rangeSelectionActive() const {
+    return mRangeSelection;
+}
+
+// ThumbnailView::addSelectionRange(): the items are appended in the order of
+// the range, so that the last one becomes the current item.
+void ThumbnailListModel::selectRangeTo(int index) {
+    if (mRangeAnchor.isEmpty() || mSelection.isEmpty() || !checkRange(index))
+        return;
+    QList<int> range = mRangeAnchor;
+    const int anchorEnd = mRangeAnchor.constLast();
+    const int step = index > anchorEnd ? 1 : -1;
+    for (int item = anchorEnd + step; step > 0 ? item <= index : item >= index; item += step) {
+        range.removeAll(item);
+        range.append(item);
+    }
+    select(range);
+}
+
 //------------------------------------------------------------------------------
 // View
 
@@ -432,11 +471,15 @@ void ThumbnailListModel::press(int index, int button, int modifiers, QPointF pos
                 else
                     deselect(mPressIndex);
             } else if (keyboardModifiers & Qt::ShiftModifier) {
-                // The widget strip never takes the keyboard focus, so it has
-                // no range anchor and Shift-click does nothing there.
+                // Without a range anchor (the strip never takes the keyboard
+                // focus, so it has none) this does nothing.
+                selectRangeTo(mPressIndex);
             } else if (mSelection.count() <= 1) {
-                emit activated(mPressIndex);
-                return;
+                if (mActivation == ItemActivation::OnPress) {
+                    emit activated(mPressIndex);
+                    return;
+                }
+                select(mPressIndex);
             } else {
                 mReleaseSelects = true;
             }
@@ -499,16 +542,26 @@ bool ThumbnailListModel::checkRange(int index) const {
     return index >= 0 && index < mCount;
 }
 
+// The items of the rows that intersect start - end.
 ThumbnailListModel::ItemRange ThumbnailListModel::itemRange(qreal start, qreal end) const {
     if (mCount == 0 || mScroll.itemExtent <= 0)
         return {};
-    const int first = qBound(0, static_cast<int>(std::floor(start / mScroll.itemExtent)), mCount - 1);
-    const int last = qBound(0, static_cast<int>(std::floor(end / mScroll.itemExtent)), mCount - 1);
-    return first <= last ? ItemRange{first, last} : ItemRange{};
+    const int lastLine = lineCount() - 1;
+    const auto lineAt = [this, lastLine](qreal position) {
+        const qreal line = std::floor((position - mScroll.leadingSpace) / mScroll.itemExtent);
+        return static_cast<int>(qBound(0.0, line, static_cast<qreal>(lastLine)));
+    };
+    const int firstLine = lineAt(start);
+    const int endLine = lineAt(end);
+    if (firstLine > endLine)
+        return {};
+    const int columns = qMax(1, mScroll.columns);
+    return ItemRange{firstLine * columns, qMin(mCount - 1, (endLine + 1) * columns - 1)};
 }
 
 ThumbnailListModel::ItemRange ThumbnailListModel::preloadRange() const {
-    return itemRange(mOffset - kPreloadDistance, mOffset + mExtent + kPreloadDistance);
+    return itemRange(mOffset - mScroll.preloadDistance,
+                     mOffset + mExtent + mScroll.preloadDistance);
 }
 
 ThumbnailListModel::ItemRange ThumbnailListModel::visibleRange() const {
@@ -516,7 +569,17 @@ ThumbnailListModel::ItemRange ThumbnailListModel::visibleRange() const {
 }
 
 qreal ThumbnailListModel::contentExtent() const {
-    return static_cast<qreal>(mCount) * mScroll.itemExtent;
+    return mScroll.leadingSpace + static_cast<qreal>(lineCount()) * mScroll.itemExtent;
+}
+
+int ThumbnailListModel::lineCount() const {
+    const int columns = qMax(1, mScroll.columns);
+    return (mCount + columns - 1) / columns;
+}
+
+qreal ThumbnailListModel::itemStart(int index) const {
+    return mScroll.leadingSpace +
+           static_cast<qreal>(index / qMax(1, mScroll.columns)) * mScroll.itemExtent;
 }
 
 qreal ThumbnailListModel::maximumOffset() const {
@@ -691,7 +754,7 @@ void ThumbnailListModel::scrollByItem(int delta) {
 void ThumbnailListModel::scrollToItem(int index) {
     if (!checkRange(index))
         return;
-    const qreal start = static_cast<qreal>(index) * mScroll.itemExtent;
+    const qreal start = itemStart(index);
     const qreal end = start + mScroll.itemExtent;
     if (start >= mOffset && end <= mOffset + mExtent)
         return;

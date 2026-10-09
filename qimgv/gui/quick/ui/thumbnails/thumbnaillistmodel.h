@@ -33,11 +33,24 @@ struct ThumbnailRequestConfig {
     friend bool operator==(const ThumbnailRequestConfig &, const ThumbnailRequestConfig &) = default;
 };
 
-// How the strip lays out and scrolls.
+// How the view lays out and scrolls. Items fill rows of columns items each
+// (1 for the strip); rows follow each other along the scroll axis after
+// leadingSpace.
 struct ThumbnailScrollConfig {
+    // Preload distance of the thumbnail strip.
+    static constexpr int kStripPreloadDistance = 3000;
+
     bool horizontal = true;
-    // Size of a cell along the strip, in logical pixels.
+    // Size of a row along the scroll axis, in logical pixels.
     int itemExtent = 0;
+    int columns = 1;
+    int leadingSpace = 0;
+    // Distance beyond the visible range in which thumbnails are loaded.
+    int preloadDistance = kStripPreloadDistance;
+    // Focusing an item keeps half a row of its neighbours in view when the
+    // view has room for them (the strip); otherwise the item is only brought
+    // into view (the folder grid).
+    bool focusShowsNeighbours = true;
     // Edge of the thumbnail area (the minimum by-item wheel step derives
     // from it).
     int thumbnailSize = 0;
@@ -49,13 +62,13 @@ struct ThumbnailScrollConfig {
     friend bool operator==(const ThumbnailScrollConfig &, const ThumbnailScrollConfig &) = default;
 };
 
-// Items of a linear thumbnail view (the thumbnail strip) with the behaviour
-// of the widget ThumbnailView / ThumbnailStrip, in C++ so that QML only lays
-// out and animates:
+// Items of a thumbnail view (the thumbnail strip, the folder grid) with the
+// behaviour of the widget ThumbnailView, in C++ so that QML only lays out and
+// animates:
 // - item state: thumbnail and labels, directory, requested / final pending,
 //   unavailable, selected, drag hover;
 // - visible range: the view reports its scroll offset and extent
-//   (setViewport()); thumbnails within kPreloadDistance of it that are not
+//   (setViewport()); thumbnails within the preload distance of it that are not
 //   loaded, requested or unavailable are requested in one batch, nearest
 //   first in the scroll direction (thumbnailsNeeded); with unloadOffscreen,
 //   thumbnails outside that range are dropped. Nothing is requested while
@@ -68,9 +81,11 @@ struct ThumbnailScrollConfig {
 //   (smooth with acceleration, by item, touchpad pixels), the right-button
 //   gesture to the ends; the model sends the target to the view
 //   (scrollRequested) and the view reports when an animation ended;
-// - pointer input of the strip: activation on press, Ctrl toggles, the
+// - pointer input: activation on press (the strip) or selection on press
+//   and activation by double click (the folder grid), Ctrl toggles, Shift
+//   extends a range from the selection held when the range began, the
 //   release selects within a multi-selection, drag out, back / forward
-//   buttons, double click.
+//   buttons.
 //
 // The signals carry the IDirectoryView requests under their own names; the
 // application's DirectoryViewAdapter forwards them. GUI thread only.
@@ -95,8 +110,10 @@ public:
     };
     Q_ENUM(Role)
 
-    // Distance beyond the visible range in which thumbnails are loaded.
-    static constexpr int kPreloadDistance = 3000;
+    // What a left-button press on an item does without modifiers when at
+    // most one item is selected.
+    enum class ItemActivation { OnPress, OnDoubleClick };
+
     // Delay of the load after items were inserted, removed or resized.
     static constexpr int kLoadDelayMs = 150;
     // Pointer travel that starts a drag out, and the right-button gesture.
@@ -163,6 +180,20 @@ public:
     void setScrollConfig(const ThumbnailScrollConfig &config);
     // While blocked (the panel slides), nothing is requested.
     void setLoadingBlocked(bool blocked);
+    void setItemActivation(ItemActivation activation);
+
+    // --- selection and scrolling (keyboard navigation) ---------------------
+    // A Shift range starts from the current selection and ends with
+    // endRangeSelection(); Shift-presses and selectRangeTo() extend it.
+    void beginRangeSelection();
+    void endRangeSelection();
+    [[nodiscard]] bool rangeSelectionActive() const;
+    // Selects the range anchor plus the items from the end of the anchor to
+    // index; nothing happens without an anchor or a selection.
+    void selectRangeTo(int index);
+    // Scrolls until the item is fully visible (animated with smooth
+    // scrolling).
+    void scrollToItem(int index);
 
     // --- view (QML) ------------------------------------------------------
     // The view is shown and laid out.
@@ -232,8 +263,9 @@ private:
     void scrollSmooth(int delta, double multiplier, double acceleration, bool additive);
     void scrollPrecise(int delta);
     void scrollByItem(int delta);
-    void scrollToItem(int index);
     void scrollToEdge(bool end);
+    [[nodiscard]] qreal itemStart(int index) const;
+    [[nodiscard]] int lineCount() const;
 
     int mCount = 0;
     int mDirCount = 0;
@@ -247,6 +279,9 @@ private:
 
     ThumbnailRequestConfig mRequest;
     ThumbnailScrollConfig mScroll;
+    ItemActivation mActivation = ItemActivation::OnPress;
+    QList<int> mRangeAnchor;
+    bool mRangeSelection = false;
     bool mActive = false;
     bool mLoadingBlocked = false;
     QTimer mLoadTimer;

@@ -148,7 +148,7 @@ private slots:
     prepare(model, 1000);
     QCOMPARE(requests.count(), 1);
     const auto indices = requests.first().at(0).value<QList<int>>();
-    // 0 .. floor((500 + kPreloadDistance) / 100).
+    // 0 .. floor((500 + kStripPreloadDistance) / 100).
     QCOMPARE(indices.first(), 0);
     QCOMPARE(indices.last(), 35);
     QCOMPARE(indices.count(), 36);
@@ -485,6 +485,96 @@ private slots:
     model.press(-1, Qt::ForwardButton, Qt::NoModifier, {});
     QCOMPARE(back.count(), 1);
     QCOMPARE(forward.count(), 1);
+  }
+
+  //--- rows -------------------------------------------------------------------
+  void rowsRequestTheVisibleAndPreloadedItems() {
+    constexpr int kColumns = 4;
+    constexpr int kLeadingSpace = 6;
+    constexpr int kPreloadDistance = 200;
+    ThumbnailListModel model;
+    model.configure({.pixelSize = kRequestSize});
+    model.setScrollConfig({.horizontal = false,
+                           .itemExtent = kItemExtent,
+                           .columns = kColumns,
+                           .leadingSpace = kLeadingSpace,
+                           .preloadDistance = kPreloadDistance});
+    model.populate(100);
+    QSignalSpy requests(&model, &ThumbnailListModel::thumbnailsNeeded);
+    model.setViewport(0.0, kViewExtent);
+    model.setActive(true);
+    QCOMPARE(requests.count(), 1);
+    // Rows 0 .. floor((500 + 200 - 6) / 100) = 6, four items each.
+    const auto indices = requests.first().at(0).value<QList<int>>();
+    QCOMPARE(indices.size(), 7 * kColumns);
+    QCOMPARE(indices.constFirst(), 0);
+    QCOMPARE(indices.constLast(), 7 * kColumns - 1);
+  }
+
+  void rowsFocusAndScrollByRow() {
+    constexpr int kColumns = 4;
+    constexpr int kLeadingSpace = 6;
+    ThumbnailListModel model;
+    model.configure({.pixelSize = kRequestSize});
+    model.setScrollConfig({.horizontal = false,
+                           .itemExtent = kItemExtent,
+                           .columns = kColumns,
+                           .leadingSpace = kLeadingSpace,
+                           .focusShowsNeighbours = false,
+                           .thumbnailSize = kThumbnailSize});
+    model.populate(100);
+    model.setViewport(0.0, kViewExtent);
+    model.setActive(true);
+    QSignalSpy scrolls(&model, &ThumbnailListModel::scrollRequested);
+    // Item 41 is in row 10, which ends at 6 + 11 * 100; no neighbour margin.
+    model.focusOn(41);
+    QCOMPARE(scrolls.count(), 1);
+    QCOMPARE(scrolls.first().at(0).toReal(), kLeadingSpace + 11.0 * kItemExtent - kViewExtent);
+    // The content ends after 25 rows.
+    model.scrollToItem(99);
+    QCOMPARE(model.viewOffset(), kLeadingSpace + 25.0 * kItemExtent - kViewExtent);
+    // An item of a visible row does not scroll.
+    scrolls.clear();
+    model.scrollToItem(97);
+    QCOMPARE(scrolls.count(), 0);
+  }
+
+  void doubleClickActivationSelectsOnPress() {
+    ThumbnailListModel model;
+    prepare(model, 10);
+    model.setItemActivation(ThumbnailListModel::ItemActivation::OnDoubleClick);
+    QSignalSpy activated(&model, &ThumbnailListModel::activated);
+    model.press(3, Qt::LeftButton, Qt::NoModifier, {});
+    QCOMPARE(activated.count(), 0);
+    QCOMPARE(model.selection(), QList<int>{3});
+    model.doubleClick(3, Qt::LeftButton);
+    QCOMPARE(activated.count(), 1);
+    QCOMPARE(activated.first().at(0).toInt(), 3);
+  }
+
+  void shiftExtendsARangeFromTheAnchor() {
+    ThumbnailListModel model;
+    prepare(model, 10);
+    model.select(4);
+    // Without an anchor Shift-press changes nothing (the strip).
+    model.press(6, Qt::LeftButton, Qt::ShiftModifier, {});
+    QCOMPARE(model.selection(), QList<int>{4});
+
+    model.beginRangeSelection();
+    QVERIFY(model.rangeSelectionActive());
+    model.press(6, Qt::LeftButton, Qt::ShiftModifier, {});
+    QCOMPARE(model.selection(), (QList<int>{4, 5, 6}));
+    // A new end replaces the previous range; the end is the current item.
+    model.selectRangeTo(2);
+    QCOMPARE(model.selection(), (QList<int>{4, 3, 2}));
+    QCOMPARE(model.currentIndex(), 2);
+    model.endRangeSelection();
+    QVERIFY(!model.rangeSelectionActive());
+    // A new directory drops the anchor.
+    model.populate(10);
+    model.select(1);
+    model.selectRangeTo(3);
+    QCOMPARE(model.selection(), QList<int>{1});
   }
 
   //--- panel ------------------------------------------------------------------

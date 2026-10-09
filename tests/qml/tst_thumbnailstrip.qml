@@ -31,7 +31,7 @@ Item {
         // More than a screen of cells plus the reuse pool, far fewer than
         // the directory.
         readonly property int delegateLimit: 60
-        // The preloaded range of kPreloadDistance on both sides, in cells
+        // The preloaded range of kStripPreloadDistance on both sides, in cells
         // of the test layout (cell width 80 + 2 * (9 + 2) = 102 pixels).
         readonly property int requestLimit: 80
 
