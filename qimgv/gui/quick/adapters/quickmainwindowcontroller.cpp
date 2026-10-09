@@ -7,12 +7,15 @@
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QQuickWindow>
+#include <QScreen>
 
 #include "components/actionmanager/actionmanager.h"
 #include "components/viewmode/viewmodecontroller.h"
 #include "gui/ports/uievents.h"
+#include "gui/quick/ui/crop/cropcontroller.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
 #include "gui/quick/ui/mainwindowshell.h"
+#include "gui/quick/ui/menus/contextmenumodel.h"
 #include "gui/quick/ui/overlays/overlaycoordinator.h"
 #include "gui/quick/ui/thumbnails/thumbnailpanelcontroller.h"
 #include "settings.h"
@@ -40,6 +43,8 @@ QuickMainWindowController::QuickMainWindowController(
       viewport(context.viewport),
       overlays(context.overlays),
       thumbnailPanel(context.thumbnailPanel),
+      contextMenu(context.contextMenu),
+      crop(context.crop),
       viewMode(context.viewMode),
       events(context.events),
       settings(context.settings),
@@ -81,6 +86,8 @@ QuickMainWindowController::QuickMainWindowController(
         shell.setFolderViewActive(mode == MODE_FOLDERVIEW);
         overlays.setFolderViewActive(mode == MODE_FOLDERVIEW);
         thumbnailPanel.setFolderViewActive(mode == MODE_FOLDERVIEW);
+        contextMenu.setFolderViewActive(mode == MODE_FOLDERVIEW);
+        crop.setFolderViewActive(mode == MODE_FOLDERVIEW);
         updateTitle();
     });
     shell.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
@@ -88,6 +95,8 @@ QuickMainWindowController::QuickMainWindowController(
     overlays.setFullscreen(windowState.isFullscreen());
     thumbnailPanel.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
     thumbnailPanel.setFullscreen(windowState.isFullscreen());
+    contextMenu.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
+    crop.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
     thumbnailPanel.setWindowSize(window.size());
 
     // The title shows the zoom, the view locks and (by setting) extended
@@ -193,11 +202,16 @@ void QuickMainWindowController::setSaveOverlayVisible(bool visible) {
 }
 
 bool QuickMainWindowController::isCropPanelActive() const {
-    return false;
+    return crop.isActive();
 }
 
 void QuickMainWindowController::toggleCropPanel() {
-    reportUnavailable(u"crop panel"_s);
+    if (const QScreen *screen = window.screen())
+        crop.setScreenSize(screen->geometry().size());
+    else
+        qWarning() << "QuickMainWindowController: the window has no screen;"
+                      " the screen aspect preset keeps its ratio";
+    crop.toggle();
 }
 
 void QuickMainWindowController::toggleFullscreenInfoBar() {

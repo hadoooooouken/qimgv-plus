@@ -14,8 +14,10 @@
 #include "gui/quick/bridges/actiondispatcher.h"
 #include "gui/quick/bridges/settingsbridge.h"
 #include "gui/quick/bridges/themebridge.h"
+#include "gui/quick/ui/crop/cropcontroller.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
 #include "gui/quick/ui/mainwindowshell.h"
+#include "gui/quick/ui/menus/contextmenumodel.h"
 #include "gui/quick/ui/overlays/overlaycoordinator.h"
 #include "gui/quick/ui/thumbnails/thumbnailpanelcontroller.h"
 
@@ -70,6 +72,10 @@ class BridgeTestFixture : public QObject {
   Q_PROPERTY(int requestedThumbnailCount READ requestedThumbnailCount FINAL)
   Q_PROPERTY(int lastActivatedThumbnail READ lastActivatedThumbnail FINAL)
   Q_PROPERTY(int lastPinRequest READ lastPinRequest FINAL)
+  Q_PROPERTY(ContextMenuModel *contextMenu READ contextMenu CONSTANT FINAL)
+  Q_PROPERTY(CropController *crop READ crop CONSTANT FINAL)
+  Q_PROPERTY(QString lastCropRequest READ lastCropRequest FINAL)
+  Q_PROPERTY(int scriptSettingsRequests READ scriptSettingsRequests FINAL)
 
 public:
   explicit BridgeTestFixture(QObject *parent = nullptr);
@@ -100,6 +106,13 @@ public:
   [[nodiscard]] int lastActivatedThumbnail() const;
   // The last pin button request: 1 pin, 0 unpin, -1 none.
   [[nodiscard]] int lastPinRequest() const;
+  [[nodiscard]] ContextMenuModel *contextMenu();
+  [[nodiscard]] CropController *crop();
+  // The last crop request: "crop:x,y,w,h", "cropAndSave:x,y,w,h" or
+  // "default:<action>"; empty for none.
+  [[nodiscard]] QString lastCropRequest() const;
+  // How often "Configure menu" asked for the script settings.
+  [[nodiscard]] int scriptSettingsRequests() const;
 
   // Flips viewer.smoothZoom and publishes the snapshot (viewer area only).
   Q_INVOKABLE void toggleSmoothZoom();
@@ -112,6 +125,8 @@ public:
   // Shows a plain image of width x height pixels in the viewport, as a new
   // document (fitted with the default fit mode).
   Q_INVOKABLE void showTestImage(int width, int height);
+  // Closes the shown image.
+  Q_INVOKABLE void closeTestImage();
   // Sets the window shell state, as the Quick UI host does.
   Q_INVOKABLE void setFolderViewActive(bool active);
   Q_INVOKABLE void setFullscreen(bool fullscreen);
@@ -151,6 +166,16 @@ public:
   Q_INVOKABLE int deliverRequestedThumbnails();
   Q_INVOKABLE void panelPointerMoved(QPointF position, int buttons);
 
+  // Context menu: the menu action, as QuickContextMenuActions runs it, with
+  // the scripts named in scripts and the CAS filter on or off.
+  Q_INVOKABLE void toggleContextMenu(const QStringList &scripts, bool casFilter);
+  // Crop mode: the crop panel request of the shell port, with screenSize.
+  // The fixture keeps the controller's image and image area in sync with
+  // the viewport and turns the viewer input off while it is active, as
+  // QuickCropActions does.
+  Q_INVOKABLE void toggleCrop(QSize screenSize);
+  Q_INVOKABLE void clearCropRequest();
+
   // Path of fileName next to the test executable, for images the tests save
   // for review.
   Q_INVOKABLE QString artifactPath(const QString &fileName) const;
@@ -174,4 +199,8 @@ private:
   int mRequestedThumbnailCount = 0;
   int mLastActivatedThumbnail = -1;
   int mLastPinRequest = -1;
+  ContextMenuModel mContextMenu;
+  CropController mCrop;
+  QString mLastCropRequest;
+  int mScriptSettingsRequests = 0;
 };

@@ -5,9 +5,19 @@ import qimgv.bridges
 
 // Context menu row of the widget UI: label on the left, the action's
 // shortcut on the right in the secondary text colour, a rounded accent
-// highlight under the pointer.
+// highlight under the pointer. The icon is either icon.source or a glyph of
+// the application icon font (hasGlyph, glyph).
 T.MenuItem {
     id: control
+
+    // Text shown on the right; the Action's shortcut by default.
+    property string shortcutText: control.action ? ShortcutText.of(control.action.shortcut) : ""
+    // Draws glyph (a FluentIcons value) as the icon.
+    property bool hasGlyph: false
+    property int glyph
+    property int glyphSize: Theme.standardIconSize
+    property color glyphColor: Theme.colors.icons
+    property color labelColor: Theme.colors.textHc
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding)
@@ -28,22 +38,36 @@ T.MenuItem {
                                                  ? control.indicator.width + control.spacing : 0
         readonly property real arrowPadding: control.subMenu && control.arrow
                                              ? control.arrow.width + control.spacing : 0
-        readonly property string shortcutText: control.action ? ShortcutText.of(control.action.shortcut) : ""
+        readonly property real glyphPadding: control.hasGlyph ? glyphIcon.width + control.spacing : 0
+        readonly property string shortcutText: control.shortcutText
         readonly property color secondaryColor: Color.transparent(Theme.colors.text,
                                                                   StyleConstants.secondaryTextOpacity)
 
-        implicitWidth: indicatorPadding + label.implicitWidth
+        implicitWidth: indicatorPadding + glyphPadding + label.implicitWidth
                        + (shortcutText ? StyleConstants.menuShortcutGap + shortcut.implicitWidth : 0)
                        + arrowPadding
         implicitHeight: Math.max(label.implicitHeight, shortcut.implicitHeight)
         LayoutMirroring.enabled: control.mirrored
         LayoutMirroring.childrenInherit: true
 
+        IconGlyph {
+            id: glyphIcon
+
+            anchors.left: parent.left
+            anchors.leftMargin: parent.indicatorPadding
+            anchors.verticalCenter: parent.verticalCenter
+            visible: control.hasGlyph
+            icon: control.glyph
+            size: control.glyphSize
+            color: control.glyphColor
+            opacity: control.enabled ? 1.0 : StyleConstants.disabledOpacity
+        }
+
         IconLabel {
             id: label
 
             anchors.left: parent.left
-            anchors.leftMargin: parent.indicatorPadding
+            anchors.leftMargin: parent.indicatorPadding + parent.glyphPadding
             anchors.right: shortcut.visible ? shortcut.left : parent.right
             anchors.rightMargin: shortcut.visible ? StyleConstants.menuShortcutGap : parent.arrowPadding
             anchors.verticalCenter: parent.verticalCenter
@@ -55,7 +79,7 @@ T.MenuItem {
             icon: control.icon
             text: control.text
             font: control.font
-            color: control.enabled ? Theme.colors.textHc : parent.secondaryColor
+            color: control.enabled ? control.labelColor : parent.secondaryColor
         }
 
         Text {

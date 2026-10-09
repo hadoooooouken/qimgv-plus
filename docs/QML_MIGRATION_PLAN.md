@@ -1416,6 +1416,106 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
   via `Shape`.
 - **Acceptance:** menu opens beyond window edges; all shortcuts displayed
   match `ActionManager`.
+- **Delivered:**
+  - **Menu model** (`gui/quick/ui/menus/`, module `qimgv.ui`, free of
+    `Settings` and `ActionManager`): `ContextMenuModel` holds the rows of the
+    widget `ContextMenu` in four `ContextMenuEntryList` models (zoom buttons,
+    transform buttons, action rows, scripts; roles prefixed `entry*` so they
+    do not shadow delegate properties). Shortcuts come from
+    `IActionDispatcher::shortcutFor()`, so they are the ones `ActionManager`
+    uses; `refreshShortcuts()` re-reads them on `settingsChanged` and updates
+    the rows in place (`dataChanged`, no reset). Rules: rows acting on the
+    image are disabled without one; CAS settings is listed only with an image
+    and the CAS filter; "More" expands in place and collapses whenever the
+    menu opens; the menu action toggles the menu; it does not open while the
+    viewer takes no input (crop mode), and the folder view closes it. Texts
+    keep the widget's `ContextMenu` translation context.
+  - **Menu QML:** `ViewerContextMenu.qml` (not `ContextMenu.qml`: that name
+    is the Qt Quick Controls `ContextMenu` attached type) is a `Menu` with
+    `popupType: Popup.Window`, opening at the pointer through `popup()`; the
+    user chose a window menu with widget parity over `Popup.Native`, which
+    cannot show the button rows, the destructive tones or the theme. Button
+    rows act on press; "More" is not a `MenuItem` (a triggered item closes
+    the menu); "Open with..." is a cascading submenu with the scripts and
+    "Configure menu". Rows are laid out in a `Column` over `contentModel`:
+    the style's `ListView` estimates rows outside its view, which left the
+    window too short once "More" expanded. The menu is created on its first
+    opening. The style `MenuItem` gained `shortcutText`, a glyph icon
+    (`hasGlyph`, `glyph`, `glyphSize`, `glyphColor`) and `labelColor`.
+  - **Crop model** (`gui/quick/ui/crop/`): `CropSelection` is the selection
+    logic of `CropOverlay` in image pixels (bounded selection, free and
+    ratio-locked resize from the opposite anchor, flips across the anchor,
+    move, new selections taking their direction from the first travel along
+    both axes). A drag applies the whole travel since it began to the
+    selection it started from, so fractional pointer moves accumulate
+    (the widget applied each move's rounded delta). `CropController` adds
+    the mode and the panel: opens in the document view with an image, closes
+    in the folder view or without an image; opening and new images reset to
+    the free ratio with the whole image; the eight presets of `CropPanel`;
+    edited inputs are moved into the image; crop / crop and save close the
+    mode and request only a selection that is not empty and not the image
+    size; the default action follows the settings and the right click; the
+    pointer maps through the image area on screen; handles are drawn while
+    nothing is dragged and the selection is at least 90 device pixels.
+  - **Crop QML:** `CropOverlay.qml` (tint bands, outline and handles as
+    rectangles, not `Shape`: all axis aligned, no extra module to deploy),
+    `CropPanel.qml` (inputs in a grid, presets, swap, the default action
+    marker of `PushButtonFocusInd`), `SidePanel.qml` (surface at the right
+    edge that takes its space from the document page, takes the wheel and
+    focuses the width input). Enter, Shift+Enter, Escape and Ctrl+A are
+    `Shortcut`s of the crop mode; the focused input is left first, so its
+    edit applies.
+  - **Viewer and panel:** `ImageViewportController` gained `imageArea()`,
+    `imageSize()`, `imageGeometryChanged()`, `setInteractionEnabled()`
+    (zoom, scroll and fit actions and presses, double clicks, wheel and pinch
+    do nothing while off) and `setExpandSmallImagesInFitMode()`.
+    `ThumbnailPanelController::setInteractionEnabled()` hides an unpinned
+    panel and keeps it from sliding in, as `DocumentWidget` does.
+  - **Application side:** `QuickContextMenuActions` (menu action, scripts
+    with a command, displayed image, CAS filter) and `QuickCropActions`
+    (`QuickCropContext`; the viewer side effects of `MW::showCropPanel()` /
+    `hideCropPanel()`, crop requests to `UiEvents`, the default action to
+    `Settings`). `QuickMainWindowController` implements the crop parts of
+    `IShellPort` (with the size of the window's screen for the screen preset)
+    and passes the view mode to the menu and the crop mode. `QuickUiHost`
+    takes the `ScriptManager`.
+  - **Path selector submenu:** delivered with the copy / move overlay in
+    S2.3 (`CopyTargetsModel`, `FolderDialog`).
+  - **Deviations:**
+    - While the menu is open, keys navigate it; the widget menu passed them
+      to the action shortcuts.
+    - Enter with an empty selection closes the crop mode (the widget overlay
+      ignored it, the panel closed).
+    - "Configure menu" logs that the script settings are not available
+      until the Quick settings dialog (S3.3).
+  - **Measured** (Release, `smoke.png` 300 x 300, process start to first
+    `documentRenderingSettled`, 5 runs each, same session): Quick UI median
+    355 ms (348 - 386), widget UI median 559 ms (534 - 599). The menu and
+    the crop panel are created on first use.
+  - **Not verified by hand in the running application:** opening the menu
+    and the crop mode, since no input was sent to the desktop; the tests
+    drive them and the offscreen renders (`contextmenu.png`, `crop.png`
+    next to `qimgv_qml_tests`) were reviewed. Smoke runs start and close the
+    Quick UI without QML warnings.
+  - **Flagged, not changed:** the `ThumbnailStrip.qml` scroll bar reports
+    TypeErrors (anchors on a null parent) while QML tests tear their windows
+    down (S2.4).
+  - Tests:
+    - `qimgv_tests` gained `ContextMenuTests` (rows, every menu action is an
+      application action, shortcut parity and refresh in place, image rows,
+      CAS, More, open rules, triggering, scripts) and `CropTests`
+      (selection: fit, place, free / locked corner and edge resize, flips,
+      move, accumulated travel, new selections; controller: mode, presets,
+      custom ratio and swap, inputs, crop validity, default action, pointer
+      mapping, handles and cursors), plus the viewport interaction lock, the
+      small-image enlargement and the panel gate.
+    - `qimgv_qml_tests` gained `tst_contextmenu.qml` (own window larger than
+      the test window, shortcuts equal `Actions.shortcutFor()` and follow
+      edits, rows, buttons on press, More, disabled image rows, the scripts
+      submenu, Escape and the folder view) and `tst_crop.qml` (opening with
+      the panel, drawing, inputs, presets, Enter / Shift+Enter / Escape, the
+      default action, the wheel, the folder view); `tst_mainwindow.qml`
+      checks the docked side panel.
 
 #### S2.5b Spike: HDR output (optional, not blocking)
 - **Goal:** measure whether an scRGB swapchain is viable for HDR displays.

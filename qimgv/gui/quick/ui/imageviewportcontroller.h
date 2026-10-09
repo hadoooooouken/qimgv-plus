@@ -126,6 +126,19 @@ public:
     // viewport in panorama mode. Asynchronous: visibleImageGrabbed() or
     // visibleImageGrabFailed() follows. A newer grab replaces a pending one.
     void grabVisibleImage();
+    // Where the image is drawn (viewport coordinates, logical pixels; empty
+    // without an image) and its size in pixels. imageGeometryChanged()
+    // follows every change.
+    [[nodiscard]] QRectF imageArea() const;
+    [[nodiscard]] QSize imageSize() const;
+    // Viewer input on or off (the crop mode turns it off). While off, the
+    // zoom, scroll and fit actions and the pointer presses, double clicks,
+    // wheel and pinch do nothing, as in the widget viewer.
+    void setInteractionEnabled(bool enabled);
+    [[nodiscard]] bool isInteractionEnabled() const;
+    // Enlarges small images in fit-to-window mode regardless of the
+    // settings (crop mode); takes effect with the next fit.
+    void setExpandSmallImagesInFitMode(bool enabled);
 
     // --- viewer actions -------------------------------------------------
     void zoomIn();
@@ -210,6 +223,7 @@ signals:
     void prevImageRequested();
     // Image area on screen after a fit-to-window centring (crop overlay).
     void imageAreaChanged(QRect area);
+    void imageGeometryChanged();
     void playbackError(const QString &message);
     void visibleImageGrabbed(const QImage &image);
     void visibleImageGrabFailed();
@@ -316,6 +330,7 @@ private:
     QString mFilePath;
     bool mAwaitingFirstFrame = false;
     bool mPanorama = false;
+    bool mInteractionEnabled = true;
 
     bool mRenderingSettled = false;
     bool mPinching = false;

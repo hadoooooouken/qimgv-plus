@@ -17,7 +17,9 @@ TestCase {
             viewportController: Fixture.viewportController,
             windowShell: Fixture.windowShell,
             overlays: Fixture.overlays,
-            thumbnailPanel: Fixture.thumbnailPanel
+            thumbnailPanel: Fixture.thumbnailPanel,
+            contextMenu: Fixture.contextMenu,
+            crop: Fixture.crop
         });
         verify(window !== null, "qimgv.ui/Main could not be instantiated");
         return window;
@@ -81,6 +83,26 @@ TestCase {
         // A floating panel covers the viewport instead.
         Fixture.configureThumbnailPanel(false, SettingsEnums.PanelPosition.Bottom, false);
         compare(viewport.height, window.height);
+    }
+
+    function test_cropModeDocksTheSidePanelAndCoversTheViewport() {
+        Fixture.configureThumbnailPanel(false, SettingsEnums.PanelPosition.Bottom, false);
+        const window = createWindow();
+        const viewport = childOfType(window, "ImageViewport");
+        const overlay = childOfType(window, "CropOverlay");
+        const sidePanel = childOfType(window, "SidePanel");
+        verify(overlay !== null && sidePanel !== null, "no crop overlay or side panel");
+        verify(!overlay.visible);
+        verify(!sidePanel.visible);
+        Fixture.showTestImage(64, 64);
+        Fixture.toggleCrop(Qt.size(1920, 1080));
+        verify(overlay.visible);
+        verify(sidePanel.visible);
+        compare(viewport.width, window.width - sidePanel.width);
+        compare(overlay.width, viewport.width);
+        compare(sidePanel.x, window.width - sidePanel.width);
+        Fixture.crop.cancel();
+        compare(viewport.width, window.width);
     }
 
     function test_externalFileDropsReachTheShell() {

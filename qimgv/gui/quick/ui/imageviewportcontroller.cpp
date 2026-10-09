@@ -457,6 +457,17 @@ bool ImageViewportController::hasImage() const {
     return mImage != nullptr;
 }
 
+QRectF ImageViewportController::imageArea() const {
+    if (!hasImage())
+        return {};
+    const ViewTransform &transform = mTransform.transform();
+    return QRectF(transform.imagePosition(), transform.scaledSizeF());
+}
+
+QSize ImageViewportController::imageSize() const {
+    return mImage ? mImage->size() : QSize();
+}
+
 void ImageViewportController::setUpscaledCrop(const QImage &crop, const QRect &sourceRect) {
     if (mPanorama || !mImage || !mView)
         return;
@@ -570,6 +581,7 @@ void ImageViewportController::onTransformChanged() {
     setRenderingSettled(false);
     mPresentation.cancel();
     applyItemSettled();
+    emit imageGeometryChanged();
 }
 
 void ImageViewportController::onScaleChanged(qreal scale) {
@@ -657,6 +669,8 @@ void ImageViewportController::zoomInCursor() { zoomBy(true, true); }
 void ImageViewportController::zoomOutCursor() { zoomBy(false, true); }
 
 void ImageViewportController::zoomBy(bool zoomIn, bool atCursor) {
+    if (!mInteractionEnabled)
+        return;
     mTransform.setZoomAnchor(zoomAnchorPosition(atCursor));
     // Repeated zooms during a smooth zoom continue from its target.
     const float baseScale = isZoomAnimating() ? mZoomTargetScale : currentScale();
@@ -725,13 +739,47 @@ void ImageViewportController::forceFitMode(ImageFitMode mode) {
     requestScaling();
 }
 
-void ImageViewportController::fitWindow() { forceFitMode(FIT_WINDOW); }
-void ImageViewportController::fitWidth() { forceFitMode(FIT_WIDTH); }
-void ImageViewportController::fitHeight() { forceFitMode(FIT_HEIGHT); }
-void ImageViewportController::fitOriginal() { setFitMode(FIT_ORIGINAL); }
+void ImageViewportController::fitWindow() {
+    if (mInteractionEnabled)
+        forceFitMode(FIT_WINDOW);
+}
+
+void ImageViewportController::fitWidth() {
+    if (mInteractionEnabled)
+        forceFitMode(FIT_WIDTH);
+}
+
+void ImageViewportController::fitHeight() {
+    if (mInteractionEnabled)
+        forceFitMode(FIT_HEIGHT);
+}
+
+void ImageViewportController::fitOriginal() {
+    if (mInteractionEnabled)
+        setFitMode(FIT_ORIGINAL);
+}
 
 void ImageViewportController::switchFitMode() {
-    setFitMode(mTransform.transform().fitMode() == FIT_WINDOW ? FIT_ORIGINAL : FIT_WINDOW);
+    if (mInteractionEnabled)
+        setFitMode(mTransform.transform().fitMode() == FIT_WINDOW ? FIT_ORIGINAL : FIT_WINDOW);
+}
+
+void ImageViewportController::setInteractionEnabled(bool enabled) {
+    if (mInteractionEnabled == enabled)
+        return;
+    mInteractionEnabled = enabled;
+    if (!enabled) {
+        stopScaleTimerAndAnimations();
+        mPinching = false;
+    }
+}
+
+bool ImageViewportController::isInteractionEnabled() const {
+    return mInteractionEnabled;
+}
+
+void ImageViewportController::setExpandSmallImagesInFitMode(bool enabled) {
+    mTransform.setExpandSmallImagesInFitMode(enabled);
 }
 
 void ImageViewportController::toggleLockZoom() {
@@ -802,6 +850,8 @@ void ImageViewportController::scrollLeft() { scroll(-kScrollStepPx, 0, true); }
 void ImageViewportController::scrollRight() { scroll(kScrollStepPx, 0, true); }
 
 void ImageViewportController::scroll(int dx, int dy, bool smooth) {
+    if (!mInteractionEnabled)
+        return;
     if (smooth && useSmoothMotion())
         scrollSmooth(dx, dy);
     else
@@ -866,6 +916,8 @@ InteractionContext ImageViewportController::interactionContext() const {
 
 bool ImageViewportController::pointerPressed(QPointF position, int button, int modifiers) {
     mPointerPosition = position;
+    if (!mInteractionEnabled)
+        return false;
     const auto pressed = static_cast<Qt::MouseButton>(button);
     if (mClickZonesEnabled) {
         const ClickZone zone = clickZoneAt(position);
@@ -918,6 +970,8 @@ bool ImageViewportController::pointerReleased(QPointF position) {
 
 bool ImageViewportController::pointerDoubleClicked(QPointF position, int button, int modifiers) {
     mPointerPosition = position;
+    if (!mInteractionEnabled)
+        return false;
     const auto clicked = static_cast<Qt::MouseButton>(button);
     // The second press of the double click already acted on the click zone.
     if (mClickZonesEnabled && clicked == Qt::LeftButton && modifiers == Qt::NoModifier &&
@@ -945,6 +999,8 @@ void ImageViewportController::pointerExited() {
 bool ImageViewportController::wheelTurned(QPointF position, QPoint angleDelta, QPoint pixelDelta,
                                           int buttons, int modifiers) {
     mPointerPosition = position;
+    if (!mInteractionEnabled)
+        return false;
     if (mPanorama) {
         mTransform.zoomPanoramaByWheel(angleDelta.y());
         return true;
@@ -981,7 +1037,7 @@ bool ImageViewportController::wheelTurned(QPointF position, QPoint angleDelta, Q
 }
 
 void ImageViewportController::pinchStarted(QPointF centroid) {
-    if (!mImage || mPanorama)
+    if (!mImage || mPanorama || !mInteractionEnabled)
         return;
     mPointerPosition = centroid;
     stopScaleTimerAndAnimations();

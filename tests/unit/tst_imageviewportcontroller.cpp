@@ -127,6 +127,48 @@ private slots:
     QCOMPARE(controller.currentScale(), 0.5f);
   }
 
+  // The crop mode turns the viewer input off.
+  void lockedInteractionIgnoresViewActionsAndPointer() {
+    Viewport viewport;
+    ImageViewportController &controller = viewport.controller;
+    controller.showImage(testImage(kLargeImage), kFirstFile);
+    controller.setInteractionEnabled(false);
+    QVERIFY(!controller.isInteractionEnabled());
+
+    controller.zoomIn();
+    controller.zoomInCursor();
+    controller.fitOriginal();
+    controller.switchFitMode();
+    controller.scrollDown();
+    QCOMPARE(controller.currentScale(), 0.5f);
+    QCOMPARE(viewport.item.imagePosition(), QPointF(0, 0));
+    QVERIFY(!controller.pointerPressed(kCentre, kLeft, kNoModifiers));
+    QVERIFY(!controller.wheelTurned(kCentre, QPoint(0, 120), QPoint(), kRight, kNoModifiers));
+    QCOMPARE(controller.currentScale(), 0.5f);
+
+    controller.setInteractionEnabled(true);
+    controller.zoomIn();
+    QVERIFY(controller.currentScale() > 0.5f);
+  }
+
+  // The crop mode enlarges small images to the window.
+  void smallImagesCanBeEnlargedToTheWindow() {
+    Viewport viewport;
+    ImageViewportController &controller = viewport.controller;
+    QCOMPARE(controller.imageArea(), QRectF());
+    controller.showImage(testImage(kSmallImage), kFirstFile);
+    QCOMPARE(controller.currentScale(), 1.0f);
+    QCOMPARE(controller.imageSize(), kSmallImage);
+    QCOMPARE(controller.imageArea(), QRectF(QPointF(300, 225), QSizeF(kSmallImage)));
+
+    QSignalSpy geometry(&controller, &ImageViewportController::imageGeometryChanged);
+    controller.setExpandSmallImagesInFitMode(true);
+    controller.fitWindow();
+    QVERIFY(geometry.count() > 0);
+    QCOMPARE(controller.currentScale(), 4.0f);
+    QCOMPARE(controller.imageArea(), QRectF(QPointF(0, 0), kViewport));
+  }
+
   void zoomKeepsTheViewportCentre() {
     Viewport viewport;
     ImageViewportController &controller = viewport.controller;

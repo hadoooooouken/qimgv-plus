@@ -134,7 +134,8 @@ BridgeTestFixture::BridgeTestFixture(QObject *parent)
     : QObject(parent), mSettings(testSettings()),
       mSettingsBridge(mSettings), mThemeBridge(testTheme(mDark)),
       mActionBridge(mDispatcher), mViewport(mSettings), mOverlays(mSettings),
-      mThumbnailPanel(mThumbnails, mSettings) {
+      mThumbnailPanel(mThumbnails, mSettings), mContextMenu(mDispatcher),
+      mCrop(mSettings) {
   mThumbnailPanel.setLabelFont(QGuiApplication::font());
   connect(&mThumbnails, &ThumbnailListModel::thumbnailsNeeded, this,
           [this](const QList<int> &indices) {
@@ -167,6 +168,39 @@ BridgeTestFixture::BridgeTestFixture(QObject *parent)
           [this]() { mLastFileRequest = u"discard"_s; });
   connect(mOverlays.colorAdjustmentsEditor(), &ColorAdjustmentsEditor::previewChanged,
           &mViewport, &ImageViewportController::setColorAdjustments);
+
+  connect(&mContextMenu, &ContextMenuModel::scriptSettingsRequested, this,
+          [this]() { ++mScriptSettingsRequests; });
+
+  const auto syncCropImage = [this]() {
+    mCrop.setImageSize(mViewport.imageSize());
+    mCrop.setDevicePixelRatio(mViewport.devicePixelRatio());
+    mCrop.setImageArea(mViewport.imageArea());
+  };
+  connect(&mViewport, &ImageViewportController::imageChanged, this, syncCropImage);
+  connect(&mViewport, &ImageViewportController::imageGeometryChanged, this,
+          syncCropImage);
+  connect(&mCrop, &CropController::activeChanged, this, [this]() {
+    const bool active = mCrop.isActive();
+    mViewport.setExpandSmallImagesInFitMode(active);
+    if (active)
+      mViewport.fitWindow();
+    mViewport.setInteractionEnabled(!active);
+    mContextMenu.setInteractionEnabled(!active);
+    mThumbnailPanel.setInteractionEnabled(!active);
+  });
+  const auto rectText = [](const QRect &rect) {
+    return u"%1,%2,%3,%4"_s.arg(rect.x()).arg(rect.y()).arg(rect.width()).arg(rect.height());
+  };
+  connect(&mCrop, &CropController::cropRequested, this,
+          [this, rectText](const QRect &rect) { mLastCropRequest = u"crop:"_s + rectText(rect); });
+  connect(&mCrop, &CropController::cropAndSaveRequested, this, [this, rectText](const QRect &rect) {
+    mLastCropRequest = u"cropAndSave:"_s + rectText(rect);
+  });
+  connect(&mCrop, &CropController::defaultActionChosen, this,
+          [this](SettingsEnums::CropAction action) {
+            mLastCropRequest = u"default:"_s + QString::number(static_cast<int>(action));
+          });
 }
 
 SettingsBridge &BridgeTestFixture::settingsBridge() { return mSettingsBridge; }
@@ -234,6 +268,8 @@ int BridgeTestFixture::lastPinRequest() const { return mLastPinRequest; }
 void BridgeTestFixture::setFolderViewActive(bool active) {
   mWindowShell.setFolderViewActive(active);
   mOverlays.setFolderViewActive(active);
+  mContextMenu.setFolderViewActive(active);
+  mCrop.setFolderViewActive(active);
 }
 
 void BridgeTestFixture::setFullscreen(bool fullscreen) {
@@ -278,6 +314,7 @@ void BridgeTestFixture::setShortcut(const QString &action,
                                     const QString &shortcut) {
   mDispatcher.setShortcut(action, shortcut);
   mActionBridge.refresh();
+  mContextMenu.refreshShortcuts();
 }
 
 void BridgeTestFixture::showTestImage(int width, int height) {
@@ -288,7 +325,36 @@ void BridgeTestFixture::showTestImage(int width, int height) {
   mViewport.showImage(std::make_shared<const QImage>(std::move(image)),
                       kTestImagePath);
   mOverlays.setDocumentDisplayed(true);
+  mContextMenu.setImageDisplayed(true);
 }
+
+void BridgeTestFixture::closeTestImage() {
+  mViewport.closeImage();
+  mOverlays.setDocumentDisplayed(false);
+  mContextMenu.setImageDisplayed(false);
+}
+
+ContextMenuModel *BridgeTestFixture::contextMenu() { return &mContextMenu; }
+
+CropController *BridgeTestFixture::crop() { return &mCrop; }
+
+QString BridgeTestFixture::lastCropRequest() const { return mLastCropRequest; }
+
+int BridgeTestFixture::scriptSettingsRequests() const { return mScriptSettingsRequests; }
+
+void BridgeTestFixture::toggleContextMenu(const QStringList &scripts, bool casFilter) {
+  mContextMenu.setScripts(scripts);
+  mContextMenu.setImageDisplayed(mViewport.hasImage());
+  mContextMenu.setCasFilterActive(casFilter);
+  mContextMenu.toggle();
+}
+
+void BridgeTestFixture::toggleCrop(QSize screenSize) {
+  mCrop.setScreenSize(screenSize);
+  mCrop.toggle();
+}
+
+void BridgeTestFixture::clearCropRequest() { mLastCropRequest.clear(); }
 
 QString BridgeTestFixture::artifactPath(const QString &fileName) const {
   return QDir(QCoreApplication::applicationDirPath()).filePath(fileName);

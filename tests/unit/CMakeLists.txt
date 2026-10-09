@@ -22,6 +22,8 @@ qt_add_executable(qimgv_tests
     tst_uimetrics.cpp
     tst_overlays.cpp
     tst_thumbnailstrip.cpp
+    tst_contextmenu.cpp
+    tst_crop.cpp
     "${QIMGV_APP_SOURCE_DIR}/components/viewmode/viewmodecontroller.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/shellinfo/windowtitle.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/singleinstance/singleinstancechannel.cpp"
@@ -33,6 +35,7 @@ qt_add_executable(qimgv_tests
     "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/placeholderdirectoryview.cpp"
     "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/themesnapshotbuilder.cpp"
     "${QIMGV_APP_SOURCE_DIR}/themestore.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/utils/actions.cpp"
 )
 
 # Components under test are compiled from the application sources and use

@@ -10,6 +10,8 @@
 #include "gui/ports/windowport.h"
 
 class ActionManager;
+class ContextMenuModel;
+class CropController;
 class ImageViewportController;
 class MainWindowShell;
 class OverlayCoordinator;
@@ -27,6 +29,8 @@ struct QuickMainWindowContext {
     ImageViewportController &viewport;
     OverlayCoordinator &overlays;
     ThumbnailPanelController &thumbnailPanel;
+    ContextMenuModel &contextMenu;
+    CropController &crop;
     ViewModeController &viewMode;
     UiEvents &events;
     Settings &settings;
@@ -49,9 +53,11 @@ struct QuickMainWindowContext {
 // fullscreen info bar, rename prompt, current file) and the window's pointer
 // moves, fullscreen state and view mode go to the OverlayCoordinator. The
 // thumbnail panel follows the window's pointer moves and exits, size,
-// activation, fullscreen state and view mode. The shell parts without a
-// Quick UI yet (folder tree, sorting, crop panel) are logged once and
-// otherwise ignored until their stages (S2.5 - S3.1) implement them.
+// activation, fullscreen state and view mode. The context menu and the crop
+// mode follow the view mode; the crop panel requests open and close the
+// crop mode (CropController) with the size of the window's screen. The
+// shell parts without a Quick UI yet (folder tree, sorting) are logged once
+// and otherwise ignored until S3.1 implements them.
 // GUI thread only.
 class QuickMainWindowController final : public QObject,
                                         public IWindowPort,
@@ -100,6 +106,8 @@ private:
     ImageViewportController &viewport;
     OverlayCoordinator &overlays;
     ThumbnailPanelController &thumbnailPanel;
+    ContextMenuModel &contextMenu;
+    CropController &crop;
     ViewModeController &viewMode;
     UiEvents &events;
     Settings &settings;

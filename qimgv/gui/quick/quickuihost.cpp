@@ -29,6 +29,8 @@ constexpr QLatin1StringView viewportControllerProperty = "viewportController"_L1
 constexpr QLatin1StringView windowShellProperty = "windowShell"_L1;
 constexpr QLatin1StringView overlaysProperty = "overlays"_L1;
 constexpr QLatin1StringView thumbnailPanelProperty = "thumbnailPanel"_L1;
+constexpr QLatin1StringView contextMenuProperty = "contextMenu"_L1;
+constexpr QLatin1StringView cropProperty = "crop"_L1;
 
 constexpr QLatin1StringView bridgesModule = "qimgv.bridges"_L1;
 constexpr QLatin1StringView settingsBridgeType = "AppSettings"_L1;
@@ -61,7 +63,8 @@ GraphicsApiInfo graphicsApiInfo(QuickGraphicsApi api) {
 } // namespace
 
 //------------------------------------------------------------------------------
-QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager)
+QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager,
+                         ScriptManager &scriptManager)
     : mSettings(settings),
       mActionManager(actionManager),
       mViewMode(settings.defaultViewMode()),
@@ -76,7 +79,18 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager)
       mViewerActions(actionManager, settings, mViewport),
       mOverlays(BridgeSnapshots::readUiSettings(settings)),
       mOverlayActions(actionManager, settings, mOverlays, mViewport),
-      mThumbnailPanel(*mThumbnailPanelView, BridgeSnapshots::readUiSettings(settings)) {
+      mThumbnailPanel(*mThumbnailPanelView, BridgeSnapshots::readUiSettings(settings)),
+      mContextMenu(mDispatcher),
+      mContextMenuActions(actionManager, scriptManager, mContextMenu, mViewport),
+      mCrop(BridgeSnapshots::readUiSettings(settings)),
+      mCropActions(QuickCropContext{
+          .crop = mCrop,
+          .viewport = mViewport,
+          .thumbnailPanel = mThumbnailPanel,
+          .contextMenu = mContextMenu,
+          .events = mEvents,
+          .settings = settings,
+      }) {
   // settingsChanged also announces theme switches and shortcut edits; each
   // receiver acts only on what actually changed.
   QObject::connect(&settings, &Settings::settingsChanged, &mSettingsBridge,
@@ -165,8 +179,10 @@ void QuickUiHost::onSettingsChanged() {
   mViewport.applySettings(snapshot);
   mOverlays.applySettings(snapshot);
   mThumbnailPanel.applySettings(snapshot);
+  mCrop.applySettings(snapshot);
   mThemeBridge.apply(BridgeSnapshots::readTheme(mSettings));
   mActionBridge.refresh();
+  mContextMenu.refreshShortcuts();
 }
 
 //------------------------------------------------------------------------------
@@ -231,7 +247,9 @@ bool QuickUiHost::start() {
       {{viewportControllerProperty, QVariant::fromValue(&mViewport)},
        {windowShellProperty, QVariant::fromValue(&mWindowShell)},
        {overlaysProperty, QVariant::fromValue(&mOverlays)},
-       {thumbnailPanelProperty, QVariant::fromValue(&mThumbnailPanel)}});
+       {thumbnailPanelProperty, QVariant::fromValue(&mThumbnailPanel)},
+       {contextMenuProperty, QVariant::fromValue(&mContextMenu)},
+       {cropProperty, QVariant::fromValue(&mCrop)}});
   mEngine.loadFromModule(mainWindowModule, mainWindowType);
   const QList<QObject *> roots = mEngine.rootObjects();
   QQuickWindow *window =
@@ -256,6 +274,8 @@ bool QuickUiHost::start() {
           .viewport = mViewport,
           .overlays = mOverlays,
           .thumbnailPanel = mThumbnailPanel,
+          .contextMenu = mContextMenu,
+          .crop = mCrop,
           .viewMode = mViewMode,
           .events = mEvents,
           .settings = mSettings,

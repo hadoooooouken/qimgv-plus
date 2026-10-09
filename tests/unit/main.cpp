@@ -25,5 +25,7 @@ int main(int argc, char **argv) {
   status |= runUiMetricsTests(argc, argv);
   status |= runOverlayTests(argc, argv);
   status |= runThumbnailStripTests(argc, argv);
+  status |= runContextMenuTests(argc, argv);
+  status |= runCropTests(argc, argv);
   return status;
 }

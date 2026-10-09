@@ -521,6 +521,24 @@ private slots:
     QVERIFY(panel.isAnimated());
   }
 
+  // The crop mode turns the viewer input off.
+  void lockedViewerKeepsTheFloatingPanelHidden() {
+    ThumbnailListModel model;
+    ThumbnailPanelController panel(model, panelSettings(false, Enums::PanelPosition::Bottom));
+    panel.setWindowSize(kLargeWindow);
+    panel.pointerMoved(bottomPanelPoint(), Qt::NoButton);
+    QVERIFY(panel.isShown());
+    panel.setInteractionEnabled(false);
+    QVERIFY(!panel.isShown());
+    QVERIFY(!panel.isAnimated());
+    panel.pointerMoved(viewerPoint(), Qt::NoButton);
+    panel.pointerMoved(bottomPanelPoint(), Qt::NoButton);
+    QVERIFY(!panel.isShown());
+    panel.setInteractionEnabled(true);
+    panel.pointerMoved(bottomPanelPoint(), Qt::NoButton);
+    QVERIFY(panel.isShown());
+  }
+
   void pressInThePanelAreaKeepsItHidden() {
     ThumbnailListModel model;
     ThumbnailPanelController panel(model, panelSettings(false, Enums::PanelPosition::Bottom));

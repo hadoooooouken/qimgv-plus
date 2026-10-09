@@ -158,6 +158,8 @@ void ThumbnailPanelController::pointerMoved(QPointF position, Qt::MouseButtons b
             mAvoidShow = true;
         return;
     }
+    if (!mInteractionEnabled)
+        return;
 
     const QRectF hoverArea =
         trigger.adjusted(-kHoverMarginPx, -kHoverMarginPx, kHoverMarginPx, kHoverMarginPx);
@@ -182,6 +184,12 @@ void ThumbnailPanelController::hideNow() {
         return;
     cancelHide();
     setShown(false, false);
+}
+
+void ThumbnailPanelController::setInteractionEnabled(bool enabled) {
+    mInteractionEnabled = enabled;
+    if (!enabled)
+        hideNow();
 }
 
 //------------------------------------------------------------------------------

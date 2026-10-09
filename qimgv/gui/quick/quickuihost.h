@@ -12,6 +12,8 @@
 #include "gui/quick/adapters/directoryviewadapter.h"
 #include "gui/quick/adapters/interimports.h"
 #include "gui/quick/adapters/placeholderdirectoryview.h"
+#include "gui/quick/adapters/quickcontextmenuactions.h"
+#include "gui/quick/adapters/quickcropactions.h"
 #include "gui/quick/adapters/quickmainwindowcontroller.h"
 #include "gui/quick/adapters/quickoverlayactions.h"
 #include "gui/quick/adapters/quickvieweractions.h"
@@ -19,13 +21,16 @@
 #include "gui/quick/bridges/actionbridge.h"
 #include "gui/quick/bridges/settingsbridge.h"
 #include "gui/quick/bridges/themebridge.h"
+#include "gui/quick/ui/crop/cropcontroller.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
 #include "gui/quick/ui/mainwindowshell.h"
+#include "gui/quick/ui/menus/contextmenumodel.h"
 #include "gui/quick/ui/overlays/overlaycoordinator.h"
 #include "gui/quick/ui/thumbnails/thumbnailpanelcontroller.h"
 
 class ActionManager;
 class QQuickWindow;
+class ScriptManager;
 class Settings;
 
 // Composition root of the Qt Quick UI (--ui=quick), the counterpart of
@@ -33,16 +38,19 @@ class Settings;
 // with its viewer port and actions, the overlays (OverlayCoordinator, which
 // is also the notification port) with their actions, the thumbnail panel
 // (its directory view, the DirectoryViewAdapter, and its
-// ThumbnailPanelController), the view mode state, the inbound UiEvents, the
-// port adapters and the QML engine; keeps the bridges, the viewport, the
-// overlays and the panel in sync with Settings and creates the main window
-// from the qimgv.ui module. Core talks to this UI only through ports().
+// ThumbnailPanelController), the context menu (ContextMenuModel) and the
+// crop mode (CropController) with their actions, the view mode state, the
+// inbound UiEvents, the port adapters and the QML engine; keeps the bridges,
+// the viewport, the overlays, the panel, the menu and the crop mode in sync
+// with Settings and creates the main window from the qimgv.ui module. Core
+// talks to this UI only through ports().
 //
 // Must be destroyed before QApplication and after every Core built from
-// ports(); settings and actionManager must outlive it.
+// ports(); settings, actionManager and scriptManager must outlive it.
 class QuickUiHost {
 public:
-  QuickUiHost(Settings &settings, ActionManager &actionManager);
+  QuickUiHost(Settings &settings, ActionManager &actionManager,
+              ScriptManager &scriptManager);
   ~QuickUiHost();
   QuickUiHost(const QuickUiHost &) = delete;
   QuickUiHost &operator=(const QuickUiHost &) = delete;
@@ -74,9 +82,9 @@ private:
   DecliningDialogPort mDialogs;
   std::shared_ptr<DirectoryViewAdapter> mThumbnailPanelView;
   std::shared_ptr<PlaceholderDirectoryView> mFolderView;
-  // The bridges, the viewport controller, the overlays, the thumbnail panel
-  // and the window shell are declared before the engine so that they
-  // outlive it, as
+  // The bridges, the viewport controller, the overlays, the thumbnail panel,
+  // the context menu, the crop mode and the window shell are declared
+  // before the engine so that they outlive it, as
   // QQmlEngine::setExternalSingletonInstance() and the main window's
   // required properties require.
   ActionManagerDispatcher mDispatcher;
@@ -89,6 +97,10 @@ private:
   OverlayCoordinator mOverlays;
   QuickOverlayActions mOverlayActions;
   ThumbnailPanelController mThumbnailPanel;
+  ContextMenuModel mContextMenu;
+  QuickContextMenuActions mContextMenuActions;
+  CropController mCrop;
+  QuickCropActions mCropActions;
   MainWindowShell mWindowShell;
   QQmlApplicationEngine mEngine;
   // Works on the window the engine owns, so it is destroyed first.

@@ -21,6 +21,7 @@
 #include "apptranslator.h"
 #include "appversion.h"
 #include "components/actionmanager/actionmanager.h"
+#include "components/scriptmanager/scriptmanager.h"
 #include "components/singleinstance/singleinstancechannel.h"
 #include "core.h"
 #include "gui/quick/quickuihost.h"
@@ -253,7 +254,7 @@ int main(int argc, char *argv[]) {
     AppTranslator translator;
     SingleInstanceChannel *channelPtr = channel ? &*channel : nullptr;
     if (*uiMode == UiMode::Quick) {
-      QuickUiHost quickUi(*settings, *actionManager);
+      QuickUiHost quickUi(*settings, *actionManager, *scriptManager);
       const std::optional<UiPorts> ports =
           quickUi.start() ? quickUi.ports() : std::nullopt;
       exitCode = ports ? runCore(a, *ports, channelPtr, parser.positionalArguments())

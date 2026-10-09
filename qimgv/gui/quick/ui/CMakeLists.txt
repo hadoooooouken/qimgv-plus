@@ -8,12 +8,18 @@ qt_add_qml_module(qimgv_ui
     URI qimgv.ui
     IMPORTS qimgv.bridges qimgv.render qimgv.style
     SOURCES
+        crop/cropcontroller.cpp
+        crop/cropcontroller.h
+        crop/cropselection.cpp
+        crop/cropselection.h
         framepresentationtracker.cpp
         framepresentationtracker.h
         imageviewportcontroller.cpp
         imageviewportcontroller.h
         mainwindowshell.cpp
         mainwindowshell.h
+        menus/contextmenumodel.cpp
+        menus/contextmenumodel.h
         overlays/adjustmentslidermodel.cpp
         overlays/adjustmentslidermodel.h
         overlays/cassettingseditor.cpp
@@ -46,6 +52,8 @@ qt_add_qml_module(qimgv_ui
         ColorAdjustmentsOverlay.qml
         ControlsOverlay.qml
         CopyOverlay.qml
+        CropOverlay.qml
+        CropPanel.qml
         FloatingMessage.qml
         FullscreenInfoOverlay.qml
         ImageInfoOverlay.qml
@@ -57,12 +65,16 @@ qt_add_qml_module(qimgv_ui
         OverlayPanel.qml
         RenameOverlay.qml
         SaveConfirmOverlay.qml
+        SidePanel.qml
         ThumbnailStrip.qml
         ThumbnailWidget.qml
+        ViewerContextMenu.qml
 )
 
 # The generated QML type registrations include the headers by file name.
 target_include_directories(qimgv_ui PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/crop"
+    "${CMAKE_CURRENT_SOURCE_DIR}/menus"
     "${CMAKE_CURRENT_SOURCE_DIR}/overlays"
     "${CMAKE_CURRENT_SOURCE_DIR}/thumbnails"
 )

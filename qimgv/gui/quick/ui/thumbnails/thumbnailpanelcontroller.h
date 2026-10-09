@@ -102,6 +102,9 @@ public:
     void pointerLeftWindow();
     // Hides an unpinned panel at once.
     void hideNow();
+    // Pointer moves bring the floating panel only while the viewer takes
+    // input; turning it off (crop mode) hides an unpinned panel at once.
+    void setInteractionEnabled(bool enabled);
 
     // --- QML -------------------------------------------------------------
     Q_INVOKABLE void togglePinned();
@@ -154,6 +157,7 @@ private:
     bool mDocked = false;
     bool mFullscreen = false;
     bool mFolderViewActive = false;
+    bool mInteractionEnabled = true;
     bool mExitButtonVisible = false;
     // A press started in the trigger area: no hover show until it is left.
     bool mAvoidShow = false;
