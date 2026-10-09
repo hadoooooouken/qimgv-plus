@@ -912,6 +912,108 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
 - **Acceptance:** cold start time and first-frame time measured against the
   widget UI on the same machine (Release preset) and not worse; single
   instance raise works.
+- **Delivered:**
+  - **Startup (`main.cpp`):** both user interfaces run through one path:
+    `SingleInstanceChannel` (`components/singleinstance/`, the former
+    inline `QLocalServer` / `QLocalSocket` code) → `AppServices` →
+    `AppTranslator` → `WidgetUi` or `QuickUiHost` → `runCore()` (Core,
+    command-line or `Core::loadDefaultPath()`, `showGui()`). `--ui=quick`
+    now takes part in the single-instance hand-off and runs Core.
+    `main.cpp` defines `NOMINMAX`: `core.h` includes `<windows.h>` through
+    the directory watcher headers, and its `max` macro broke `QRangeModel`
+    from the bridges. **Flagged:** that `<windows.h>` leak into every Core
+    includer is not fixed here.
+  - **`QuickUiHost`** is the Quick composition root, like `WidgetUi`: it
+    owns `UiEvents`, `ViewModeController`, the port adapters and the
+    engine, and its `ports()` returns `std::nullopt` until `start()` has
+    created the window. The viewport's `scalingRequested`,
+    `renderingSettled` (→ `documentRenderingSettled`), `draggedOut` and
+    next/previous signals go to `UiEvents`. Viewer messages and playback
+    errors go to the notification port.
+  - **`QuickMainWindowController`** (`gui/quick/adapters/`) implements
+    `IWindowPort` and `IShellPort` on the `QQuickWindow`. It owns
+    `WindowStateController` (`components/windowstate/`, works on any
+    `QWindow`): saved placement (geometry, maximized, display) restored on
+    the hidden window, reported once the window has rested (30 ms) and
+    persisted in `Settings`; pseudo-fullscreen as a frameless window over
+    the remembered display; a saved geometry without a display is centred
+    on the primary display. The controller also handles the
+    `toggleFullscreen` and `closeFullScreenOrExit` actions, and window
+    close (standby or exit, as `MW::closeEvent`, an event filter on the
+    window). The window title comes from `windowTitleFor()`
+    (`components/shellinfo/`), the widget UI's title rules in the `MW`
+    translation context. **Flagged:** `MW` keeps its own copies of the
+    window-state and title logic until S4.2.
+  - **`MainWindowShell`** (`qimgv.ui`, required property `windowShell`):
+    `folderViewActive`, `fullscreen` (fullscreen background colour), and
+    `dropUrls()` from the `Main.qml` `DropArea`. The host turns the URLs
+    into a `QMimeData` and emits `UiEvents::droppedIn`. **Deviation:** not
+    through `MimePayloadManager`, which builds outbound payloads only;
+    `Core::onDropIn()` reads the URLs directly.
+  - **Interim ports**, to be replaced by their stages:
+    `LoggingNotificationPort` (S2.3); `DecliningDialogPort`, which declines
+    every dialog, so nothing is deleted, overwritten or saved without
+    confirmation (S3.2); `PlaceholderDirectoryView` for the thumbnail strip
+    (S2.4) and the folder view (S3.1). The folder placeholder reports both
+    readiness signals when populated, and `Main.qml` shows a "not available
+    yet" page in folder mode that keeps the action shortcuts. Shell parts
+    without a Quick UI (metadata, folder tree, sorting, overlays, crop panel,
+    rename prompt) are logged once.
+  - **Cold start:** `ColdStartWindowController` and `Core::raiseWindow()`
+    are unchanged. The Quick window port does not conceal (no opacity
+    trick): the window is shown at once with the theme background as its
+    clear colour, and the image appears with the frame that renders it.
+    `setWindowUpdatesSuspended()` does nothing either (the scene graph
+    synchronizes only between event-loop iterations).
+  - **Graphics:** hidden setting `quickGraphicsApi` (`d3d11` default,
+    `d3d12`, `vulkan`) applied with `QQuickWindow::setGraphicsApi()` before
+    the window is created. The pipeline cache is loaded from and saved to
+    `cache/quick-pipeline-<api>.cache` through `QQuickGraphicsConfiguration`;
+    `Main.qml` is created hidden so the configuration applies before the
+    first exposure.
+  - **Workaround (Qt 6.12):** the DXGI vertical blank thread of the Windows
+    platform plugin stopped delivering update requests on the development
+    machine (GeForce RTX 3060, 164 Hz, single display). After the first
+    frame no further frame was rendered, so the viewport never settled and
+    every QML animation and timer stalled; Qt's own `qml` tool hangs the
+    same way. `QuickUiHost` sets `QT_D3D_NO_VBLANK_THREAD=1` for the
+    Direct3D backends unless the user set it; frames are still paced by the
+    swap chain's vertical sync.
+  - **Measured** (Release, same machine, `image-2.jpg` 300×300, process
+    start → first `documentRenderingSettled`, 6 runs each, logged with
+    `QT_LOGGING_RULES="qimgv.startup.info=true"` by
+    `utils/startuptiming`): widget UI median ≈ 510 ms (501–606), Quick UI
+    median ≈ 322 ms (314–438); the Quick UI's first frame is presented 2–3
+    ms before it settles. A second launch hands its path to a running Quick
+    UI and exits in 0.04 s.
+  - **Not in this stage:** `autoResizeWindow` (`MW::preShowResize`), the
+    fullscreen info bar and the controls overlay (S2.3), and the settings
+    dialog entry for the graphics API (S3.3).
+  - Tests: `qimgv_tests` gained `WindowStateTests` (restore, maximized,
+    off-screen geometry, pseudo-fullscreen and back, start in fullscreen,
+    debounced and immediate reports, no reports in fullscreen),
+    `SingleInstanceTests` (hand-off from a second thread, empty path,
+    several forwards, no primary), `WindowTitleTests` and `QuickShellTests`
+    (drops, shell state, placeholder views). `qimgv_qml_tests`:
+    `tst_mainwindow.qml` checks that the window is created hidden, the
+    fullscreen background, the folder-mode page, and an external file drop
+    (real `QDragEnter` / `QDrop` events sent by the fixture) reaching the
+    shell.
+
+#### S2.1b Quick viewer carry-overs
+- **Goal:** finish the viewer work earlier stages deferred to S2.1.
+- **Owner:** `ImageStatic` / `utils/hdrsource.h` (HDR source), `Core`'s
+  upscale trigger, `ImageViewportController` with the renderer (readback).
+- **Scope:**
+  - From S1.4: for the Quick UI, `ImageStatic` keeps the HDR source and
+    skips CPU tone mapping; the GPU conversion pass tone maps it.
+  - From S1.6: start the AI upscale without first requesting a CPU-scaled
+    copy the Quick UI never displays.
+  - From S1.6: `copyViewportToClipboard` through a GPU readback of the
+    viewport.
+- **Acceptance:** HDR images look the same as with CPU tone mapping (pixel
+  test); an upscale in the Quick UI runs no CPU scale; the copied viewport
+  matches the screen; the widget UI is unchanged.
 
 #### S2.2 Style and theme
 - **Goal:** the Quick UI matches the current look in light and dark schemes.
@@ -1085,7 +1187,7 @@ S0.1 -> S0.2 -> S0.3 -> S0.4 -> S0.5
                 S1.1 -> S1.2 -> S1.3 -> S1.4 -> S1.5 -> S1.6
                                                          |
                                                          v
-                S2.1 -> S2.2 -> {S2.3, S2.4, S2.5, S2.6}   (S2.5b optional)
+                S2.1 -> S2.1b -> S2.2 -> {S2.3, S2.4, S2.5, S2.6}   (S2.5b optional)
                                                          |
                                                          v
                                   S3.1 -> S3.2 -> S3.3 -> S3.4

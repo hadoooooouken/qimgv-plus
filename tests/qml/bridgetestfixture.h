@@ -3,7 +3,10 @@
 #include <QMap>
 #include <QObject>
 #include <QPoint>
+#include <QPointF>
+#include <QQuickWindow>
 #include <QString>
+#include <QUrl>
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
@@ -12,6 +15,7 @@
 #include "gui/quick/bridges/settingsbridge.h"
 #include "gui/quick/bridges/themebridge.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
+#include "gui/quick/ui/mainwindowshell.h"
 
 // Records what ActionBridge forwards instead of running actions.
 class FakeActionDispatcher final : public IActionDispatcher {
@@ -53,6 +57,8 @@ class BridgeTestFixture : public QObject {
   Q_PROPERTY(QVariantList mouseEventTypes READ mouseEventTypes FINAL)
   Q_PROPERTY(QVariantList mouseButtons READ mouseButtons FINAL)
   Q_PROPERTY(ImageViewportController *viewportController READ viewportController CONSTANT FINAL)
+  Q_PROPERTY(MainWindowShell *windowShell READ windowShell CONSTANT FINAL)
+  Q_PROPERTY(QList<QUrl> lastDroppedUrls READ lastDroppedUrls FINAL)
 
 public:
   explicit BridgeTestFixture(QObject *parent = nullptr);
@@ -68,6 +74,8 @@ public:
   [[nodiscard]] QVariantList mouseEventTypes() const;
   [[nodiscard]] QVariantList mouseButtons() const;
   [[nodiscard]] ImageViewportController *viewportController();
+  [[nodiscard]] MainWindowShell *windowShell();
+  [[nodiscard]] QList<QUrl> lastDroppedUrls() const;
 
   // Flips viewer.smoothZoom and publishes the snapshot (viewer area only).
   Q_INVOKABLE void toggleSmoothZoom();
@@ -80,6 +88,14 @@ public:
   // Shows a plain image of width x height pixels in the viewport, as a new
   // document (fitted with the default fit mode).
   Q_INVOKABLE void showTestImage(int width, int height);
+  // Sets the window shell state, as the Quick UI host does.
+  Q_INVOKABLE void setFolderViewActive(bool active);
+  Q_INVOKABLE void setFullscreen(bool fullscreen);
+  // Drags a file with url from another application onto window at
+  // position (window coordinates) and drops it there, with the drag and drop
+  // events the platform sends. Returns whether the drop was accepted.
+  Q_INVOKABLE bool dropExternalFile(QQuickWindow *window, QPointF position,
+                                    const QUrl &url);
   // Forgets the input the dispatcher recorded.
   Q_INVOKABLE void clearInputLog();
 
@@ -91,4 +107,6 @@ private:
   ThemeBridge mThemeBridge;
   ActionBridge mActionBridge;
   ImageViewportController mViewport;
+  MainWindowShell mWindowShell;
+  QList<QUrl> mLastDroppedUrls;
 };

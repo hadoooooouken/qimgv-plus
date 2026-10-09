@@ -12,6 +12,8 @@ qt_add_qml_module(qimgv_ui
         framepresentationtracker.h
         imageviewportcontroller.cpp
         imageviewportcontroller.h
+        mainwindowshell.cpp
+        mainwindowshell.h
     QML_FILES
         ImageViewport.qml
         Main.qml

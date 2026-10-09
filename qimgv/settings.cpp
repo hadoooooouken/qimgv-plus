@@ -844,6 +844,44 @@ void Settings::setStandbyMode(bool mode) {
   settings->settingsConf->setValue("standbyMode", mode);
 }
 //------------------------------------------------------------------------------
+namespace {
+constexpr auto quickGraphicsApiKey = "quickGraphicsApi";
+constexpr auto quickGraphicsApiD3D11 = "d3d11";
+constexpr auto quickGraphicsApiD3D12 = "d3d12";
+constexpr auto quickGraphicsApiVulkan = "vulkan";
+} // namespace
+
+QuickGraphicsApi Settings::quickGraphicsApi() {
+  const QString name = settings->settingsConf
+                           ->value(quickGraphicsApiKey, quickGraphicsApiD3D11)
+                           .toString()
+                           .toLower();
+  if (name == QLatin1StringView(quickGraphicsApiD3D12))
+    return QuickGraphicsApi::Direct3D12;
+  if (name == QLatin1StringView(quickGraphicsApiVulkan))
+    return QuickGraphicsApi::Vulkan;
+  if (name != QLatin1StringView(quickGraphicsApiD3D11))
+    qWarning() << "Unknown" << quickGraphicsApiKey << name << "- using"
+               << quickGraphicsApiD3D11;
+  return QuickGraphicsApi::Direct3D11;
+}
+
+void Settings::setQuickGraphicsApi(QuickGraphicsApi api) {
+  const char *name = quickGraphicsApiD3D11;
+  switch (api) {
+  case QuickGraphicsApi::Direct3D11:
+    name = quickGraphicsApiD3D11;
+    break;
+  case QuickGraphicsApi::Direct3D12:
+    name = quickGraphicsApiD3D12;
+    break;
+  case QuickGraphicsApi::Vulkan:
+    name = quickGraphicsApiVulkan;
+    break;
+  }
+  settings->settingsConf->setValue(quickGraphicsApiKey, QString::fromLatin1(name));
+}
+//------------------------------------------------------------------------------
 bool Settings::maximizedWindow() {
   return settings->stateConf->value("maximizedWindow", false).toBool();
 }

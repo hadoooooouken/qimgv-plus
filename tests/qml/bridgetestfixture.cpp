@@ -1,8 +1,12 @@
 #include "bridgetestfixture.h"
 
 #include <QColor>
+#include <QCoreApplication>
+#include <QDebug>
+#include <QDropEvent>
 #include <QImage>
 #include <QKeyEvent>
+#include <QMimeData>
 #include <QMouseEvent>
 #include <QWheelEvent>
 
@@ -98,7 +102,10 @@ void FakeActionDispatcher::setShortcut(const QString &action,
 BridgeTestFixture::BridgeTestFixture(QObject *parent)
     : QObject(parent), mSettings(testSettings()),
       mSettingsBridge(mSettings), mThemeBridge(testTheme(mDark)),
-      mActionBridge(mDispatcher), mViewport(mSettings) {}
+      mActionBridge(mDispatcher), mViewport(mSettings) {
+  connect(&mWindowShell, &MainWindowShell::urlsDropped, this,
+          [this](const QList<QUrl> &urls) { mLastDroppedUrls = urls; });
+}
 
 SettingsBridge &BridgeTestFixture::settingsBridge() { return mSettingsBridge; }
 
@@ -130,6 +137,41 @@ QVariantList BridgeTestFixture::mouseButtons() const {
 
 ImageViewportController *BridgeTestFixture::viewportController() {
   return &mViewport;
+}
+
+MainWindowShell *BridgeTestFixture::windowShell() {
+  return &mWindowShell;
+}
+
+QList<QUrl> BridgeTestFixture::lastDroppedUrls() const {
+  return mLastDroppedUrls;
+}
+
+void BridgeTestFixture::setFolderViewActive(bool active) {
+  mWindowShell.setFolderViewActive(active);
+}
+
+void BridgeTestFixture::setFullscreen(bool fullscreen) {
+  mWindowShell.setFullscreen(fullscreen);
+}
+
+bool BridgeTestFixture::dropExternalFile(QQuickWindow *window, QPointF position,
+                                         const QUrl &url) {
+  if (!window) {
+    qWarning() << "BridgeTestFixture: dropExternalFile() needs a window";
+    return false;
+  }
+  QMimeData mimeData;
+  mimeData.setUrls({url});
+  constexpr Qt::DropActions actions = Qt::CopyAction | Qt::MoveAction | Qt::LinkAction;
+  QDragEnterEvent enter(position.toPoint(), actions, &mimeData, Qt::LeftButton,
+                        Qt::NoModifier);
+  QCoreApplication::sendEvent(window, &enter);
+  if (!enter.isAccepted())
+    return false;
+  QDropEvent drop(position, actions, &mimeData, Qt::LeftButton, Qt::NoModifier);
+  QCoreApplication::sendEvent(window, &drop);
+  return drop.isAccepted();
 }
 
 //------------------------------------------------------------------------------

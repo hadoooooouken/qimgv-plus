@@ -13,7 +13,15 @@ qt_add_executable(qimgv_tests
     tst_tilegrid.cpp
     tst_viewportinteraction.cpp
     tst_viewtransform.cpp
+    tst_quickshell.cpp
+    tst_singleinstance.cpp
+    tst_windowstate.cpp
+    tst_windowtitle.cpp
     "${QIMGV_APP_SOURCE_DIR}/components/viewmode/viewmodecontroller.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/components/shellinfo/windowtitle.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/components/singleinstance/singleinstancechannel.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/components/windowstate/windowstatecontroller.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/placeholderdirectoryview.cpp"
 )
 
 # Components under test are compiled from the application sources and use
@@ -23,6 +31,8 @@ target_include_directories(qimgv_tests PRIVATE "${QIMGV_APP_SOURCE_DIR}")
 target_link_libraries(qimgv_tests PRIVATE
     Qt6::Core
     Qt6::Gui
+    # SingleInstanceChannel (QLocalServer / QLocalSocket).
+    Qt6::Network
     Qt6::Test
     Qt6::Quick
     # TileGrid, ImageFilterMode (moc data of RenderEnums), colour transform

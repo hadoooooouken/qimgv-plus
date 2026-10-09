@@ -41,6 +41,10 @@ target_sources(qimgv-plus PRIVATE
 
     viewmode/viewmodecontroller.cpp
 
+    shellinfo/windowtitle.cpp
+    singleinstance/singleinstancechannel.cpp
+    windowstate/windowstatecontroller.cpp
+
     mimepayload/mimepayloadmanager.cpp
 
     comfymetadata/comfyksamplerparser.cpp

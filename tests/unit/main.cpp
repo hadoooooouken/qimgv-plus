@@ -16,5 +16,9 @@ int main(int argc, char **argv) {
   status |= runAnimationPlayerTests(argc, argv);
   status |= runViewportInteractionTests(argc, argv);
   status |= runImageViewportControllerTests(argc, argv);
+  status |= runWindowStateTests(argc, argv);
+  status |= runSingleInstanceTests(argc, argv);
+  status |= runWindowTitleTests(argc, argv);
+  status |= runQuickShellTests(argc, argv);
   return status;
 }

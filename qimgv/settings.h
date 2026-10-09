@@ -70,6 +70,9 @@ public:
   void setFullscreenMode(bool mode);
   bool standbyMode();
   void setStandbyMode(bool mode);
+  // Hidden setting (no settings dialog entry yet); Direct3D 11 by default.
+  QuickGraphicsApi quickGraphicsApi();
+  void setQuickGraphicsApi(QuickGraphicsApi api);
   ImageFitMode imageFitMode();
   void setImageFitMode(ImageFitMode mode);
   QRect windowGeometry();

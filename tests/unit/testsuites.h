@@ -10,3 +10,7 @@ int runColorTransformTests(int argc, char **argv);
 int runAnimationPlayerTests(int argc, char **argv);
 int runViewportInteractionTests(int argc, char **argv);
 int runImageViewportControllerTests(int argc, char **argv);
+int runWindowStateTests(int argc, char **argv);
+int runSingleInstanceTests(int argc, char **argv);
+int runWindowTitleTests(int argc, char **argv);
+int runQuickShellTests(int argc, char **argv);

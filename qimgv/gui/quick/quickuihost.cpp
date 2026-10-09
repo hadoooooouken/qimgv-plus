@@ -2,11 +2,15 @@
 
 #include <QDebug>
 #include <QLatin1StringView>
+#include <QQuickGraphicsConfiguration>
+#include <QQuickWindow>
+#include <QSGRendererInterface>
 #include <QVariant>
 #include <QtQml/QQmlExtensionPlugin>
 
 #include "gui/quick/adapters/bridgesnapshots.h"
 #include "settings.h"
+#include "utils/startuptiming.h"
 
 // The QML modules are static libraries; importing their static plugins keeps
 // the linker from discarding the module registration and resources.
@@ -20,16 +24,45 @@ using namespace Qt::StringLiterals;
 constexpr QLatin1StringView mainWindowModule = "qimgv.ui"_L1;
 constexpr QLatin1StringView mainWindowType = "Main"_L1;
 constexpr QLatin1StringView viewportControllerProperty = "viewportController"_L1;
+constexpr QLatin1StringView windowShellProperty = "windowShell"_L1;
 
 constexpr QLatin1StringView bridgesModule = "qimgv.bridges"_L1;
 constexpr QLatin1StringView settingsBridgeType = "AppSettings"_L1;
 constexpr QLatin1StringView themeBridgeType = "Theme"_L1;
 constexpr QLatin1StringView actionBridgeType = "Actions"_L1;
+
+// Pipeline cache file in the application cache directory, one per graphics
+// API (the cached data is API specific).
+constexpr QLatin1StringView pipelineCacheFilePattern = "quick-pipeline-%1.cache"_L1;
+
+// Disables the DXGI vertical blank thread of the Qt Windows platform plugin.
+constexpr char noVblankThreadVariable[] = "QT_D3D_NO_VBLANK_THREAD";
+
+struct GraphicsApiInfo {
+  QSGRendererInterface::GraphicsApi api;
+  QLatin1StringView name;
+};
+
+GraphicsApiInfo graphicsApiInfo(QuickGraphicsApi api) {
+  switch (api) {
+  case QuickGraphicsApi::Direct3D12:
+    return {QSGRendererInterface::Direct3D12, "d3d12"_L1};
+  case QuickGraphicsApi::Vulkan:
+    return {QSGRendererInterface::Vulkan, "vulkan"_L1};
+  case QuickGraphicsApi::Direct3D11:
+    break;
+  }
+  return {QSGRendererInterface::Direct3D11, "d3d11"_L1};
+}
 } // namespace
 
 //------------------------------------------------------------------------------
 QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager)
     : mSettings(settings),
+      mActionManager(actionManager),
+      mViewMode(settings.defaultViewMode()),
+      mThumbnailPanelView(std::make_shared<PlaceholderDirectoryView>()),
+      mFolderView(std::make_shared<PlaceholderDirectoryView>()),
       mDispatcher(actionManager),
       mSettingsBridge(BridgeSnapshots::readUiSettings(settings)),
       mThemeBridge(BridgeSnapshots::readTheme(settings)),
@@ -41,19 +74,40 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager)
   // receiver acts only on what actually changed.
   QObject::connect(&settings, &Settings::settingsChanged, &mSettingsBridge,
                    [this]() { onSettingsChanged(); });
+  forwardViewportEvents();
+}
 
-  // Until the Quick UI has its notification overlay (S2.3) and Core (S2.1),
-  // viewer messages and playback errors are logged.
+QuickUiHost::~QuickUiHost() = default;
+
+//------------------------------------------------------------------------------
+void QuickUiHost::forwardViewportEvents() {
+  UiEvents *events = &mEvents;
+  QObject::connect(&mViewport, &ImageViewportController::scalingRequested,
+                   events, &UiEvents::scalingRequested);
+  QObject::connect(&mViewport, &ImageViewportController::renderingSettled,
+                   events, &UiEvents::documentRenderingSettled);
+  QObject::connect(&mViewport, &ImageViewportController::draggedOut, events,
+                   &UiEvents::draggedOut);
+  QObject::connect(&mViewport, &ImageViewportController::nextImageRequested,
+                   events, &UiEvents::nextImageRequested);
+  QObject::connect(&mViewport, &ImageViewportController::prevImageRequested,
+                   events, &UiEvents::prevImageRequested);
+
   QObject::connect(&mViewerActions, &QuickViewerActions::notificationRequested,
-                   &mViewerActions, [](const NotificationRequest &request) {
-                     qInfo().noquote() << "QuickUiHost: viewer message:"
-                                       << request.text;
+                   &mViewerActions, [this](const NotificationRequest &request) {
+                     mNotifications.showNotification(request);
                    });
   QObject::connect(&mViewport, &ImageViewportController::playbackError,
-                   &mViewport, [](const QString &message) {
-                     qWarning().noquote()
-                         << "QuickUiHost: animation playback failed:"
-                         << message;
+                   &mViewport, [this](const QString &message) {
+                     mNotifications.showError(message);
+                   });
+
+  // The folder view placeholder has nothing to lay out: it is ready as soon
+  // as it holds the directory, which completes the cold-start wait.
+  QObject::connect(mFolderView.get(), &PlaceholderDirectoryView::populated,
+                   events, [events]() {
+                     emit events->filesystemViewReady();
+                     emit events->visibleThumbnailsReady();
                    });
 }
 
@@ -84,17 +138,95 @@ bool QuickUiHost::registerBridges() {
 }
 
 //------------------------------------------------------------------------------
+// Must run before the first QQuickWindow is created.
+void QuickUiHost::applyGraphicsApi() {
+  const QSGRendererInterface::GraphicsApi api =
+      graphicsApiInfo(mSettings.quickGraphicsApi()).api;
+  // Workaround for Qt 6.12: its DXGI vertical blank thread (used for the
+  // update requests of Direct3D windows) stops delivering them on some
+  // systems (seen on an NVIDIA GeForce RTX 3060 at 164 Hz, also with Qt's own
+  // qml tool): after the first frame no further frame is rendered and every
+  // animation and QML timer stalls. Without it, update requests fall back to
+  // a timer and the render loop still paces frames with the swap chain's
+  // vertical sync. The service reads the variable when it is first used,
+  // which is after this point; a value set by the user is kept.
+  const bool direct3D = api == QSGRendererInterface::Direct3D11 ||
+                        api == QSGRendererInterface::Direct3D12;
+  if (direct3D && !qEnvironmentVariableIsSet(noVblankThreadVariable))
+    qputenv(noVblankThreadVariable, "1");
+  QQuickWindow::setGraphicsApi(api);
+}
+
+//------------------------------------------------------------------------------
+// Must run before the window is exposed for the first time. The cache is
+// read when the scene graph initializes and written when the window releases
+// its graphics resources.
+void QuickUiHost::configurePipelineCache(QQuickWindow &window) {
+  const QString cacheFile =
+      mSettings.tmpDir() +
+      QString(pipelineCacheFilePattern)
+          .arg(graphicsApiInfo(mSettings.quickGraphicsApi()).name);
+  QQuickGraphicsConfiguration configuration = window.graphicsConfiguration();
+  configuration.setPipelineCacheLoadFile(cacheFile);
+  configuration.setPipelineCacheSaveFile(cacheFile);
+  window.setGraphicsConfiguration(configuration);
+}
+
+//------------------------------------------------------------------------------
 bool QuickUiHost::start() {
   if (!registerBridges())
     return false;
 
+  applyGraphicsApi();
   mEngine.setInitialProperties(
-      {{viewportControllerProperty, QVariant::fromValue(&mViewport)}});
+      {{viewportControllerProperty, QVariant::fromValue(&mViewport)},
+       {windowShellProperty, QVariant::fromValue(&mWindowShell)}});
   mEngine.loadFromModule(mainWindowModule, mainWindowType);
-  if (mEngine.rootObjects().isEmpty()) {
+  const QList<QObject *> roots = mEngine.rootObjects();
+  QQuickWindow *window =
+      roots.isEmpty() ? nullptr : qobject_cast<QQuickWindow *>(roots.constFirst());
+  if (!window) {
     qCritical() << "QuickUiHost: failed to create" << mainWindowType
                 << "from QML module" << mainWindowModule;
     return false;
   }
+
+  configurePipelineCache(*window);
+  QObject::connect(
+      window, &QQuickWindow::frameSwapped, window,
+      []() { logStartupMilestone(u"Qt Quick UI: first frame presented"); },
+      static_cast<Qt::ConnectionType>(Qt::DirectConnection |
+                                      Qt::SingleShotConnection));
+
+  mWindowController = std::make_unique<QuickMainWindowController>(
+      QuickMainWindowContext{
+          .window = *window,
+          .shell = mWindowShell,
+          .viewport = mViewport,
+          .viewMode = mViewMode,
+          .events = mEvents,
+          .settings = mSettings,
+          .actions = mActionManager,
+      });
   return true;
+}
+
+//------------------------------------------------------------------------------
+std::optional<UiPorts> QuickUiHost::ports() {
+  if (!mWindowController) {
+    qCritical() << "QuickUiHost: the ports are requested before the main window"
+                   " was created";
+    return std::nullopt;
+  }
+  return UiPorts{
+      mNotifications,
+      mDialogs,
+      mViewerPort,
+      *mWindowController,
+      *mWindowController,
+      mViewMode,
+      mEvents,
+      mThumbnailPanelView,
+      mFolderView,
+  };
 }

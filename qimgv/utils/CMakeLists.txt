@@ -30,6 +30,8 @@ target_sources(qimgv-plus PRIVATE
     inputmap.cpp
     randomizer.cpp
     script.cpp
+    startuptiming.cpp
+    startuptiming.h
     stuff.cpp
     fileoperations.cpp
     colormanager.cpp

@@ -1,12 +1,14 @@
+// core.h includes <windows.h> (through the directory watcher headers); its
+// min/max macros would break Qt templates included after it (QRangeModel in
+// the Quick UI bridges).
+#define NOMINMAX
+
 #include <QApplication>
 #include <QCommandLineParser>
-#include <QCryptographicHash>
 #include <QDataStream>
 #include <QDir>
 #include <QEvent>
 #include <QFileInfo>
-#include <QLocalServer>
-#include <QLocalSocket>
 #include <QStyleFactory>
 #include <QSettings>
 #include <QStandardPaths>
@@ -15,18 +17,18 @@
 #include <memory>
 #include <optional>
 
-#include <windows.h>
-
 #include "appservices.h"
 #include "apptranslator.h"
 #include "appversion.h"
 #include "components/actionmanager/actionmanager.h"
+#include "components/singleinstance/singleinstancechannel.h"
 #include "core.h"
 #include "gui/quick/quickuihost.h"
 #include "gui/widgetui/widgetui.h"
 #include "proxystyle.h"
 #include "settings.h"
 #include "utils/cmdoptionsrunner.h"
+#include "utils/startuptiming.h"
 
 //------------------------------------------------------------------------------
 ProxyStyleColors proxyStyleColors(const ColorScheme &colors) {
@@ -71,9 +73,6 @@ using namespace Qt::StringLiterals;
 constexpr QLatin1StringView uiOptionName = "ui"_L1;
 constexpr QLatin1StringView uiModeWidgetsName = "widgets"_L1;
 constexpr QLatin1StringView uiModeQuickName = "quick"_L1;
-
-constexpr int singleInstanceConnectTimeoutMs = 500;
-constexpr int singleInstanceWriteTimeoutMs = 1000;
 } // namespace
 
 std::optional<UiMode> uiModeFromName(QStringView name) {
@@ -82,6 +81,47 @@ std::optional<UiMode> uiModeFromName(QStringView name) {
   if (name == uiModeQuickName)
     return UiMode::Quick;
   return std::nullopt;
+}
+//------------------------------------------------------------------------------
+// The "multiInstance" setting, read before the services exist (they are
+// started only by the primary instance).
+bool multiInstanceEnabled() {
+  QString confPath = QCoreApplication::applicationDirPath() + "/conf";
+  if (!QFileInfo::exists(confPath + "/qimgv-plus.ini"))
+    confPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+  QSettings tempSettings(confPath + "/qimgv-plus.ini", QSettings::IniFormat);
+  return tempSettings.value("multiInstance", false).toBool();
+}
+//------------------------------------------------------------------------------
+// Runs Core over the given user interface until the application exits: opens
+// the command-line path (or the default path), answers the paths sent by
+// secondary instances through channel (nullptr in multi-instance mode) and
+// shows the window.
+int runCore(QApplication &app, const UiPorts &ports,
+            SingleInstanceChannel *channel, const QStringList &paths) {
+  QObject::connect(
+      &ports.events, &UiEvents::documentRenderingSettled, &ports.events,
+      []() { logStartupMilestone(u"first document rendering settled"); },
+      Qt::SingleShotConnection);
+
+  Core core(ports);
+  if (channel) {
+    QObject::connect(channel, &SingleInstanceChannel::pathReceived, &core,
+                     [&core](const QString &path) { core.raiseWindow(path); });
+    channel->listen();
+  }
+
+  if (!paths.isEmpty())
+    core.loadPath(paths.constFirst());
+  else
+    core.loadDefaultPath();
+
+  // wait for event queue to catch up before showing window
+  // this avoids white background flicker on windows (or not?)
+  qApp->processEvents();
+
+  core.showGui();
+  return app.exec();
 }
 //------------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
@@ -188,113 +228,39 @@ int main(int argc, char *argv[]) {
     QTimer::singleShot(0, &r,
                        [&r, path = parser.value("gen-thumbs"), size] { r.generateThumbs(path, size); });
     exitCode = a.exec();
-  } else if (*uiMode == UiMode::Quick) {
-    // Qt Quick shell over the application services (settings, theme and
-    // actions bridges); Core is not attached yet. It does not take part in
-    // the single-instance handshake yet, so it never forwards to a running
-    // widget-UI instance.
-    startServices();
-    QuickUiHost quickUi(*settings, *actionManager);
-    exitCode = quickUi.start() ? a.exec() : EXIT_FAILURE;
   } else {
-    // -----------------------------------------------------------------------------
-
-    bool isMultiInstance = false;
-    {
-      QString appDirPath = QCoreApplication::applicationDirPath();
-      QString confPath = appDirPath + "/conf";
-      if (!QFileInfo::exists(confPath + "/qimgv-plus.ini")) {
-        confPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    // Primary or secondary instance; the same channel serves both UIs, so a
+    // second launch raises whichever UI is running.
+    std::optional<SingleInstanceChannel> channel;
+    if (!multiInstanceEnabled()) {
+      channel.emplace(SingleInstanceChannel::serverNameFor(QDir::tempPath()));
+      QString pathToSend;
+      if (!parser.positionalArguments().isEmpty()) {
+        pathToSend =
+            QFileInfo(parser.positionalArguments().constFirst()).absoluteFilePath();
       }
-      QSettings tempSettings(confPath + "/qimgv-plus.ini", QSettings::IniFormat);
-      isMultiInstance = tempSettings.value("multiInstance", false).toBool();
-    }
-
-    QString serverName = "qimgv-plus-single-instance-" +
-                         QCryptographicHash::hash(QDir::tempPath().toUtf8(),
-                                                  QCryptographicHash::Md5)
-                             .toHex();
-    // Outlives Core. Its connections use Core as the context object, so they
-    // are dropped when Core is destroyed; pending client sockets are children
-    // of the server and go with it.
-    std::unique_ptr<QLocalServer> server;
-
-    if (!isMultiInstance) {
-      QLocalSocket socket;
-      socket.connectToServer(serverName);
-      if (socket.waitForConnected(singleInstanceConnectTimeoutMs)) {
-        QByteArray data;
-        QDataStream out(&data, QIODevice::WriteOnly);
-        QString pathToSend;
-        if (parser.positionalArguments().count()) {
-          pathToSend =
-              QFileInfo(parser.positionalArguments().at(0)).absoluteFilePath();
-        }
-        out << pathToSend;
-        AllowSetForegroundWindow(ASFW_ANY);
-        socket.write(data);
-        socket.waitForBytesWritten(singleInstanceWriteTimeoutMs);
-        socket.disconnectFromServer();
+      if (channel->forwardToPrimary(pathToSend))
         return 0;
-      }
-
-      QLocalServer::removeServer(serverName);
-      server = std::make_unique<QLocalServer>();
     }
 
     // Primary instance, initialize all services
     startServices();
 
-    {
-      QApplication::setQuitOnLastWindowClosed(false);
-      // Installed before the widgets are built so that their strings are
-      // translated; destroyed last, after the UI and Core.
-      AppTranslator translator;
+    // Closing the window may only suspend to standby; the exit action quits.
+    QApplication::setQuitOnLastWindowClosed(false);
+    // Installed before the user interface is built so that its strings are
+    // translated; destroyed last, after the UI and Core.
+    AppTranslator translator;
+    SingleInstanceChannel *channelPtr = channel ? &*channel : nullptr;
+    if (*uiMode == UiMode::Quick) {
+      QuickUiHost quickUi(*settings, *actionManager);
+      const std::optional<UiPorts> ports =
+          quickUi.start() ? quickUi.ports() : std::nullopt;
+      exitCode = ports ? runCore(a, *ports, channelPtr, parser.positionalArguments())
+                       : EXIT_FAILURE;
+    } else {
       WidgetUi widgetUi;
-      Core core(widgetUi.ports());
-
-      if (server) {
-        QLocalServer *localServer = server.get();
-        QObject::connect(
-            localServer, &QLocalServer::newConnection, &core,
-            [localServer, &core]() {
-              QLocalSocket *clientSocket = localServer->nextPendingConnection();
-              if (!clientSocket)
-                return;
-              QObject::connect(clientSocket, &QLocalSocket::disconnected,
-                               clientSocket, &QLocalSocket::deleteLater);
-              QObject::connect(clientSocket, &QLocalSocket::readyRead,
-                               clientSocket, [clientSocket, &core]() {
-                                 QDataStream in(clientSocket);
-                                 in.startTransaction();
-                                 QString pathReceived;
-                                 in >> pathReceived;
-                                 if (!in.commitTransaction())
-                                   return;
-                                 core.raiseWindow(pathReceived);
-                               });
-            });
-        server->listen(serverName);
-      }
-
-      if (parser.positionalArguments().count())
-        core.loadPath(parser.positionalArguments().at(0));
-      else if (settings->rememberLastFolder() && !settings->lastFolder().isEmpty() && QFileInfo(settings->lastFolder()).exists()) {
-        core.loadPath(settings->lastFolder());
-      } else if (settings->defaultViewMode() == MODE_FOLDERVIEW) {
-        QStringList bookmarks = settings->bookmarks();
-        if (!bookmarks.isEmpty() && QFileInfo(bookmarks.first()).exists())
-          core.loadPath(bookmarks.first());
-        else
-          core.loadPath(QDir::homePath());
-      }
-
-      // wait for event queue to catch up before showing window
-      // this avoids white background flicker on windows (or not?)
-      qApp->processEvents();
-
-      core.showGui();
-      exitCode = a.exec();
+      exitCode = runCore(a, widgetUi.ports(), channelPtr, parser.positionalArguments());
     }
   }
 

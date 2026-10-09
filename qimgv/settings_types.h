@@ -59,3 +59,7 @@ enum FolderEndAction {
 enum ThumbPanelStyle { TH_PANEL_SIMPLE, TH_PANEL_EXTENDED };
 
 enum ThemeMode { THEME_AUTO, THEME_DARK, THEME_LIGHT };
+
+// Graphics API of the Qt Quick UI (--ui=quick); applied before its window is
+// created.
+enum class QuickGraphicsApi { Direct3D11, Direct3D12, Vulkan };

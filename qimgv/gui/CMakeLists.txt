@@ -96,6 +96,9 @@ target_sources(qimgv-plus PRIVATE
     quick/quickuihost.cpp
     quick/adapters/actionmanagerdispatcher.cpp
     quick/adapters/bridgesnapshots.cpp
+    quick/adapters/interimports.cpp
+    quick/adapters/placeholderdirectoryview.cpp
+    quick/adapters/quickmainwindowcontroller.cpp
     quick/adapters/quickvieweractions.cpp
     quick/adapters/quickviewerport.cpp
 )

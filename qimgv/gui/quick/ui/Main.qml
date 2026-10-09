@@ -7,25 +7,58 @@ import qimgv.bridges
 // Main window of the Qt Quick UI (--ui=quick). The Basic style is imported
 // explicitly: it is the base of the application style and lets qmlsc compile
 // the bindings ahead of time instead of resolving the style at runtime.
+//
+// Created hidden: the Quick UI host applies the graphics configuration first,
+// and Core shows the window (geometry, fullscreen) through its window port.
 ApplicationWindow {
     id: root
 
     // Provided by QuickUiHost (initial properties).
     required property ImageViewportController viewportController
+    required property MainWindowShell windowShell
 
     readonly property int initialWidth: 1280
     readonly property int initialHeight: 800
 
     width: initialWidth
     height: initialHeight
-    visible: true
+    visible: false
+    // The title is kept current by the Quick UI host.
     title: Qt.application.name
-    color: Theme.colors.background
+    color: windowShell.fullscreen ? Theme.colors.backgroundFullscreen
+                                  : Theme.colors.background
 
-    // The image viewer. Images are supplied from C++ once Core drives the
-    // Quick UI (S2.1); until then it shows the viewer background only.
+    // The image viewer (document mode).
     ImageViewport {
         anchors.fill: parent
         controller: root.viewportController
+        visible: !root.windowShell.folderViewActive
+        focus: visible
+    }
+
+    // Folder mode. The folder view is not part of the Qt Quick UI yet; the
+    // page keeps the action shortcuts working, so the user can leave it.
+    FocusScope {
+        anchors.fill: parent
+        visible: root.windowShell.folderViewActive
+        focus: visible
+        Keys.onPressed: event => event.accepted = Actions.handleKeyEvent(event)
+
+        Label {
+            anchors.centerIn: parent
+            text: qsTr("The folder view is not available in this user interface yet.")
+            color: Theme.colors.text
+            font: Theme.fonts.base
+        }
+    }
+
+    // Files dropped anywhere on the window open like in the widget UI.
+    DropArea {
+        anchors.fill: parent
+        onEntered: drag => drag.accepted = drag.hasUrls
+        onDropped: drop => {
+            root.windowShell.dropUrls(drop.urls, drop.source);
+            drop.accept();
+        }
     }
 }
