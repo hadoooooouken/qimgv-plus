@@ -90,6 +90,7 @@ UiSettingsSnapshot BridgeSnapshots::readUiSettings(Settings &settings) {
                   static_cast<Enums::ScalingFilter>(settings.scalingFilter()),
               .casSharpening = settings.casSharpening(),
               .casContrast = settings.casContrast(),
+              .useUpscayl = settings.useUpscayl(),
               .smoothZoom = settings.enableSmoothZoom(),
               .smoothScroll = settings.enableSmoothScroll(),
               .zoomStep = settings.zoomStep(),

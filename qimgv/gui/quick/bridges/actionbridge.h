@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QAbstractItemModel>
+#include <QEvent>
 #include <QObject>
 #include <QRangeModel>
 #include <QRangeModelAdapter>
@@ -34,8 +35,11 @@ template <> struct QRangeModel::RowOptions<ActionEntry> {
 // QML runs actions by name and forwards unhandled input:
 //   Keys.onPressed: (event) => event.accepted = Actions.handleKeyEvent(event)
 //   MouseArea { onWheel: (wheel) => wheel.accepted = Actions.handleWheelEvent(wheel) }
-// Both rebuild the matching Qt event and pass it to the dispatcher, which is
-// ActionManager::processEvent() in the application.
+//   MouseArea { onPressed: (mouse) => Actions.handleMousePress(mouse) }
+// Each rebuilds the matching Qt event and passes it to the dispatcher, which
+// is ActionManager::processEvent() in the application. Mouse buttons form
+// shortcuts like the widget UI: presses of every button but the right one,
+// the release of the right button, and left-button double clicks.
 //
 // Shortcuts can be edited at runtime (settings dialog); the composition root
 // calls refresh() on Settings::settingsChanged, which updates the model and
@@ -67,6 +71,11 @@ public:
   Q_INVOKABLE bool handleKeyEvent(QObject *event);
   // Forwards a QML WheelEvent; returns true when an action handled it.
   Q_INVOKABLE bool handleWheelEvent(QObject *event);
+  // Forward a QML MouseEvent of a press, release or double click; return
+  // true when an action handled it.
+  Q_INVOKABLE bool handleMousePress(QObject *event);
+  Q_INVOKABLE bool handleMouseRelease(QObject *event);
+  Q_INVOKABLE bool handleMouseDoubleClick(QObject *event);
 
   // Re-reads actions and shortcuts from the dispatcher.
   void refresh();
@@ -76,6 +85,7 @@ signals:
 
 private:
   [[nodiscard]] std::vector<ActionEntry> readEntries() const;
+  [[nodiscard]] bool handleMouseEvent(QObject *event, QEvent::Type type);
 
   IActionDispatcher &mDispatcher;
   QRangeModelAdapter<std::vector<ActionEntry>> mActions;

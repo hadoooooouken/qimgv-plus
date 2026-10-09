@@ -1,8 +1,12 @@
 #include "bridgetestfixture.h"
 
 #include <QColor>
+#include <QImage>
 #include <QKeyEvent>
+#include <QMouseEvent>
 #include <QWheelEvent>
+
+#include <memory>
 
 namespace {
 using namespace Qt::StringLiterals;
@@ -21,6 +25,8 @@ const QMap<QString, QString> &initialShortcuts() {
 constexpr QRgb kDarkBackground = 0xff1f1f1f;
 constexpr QRgb kLightBackground = 0xfff2f2f2;
 const QString kIconFontFamily = u"FluentSystemIcons-Custom"_s;
+const QString kTestImagePath = u"C:/fixture/test.png"_s;
+constexpr QRgb kTestImageColor = 0xff3080c0;
 
 ThemeSnapshot testTheme(bool dark) {
   ThemeSnapshot theme;
@@ -33,7 +39,13 @@ ThemeSnapshot testTheme(bool dark) {
 UiSettingsSnapshot testSettings() {
   UiSettingsSnapshot settings;
   settings.viewer.smoothZoom = true;
+  settings.viewer.fitMode = SettingsEnums::FitMode::Window;
+  settings.viewer.zoomStep = 0.25;
+  settings.viewer.imageScrolling = SettingsEnums::ImageScrolling::ByTrackpadAndWheel;
+  settings.viewer.mouseScrollingSpeed = 1.0;
+  settings.viewer.trackpadDetection = true;
   settings.panel.position = SettingsEnums::PanelPosition::Bottom;
+  settings.overlays.zoomIndicatorMode = SettingsEnums::ZoomIndicatorMode::Enabled;
   return settings;
 }
 
@@ -67,6 +79,13 @@ bool FakeActionDispatcher::processEvent(QInputEvent &event) {
     lastWheelAngleDelta = static_cast<QWheelEvent &>(event).angleDelta();
     return true;
   }
+  if (event.type() == QEvent::MouseButtonPress ||
+      event.type() == QEvent::MouseButtonRelease ||
+      event.type() == QEvent::MouseButtonDblClick) {
+    mouseEventTypes.append(static_cast<int>(event.type()));
+    mouseButtons.append(static_cast<int>(static_cast<QMouseEvent &>(event).button()));
+    return true;
+  }
   return false;
 }
 
@@ -79,7 +98,7 @@ void FakeActionDispatcher::setShortcut(const QString &action,
 BridgeTestFixture::BridgeTestFixture(QObject *parent)
     : QObject(parent), mSettings(testSettings()),
       mSettingsBridge(mSettings), mThemeBridge(testTheme(mDark)),
-      mActionBridge(mDispatcher) {}
+      mActionBridge(mDispatcher), mViewport(mSettings) {}
 
 SettingsBridge &BridgeTestFixture::settingsBridge() { return mSettingsBridge; }
 
@@ -101,10 +120,23 @@ QPoint BridgeTestFixture::lastWheelAngleDelta() const {
   return mDispatcher.lastWheelAngleDelta;
 }
 
+QVariantList BridgeTestFixture::mouseEventTypes() const {
+  return mDispatcher.mouseEventTypes;
+}
+
+QVariantList BridgeTestFixture::mouseButtons() const {
+  return mDispatcher.mouseButtons;
+}
+
+ImageViewportController *BridgeTestFixture::viewportController() {
+  return &mViewport;
+}
+
 //------------------------------------------------------------------------------
 void BridgeTestFixture::toggleSmoothZoom() {
   mSettings.viewer.smoothZoom = !mSettings.viewer.smoothZoom;
   mSettingsBridge.apply(mSettings);
+  mViewport.applySettings(mSettings);
 }
 
 void BridgeTestFixture::reapplySettings() { mSettingsBridge.apply(mSettings); }
@@ -118,4 +150,22 @@ void BridgeTestFixture::setShortcut(const QString &action,
                                     const QString &shortcut) {
   mDispatcher.setShortcut(action, shortcut);
   mActionBridge.refresh();
+}
+
+void BridgeTestFixture::showTestImage(int width, int height) {
+  QImage image(width, height, QImage::Format_ARGB32_Premultiplied);
+  image.fill(QColor::fromRgba(kTestImageColor));
+  // Showing the same path again would keep the view (rotation handling).
+  mViewport.closeImage();
+  mViewport.showImage(std::make_shared<const QImage>(std::move(image)),
+                      kTestImagePath);
+}
+
+void BridgeTestFixture::clearInputLog() {
+  mDispatcher.lastInvoked.clear();
+  mDispatcher.lastKey = 0;
+  mDispatcher.lastModifiers = 0;
+  mDispatcher.lastWheelAngleDelta = QPoint();
+  mDispatcher.mouseEventTypes.clear();
+  mDispatcher.mouseButtons.clear();
 }

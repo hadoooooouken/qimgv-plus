@@ -24,6 +24,7 @@ struct ViewerSettings {
   Q_PROPERTY(SettingsEnums::ScalingFilter scalingFilter MEMBER scalingFilter)
   Q_PROPERTY(double casSharpening MEMBER casSharpening)
   Q_PROPERTY(double casContrast MEMBER casContrast)
+  Q_PROPERTY(bool useUpscayl MEMBER useUpscayl)
   Q_PROPERTY(bool smoothZoom MEMBER smoothZoom)
   Q_PROPERTY(bool smoothScroll MEMBER smoothScroll)
   Q_PROPERTY(double zoomStep MEMBER zoomStep)
@@ -48,6 +49,8 @@ public:
   SettingsEnums::ScalingFilter scalingFilter{};
   double casSharpening{};
   double casContrast{};
+  // AI upscaling of the visible area when zoomed in.
+  bool useUpscayl{};
   bool smoothZoom{};
   bool smoothScroll{};
   double zoomStep{};

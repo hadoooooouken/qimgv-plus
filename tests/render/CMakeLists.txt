@@ -19,6 +19,8 @@ target_link_libraries(qimgv_render_tests PRIVATE
     Qt6::Quick
     Qt6::Test
     qimgv_render
+    # ImageViewportController's settle reporting runs on the real frame loop.
+    qimgv_ui
 )
 
 qimgv_configure_test(qimgv_render_tests)

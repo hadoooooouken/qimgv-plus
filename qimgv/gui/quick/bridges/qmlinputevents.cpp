@@ -25,6 +25,10 @@ constexpr const char *kPixelDeltaProperty = "pixelDelta";
 constexpr const char *kButtonsProperty = "buttons";
 constexpr const char *kInvertedProperty = "inverted";
 
+// Property name of QQuickMouseEvent (QML MouseEvent); x, y, buttons and
+// modifiers are shared with WheelEvent.
+constexpr const char *kButtonProperty = "button";
+
 // Reads property name of object; logs and returns std::nullopt when the
 // object does not have it or its value does not convert to T.
 template <typename T>
@@ -89,4 +93,33 @@ QmlInputEvents::wheelFrom(const QObject *qmlEvent) {
       Qt::MouseButtons::fromInt(*buttons),
       Qt::KeyboardModifiers::fromInt(*modifiers), Qt::NoScrollPhase,
       *inverted);
+}
+
+//------------------------------------------------------------------------------
+std::unique_ptr<QMouseEvent>
+QmlInputEvents::mouseButtonFrom(const QObject *qmlEvent, QEvent::Type type) {
+  if (type != QEvent::MouseButtonPress && type != QEvent::MouseButtonRelease &&
+      type != QEvent::MouseButtonDblClick) {
+    qWarning() << "QmlInputEvents::mouseButtonFrom: not a mouse button event "
+                  "type:"
+               << type;
+    return nullptr;
+  }
+  if (!qmlEvent) {
+    qWarning() << "QmlInputEvents::mouseButtonFrom: null event";
+    return nullptr;
+  }
+  const auto x = readProperty<qreal>(*qmlEvent, kXProperty);
+  const auto y = readProperty<qreal>(*qmlEvent, kYProperty);
+  const auto button = readProperty<int>(*qmlEvent, kButtonProperty);
+  const auto buttons = readProperty<int>(*qmlEvent, kButtonsProperty);
+  const auto modifiers = readProperty<int>(*qmlEvent, kModifiersProperty);
+  if (!x || !y || !button || !buttons || !modifiers)
+    return nullptr;
+
+  const QPointF position(*x, *y);
+  return std::make_unique<QMouseEvent>(
+      type, position, position, static_cast<Qt::MouseButton>(*button),
+      Qt::MouseButtons::fromInt(*buttons),
+      Qt::KeyboardModifiers::fromInt(*modifiers));
 }

@@ -8,3 +8,5 @@ int runTileGridTests(int argc, char **argv);
 int runImageFilterTests(int argc, char **argv);
 int runColorTransformTests(int argc, char **argv);
 int runAnimationPlayerTests(int argc, char **argv);
+int runViewportInteractionTests(int argc, char **argv);
+int runImageViewportControllerTests(int argc, char **argv);

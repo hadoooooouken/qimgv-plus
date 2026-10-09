@@ -14,5 +14,7 @@ int main(int argc, char **argv) {
   status |= runImageFilterTests(argc, argv);
   status |= runColorTransformTests(argc, argv);
   status |= runAnimationPlayerTests(argc, argv);
+  status |= runViewportInteractionTests(argc, argv);
+  status |= runImageViewportControllerTests(argc, argv);
   return status;
 }

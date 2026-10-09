@@ -96,6 +96,8 @@ target_sources(qimgv-plus PRIVATE
     quick/quickuihost.cpp
     quick/adapters/actionmanagerdispatcher.cpp
     quick/adapters/bridgesnapshots.cpp
+    quick/adapters/quickvieweractions.cpp
+    quick/adapters/quickviewerport.cpp
 )
 
 add_subdirectory(quick)

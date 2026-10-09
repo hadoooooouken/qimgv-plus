@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QLatin1StringView>
+#include <QVariant>
 #include <QtQml/QQmlExtensionPlugin>
 
 #include "gui/quick/adapters/bridgesnapshots.h"
@@ -18,6 +19,7 @@ using namespace Qt::StringLiterals;
 
 constexpr QLatin1StringView mainWindowModule = "qimgv.ui"_L1;
 constexpr QLatin1StringView mainWindowType = "Main"_L1;
+constexpr QLatin1StringView viewportControllerProperty = "viewportController"_L1;
 
 constexpr QLatin1StringView bridgesModule = "qimgv.bridges"_L1;
 constexpr QLatin1StringView settingsBridgeType = "AppSettings"_L1;
@@ -27,23 +29,41 @@ constexpr QLatin1StringView actionBridgeType = "Actions"_L1;
 
 //------------------------------------------------------------------------------
 QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager)
-    : mDispatcher(actionManager),
+    : mSettings(settings),
+      mDispatcher(actionManager),
       mSettingsBridge(BridgeSnapshots::readUiSettings(settings)),
       mThemeBridge(BridgeSnapshots::readTheme(settings)),
-      mActionBridge(mDispatcher) {
+      mActionBridge(mDispatcher),
+      mViewport(BridgeSnapshots::readUiSettings(settings)),
+      mViewerPort(mViewport),
+      mViewerActions(actionManager, settings, mViewport) {
   // settingsChanged also announces theme switches and shortcut edits; each
-  // bridge emits only for what actually changed.
+  // receiver acts only on what actually changed.
   QObject::connect(&settings, &Settings::settingsChanged, &mSettingsBridge,
-                   [this, &settings]() {
-                     mSettingsBridge.apply(
-                         BridgeSnapshots::readUiSettings(settings));
+                   [this]() { onSettingsChanged(); });
+
+  // Until the Quick UI has its notification overlay (S2.3) and Core (S2.1),
+  // viewer messages and playback errors are logged.
+  QObject::connect(&mViewerActions, &QuickViewerActions::notificationRequested,
+                   &mViewerActions, [](const NotificationRequest &request) {
+                     qInfo().noquote() << "QuickUiHost: viewer message:"
+                                       << request.text;
                    });
-  QObject::connect(&settings, &Settings::settingsChanged, &mThemeBridge,
-                   [this, &settings]() {
-                     mThemeBridge.apply(BridgeSnapshots::readTheme(settings));
+  QObject::connect(&mViewport, &ImageViewportController::playbackError,
+                   &mViewport, [](const QString &message) {
+                     qWarning().noquote()
+                         << "QuickUiHost: animation playback failed:"
+                         << message;
                    });
-  QObject::connect(&settings, &Settings::settingsChanged, &mActionBridge,
-                   &ActionBridge::refresh);
+}
+
+//------------------------------------------------------------------------------
+void QuickUiHost::onSettingsChanged() {
+  const UiSettingsSnapshot snapshot = BridgeSnapshots::readUiSettings(mSettings);
+  mSettingsBridge.apply(snapshot);
+  mViewport.applySettings(snapshot);
+  mThemeBridge.apply(BridgeSnapshots::readTheme(mSettings));
+  mActionBridge.refresh();
 }
 
 //------------------------------------------------------------------------------
@@ -68,6 +88,8 @@ bool QuickUiHost::start() {
   if (!registerBridges())
     return false;
 
+  mEngine.setInitialProperties(
+      {{viewportControllerProperty, QVariant::fromValue(&mViewport)}});
   mEngine.loadFromModule(mainWindowModule, mainWindowType);
   if (mEngine.rootObjects().isEmpty()) {
     qCritical() << "QuickUiHost: failed to create" << mainWindowType

@@ -34,6 +34,31 @@ target_link_libraries(qimgv_fluenticons PUBLIC Qt6::Core)
 qt_extract_metatypes(qimgv_fluenticons)
 qimgv_apply_msvc_profile(qimgv_fluenticons)
 
+# UI-independent viewer components: zoom / pan / fit state, mouse
+# interaction, scaling filter selection and animation playback. A library of
+# its own because qimgv-plus, the qimgv.ui QML module (ImageViewportController)
+# and the tests all use them.
+add_library(qimgv_viewcomponents STATIC
+    components/animationplayer/animationplayer.cpp
+    components/animationplayer/animationplayer.h
+    components/scalingfilter/scalingfilterselection.cpp
+    components/scalingfilter/scalingfilterselection.h
+    components/viewtransform/viewportinteraction.cpp
+    components/viewtransform/viewportinteraction.h
+    components/viewtransform/viewtransform.cpp
+    components/viewtransform/viewtransform.h
+    components/viewtransform/viewtransformcontroller.cpp
+    components/viewtransform/viewtransformcontroller.h
+)
+target_include_directories(qimgv_viewcomponents PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_features(qimgv_viewcomponents PUBLIC cxx_std_23)
+if(MSVC)
+    # Same C++26 working-draft switch as qimgv-plus.
+    target_compile_options(qimgv_viewcomponents PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>")
+endif()
+target_link_libraries(qimgv_viewcomponents PUBLIC Qt6::Core Qt6::Gui)
+qimgv_apply_msvc_profile(qimgv_viewcomponents)
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # TRANSLATIONS
@@ -181,6 +206,7 @@ target_link_libraries(qimgv-plus PRIVATE
     qimgv_uiplugin
     qimgv_renderplugin
     qimgv_fluenticons
+    qimgv_viewcomponents
 )
 
 # OPTION DEFINITIONS, LINKING

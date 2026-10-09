@@ -4,12 +4,14 @@
 #include <QObject>
 #include <QPoint>
 #include <QString>
+#include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
 #include "gui/quick/bridges/actionbridge.h"
 #include "gui/quick/bridges/actiondispatcher.h"
 #include "gui/quick/bridges/settingsbridge.h"
 #include "gui/quick/bridges/themebridge.h"
+#include "gui/quick/ui/imageviewportcontroller.h"
 
 // Records what ActionBridge forwards instead of running actions.
 class FakeActionDispatcher final : public IActionDispatcher {
@@ -27,14 +29,18 @@ public:
   int lastKey = 0;
   int lastModifiers = 0;
   QPoint lastWheelAngleDelta;
+  // QEvent::Type and Qt::MouseButton of the mouse events, oldest first.
+  QVariantList mouseEventTypes;
+  QVariantList mouseButtons;
 
 private:
   QMap<QString, QString> mShortcuts; // <action, shortcut>
 };
 
 // Per-engine test services: the three bridges over a fake dispatcher and
-// fixed snapshots, plus the hooks tst_bridges.qml uses to change them.
-// Published as the Fixture singleton of the qimgv.tests module.
+// fixed snapshots, an image viewport controller, plus the hooks the tests use
+// to change them. Published as the Fixture singleton of the qimgv.tests
+// module.
 class BridgeTestFixture : public QObject {
   Q_OBJECT
   QML_NAMED_ELEMENT(Fixture)
@@ -44,6 +50,9 @@ class BridgeTestFixture : public QObject {
   Q_PROPERTY(int lastKey READ lastKey FINAL)
   Q_PROPERTY(int lastModifiers READ lastModifiers FINAL)
   Q_PROPERTY(QPoint lastWheelAngleDelta READ lastWheelAngleDelta FINAL)
+  Q_PROPERTY(QVariantList mouseEventTypes READ mouseEventTypes FINAL)
+  Q_PROPERTY(QVariantList mouseButtons READ mouseButtons FINAL)
+  Q_PROPERTY(ImageViewportController *viewportController READ viewportController CONSTANT FINAL)
 
 public:
   explicit BridgeTestFixture(QObject *parent = nullptr);
@@ -56,6 +65,9 @@ public:
   [[nodiscard]] int lastKey() const;
   [[nodiscard]] int lastModifiers() const;
   [[nodiscard]] QPoint lastWheelAngleDelta() const;
+  [[nodiscard]] QVariantList mouseEventTypes() const;
+  [[nodiscard]] QVariantList mouseButtons() const;
+  [[nodiscard]] ImageViewportController *viewportController();
 
   // Flips viewer.smoothZoom and publishes the snapshot (viewer area only).
   Q_INVOKABLE void toggleSmoothZoom();
@@ -65,6 +77,11 @@ public:
   Q_INVOKABLE void switchTheme();
   // Rebinds action and refreshes the actions bridge.
   Q_INVOKABLE void setShortcut(const QString &action, const QString &shortcut);
+  // Shows a plain image of width x height pixels in the viewport, as a new
+  // document (fitted with the default fit mode).
+  Q_INVOKABLE void showTestImage(int width, int height);
+  // Forgets the input the dispatcher recorded.
+  Q_INVOKABLE void clearInputLog();
 
 private:
   FakeActionDispatcher mDispatcher;
@@ -73,4 +90,5 @@ private:
   SettingsBridge mSettingsBridge;
   ThemeBridge mThemeBridge;
   ActionBridge mActionBridge;
+  ImageViewportController mViewport;
 };

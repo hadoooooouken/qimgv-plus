@@ -10,7 +10,7 @@ qt_add_executable(qimgv_qml_tests
 
 qt_add_qml_module(qimgv_qml_tests
     URI qimgv.tests
-    DEPENDENCIES qimgv.bridges
+    DEPENDENCIES qimgv.bridges qimgv.ui
     SOURCES
         bridgetestfixture.cpp
         bridgetestfixture.h
@@ -25,6 +25,7 @@ target_link_libraries(qimgv_qml_tests PRIVATE
     Qt6::Quick
     Qt6::QuickTest
     qimgv_bridges
+    qimgv_ui
     qimgv_bridgesplugin
     qimgv_uiplugin
     qimgv_renderplugin

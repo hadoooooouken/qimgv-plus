@@ -16,6 +16,7 @@
 #include "gui/quick/render/resamplegrid.h"
 #include "gui/quick/render/textureuploadformat.h"
 #include "gui/quick/render/tilegrid.h"
+#include "gui/quick/ui/imageviewportcontroller.h"
 #include "offscreenquick.h"
 #include "referenceimages.h"
 #include "utils/hdrtonemapper.h"
@@ -24,6 +25,8 @@ namespace {
 using namespace Qt::StringLiterals;
 
 constexpr QSize kTestImageSize(64, 48);
+// Zoom step of the viewport settle test.
+constexpr double kViewportZoomStep = 0.25;
 constexpr int kMargin = 8;
 constexpr int kLargestMagnification = 3;
 constexpr QSize kFrameSize = kTestImageSize * kLargestMagnification +
@@ -2059,6 +2062,48 @@ private slots:
     // An empty source area clears the crop.
     scene.item->setUpscaledCrop(shared(makeCropImage()), QRect());
     QVERIFY(!scene.item->hasUpscaledCrop());
+  }
+
+  // ImageViewportController reports renderingSettled() only after a frame
+  // that carries its settle pass has ended (QQuickWindow::afterFrameEnd),
+  // the replacement of the widget viewer's frameSwapped wait.
+  void viewportSettlesAfterThePresentedFrame() {
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    UiSettingsSnapshot settings;
+    settings.viewer.fitMode = SettingsEnums::FitMode::Window;
+    settings.viewer.zoomStep = kViewportZoomStep;
+    ImageViewportController controller(settings);
+    controller.setView(scene.item.get());
+    QSignalSpy settled(&controller, &ImageViewportController::renderingSettled);
+    RENDER(scene, empty);
+
+    // A frame rendered before the image was shown does not count.
+    controller.showImage(shared(makeTestImage(ImageKind::Opaque, kTestImageSize)),
+                         u"viewport.png"_s);
+    QVERIFY(scene.item->isSettled());
+    QCoreApplication::processEvents();
+    QCOMPARE(settled.count(), 0);
+    QVERIFY(!controller.isRenderingSettled());
+
+    RENDER(scene, first);
+    QCoreApplication::processEvents();
+    QCOMPARE(settled.count(), 1);
+    QVERIFY(controller.isRenderingSettled());
+    QVERIFY(scene.item->isSettled());
+
+    // Every further frame of the same state stays quiet.
+    RENDER(scene, second);
+    QCoreApplication::processEvents();
+    QCOMPARE(settled.count(), 1);
+
+    // A view change unsettles until the next presented frame.
+    controller.zoomIn();
+    QVERIFY(!controller.isRenderingSettled());
+    RENDER(scene, zoomed);
+    QCoreApplication::processEvents();
+    QCOMPARE(settled.count(), 2);
+    QVERIFY(controller.isRenderingSettled());
   }
 };
 

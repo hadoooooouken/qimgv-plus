@@ -814,6 +814,87 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
 - **Acceptance:** every viewer action in `ActionManager` works in
   `--ui=quick`; zoom indicator and cursor auto-hide behave as before;
   `IViewerPort` is fully implemented by a `QuickViewerPort` adapter.
+- **Delivered:**
+  - **Scope decision (user):** verified by tests only. Core is not attached
+    to `--ui=quick` before S2.1, so real files are checked by hand there;
+    `QuickViewerPort` and the viewport's outbound signals
+    (`scalingRequested`, `nextImageRequested` / `prevImageRequested`,
+    `draggedOut`, `renderingSettled`) are wired to Core / `UiEvents` in
+    S2.1.
+  - **`qimgv_viewcomponents`** static library (`ViewTransform`,
+    `ViewTransformController`, `AnimationPlayer`, the new
+    `ViewportInteraction` and `ScalingFilterSelection`), linked by
+    qimgv-plus, `qimgv.ui` and the tests instead of compiling the sources
+    into each.
+  - **`ViewportInteraction`** (`components/viewtransform/`): the widget
+    viewer's mouse state machine without widgets (left-button pan /
+    drag-out, right-button zoom stroke and next/previous gesture, wheel zoom
+    with the right button, DPR-scaled thresholds), `WheelClassifier`
+    (wheel vs. trackpad heuristic and cooldown) and the wheel scroll
+    helpers. `ScalingFilterSelection` (`components/scalingfilter/`) holds
+    the toggle/cycle decision that lives in `MW` for the widget UI.
+  - **`ImageViewportController`** (`qimgv.ui`, `QML_ELEMENT`, uncreatable):
+    owns the `ViewTransformController`, the interaction, `AnimationPlayer`,
+    the smooth zoom (smootherstep) and scroll (OutSine) animations as
+    `QVariantAnimation`s (jumps when `motionPreference` is `ReducedMotion`),
+    the settle pass, click zones, cursor auto-hide and the zoom indicator
+    state; drives the `ImageRenderItem` set as its `view` (image, animation
+    frames, placement, filter via `imageFilterModeFor`, CAS strength,
+    transparency grid, colour adjustments, projection and panorama camera,
+    upscaled crop, `settled`). Settings arrive as `UiSettingsSnapshot`
+    through `applySettings()` from `QuickUiHost`; `ViewerSettings` gained
+    `useUpscayl`. Passed to `Main.qml` as the required property
+    `viewportController`.
+  - **`ImageViewport.qml`**: `ImageRenderItem`, one `MouseArea` (all
+    buttons, hover) and a `PinchHandler`, the zoom indicator and the click
+    zone pills; keys, and pointer events the controller does not consume,
+    go to `Actions` (`ActionBridge` gained `handleMousePress`,
+    `handleMouseRelease`, `handleMouseDoubleClick`, so mouse shortcuts such
+    as `LMB_DoubleClick` and the right-click menu work as in the widget UI).
+    **Deviation:** a `MouseArea` instead of `WheelHandler` / `DragHandler` /
+    `TapHandler`. One press-move-release sequence decides between zoom,
+    gesture, drag-out and right click; split over several handlers that
+    decision would be made by grab arbitration in QML instead of in the
+    tested controller. "Wrapping pan" was dropped: the widget viewer has no
+    such behaviour.
+  - **Settling:** any view change unsettles the item; the settle pass runs
+    80 ms after the view rests or when a zoom ends, and `renderingSettled`
+    follows `FramePresentationTracker`: requests are numbered, the render
+    thread records the newest one in `beforeSynchronizing` and reports it in
+    `afterFrameEnd`, so a frame already in flight never completes a newer
+    request. During animation playback the item stays unsettled.
+  - **Scaling requests:** the GPU shows every filter, so a CPU-scaled copy
+    is requested only as the AI upscaler's source (Upscayl on, scale above
+    1:1, not panorama / animation); `QuickViewerPort::showScaledImage`
+    ignores the result. **Flagged for S2.1:** Core only starts an upscale
+    after a CPU scale finishes, which costs one unneeded CPU scale per
+    upscale in the Quick UI.
+  - **`QuickViewerActions`** (`gui/quick/adapters/`): fit, zoom, scroll,
+    lock, transparency grid, filter toggle/cycle and panorama actions of
+    `ActionManager` run on the controller; the confirmation messages (the
+    widget UI's `MW` translations) go out as `notificationRequested` and are
+    logged until S2.3. Not in this stage: context menu (S2.5), viewport
+    copy to clipboard (needs a GPU readback, S2.1), Upscayl / HDR toggles
+    and "Zoom temporarily disabled" (S2.3 / S2.5).
+  - **Deviations (improvements):** session overrides (temporary filter,
+    transparency grid) reset only when viewer settings change, not on
+    every settings notification; one drag-out per press; a press in a
+    click zone suppresses panning until release; a double click in a click
+    zone does not navigate a third time.
+  - **Flagged:** the interaction logic now exists twice (`ImageViewerV2` /
+    `ViewerWidget` and the controller), resolved by S4.2; `MW` keeps its own
+    filter toggle/cycle code.
+  - Tests: `qimgv_tests` gained `ViewportInteractionTests` (every mode,
+    thresholds at DPR 1.0 / 1.5 / 2.0, wheel classification, scroll
+    helpers, filter selection, the tracker's numbering) and
+    `ImageViewportControllerTests` (fit / zoom / smooth zoom, pan,
+    drag-out, gestures, right click, wheel and trackpad, upscale requests,
+    panorama, click zones, zoom indicator modes, session overrides, visible
+    rect, rotation, animation); `qimgv_render_tests` gained
+    `viewportSettlesAfterThePresentedFrame` on the real frame loop
+    (mutation-checked); `qimgv_qml_tests` gained `tst_imageviewport.qml`
+    (forwarding of keys, double clicks, right clicks and unused wheels to
+    the shortcuts). All pass on D3D11, D3D12 and Vulkan.
 
 ### Phase 2: Quick application shell
 

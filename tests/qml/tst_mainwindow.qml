@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import qimgv.bridges
+import qimgv.tests
 
 TestCase {
     id: testCase
@@ -12,7 +13,8 @@ TestCase {
         compare(component.status, Component.Ready, component.errorString());
 
         const window = createTemporaryObject(component, testCase, {
-            visible: false
+            visible: false,
+            viewportController: Fixture.viewportController
         });
         verify(window !== null, "qimgv.ui/Main could not be instantiated");
         compare(window.width, window.initialWidth);
