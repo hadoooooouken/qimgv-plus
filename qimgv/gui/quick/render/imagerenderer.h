@@ -23,6 +23,16 @@
 // as premultiplied alpha with a full mip chain whenever the item's image
 // generation or the effective tile size limit changes.
 //
+// With an active SourceConversion (HDR images, or a display colour space
+// that differs from the image's), each tile is instead uploaded with straight
+// alpha into a source texture and rendered by the conversion pass
+// (convert.frag: HDR decode and tone mapping, colour transform) into the
+// tile's displayed texture, whose mip chain is then built; everything after
+// that sees display-encoded, premultiplied texels as before. HDR sources are
+// kept so that a new tone mapping or colour transform only re-runs the
+// conversion; SDR sources are released after the conversion, and a new
+// transform re-uploads them from the retained image.
+//
 // The tile shader applies the ImageFilter of the frame: CAS or smart
 // sharpening and the colour adjustment matrix (ports of the widget viewer's
 // filter.frag). While the frame is settled and the image is shown below 1:1,
@@ -59,6 +69,9 @@ private:
   struct GpuTile {
     ImageTile region;
     std::unique_ptr<QRhiTexture> texture;
+    // Straight-alpha source of the conversion pass; null when the image is
+    // drawn unconverted and after an SDR source was converted.
+    std::unique_ptr<QRhiTexture> source;
     std::unique_ptr<QRhiBuffer> uniforms;
     // One binding set per RenderEnums::TextureSampling.
     std::array<std::unique_ptr<QRhiShaderResourceBindings>, kSamplingCount>
@@ -88,7 +101,7 @@ private:
   using FrameTexture = FrameResource<QRhiTexture>;
 
   // Offscreen passes recorded before the main pass.
-  enum class PassKind { BoxReduce, Resample };
+  enum class PassKind { BoxReduce, Resample, Convert };
 
   // Pipeline of one kind of offscreen pass for one render target format.
   struct PassPipeline {
@@ -124,8 +137,23 @@ private:
   // QRhiResourceUpdateBatch::generateMips().
   [[nodiscard]] bool generatesMipsByBoxReduce() const;
   [[nodiscard]] QRhiTexture::Flags tileTextureFlags() const;
-  [[nodiscard]] bool createTile(GpuTile &tile, QRhiTexture::Format format);
+  [[nodiscard]] bool createTile(GpuTile &tile, QRhiTexture::Format format,
+                                QRhiTexture::Flags extraFlags = {});
   void releaseTiles();
+  // Drops every tile's exact downsample and resampling results.
+  void invalidateFilteredTiles();
+
+  // The frame's conversion is active and the conversion pass is available.
+  [[nodiscard]] bool wantsConversion() const;
+  // The uploaded sources must be (re)converted for the frame's conversion.
+  [[nodiscard]] bool needsConversion() const;
+  // Records the conversion pass of every tile and the mip chains of the
+  // results on cb.
+  void convertTiles(QRhiCommandBuffer *cb);
+  // The 3D lookup table of the frame's conversion, uploaded on first use;
+  // the layout placeholder when the conversion uses none; null on failure
+  // (reported).
+  [[nodiscard]] QRhiTexture *conversionLut(QRhiCommandBuffer *cb);
 
   // Resources of the exact-ratio downsample; optional: on failure the
   // renderer keeps drawing from the mip chain.
@@ -133,25 +161,35 @@ private:
   // Resources of the MKS2021 resampling; optional like the exact
   // downsample, and built on its sampler.
   [[nodiscard]] bool createResampleResources();
+  // Resources of the conversion pass, built on the exact downsample's
+  // sampler; without them images are drawn unconverted (reported).
+  [[nodiscard]] bool createConvertResources();
   [[nodiscard]] QRhiGraphicsPipeline *
   passPipeline(PassKind kind, QRhiTexture::Format format,
                QRhiRenderPassDescriptor *compatiblePass);
   // One offscreen pass: reads source (and, for resampling passes, the
-  // weight table weights) and renders into a new single-level texture of the
-  // source's format and of size `size`; uniforms (uniformSize bytes) fill the
-  // pass's uniform buffer.
+  // weight table weights; for conversion passes, the colour lookup table
+  // colorLut) and renders into a new single-level texture of the source's
+  // format and of size `size`; uniforms (uniformSize bytes) fill the pass's
+  // uniform buffer.
   struct OffscreenPass {
     PassKind kind = PassKind::BoxReduce;
     QRhiTexture *source = nullptr;
     QRhiTexture *weights = nullptr;
+    QRhiTexture *colorLut = nullptr;
     QSize size;
     const void *uniforms = nullptr;
     quint32 uniformSize = 0;
     QRhiTexture::Flags extraFlags;
   };
-  // Records pass on cb; null on failure (reported).
+  // Records pass on cb into a new texture; null on failure (reported).
   [[nodiscard]] FrameTexture recordOffscreenPass(QRhiCommandBuffer *cb,
                                                  const OffscreenPass &pass);
+  // Records pass on cb into level 0 of target (pass.size and
+  // pass.extraFlags are not used); false on failure (reported).
+  [[nodiscard]] bool recordPassInto(QRhiCommandBuffer *cb,
+                                    const OffscreenPass &pass,
+                                    QRhiTexture *target);
   // Uploads a resampling weight table (size.width() floats per row) into a
   // new R32F texture, recorded on cb; null on failure (reported).
   [[nodiscard]] FrameTexture uploadWeightTable(QRhiCommandBuffer *cb,
@@ -186,6 +224,13 @@ private:
   std::optional<quint64> mUploadedGeneration;
   int mUploadedTileSizeLimit = 0;
   bool mImageHasAlpha = false;
+  // The tiles were uploaded for the conversion pass, and their sources are
+  // kept after it (HDR images).
+  bool mUploadedConverted = false;
+  bool mSourcesRetained = false;
+  // Conversion the displayed textures hold; empty until the uploaded sources
+  // were converted.
+  std::optional<SourceConversion> mConvertedWith;
 
   QShader mVertexShader;
   QShader mFragmentShader;
@@ -213,6 +258,18 @@ private:
   QShader mResampleFragmentShader;
   std::unique_ptr<QRhiBuffer> mResampleLayoutUniforms;
   std::unique_ptr<QRhiShaderResourceBindings> mResampleLayoutBindings;
+
+  bool mConvertReady = false;
+  QShader mConvertVertexShader;
+  QShader mConvertFragmentShader;
+  std::unique_ptr<QRhiSampler> mLutSampler;
+  // 1 x 1 x 1 placeholder bound when the conversion uses no lookup table.
+  std::unique_ptr<QRhiTexture> mLayoutLut;
+  std::unique_ptr<QRhiBuffer> mConvertLayoutUniforms;
+  std::unique_ptr<QRhiShaderResourceBindings> mConvertLayoutBindings;
+  // Uploaded lookup table and the data it was uploaded from.
+  std::unique_ptr<QRhiTexture> mLutTexture;
+  std::shared_ptr<const ColorLut> mLutData;
 
   std::vector<PassPipeline> mPassPipelines;
 

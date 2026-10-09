@@ -5,11 +5,27 @@
 #include <QQuickWindow>
 #include <utility>
 
+#include "gui/quick/render/colorlutbuilder.h"
 #include "gui/quick/render/imagerenderer.h"
+#include "utils/hdrsource.h"
+#include "utils/hdrtonemapper.h"
 
 namespace {
+using namespace Qt::StringLiterals;
+
 constexpr int kOpaqueAlpha = 255;
-}
+
+// RenderEnums::ToneMapOperator carries the values of the CPU tone mapper's
+// operators (and of Settings::hdrToneMappingOperator()).
+static_assert(static_cast<int>(RenderEnums::ToneMapOperator::Bt2408) ==
+              static_cast<int>(ToneMapOperator::Bt2408));
+static_assert(static_cast<int>(RenderEnums::ToneMapOperator::ReinhardJodie) ==
+              static_cast<int>(ToneMapOperator::ReinhardJodie));
+static_assert(static_cast<int>(RenderEnums::ToneMapOperator::AcesFilmic) ==
+              static_cast<int>(ToneMapOperator::AcesFilmic));
+static_assert(static_cast<int>(RenderEnums::ToneMapOperator::Hable) ==
+              static_cast<int>(ToneMapOperator::Hable));
+} // namespace
 
 //------------------------------------------------------------------------------
 ImageRenderItem::ImageRenderItem(QQuickItem *parent)
@@ -20,6 +36,11 @@ ImageRenderItem::ImageRenderItem(QQuickItem *parent)
             emit renderError(message);
           })) {
   setAlphaBlending(mSettings.backgroundColor.alpha() < kOpaqueAlpha);
+  mLutBuilder = new ColorLutBuilder(this);
+  connect(mLutBuilder, &ColorLutBuilder::lutReady, this,
+          &ImageRenderItem::refreshConversion);
+  connect(mLutBuilder, &ColorLutBuilder::lutFailed, this,
+          &ImageRenderItem::reportConversionError);
 }
 
 //------------------------------------------------------------------------------
@@ -35,6 +56,11 @@ void ImageRenderItem::setImage(std::shared_ptr<const QImage> image) {
   const QSize previousSize = imageSize();
   mImage = std::move(image);
   ++mImageGeneration;
+  mImageIsHdr = mImage && isHdrImage(*mImage);
+  mHdrEncoding = mImageIsHdr ? detectHdrSourceEncoding(*mImage)
+                             : HdrSourceEncoding{};
+  mImageColorSpace = mImage ? mImage->colorSpace() : QColorSpace();
+  refreshConversion();
   update();
   if (imageSize() != previousSize)
     emit imageChanged();
@@ -191,6 +217,105 @@ void ImageRenderItem::setSettled(bool settled) {
 }
 
 //------------------------------------------------------------------------------
+void ImageRenderItem::setToneMapping(const ToneMapping &toneMapping) {
+  if (mToneMapping == toneMapping)
+    return;
+  mToneMapping = toneMapping;
+  refreshConversion();
+  emit toneMappingChanged();
+}
+
+const ToneMapping &ImageRenderItem::toneMapping() const { return mToneMapping; }
+
+bool ImageRenderItem::isToneMappingEnabled() const {
+  return mToneMapping.enabled;
+}
+
+void ImageRenderItem::setToneMappingEnabled(bool enabled) {
+  ToneMapping toneMapping = mToneMapping;
+  toneMapping.enabled = enabled;
+  setToneMapping(toneMapping);
+}
+
+RenderEnums::ToneMapOperator ImageRenderItem::toneMapOperator() const {
+  return mToneMapping.op;
+}
+
+void ImageRenderItem::setToneMapOperator(RenderEnums::ToneMapOperator op) {
+  ToneMapping toneMapping = mToneMapping;
+  toneMapping.op = op;
+  setToneMapping(toneMapping);
+}
+
+qreal ImageRenderItem::hdrWhiteLevel() const { return mToneMapping.whiteNits; }
+
+void ImageRenderItem::setHdrWhiteLevel(qreal nits) {
+  ToneMapping toneMapping = mToneMapping;
+  toneMapping.whiteNits = static_cast<float>(nits);
+  setToneMapping(toneMapping);
+}
+
+void ImageRenderItem::setColorManagement(
+    const ColorManagement &colorManagement) {
+  if (mColorManagement == colorManagement)
+    return;
+  mColorManagement = colorManagement;
+  refreshConversion();
+  emit colorManagementChanged();
+}
+
+const ColorManagement &ImageRenderItem::colorManagement() const {
+  return mColorManagement;
+}
+
+const SourceConversion &ImageRenderItem::sourceConversion() const {
+  return mConversion;
+}
+
+void ImageRenderItem::refreshConversion() {
+  SourceConversion conversion;
+  if (mImage) {
+    conversion.hdr = mImageIsHdr;
+    if (mImageIsHdr) {
+      conversion.hdrEncoding = mHdrEncoding;
+      conversion.toneMapping = mToneMapping;
+    }
+    if (mColorManagement.enabled) {
+      // HDR images reach the colour transform as sRGB, like the output of
+      // HdrToneMapper; untagged images are sRGB, like in ColorManager.
+      const QColorSpace source =
+          mImageIsHdr || !mImageColorSpace.isValid()
+              ? QColorSpace(QColorSpace::SRgb)
+              : mImageColorSpace;
+      const QColorSpace &target = mColorManagement.target;
+      conversion.color = planColorTransform(source, target);
+      if (conversion.color.kind == ColorTransformKind::Unsupported) {
+        reportConversionError(
+            u"The image is shown without colour management: %1"_s.arg(
+                conversion.color.reason));
+        conversion.color = ColorTransformPlan{};
+      } else if (conversion.color.kind == ColorTransformKind::Lut) {
+        conversion.lut = mLutBuilder->find(source, target);
+        if (!conversion.lut)
+          mLutBuilder->request(source, target);
+      }
+    }
+  }
+  if (conversion == mConversion)
+    return;
+  mConversion = std::move(conversion);
+  update();
+}
+
+void ImageRenderItem::reportConversionError(const QString &message) {
+  if (message == mLastConversionError)
+    return;
+  mLastConversionError = message;
+  qWarning().noquote() << "ImageRenderItem:" << message;
+  emit renderError(message);
+}
+
+//------------------------------------------------------------------------------
 RenderFrame ImageRenderItem::frameSnapshot() const {
   RenderFrame frame;
   frame.image = mImage;
@@ -198,6 +323,7 @@ RenderFrame ImageRenderItem::frameSnapshot() const {
   frame.placement = mPlacement;
   frame.settings = mSettings;
   frame.filter = mFilter;
+  frame.conversion = mConversion;
   frame.settled = mSettled;
   if (const QQuickWindow *itemWindow = window())
     frame.devicePixelRatio = itemWindow->effectiveDevicePixelRatio();

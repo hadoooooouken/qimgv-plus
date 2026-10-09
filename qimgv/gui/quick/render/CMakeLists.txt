@@ -3,7 +3,8 @@
 # docs/QML_MIGRATION_PLAN.md): ImageRenderItem (QQuickRhiItem) and its
 # render-thread ImageRenderer, drawing through QRhi with the RHI shaders in
 # res/shaders/rhi (tile drawing with sharpening and colour adjustments, the
-# exact-ratio box downsample and the Magic Kernel Sharp 2021 resampling).
+# exact-ratio box downsample, the Magic Kernel Sharp 2021 resampling and the
+# source conversion: HDR tone mapping and display colour management).
 
 qt_add_library(qimgv_render STATIC)
 
@@ -11,6 +12,10 @@ qt_add_qml_module(qimgv_render
     URI qimgv.render
     DEPENDENCIES QtQuick
     SOURCES
+        colorlutbuilder.cpp
+        colorlutbuilder.h
+        colortransformplan.cpp
+        colortransformplan.h
         imagefiltermode.cpp
         imagefiltermode.h
         imagerenderer.cpp
@@ -42,9 +47,10 @@ qt_add_shaders(qimgv_render "qimgv_render_shaders"
 )
 
 # The resampling passes read exact texels with texelFetch() and loop over a
-# scale-dependent number of taps, which GLSL ES 1.00 cannot express; their
-# OpenGL variants start at GLSL ES 3.00 / GLSL 3.30. The Quick UI renders on
-# Direct3D 11 by default and never on an OpenGL ES 2 context.
+# scale-dependent number of taps, and the conversion pass also samples a 3D
+# lookup table; GLSL ES 1.00 can express neither, so their OpenGL variants
+# start at GLSL ES 3.00 / GLSL 3.30. The Quick UI renders on Direct3D 11 by
+# default and never on an OpenGL ES 2 context.
 qt_add_shaders(qimgv_render "qimgv_render_resample_shaders"
     PREFIX "/qimgv/render/shaders"
     BASE "${QIMGV_RHI_SHADER_DIR}"
@@ -52,6 +58,8 @@ qt_add_shaders(qimgv_render "qimgv_render_resample_shaders"
     FILES
         "${QIMGV_RHI_SHADER_DIR}/resample.vert"
         "${QIMGV_RHI_SHADER_DIR}/resample.frag"
+        "${QIMGV_RHI_SHADER_DIR}/convert.vert"
+        "${QIMGV_RHI_SHADER_DIR}/convert.frag"
 )
 
 # Headers include each other relative to the application root.

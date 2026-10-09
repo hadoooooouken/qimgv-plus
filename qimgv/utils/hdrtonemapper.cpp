@@ -1,4 +1,5 @@
 #include "hdrtonemapper.h"
+#include "hdrsource.h"
 
 #include <QColorSpace>
 #include <QFloat16>
@@ -78,18 +79,10 @@ constexpr float kEpsilon = 1e-6f;
 // Components per pixel in the kimageformats float plugins' buffer layout.
 constexpr int kFloatChannelsPerPixel = 4;
 
-enum class InputTransfer {
-    PQ,
-    HLG,
-    Linear,
-    Gamma
-};
-
-enum class InputPrimaries {
-    Bt2020,
-    DisplayP3,
-    Srgb
-};
+// Encoding of the source samples, detected by detectHdrSourceEncoding()
+// (utils/hdrsource.h), which the GPU renderer shares.
+using InputTransfer = HdrTransfer;
+using InputPrimaries = HdrPrimaries;
 
 // qfloat16 does not expose setBits()/bits() in the public Qt API. Its
 // storage is a single 16-bit word, so reinterpret via memcpy.
@@ -129,7 +122,6 @@ inline float decodeTransferAbsolute(InputTransfer transfer, float n) {
     }
     case InputTransfer::Linear:
         return n * kScRgbReferenceWhiteNits;
-    case InputTransfer::Gamma:
     default:
         return 0.0f;
     }
@@ -789,44 +781,11 @@ private:
 // Public API.
 // ---------------------------------------------------------------------------
 bool HdrToneMapper::isLinearFloatFormat(QImage::Format format) {
-    switch (format) {
-    case QImage::Format_RGBX16FPx4:
-    case QImage::Format_RGBA16FPx4:
-    case QImage::Format_RGBA16FPx4_Premultiplied:
-    case QImage::Format_RGBX32FPx4:
-    case QImage::Format_RGBA32FPx4:
-    case QImage::Format_RGBA32FPx4_Premultiplied:
-        return true;
-    default:
-        return false;
-    }
+    return isLinearFloatHdrFormat(format);
 }
 
 bool HdrToneMapper::isHdr(const QImage &image) {
-    if (image.isNull()) return false;
-
-    if (image.text(QStringLiteral("HDR_IsHDR")) == QStringLiteral("true") ||
-        !image.text(QStringLiteral("HDR_Profile")).isEmpty()) {
-        return true;
-    }
-    if (isLinearFloatFormat(image.format())) return true;
-
-    const QColorSpace cs = image.colorSpace();
-    if (cs.isValid()) {
-        const QColorSpace::TransferFunction tf = cs.transferFunction();
-        if (tf == QColorSpace::TransferFunction::St2084 ||
-            tf == QColorSpace::TransferFunction::Hlg) {
-            return true;
-        }
-        const QString desc = cs.description();
-        if (desc.contains(QStringLiteral("HDR"), Qt::CaseInsensitive) ||
-            desc.contains(QStringLiteral("PQ"), Qt::CaseInsensitive) ||
-            desc.contains(QStringLiteral("HLG"), Qt::CaseInsensitive) ||
-            desc.contains(QStringLiteral("2100"), Qt::CaseInsensitive)) {
-            return true;
-        }
-    }
-    return false;
+    return isHdrImage(image);
 }
 
 QString HdrToneMapper::detectHdrProfile(const QImage &image) {
@@ -870,29 +829,9 @@ QImage HdrToneMapper::applyToneMapping(const QImage &srcImage,
                                        const HdrToneMapParams &params) {
     if (srcImage.isNull()) return srcImage;
 
-    InputTransfer transfer = InputTransfer::PQ;
-    const QString transferText = srcImage.text(QStringLiteral("HDR_Transfer"));
-    const QColorSpace cs = srcImage.colorSpace();
-
-    if (transferText.compare(QStringLiteral("HLG"), Qt::CaseInsensitive) == 0 ||
-        (cs.isValid() && cs.transferFunction() == QColorSpace::TransferFunction::Hlg)) {
-        transfer = InputTransfer::HLG;
-    } else if (transferText.compare(QStringLiteral("Linear"), Qt::CaseInsensitive) == 0 ||
-               (cs.isValid() && cs.transferFunction() == QColorSpace::TransferFunction::Linear) ||
-               (!cs.isValid() && isLinearFloatFormat(srcImage.format()))) {
-        transfer = InputTransfer::Linear;
-    }
-
-    InputPrimaries primaries = InputPrimaries::Bt2020;
-    const QString primariesText = srcImage.text(QStringLiteral("HDR_Primaries"));
-    if (primariesText.contains(QStringLiteral("P3"), Qt::CaseInsensitive) ||
-        (cs.isValid() && cs.primaries() == QColorSpace::Primaries::DciP3D65)) {
-        primaries = InputPrimaries::DisplayP3;
-    } else if (primariesText.contains(QStringLiteral("709"), Qt::CaseInsensitive) ||
-               primariesText.contains(QStringLiteral("sRGB"), Qt::CaseInsensitive) ||
-               (cs.isValid() && cs.primaries() == QColorSpace::Primaries::SRgb)) {
-        primaries = InputPrimaries::Srgb;
-    }
+    const HdrSourceEncoding encoding = detectHdrSourceEncoding(srcImage);
+    const InputTransfer transfer = encoding.transfer;
+    const InputPrimaries primaries = encoding.primaries;
 
     const float targetWhite = (params.targetWhiteNits > 0.0f)
         ? params.targetWhiteNits : 203.0f;

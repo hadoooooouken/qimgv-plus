@@ -628,6 +628,92 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
 - **Acceptance:** EXR/HDR/AVIF/JXL HDR samples match the CPU output within
   tolerance; switching operator or white level re-renders without
   re-decoding; LUT generation never runs on the GUI or render thread.
+- **Delivered:**
+  - **Scope (agreed 2026-10-09):** renderer side only. The HDR detection
+    rules moved unchanged from `hdrtonemapper.cpp` into the header-only
+    `utils/hdrsource.h` (`isHdrImage()`, `isLinearFloatHdrFormat()`,
+    `detectHdrSourceEncoding()`), shared by `HdrToneMapper` and the
+    renderer; CPU behaviour is unchanged. **Deferred to S2.1:** keeping the
+    HDR source in `ImageStatic` and skipping CPU tone mapping when the Quick
+    viewer is active (nothing consumes it before `Core` feeds the Quick
+    viewer).
+  - `ImageRenderItem` resolves a `SourceConversion` on the GUI thread from
+    the image (HDR detection, its colour space), `ToneMapping` (enabled,
+    `RenderEnums::ToneMapOperator`, white level in nits; same values as
+    `ToneMapOperator` / the settings) and `ColorManagement` (enabled, target
+    `QColorSpace` supplied by the caller from
+    `ColorManager::getTargetColorSpace()`; the renderer never calls
+    `ColorManager`). C++ setters `setToneMapping()` /
+    `setColorManagement()`, QML properties `toneMapping`,
+    `toneMapOperator`, `hdrWhiteLevel`. The bridge and `Main.qml`
+    bindings are S1.6 / S2.1 wiring.
+  - **Conversion pass** (`res/shaders/rhi/convert.vert/.frag`): when the
+    conversion is active, each tile is uploaded with straight alpha into a
+    source texture and rendered once into the tile's displayed texture
+    (premultiplied, display-encoded), whose mip chain is built afterwards.
+    The mip chain, sharpening, exact downsample and MKS2021 then work
+    unchanged on display-encoded texels, which is the CPU order (tone map ->
+    colour management -> scale / filter). HDR samples are decoded and tone
+    mapped exactly like `HdrToneMapper` (same constants: PQ / HLG / scRGB
+    decode, white level, BT.2020 / P3 -> sRGB matrices, gamut compression,
+    the four operators with highlight desaturation), then colour managed from
+    sRGB like the CPU. Tone mapping off clamps and shows the samples as sRGB
+    (the CPU fallback). SDR images already in the display space keep the
+    S1.3 path with no extra pass or memory.
+  - **Re-render without re-decode:** HDR source textures are kept, so a new
+    operator, white level or display space only re-runs the conversion and
+    mip passes (cost: one source texture per HDR image in VRAM). SDR sources
+    are released after the conversion; a new display space re-uploads them
+    from the retained `QImage`.
+  - **Deviation (approved): source precision.** Float HDR images
+    (`RGBA16FPx4`, `RGBA32FPx4`) are uploaded as `RGBA16F` (the CPU mapper
+    quantizes 32-bit floats to the same half floats); 16-bit integer HDR
+    images (PQ / HLG codes) as `RGBA32F`, because half floats shifted dark
+    PQ codes by up to 13 8-bit levels after tone mapping. Displayed textures
+    are `RGBA16F` for float sources, `RGBA8` otherwise.
+  - **Colour transforms** (`gui/quick/render/colortransformplan.*`, pure
+    functions): source and target both `ThreeComponentMatrix` with a named
+    transfer function (every `ColorManager` preset and most monitor ICC
+    profiles) -> parametric (transfer curve with Qt's parameters, 3x3 matrix,
+    inverse curve). The matrix comes from the ICC colorant tags (`rXYZ`,
+    `gXYZ`, `bXYZ`) of `QColorSpace::iccProfile()`, i.e. the D50 matrix Qt's
+    own transforms use. Everything else (table curves, element-list
+    profiles) -> a 33^3 `RGBA16F` 3D LUT built by `QColorTransform` in
+    `ColorLutBuilder` on the thread pool. Results come back through a queued
+    call guarded by a lifetime token and the task id. The builder caches 4
+    (source, target) pairs by ICC identity and reports each failure once.
+    Until the LUT is ready the image is shown without the colour transform.
+    Grey and other non-RGB spaces and invalid targets are reported through
+    `renderError` and shown unconverted.
+  - **Found: Qt 6.12 `QColorSpace::primaryPoints()` returns its points in
+    the wrong fields** (red in `whitePoint`, ...), and `PrimaryPoints::
+    isValid()` fails for Display P3 and BT.2020. That is why the colorant
+    tags are read instead.
+  - **Found, out of scope (flagged):** `ColorManager`'s "ProPhoto" preset
+    builds an invalid `QColorSpace` (Qt rejects the blue primary with
+    y = 0), so the CPU path silently skips colour management for it. The
+    GPU path receives the same invalid target and reports it.
+  - Tests: `qimgv_tests` gained `ColorTransformTests` (curve round trips,
+    plans for named and ICC spaces against `QColorTransform`, LUT lattice
+    values, builder cache / single failure / destroyed builder).
+    `qimgv_render_tests` links the unchanged `hdrtonemapper.cpp` and compares
+    the GPU with it for PQ, PQ with alpha, HLG, untagged half-float and
+    linear-sRGB float images x 4 operators, a 400 nit white level and tone
+    mapping off (tolerance 2 levels). It compares colour management with
+    `QImage::convertedToColorSpace()` for opaque / alpha / 16-bit images to
+    P3, ProPhoto, linear sRGB (2 levels) and Adobe RGB / Rec2020 (4 levels:
+    Qt's 8-bit tables flatten the steep start of inverse pure-gamma curves,
+    and the GPU's analytic value is the exact one). LUT targets are tested
+    within 4 levels (darkest shades of a curve that is infinitely steep at
+    black) and HDR + colour management within 3. Also covered: operator /
+    white level / enable switches (no `imageChanged`, same result as a
+    fresh render), the display-space switch re-upload, identity colour
+    management being bit-identical to the plain path, tiled = untiled, and
+    exact downsample / MKS2021 on converted images. All pass on D3D11,
+    D3D12 and Vulkan (RTX 3060).
+  - Startup: the conversion resources (two shaders, a 1x1x1 3D placeholder)
+    are created with the renderer's other device resources; no thread-pool
+    work happens until an image needs a LUT.
 
 #### S1.5 Animation, panorama and upscaled-crop layers
 - **Goal:** remaining viewer content types on the GPU path.

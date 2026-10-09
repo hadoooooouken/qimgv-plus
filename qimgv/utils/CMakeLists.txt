@@ -38,6 +38,7 @@ target_sources(qimgv-plus PRIVATE
     displayutils.cpp
     hdrtonemapper.cpp
     hdrtonemapper.h
+    hdrsource.h
 )
 
 target_sources(qimgv-plus PRIVATE

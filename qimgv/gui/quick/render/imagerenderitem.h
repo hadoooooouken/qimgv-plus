@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QColor>
+#include <QColorSpace>
 #include <QPointF>
 #include <QQuickRhiItem>
 #include <QSize>
@@ -10,6 +11,7 @@
 #include "gui/quick/render/renderframe.h"
 #include "gui/quick/render/rendererrorchannel.h"
 
+class ColorLutBuilder;
 class QImage;
 
 // GPU image view of the Qt Quick UI: draws one image through QRhi with
@@ -17,6 +19,14 @@ class QImage;
 // over a background colour and an optional transparency checkerboard.
 // Images larger than the GPU texture size limit are split into tiles
 // (TileGrid) instead of falling back to the CPU.
+//
+// HDR images (isHdrImage()) are tone mapped on the GPU with the item's
+// ToneMapping, and with ColorManagement enabled every image is converted into
+// the display colour space it names (SourceConversion). Changing either only
+// re-runs the renderer's conversion pass; the image is not decoded again.
+// Colour spaces that need a lookup table get it from a ColorLutBuilder on a
+// worker thread; until it is ready the image is shown without the colour
+// transform.
 //
 // The ImageFilter adds CAS or smart sharpening and colour adjustments. While
 // `settled` is true and the image is shown below 1:1, the renderer replaces
@@ -47,6 +57,9 @@ class ImageRenderItem : public QQuickRhiItem {
   Q_PROPERTY(qreal casSharpening READ casSharpening WRITE setCasSharpening NOTIFY imageFilterChanged FINAL)
   Q_PROPERTY(qreal casContrast READ casContrast WRITE setCasContrast NOTIFY imageFilterChanged FINAL)
   Q_PROPERTY(bool settled READ isSettled WRITE setSettled NOTIFY settledChanged FINAL)
+  Q_PROPERTY(bool toneMapping READ isToneMappingEnabled WRITE setToneMappingEnabled NOTIFY toneMappingChanged FINAL)
+  Q_PROPERTY(RenderEnums::ToneMapOperator toneMapOperator READ toneMapOperator WRITE setToneMapOperator NOTIFY toneMappingChanged FINAL)
+  Q_PROPERTY(qreal hdrWhiteLevel READ hdrWhiteLevel WRITE setHdrWhiteLevel NOTIFY toneMappingChanged FINAL)
 
 public:
   explicit ImageRenderItem(QQuickItem *parent = nullptr);
@@ -87,6 +100,22 @@ public:
   [[nodiscard]] bool isSettled() const;
   void setSettled(bool settled);
 
+  void setToneMapping(const ToneMapping &toneMapping);
+  [[nodiscard]] const ToneMapping &toneMapping() const;
+  [[nodiscard]] bool isToneMappingEnabled() const;
+  void setToneMappingEnabled(bool enabled);
+  [[nodiscard]] RenderEnums::ToneMapOperator toneMapOperator() const;
+  void setToneMapOperator(RenderEnums::ToneMapOperator op);
+  // White level in nits.
+  [[nodiscard]] qreal hdrWhiteLevel() const;
+  void setHdrWhiteLevel(qreal nits);
+
+  // target: ColorManager::getTargetColorSpace() of the caller.
+  void setColorManagement(const ColorManagement &colorManagement);
+  [[nodiscard]] const ColorManagement &colorManagement() const;
+  // The conversion the renderer applies to the current image.
+  [[nodiscard]] const SourceConversion &sourceConversion() const;
+
   // Render-thread side, called from ImageRenderer::synchronize() only.
   [[nodiscard]] RenderFrame frameSnapshot() const;
   // Channel through which the renderer reports errors; they are emitted as
@@ -101,6 +130,8 @@ signals:
   void imageChanged();
   void imageFilterChanged();
   void settledChanged();
+  void toneMappingChanged();
+  void colorManagementChanged();
   void renderError(const QString &message);
 
 protected:
@@ -108,6 +139,12 @@ protected:
 
 private:
   void applySettings(const RenderSettings &settings);
+  // Resolves mConversion from the image, the tone mapping and the colour
+  // management; requests a lookup table when the plan needs one.
+  void refreshConversion();
+  // GUI-thread failures of the conversion setup, reported like render
+  // errors, once per distinct message.
+  void reportConversionError(const QString &message);
 
   std::shared_ptr<const QImage> mImage;
   quint64 mImageGeneration = 0;
@@ -115,5 +152,15 @@ private:
   RenderSettings mSettings;
   ImageFilter mFilter;
   bool mSettled = false;
+  // Detected in setImage().
+  bool mImageIsHdr = false;
+  HdrSourceEncoding mHdrEncoding;
+  QColorSpace mImageColorSpace;
+  ToneMapping mToneMapping;
+  ColorManagement mColorManagement;
+  SourceConversion mConversion;
+  // Child object; built tables outlive image changes.
+  ColorLutBuilder *mLutBuilder = nullptr;
+  QString mLastConversionError;
   std::shared_ptr<RenderErrorChannel> mErrorChannel;
 };

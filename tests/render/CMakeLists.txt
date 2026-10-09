@@ -9,6 +9,8 @@ qt_add_executable(qimgv_render_tests
     referenceimages.cpp
     referenceimages.h
     tst_imagerenderer.cpp
+    # The HDR tests compare against the unchanged CPU tone mapper.
+    "${PROJECT_SOURCE_DIR}/qimgv/utils/hdrtonemapper.cpp"
 )
 
 target_link_libraries(qimgv_render_tests PRIVATE

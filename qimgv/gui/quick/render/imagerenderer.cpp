@@ -31,6 +31,10 @@ constexpr QLatin1StringView kResampleVertexShaderPath =
     ":/qimgv/render/shaders/resample.vert.qsb"_L1;
 constexpr QLatin1StringView kResampleFragmentShaderPath =
     ":/qimgv/render/shaders/resample.frag.qsb"_L1;
+constexpr QLatin1StringView kConvertVertexShaderPath =
+    ":/qimgv/render/shaders/convert.vert.qsb"_L1;
+constexpr QLatin1StringView kConvertFragmentShaderPath =
+    ":/qimgv/render/shaders/convert.frag.qsb"_L1;
 
 // Unit quad as a triangle strip; image.vert / boxreduce.vert stretch it over
 // the target.
@@ -41,6 +45,7 @@ constexpr quint32 kQuadVertexStride = 2 * sizeof(float);
 constexpr int kUniformBinding = 0;
 constexpr int kTextureBinding = 1;
 constexpr int kWeightTableBinding = 2;
+constexpr int kColorLutBinding = 2;
 
 // Transparency checkerboard, identical to ImageViewerV2's: 16 logical px
 // square tiles of 2 x 2 cells, light cells #999999, dark cells #666666.
@@ -65,6 +70,7 @@ constexpr int kMinimumReducedSide = 1;
 const QColor kReduceClearColor = Qt::transparent;
 
 constexpr QSize kLayoutTextureSize(1, 1);
+constexpr int kLayoutLutDepth = 1;
 constexpr float kClearDepth = 1.0f;
 constexpr quint32 kClearStencil = 0;
 
@@ -166,6 +172,77 @@ static_assert(offsetof(ResampleUniforms, finalPass) == 88);
 static_assert(offsetof(ResampleUniforms, tapCount) == 92);
 static_assert(sizeof(ResampleUniforms) % 16 == 0);
 
+// std140 mirror of the ConvertParams block in res/shaders/rhi/convert.*.
+struct ConvertUniforms {
+  // Values of the shader's sourceMode.
+  static constexpr qint32 kSourceEncoded = 0;
+  static constexpr qint32 kSourceToneMapped = 1;
+  // Values of the shader's colorMode.
+  static constexpr qint32 kColorNone = 0;
+  static constexpr qint32 kColorParametric = 1;
+  static constexpr qint32 kColorLut = 2;
+
+  float mvp[16]{};
+  float primariesRow0[4]{};
+  float primariesRow1[4]{};
+  float primariesRow2[4]{};
+  float colorRow0[4]{};
+  float colorRow1[4]{};
+  float colorRow2[4]{};
+  float sourceCurve0[4]{};
+  float sourceCurve1[4]{};
+  float targetCurve0[4]{};
+  float targetCurve1[4]{};
+  float dstSize[2]{};
+  float whiteScale = 0.0f;
+  float lutScale = 0.0f;
+  float lutOffset = 0.0f;
+  qint32 sourceMode = kSourceEncoded;
+  qint32 hdrTransfer = 0;
+  qint32 toneMapOperator = 0;
+  qint32 colorMode = kColorNone;
+  qint32 padding[3]{};
+};
+static_assert(offsetof(ConvertUniforms, primariesRow0) == 64);
+static_assert(offsetof(ConvertUniforms, primariesRow1) == 80);
+static_assert(offsetof(ConvertUniforms, primariesRow2) == 96);
+static_assert(offsetof(ConvertUniforms, colorRow0) == 112);
+static_assert(offsetof(ConvertUniforms, colorRow1) == 128);
+static_assert(offsetof(ConvertUniforms, colorRow2) == 144);
+static_assert(offsetof(ConvertUniforms, sourceCurve0) == 160);
+static_assert(offsetof(ConvertUniforms, sourceCurve1) == 176);
+static_assert(offsetof(ConvertUniforms, targetCurve0) == 192);
+static_assert(offsetof(ConvertUniforms, targetCurve1) == 208);
+static_assert(offsetof(ConvertUniforms, dstSize) == 224);
+static_assert(offsetof(ConvertUniforms, whiteScale) == 232);
+static_assert(offsetof(ConvertUniforms, lutScale) == 236);
+static_assert(offsetof(ConvertUniforms, lutOffset) == 240);
+static_assert(offsetof(ConvertUniforms, sourceMode) == 244);
+static_assert(offsetof(ConvertUniforms, hdrTransfer) == 248);
+static_assert(offsetof(ConvertUniforms, toneMapOperator) == 252);
+static_assert(offsetof(ConvertUniforms, colorMode) == 256);
+static_assert(sizeof(ConvertUniforms) % 16 == 0);
+
+// Values of the shader's hdrTransfer and toneMapOperator.
+static_assert(static_cast<int>(HdrTransfer::PQ) == 0);
+static_assert(static_cast<int>(HdrTransfer::HLG) == 1);
+static_assert(static_cast<int>(HdrTransfer::Linear) == 2);
+static_assert(static_cast<int>(RenderEnums::ToneMapOperator::Bt2408) == 0);
+static_assert(static_cast<int>(RenderEnums::ToneMapOperator::ReinhardJodie) == 1);
+static_assert(static_cast<int>(RenderEnums::ToneMapOperator::AcesFilmic) == 2);
+static_assert(static_cast<int>(RenderEnums::ToneMapOperator::Hable) == 3);
+
+// HDR primaries -> linear sRGB, HdrToneMapper's matrices (row-major).
+constexpr float kBt2020ToSrgb[3][3] = {
+    {1.6604910f, -0.5876411f, -0.0728499f},
+    {-0.1245505f, 1.1328999f, -0.0083494f},
+    {-0.0181508f, -0.1005789f, 1.1187297f}};
+constexpr float kP3ToSrgb[3][3] = {{1.2249402f, -0.2249402f, 0.0000000f},
+                                   {-0.0420569f, 1.0420569f, 0.0000000f},
+                                   {-0.0196376f, -0.0786361f, 1.0982737f}};
+constexpr float kIdentity3[3][3] = {
+    {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
+
 // Weight table of one resampling pass (resample.frag): column d describes
 // destination index d = output firstOutput + d, with its first source texel
 // (relative to the source texture's texel 0, source index sourceBase) in row
@@ -232,6 +309,72 @@ void setRow(float (&target)[4], const float (&row)[3]) {
   target[1] = row[1];
   target[2] = row[2];
   target[3] = 0.0f;
+}
+
+void setMatrixRow(float (&target)[4], const ColorMatrix3 &matrix, int row) {
+  target[0] = static_cast<float>(matrix[row * 3]);
+  target[1] = static_cast<float>(matrix[row * 3 + 1]);
+  target[2] = static_cast<float>(matrix[row * 3 + 2]);
+  target[3] = 0.0f;
+}
+
+void setCurve(float (&first)[4], float (&second)[4],
+              const TransferCurve &curve) {
+  first[0] = curve.a;
+  first[1] = curve.b;
+  first[2] = curve.c;
+  first[3] = curve.d;
+  second[0] = curve.e;
+  second[1] = curve.f;
+  second[2] = curve.g;
+  second[3] = 0.0f;
+}
+
+// Uniforms of the conversion pass shared by every tile (size and projection
+// are per tile); lutSize is the side of the bound lookup table.
+ConvertUniforms conversionUniforms(const SourceConversion &conversion,
+                                   int lutSize) {
+  ConvertUniforms uniforms;
+  if (conversion.hdr) {
+    uniforms.sourceMode = conversion.toneMapping.enabled
+                              ? ConvertUniforms::kSourceToneMapped
+                              : ConvertUniforms::kSourceEncoded;
+    uniforms.hdrTransfer = static_cast<qint32>(conversion.hdrEncoding.transfer);
+    uniforms.toneMapOperator =
+        static_cast<qint32>(conversion.toneMapping.op);
+    const float white = conversion.toneMapping.whiteNits > 0.0f
+                            ? conversion.toneMapping.whiteNits
+                            : ToneMapping::kDefaultWhiteNits;
+    uniforms.whiteScale = 1.0f / white;
+  }
+  const auto &primaries =
+      conversion.hdrEncoding.primaries == HdrPrimaries::Bt2020 ? kBt2020ToSrgb
+      : conversion.hdrEncoding.primaries == HdrPrimaries::DisplayP3
+          ? kP3ToSrgb
+          : kIdentity3;
+  setRow(uniforms.primariesRow0, primaries[0]);
+  setRow(uniforms.primariesRow1, primaries[1]);
+  setRow(uniforms.primariesRow2, primaries[2]);
+
+  const ParametricColorTransform &parametric = conversion.color.parametric;
+  setMatrixRow(uniforms.colorRow0, parametric.matrix, 0);
+  setMatrixRow(uniforms.colorRow1, parametric.matrix, 1);
+  setMatrixRow(uniforms.colorRow2, parametric.matrix, 2);
+  setCurve(uniforms.sourceCurve0, uniforms.sourceCurve1,
+           parametric.sourceCurve);
+  setCurve(uniforms.targetCurve0, uniforms.targetCurve1,
+           parametric.targetCurve);
+  if (conversion.color.kind == ColorTransformKind::Parametric) {
+    uniforms.colorMode = ConvertUniforms::kColorParametric;
+  } else if (conversion.color.kind == ColorTransformKind::Lut &&
+             conversion.lut && lutSize > 0) {
+    uniforms.colorMode = ConvertUniforms::kColorLut;
+    // Lattice point i of n lies at the centre of texel i.
+    uniforms.lutScale =
+        static_cast<float>(lutSize - 1) / static_cast<float>(lutSize);
+    uniforms.lutOffset = 0.5f / static_cast<float>(lutSize);
+  }
+  return uniforms;
 }
 
 // Device-pixel geometry of the image in the colour buffer.
@@ -415,6 +558,7 @@ void ImageRenderer::initialize(QRhiCommandBuffer *cb) {
     mDeviceResourcesReady = createDeviceResources(cb);
     mReduceReady = mDeviceResourcesReady && createReduceResources();
     mResampleReady = mReduceReady && createResampleResources();
+    mConvertReady = mReduceReady && createConvertResources();
   }
   if (mDeviceResourcesReady && !ensurePipeline())
     mPipeline.reset();
@@ -577,6 +721,56 @@ bool ImageRenderer::createResampleResources() {
   return true;
 }
 
+bool ImageRenderer::createConvertResources() {
+  if (!loadShader(kConvertVertexShaderPath, mConvertVertexShader) ||
+      !loadShader(kConvertFragmentShaderPath, mConvertFragmentShader))
+    return false;
+  if (!mRhi->isFeatureSupported(QRhi::ThreeDimensionalTextures) ||
+      !mRhi->isTextureFormatSupported(QRhiTexture::RGBA16F,
+                                      QRhiTexture::ThreeDimensional)) {
+    reportError(u"The GPU has no RGBA16F 3D textures; HDR tone mapping and "
+                u"colour management are not available"_s);
+    return false;
+  }
+
+  // Trilinear interpolation between the lattice points of the lookup table.
+  mLutSampler.reset(mRhi->newSampler(
+      QRhiSampler::Linear, QRhiSampler::Linear, QRhiSampler::None,
+      QRhiSampler::ClampToEdge, QRhiSampler::ClampToEdge,
+      QRhiSampler::ClampToEdge));
+  mLayoutLut.reset(mRhi->newTexture(
+      QRhiTexture::RGBA16F, kLayoutTextureSize.width(),
+      kLayoutTextureSize.height(), kLayoutLutDepth, 1,
+      QRhiTexture::ThreeDimensional));
+  mConvertLayoutUniforms.reset(mRhi->newBuffer(
+      QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, sizeof(ConvertUniforms)));
+  if (!mLutSampler->create() || !mLayoutLut->create() ||
+      !mConvertLayoutUniforms->create()) {
+    reportError(u"Cannot create the colour conversion resources"_s);
+    return false;
+  }
+  // convert.frag reads exact texels with texelFetch(); the sampler of the
+  // exact downsample only completes the combined image sampler binding.
+  mConvertLayoutBindings.reset(mRhi->newShaderResourceBindings());
+  mConvertLayoutBindings->setBindings(
+      {QRhiShaderResourceBinding::uniformBuffer(
+           kUniformBinding,
+           QRhiShaderResourceBinding::VertexStage |
+               QRhiShaderResourceBinding::FragmentStage,
+           mConvertLayoutUniforms.get()),
+       QRhiShaderResourceBinding::sampledTexture(
+           kTextureBinding, QRhiShaderResourceBinding::FragmentStage,
+           mLayoutTexture.get(), mReduceSampler.get()),
+       QRhiShaderResourceBinding::sampledTexture(
+           kColorLutBinding, QRhiShaderResourceBinding::FragmentStage,
+           mLayoutLut.get(), mLutSampler.get())});
+  if (!mConvertLayoutBindings->create()) {
+    reportError(u"Cannot create the colour conversion layout bindings"_s);
+    return false;
+  }
+  return true;
+}
+
 bool ImageRenderer::ensurePipeline() {
   QRhiRenderTarget *target = renderTarget();
   if (!target) {
@@ -631,7 +825,6 @@ ImageRenderer::passPipeline(PassKind kind, QRhiTexture::Format format,
       return entry.pipeline.get();
   }
 
-  const bool reduce = kind == PassKind::BoxReduce;
   PassPipeline entry;
   entry.kind = kind;
   entry.format = format;
@@ -640,24 +833,34 @@ ImageRenderer::passPipeline(PassKind kind, QRhiTexture::Format format,
       mRhi->newGraphicsPipeline());
   // Every destination texel is written once; no blending.
   pipeline->setTopology(QRhiGraphicsPipeline::TriangleStrip);
-  pipeline->setShaderStages(
-      {{QRhiShaderStage::Vertex,
-        reduce ? mReduceVertexShader : mResampleVertexShader},
-       {QRhiShaderStage::Fragment,
-        reduce ? mReduceFragmentShader : mResampleFragmentShader}});
+  const QShader *vertexShader = &mReduceVertexShader;
+  const QShader *fragmentShader = &mReduceFragmentShader;
+  QRhiShaderResourceBindings *layoutBindings = mReduceLayoutBindings.get();
+  QString failure = u"Cannot create the exact downsample pipeline"_s;
+  if (kind == PassKind::Resample) {
+    vertexShader = &mResampleVertexShader;
+    fragmentShader = &mResampleFragmentShader;
+    layoutBindings = mResampleLayoutBindings.get();
+    failure = u"Cannot create the resampling pipeline"_s;
+  } else if (kind == PassKind::Convert) {
+    vertexShader = &mConvertVertexShader;
+    fragmentShader = &mConvertFragmentShader;
+    layoutBindings = mConvertLayoutBindings.get();
+    failure = u"Cannot create the colour conversion pipeline"_s;
+  }
+  pipeline->setShaderStages({{QRhiShaderStage::Vertex, *vertexShader},
+                             {QRhiShaderStage::Fragment, *fragmentShader}});
   QRhiVertexInputLayout inputLayout;
   inputLayout.setBindings({{kQuadVertexStride}});
   inputLayout.setAttributes(
       {{0, 0, QRhiVertexInputAttribute::Float2, 0}});
   pipeline->setVertexInputLayout(inputLayout);
-  pipeline->setShaderResourceBindings(reduce ? mReduceLayoutBindings.get()
-                                             : mResampleLayoutBindings.get());
+  pipeline->setShaderResourceBindings(layoutBindings);
   pipeline->setRenderPassDescriptor(entry.renderPass.get());
   if (pipeline->create())
     entry.pipeline = std::move(pipeline);
   else
-    reportError(reduce ? u"Cannot create the exact downsample pipeline"_s
-                       : u"Cannot create the resampling pipeline"_s);
+    reportError(failure);
   mPassPipelines.push_back(std::move(entry));
   return mPassPipelines.back().pipeline.get();
 }
@@ -666,6 +869,13 @@ void ImageRenderer::releaseDeviceResources() {
   releaseTiles();
   mUploadedGeneration.reset();
   mPassPipelines.clear();
+  mLutTexture.reset();
+  mLutData.reset();
+  mConvertLayoutBindings.reset();
+  mConvertLayoutUniforms.reset();
+  mLayoutLut.reset();
+  mLutSampler.reset();
+  mConvertReady = false;
   mResampleLayoutBindings.reset();
   mResampleLayoutUniforms.reset();
   mResampleReady = false;
@@ -695,9 +905,26 @@ int ImageRenderer::effectiveTileSizeLimit() const {
 }
 
 bool ImageRenderer::needsUpload() const {
-  return !mUploadedGeneration ||
-         *mUploadedGeneration != mFrame.imageGeneration ||
-         (mFrame.image && mUploadedTileSizeLimit != effectiveTileSizeLimit());
+  if (!mUploadedGeneration || *mUploadedGeneration != mFrame.imageGeneration)
+    return true;
+  if (!mFrame.image)
+    return false;
+  if (mUploadedTileSizeLimit != effectiveTileSizeLimit() ||
+      mUploadedConverted != wantsConversion())
+    return true;
+  // An SDR source was released after its conversion; a new conversion needs
+  // it again.
+  return mUploadedConverted && !mSourcesRetained &&
+         mConvertedWith != mFrame.conversion;
+}
+
+bool ImageRenderer::wantsConversion() const {
+  return mConvertReady && mFrame.conversion.isActive();
+}
+
+bool ImageRenderer::needsConversion() const {
+  return mUploadedConverted && !mTiles.empty() && mTiles.front().source &&
+         mConvertedWith != mFrame.conversion;
 }
 
 void ImageRenderer::releaseTiles() {
@@ -705,6 +932,21 @@ void ImageRenderer::releaseTiles() {
   // flight, so the tiles can be dropped immediately.
   mTiles.clear();
   mImageHasAlpha = false;
+  mUploadedConverted = false;
+  mSourcesRetained = false;
+  mConvertedWith.reset();
+}
+
+void ImageRenderer::invalidateFilteredTiles() {
+  for (GpuTile &tile : mTiles) {
+    tile.reducedScale.reset();
+    tile.reduced.reset();
+    tile.reducedBindings.reset();
+    tile.resampledScale.reset();
+    tile.resampledOutputs = QRect();
+    tile.resampled.reset();
+    tile.resampledBindings.reset();
+  }
 }
 
 bool ImageRenderer::generatesMipsByBoxReduce() const {
@@ -720,9 +962,10 @@ QRhiTexture::Flags ImageRenderer::tileTextureFlags() const {
              : QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
 }
 
-bool ImageRenderer::createTile(GpuTile &tile, QRhiTexture::Format format) {
+bool ImageRenderer::createTile(GpuTile &tile, QRhiTexture::Format format,
+                               QRhiTexture::Flags extraFlags) {
   tile.texture.reset(mRhi->newTexture(format, tile.region.texture.size(), 1,
-                                      tileTextureFlags()));
+                                      tileTextureFlags() | extraFlags));
   if (!tile.texture->create()) {
     reportError(u"Cannot create a %1 x %2 image texture"_s.arg(
         tile.region.texture.width()).arg(tile.region.texture.height()));
@@ -772,17 +1015,45 @@ void ImageRenderer::uploadImage(QRhiResourceUpdateBatch *updates) {
     return;
   }
 
+  const bool bgra8 = mRhi->isTextureFormatSupported(QRhiTexture::BGRA8);
   // The mip chain is generated by the GPU, or rendered by the box-reduce
   // pipeline (generatesMipsByBoxReduce()), so the format must support that.
   const TextureFormatSupport support{
-      mRhi->isTextureFormatSupported(QRhiTexture::BGRA8),
-      mRhi->isTextureFormatSupported(QRhiTexture::RGBA16F,
-                                     tileTextureFlags()) &&
-          (!generatesMipsByBoxReduce() ||
-           mRhi->isTextureFormatSupported(QRhiTexture::RGBA16F,
-                                          QRhiTexture::RenderTarget))};
-  const TextureUploadFormat format =
+      bgra8, mRhi->isTextureFormatSupported(QRhiTexture::RGBA16F,
+                                            tileTextureFlags()) &&
+                 (!generatesMipsByBoxReduce() ||
+                  mRhi->isTextureFormatSupported(QRhiTexture::RGBA16F,
+                                                 QRhiTexture::RenderTarget))};
+  TextureUploadFormat format =
       chooseTextureUploadFormat(image.format(), support);
+  // Displayed texture of the conversion pass: rendered to, then mipmapped.
+  QRhiTexture::Format convertedFormat = QRhiTexture::RGBA8;
+  const bool convert = wantsConversion();
+  if (mFrame.conversion.isActive() && !convert) {
+    reportError(u"Colour conversion is not available; the image is shown "
+                u"without tone mapping or colour management"_s);
+  }
+  if (convert) {
+    // The source is only read with texelFetch().
+    const std::optional<TextureUploadFormat> sourceFormat =
+        chooseConversionSourceFormat(
+            image.format(), mFrame.conversion.hdr,
+            TextureFormatSupport{
+                bgra8, mRhi->isTextureFormatSupported(QRhiTexture::RGBA16F),
+                mRhi->isTextureFormatSupported(QRhiTexture::RGBA32F)});
+    if (!sourceFormat) {
+      reportError(u"The GPU has no RGBA16F textures; HDR images cannot be "
+                  u"shown"_s);
+      return;
+    }
+    format = *sourceFormat;
+    convertedFormat = convertedTextureFormat(format);
+    if (convertedFormat == QRhiTexture::RGBA16F &&
+        !mRhi->isTextureFormatSupported(
+            QRhiTexture::RGBA16F,
+            tileTextureFlags() | QRhiTexture::RenderTarget))
+      convertedFormat = QRhiTexture::RGBA8;
+  }
   // Formats that match a texture format are uploaded straight from the
   // shared image; everything else is converted one tile at a time, so that a
   // huge image is never converted as a whole.
@@ -792,8 +1063,19 @@ void ImageRenderer::uploadImage(QRhiResourceUpdateBatch *updates) {
   for (qsizetype index = 0; index < layout.size(); ++index) {
     GpuTile &tile = tiles[index];
     tile.region = layout[index];
-    if (!createTile(tile, format.textureFormat))
+    if (convert) {
+      if (!createTile(tile, convertedFormat, QRhiTexture::RenderTarget))
+        return;
+      tile.source.reset(mRhi->newTexture(format.textureFormat,
+                                         tile.region.texture.size()));
+      if (!tile.source->create()) {
+        reportError(u"Cannot create a %1 x %2 source texture"_s.arg(
+            tile.region.texture.width()).arg(tile.region.texture.height()));
+        return;
+      }
+    } else if (!createTile(tile, format.textureFormat)) {
       return;
+    }
 
     QRhiTextureSubresourceUploadDescription source;
     if (direct) {
@@ -809,6 +1091,13 @@ void ImageRenderer::uploadImage(QRhiResourceUpdateBatch *updates) {
           tile.region.texture.width()).arg(tile.region.texture.height()));
       return;
     }
+    if (convert) {
+      // The displayed texture and its mip chain are rendered by
+      // convertTiles().
+      updates->uploadTexture(tile.source.get(),
+                             QRhiTextureUploadEntry(0, 0, source));
+      continue;
+    }
     updates->uploadTexture(tile.texture.get(),
                            QRhiTextureUploadEntry(0, 0, source));
     if (!generatesMipsByBoxReduce())
@@ -816,7 +1105,101 @@ void ImageRenderer::uploadImage(QRhiResourceUpdateBatch *updates) {
   }
   mTiles = std::move(tiles);
   mImageHasAlpha = image.hasAlphaChannel();
+  mUploadedConverted = convert;
+  mSourcesRetained = convert && mFrame.conversion.hdr;
   mLastError.clear();
+}
+
+//------------------------------------------------------------------------------
+QRhiTexture *ImageRenderer::conversionLut(QRhiCommandBuffer *cb) {
+  const SourceConversion &conversion = mFrame.conversion;
+  if (conversion.color.kind != ColorTransformKind::Lut || !conversion.lut)
+    return mLayoutLut.get();
+  if (mLutTexture && mLutData == conversion.lut)
+    return mLutTexture.get();
+
+  mLutTexture.reset();
+  mLutData.reset();
+  const ColorLut &lut = *conversion.lut;
+  const std::size_t sliceValues =
+      static_cast<std::size_t>(lut.size) * lut.size * ColorLut::kChannels;
+  if (lut.size <= 0 ||
+      lut.halfRgba.size() != sliceValues * static_cast<std::size_t>(lut.size)) {
+    reportError(u"The colour lookup table has an invalid size"_s);
+    return nullptr;
+  }
+  auto texture = std::unique_ptr<QRhiTexture>(
+      mRhi->newTexture(QRhiTexture::RGBA16F, lut.size, lut.size, lut.size, 1,
+                       QRhiTexture::ThreeDimensional));
+  if (!texture->create()) {
+    reportError(u"Cannot create a %1^3 colour lookup table"_s.arg(lut.size));
+    return nullptr;
+  }
+  QRhiResourceUpdateBatch *updates = mRhi->nextResourceUpdateBatch();
+  if (!updates) {
+    reportError(u"No QRhi resource update batch is available"_s);
+    return nullptr;
+  }
+  // One upload entry per blue slice (the layer of a 3D texture).
+  QList<QRhiTextureUploadEntry> slices;
+  slices.reserve(lut.size);
+  const quint32 sliceBytes =
+      static_cast<quint32>(sliceValues * sizeof(quint16));
+  for (int slice = 0; slice < lut.size; ++slice) {
+    slices.append(QRhiTextureUploadEntry(
+        slice, 0,
+        QRhiTextureSubresourceUploadDescription(
+            lut.halfRgba.data() + slice * sliceValues, sliceBytes)));
+  }
+  QRhiTextureUploadDescription description;
+  description.setEntries(slices.cbegin(), slices.cend());
+  updates->uploadTexture(texture.get(), description);
+  cb->resourceUpdate(updates);
+  mLutTexture = std::move(texture);
+  mLutData = conversion.lut;
+  return mLutTexture.get();
+}
+
+// Renders every tile's source through the conversion pass into level 0 of
+// its displayed texture, then builds the mip chain from the result. Cached
+// exact downsamples and resamplings were built from the previous conversion.
+void ImageRenderer::convertTiles(QRhiCommandBuffer *cb) {
+  mConvertedWith = mFrame.conversion;
+  invalidateFilteredTiles();
+  QRhiTexture *lut = conversionLut(cb);
+  // Without its table (reported) the conversion still decodes and tone maps;
+  // it only skips the colour transform.
+  if (!lut)
+    lut = mLayoutLut.get();
+  QRhiResourceUpdateBatch *mips = mRhi->nextResourceUpdateBatch();
+  if (!mips) {
+    reportError(u"No QRhi resource update batch is available"_s);
+    return;
+  }
+  const int lutSize = lut == mLutTexture.get() && mLutData ? mLutData->size : 0;
+  ConvertUniforms uniforms = conversionUniforms(mFrame.conversion, lutSize);
+  for (GpuTile &tile : mTiles) {
+    const QSize size = tile.texture->pixelSize();
+    const QMatrix4x4 mvp = reduceProjection(mRhi, size);
+    std::memcpy(uniforms.mvp, mvp.constData(), sizeof(uniforms.mvp));
+    uniforms.dstSize[0] = static_cast<float>(size.width());
+    uniforms.dstSize[1] = static_cast<float>(size.height());
+    const OffscreenPass pass{PassKind::Convert, tile.source.get(), nullptr,
+                             lut,               size,              &uniforms,
+                             sizeof(uniforms),  {}};
+    if (!recordPassInto(cb, pass, tile.texture.get()))
+      continue;
+    if (generatesMipsByBoxReduce())
+      generateTileMips(cb, tile, mips);
+    else
+      mips->generateMips(tile.texture.get());
+  }
+  cb->resourceUpdate(mips);
+  if (mSourcesRetained)
+    return;
+  // Read by the passes just recorded: released once the frame is done.
+  for (GpuTile &tile : mTiles)
+    FrameTexture released(tile.source.release());
 }
 
 //------------------------------------------------------------------------------
@@ -826,21 +1209,31 @@ void ImageRenderer::uploadImage(QRhiResourceUpdateBatch *updates) {
 // it.
 ImageRenderer::FrameTexture ImageRenderer::recordOffscreenPass(
     QRhiCommandBuffer *cb, const OffscreenPass &pass) {
-  QRhiTexture *source = pass.source;
   const QSize size = pass.size;
-  const QRhiTexture::Format format = source->format();
   FrameTexture texture(mRhi->newTexture(
-      format, size, 1, QRhiTexture::RenderTarget | pass.extraFlags));
+      pass.source->format(), size, 1,
+      QRhiTexture::RenderTarget | pass.extraFlags));
   if (!texture->create()) {
     reportError(u"Cannot create a %1 x %2 intermediate texture"_s.arg(
         size.width()).arg(size.height()));
     return {};
   }
+  if (!recordPassInto(cb, pass, texture.get()))
+    return {};
+  return texture;
+}
+
+bool ImageRenderer::recordPassInto(QRhiCommandBuffer *cb,
+                                   const OffscreenPass &pass,
+                                   QRhiTexture *target) {
+  QRhiTexture *source = pass.source;
+  const QSize size = target->pixelSize();
+  const QRhiTexture::Format format = target->format();
   // Declared in dependency order, so that the release requests are issued
   // in reverse (bindings and target before the render pass descriptor).
   FrameResource<QRhiTextureRenderTarget> renderTarget(
       mRhi->newTextureRenderTarget(
-          QRhiTextureRenderTargetDescription(QRhiColorAttachment(texture.get()))));
+          QRhiTextureRenderTargetDescription(QRhiColorAttachment(target))));
   FrameResource<QRhiRenderPassDescriptor> renderPass(
       renderTarget->newCompatibleRenderPassDescriptor());
   renderTarget->setRenderPassDescriptor(renderPass.get());
@@ -848,7 +1241,7 @@ ImageRenderer::FrameTexture ImageRenderer::recordOffscreenPass(
       QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, pass.uniformSize));
   if (!renderTarget->create() || !uniformBuffer->create()) {
     reportError(u"Cannot create an intermediate render target"_s);
-    return {};
+    return false;
   }
   FrameResource<QRhiShaderResourceBindings> bindings(
       mRhi->newShaderResourceBindings());
@@ -866,20 +1259,25 @@ ImageRenderer::FrameTexture ImageRenderer::recordOffscreenPass(
         kWeightTableBinding, QRhiShaderResourceBinding::FragmentStage,
         pass.weights, mReduceSampler.get()));
   }
+  if (pass.colorLut) {
+    passBindings.append(QRhiShaderResourceBinding::sampledTexture(
+        kColorLutBinding, QRhiShaderResourceBinding::FragmentStage,
+        pass.colorLut, mLutSampler.get()));
+  }
   bindings->setBindings(passBindings.cbegin(), passBindings.cend());
   if (!bindings->create()) {
     reportError(u"Cannot create intermediate pass shader bindings"_s);
-    return {};
+    return false;
   }
   QRhiGraphicsPipeline *pipeline =
       passPipeline(pass.kind, format, renderPass.get());
   if (!pipeline)
-    return {};
+    return false;
 
   QRhiResourceUpdateBatch *updates = mRhi->nextResourceUpdateBatch();
   if (!updates) {
     reportError(u"No QRhi resource update batch is available"_s);
-    return {};
+    return false;
   }
   updates->updateDynamicBuffer(uniformBuffer.get(), 0, pass.uniformSize,
                                pass.uniforms);
@@ -894,7 +1292,7 @@ ImageRenderer::FrameTexture ImageRenderer::recordOffscreenPass(
   cb->setVertexInput(0, 1, &vertexInput);
   cb->draw(kQuadVertexCount);
   cb->endPass();
-  return texture;
+  return true;
 }
 
 // Records one exact-area box pass that reduces level 0 of source
@@ -915,8 +1313,8 @@ ImageRenderer::recordBoxPass(QRhiCommandBuffer *cb, QRhiTexture *source,
   uniforms.ratio[1] = static_cast<float>(size.height()) /
                       static_cast<float>(sourceSize.height());
   return recordOffscreenPass(
-      cb, OffscreenPass{PassKind::BoxReduce, source, nullptr, size, &uniforms,
-                        sizeof(uniforms), extraFlags});
+      cb, OffscreenPass{PassKind::BoxReduce, source, nullptr, nullptr, size,
+                        &uniforms, sizeof(uniforms), extraFlags});
 }
 
 //------------------------------------------------------------------------------
@@ -1049,8 +1447,8 @@ void ImageRenderer::buildResampledTile(QRhiCommandBuffer *cb, GpuTile &tile,
   horizontal.tapCount = columns.taps;
   FrameTexture rows = recordOffscreenPass(
       cb, OffscreenPass{PassKind::Resample, tile.texture.get(),
-                        columnTable.get(), horizontalSize, &horizontal,
-                        sizeof(horizontal)});
+                        columnTable.get(), nullptr, horizontalSize,
+                        &horizontal, sizeof(horizontal)});
   if (!rows)
     return;
 
@@ -1067,7 +1465,8 @@ void ImageRenderer::buildResampledTile(QRhiCommandBuffer *cb, GpuTile &tile,
   vertical.tapCount = rowWeights.taps;
   FrameTexture result = recordOffscreenPass(
       cb, OffscreenPass{PassKind::Resample, rows.get(), rowTable.get(),
-                        outputs.size(), &vertical, sizeof(vertical)});
+                        nullptr, outputs.size(), &vertical,
+                        sizeof(vertical)});
   if (!result)
     return;
 
@@ -1149,7 +1548,7 @@ void ImageRenderer::render(QRhiCommandBuffer *cb) {
   if (mPipeline && needsUpload()) {
     uploadImage(updates);
     updatesHaveUploads = !mTiles.empty();
-    if (generatesMipsByBoxReduce() && !mTiles.empty()) {
+    if (generatesMipsByBoxReduce() && !mTiles.empty() && !mUploadedConverted) {
       if (!submitUploads())
         return;
       QRhiResourceUpdateBatch *copies = mRhi->nextResourceUpdateBatch();
@@ -1161,6 +1560,12 @@ void ImageRenderer::render(QRhiCommandBuffer *cb) {
         generateTileMips(cb, tile, copies);
       cb->resourceUpdate(copies);
     }
+  }
+  if (mPipeline && needsConversion()) {
+    // The conversion reads the uploaded sources.
+    if (!submitUploads())
+      return;
+    convertTiles(cb);
   }
 
   const QSize targetSize = target->pixelSize();

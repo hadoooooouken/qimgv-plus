@@ -11,5 +11,6 @@ int main(int argc, char **argv) {
   status |= runViewTransformTests(argc, argv);
   status |= runTileGridTests(argc, argv);
   status |= runImageFilterTests(argc, argv);
+  status |= runColorTransformTests(argc, argv);
   return status;
 }

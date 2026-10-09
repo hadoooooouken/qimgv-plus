@@ -1,13 +1,16 @@
 #pragma once
 
 #include <QColor>
+#include <QColorSpace>
 #include <QImage>
 #include <QObject>
 #include <QPointF>
 #include <QtQml/qqmlregistration.h>
 #include <memory>
 
+#include "gui/quick/render/colortransformplan.h"
 #include "utils/coloradjustments.h"
+#include "utils/hdrsource.h"
 
 // Value types handed from ImageRenderItem (GUI thread) to ImageRenderer
 // (render thread) in QQuickRhiItemRenderer::synchronize().
@@ -51,6 +54,19 @@ enum class Resampling {
   Mks2021,
 };
 Q_ENUM_NS(Resampling)
+
+// HDR tone mapping operators, the values of ::ToneMapOperator
+// (utils/hdrtonemapper.h) and of Settings::hdrToneMappingOperator().
+enum class ToneMapOperator {
+  // ITU-R BT.2408 luminance knee with a tanh roll-off.
+  Bt2408,
+  ReinhardJodie,
+  // Narkowicz fit of the ACES filmic curve.
+  AcesFilmic,
+  // Uncharted 2 filmic curve.
+  Hable,
+};
+Q_ENUM_NS(ToneMapOperator)
 } // namespace RenderEnums
 
 // Where the image is drawn, in the units of ViewTransform (S0.4).
@@ -100,6 +116,64 @@ struct ImageFilter {
   friend bool operator==(const ImageFilter &, const ImageFilter &) = default;
 };
 
+// HDR tone mapping of HDR images (isHdrImage()), as HdrToneMapper does on
+// the CPU (Settings::hdrToneMapping*()).
+struct ToneMapping {
+  // BT.2408 reference white; also HdrToneMapper's value for a white level
+  // that is not positive.
+  static constexpr float kDefaultWhiteNits = 203.0f;
+
+  // Off: the stored samples are clamped to [0, 1] and shown as sRGB, like
+  // the CPU's fallback conversion.
+  bool enabled = true;
+  RenderEnums::ToneMapOperator op = RenderEnums::ToneMapOperator::Bt2408;
+  // Luminance in nits that is shown as SDR white.
+  float whiteNits = kDefaultWhiteNits;
+
+  friend bool operator==(const ToneMapping &, const ToneMapping &) = default;
+};
+
+// Display colour management (Settings::colorManagementEnabled()). target is
+// the display colour space ColorManager::getTargetColorSpace() returns; the
+// renderer never asks ColorManager itself.
+struct ColorManagement {
+  bool enabled = false;
+  QColorSpace target;
+
+  friend bool operator==(const ColorManagement &,
+                         const ColorManagement &) = default;
+};
+
+// How ImageRenderer turns the uploaded source pixels into the displayed
+// texture (res/shaders/rhi/convert.frag), resolved by ImageRenderItem on the
+// GUI thread. Inactive for an SDR image already in the display colour space:
+// the image is then uploaded and drawn as it is.
+struct SourceConversion {
+  // The image is HDR: its samples are decoded with hdrEncoding and tone
+  // mapped (or clamped) into linear sRGB, which is then the source of the
+  // colour transform.
+  bool hdr = false;
+  HdrSourceEncoding hdrEncoding;
+  // HDR images only; the default otherwise.
+  ToneMapping toneMapping;
+  // Identity, Parametric or Lut; an Unsupported plan is resolved to
+  // Identity by the item, which reports it.
+  ColorTransformPlan color;
+  // The table of a Lut plan; a Lut plan without one is not applied yet.
+  std::shared_ptr<const ColorLut> lut;
+
+  [[nodiscard]] bool appliesColorTransform() const {
+    return color.kind == ColorTransformKind::Parametric ||
+           (color.kind == ColorTransformKind::Lut && lut);
+  }
+  [[nodiscard]] bool isActive() const {
+    return hdr || appliesColorTransform();
+  }
+
+  friend bool operator==(const SourceConversion &,
+                         const SourceConversion &) = default;
+};
+
 // Everything one frame of ImageRenderer depends on.
 struct RenderFrame {
   // Immutable and shared with the GUI thread; null when no image is shown.
@@ -110,6 +184,7 @@ struct RenderFrame {
   ImagePlacement placement;
   RenderSettings settings;
   ImageFilter filter;
+  SourceConversion conversion;
   // The view is not being zoomed, panned or animated. Only then does the
   // renderer spend the extra passes of the exact-ratio downsample and of the
   // resampling kernel.

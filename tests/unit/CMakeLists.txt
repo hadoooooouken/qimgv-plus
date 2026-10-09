@@ -4,6 +4,7 @@ set(QIMGV_APP_SOURCE_DIR "${PROJECT_SOURCE_DIR}/qimgv")
 
 qt_add_executable(qimgv_tests
     main.cpp
+    tst_colortransform.cpp
     tst_qimgv.cpp
     tst_imagefilter.cpp
     tst_tilegrid.cpp
@@ -20,7 +21,8 @@ target_include_directories(qimgv_tests PRIVATE "${QIMGV_APP_SOURCE_DIR}")
 target_link_libraries(qimgv_tests PRIVATE
     Qt6::Core
     Qt6::Test
-    # TileGrid, ImageFilterMode (moc data of RenderEnums).
+    # TileGrid, ImageFilterMode (moc data of RenderEnums), colour transform
+    # plans and ColorLutBuilder.
     qimgv_render
 )
 

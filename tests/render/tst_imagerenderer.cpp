@@ -1,5 +1,7 @@
+#include <QColorSpace>
 #include <QCoreApplication>
 #include <QElapsedTimer>
+#include <QFloat16>
 #include <QQuickWindow>
 #include <QRandomGenerator>
 #include <QSGRendererInterface>
@@ -14,6 +16,7 @@
 #include "gui/quick/render/tilegrid.h"
 #include "offscreenquick.h"
 #include "referenceimages.h"
+#include "utils/hdrtonemapper.h"
 
 namespace {
 using namespace Qt::StringLiterals;
@@ -144,6 +147,41 @@ constexpr int kLatencyRuns = 9;
 constexpr qreal kLatencyScaleStep = 0.001;
 constexpr quint32 kRgb32OpaqueBits = 0xFF000000u;
 
+// HDR tone mapping against HdrToneMapper (the unchanged CPU code, linked into
+// this test). The GPU decodes 16-bit integer codes from half floats, evaluates
+// the transfer, tanh and sRGB curves analytically where the CPU uses tables,
+// and keeps the result in a half-float texture; the CPU rounds to 8 bits.
+constexpr int kToneMapTolerance = 2;
+// Colour management against QImage::convertedToColorSpace() (what
+// ColorManager does): Qt's transfer tables against analytic curves.
+constexpr int kColorManagementTolerance = 2;
+// Targets with a pure gamma curve (Adobe RGB): Qt's 8-bit conversion tables
+// flatten the steep start of the inverse curve, so the CPU shows the darkest
+// shades up to 4 levels too dark where the GPU's analytic curve is exact
+// (e.g. a small green contribution to Adobe RGB blue becomes 0 instead of
+// 4).
+constexpr int kPureGammaShadowTolerance = 4;
+// Through a 33^3 lookup table: trilinear interpolation between the lattice
+// points; largest for the darkest shades of a curve that is infinitely steep
+// at black (the test's 2.0 gamma table curve).
+constexpr int kColorLutTolerance = 4;
+// HDR tone mapping followed by colour management: the CPU rounds to 8 bits
+// in between.
+constexpr int kHdrColorManagementTolerance = 3;
+// A converted HDR image, then filtered: the CPU reference is the 8-bit tone
+// mapped image, the GPU filters the half-float conversion.
+constexpr int kConvertedFilterTolerance = 3;
+// Peak of the random linear-light test images, in units of the 80 nit scRGB
+// white: 2000 nits.
+constexpr float kLinearPeak = 25.0f;
+// Slightly negative samples exercise the gamut compression.
+constexpr float kLinearFloor = -0.05f;
+constexpr float kBrightWhiteNits = 400.0f;
+constexpr int kLutWaitTimeoutMs = 10000;
+constexpr int kTransferTableSize = 1024;
+constexpr double kTableGamma = 2.0;
+constexpr double kChannelMax16 = 65535.0;
+
 QRhi::Implementation rhiBackend = QRhi::D3D11;
 
 QSGRendererInterface::GraphicsApi graphicsApiFor(QRhi::Implementation backend) {
@@ -207,6 +245,110 @@ QImage makeHugeImage() {
     }
   }
   return image;
+}
+
+enum class HdrKind { Pq, PqAlpha, Hlg, LinearHalf, LinearFloat };
+
+// Random HDR samples in the formats the image plugins decode into: 16-bit
+// PQ / HLG codes tagged with a BT.2100 colour space, untagged half-float
+// linear light (BT.2020 primaries, the tone mapper's default) and
+// float linear light tagged linear sRGB.
+QImage makeHdrImage(HdrKind kind, QSize size) {
+  QRandomGenerator generator(kImageSeed);
+  constexpr quint32 k16BitRange = 65536;
+  if (kind == HdrKind::LinearHalf || kind == HdrKind::LinearFloat) {
+    const bool half = kind == HdrKind::LinearHalf;
+    QImage image(size, half ? QImage::Format_RGBA16FPx4
+                            : QImage::Format_RGBA32FPx4);
+    if (!half)
+      image.setColorSpace(QColorSpace(QColorSpace::SRgbLinear));
+    for (int y = 0; y < size.height(); ++y) {
+      for (int x = 0; x < size.width(); ++x) {
+        float values[kChannels];
+        for (int c = 0; c < kChannels - 1; ++c) {
+          values[c] = kLinearFloor + float(generator.generateDouble()) *
+                                         (kLinearPeak - kLinearFloor);
+        }
+        values[kChannels - 1] = 1.0f;
+        for (int c = 0; c < kChannels; ++c) {
+          if (half) {
+            reinterpret_cast<qfloat16 *>(image.scanLine(y))[x * kChannels + c] =
+                qfloat16(values[c]);
+          } else {
+            reinterpret_cast<float *>(image.scanLine(y))[x * kChannels + c] =
+                values[c];
+          }
+        }
+      }
+    }
+    return image;
+  }
+  QImage image(size, QImage::Format_RGBA64);
+  image.setColorSpace(QColorSpace(kind == HdrKind::Hlg
+                                      ? QColorSpace::Bt2100Hlg
+                                      : QColorSpace::Bt2100Pq));
+  for (int y = 0; y < size.height(); ++y) {
+    for (int x = 0; x < size.width(); ++x) {
+      const quint16 alpha = kind == HdrKind::PqAlpha
+                                ? quint16(generator.bounded(k16BitRange))
+                                : quint16(kChannelMax16);
+      image.setPixelColor(
+          x, y,
+          QColor::fromRgba64(quint16(generator.bounded(k16BitRange)),
+                             quint16(generator.bounded(k16BitRange)),
+                             quint16(generator.bounded(k16BitRange)), alpha));
+    }
+  }
+  return image;
+}
+
+// The CPU display path of an HDR image (ImageStatic::loadGeneric()).
+QImage cpuToneMapped(const QImage &image, const ToneMapping &toneMapping) {
+  if (!toneMapping.enabled) {
+    return image.convertToFormat(image.hasAlphaChannel()
+                                     ? QImage::Format_ARGB32
+                                     : QImage::Format_RGB32);
+  }
+  return HdrToneMapper::applyToneMapping(
+      image, HdrToneMapParams{true,
+                              static_cast<ToneMapOperator>(toneMapping.op),
+                              toneMapping.whiteNits});
+}
+
+// sRGB primaries with a table transfer function (a pure 2.0 gamma): only
+// reachable through a colour lookup table.
+QColorSpace tableCurveSpace() {
+  QList<uint16_t> table;
+  for (int i = 0; i < kTransferTableSize; ++i) {
+    const double x = double(i) / (kTransferTableSize - 1);
+    table.append(uint16_t(std::lround(std::pow(x, kTableGamma) * kChannelMax16)));
+  }
+  return QColorSpace(QColorSpace::Primaries::SRgb, table);
+}
+
+// ColorManager's Rec2020 preset.
+QColorSpace rec2020Gamma22() {
+  return QColorSpace(QPointF(0.3127, 0.3290), QPointF(0.708, 0.292),
+                     QPointF(0.170, 0.797), QPointF(0.131, 0.046),
+                     QColorSpace::TransferFunction::Gamma, 2.2f);
+}
+
+// What ColorManager::applyColorManagement() shows for image.
+QImage cpuColorManaged(QImage image, const QColorSpace &target) {
+  if (!image.colorSpace().isValid())
+    image.setColorSpace(QColorSpace(QColorSpace::SRgb));
+  return image.convertedToColorSpace(target);
+}
+
+ColorManagement managedFor(const QColorSpace &target) {
+  return ColorManagement{true, target};
+}
+
+// The image drawn 1:1 with nearest sampling: exactly the converted texels.
+FloatImage oneToOneFrame(const QImage &reference) {
+  return expectedFrame(premultipliedSource(reference),
+                       ReferenceScene{kFrameSize, kImageOrigin, {1, 1},
+                                      ReferenceFilter::Nearest, kBackground});
 }
 
 std::shared_ptr<const QImage> shared(QImage image) {
@@ -319,6 +461,9 @@ struct Scene {
   } while (false)
 
 Q_DECLARE_METATYPE(ImageKind)
+Q_DECLARE_METATYPE(HdrKind)
+Q_DECLARE_METATYPE(ToneMapping)
+Q_DECLARE_METATYPE(QColorSpace)
 Q_DECLARE_METATYPE(ReferenceScale)
 Q_DECLARE_METATYPE(ImageFilter)
 
@@ -344,8 +489,8 @@ private slots:
   }
 
   void uploadFormatSelection() {
-    const TextureFormatSupport all{true, true};
-    const TextureFormatSupport none{false, false};
+    const TextureFormatSupport all{true, true, true};
+    const TextureFormatSupport none{false, false, false};
     QCOMPARE(chooseTextureUploadFormat(QImage::Format_RGB32, all),
              (TextureUploadFormat{QRhiTexture::BGRA8, QImage::Format_RGB32}));
     QCOMPARE(chooseTextureUploadFormat(QImage::Format_ARGB32_Premultiplied, all),
@@ -379,6 +524,47 @@ private slots:
                                        all),
              (TextureUploadFormat{QRhiTexture::RGBA16F,
                                   QImage::Format_RGBA16FPx4_Premultiplied}));
+
+    // Conversion sources keep straight alpha.
+    QCOMPARE(chooseConversionSourceFormat(QImage::Format_ARGB32, false, all),
+             (TextureUploadFormat{QRhiTexture::BGRA8, QImage::Format_ARGB32}));
+    QCOMPARE(chooseConversionSourceFormat(QImage::Format_ARGB32_Premultiplied,
+                                          false, all),
+             (TextureUploadFormat{QRhiTexture::RGBA8, QImage::Format_RGBA8888}));
+    // 16-bit HDR codes are kept exact.
+    QCOMPARE(chooseConversionSourceFormat(QImage::Format_RGBA64, true, all),
+             (TextureUploadFormat{QRhiTexture::RGBA32F,
+                                  QImage::Format_RGBA32FPx4}));
+    QCOMPARE(chooseConversionSourceFormat(QImage::Format_RGBA64, true,
+                                          TextureFormatSupport{true, true,
+                                                               false}),
+             (TextureUploadFormat{QRhiTexture::RGBA16F,
+                                  QImage::Format_RGBA16FPx4}));
+    QCOMPARE(chooseConversionSourceFormat(QImage::Format_RGBA64, false, all),
+             (TextureUploadFormat{QRhiTexture::RGBA16F,
+                                  QImage::Format_RGBA16FPx4}));
+    QCOMPARE(chooseConversionSourceFormat(QImage::Format_RGBA16FPx4, true, all),
+             (TextureUploadFormat{QRhiTexture::RGBA16F,
+                                  QImage::Format_RGBA16FPx4}));
+    QCOMPARE(chooseConversionSourceFormat(QImage::Format_RGBA32FPx4, true, all),
+             (TextureUploadFormat{QRhiTexture::RGBA16F,
+                                  QImage::Format_RGBA16FPx4}));
+    // An HDR image (even an 8-bit one) needs float textures.
+    QCOMPARE(chooseConversionSourceFormat(QImage::Format_ARGB32, true, all),
+             (TextureUploadFormat{QRhiTexture::RGBA32F,
+                                  QImage::Format_RGBA32FPx4}));
+    QVERIFY(!chooseConversionSourceFormat(QImage::Format_RGBA64, true, none));
+    QCOMPARE(chooseConversionSourceFormat(QImage::Format_RGBA64, false, none),
+             (TextureUploadFormat{QRhiTexture::RGBA8, QImage::Format_RGBA8888}));
+    QCOMPARE(convertedTextureFormat(TextureUploadFormat{
+                 QRhiTexture::RGBA16F, QImage::Format_RGBA16FPx4}),
+             QRhiTexture::RGBA16F);
+    QCOMPARE(convertedTextureFormat(TextureUploadFormat{
+                 QRhiTexture::RGBA32F, QImage::Format_RGBA32FPx4}),
+             QRhiTexture::RGBA16F);
+    QCOMPARE(convertedTextureFormat(
+                 TextureUploadFormat{QRhiTexture::BGRA8, QImage::Format_RGB32}),
+             QRhiTexture::RGBA8);
   }
 
   void withoutImageClearsToBackground() {
@@ -1204,6 +1390,357 @@ private slots:
                              .arg(scale)
                              .arg(unsettledMs, 0, 'f', 2)
                              .arg(settledMs, 0, 'f', 2);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  void hdrToneMappingMatchesCpu_data() {
+    QTest::addColumn<HdrKind>("kind");
+    QTest::addColumn<ToneMapping>("toneMapping");
+    const struct {
+      const char *name;
+      HdrKind kind;
+    } kinds[] = {{"PQ", HdrKind::Pq},
+                 {"PQ alpha", HdrKind::PqAlpha},
+                 {"HLG", HdrKind::Hlg},
+                 {"linear half", HdrKind::LinearHalf},
+                 {"linear float sRGB", HdrKind::LinearFloat}};
+    const struct {
+      const char *name;
+      RenderEnums::ToneMapOperator op;
+    } operators[] = {{"BT.2408", RenderEnums::ToneMapOperator::Bt2408},
+                     {"Reinhard-Jodie",
+                      RenderEnums::ToneMapOperator::ReinhardJodie},
+                     {"ACES", RenderEnums::ToneMapOperator::AcesFilmic},
+                     {"Hable", RenderEnums::ToneMapOperator::Hable}};
+    for (const auto &kind : kinds) {
+      for (const auto &op : operators) {
+        QTest::addRow("%s %s", kind.name, op.name)
+            << kind.kind
+            << ToneMapping{true, op.op, ToneMapping::kDefaultWhiteNits};
+      }
+      QTest::addRow("%s BT.2408 400 nits", kind.name)
+          << kind.kind
+          << ToneMapping{true, RenderEnums::ToneMapOperator::Bt2408,
+                         kBrightWhiteNits};
+      QTest::addRow("%s off", kind.name)
+          << kind.kind
+          << ToneMapping{false, RenderEnums::ToneMapOperator::Bt2408,
+                         ToneMapping::kDefaultWhiteNits};
+    }
+  }
+
+  // The conversion pass matches HdrToneMapper (and, with tone mapping off,
+  // the CPU's clamping fallback) texel for texel.
+  void hdrToneMappingMatchesCpu() {
+    QFETCH(HdrKind, kind);
+    QFETCH(ToneMapping, toneMapping);
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makeHdrImage(kind, kTestImageSize);
+    scene.item->setToneMapping(toneMapping);
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Nearest));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 1.0});
+    QVERIFY(scene.item->sourceConversion().hdr);
+    RENDER(scene, frame);
+    COMPARE_TO_REFERENCE(frame, oneToOneFrame(cpuToneMapped(image, toneMapping)),
+                         kToneMapTolerance);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  // A new operator or white level only re-runs the conversion of the
+  // uploaded HDR source, with the same result as a fresh image.
+  void toneMappingChangeReconverts() {
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makeHdrImage(HdrKind::Pq, kTestImageSize);
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Nearest));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 1.0});
+    RENDER(scene, first);
+
+    QSignalSpy imageChanges(scene.item.get(), &ImageRenderItem::imageChanged);
+    scene.item->setToneMapOperator(RenderEnums::ToneMapOperator::Hable);
+    scene.item->setHdrWhiteLevel(kBrightWhiteNits);
+    RENDER(scene, hable);
+    COMPARE_TO_REFERENCE(hable,
+                         oneToOneFrame(cpuToneMapped(
+                             image, scene.item->toneMapping())),
+                         kToneMapTolerance);
+    QVERIFY(maxDifference(first, hable) > 0);
+
+    scene.item->setToneMappingEnabled(false);
+    RENDER(scene, clamped);
+    COMPARE_TO_REFERENCE(clamped,
+                         oneToOneFrame(cpuToneMapped(
+                             image, scene.item->toneMapping())),
+                         kToneMapTolerance);
+
+    scene.item->setToneMapping(ToneMapping{});
+    RENDER(scene, again);
+    QCOMPARE(maxDifference(first, again), 0);
+    QCOMPARE(imageChanges.count(), 0);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  void colorManagementMatchesQt_data() {
+    QTest::addColumn<ImageKind>("kind");
+    QTest::addColumn<QColorSpace>("source");
+    QTest::addColumn<QColorSpace>("target");
+    QTest::addColumn<int>("tolerance");
+    const QColorSpace srgb(QColorSpace::SRgb);
+    const struct {
+      const char *name;
+      QColorSpace space;
+      int tolerance;
+    } targets[] = {{"Display P3", QColorSpace(QColorSpace::DisplayP3),
+                    kColorManagementTolerance},
+                   {"Adobe RGB", QColorSpace(QColorSpace::AdobeRgb),
+                    kPureGammaShadowTolerance},
+                   {"ProPhoto", QColorSpace(QColorSpace::ProPhotoRgb),
+                    kColorManagementTolerance},
+                   {"Rec2020", rec2020Gamma22(), kPureGammaShadowTolerance},
+                   {"linear sRGB", QColorSpace(QColorSpace::SRgbLinear),
+                    kColorManagementTolerance}};
+    const struct {
+      const char *name;
+      ImageKind kind;
+    } kinds[] = {{"opaque", ImageKind::Opaque},
+                 {"alpha", ImageKind::Alpha},
+                 {"16-bit", ImageKind::Deep}};
+    for (const auto &kind : kinds) {
+      for (const auto &target : targets) {
+        QTest::addRow("%s sRGB -> %s", kind.name, target.name)
+            << kind.kind << srgb << target.space << target.tolerance;
+      }
+    }
+    QTest::newRow("opaque Adobe RGB -> sRGB")
+        << ImageKind::Opaque << QColorSpace(QColorSpace::AdobeRgb) << srgb
+        << kColorManagementTolerance;
+    QTest::newRow("opaque untagged -> Display P3")
+        << ImageKind::Opaque << QColorSpace()
+        << QColorSpace(QColorSpace::DisplayP3) << kColorManagementTolerance;
+  }
+
+  // Parametric colour management matches what ColorManager does on the CPU.
+  void colorManagementMatchesQt() {
+    QFETCH(ImageKind, kind);
+    QFETCH(QColorSpace, source);
+    QFETCH(QColorSpace, target);
+    QFETCH(int, tolerance);
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    QImage image = makeTestImage(kind, kTestImageSize);
+    image.setColorSpace(source);
+    scene.item->setColorManagement(managedFor(target));
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Nearest));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 1.0});
+    QCOMPARE(scene.item->sourceConversion().color.kind,
+             ColorTransformKind::Parametric);
+    RENDER(scene, frame);
+    COMPARE_TO_REFERENCE(frame, oneToOneFrame(cpuColorManaged(image, target)),
+                         tolerance);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  // A display profile without a parametric form goes through a lookup table
+  // built on a worker thread; until it is ready the image is unconverted.
+  void colorLutMatchesQt() {
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makeTestImage(ImageKind::Alpha, kTestImageSize);
+    const QColorSpace target = tableCurveSpace();
+    scene.item->setColorManagement(managedFor(target));
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Nearest));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 1.0});
+    QCOMPARE(scene.item->sourceConversion().color.kind,
+             ColorTransformKind::Lut);
+    QTRY_VERIFY_WITH_TIMEOUT(scene.item->sourceConversion().lut != nullptr,
+                             kLutWaitTimeoutMs);
+    RENDER(scene, frame);
+    COMPARE_TO_REFERENCE(frame, oneToOneFrame(cpuColorManaged(image, target)),
+                         kColorLutTolerance);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  void hdrWithColorManagementMatchesCpu_data() {
+    QTest::addColumn<HdrKind>("kind");
+    QTest::addColumn<QColorSpace>("target");
+    QTest::newRow("PQ -> Display P3")
+        << HdrKind::Pq << QColorSpace(QColorSpace::DisplayP3);
+    QTest::newRow("HLG -> Adobe RGB")
+        << HdrKind::Hlg << QColorSpace(QColorSpace::AdobeRgb);
+    QTest::newRow("linear -> table curve")
+        << HdrKind::LinearHalf << tableCurveSpace();
+  }
+
+  // HDR images are tone mapped to sRGB first, then colour managed, like
+  // HdrToneMapper followed by ColorManager.
+  void hdrWithColorManagementMatchesCpu() {
+    QFETCH(HdrKind, kind);
+    QFETCH(QColorSpace, target);
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makeHdrImage(kind, kTestImageSize);
+    scene.item->setColorManagement(managedFor(target));
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Nearest));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 1.0});
+    QTRY_VERIFY_WITH_TIMEOUT(
+        scene.item->sourceConversion().appliesColorTransform(),
+        kLutWaitTimeoutMs);
+    RENDER(scene, frame);
+    const int tolerance =
+        scene.item->sourceConversion().color.kind == ColorTransformKind::Lut
+            ? kColorLutTolerance + kToneMapTolerance
+            : kHdrColorManagementTolerance;
+    COMPARE_TO_REFERENCE(
+        frame,
+        oneToOneFrame(cpuColorManaged(cpuToneMapped(image, ToneMapping{}),
+                                      target)),
+        tolerance);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  // An sRGB image on an sRGB display needs no conversion: the plain upload
+  // path is used, with an identical result.
+  void colorManagementToSameSpaceIsUnconverted() {
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    const QImage image = makeTestImage(ImageKind::Alpha, kTestImageSize);
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Trilinear));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 0.5});
+    RENDER(scene, plain);
+    scene.item->setColorManagement(
+        managedFor(QColorSpace(QColorSpace::SRgb)));
+    QVERIFY(!scene.item->sourceConversion().isActive());
+    RENDER(scene, managed);
+    QCOMPARE(maxDifference(plain, managed), 0);
+  }
+
+  // SDR sources are released after their conversion: a new display colour
+  // space re-uploads them, and turning colour management off returns to the
+  // plain path.
+  void colorManagementChangeReuploads() {
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makeTestImage(ImageKind::Opaque, kTestImageSize);
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Nearest));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 1.0});
+    RENDER(scene, plain);
+    const QColorSpace p3(QColorSpace::DisplayP3);
+    const QColorSpace adobe(QColorSpace::AdobeRgb);
+    scene.item->setColorManagement(managedFor(p3));
+    RENDER(scene, inP3);
+    COMPARE_TO_REFERENCE(inP3, oneToOneFrame(cpuColorManaged(image, p3)),
+                         kColorManagementTolerance);
+    scene.item->setColorManagement(managedFor(adobe));
+    RENDER(scene, inAdobe);
+    COMPARE_TO_REFERENCE(inAdobe, oneToOneFrame(cpuColorManaged(image, adobe)),
+                         kPureGammaShadowTolerance);
+    scene.item->setColorManagement(ColorManagement{false, adobe});
+    RENDER(scene, unmanaged);
+    QCOMPARE(maxDifference(plain, unmanaged), 0);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  // A display colour space that cannot be a target is reported once; the
+  // image is shown unconverted.
+  void invalidTargetIsReported() {
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makeTestImage(ImageKind::Opaque, kTestImageSize);
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Nearest));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 1.0});
+    RENDER(scene, plain);
+    scene.item->setColorManagement(managedFor(QColorSpace()));
+    RENDER(scene, managed);
+    QCOMPARE(maxDifference(plain, managed), 0);
+    scene.item->setImage(shared(makeTestImage(ImageKind::Alpha, kTestImageSize)));
+    RENDER(scene, next);
+    QCOMPARE(errors.count(), 1);
+  }
+
+  // Each tile converts its own texels; the tiles meet without seams.
+  void tiledConversionMatchesUntiled() {
+    const QSize frameSize = kTiledImageSize + QSize(2 * kMargin, 2 * kMargin);
+    Scene scene;
+    CREATE_SCENE(scene, frameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    scene.item->setImage(shared(makeHdrImage(HdrKind::PqAlpha, kTiledImageSize)));
+    scene.item->setColorManagement(
+        managedFor(QColorSpace(QColorSpace::DisplayP3)));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 1.0});
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Nearest));
+    RENDER(scene, untiled);
+    scene.item->setRenderSettings(settingsWith(
+        RenderEnums::TextureSampling::Nearest, false, kSmallTileLimit));
+    RENDER(scene, tiled);
+    QVERIFY(TileGrid::layout(kTiledImageSize, kSmallTileLimit).size() > 1);
+    QCOMPARE(maxDifference(tiled, untiled), 0);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  void convertedImageIsFiltered_data() {
+    QTest::addColumn<qreal>("scale");
+    QTest::addColumn<RenderEnums::Resampling>("resampling");
+    QTest::newRow("exact downsample 62.5%")
+        << kOnePassReduction << RenderEnums::Resampling::None;
+    QTest::newRow("MKS2021 50%") << kMksHalf << RenderEnums::Resampling::Mks2021;
+    QTest::newRow("MKS2021 170%")
+        << kMksFractionalUpscale << RenderEnums::Resampling::Mks2021;
+  }
+
+  // The mip chain, the exact downsample and the resampling read the
+  // converted texels, like the CPU filters read the tone-mapped image.
+  void convertedImageIsFiltered() {
+    QFETCH(qreal, scale);
+    QFETCH(RenderEnums::Resampling, resampling);
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makeHdrImage(HdrKind::Pq, kTestImageSize);
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Trilinear));
+    scene.item->setResampling(resampling);
+    scene.item->setSettled(true);
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), scale});
+    RENDER(scene, frame);
+
+    const FloatImage toneMapped =
+        premultipliedSource(cpuToneMapped(image, ToneMapping{}));
+    const FloatImage filtered =
+        resampling == RenderEnums::Resampling::Mks2021
+            ? mks2021Resample(toneMapped,
+                              ResampleGrid::outputSize(kTestImageSize, scale))
+            : exactReduce(toneMapped,
+                          (QSizeF(kTestImageSize) * scale).toSize());
+    COMPARE_TO_REFERENCE(frame,
+                         composeOver(filtered, kFrameSize, kImageOrigin,
+                                     kBackground),
+                         kConvertedFilterTolerance);
     QCOMPARE(errors.count(), 0);
   }
 };
