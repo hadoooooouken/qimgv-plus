@@ -103,3 +103,20 @@ struct ReferenceFilterParams {
 [[nodiscard]] int maxLevelDifference(const QImage &actual,
                                      const FloatImage &expected,
                                      QString *where);
+
+// View of the panorama reference, in degrees (PanoramaCamera).
+struct ReferencePanorama {
+  double yaw = 0.0;
+  double pitch = 0.0;
+  double fov = 0.0;
+};
+
+// The widget viewer's res/shaders/panorama.frag in double precision, for an
+// opaque source: per pixel centre the same ray, rotations and
+// equirectangular mapping, then bilinear sampling of the source itself
+// (level 0), repeating horizontally and clamped vertically; color applies
+// like image.frag's colour matrix.
+[[nodiscard]] FloatImage panoramaFrame(const FloatImage &source,
+                                       QSize frameSize,
+                                       const ReferencePanorama &camera,
+                                       const std::optional<ColorMatrix> &color);

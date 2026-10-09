@@ -8,7 +8,7 @@ layout(location = 0) in vec2 corner;
 layout(location = 0) out vec2 texCoord;
 layout(location = 1) out vec2 devicePos;
 
-// Mirrored by TileUniforms in gui/quick/render/imagerenderer.cpp; identical
+// Mirrored by TileUniforms in gui/quick/render/rhipassuniforms.h; identical
 // in image.frag.
 layout(std140, binding = 0) uniform TileParams {
     mat4 mvp;

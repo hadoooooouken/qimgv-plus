@@ -8,7 +8,9 @@
 #include <QSignalSpy>
 #include <QTest>
 #include <algorithm>
+#include <cmath>
 #include <memory>
+#include <optional>
 
 #include "gui/quick/render/imagerenderitem.h"
 #include "gui/quick/render/resamplegrid.h"
@@ -181,6 +183,26 @@ constexpr int kLutWaitTimeoutMs = 10000;
 constexpr int kTransferTableSize = 1024;
 constexpr double kTableGamma = 2.0;
 constexpr double kChannelMax16 = 65535.0;
+
+// Panorama: a smooth image that is periodic horizontally (no edge at the
+// back seam), magnified on screen so that trilinear sampling stays on level
+// 0. The GPU's bilinear weights are quantized to a few subtexel bits.
+constexpr QSize kPanoramaImageSize(512, 256);
+constexpr QSize kPanoramaFrameSize(96, 64);
+constexpr int kPanoramaTolerance = 2;
+// Adjusted colours amplify the filtering error by the matrix gain.
+constexpr int kPanoramaColorTolerance = 4;
+constexpr double kPanoramaAmplitude = 0.4;
+constexpr double kPanoramaMid = 0.5;
+constexpr double kPanoramaGreenBase = 0.2;
+constexpr double kPanoramaGreenRange = 0.6;
+constexpr int kPanoramaRedPeriods = 2;
+// Facing the image centre (u = 0.5), away from the back seam.
+constexpr ReferencePanorama kPanoramaFront{0.0, 0.0, 90.0};
+
+// Upscaled crop: a part of kTestImageSize upscaled kCropUpscale times.
+constexpr QRect kCropSourceRect(16, 12, 24, 16);
+constexpr int kCropUpscale = 2;
 
 QRhi::Implementation rhiBackend = QRhi::D3D11;
 
@@ -421,6 +443,69 @@ QString describeDifference(int difference, const QString &where) {
   return u"max difference %1 at %2"_s.arg(difference).arg(where);
 }
 
+// Smooth RGB test image of the panorama tests: red and blue repeat
+// horizontally, green is a vertical ramp. Red and blue peak at the back seam
+// (u = 0), far from the image mean that a too coarse mip level shows there.
+QImage makePanoramaImage() {
+  constexpr double kTau = 6.283185307179586;
+  QImage image(kPanoramaImageSize, QImage::Format_RGB32);
+  const double width = kPanoramaImageSize.width();
+  const double height = kPanoramaImageSize.height();
+  for (int y = 0; y < image.height(); ++y) {
+    for (int x = 0; x < image.width(); ++x) {
+      const double u = (x + 0.5) / width;
+      const double v = (y + 0.5) / height;
+      const double red =
+          kPanoramaMid + kPanoramaAmplitude * std::cos(kTau * kPanoramaRedPeriods * u);
+      const double green = kPanoramaGreenBase + kPanoramaGreenRange * v;
+      const double blue =
+          kPanoramaMid + kPanoramaAmplitude * std::cos(kTau * (u + v));
+      image.setPixelColor(x, y, QColor::fromRgbF(float(red), float(green),
+                                                 float(blue)));
+    }
+  }
+  return image;
+}
+
+// The test image drawn in frame at scale magnification / reduction with the
+// crop drawn over kCropSourceRect, both with bilinear magnification and box
+// average reductions (the trilinear GPU result at these scales).
+FloatImage expectedWithCrop(const QImage &image, const QImage &crop,
+                            QSize frameSize, QPoint origin,
+                            ReferenceScale scale) {
+  FloatImage frame = expectedFrame(
+      premultipliedSource(image),
+      ReferenceScene{frameSize, origin, scale, ReferenceFilter::Bilinear,
+                     kBackground});
+  // Crop pixels per image pixel on screen: scale / kCropUpscale.
+  ReferenceScale cropScale{scale.magnification, scale.reduction * kCropUpscale};
+  while (cropScale.magnification > 1 && cropScale.reduction > 1 &&
+         cropScale.magnification % 2 == 0 && cropScale.reduction % 2 == 0) {
+    cropScale.magnification /= 2;
+    cropScale.reduction /= 2;
+  }
+  const QPoint cropOrigin =
+      origin + kCropSourceRect.topLeft() * scale.magnification / scale.reduction;
+  const FloatImage cropFrame = expectedFrame(
+      premultipliedSource(crop),
+      ReferenceScene{frameSize, cropOrigin, cropScale,
+                     ReferenceFilter::Bilinear, kBackground});
+  const QRect cropRect(cropOrigin, kCropSourceRect.size() * scale.magnification /
+                                       scale.reduction);
+  const QRect visible = cropRect.intersected(QRect(QPoint(0, 0), frameSize));
+  for (int y = visible.top(); y <= visible.bottom(); ++y) {
+    for (int x = visible.left(); x <= visible.right(); ++x)
+      frame.at(x, y) = cropFrame.at(x, y);
+  }
+  return frame;
+}
+
+QImage makeCropImage() {
+  // Different content from the image part it covers.
+  return makeTestImage(ImageKind::Opaque, kCropSourceRect.size() * kCropUpscale)
+      .mirrored(true, true);
+}
+
 // One offscreen scene with an ImageRenderItem filling it. The item is
 // declared after the scene so that it is destroyed first.
 struct Scene {
@@ -466,6 +551,7 @@ Q_DECLARE_METATYPE(ToneMapping)
 Q_DECLARE_METATYPE(QColorSpace)
 Q_DECLARE_METATYPE(ReferenceScale)
 Q_DECLARE_METATYPE(ImageFilter)
+Q_DECLARE_METATYPE(ReferencePanorama)
 
 class ImageRendererTests : public QObject {
   Q_OBJECT
@@ -1742,6 +1828,237 @@ private slots:
                                      kBackground),
                          kConvertedFilterTolerance);
     QCOMPARE(errors.count(), 0);
+  }
+
+  // Animation frames of the same size and format go into the textures of
+  // the previous frame; converted sources are kept for the next frame.
+  void animationFramesReuseTextures_data() {
+    QTest::addColumn<bool>("managed");
+    QTest::newRow("plain") << false;
+    QTest::newRow("colour managed") << true;
+  }
+
+  void animationFramesReuseTextures() {
+    QFETCH(bool, managed);
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QColorSpace p3(QColorSpace::DisplayP3);
+    if (managed)
+      scene.item->setColorManagement(managedFor(p3));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Nearest));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 1.0});
+    const QImage first = makeTestImage(ImageKind::Opaque, kTestImageSize);
+    const QImage second = first.mirrored(true, false);
+    const QImage third = first.mirrored(false, true);
+    scene.item->setImage(shared(first));
+    RENDER(scene, firstFrame);
+    scene.item->setImage(shared(second),
+                         ImageRenderItem::ImageUpdate::AnimationFrame);
+    RENDER(scene, secondFrame);
+    const RenderStatisticsSnapshot afterSecond = scene.item->statistics();
+    scene.item->setImage(shared(third),
+                         ImageRenderItem::ImageUpdate::AnimationFrame);
+    RENDER(scene, thirdFrame);
+    const RenderStatisticsSnapshot afterThird = scene.item->statistics();
+    QCOMPARE(afterThird.imageTexturesCreated, afterSecond.imageTexturesCreated);
+    QCOMPARE(afterThird.imageUploads, afterSecond.imageUploads + 1);
+    if (managed) {
+      COMPARE_TO_REFERENCE(thirdFrame,
+                           oneToOneFrame(cpuColorManaged(third, p3)),
+                           kColorManagementTolerance);
+    } else {
+      COMPARE_TO_REFERENCE(thirdFrame, oneToOneFrame(third), kExactTolerance);
+      COMPARE_TO_REFERENCE(secondFrame, oneToOneFrame(second),
+                           kExactTolerance);
+    }
+
+    // A frame of another size needs new textures.
+    scene.item->setImage(
+        shared(makeTestImage(ImageKind::Opaque, kTestImageSize / 2)),
+        ImageRenderItem::ImageUpdate::AnimationFrame);
+    RENDER(scene, smaller);
+    QVERIFY(scene.item->statistics().imageTexturesCreated >
+            afterThird.imageTexturesCreated);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  void panoramaMatchesReference_data() {
+    QTest::addColumn<ReferencePanorama>("camera");
+    QTest::addColumn<bool>("adjusted");
+    QTest::newRow("front") << kPanoramaFront << false;
+    QTest::newRow("turned up") << ReferencePanorama{135.0, 30.0, 70.0} << false;
+    QTest::newRow("back seam, down")
+        << ReferencePanorama{180.0, -30.0, 100.0} << false;
+    QTest::newRow("adjusted") << ReferencePanorama{45.0, 10.0, 90.0} << true;
+  }
+
+  void panoramaMatchesReference() {
+    QFETCH(ReferencePanorama, camera);
+    QFETCH(bool, adjusted);
+    Scene scene;
+    CREATE_SCENE(scene, kPanoramaFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makePanoramaImage();
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Bilinear));
+    scene.item->setProjection(RenderEnums::Projection::Equirectangular);
+    scene.item->setPanoramaCamera(PanoramaCamera{
+        float(camera.yaw), float(camera.pitch), float(camera.fov)});
+    std::optional<ColorMatrix> color;
+    if (adjusted) {
+      scene.item->setColorAdjustments(kTestAdjustments);
+      color = colorAdjustmentMatrix(kTestAdjustments);
+    }
+    RENDER(scene, frame);
+    COMPARE_TO_REFERENCE(
+        frame,
+        panoramaFrame(premultipliedSource(image), kPanoramaFrameSize, camera,
+                      color),
+        adjusted ? kPanoramaColorTolerance : kPanoramaTolerance);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  // The longitude footprint is corrected at the back seam: trilinear
+  // sampling stays on level 0 there instead of the smallest mip level.
+  void panoramaSeamKeepsDetail() {
+    Scene scene;
+    CREATE_SCENE(scene, kPanoramaFrameSize);
+    const QImage image = makePanoramaImage();
+    // Off 180 degrees: the seam must fall inside a 2 x 2 pixel quad, where
+    // the derivatives straddle it, not on a quad boundary.
+    const ReferencePanorama back{178.5, 0.0, 90.0};
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Trilinear));
+    scene.item->setProjection(RenderEnums::Projection::Equirectangular);
+    scene.item->setPanoramaCamera(
+        PanoramaCamera{float(back.yaw), float(back.pitch), float(back.fov)});
+    RENDER(scene, frame);
+    COMPARE_TO_REFERENCE(frame,
+                         panoramaFrame(premultipliedSource(image),
+                                       kPanoramaFrameSize, back, std::nullopt),
+                         kPanoramaTolerance);
+  }
+
+  // Each tile draws the rays that hit its core.
+  void tiledPanoramaMatchesUntiled() {
+    Scene scene;
+    CREATE_SCENE(scene, kPanoramaFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    scene.item->setImage(shared(makePanoramaImage()));
+    scene.item->setProjection(RenderEnums::Projection::Equirectangular);
+    scene.item->setPanoramaCamera(PanoramaCamera{
+        float(kPanoramaFront.yaw), float(kPanoramaFront.pitch),
+        float(kPanoramaFront.fov)});
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Bilinear));
+    RENDER(scene, untiled);
+    scene.item->setRenderSettings(settingsWith(
+        RenderEnums::TextureSampling::Bilinear, false, kSmallTileLimit));
+    RENDER(scene, tiled);
+    QVERIFY(TileGrid::layout(kPanoramaImageSize, kSmallTileLimit).size() > 1);
+    QVERIFY2(maxDifference(tiled, untiled) <= kTileSeamTolerance,
+             qPrintable(u"max difference %1"_s.arg(maxDifference(tiled, untiled))));
+    QCOMPARE(errors.count(), 0);
+  }
+
+  void upscaledCropMatchesReference_data() {
+    QTest::addColumn<ReferenceScale>("scale");
+    QTest::addColumn<QPoint>("origin");
+    // Crop scale = image scale / kCropUpscale.
+    QTest::newRow("100% (crop 50%)") << ReferenceScale{1, 1} << kImageOrigin;
+    QTest::newRow("200% (crop 1:1)") << ReferenceScale{2, 1} << kImageOrigin;
+    QTest::newRow("400% panned (crop 200%)")
+        << ReferenceScale{4, 1} << QPoint(-40, -30);
+    QTest::newRow("50% (crop 25%)") << ReferenceScale{1, 2} << kImageOrigin;
+  }
+
+  void upscaledCropMatchesReference() {
+    QFETCH(ReferenceScale, scale);
+    QFETCH(QPoint, origin);
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QImage image = makeTestImage(ImageKind::Opaque, kTestImageSize);
+    const QImage crop = makeCropImage();
+    scene.item->setImage(shared(image));
+    scene.item->setUpscaledCrop(shared(crop), kCropSourceRect);
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Trilinear));
+    scene.item->setPlacement(ImagePlacement{
+        QPointF(origin), qreal(scale.magnification) / qreal(scale.reduction)});
+    RENDER(scene, frame);
+    COMPARE_TO_REFERENCE(
+        frame, expectedWithCrop(image, crop, kFrameSize, origin, scale),
+        kFilteredTolerance);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  // The crop goes through the same colour management as the image.
+  void upscaledCropIsColorManaged() {
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    const QColorSpace p3(QColorSpace::DisplayP3);
+    const QImage image = makeTestImage(ImageKind::Opaque, kTestImageSize);
+    const QImage crop = makeCropImage();
+    scene.item->setColorManagement(managedFor(p3));
+    scene.item->setImage(shared(image));
+    scene.item->setUpscaledCrop(shared(crop), kCropSourceRect);
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Nearest));
+    // Crop shown 1:1.
+    const ReferenceScale scale{kCropUpscale, 1};
+    scene.item->setPlacement(
+        ImagePlacement{QPointF(kImageOrigin), qreal(kCropUpscale)});
+    QVERIFY(scene.item->cropConversion().isActive());
+    RENDER(scene, frame);
+    const QImage managedImage = cpuColorManaged(image, p3);
+    const QImage managedCrop = cpuColorManaged(crop, p3);
+    FloatImage expected = expectedFrame(
+        premultipliedSource(managedImage),
+        ReferenceScene{kFrameSize, kImageOrigin, scale, ReferenceFilter::Nearest,
+                       kBackground});
+    const QPoint cropOrigin = kImageOrigin + kCropSourceRect.topLeft() * kCropUpscale;
+    const FloatImage cropSource = premultipliedSource(managedCrop);
+    for (int y = 0; y < managedCrop.height(); ++y) {
+      for (int x = 0; x < managedCrop.width(); ++x)
+        expected.at(cropOrigin.x() + x, cropOrigin.y() + y) = cropSource.at(x, y);
+    }
+    COMPARE_TO_REFERENCE(frame, expected, kColorManagementTolerance);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  // A new image drops the crop, animation frames keep it, and panorama mode
+  // does not draw it.
+  void upscaledCropLifetime() {
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy changes(scene.item.get(), &ImageRenderItem::upscaledCropChanged);
+    const QImage image = makeTestImage(ImageKind::Opaque, kTestImageSize);
+    scene.item->setImage(shared(image));
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Trilinear));
+    scene.item->setPlacement(ImagePlacement{QPointF(kImageOrigin), 1.0});
+    scene.item->setProjection(RenderEnums::Projection::Equirectangular);
+    RENDER(scene, panoramaPlain);
+    scene.item->setUpscaledCrop(shared(makeCropImage()), kCropSourceRect);
+    QVERIFY(scene.item->hasUpscaledCrop());
+    RENDER(scene, panoramaWithCrop);
+    QCOMPARE(maxDifference(panoramaPlain, panoramaWithCrop), 0);
+
+    scene.item->setImage(shared(image.mirrored(true, false)),
+                         ImageRenderItem::ImageUpdate::AnimationFrame);
+    QVERIFY(scene.item->hasUpscaledCrop());
+    scene.item->setImage(shared(image));
+    QVERIFY(!scene.item->hasUpscaledCrop());
+    QCOMPARE(changes.count(), 2);
+    // An empty source area clears the crop.
+    scene.item->setUpscaledCrop(shared(makeCropImage()), QRect());
+    QVERIFY(!scene.item->hasUpscaledCrop());
   }
 };
 

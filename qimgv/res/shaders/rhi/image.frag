@@ -13,7 +13,7 @@ layout(location = 1) in vec2 devicePos;
 
 layout(location = 0) out vec4 fragColor;
 
-// Mirrored by TileUniforms in gui/quick/render/imagerenderer.cpp; identical
+// Mirrored by TileUniforms in gui/quick/render/rhipassuniforms.h; identical
 // in image.vert.
 layout(std140, binding = 0) uniform TileParams {
     mat4 mvp;

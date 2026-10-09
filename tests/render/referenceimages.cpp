@@ -491,3 +491,69 @@ int maxLevelDifference(const QImage &actual, const FloatImage &expected,
   }
   return worst;
 }
+
+FloatImage panoramaFrame(const FloatImage &source, QSize frameSize,
+                         const ReferencePanorama &camera,
+                         const std::optional<ColorMatrix> &color) {
+  constexpr double kPi = 3.14159265358979323846;
+  constexpr double kDegrees = kPi / 180.0;
+  const int width = source.size().width();
+  const int height = source.size().height();
+  const double tanHalfFov = std::tan(camera.fov * kDegrees * kPixelCentre);
+  const double aspect = double(frameSize.width()) / frameSize.height();
+  const double sinYaw = std::sin(camera.yaw * kDegrees);
+  const double cosYaw = std::cos(camera.yaw * kDegrees);
+  const double sinPitch = std::sin(camera.pitch * kDegrees);
+  const double cosPitch = std::cos(camera.pitch * kDegrees);
+  FloatImage frame(frameSize);
+  for (int y = 0; y < frameSize.height(); ++y) {
+    for (int x = 0; x < frameSize.width(); ++x) {
+      const double sx = 2.0 * (x + kPixelCentre) / frameSize.width() - 1.0;
+      const double sy = 2.0 * (y + kPixelCentre) / frameSize.height() - 1.0;
+      double rx = sx * aspect * tanHalfFov;
+      double ry = -sy * tanHalfFov;
+      double rz = 1.0;
+      const double length = std::sqrt(rx * rx + ry * ry + rz * rz);
+      rx /= length;
+      ry /= length;
+      rz /= length;
+      const double py = ry * cosPitch - rz * sinPitch;
+      const double pz = ry * sinPitch + rz * cosPitch;
+      const double yx = rx * cosYaw + pz * sinYaw;
+      const double yz = -rx * sinYaw + pz * cosYaw;
+      const double lon = std::atan2(yx, yz);
+      const double lat = std::asin(std::clamp(py, -1.0, 1.0));
+      const double u = (0.5 + lon / (2.0 * kPi)) * width - kPixelCentre;
+      const double v = (0.5 - lat / kPi) * height - kPixelCentre;
+
+      const int x0 = static_cast<int>(std::floor(u));
+      const int y0 = static_cast<int>(std::floor(v));
+      const double fx = u - x0;
+      const double fy = v - y0;
+      const auto texel = [&](int tx, int ty) -> const Rgba & {
+        const int wrapped = ((tx % width) + width) % width;
+        return source.at(wrapped, std::clamp(ty, 0, height - 1));
+      };
+      Rgba pixel{};
+      for (int c = 0; c < kChannels; ++c) {
+        const double top = texel(x0, y0)[c] * (1.0 - fx) +
+                           texel(x0 + 1, y0)[c] * fx;
+        const double bottom = texel(x0, y0 + 1)[c] * (1.0 - fx) +
+                              texel(x0 + 1, y0 + 1)[c] * fx;
+        pixel[c] = top * (1.0 - fy) + bottom * fy;
+      }
+      if (color) {
+        const ColorMatrix &m = *color;
+        const Rgba straight = pixel;
+        for (int row = 0; row < kColorChannels; ++row) {
+          const double value = m.m[row][0] * straight[0] +
+                               m.m[row][1] * straight[1] +
+                               m.m[row][2] * straight[2] + m.offset;
+          pixel[row] = std::clamp(value, 0.0, 1.0);
+        }
+      }
+      frame.at(x, y) = pixel;
+    }
+  }
+  return frame;
+}

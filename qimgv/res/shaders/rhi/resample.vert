@@ -9,7 +9,7 @@ layout(location = 0) in vec2 corner;
 
 layout(location = 0) out vec2 dstPos;
 
-// Mirrored by ResampleUniforms in gui/quick/render/imagerenderer.cpp;
+// Mirrored by ResampleUniforms in gui/quick/render/rhipassuniforms.h;
 // identical in resample.frag.
 layout(std140, binding = 0) uniform ResampleParams {
     mat4 mvp;

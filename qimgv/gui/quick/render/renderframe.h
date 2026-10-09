@@ -5,6 +5,7 @@
 #include <QImage>
 #include <QObject>
 #include <QPointF>
+#include <QRect>
 #include <QtQml/qqmlregistration.h>
 #include <memory>
 
@@ -67,6 +68,16 @@ enum class ToneMapOperator {
   Hable,
 };
 Q_ENUM_NS(ToneMapOperator)
+
+// How the image is mapped onto the item.
+enum class Projection {
+  // The image as a flat picture at ImagePlacement.
+  Flat,
+  // A 360 x 180 degree equirectangular panorama seen from its centre with a
+  // PanoramaCamera (the widget viewer's panorama mode, panorama.frag).
+  Equirectangular,
+};
+Q_ENUM_NS(Projection)
 } // namespace RenderEnums
 
 // Where the image is drawn, in the units of ViewTransform (S0.4).
@@ -96,6 +107,21 @@ struct RenderSettings {
 
   friend bool operator==(const RenderSettings &,
                          const RenderSettings &) = default;
+};
+
+// View direction of RenderEnums::Projection::Equirectangular, in degrees, as
+// PanoramaView (components/viewtransform) holds it, with the signs of the
+// widget viewer's panorama.frag; fov is the vertical field of view.
+struct PanoramaCamera {
+  // PanoramaView::kDefaultFov.
+  static constexpr float kDefaultFov = 90.0f;
+
+  float yaw = 0.0f;
+  float pitch = 0.0f;
+  float fov = kDefaultFov;
+
+  friend bool operator==(const PanoramaCamera &,
+                         const PanoramaCamera &) = default;
 };
 
 // Filtering of the image: resampling kernel, sharpening and colour
@@ -174,17 +200,39 @@ struct SourceConversion {
                          const SourceConversion &) = default;
 };
 
+// One image the renderer uploads into textures: the image itself and how its
+// pixels become displayed texels.
+struct LayerSource {
+  // Immutable and shared with the GUI thread; null when nothing is shown.
+  std::shared_ptr<const QImage> image;
+  // Incremented by every new image; the renderer re-uploads when it differs
+  // from the generation of its textures. A new image of the same size and
+  // format is uploaded into the existing textures.
+  quint64 generation = 0;
+  SourceConversion conversion;
+  // The image is a frame of an animation: the converted sources of SDR
+  // images are kept so that the next frame is uploaded into them too.
+  bool animationFrame = false;
+};
+
+// AI-upscaled part of the image (Upscaler), drawn over the area of the image
+// it was made from.
+struct UpscaledCrop {
+  LayerSource source;
+  // Area of the image in source pixels that the crop image covers.
+  QRect sourceRect;
+};
+
 // Everything one frame of ImageRenderer depends on.
 struct RenderFrame {
-  // Immutable and shared with the GUI thread; null when no image is shown.
-  std::shared_ptr<const QImage> image;
-  // Incremented by every ImageRenderItem::setImage(); the renderer re-uploads
-  // when it differs from the generation of its textures.
-  quint64 imageGeneration = 0;
+  LayerSource image;
+  // No crop when crop.source.image is null; never drawn in panorama mode.
+  UpscaledCrop crop;
   ImagePlacement placement;
   RenderSettings settings;
   ImageFilter filter;
-  SourceConversion conversion;
+  RenderEnums::Projection projection = RenderEnums::Projection::Flat;
+  PanoramaCamera panorama;
   // The view is not being zoomed, panned or animated. Only then does the
   // renderer spend the extra passes of the exact-ratio downsample and of the
   // resampling kernel.

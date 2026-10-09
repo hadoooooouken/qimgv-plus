@@ -12,7 +12,7 @@ layout(location = 0) in vec2 dstPos;
 
 layout(location = 0) out vec4 fragColor;
 
-// Mirrored by ReduceUniforms in gui/quick/render/imagerenderer.cpp;
+// Mirrored by ReduceUniforms in gui/quick/render/rhipassuniforms.h;
 // identical in boxreduce.vert.
 layout(std140, binding = 0) uniform ReduceParams {
     mat4 mvp;

@@ -9,7 +9,7 @@ layout(location = 0) in vec2 corner;
 
 layout(location = 0) out vec2 dstPos;
 
-// Mirrored by ReduceUniforms in gui/quick/render/imagerenderer.cpp;
+// Mirrored by ReduceUniforms in gui/quick/render/rhipassuniforms.h;
 // identical in boxreduce.frag.
 layout(std140, binding = 0) uniform ReduceParams {
     mat4 mvp;

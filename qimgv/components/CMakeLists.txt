@@ -41,6 +41,8 @@ target_sources(qimgv-plus PRIVATE
 
     viewmode/viewmodecontroller.cpp
 
+    animationplayer/animationplayer.cpp
+
     viewtransform/viewtransform.cpp
     viewtransform/viewtransformcontroller.cpp
 

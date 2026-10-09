@@ -34,7 +34,8 @@ ImageRenderItem::ImageRenderItem(QQuickItem *parent)
           this, [this](const QString &message) {
             qWarning().noquote() << "ImageRenderItem:" << message;
             emit renderError(message);
-          })) {
+          })),
+      mStatistics(std::make_shared<RenderStatistics>()) {
   setAlphaBlending(mSettings.backgroundColor.alpha() < kOpaqueAlpha);
   mLutBuilder = new ColorLutBuilder(this);
   connect(mLutBuilder, &ColorLutBuilder::lutReady, this,
@@ -50,18 +51,34 @@ QQuickRhiItemRenderer *ImageRenderItem::createRenderer() {
 }
 
 //------------------------------------------------------------------------------
-void ImageRenderItem::setImage(std::shared_ptr<const QImage> image) {
+ImageRenderItem::SourceTraits
+ImageRenderItem::SourceTraits::of(const QImage *image) {
+  SourceTraits traits;
+  if (!image)
+    return traits;
+  traits.hdr = isHdrImage(*image);
+  if (traits.hdr)
+    traits.hdrEncoding = detectHdrSourceEncoding(*image);
+  traits.colorSpace = image->colorSpace();
+  return traits;
+}
+
+void ImageRenderItem::setImage(std::shared_ptr<const QImage> image,
+                               ImageUpdate update) {
   if (image && image->isNull())
     image.reset();
   const QSize previousSize = imageSize();
+  const bool hadImage = mImage != nullptr;
   mImage = std::move(image);
   ++mImageGeneration;
-  mImageIsHdr = mImage && isHdrImage(*mImage);
-  mHdrEncoding = mImageIsHdr ? detectHdrSourceEncoding(*mImage)
-                             : HdrSourceEncoding{};
-  mImageColorSpace = mImage ? mImage->colorSpace() : QColorSpace();
+  mImageIsAnimationFrame = update == ImageUpdate::AnimationFrame;
+  // Frames of one animation share their colour space and encoding.
+  if (!mImageIsAnimationFrame || !hadImage || previousSize != imageSize())
+    mImageTraits = SourceTraits::of(mImage.get());
+  if (!mImageIsAnimationFrame)
+    clearUpscaledCrop();
   refreshConversion();
-  update();
+  QQuickItem::update();
   if (imageSize() != previousSize)
     emit imageChanged();
 }
@@ -273,20 +290,33 @@ const SourceConversion &ImageRenderItem::sourceConversion() const {
 }
 
 void ImageRenderItem::refreshConversion() {
+  SourceConversion conversion = resolveConversion(mImage.get(), mImageTraits);
+  SourceConversion cropConversion =
+      resolveConversion(mCrop.get(), mCropTraits);
+  if (conversion == mConversion && cropConversion == mCropConversion)
+    return;
+  mConversion = std::move(conversion);
+  mCropConversion = std::move(cropConversion);
+  update();
+}
+
+SourceConversion
+ImageRenderItem::resolveConversion(const QImage *image,
+                                   const SourceTraits &traits) {
   SourceConversion conversion;
-  if (mImage) {
-    conversion.hdr = mImageIsHdr;
-    if (mImageIsHdr) {
-      conversion.hdrEncoding = mHdrEncoding;
+  if (image) {
+    conversion.hdr = traits.hdr;
+    if (traits.hdr) {
+      conversion.hdrEncoding = traits.hdrEncoding;
       conversion.toneMapping = mToneMapping;
     }
     if (mColorManagement.enabled) {
       // HDR images reach the colour transform as sRGB, like the output of
       // HdrToneMapper; untagged images are sRGB, like in ColorManager.
       const QColorSpace source =
-          mImageIsHdr || !mImageColorSpace.isValid()
+          traits.hdr || !traits.colorSpace.isValid()
               ? QColorSpace(QColorSpace::SRgb)
-              : mImageColorSpace;
+              : traits.colorSpace;
       const QColorSpace &target = mColorManagement.target;
       conversion.color = planColorTransform(source, target);
       if (conversion.color.kind == ColorTransformKind::Unsupported) {
@@ -301,10 +331,98 @@ void ImageRenderItem::refreshConversion() {
       }
     }
   }
-  if (conversion == mConversion)
+  return conversion;
+}
+
+//------------------------------------------------------------------------------
+void ImageRenderItem::setUpscaledCrop(std::shared_ptr<const QImage> crop,
+                                      const QRect &sourceRect) {
+  if (!crop || crop->isNull() || sourceRect.isEmpty()) {
+    clearUpscaledCrop();
     return;
-  mConversion = std::move(conversion);
+  }
+  const bool had = hasUpscaledCrop();
+  mCrop = std::move(crop);
+  ++mCropGeneration;
+  mCropSourceRect = sourceRect;
+  mCropTraits = SourceTraits::of(mCrop.get());
+  refreshConversion();
   update();
+  if (!had)
+    emit upscaledCropChanged();
+}
+
+void ImageRenderItem::clearUpscaledCrop() {
+  if (!mCrop)
+    return;
+  mCrop.reset();
+  ++mCropGeneration;
+  mCropSourceRect = QRect();
+  mCropTraits = SourceTraits{};
+  mCropConversion = SourceConversion{};
+  update();
+  emit upscaledCropChanged();
+}
+
+bool ImageRenderItem::hasUpscaledCrop() const { return mCrop != nullptr; }
+
+const SourceConversion &ImageRenderItem::cropConversion() const {
+  return mCropConversion;
+}
+
+//------------------------------------------------------------------------------
+RenderEnums::Projection ImageRenderItem::projection() const {
+  return mProjection;
+}
+
+void ImageRenderItem::setProjection(RenderEnums::Projection projection) {
+  if (mProjection == projection)
+    return;
+  mProjection = projection;
+  update();
+  emit projectionChanged();
+}
+
+void ImageRenderItem::setPanoramaCamera(const PanoramaCamera &camera) {
+  if (mPanoramaCamera == camera)
+    return;
+  mPanoramaCamera = camera;
+  update();
+  emit panoramaCameraChanged();
+}
+
+const PanoramaCamera &ImageRenderItem::panoramaCamera() const {
+  return mPanoramaCamera;
+}
+
+qreal ImageRenderItem::panoramaYaw() const { return mPanoramaCamera.yaw; }
+
+void ImageRenderItem::setPanoramaYaw(qreal yaw) {
+  PanoramaCamera camera = mPanoramaCamera;
+  camera.yaw = static_cast<float>(yaw);
+  setPanoramaCamera(camera);
+}
+
+qreal ImageRenderItem::panoramaPitch() const { return mPanoramaCamera.pitch; }
+
+void ImageRenderItem::setPanoramaPitch(qreal pitch) {
+  PanoramaCamera camera = mPanoramaCamera;
+  camera.pitch = static_cast<float>(pitch);
+  setPanoramaCamera(camera);
+}
+
+qreal ImageRenderItem::panoramaFov() const { return mPanoramaCamera.fov; }
+
+void ImageRenderItem::setPanoramaFov(qreal fov) {
+  PanoramaCamera camera = mPanoramaCamera;
+  camera.fov = static_cast<float>(fov);
+  setPanoramaCamera(camera);
+}
+
+RenderStatisticsSnapshot ImageRenderItem::statistics() const {
+  return RenderStatisticsSnapshot{
+      mStatistics->imageTexturesCreated.load(std::memory_order_relaxed),
+      mStatistics->imageUploads.load(std::memory_order_relaxed)};
 }
 
 void ImageRenderItem::reportConversionError(const QString &message) {
@@ -318,12 +436,16 @@ void ImageRenderItem::reportConversionError(const QString &message) {
 //------------------------------------------------------------------------------
 RenderFrame ImageRenderItem::frameSnapshot() const {
   RenderFrame frame;
-  frame.image = mImage;
-  frame.imageGeneration = mImageGeneration;
+  frame.image = LayerSource{mImage, mImageGeneration, mConversion,
+                            mImageIsAnimationFrame};
+  frame.crop = UpscaledCrop{
+      LayerSource{mCrop, mCropGeneration, mCropConversion, false},
+      mCropSourceRect};
   frame.placement = mPlacement;
   frame.settings = mSettings;
   frame.filter = mFilter;
-  frame.conversion = mConversion;
+  frame.projection = mProjection;
+  frame.panorama = mPanoramaCamera;
   frame.settled = mSettled;
   if (const QQuickWindow *itemWindow = window())
     frame.devicePixelRatio = itemWindow->effectiveDevicePixelRatio();
@@ -332,4 +454,8 @@ RenderFrame ImageRenderItem::frameSnapshot() const {
 
 std::shared_ptr<RenderErrorChannel> ImageRenderItem::errorChannel() const {
   return mErrorChannel;
+}
+
+std::shared_ptr<RenderStatistics> ImageRenderItem::statisticsChannel() const {
+  return mStatistics;
 }

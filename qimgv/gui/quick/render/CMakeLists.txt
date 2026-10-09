@@ -1,10 +1,11 @@
 ## QML MODULE qimgv.render
 # GPU image rendering for the Qt Quick UI (Phase 1 of
 # docs/QML_MIGRATION_PLAN.md): ImageRenderItem (QQuickRhiItem) and its
-# render-thread ImageRenderer, drawing through QRhi with the RHI shaders in
-# res/shaders/rhi (tile drawing with sharpening and colour adjustments, the
-# exact-ratio box downsample, the Magic Kernel Sharp 2021 resampling and the
-# source conversion: HDR tone mapping and display colour management).
+# render-thread ImageRenderer (with RenderDevice and ImageLayer), drawing
+# through QRhi with the RHI shaders in res/shaders/rhi (tile drawing with
+# sharpening and colour adjustments, the exact-ratio box downsample, the
+# Magic Kernel Sharp 2021 resampling, the source conversion: HDR tone mapping
+# and display colour management, and the equirectangular panorama).
 
 qt_add_library(qimgv_render STATIC)
 
@@ -18,6 +19,8 @@ qt_add_qml_module(qimgv_render
         colortransformplan.h
         imagefiltermode.cpp
         imagefiltermode.h
+        imagelayer.cpp
+        imagelayer.h
         imagerenderer.cpp
         imagerenderer.h
         imagerenderitem.cpp
@@ -25,8 +28,14 @@ qt_add_qml_module(qimgv_render
         renderframe.h
         rendererrorchannel.cpp
         rendererrorchannel.h
+        rendererrorreporter.cpp
+        rendererrorreporter.h
+        renderdevice.cpp
+        renderdevice.h
+        renderstatistics.h
         resamplegrid.cpp
         resamplegrid.h
+        rhipassuniforms.h
         textureuploadformat.cpp
         textureuploadformat.h
         tilegrid.cpp
@@ -47,8 +56,10 @@ qt_add_shaders(qimgv_render "qimgv_render_shaders"
 )
 
 # The resampling passes read exact texels with texelFetch() and loop over a
-# scale-dependent number of taps, and the conversion pass also samples a 3D
-# lookup table; GLSL ES 1.00 can express neither, so their OpenGL variants
+# scale-dependent number of taps, the conversion pass also samples a 3D
+# lookup table, and the panorama samples with explicit gradients
+# (textureGrad); GLSL ES 1.00 can express none of them, so their OpenGL
+# variants
 # start at GLSL ES 3.00 / GLSL 3.30. The Quick UI renders on Direct3D 11 by
 # default and never on an OpenGL ES 2 context.
 qt_add_shaders(qimgv_render "qimgv_render_resample_shaders"
@@ -60,6 +71,8 @@ qt_add_shaders(qimgv_render "qimgv_render_resample_shaders"
         "${QIMGV_RHI_SHADER_DIR}/resample.frag"
         "${QIMGV_RHI_SHADER_DIR}/convert.vert"
         "${QIMGV_RHI_SHADER_DIR}/convert.frag"
+        "${QIMGV_RHI_SHADER_DIR}/panorama.vert"
+        "${QIMGV_RHI_SHADER_DIR}/panorama.frag"
 )
 
 # Headers include each other relative to the application root.

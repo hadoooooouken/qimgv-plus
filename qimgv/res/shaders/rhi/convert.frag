@@ -17,7 +17,7 @@ layout(location = 0) in vec2 dstPos;
 
 layout(location = 0) out vec4 fragColor;
 
-// Mirrored by ConvertUniforms in gui/quick/render/imagerenderer.cpp;
+// Mirrored by ConvertUniforms in gui/quick/render/rhipassuniforms.h;
 // identical in convert.vert.
 layout(std140, binding = 0) uniform ConvertParams {
     mat4 mvp;

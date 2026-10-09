@@ -727,6 +727,77 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
 - **Acceptance:** GIF/WebP/APNG/animated SVG playback timing matches the
   widget viewer; panorama yaw/pitch/FOV parity; AI upscale crop displays at
   the correct position at every zoom.
+- **Delivered:**
+  - **Found:** `ImageAnimated` is not the frame source of the widget
+    viewer; `ImageViewerV2` drives its own `QMovie` (timer, loop, stepping).
+    `ImageAnimated` stays unchanged (metadata only).
+  - **Playback** in the new UI-free component `AnimationPlayer`
+    (`components/animationplayer/`, compiled into the app; wired to the
+    viewer by `QuickViewerPort` in S1.6). It wraps `QMovie` with the widget
+    viewer's schedule: each frame stays for `QMovie::nextFrameDelay()`
+    (precise single-shot timer), after the last frame it loops or stops with
+    `playbackFinished()`, `nextFrame()` / `prevFrame()` wrap without
+    changing the playing state, enabling the loop resumes playback.
+    Properties `playing`, `loop`, `finished`, `frameIndex`, `frameCount`;
+    frames are published as `std::shared_ptr<const QImage>` through
+    `frameReady()`; decode failures through `playbackError()`. The timing
+    logic now exists twice (`ImageViewerV2` and `AnimationPlayer`); flagged,
+    resolved by the widget removal in S4.2.
+  - **Texture reuse:** `ImageRenderItem::setImage(image,
+    ImageUpdate::AnimationFrame)` keeps the upscaled crop and the source
+    traits; the renderer uploads a frame of the same size and texture
+    formats into the existing textures (mips regenerated, filter caches
+    dropped) and keeps converted sources of animation frames, so playback
+    with colour management allocates nothing per frame. `RenderStatistics`
+    (texture creations, uploads), readable through
+    `ImageRenderItem::statistics()`, makes this testable.
+  - **Refactoring (same commit, user decision):** `ImageRenderer` was split.
+    `RenderDevice` holds the per-`QRhi` resources (shaders, quad, samplers,
+    layout bindings, colour LUT, offscreen pass pipelines and their
+    recording); `ImageLayer` holds one image's tiles, upload, conversion,
+    exact downsample and MKS2021 caches; `ImageRenderer` only orchestrates
+    the frame and owns the two pipelines of the item's render pass.
+    `RenderErrorReporter` carries the once-per-message error reporting;
+    the std140 uniform mirrors moved to `rhipassuniforms.h`. The existing
+    render tests pass unchanged on all backends. Fixed on the way: a failed
+    upload no longer submits an update batch that references the released
+    textures.
+  - **Panorama:** `RenderEnums::Projection {Flat, Equirectangular}` and
+    `PanoramaCamera` (yaw / pitch / vertical FOV in degrees, as
+    `PanoramaView`) in `RenderFrame`; QML properties `projection`,
+    `panoramaYaw`, `panoramaPitch`, `panoramaFov`.
+    `res/shaders/rhi/panorama.vert/.frag` port `panorama.frag` (same ray,
+    rotation order and mapping; colour matrix on straight colour). The image
+    keeps its conversion (tone mapping, colour management), which the widget
+    panorama lacked. **Deviations (improvements):** images above the
+    texture size limit render as panoramas (one full-item quad per tile,
+    rays outside the tile core are discarded; a single-column image uses a
+    horizontally repeating sampler, a multi-column one has a clamped
+    one-texel seam at the back); sampling follows the item's `sampling`
+    with explicit gradients whose longitude part is corrected at the back
+    seam, so trilinear sampling no longer aliases on large panoramas.
+    Built for GLSL ES 3.00 / GLSL 3.30 and up (`textureGrad`).
+  - **Upscaled crop:** `setUpscaledCrop(std::shared_ptr<const QImage>,
+    QRect sourceRect)` / `clearUpscaledCrop()`, property `hasUpscaledCrop`.
+    The crop is a second `ImageLayer` drawn after the image over
+    `sourceRect`: corner snapped to whole device pixels, scale
+    `imageScale * sourceRect.width / crop.width` (the widget viewer's
+    formula), same sampling, sharpening, exact downsample / MKS2021 and
+    colour adjustments, and its own `SourceConversion` from its colour space
+    (the `Upscaler` keeps the source's). A new image clears it, animation
+    frames keep it, panorama mode does not draw it (as the widget viewer).
+  - Tests: `qimgv_tests` gained `AnimationPlayerTests` (an embedded GIF:
+    schedule equals `QMovie::nextFrameDelay()` per frame, loop, stop at the
+    end, stepping, single frame, errors, close); the suite now runs under
+    `QGuiApplication`. `qimgv_render_tests` gained animation texture reuse
+    (plain and colour managed), panorama against a double-precision CPU
+    port of `panorama.frag` (four cameras incl. the back seam and colour
+    adjustments, 2-4 levels), seam detail with trilinear sampling (verified
+    to fail without the gradient correction), tiled = untiled panorama, the
+    crop at 50 / 100 / 200 / 400 % (panned) against references, the colour
+    managed crop and the crop lifetime. All pass on D3D11, D3D12 and Vulkan
+    (RTX 3060). Real GIF / WebP / APNG / animated SVG files through the
+    Quick viewer are checked when S1.6 / S2.1 wire the player in.
 
 #### S1.6 `ImageViewport` interaction component
 - **Goal:** the complete viewer as a reusable QML component.

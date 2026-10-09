@@ -7,3 +7,4 @@ int runViewTransformTests(int argc, char **argv);
 int runTileGridTests(int argc, char **argv);
 int runImageFilterTests(int argc, char **argv);
 int runColorTransformTests(int argc, char **argv);
+int runAnimationPlayerTests(int argc, char **argv);

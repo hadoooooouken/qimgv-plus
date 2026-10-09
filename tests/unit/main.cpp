@@ -1,16 +1,18 @@
-#include <QCoreApplication>
+#include <QGuiApplication>
 
 #include "testsuites.h"
 
 // Runs every suite, so one failing suite does not hide the others; the exit
-// code is non-zero when any suite failed.
+// code is non-zero when any suite failed. QMovie (AnimationPlayer) needs a
+// QGuiApplication; CTest runs the suites on the offscreen platform.
 int main(int argc, char **argv) {
-  QCoreApplication app(argc, argv);
+  QGuiApplication app(argc, argv);
   int status = 0;
   status |= runQimgvTests(argc, argv);
   status |= runViewTransformTests(argc, argv);
   status |= runTileGridTests(argc, argv);
   status |= runImageFilterTests(argc, argv);
   status |= runColorTransformTests(argc, argv);
+  status |= runAnimationPlayerTests(argc, argv);
   return status;
 }

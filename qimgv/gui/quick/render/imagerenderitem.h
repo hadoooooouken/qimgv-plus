@@ -4,12 +4,14 @@
 #include <QColorSpace>
 #include <QPointF>
 #include <QQuickRhiItem>
+#include <QRect>
 #include <QSize>
 #include <QtQml/qqmlregistration.h>
 #include <memory>
 
 #include "gui/quick/render/renderframe.h"
 #include "gui/quick/render/rendererrorchannel.h"
+#include "gui/quick/render/renderstatistics.h"
 
 class ColorLutBuilder;
 class QImage;
@@ -34,6 +36,15 @@ class QImage;
 // kernel selected, it instead resamples the visible part of the image with
 // that kernel at any scale other than 1:1. Whoever drives the view sets
 // settled to false during zoom, pan, resize and animation playback.
+//
+// Frames of an animation (AnimationPlayer) are passed with
+// ImageUpdate::AnimationFrame: a frame of the same size and format is
+// uploaded into the textures of the previous one.
+//
+// An upscaled crop (setUpscaledCrop()) is drawn over the area of the image
+// it was made from, with the same filtering and conversion. With the
+// Equirectangular projection the image is shown as a 360 degree panorama
+// from the PanoramaCamera instead (the crop is then not drawn).
 //
 // The item only holds GUI-thread state; ImageRenderer renders on the render
 // thread from the RenderFrame snapshot taken in synchronize(). Rendering
@@ -60,13 +71,29 @@ class ImageRenderItem : public QQuickRhiItem {
   Q_PROPERTY(bool toneMapping READ isToneMappingEnabled WRITE setToneMappingEnabled NOTIFY toneMappingChanged FINAL)
   Q_PROPERTY(RenderEnums::ToneMapOperator toneMapOperator READ toneMapOperator WRITE setToneMapOperator NOTIFY toneMappingChanged FINAL)
   Q_PROPERTY(qreal hdrWhiteLevel READ hdrWhiteLevel WRITE setHdrWhiteLevel NOTIFY toneMappingChanged FINAL)
+  Q_PROPERTY(RenderEnums::Projection projection READ projection WRITE setProjection NOTIFY projectionChanged FINAL)
+  Q_PROPERTY(qreal panoramaYaw READ panoramaYaw WRITE setPanoramaYaw NOTIFY panoramaCameraChanged FINAL)
+  Q_PROPERTY(qreal panoramaPitch READ panoramaPitch WRITE setPanoramaPitch NOTIFY panoramaCameraChanged FINAL)
+  Q_PROPERTY(qreal panoramaFov READ panoramaFov WRITE setPanoramaFov NOTIFY panoramaCameraChanged FINAL)
+  Q_PROPERTY(bool hasUpscaledCrop READ hasUpscaledCrop NOTIFY upscaledCropChanged FINAL)
 
 public:
+  // What a setImage() call shows.
+  enum class ImageUpdate {
+    // A different image: the upscaled crop is dropped.
+    NewImage,
+    // The next frame of the animation being shown: the crop is kept, and
+    // textures (and converted sources) are reused when the frame has the
+    // same size and format.
+    AnimationFrame,
+  };
+
   explicit ImageRenderItem(QQuickItem *parent = nullptr);
 
   // Shows image, or nothing for a null pointer or a null image. The image is
   // shared with the render thread and must not be modified afterwards.
-  void setImage(std::shared_ptr<const QImage> image);
+  void setImage(std::shared_ptr<const QImage> image,
+                ImageUpdate update = ImageUpdate::NewImage);
   [[nodiscard]] QSize imageSize() const;
 
   void setPlacement(const ImagePlacement &placement);
@@ -116,11 +143,37 @@ public:
   // The conversion the renderer applies to the current image.
   [[nodiscard]] const SourceConversion &sourceConversion() const;
 
+  // Shows crop (an upscaled copy of sourceRect of the image, in source
+  // pixels) over that area; replaces a previous crop. A null or empty crop or
+  // an empty sourceRect clears it.
+  void setUpscaledCrop(std::shared_ptr<const QImage> crop,
+                       const QRect &sourceRect);
+  void clearUpscaledCrop();
+  [[nodiscard]] bool hasUpscaledCrop() const;
+  [[nodiscard]] const SourceConversion &cropConversion() const;
+
+  [[nodiscard]] RenderEnums::Projection projection() const;
+  void setProjection(RenderEnums::Projection projection);
+  void setPanoramaCamera(const PanoramaCamera &camera);
+  [[nodiscard]] const PanoramaCamera &panoramaCamera() const;
+  // Degrees.
+  [[nodiscard]] qreal panoramaYaw() const;
+  void setPanoramaYaw(qreal yaw);
+  [[nodiscard]] qreal panoramaPitch() const;
+  void setPanoramaPitch(qreal pitch);
+  [[nodiscard]] qreal panoramaFov() const;
+  void setPanoramaFov(qreal fov);
+
+  // GPU work done by the renderer so far.
+  [[nodiscard]] RenderStatisticsSnapshot statistics() const;
+
   // Render-thread side, called from ImageRenderer::synchronize() only.
   [[nodiscard]] RenderFrame frameSnapshot() const;
   // Channel through which the renderer reports errors; they are emitted as
   // renderError() on the GUI thread.
   [[nodiscard]] std::shared_ptr<RenderErrorChannel> errorChannel() const;
+  // Counters the renderer writes.
+  [[nodiscard]] std::shared_ptr<RenderStatistics> statisticsChannel() const;
 
 signals:
   void samplingChanged();
@@ -132,30 +185,50 @@ signals:
   void settledChanged();
   void toneMappingChanged();
   void colorManagementChanged();
+  void projectionChanged();
+  void panoramaCameraChanged();
+  void upscaledCropChanged();
   void renderError(const QString &message);
 
 protected:
   QQuickRhiItemRenderer *createRenderer() override;
 
 private:
+  // What the conversion of one image depends on, detected once per image.
+  struct SourceTraits {
+    bool hdr = false;
+    HdrSourceEncoding hdrEncoding;
+    QColorSpace colorSpace;
+
+    [[nodiscard]] static SourceTraits of(const QImage *image);
+  };
+
   void applySettings(const RenderSettings &settings);
-  // Resolves mConversion from the image, the tone mapping and the colour
-  // management; requests a lookup table when the plan needs one.
+  // Resolves the conversions of the image and the crop from their traits,
+  // the tone mapping and the colour management; requests lookup tables when
+  // a plan needs one.
   void refreshConversion();
+  [[nodiscard]] SourceConversion resolveConversion(const QImage *image,
+                                                   const SourceTraits &traits);
   // GUI-thread failures of the conversion setup, reported like render
   // errors, once per distinct message.
   void reportConversionError(const QString &message);
 
   std::shared_ptr<const QImage> mImage;
   quint64 mImageGeneration = 0;
+  bool mImageIsAnimationFrame = false;
+  SourceTraits mImageTraits;
+  std::shared_ptr<const QImage> mCrop;
+  quint64 mCropGeneration = 0;
+  QRect mCropSourceRect;
+  SourceTraits mCropTraits;
+  SourceConversion mCropConversion;
+  RenderEnums::Projection mProjection = RenderEnums::Projection::Flat;
+  PanoramaCamera mPanoramaCamera;
   ImagePlacement mPlacement;
   RenderSettings mSettings;
   ImageFilter mFilter;
   bool mSettled = false;
-  // Detected in setImage().
-  bool mImageIsHdr = false;
-  HdrSourceEncoding mHdrEncoding;
-  QColorSpace mImageColorSpace;
   ToneMapping mToneMapping;
   ColorManagement mColorManagement;
   SourceConversion mConversion;
@@ -163,4 +236,5 @@ private:
   ColorLutBuilder *mLutBuilder = nullptr;
   QString mLastConversionError;
   std::shared_ptr<RenderErrorChannel> mErrorChannel;
+  std::shared_ptr<RenderStatistics> mStatistics;
 };
