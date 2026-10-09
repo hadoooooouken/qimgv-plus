@@ -154,7 +154,6 @@ Principles:
 
 | Feature | Reason |
 |---|---|
-| HDR swapchain for Qt Quick windows | Qt Quick has no public, documented API for an scRGB/HDR10 window swapchain in 6.12. A spike (S2.5b) may test the internal option; production keeps SDR output with GPU tone mapping. |
 | Windows screen colour space derived from ICC (`ColorProfileGetDisplayDefault`) in the 6.12 QPA plugin | No public `QScreen` accessor was found in the 6.12 docs; `ColorManager`'s `GetICMProfileW` path stays until a public API exists. |
 | Direct3D 12 / Vulkan scene graph backends | Offered as a user setting; D3D11 remains the default for startup time and driver maturity. |
 
@@ -170,6 +169,7 @@ Principles:
 | QML `Image` + `QQuickImageProvider` for the main image | No custom filtering/tone mapping, CPU decode on provider threads, duplicate caching. |
 | Qt Quick 3D for the panorama view | Large module and startup cost for a single fragment shader. |
 | `QtQuick.Pdf` | PDF pages are already rasterized into the image pipeline by `ImageStatic::loadPdf()`. |
+| HDR swapchain for Qt Quick windows | Qt Quick has no public, documented API for an scRGB/HDR10 window swapchain in 6.12, and HDR displays are out of scope. Output stays SDR with GPU tone mapping. |
 
 ---
 
@@ -1517,10 +1517,6 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
       default action, the wheel, the folder view); `tst_mainwindow.qml`
       checks the docked side panel.
 
-#### S2.5b Spike: HDR output (optional, not blocking)
-- **Goal:** measure whether an scRGB swapchain is viable for HDR displays.
-- **Scope:** prototype only, in a separate branch; documents findings.
-
 #### S2.6 SVG display path
 - **Goal:** sharp SVG at any zoom on the GPU.
 - **Owner:** `ImageViewport` chooses the layer; `Loader` decides the
@@ -1634,7 +1630,7 @@ S0.1 -> S0.2 -> S0.3 -> S0.4 -> S0.5
                 S1.1 -> S1.2 -> S1.3 -> S1.4 -> S1.5 -> S1.6
                                                          |
                                                          v
-                S2.1 -> S2.1b -> S2.2 -> {S2.3, S2.4, S2.5, S2.6}   (S2.5b optional)
+                S2.1 -> S2.1b -> S2.2 -> {S2.3, S2.4, S2.5, S2.6}
                                                          |
                                                          v
                                   S3.1 -> S3.2 -> S3.3 -> S3.4
