@@ -20,5 +20,7 @@ int main(int argc, char **argv) {
   status |= runSingleInstanceTests(argc, argv);
   status |= runWindowTitleTests(argc, argv);
   status |= runQuickShellTests(argc, argv);
+  status |= runDecodedPixelsTests(argc, argv);
+  status |= runUpscaleDecisionTests(argc, argv);
   return status;
 }

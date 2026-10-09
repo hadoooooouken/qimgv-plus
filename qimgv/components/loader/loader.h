@@ -18,6 +18,8 @@ public:
 
     void clearTasks();
     bool isBusy() const;
+    // Applies to the loads started afterwards.
+    void setDisplayPipeline(DisplayPipeline pipeline);
     bool isLoading(QString path);
 private:
     struct TaskRecord {
@@ -31,6 +33,7 @@ private:
     LoaderTaskNotifier taskNotifier;
     std::stop_source mCancellationSource;
     QThreadPool *pool;    
+    DisplayPipeline mDisplayPipeline = DisplayPipeline::Cpu;
     [[nodiscard]] quint64 nextTaskId();
     void cancelTasks();
     void doLoadAsync(QString path, int priority);

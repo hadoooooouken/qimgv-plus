@@ -1,6 +1,9 @@
 #include "quickvieweractions.h"
 
+#include <QClipboard>
 #include <QCoreApplication>
+#include <QDebug>
+#include <QGuiApplication>
 
 #include "components/actionmanager/actionmanager.h"
 #include "components/scalingfilter/scalingfilterselection.h"
@@ -57,6 +60,15 @@ QuickViewerActions::QuickViewerActions(ActionManager &actions, Settings &setting
     connect(&actions, &ActionManager::toggleTransparencyGrid, view,
             &ImageViewportController::toggleTransparencyGrid);
     connect(&actions, &ActionManager::togglePanorama, view, &ImageViewportController::togglePanorama);
+    connect(&actions, &ActionManager::copyViewportClipboard, view,
+            &ImageViewportController::grabVisibleImage);
+    connect(view, &ImageViewportController::visibleImageGrabbed, this,
+            &QuickViewerActions::copyToClipboard);
+    connect(view, &ImageViewportController::visibleImageGrabFailed, this, [this]() {
+        emit notificationRequested({QCoreApplication::translate(
+                                        "MW", "No viewport image available to copy."),
+                                    NotificationKind::Warning, std::nullopt});
+    });
     connect(&actions, &ActionManager::lockZoom, this, &QuickViewerActions::toggleLockZoom);
     connect(&actions, &ActionManager::lockView, this, &QuickViewerActions::toggleLockView);
     connect(&actions, &ActionManager::toggleScalingFilter, this,
@@ -94,6 +106,18 @@ void QuickViewerActions::selectScalingFilter(ScalingFilter filter, bool persist)
     if (persist)
         settings.setScalingFilter(filter);
     viewport.setScalingFilter(filter);
+}
+
+void QuickViewerActions::copyToClipboard(const QImage &image) {
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    if (!clipboard) {
+        qWarning() << "QuickViewerActions: no clipboard";
+        return;
+    }
+    clipboard->setImage(image);
+    emit notificationRequested({QCoreApplication::translate(
+                                    "MW", "Viewport image copied to clipboard"),
+                                NotificationKind::Success, std::nullopt});
 }
 
 void QuickViewerActions::notify(const QString &text) {

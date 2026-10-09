@@ -5,6 +5,7 @@
 #include "gui/uimetrics.h"
 #include "settings.h"
 #include "themestore.h"
+#include "utils/colormanager.h"
 #include "utils/iconfontmanager.h"
 
 namespace {
@@ -142,6 +143,16 @@ UiSettingsSnapshot BridgeSnapshots::readUiSettings(Settings &settings) {
               .showSaveOverlay = settings.showSaveOverlay(),
               .defaultCropAction =
                   static_cast<Enums::CropAction>(settings.defaultCropAction()),
+          },
+      .displayColor =
+          {
+              .toneMapping = settings.hdrToneMappingEnabled(),
+              .toneMapOperator = settings.hdrToneMappingOperator(),
+              .hdrWhiteLevel = settings.hdrTargetWhiteLevel(),
+              .colorManagement = settings.colorManagementEnabled(),
+              .target = settings.colorManagementEnabled()
+                            ? ColorManager::getTargetColorSpace()
+                            : QColorSpace(),
           },
   };
 }

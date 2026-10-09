@@ -21,6 +21,9 @@ constexpr QSize kPanoramaImage(2000, 1000);
 constexpr double kZoomStep = 0.25;
 constexpr qreal kScaleTolerance = 1e-4;
 constexpr QPointF kCentre(400, 300);
+constexpr int kHdrWhiteLevel = 400;
+// No ::ToneMapOperator has this value.
+constexpr int kUnknownToneMapOperator = 9;
 // Inside the left / right click zone of kViewport.
 constexpr QPointF kLeftEdge(10, 300);
 constexpr QPointF kRightEdge(790, 300);
@@ -216,7 +219,7 @@ private slots:
     settings.viewer.useUpscayl = true;
     Viewport viewport(settings);
     ImageViewportController &controller = viewport.controller;
-    QSignalSpy scaling(&controller, &ImageViewportController::scalingRequested);
+    QSignalSpy scaling(&controller, &ImageViewportController::upscaleRequested);
     controller.showImage(testImage(kSmallImage), kFirstFile);
     QCOMPARE(controller.currentScale(), 1.0f);
 
@@ -236,27 +239,82 @@ private slots:
     QVERIFY(!controller.pointerReleased(kCentre));
   }
 
-  void upscaleSourceIsRequestedAboveOneToOne() {
+  void upscaleIsRequestedAboveOneToOne() {
     UiSettingsSnapshot settings = testSettings();
     settings.viewer.useUpscayl = true;
     Viewport viewport(settings);
     ImageViewportController &controller = viewport.controller;
-    QSignalSpy scaling(&controller, &ImageViewportController::scalingRequested);
+    QSignalSpy upscale(&controller, &ImageViewportController::upscaleRequested);
     controller.showImage(testImage(kSmallImage), kFirstFile);
-    QCOMPARE(scaling.count(), 0);
+    QCOMPARE(upscale.count(), 0);
 
     controller.zoomIn();
-    QCOMPARE(scaling.count(), 1);
+    QCOMPARE(upscale.count(), 1);
     const QSize expected =
         (QSizeF(kSmallImage) * (1.0 + kZoomStep)).toSize();
-    QCOMPARE(scaling.at(0).at(0).toSize(), expected);
-    // The CPU kernel of the GPU MKS2021 filter.
-    QCOMPARE(scaling.at(0).at(1).value<ScalingFilter>(), QI_FILTER_MKS2021);
+    QCOMPARE(upscale.at(0).at(0).toSize(), expected);
 
     settings.viewer.useUpscayl = false;
     controller.applySettings(settings);
     controller.zoomIn();
-    QCOMPARE(scaling.count(), 1);
+    QCOMPARE(upscale.count(), 1);
+  }
+
+  void turningUpscaylOffHidesTheCrop() {
+    UiSettingsSnapshot settings = testSettings();
+    settings.viewer.useUpscayl = true;
+    Viewport viewport(settings);
+    ImageViewportController &controller = viewport.controller;
+    controller.showImage(testImage(kSmallImage), kFirstFile);
+    controller.zoomIn();
+    controller.setUpscaledCrop(*testImage(kSmallImage), QRect(QPoint(0, 0), kSmallImage));
+    QVERIFY(viewport.item.hasUpscaledCrop());
+
+    settings.viewer.useUpscayl = false;
+    controller.applySettings(settings);
+    QVERIFY(!viewport.item.hasUpscaledCrop());
+  }
+
+  void displayColorSettingsReachTheView() {
+    UiSettingsSnapshot settings = testSettings();
+    settings.displayColor = {.toneMapping = false,
+                             .toneMapOperator = static_cast<int>(RenderEnums::ToneMapOperator::AcesFilmic),
+                             .hdrWhiteLevel = kHdrWhiteLevel,
+                             .colorManagement = true,
+                             .target = QColorSpace(QColorSpace::DisplayP3)};
+    Viewport viewport(settings);
+    const ToneMapping expectedToneMapping{.enabled = false,
+                                          .op = RenderEnums::ToneMapOperator::AcesFilmic,
+                                          .whiteNits = kHdrWhiteLevel};
+    QCOMPARE(viewport.item.toneMapping(), expectedToneMapping);
+    const ColorManagement expectedColor{.enabled = true,
+                                        .target = QColorSpace(QColorSpace::DisplayP3)};
+    QCOMPARE(viewport.item.colorManagement(), expectedColor);
+
+    // A colour change keeps the session filter (not a viewer setting).
+    viewport.controller.setScalingFilter(QI_FILTER_NEAREST);
+    settings.displayColor.toneMapOperator = static_cast<int>(RenderEnums::ToneMapOperator::Hable);
+    viewport.controller.applySettings(settings);
+    QCOMPARE(viewport.item.toneMapping().op, RenderEnums::ToneMapOperator::Hable);
+    QCOMPARE(viewport.controller.scalingFilter(), QI_FILTER_NEAREST);
+  }
+
+  void unknownToneMapOperatorFallsBackToBt2408() {
+    UiSettingsSnapshot settings = testSettings();
+    settings.displayColor.toneMapOperator = kUnknownToneMapOperator;
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(u"unknown tone mapping operator"_s));
+    Viewport viewport(settings);
+    QCOMPARE(viewport.item.toneMapping().op, RenderEnums::ToneMapOperator::Bt2408);
+  }
+
+  void grabWithoutAWindowFails() {
+    Viewport viewport;
+    QSignalSpy failed(&viewport.controller, &ImageViewportController::visibleImageGrabFailed);
+    viewport.controller.grabVisibleImage();
+    QCOMPARE(failed.count(), 1);
+    viewport.controller.showImage(testImage(kLargeImage), kFirstFile);
+    viewport.controller.grabVisibleImage();
+    QCOMPARE(failed.count(), 2);
   }
 
   void wheelScrollsZoomsOrFallsThrough() {

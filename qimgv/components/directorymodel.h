@@ -17,6 +17,9 @@ public:
     ~DirectoryModel();
 
     void clearScaler();
+    // How loaded static images are prepared for display (see
+    // DisplayPipeline); set once, before the first load.
+    void setDisplayPipeline(DisplayPipeline pipeline);
     void requestScaled(const ScalerRequest &req);
 
     void load(QString filePath, bool asyncHint);

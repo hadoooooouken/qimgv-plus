@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QImage>
 #include <QObject>
 #include <QString>
 
@@ -34,6 +35,7 @@ private:
     // Shows filter in the viewer; persist also stores it as the configured
     // filter (cycling does, toggling to nearest does not).
     void selectScalingFilter(ScalingFilter filter, bool persist);
+    void copyToClipboard(const QImage &image);
     void notify(const QString &text);
     void notify(const QString &text, int durationMs);
 

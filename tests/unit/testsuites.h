@@ -14,3 +14,5 @@ int runWindowStateTests(int argc, char **argv);
 int runSingleInstanceTests(int argc, char **argv);
 int runWindowTitleTests(int argc, char **argv);
 int runQuickShellTests(int argc, char **argv);
+int runDecodedPixelsTests(int argc, char **argv);
+int runUpscaleDecisionTests(int argc, char **argv);

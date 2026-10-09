@@ -16,6 +16,10 @@ public:
     virtual std::unique_ptr<QPixmap> getPixmap() = 0;
     virtual std::shared_ptr<const QImage> getImage() = 0;
     virtual std::shared_ptr<const QImage> getDisplayImage() = 0;
+    // The current pixels before display processing: for an HDR image shown
+    // by the GPU viewer, the HDR source (its metadata and colour space);
+    // otherwise the same as getImage(). Does not trigger an SDR conversion.
+    virtual std::shared_ptr<const QImage> getDecodedImage() { return getImage(); }
     DocumentType type() const;
     QString filePath() const;
     virtual int height() = 0;

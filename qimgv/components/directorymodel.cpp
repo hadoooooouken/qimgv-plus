@@ -23,6 +23,10 @@ DirectoryModel::DirectoryModel(QObject *parent) :
     connect(scaler.get(), &Scaler::scalingFinished, this, &DirectoryModel::scalingFinished);
 }
 
+void DirectoryModel::setDisplayPipeline(DisplayPipeline pipeline) {
+    loader.setDisplayPipeline(pipeline);
+}
+
 DirectoryModel::~DirectoryModel() {
     loader.clearTasks();
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QColorSpace>
 #include <QObject>
 #include <QString>
 #include <QtQml/qqmlregistration.h>
@@ -154,11 +155,32 @@ public:
 };
 
 // Complete set published by SettingsBridge in one step.
+// Colour pipeline of the image renderer: HDR tone mapping and display colour
+// management. C++ only (ImageViewportController); not exposed to QML.
+struct DisplayColorSettings {
+  // Settings::hdrTargetWhiteLevel() default (BT.2408 reference white).
+  static constexpr int kDefaultHdrWhiteLevel = 203;
+
+  bool toneMapping = true;
+  // A ::ToneMapOperator value (Settings::hdrToneMappingOperator()).
+  int toneMapOperator = 0;
+  // Luminance in nits that is shown as SDR white.
+  int hdrWhiteLevel = kDefaultHdrWhiteLevel;
+  bool colorManagement = false;
+  // ColorManager::getTargetColorSpace(); invalid while colour management
+  // is off.
+  QColorSpace target;
+
+  friend bool operator==(const DisplayColorSettings &,
+                         const DisplayColorSettings &) = default;
+};
+
 struct UiSettingsSnapshot {
   ViewerSettings viewer;
   PanelSettings panel;
   FolderViewSettings folderView;
   OverlaySettings overlays;
+  DisplayColorSettings displayColor;
 
   friend bool operator==(const UiSettingsSnapshot &,
                          const UiSettingsSnapshot &) = default;

@@ -6,12 +6,19 @@
 #include <QString>
 #include <memory>
 
+#include "utils/displaypipeline.h"
+
 // Outbound UI port for the document viewer: what is displayed and the view
 // state the core needs for scaling and AI upscaling decisions. Must only be
 // called on the GUI thread.
 class IViewerPort {
 public:
     virtual ~IViewerPort() = default;
+
+    // Where this viewer wants static images prepared; constant for the
+    // viewer's lifetime. Core loads images accordingly and passes them to
+    // showImage() as Image::getDisplayImage() returns them.
+    [[nodiscard]] virtual DisplayPipeline displayPipeline() const = 0;
 
     virtual void showImage(std::shared_ptr<const QImage> image, const QString &filePath) = 0;
     virtual void showAnimation(const QString &filePath, const QString &format, QSize size) = 0;

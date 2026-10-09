@@ -4,6 +4,7 @@
 #include <QEasingCurve>
 #include <QEvent>
 #include <QGuiApplication>
+#include <QQuickItemGrabResult>
 #include <QQuickWindow>
 #include <QStyleHints>
 #include <QAccessibilityHints>
@@ -17,6 +18,23 @@ namespace {
 // Delay before the settle pass after the view stops moving (the widget
 // viewer's high-quality rescale delay).
 constexpr int kSettleDelayMs = 80;
+
+// Settings::hdrToneMappingOperator() -> renderer operator; the values are
+// the same (see imagerenderitem.cpp). Unknown values select BT.2408, as
+// the settings dialog's default.
+RenderEnums::ToneMapOperator toneMapOperatorFor(int settingsValue) {
+    switch (settingsValue) {
+    case static_cast<int>(RenderEnums::ToneMapOperator::Bt2408):
+    case static_cast<int>(RenderEnums::ToneMapOperator::ReinhardJodie):
+    case static_cast<int>(RenderEnums::ToneMapOperator::AcesFilmic):
+    case static_cast<int>(RenderEnums::ToneMapOperator::Hable):
+        return static_cast<RenderEnums::ToneMapOperator>(settingsValue);
+    default:
+        qWarning() << "ImageViewportController: unknown tone mapping operator"
+                   << settingsValue << "- using BT.2408";
+        return RenderEnums::ToneMapOperator::Bt2408;
+    }
+}
 // Smooth zoom and scroll duration (ImageViewerV2::ANIMATION_SPEED).
 constexpr int kMotionDurationMs = 150;
 // Keyboard scroll step, logical pixels.
@@ -212,7 +230,20 @@ void ImageViewportController::pushDisplayState() {
                                    : RenderEnums::Projection::Flat);
     onPanoramaChanged();
     applyFilter();
+    applyDisplayColor();
     applyItemSettled();
+}
+
+// HDR tone mapping and display colour management of the decoded image (the
+// Quick UI uses DisplayPipeline::Gpu).
+void ImageViewportController::applyDisplayColor() {
+    if (!mView)
+        return;
+    const DisplayColorSettings &color = mSettings.displayColor;
+    mView->setToneMapping({.enabled = color.toneMapping,
+                           .op = toneMapOperatorFor(color.toneMapOperator),
+                           .whiteNits = static_cast<float>(color.hdrWhiteLevel)});
+    mView->setColorManagement({.enabled = color.colorManagement, .target = color.target});
 }
 
 void ImageViewportController::applyFilter() {
@@ -286,12 +317,16 @@ void ImageViewportController::applySettings(const UiSettingsSnapshot &settings) 
     const bool viewerChanged = first || settings.viewer != mSettings.viewer;
     const bool panelChanged = first || settings.panel != mSettings.panel;
     const bool overlaysChanged = first || settings.overlays != mSettings.overlays;
-    if (!viewerChanged && !panelChanged && !overlaysChanged)
+    const bool displayColorChanged = first || settings.displayColor != mSettings.displayColor;
+    if (!viewerChanged && !panelChanged && !overlaysChanged && !displayColorChanged)
         return;
     const bool useUpscaylBefore = mSettings.viewer.useUpscayl;
     const ScalingFilter filterBefore = mScalingFilter;
     mSettings = settings;
 
+    // The renderer converts again from the kept source; no re-decode.
+    if (displayColorChanged)
+        applyDisplayColor();
     if (panelChanged || viewerChanged)
         updateClickZonesEnabled();
     if (overlaysChanged)
@@ -470,6 +505,45 @@ bool ImageViewportController::panoramaMode() const {
     return mPanorama;
 }
 
+void ImageViewportController::grabVisibleImage() {
+    const QRect viewport(QPoint(0, 0), viewportSize());
+    // Every pixel the image covers, also partly at a fractional position.
+    const QRectF imageArea =
+        mImage ? QRectF(mTransform.transform().imagePosition(),
+                        QSizeF(mImage->size()) * mTransform.transform().scale())
+               : QRectF();
+    const QRectF visible = mPanorama ? QRectF(viewport) : imageArea.intersected(QRectF(viewport));
+    if (!mImage || !mView || !mView->window() || visible.isEmpty()) {
+        emit visibleImageGrabFailed();
+        return;
+    }
+    const qreal dpr = windowDevicePixelRatio();
+    const QSize grabSize = (QSizeF(viewport.size()) * dpr).toSize();
+    QSharedPointer<QQuickItemGrabResult> grab = mView->grabToImage(grabSize);
+    if (!grab) {
+        qWarning() << "ImageViewportController: the viewport could not be read back";
+        emit visibleImageGrabFailed();
+        return;
+    }
+    // Replacing a pending grab drops its connection with it.
+    mPendingGrab = grab;
+    mPendingGrabCrop = QRectF(visible.topLeft() * dpr, visible.size() * dpr)
+                           .toAlignedRect()
+                           .intersected(QRect(QPoint(0, 0), grabSize));
+    connect(grab.data(), &QQuickItemGrabResult::ready, this, [this, dpr]() {
+        const QSharedPointer<QQuickItemGrabResult> finished = std::exchange(mPendingGrab, {});
+        const QImage grabbed = finished ? finished->image() : QImage();
+        if (grabbed.isNull()) {
+            qWarning() << "ImageViewportController: the viewport readback returned no image";
+            emit visibleImageGrabFailed();
+            return;
+        }
+        QImage visibleImage = grabbed.copy(mPendingGrabCrop);
+        visibleImage.setDevicePixelRatio(dpr);
+        emit visibleImageGrabbed(visibleImage);
+    });
+}
+
 void ImageViewportController::setColorAdjustments(const ColorAdjustments &adjustments) {
     mColorAdjustments = adjustments;
     if (mView)
@@ -513,8 +587,8 @@ void ImageViewportController::onPanoramaChanged() {
 //------------------------------------------------------------------------------
 // Scaling and settling
 //------------------------------------------------------------------------------
-// The GPU renderer shows every filter itself; a CPU-scaled copy is only
-// requested as the source of an AI upscale (Core::onScalingFinished()).
+// The GPU renderer shows every filter itself; Core is only asked about the
+// AI upscale of the visible area (Core::onUpscaleRequested()).
 void ImageViewportController::requestScaling() {
     mScaleTimer.stop();
     setRenderingSettled(false);
@@ -528,17 +602,14 @@ void ImageViewportController::requestScaling() {
         mInteraction.mode() == ViewportInteraction::Mode::Zoom ||
         mInteraction.mode() == ViewportInteraction::Mode::WheelZoom)
         return;
-    if (needsUpscaleSource()) {
-        // The GPU port of MKS2021 has the CPU kernel as its source filter.
-        const ScalingFilter requestFilter =
-            mScalingFilter == QI_FILTER_MKS2021_GPU ? QI_FILTER_MKS2021 : mScalingFilter;
-        emit scalingRequested(mTransform.transform().scaledSize() * devicePixelRatio(),
-                              requestFilter);
-    }
+    if (wantsUpscale())
+        emit upscaleRequested(mTransform.transform().scaledSize() * devicePixelRatio());
+    else if (!mSettings.viewer.useUpscayl)
+        hideUpscaledCrop();
     presentSettledFrame();
 }
 
-bool ImageViewportController::needsUpscaleSource() const {
+bool ImageViewportController::wantsUpscale() const {
     return mSettings.viewer.useUpscayl && !mPanorama && !mPlayer.isOpen() &&
            currentScale() > kOneToOneScale + ViewTransform::kScaleEpsilon;
 }

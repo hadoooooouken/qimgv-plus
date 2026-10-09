@@ -82,8 +82,8 @@ QuickUiHost::~QuickUiHost() = default;
 //------------------------------------------------------------------------------
 void QuickUiHost::forwardViewportEvents() {
   UiEvents *events = &mEvents;
-  QObject::connect(&mViewport, &ImageViewportController::scalingRequested,
-                   events, &UiEvents::scalingRequested);
+  QObject::connect(&mViewport, &ImageViewportController::upscaleRequested,
+                   events, &UiEvents::upscaleRequested);
   QObject::connect(&mViewport, &ImageViewportController::renderingSettled,
                    events, &UiEvents::documentRenderingSettled);
   QObject::connect(&mViewport, &ImageViewportController::draggedOut, events,

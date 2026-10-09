@@ -63,9 +63,7 @@ void ImageStatic::load() {
       qWarning() << "ImageStatic: failed to render font preview" << mPath;
       return;
     }
-    image = std::make_shared<const QImage>(std::move(loaded));
-    imageColorManaged =
-        std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+    setDecoded(std::make_shared<const QImage>(std::move(loaded)));
     mLoaded = true;
   }
   else if (mDocInfo->format() == "blend") {
@@ -78,9 +76,7 @@ void ImageStatic::load() {
       }
       return;
     }
-    image = std::make_shared<const QImage>(std::move(loaded));
-    imageColorManaged =
-        std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+    setDecoded(std::make_shared<const QImage>(std::move(loaded)));
     mLoaded = true;
   }
   else
@@ -127,52 +123,13 @@ void ImageStatic::loadGeneric() {
   img =
       ImageLib::exifRotated(std::move(img), mDocInfo.get()->exifOrientation());
 
-  if (HdrToneMapper::isHdr(*img)) {
-    // Guarantees that every isHdr()==true image leaves this function as an
-    // integer sRGB QImage, whether tone-mapping succeeds, is disabled, or
-    // HdrToneMapper fails to produce an image (e.g. an allocation failure).
-    auto sdrFallbackConvert = [](const QImage &src) {
-      QImage::Format fallbackFmt = src.hasAlphaChannel() ? QImage::Format_ARGB32 : QImage::Format_RGB32;
-      QImage converted = src.convertToFormat(fallbackFmt);
-      converted.setColorSpace(QColorSpace(QColorSpace::SRgb));
-      for (const QString &key : src.textKeys()) {
-        if (!key.startsWith(QStringLiteral("HDR_"))) {
-          converted.setText(key, src.text(key));
-        }
-      }
-      return converted;
-    };
-
-    if (settings && settings->hdrToneMappingEnabled()) {
-      HdrToneMapParams params = {
-          .enabled = true,
-          .op = static_cast<ToneMapOperator>(settings->hdrToneMappingOperator()),
-          .targetWhiteNits = static_cast<float>(settings->hdrTargetWhiteLevel())
-      };
-      QImage toneMapped = HdrToneMapper::applyToneMapping(*img, params);
-      if (!toneMapped.isNull()) {
-        img = std::make_unique<const QImage>(std::move(toneMapped));
-      } else {
-        img = std::make_unique<const QImage>(sdrFallbackConvert(*img));
-      }
-    } else {
-      // Fallback SDR conversion when HDR tone-mapping is disabled
-      img = std::make_unique<const QImage>(sdrFallbackConvert(*img));
-    }
-  }
-
   // scaling this format via qt results in transparent background
   // it rare enough so lets just convert it to the closest working thing
   if (img->format() == QImage::Format_Mono) {
-    QImage *imgConverted = new QImage();
-    *imgConverted = img->convertToFormat(QImage::Format_ARGB32);
-    image.reset(imgConverted);
+    setDecoded(std::make_shared<const QImage>(
+        img->convertToFormat(QImage::Format_ARGB32)));
   } else {
-    // set image
-    image = std::move(img);
-  }
-  if (image) {
-    imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+    setDecoded(std::move(img));
   }
   mLoaded = true;
 }
@@ -180,8 +137,7 @@ void ImageStatic::loadGeneric() {
 void ImageStatic::loadICO() {
   QImage loaded = ImageLib::loadICO(mPath);
   if (!loaded.isNull()) {
-    image = std::make_shared<const QImage>(std::move(loaded));
-    imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+    setDecoded(std::make_shared<const QImage>(std::move(loaded)));
     mLoaded = true;
   } else {
     qWarning() << "ImageStatic: failed to load ico" << mPath;
@@ -205,9 +161,7 @@ void ImageStatic::loadDjvu() {
 
   mPageIndex = rendered.pageIndex;
   mPageCount = rendered.pageCount;
-  image = std::make_shared<const QImage>(std::move(rendered.image));
-  imageColorManaged =
-      std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+  setDecoded(std::make_shared<const QImage>(std::move(rendered.image)));
   mLoaded = true;
 }
 
@@ -247,16 +201,55 @@ void ImageStatic::loadPdf() {
 
   std::unique_ptr<const QImage> img(new QImage(std::move(opaqueImg)));
   img = ImageLib::exifRotated(std::move(img), mDocInfo.get()->exifOrientation());
-  image = std::move(img);
-
-  if (image)
-    imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+  setDecoded(std::move(img));
   mLoaded = true;
+}
+
+// HDR -> SDR as the CPU viewer shows it: tone mapped with the current
+// settings, or (tone mapping off or failed) converted to integer sRGB. Either
+// way the result is an integer sRGB image without the HDR_* metadata text.
+QImage ImageStatic::sdrFromHdr(const QImage &hdr) {
+  if (settings && settings->hdrToneMappingEnabled()) {
+    const HdrToneMapParams params = {
+        .enabled = true,
+        .op = static_cast<ToneMapOperator>(settings->hdrToneMappingOperator()),
+        .targetWhiteNits = static_cast<float>(settings->hdrTargetWhiteLevel())};
+    QImage toneMapped = HdrToneMapper::applyToneMapping(hdr, params);
+    if (!toneMapped.isNull())
+      return toneMapped;
+  }
+  const QImage::Format fallbackFormat =
+      hdr.hasAlphaChannel() ? QImage::Format_ARGB32 : QImage::Format_RGB32;
+  QImage converted = hdr.convertToFormat(fallbackFormat);
+  converted.setColorSpace(QColorSpace(QColorSpace::SRgb));
+  for (const QString &key : hdr.textKeys()) {
+    if (!key.startsWith(QStringLiteral("HDR_")))
+      converted.setText(key, hdr.text(key));
+  }
+  return converted;
+}
+
+DisplayPipeline ImageStatic::displayPipeline() const {
+  return mDecodeContext.displayPipeline;
+}
+
+// The CPU pipeline prepares the colour-managed display copy at load; the GPU
+// viewer colour manages (and tone maps) the decoded pixels itself.
+void ImageStatic::setDecoded(std::shared_ptr<const QImage> decoded) {
+  const bool hdr = decoded && HdrToneMapper::isHdr(*decoded);
+  pixels.assign(std::move(decoded), hdr, displayPipeline(), &ImageStatic::sdrFromHdr);
+  imageColorManaged.reset();
+  if (displayPipeline() == DisplayPipeline::Cpu) {
+    if (const std::shared_ptr<const QImage> sdr = pixels.sdr())
+      imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*sdr));
+  }
 }
 
 void ImageStatic::commitEdits() {
   if (isEdited()) {
-    image.swap(imageEdited);
+    pixels.replace(imageEdited);
+    // The display copy of the edited pixels becomes the current one.
+    imageColorManaged = std::move(imageColorManagedEdited);
     // The effective pixels stay unchanged, so committing does not advance the
     // content revision.
     clearEditedImageState();
@@ -266,30 +259,20 @@ void ImageStatic::commitEdits() {
 
 std::unique_ptr<QPixmap> ImageStatic::getPixmap() {
   std::unique_ptr<QPixmap> pix(new QPixmap());
-  if (settings && settings->colorManagementEnabled()) {
-    QColorSpace targetSpace = ColorManager::getTargetColorSpace();
-    if (isEdited() && imageEdited) {
-      if (!imageColorManagedEdited || imageColorManagedEdited->colorSpace() != targetSpace) {
-        imageColorManagedEdited = std::make_shared<const QImage>(ColorManager::applyColorManagement(*imageEdited));
-      }
-      pix->convertFromImage(*imageColorManagedEdited);
-    } else if (image) {
-      if (!imageColorManaged || imageColorManaged->colorSpace() != targetSpace) {
-        imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
-      }
-      pix->convertFromImage(*imageColorManaged);
-    }
-  } else {
-    if (isEdited() && imageEdited) {
-      pix->convertFromImage(*imageEdited);
-    } else if (image) {
-      pix->convertFromImage(*image);
-    }
-  }
+  const std::shared_ptr<const QImage> current = getImage();
+  if (!current)
+    return pix;
+  if (settings && settings->colorManagementEnabled())
+    pix->convertFromImage(ColorManager::applyColorManagement(*current));
+  else
+    pix->convertFromImage(*current);
   return pix;
 }
 
 std::shared_ptr<const QImage> ImageStatic::getDisplayImage() {
+  if (displayPipeline() == DisplayPipeline::Gpu)
+    return getDecodedImage();
+
   if (settings && settings->colorManagementEnabled()) {
     QColorSpace targetSpace = ColorManager::getTargetColorSpace();
     if (isEdited() && imageEdited) {
@@ -297,26 +280,29 @@ std::shared_ptr<const QImage> ImageStatic::getDisplayImage() {
         imageColorManagedEdited = std::make_shared<const QImage>(ColorManager::applyColorManagement(*imageEdited));
       }
       return imageColorManagedEdited;
-    } else if (image) {
+    } else if (const std::shared_ptr<const QImage> sdr = pixels.sdr()) {
       if (!imageColorManaged || imageColorManaged->colorSpace() != targetSpace) {
-        imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*image));
+        imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*sdr));
       }
       return imageColorManaged;
     }
   } else {
     if (isEdited() && imageEdited) {
       return imageEdited;
-    } else if (image) {
-      return image;
     }
+    return pixels.sdr();
   }
   return nullptr;
 }
 
-std::shared_ptr<const QImage> ImageStatic::getSourceImage() { return image; }
+std::shared_ptr<const QImage> ImageStatic::getDecodedImage() {
+  return isEdited() && imageEdited ? imageEdited : pixels.decoded();
+}
+
+std::shared_ptr<const QImage> ImageStatic::getSourceImage() { return pixels.sdr(); }
 
 std::shared_ptr<const QImage> ImageStatic::getImage() {
-  return isEdited() ? imageEdited : image;
+  return isEdited() ? imageEdited : pixels.sdr();
 }
 
 quint64 ImageStatic::contentRevision() const noexcept {
@@ -324,34 +310,34 @@ quint64 ImageStatic::contentRevision() const noexcept {
 }
 
 int ImageStatic::height() {
-  const QImage *img = (isEdited() ? imageEdited : image).get();
-  return img ? img->height() : 0;
+  return size().height();
 }
 
 int ImageStatic::width() {
-  const QImage *img = (isEdited() ? imageEdited : image).get();
-  return img ? img->width() : 0;
+  return size().width();
 }
 
 QSize ImageStatic::size() {
-  const QImage *img = (isEdited() ? imageEdited : image).get();
-  return img ? img->size() : QSize();
+  if (isEdited())
+    return imageEdited ? imageEdited->size() : QSize();
+  return pixels.size();
 }
 
 bool ImageStatic::setEditedImage(std::unique_ptr<const QImage> imageEditedNew) {
   if (imageEditedNew && imageEditedNew->width() != 0) {
+    const std::shared_ptr<const QImage> original = pixels.sdr();
     const std::shared_ptr<const QImage> currentImage =
-        isEdited() ? imageEdited : image;
+        isEdited() ? imageEdited : original;
     if (currentImage && *currentImage == *imageEditedNew)
       return true;
 
     clearEditedImageState();
-    if (image && *image == *imageEditedNew) {
+    if (original && *original == *imageEditedNew) {
       ++mContentRevision;
       return true;
     }
     imageEdited = std::move(imageEditedNew);
-    if (imageEdited) {
+    if (imageEdited && displayPipeline() == DisplayPipeline::Cpu) {
       imageColorManagedEdited = std::make_shared<const QImage>(ColorManager::applyColorManagement(*imageEdited));
     }
     mEdited = true;

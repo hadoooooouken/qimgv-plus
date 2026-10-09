@@ -1,5 +1,6 @@
 #include <QColorSpace>
 #include <QCoreApplication>
+#include <QGuiApplication>
 #include <QElapsedTimer>
 #include <QFloat16>
 #include <QQuickWindow>
@@ -27,6 +28,9 @@ using namespace Qt::StringLiterals;
 constexpr QSize kTestImageSize(64, 48);
 // Zoom step of the viewport settle test.
 constexpr double kViewportZoomStep = 0.25;
+// The viewport read back goes through the scene graph's layer rendering of
+// the item's texture; 8-bit rounding only.
+constexpr int kGrabTolerance = 1;
 constexpr int kMargin = 8;
 constexpr int kLargestMagnification = 3;
 constexpr QSize kFrameSize = kTestImageSize * kLargestMagnification +
@@ -2104,6 +2108,48 @@ private slots:
     QCoreApplication::processEvents();
     QCOMPARE(settled.count(), 2);
     QVERIFY(controller.isRenderingSettled());
+  }
+
+  // "Copy viewport to clipboard": the read back visible image is the image
+  // area of the presented frame.
+  void viewportGrabMatchesThePresentedImage() {
+    // QQuickItem::grabToImage() needs a visible window. Showing the render
+    // control's window creates no on-screen window only on the offscreen
+    // platform (the Vulkan variant runs on the windows platform).
+    if (QGuiApplication::platformName() != u"offscreen"_s)
+      QSKIP("needs the offscreen platform to show the scene's window");
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    scene.quick.window()->setVisible(true);
+    UiSettingsSnapshot settings;
+    settings.viewer.fitMode = SettingsEnums::FitMode::Window;
+    settings.viewer.zoomStep = kViewportZoomStep;
+    ImageViewportController controller(settings);
+    controller.setView(scene.item.get());
+    controller.showImage(shared(makeTestImage(ImageKind::Opaque, kTestImageSize)),
+                         u"grab.png"_s);
+    controller.zoomIn();
+    RENDER(scene, shown);
+
+    QSignalSpy grabbed(&controller, &ImageViewportController::visibleImageGrabbed);
+    QSignalSpy failed(&controller, &ImageViewportController::visibleImageGrabFailed);
+    controller.grabVisibleImage();
+    RENDER(scene, withGrab);
+    QCoreApplication::processEvents();
+    QCOMPARE(failed.count(), 0);
+    QCOMPARE(grabbed.count(), 1);
+
+    const QRect imageArea =
+        QRectF(scene.item->imagePosition(),
+               QSizeF(kTestImageSize) * scene.item->imageScale())
+            .toAlignedRect()
+            .intersected(QRect(QPoint(0, 0), kFrameSize));
+    const QImage copied =
+        grabbed.first().first().value<QImage>().convertToFormat(withGrab.format());
+    QCOMPARE(copied.size(), imageArea.size());
+    const QImage expected = withGrab.copy(imageArea);
+    QVERIFY2(maxDifference(copied, expected) <= kGrabTolerance,
+             qPrintable(u"max difference %1"_s.arg(maxDifference(copied, expected))));
   }
 };
 

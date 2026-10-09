@@ -26,16 +26,23 @@ public:
 
     QColorSpace getTargetColorSpace() override {
         QMutexLocker locker(&mutex);
-        if (isCached) {
-            return cachedTargetSpace;
-        }
-
         if (!settings) {
             qWarning() << "ColorManager: settings object is null, unable to load color profile.";
             return QColorSpace();
         }
 
         QString profileType = settings->monitorColorProfileType();
+        // The cache belongs to the profile settings it was built from, so a
+        // reader that runs before invalidateCache() on a settings change
+        // (e.g. the Qt Quick viewer's settings snapshot) never sees the
+        // previous profile.
+        const QString profileKey = profileType == "Custom"
+            ? profileType + QLatin1Char('|') + settings->monitorColorProfilePath()
+            : profileType;
+        if (isCached && cachedProfileKey == profileKey) {
+            return cachedTargetSpace;
+        }
+
         QColorSpace targetSpace;
 
         if (profileType == "System") {
@@ -102,6 +109,7 @@ public:
         }
 
         cachedTargetSpace = targetSpace;
+        cachedProfileKey = profileKey;
         isCached = true;
         return cachedTargetSpace;
     }
@@ -132,6 +140,7 @@ public:
 
 private:
     QColorSpace cachedTargetSpace;
+    QString cachedProfileKey;
     bool isCached = false;
     QMutex mutex;
 };

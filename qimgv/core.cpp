@@ -18,6 +18,7 @@
 #include <QTimer>
 #include "components/actionmanager/actionmanager.h"
 #include "components/fileoptask/fileopcontroller.h"
+#include "components/upscaler/upscaledecision.h"
 #include "components/upscaler/upscaler.h"
 #include "components/upscaler/upscaylresizerunnable.h"
 #include "gui/controllers/coldstartwindowcontroller.h"
@@ -506,7 +507,9 @@ void Core::initComponents() {
   thumbnailer = std::make_shared<Thumbnailer>();
   thumbPanelPresenter.setThumbnailer(thumbnailer);
   folderViewPresenter.setThumbnailer(thumbnailer);
-  attachModel(new DirectoryModel());
+  auto *directoryModel = new DirectoryModel();
+  directoryModel->setDisplayPipeline(ui.viewer.displayPipeline());
+  attachModel(directoryModel);
   coldStartWindowController = std::make_unique<ColdStartWindowController>(
       ui.window, ui.viewMode, ui.viewer, ui.events);
 }
@@ -703,6 +706,7 @@ void Core::connectUiEvents() {
   connect(events, &UiEvents::nextImageRequested, this, &Core::nextImage);
   connect(events, &UiEvents::prevImageRequested, this, &Core::prevImage);
   connect(events, &UiEvents::scalingRequested, this, &Core::scalingRequest);
+  connect(events, &UiEvents::upscaleRequested, this, &Core::onUpscaleRequested);
   connect(events, &UiEvents::suspendRequested, this, &Core::suspendToStandby);
 }
 
@@ -1977,30 +1981,50 @@ void Core::scalingRequest(QSize size, ScalingFilter filter) {
 void Core::onScalingFinished(QImage scaled, ScalerRequest req) {
   if (state.hasActiveImage && req.path == state.currentFilePath) {
     ui.viewer.showScaledImage(scaled);
-    if (ui.viewer.panoramaMode()) {
-      ui.viewer.hideUpscaledCrop();
-      upscaler->reset();
-    } else if (settings->useUpscayl() && req.image &&
-        req.image->type() == DocumentType::STATIC) {
+    updateUpscale(req.image, req.size, req.path);
+  }
+}
 
-      bool limitExceeded = true;
-      if (settings->upscaylLimitEnabled()) {
-        float currentZoom = ui.viewer.currentScale() * 100.0f;
-        if (currentZoom <= settings->upscaylLimitValue()) {
-          limitExceeded = false;
-        }
-      }
+// The Qt Quick viewer scales on the GPU and asks for the upscale directly,
+// without a CPU-scaled copy.
+void Core::onUpscaleRequested(QSize size) {
+  if (!ui.window.isWindowVisible() || !state.hasActiveImage)
+    return;
+  std::shared_ptr<Image> image = model->getImage(state.currentFilePath);
+  if (image)
+    updateUpscale(image, size, state.currentFilePath);
+}
 
-      if (req.size.width() > req.image->width() && limitExceeded) {
-        upscaler->requestUpscale(req.image, req.size, req.path);
-      } else {
-        if (!limitExceeded) {
-          upscaler->invalidatePreview();
-        }
-      }
-    } else if (!settings->useUpscayl()) {
-      ui.viewer.hideUpscaledCrop();
-    }
+// size: the size the image is displayed at, device pixels.
+void Core::updateUpscale(const std::shared_ptr<Image> &image, QSize size,
+                         const QString &path) {
+  constexpr float kPercent = 100.0f;
+  const UpscaleInputs inputs{
+      .panoramaMode = ui.viewer.panoramaMode(),
+      .useUpscayl = settings->useUpscayl(),
+      .staticImage = image && image->type() == DocumentType::STATIC,
+      .limitEnabled = settings->upscaylLimitEnabled(),
+      .limitPercent = settings->upscaylLimitValue(),
+      .zoomPercent = ui.viewer.currentScale() * kPercent,
+      .displayedWidth = size.width(),
+      .imageWidth = image ? image->width() : 0,
+  };
+  switch (decideUpscale(inputs)) {
+  case UpscaleAction::HideCropAndReset:
+    ui.viewer.hideUpscaledCrop();
+    upscaler->reset();
+    break;
+  case UpscaleAction::HideCrop:
+    ui.viewer.hideUpscaledCrop();
+    break;
+  case UpscaleAction::Request:
+    upscaler->requestUpscale(image, size, path);
+    break;
+  case UpscaleAction::InvalidatePreview:
+    upscaler->invalidatePreview();
+    break;
+  case UpscaleAction::None:
+    break;
   }
 }
 
@@ -2455,7 +2479,7 @@ void Core::guiSetImage(std::shared_ptr<Image> img) {
   // but generation info does — QList<QPair<>> is used there instead of
   // QMap specifically to keep that order intact through to the UI.
   QList<QPair<QString, QString>> info;
-  auto qimg = img->getImage();
+  auto qimg = img->getDecodedImage();
   if (qimg) {
     QString hdrProfile = HdrToneMapper::detectHdrProfile(*qimg);
     if (!hdrProfile.isEmpty()) {
@@ -2534,7 +2558,7 @@ void Core::updateInfoString() {
       fileSize = img->fileSize();
       edited = img->isEdited();
       format = img->format();
-      auto qimg = img->getImage();
+      auto qimg = img->getDecodedImage();
       if (qimg) {
         QString hdrProfile = HdrToneMapper::detectHdrProfile(*qimg);
         if (!hdrProfile.isEmpty()) {

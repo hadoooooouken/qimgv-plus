@@ -67,6 +67,10 @@ QQuickItem *OffscreenQuick::contentItem() const {
   return mWindow ? mWindow->contentItem() : nullptr;
 }
 
+QQuickWindow *OffscreenQuick::window() const {
+  return mWindow.get();
+}
+
 bool OffscreenQuick::create(QSize size, QRhi::Implementation backend) {
   mSize = size;
   switch (backend) {

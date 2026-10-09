@@ -1014,6 +1014,78 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
 - **Acceptance:** HDR images look the same as with CPU tone mapping (pixel
   test); an upscale in the Quick UI runs no CPU scale; the copied viewport
   matches the screen; the widget UI is unchanged.
+- **Delivered:**
+  - **Scope decision (user):** GPU-only display with a lazily built CPU
+    copy, rather than keeping both copies at load.
+  - **`DisplayPipeline`** (`utils/displaypipeline.h`): `Cpu` (widget
+    viewer) or `Gpu` (Quick viewer), reported by the new
+    `IViewerPort::displayPipeline()`. Core passes it once to
+    `DirectoryModel::setDisplayPipeline()`; `Loader` puts it into every
+    `DecodeContext`.
+  - **`DecodedPixels`** (`sourcecontainers/`, thread safe): the unedited
+    pixels of an `ImageStatic` and their SDR copy. With `Cpu`, an HDR image
+    is converted at load as before. With `Gpu`, the HDR source is kept and
+    the SDR copy is built on the first `getImage()` / `getSourceImage()`
+    (save, edit, copy, print, wallpaper, scaler, upscaler), once even with
+    concurrent callers; a failed conversion is reported once. Committed edits
+    replace the pixels and drop the HDR source.
+  - **`ImageStatic`:** with `Gpu`, no CPU tone mapping and no CPU colour
+    management at load; `getDisplayImage()` returns the decoded image (HDR
+    stays HDR). The new `Image::getDecodedImage()` gives Core's metadata
+    (HDR profile, colour profile in the title and info) the decoded pixels
+    without forcing the SDR copy, so the Quick UI now shows the real HDR or
+    linear profile; the widget UI is unchanged (`getDecodedImage()` equals
+    `getImage()` there). **Fixed in passing:** `commitEdits()` kept the
+    colour-managed copy of the pre-edit image, so with colour management
+    on, the CPU viewer could show stale pixels after a commit.
+  - **Viewer:** `UiSettingsSnapshot` gained the C++-only
+    `DisplayColorSettings` (tone mapping on/off, operator, white level,
+    colour management and `ColorManager::getTargetColorSpace()`), applied by
+    `ImageViewportController` to the render item. A change re-renders from
+    the kept source and does not reset the viewer's session overrides.
+    `ColorManager`'s cache is now keyed on the profile settings, so the
+    Quick host (whose `settingsChanged` slot runs before Core's
+    `invalidateCache()`) never reads the previous profile.
+  - **Upscale without a CPU scale:** the upscale rules of
+    `Core::onScalingFinished()` moved unchanged into the pure
+    `decideUpscale()` (`components/upscaler/upscaledecision.*`), used by
+    the widget path after a CPU scale and by the new
+    `Core::onUpscaleRequested()` for `UiEvents::upscaleRequested`. The
+    viewport emits `upscaleRequested(size)` instead of `scalingRequested`,
+    and hides the crop itself when Upscayl is turned off.
+  - **Copy viewport to clipboard:** `ImageViewportController::
+    grabVisibleImage()` reads the render item back with
+    `QQuickItem::grabToImage()` (asynchronous; a newer grab replaces a
+    pending one) and crops it to every device pixel the image covers;
+    `QuickViewerActions` puts it on the clipboard with the widget UI's
+    messages. **Deviation:** not a hand-written `QRhi` readback: on D3D12
+    and Vulkan that completes only frames later and needs extra frames
+    scheduled, while `grabToImage()` is Qt's readback through the scene
+    graph. The copy includes the colour adjustments, tone mapping and
+    filtering exactly as shown.
+  - **Measured** (Release, `ramp.hdr` 1200×800 linear float RGBE, process
+    start → first `documentRenderingSettled`): widget UI 475 ms, Quick UI
+    358 ms (no CPU tone mapping at load). The window titles show the source
+    profile: "sRGB" (tone-mapped CPU copy) vs "Linear sRGB" (decoded source).
+  - **Flagged, not changed:** Core still reloads the current image when an
+    HDR setting changes. The Quick viewer would not need it (it re-renders
+    from the source), but the reload also refreshes the lazily built SDR
+    copy, so it is kept.
+  - **Not verified live:** the upscale (needs Upscayl models and zoom
+    input) and the clipboard copy (would need synthetic key input and
+    overwrite the clipboard); both are covered by the tests below.
+  - Tests: `qimgv_tests` gained `DecodedPixelsTests` (eager CPU conversion,
+    lazy GPU conversion, SDR passthrough, one conversion for eight
+    concurrent readers, one failure report, edits drop the HDR source) and
+    `UpscaleDecisionTests` (every branch of the former inline rules,
+    including the limit boundary). `ImageViewportControllerTests` now checks
+    `upscaleRequested`, crop hiding when Upscayl is turned off, the display
+    colour settings on the item (and that they keep the session filter), the
+    unknown-operator fallback and a grab without a window.
+    `qimgv_render_tests` gained `viewportGrabMatchesThePresentedImage` (real
+    frame loop, within one 8-bit level; skipped on the Vulkan variant, which
+    runs on the windows platform where showing the scene would open a
+    window).
 
 #### S2.2 Style and theme
 - **Goal:** the Quick UI matches the current look in light and dark schemes.

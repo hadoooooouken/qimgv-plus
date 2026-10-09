@@ -7,6 +7,7 @@
 #include <QSemaphore>
 #include <QCryptographicHash>
 #include "image.h"
+#include "sourcecontainers/decodedpixels.h"
 #include "utils/decodecontext.h"
 #include "utils/imagelib.h"
 #include <settings.h>
@@ -22,7 +23,10 @@ public:
     std::unique_ptr<QPixmap> getPixmap();
     std::shared_ptr<const QImage> getSourceImage();
     std::shared_ptr<const QImage> getImage();
+    // Cpu pipeline: the tone-mapped, colour-managed image. Gpu pipeline: the
+    // decoded image (HDR stays HDR), which the viewer converts itself.
     std::shared_ptr<const QImage> getDisplayImage() override;
+    std::shared_ptr<const QImage> getDecodedImage() override;
     // Changes whenever the effective image content is replaced or discarded.
     quint64 contentRevision() const noexcept;
 
@@ -46,8 +50,14 @@ private:
     void load();
     void loadPdf();
     void loadDjvu();
+    [[nodiscard]] static QImage sdrFromHdr(const QImage &hdr);
+    [[nodiscard]] DisplayPipeline displayPipeline() const;
+    void setDecoded(std::shared_ptr<const QImage> decoded);
+
     DecodeContext mDecodeContext;
-    std::shared_ptr<const QImage> image, imageEdited;
+    // The unedited pixels; their SDR copy is getSourceImage().
+    DecodedPixels pixels;
+    std::shared_ptr<const QImage> imageEdited;
     mutable std::shared_ptr<const QImage> imageColorManaged;
     mutable std::shared_ptr<const QImage> imageColorManagedEdited;
     quint64 mContentRevision = 0;

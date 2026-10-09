@@ -77,6 +77,11 @@ WidgetViewerAdapter::WidgetViewerAdapter(MW &window)
     : window(window) {
 }
 
+// The widget viewer shows CPU tone-mapped, colour-managed images.
+DisplayPipeline WidgetViewerAdapter::displayPipeline() const {
+    return DisplayPipeline::Cpu;
+}
+
 void WidgetViewerAdapter::showImage(std::shared_ptr<const QImage> image, const QString &filePath) {
     window.showImage(std::move(image), filePath);
 }

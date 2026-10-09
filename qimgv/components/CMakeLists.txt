@@ -53,6 +53,7 @@ target_sources(qimgv-plus PRIVATE
 
 # UPSCAYL SUPPORT
 target_sources(qimgv-plus PRIVATE
+    upscaler/upscaledecision.cpp
     upscaler/upscaler.cpp
     upscaler/upscalerrunnable.cpp
     upscaler/upscaylresizerunnable.cpp

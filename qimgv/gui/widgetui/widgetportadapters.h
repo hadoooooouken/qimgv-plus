@@ -43,6 +43,7 @@ class WidgetViewerAdapter final : public IViewerPort {
 public:
     explicit WidgetViewerAdapter(MW &window);
 
+    [[nodiscard]] DisplayPipeline displayPipeline() const override;
     void showImage(std::shared_ptr<const QImage> image, const QString &filePath) override;
     void showAnimation(const QString &filePath, const QString &format, QSize size) override;
     void closeImage() override;

@@ -13,14 +13,18 @@ qt_add_executable(qimgv_tests
     tst_tilegrid.cpp
     tst_viewportinteraction.cpp
     tst_viewtransform.cpp
+    tst_decodedpixels.cpp
     tst_quickshell.cpp
     tst_singleinstance.cpp
     tst_windowstate.cpp
+    tst_upscaledecision.cpp
     tst_windowtitle.cpp
     "${QIMGV_APP_SOURCE_DIR}/components/viewmode/viewmodecontroller.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/shellinfo/windowtitle.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/singleinstance/singleinstancechannel.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/components/upscaler/upscaledecision.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/windowstate/windowstatecontroller.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/sourcecontainers/decodedpixels.cpp"
     "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/placeholderdirectoryview.cpp"
 )
 

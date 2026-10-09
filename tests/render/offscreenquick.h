@@ -37,6 +37,7 @@ public:
 
   [[nodiscard]] QRhi *rhi() const;
   [[nodiscard]] QQuickItem *contentItem() const;
+  [[nodiscard]] QQuickWindow *window() const;
 
   // Renders one frame and returns the colour buffer as
   // Format_RGBA8888_Premultiplied, or a null image on failure (see error()).

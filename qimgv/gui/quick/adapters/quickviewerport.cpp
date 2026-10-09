@@ -8,6 +8,10 @@ QuickViewerPort::QuickViewerPort(ImageViewportController &viewport)
     : viewport(viewport) {
 }
 
+DisplayPipeline QuickViewerPort::displayPipeline() const {
+    return DisplayPipeline::Gpu;
+}
+
 void QuickViewerPort::showImage(std::shared_ptr<const QImage> image, const QString &filePath) {
     viewport.showImage(std::move(image), filePath);
 }

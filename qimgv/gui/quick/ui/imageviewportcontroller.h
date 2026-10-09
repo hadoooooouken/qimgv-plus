@@ -7,6 +7,7 @@
 #include <QPointF>
 #include <QPointer>
 #include <QRect>
+#include <QSharedPointer>
 #include <QSize>
 #include <QString>
 #include <QTimer>
@@ -24,6 +25,7 @@
 #include "settings_types.h"
 #include "utils/coloradjustments.h"
 
+class QQuickItemGrabResult;
 class QQuickWindow;
 
 // Interaction and display state of the Qt Quick image viewer
@@ -115,6 +117,11 @@ public:
     [[nodiscard]] bool isRenderingSettled() const;
     [[nodiscard]] bool panoramaMode() const;
     void setColorAdjustments(const ColorAdjustments &adjustments);
+    // Reads back the visible part of the image as it is shown (filtering,
+    // colour adjustments, tone mapping), in device pixels; the whole
+    // viewport in panorama mode. Asynchronous: visibleImageGrabbed() or
+    // visibleImageGrabFailed() follows. A newer grab replaces a pending one.
+    void grabVisibleImage();
 
     // --- viewer actions -------------------------------------------------
     void zoomIn();
@@ -189,8 +196,10 @@ signals:
     void renderingSettledChanged();
 
     // IViewerPort / UiEvents outputs.
-    // A CPU scaled copy is needed: the AI upscaler works from it.
-    void scalingRequested(QSize size, ScalingFilter filter);
+    // The visible area may be AI upscaled at the displayed size (device
+    // pixels): Upscayl is on and the view is zoomed in above 1:1. The GPU
+    // shows every scaling filter itself, so no CPU-scaled copy is requested.
+    void upscaleRequested(QSize size);
     void renderingSettled();
     void draggedOut();
     void nextImageRequested();
@@ -198,6 +207,8 @@ signals:
     // Image area on screen after a fit-to-window centring (crop overlay).
     void imageAreaChanged(QRect area);
     void playbackError(const QString &message);
+    void visibleImageGrabbed(const QImage &image);
+    void visibleImageGrabFailed();
 
 private:
     // IViewSurface
@@ -210,6 +221,7 @@ private:
     void attachWindow(QQuickWindow *window);
     void pushDisplayState();
     void applyFilter();
+    void applyDisplayColor();
     void onViewportResized();
     void syncDevicePixelRatio();
     void onDevicePixelRatioChanged();
@@ -227,7 +239,7 @@ private:
 
     // Scaling and settling.
     void requestScaling();
-    [[nodiscard]] bool needsUpscaleSource() const;
+    [[nodiscard]] bool wantsUpscale() const;
     void presentSettledFrame();
     void onFramePresented();
     void setRenderingSettled(bool settled);
@@ -271,6 +283,9 @@ private:
 
     QPointer<ImageRenderItem> mView;
     QPointer<QQuickWindow> mWindow;
+    // Readback in flight (grabVisibleImage()) and the part of it to keep.
+    QSharedPointer<QQuickItemGrabResult> mPendingGrab;
+    QRect mPendingGrabCrop;
     ViewTransformController mTransform;
     ViewportInteraction mInteraction;
     WheelClassifier mWheelClassifier;

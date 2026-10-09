@@ -138,6 +138,9 @@ private slots:
     void prevPage();
     void scalingRequest(QSize, ScalingFilter);
     void onScalingFinished(QImage scaled, ScalerRequest req);
+    void onUpscaleRequested(QSize size);
+    void updateUpscale(const std::shared_ptr<Image> &image, QSize size,
+                       const QString &path);
     void copyCurrentFile(QString destDirectory);
     void moveCurrentFile(QString destDirectory);
     void copyPathsTo(QList<QString> paths, QString destDirectory);
