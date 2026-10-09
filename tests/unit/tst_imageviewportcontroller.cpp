@@ -32,6 +32,15 @@ constexpr int kRight = Qt::RightButton;
 constexpr int kNoModifiers = Qt::NoModifier;
 const QString kFirstFile = u"C:/images/first.png"_s;
 const QString kSecondFile = u"C:/images/second.png"_s;
+// An SVG document of kLargeImage's size.
+const QByteArray kLargeSvgDocument = "<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='1200'>\n"
+    "<rect x='0' y='0' width='1600' height='1200' fill='#204060'/>\n"
+    "<circle cx='800' cy='600' r='400' fill='#e04020'/>\n"
+    "</svg>\n"_ba;
+// Long enough for the SVG document to be parsed and rasterized.
+constexpr int kSvgTimeoutMs = 5000;
+// Long enough for a settle that must not request a raster.
+constexpr int kSvgQuietWaitMs = 300;
 
 UiSettingsSnapshot testSettings() {
   UiSettingsSnapshot settings;
@@ -569,6 +578,72 @@ private slots:
     QCOMPARE(viewport.item.imageSize(), QSize());
   }
 
+  // At any scale other than 1:1 the settled view of an SVG document shows
+  // its raster at the displayed size instead of the decoded image.
+  void svgRasterReplacesTheImageWhenSettled() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = writeSvg(dir, kLargeSvgDocument);
+    Viewport viewport;
+    ImageViewportController &controller = viewport.controller;
+    controller.showImage(testImage(kLargeImage), path);
+    QTRY_VERIFY_WITH_TIMEOUT(viewport.item.hasUpscaledCrop(), kSvgTimeoutMs);
+    QCOMPARE(viewport.item.cropComposition(), CropComposition::Replace);
+    QCOMPARE(viewport.item.cropSourceRect(), controller.visibleOriginalImageRect());
+    // The settled frame is the one showing the raster.
+    QVERIFY(viewport.item.isSettled());
+
+    // Core's crop requests concern the AI upscale only.
+    controller.hideUpscaledCrop();
+    QVERIFY(viewport.item.hasUpscaledCrop());
+    controller.setUpscaledCrop(*testImage(kSmallImage), QRect(QPoint(0, 0), kSmallImage));
+    QCOMPARE(viewport.item.cropComposition(), CropComposition::Replace);
+
+    // A view change drops the raster until the next settle.
+    controller.zoomIn();
+    QVERIFY(!viewport.item.hasUpscaledCrop());
+    QTRY_VERIFY_WITH_TIMEOUT(viewport.item.hasUpscaledCrop(), kSvgTimeoutMs);
+    QCOMPARE(viewport.item.cropSourceRect(), controller.visibleOriginalImageRect());
+
+    // At 1:1 the decoded image is the document.
+    controller.fitOriginal();
+    QVERIFY(!viewport.item.hasUpscaledCrop());
+    QTest::qWait(kSvgQuietWaitMs);
+    QVERIFY(!viewport.item.hasUpscaledCrop());
+
+    controller.closeImage();
+    QVERIFY(!viewport.item.hasUpscaledCrop());
+  }
+
+  void svgDocumentsAreNotUpscaled() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = writeSvg(dir, kLargeSvgDocument);
+    UiSettingsSnapshot settings = testSettings();
+    settings.viewer.useUpscayl = true;
+    Viewport viewport(settings);
+    ImageViewportController &controller = viewport.controller;
+    QSignalSpy upscale(&controller, &ImageViewportController::upscaleRequested);
+    controller.showImage(testImage(kLargeImage), path);
+    controller.fitOriginal();
+    controller.zoomIn();
+    QTRY_VERIFY_WITH_TIMEOUT(viewport.item.hasUpscaledCrop(), kSvgTimeoutMs);
+    QCOMPARE(upscale.count(), 0);
+  }
+
+  // An image no longer of the document's shape (rotated by an edit) is
+  // shown as it is.
+  void editedSvgImageIsShownAsItIs() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = writeSvg(dir, kLargeSvgDocument);
+    Viewport viewport;
+    ImageViewportController &controller = viewport.controller;
+    controller.showImage(testImage(kLargeImage.transposed()), path);
+    QTest::qWait(kSvgQuietWaitMs);
+    QVERIFY(!viewport.item.hasUpscaledCrop());
+  }
+
   void animationPlaysIntoTheView() {
     QTemporaryDir dir;
     QVERIFY(dir.isValid());
@@ -597,6 +672,15 @@ private slots:
     controller.showAnimation(dir.filePath(u"missing.gif"_s), u"gif"_s);
     QCOMPARE(errors.count(), 1);
     QVERIFY(!controller.hasImage());
+  }
+
+private:
+  static QString writeSvg(const QTemporaryDir &dir, const QByteArray &document) {
+    const QString path = dir.filePath(u"document.svg"_s);
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly) || file.write(document) != document.size())
+      qFatal("Cannot write the test file %s", qPrintable(path));
+    return path;
   }
 };
 

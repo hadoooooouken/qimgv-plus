@@ -194,19 +194,22 @@ void ImageRenderer::prepareFlatDraws(
     std::vector<QRhiShaderResourceBindings *> &draws) {
   const QPointF origin = imageOrigin(mFrame);
   const qreal scale = mFrame.placement.scale;
-  mImage.prepareDraws(cb, mFrame,
-                      ImageLayer::DrawParams{origin, scale, targetSize,
-                                             origin, mvp},
-                      updates, draws);
-  if (mCrop.isEmpty() || mImage.isEmpty())
+  const QRect &sourceRect = mFrame.crop.sourceRect;
+  const QSize cropSize = mCrop.imageSize();
+  const bool cropDrawn = !mCrop.isEmpty() && !mImage.isEmpty() &&
+                         !sourceRect.isEmpty() && !cropSize.isEmpty();
+  if (!cropDrawn ||
+      mFrame.crop.composition != CropComposition::Replace) {
+    mImage.prepareDraws(cb, mFrame,
+                        ImageLayer::DrawParams{origin, scale, targetSize,
+                                               origin, mvp},
+                        updates, draws);
+  }
+  if (!cropDrawn)
     return;
   // The crop covers sourceRect of the image: its corner lands on the
   // image's (snapped to whole device pixels, like the widget viewer's
   // sceneRoundPos()), and its pixels are scaled by the net upscale factor.
-  const QRect &sourceRect = mFrame.crop.sourceRect;
-  const QSize cropSize = mCrop.imageSize();
-  if (sourceRect.isEmpty() || cropSize.isEmpty())
-    return;
   const QPointF cropCorner = origin + QPointF(sourceRect.topLeft()) * scale;
   const QPointF cropOrigin(std::round(cropCorner.x()),
                            std::round(cropCorner.y()));

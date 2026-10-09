@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "components/animationplayer/animationplayer.h"
+#include "components/svgrasterizer/svgrasterizer.h"
 #include "components/viewtransform/viewportinteraction.h"
 #include "components/viewtransform/viewtransformcontroller.h"
 #include "gui/quick/bridges/uisettings.h"
@@ -47,6 +48,16 @@ class QQuickWindow;
 // renderingSettled() is emitted after the frame showing it has been
 // presented. While an animation plays the item stays unsettled, so the
 // high-quality pass does not run for every frame.
+//
+// SVG documents: the image decoded by the Loader is the document drawn at
+// its default size. Once the view of an SVG document settles at any scale
+// other than 1:1, the visible part is rasterized again at the displayed
+// size by SvgRasterizer on a worker thread and shown instead of the image
+// (an upscaled crop with CropComposition::Replace), so it stays sharp at
+// any zoom with the same filters and colour handling; the settled frame is
+// then the one showing that raster. Any change of the view drops it until
+// the next settle. SVG documents are never AI upscaled, as in the widget
+// viewer.
 //
 // Owned by the Quick UI host (QuickUiHost) and handed to QML as a required
 // property; the view and its window are owned by QML. GUI thread only.
@@ -105,7 +116,10 @@ public:
     void showAnimation(const QString &filePath, const QString &format);
     void closeImage();
     [[nodiscard]] bool hasImage() const;
+    // AI-upscaled crop (Core); ignored for SVG documents, which show their
+    // own raster instead.
     void setUpscaledCrop(const QImage &crop, const QRect &sourceRect);
+    // Hides the AI-upscaled crop; the SVG raster is kept.
     void hideUpscaledCrop();
     // Re-evaluates scaling and the settle pass at the current view.
     void refreshScaling();
@@ -258,6 +272,21 @@ private:
     // Scaling and settling.
     void requestScaling();
     [[nodiscard]] bool wantsUpscale() const;
+
+    // SVG raster.
+    void openSvgDocument(const QString &filePath, QSize imageSize);
+    void onSvgDocumentReady(QSize documentSize);
+    // Requests the raster of the visible part at the current view; false
+    // when none is needed (no document, 1:1, panorama) or it is already
+    // shown, so the settled frame can be presented now.
+    bool requestSvgRaster();
+    void onSvgRasterized(const SvgRaster &raster);
+    void onSvgRasterFailed(quint64 requestId, const QString &message);
+    // Drops the raster request in flight and the shown raster (the view
+    // changed).
+    void dropSvgRaster();
+    // Removes whichever crop the view shows.
+    void clearCrop();
     void presentSettledFrame();
     void onFramePresented();
     void setRenderingSettled(bool settled);
@@ -326,9 +355,17 @@ private:
     bool mTransparencyGrid = false;
     ColorAdjustments mColorAdjustments;
 
+    // What the view's crop is.
+    enum class CropKind { None, Upscaled, SvgRaster };
+
     std::shared_ptr<const QImage> mImage;
     QString mFilePath;
     bool mAwaitingFirstFrame = false;
+    SvgRasterizer mSvg;
+    CropKind mCrop = CropKind::None;
+    // The SVG raster request in flight, and the one the view shows.
+    quint64 mSvgRequestId = SvgRasterizer::kNoRequest;
+    SvgRasterRequest mShownSvgRaster;
     bool mPanorama = false;
     bool mInteractionEnabled = true;
 

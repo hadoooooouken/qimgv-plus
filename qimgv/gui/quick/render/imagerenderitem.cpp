@@ -336,7 +336,8 @@ ImageRenderItem::resolveConversion(const QImage *image,
 
 //------------------------------------------------------------------------------
 void ImageRenderItem::setUpscaledCrop(std::shared_ptr<const QImage> crop,
-                                      const QRect &sourceRect) {
+                                      const QRect &sourceRect,
+                                      CropComposition composition) {
   if (!crop || crop->isNull() || sourceRect.isEmpty()) {
     clearUpscaledCrop();
     return;
@@ -345,6 +346,7 @@ void ImageRenderItem::setUpscaledCrop(std::shared_ptr<const QImage> crop,
   mCrop = std::move(crop);
   ++mCropGeneration;
   mCropSourceRect = sourceRect;
+  mCropComposition = composition;
   mCropTraits = SourceTraits::of(mCrop.get());
   refreshConversion();
   update();
@@ -358,6 +360,7 @@ void ImageRenderItem::clearUpscaledCrop() {
   mCrop.reset();
   ++mCropGeneration;
   mCropSourceRect = QRect();
+  mCropComposition = CropComposition::Over;
   mCropTraits = SourceTraits{};
   mCropConversion = SourceConversion{};
   update();
@@ -365,6 +368,12 @@ void ImageRenderItem::clearUpscaledCrop() {
 }
 
 bool ImageRenderItem::hasUpscaledCrop() const { return mCrop != nullptr; }
+
+CropComposition ImageRenderItem::cropComposition() const {
+  return mCropComposition;
+}
+
+QRect ImageRenderItem::cropSourceRect() const { return mCropSourceRect; }
 
 const SourceConversion &ImageRenderItem::cropConversion() const {
   return mCropConversion;
@@ -440,7 +449,7 @@ RenderFrame ImageRenderItem::frameSnapshot() const {
                             mImageIsAnimationFrame};
   frame.crop = UpscaledCrop{
       LayerSource{mCrop, mCropGeneration, mCropConversion, false},
-      mCropSourceRect};
+      mCropSourceRect, mCropComposition};
   frame.placement = mPlacement;
   frame.settings = mSettings;
   frame.filter = mFilter;

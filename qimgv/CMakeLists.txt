@@ -35,7 +35,8 @@ qt_extract_metatypes(qimgv_fluenticons)
 qimgv_apply_msvc_profile(qimgv_fluenticons)
 
 # UI-independent viewer components: zoom / pan / fit state, mouse
-# interaction, scaling filter selection, animation playback, the file info
+# interaction, scaling filter selection, animation playback, SVG
+# rasterization, the file info
 # texts and the copy / move destinations. A library of its own because
 # qimgv-plus, the qimgv.ui QML module (ImageViewportController, the overlay
 # models) and the tests all use them.
@@ -48,6 +49,8 @@ add_library(qimgv_viewcomponents STATIC
     components/shellinfo/fileinfotext.h
     components/scalingfilter/scalingfilterselection.cpp
     components/scalingfilter/scalingfilterselection.h
+    components/svgrasterizer/svgrasterizer.cpp
+    components/svgrasterizer/svgrasterizer.h
     components/viewtransform/viewportinteraction.cpp
     components/viewtransform/viewportinteraction.h
     components/viewtransform/viewtransform.cpp
@@ -61,7 +64,7 @@ if(MSVC)
     # Same C++26 working-draft switch as qimgv-plus.
     target_compile_options(qimgv_viewcomponents PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>")
 endif()
-target_link_libraries(qimgv_viewcomponents PUBLIC Qt6::Core Qt6::Gui)
+target_link_libraries(qimgv_viewcomponents PUBLIC Qt6::Core Qt6::Gui Qt6::Svg)
 qimgv_apply_msvc_profile(qimgv_viewcomponents)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)

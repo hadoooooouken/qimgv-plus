@@ -42,7 +42,8 @@ class QImage;
 // uploaded into the textures of the previous one.
 //
 // An upscaled crop (setUpscaledCrop()) is drawn over the area of the image
-// it was made from, with the same filtering and conversion. With the
+// it was made from, with the same filtering and conversion; with
+// CropComposition::Replace the image itself is then not drawn. With the
 // Equirectangular projection the image is shown as a 360 degree panorama
 // from the PanoramaCamera instead (the crop is then not drawn).
 //
@@ -143,13 +144,17 @@ public:
   // The conversion the renderer applies to the current image.
   [[nodiscard]] const SourceConversion &sourceConversion() const;
 
-  // Shows crop (an upscaled copy of sourceRect of the image, in source
-  // pixels) over that area; replaces a previous crop. A null or empty crop or
-  // an empty sourceRect clears it.
+  // Shows crop (a higher-resolution copy of sourceRect of the image, in
+  // source pixels) over that area, combined with the image as composition
+  // says; replaces a previous crop. A null or empty crop or an empty
+  // sourceRect clears it.
   void setUpscaledCrop(std::shared_ptr<const QImage> crop,
-                       const QRect &sourceRect);
+                       const QRect &sourceRect,
+                       CropComposition composition = CropComposition::Over);
   void clearUpscaledCrop();
   [[nodiscard]] bool hasUpscaledCrop() const;
+  [[nodiscard]] CropComposition cropComposition() const;
+  [[nodiscard]] QRect cropSourceRect() const;
   [[nodiscard]] const SourceConversion &cropConversion() const;
 
   [[nodiscard]] RenderEnums::Projection projection() const;
@@ -221,6 +226,7 @@ private:
   std::shared_ptr<const QImage> mCrop;
   quint64 mCropGeneration = 0;
   QRect mCropSourceRect;
+  CropComposition mCropComposition = CropComposition::Over;
   SourceTraits mCropTraits;
   SourceConversion mCropConversion;
   RenderEnums::Projection mProjection = RenderEnums::Projection::Flat;

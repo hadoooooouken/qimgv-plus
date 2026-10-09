@@ -215,12 +215,25 @@ struct LayerSource {
   bool animationFrame = false;
 };
 
-// AI-upscaled part of the image (Upscaler), drawn over the area of the image
-// it was made from.
+// How a crop is combined with the image under it.
+enum class CropComposition {
+  // Blended over the image (the AI-upscaled crop of Upscaler).
+  Over,
+  // Shown instead of the image: the image is not drawn while the crop is.
+  // For a crop that covers the whole visible part of the image (the SVG
+  // raster of SvgRasterizer), whose transparent pixels must not show the
+  // image under it.
+  Replace,
+};
+
+// Higher-resolution copy of a part of the image (an AI upscale or an SVG
+// raster at the displayed size), drawn over the area of the image it was
+// made from.
 struct UpscaledCrop {
   LayerSource source;
   // Area of the image in source pixels that the crop image covers.
   QRect sourceRect;
+  CropComposition composition = CropComposition::Over;
 };
 
 // Everything one frame of ImageRenderer depends on.

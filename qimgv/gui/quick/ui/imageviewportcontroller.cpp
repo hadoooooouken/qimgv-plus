@@ -153,6 +153,17 @@ ImageViewportController::ImageViewportController(const UiSettingsSnapshot &setti
     connect(&mPresentation, &FramePresentationTracker::presented, this,
             &ImageViewportController::onFramePresented);
 
+    connect(&mSvg, &SvgRasterizer::documentReady, this,
+            &ImageViewportController::onSvgDocumentReady);
+    connect(&mSvg, &SvgRasterizer::documentFailed, this, [](const QString &message) {
+        qWarning().noquote() << "ImageViewportController: SVG document not shown sharp:"
+                             << message;
+    });
+    connect(&mSvg, &SvgRasterizer::rasterized, this,
+            &ImageViewportController::onSvgRasterized);
+    connect(&mSvg, &SvgRasterizer::rasterFailed, this,
+            &ImageViewportController::onSvgRasterFailed);
+
     if (const QAccessibilityHints *hints = accessibilityHints()) {
         connect(hints, &QAccessibilityHints::motionPreferenceChanged, this,
                 &ImageViewportController::reducedMotionChanged);
@@ -386,6 +397,7 @@ void ImageViewportController::showImage(std::shared_ptr<const QImage> image,
     mFilePath = filePath;
     if (mView)
         mView->setImage(mImage, ImageRenderItem::ImageUpdate::NewImage);
+    openSvgDocument(mFilePath, newSize);
     if (rotationOrMirror)
         mTransform.showTransformedImage(newSize, preserved);
     else
@@ -445,10 +457,11 @@ void ImageViewportController::reset() {
     mAwaitingFirstFrame = false;
     mImage.reset();
     mFilePath.clear();
-    if (mView) {
-        mView->clearUpscaledCrop();
+    mSvg.close();
+    mSvgRequestId = SvgRasterizer::kNoRequest;
+    clearCrop();
+    if (mView)
         mView->setImage(nullptr);
-    }
     mTransform.clear();
     applyItemSettled();
 }
@@ -469,16 +482,26 @@ QSize ImageViewportController::imageSize() const {
 }
 
 void ImageViewportController::setUpscaledCrop(const QImage &crop, const QRect &sourceRect) {
-    if (mPanorama || !mImage || !mView)
+    // SVG documents are not upscaled (wantsUpscale()); a late crop of the
+    // previous image must not cover the SVG raster.
+    if (mPanorama || !mImage || !mView || mSvg.isOpen())
         return;
     if (crop.isNull() || sourceRect.isEmpty()) {
         qWarning() << "ImageViewportController::setUpscaledCrop: empty crop for" << sourceRect;
         return;
     }
     mView->setUpscaledCrop(std::make_shared<const QImage>(crop), sourceRect);
+    mCrop = CropKind::Upscaled;
 }
 
 void ImageViewportController::hideUpscaledCrop() {
+    if (mCrop == CropKind::Upscaled)
+        clearCrop();
+}
+
+void ImageViewportController::clearCrop() {
+    mCrop = CropKind::None;
+    mShownSvgRaster = {};
     if (mView)
         mView->clearUpscaledCrop();
 }
@@ -577,6 +600,9 @@ void ImageViewportController::onTransformChanged() {
             hideUpscaledCrop();
         mView->setPlacement({.position = transform.imagePosition(), .scale = transform.scale()});
     }
+    // The SVG raster replaces the whole image: it must not stay over a
+    // view it was not made for.
+    dropSvgRaster();
     // The settle pass of the previous view no longer matches.
     setRenderingSettled(false);
     mPresentation.cancel();
@@ -592,6 +618,7 @@ void ImageViewportController::onScaleChanged(qreal scale) {
 void ImageViewportController::onViewPositionChanged() {
     mScaleTimer.start();
     hideUpscaledCrop();
+    dropSvgRaster();
 }
 
 void ImageViewportController::onPanoramaChanged() {
@@ -624,12 +651,101 @@ void ImageViewportController::requestScaling() {
         emit upscaleRequested(mTransform.transform().scaledSize() * devicePixelRatio());
     else if (!mSettings.viewer.useUpscayl)
         hideUpscaledCrop();
+    // The settled frame of an SVG document shows its raster; it is
+    // presented when the raster arrives.
+    if (requestSvgRaster())
+        return;
     presentSettledFrame();
 }
 
 bool ImageViewportController::wantsUpscale() const {
-    return mSettings.viewer.useUpscayl && !mPanorama && !mPlayer.isOpen() &&
+    return mSettings.viewer.useUpscayl && !mPanorama && !mPlayer.isOpen() && !mSvg.isOpen() &&
            currentScale() > kOneToOneScale + ViewTransform::kScaleEpsilon;
+}
+
+//------------------------------------------------------------------------------
+// SVG raster
+//------------------------------------------------------------------------------
+void ImageViewportController::openSvgDocument(const QString &filePath, QSize imageSize) {
+    if (SvgRasterizer::isSvgFile(filePath))
+        mSvg.open(filePath, imageSize);
+}
+
+void ImageViewportController::onSvgDocumentReady(QSize documentSize) {
+    if (!mImage || !SvgRasterizer::matchesImage(documentSize, mImage->size())) {
+        // An edit (rotation) changed the image: the document no longer
+        // shows it.
+        qDebug() << "ImageViewportController: the image of" << mFilePath
+                 << "differs from its SVG document; showing the image";
+        mSvg.close();
+        return;
+    }
+    // A pending settle requests the raster itself.
+    if (!mScaleTimer.isActive())
+        requestScaling();
+}
+
+bool ImageViewportController::requestSvgRaster() {
+    if (!mSvg.isReady() || !mImage || mPanorama) {
+        dropSvgRaster();
+        return false;
+    }
+    const float scale = currentScale();
+    if (std::abs(scale - kOneToOneScale) < ViewTransform::kScaleEpsilon) {
+        // The decoded image is the document at 1:1.
+        dropSvgRaster();
+        return false;
+    }
+    const QRect source = visibleOriginalImageRect();
+    const SvgRasterRequest request{
+        .sourceRect = source,
+        .targetSize = QSize(qRound(source.width() * scale), qRound(source.height() * scale))};
+    if (!SvgRasterizer::isValidRequest(request, mImage->size())) {
+        dropSvgRaster();
+        return false;
+    }
+    if (mCrop == CropKind::SvgRaster && mShownSvgRaster == request)
+        return false;
+    dropSvgRaster();
+    mSvgRequestId = mSvg.request(request);
+    return mSvgRequestId != SvgRasterizer::kNoRequest;
+}
+
+void ImageViewportController::onSvgRasterized(const SvgRaster &raster) {
+    if (raster.requestId != mSvgRequestId)
+        return;
+    mSvgRequestId = SvgRasterizer::kNoRequest;
+    if (!mImage || !mView) {
+        presentSettledFrame();
+        return;
+    }
+    QImage image = raster.image;
+    // Converted like the image it replaces.
+    image.setColorSpace(mImage->colorSpace());
+    clearCrop();
+    mView->setUpscaledCrop(std::make_shared<const QImage>(std::move(image)),
+                           raster.request.sourceRect, CropComposition::Replace);
+    mCrop = CropKind::SvgRaster;
+    mShownSvgRaster = raster.request;
+    presentSettledFrame();
+}
+
+void ImageViewportController::onSvgRasterFailed(quint64 requestId, const QString &message) {
+    if (requestId != mSvgRequestId)
+        return;
+    mSvgRequestId = SvgRasterizer::kNoRequest;
+    qWarning().noquote() << "ImageViewportController: SVG raster failed:" << message;
+    // The settled frame shows the decoded image instead.
+    presentSettledFrame();
+}
+
+void ImageViewportController::dropSvgRaster() {
+    if (mSvgRequestId != SvgRasterizer::kNoRequest) {
+        mSvg.cancelRequests();
+        mSvgRequestId = SvgRasterizer::kNoRequest;
+    }
+    if (mCrop == CropKind::SvgRaster)
+        clearCrop();
 }
 
 void ImageViewportController::presentSettledFrame() {
@@ -828,7 +944,8 @@ void ImageViewportController::togglePanorama() {
         return;
     mPanorama = !mPanorama;
     if (mPanorama) {
-        hideUpscaledCrop();
+        clearCrop();
+        dropSvgRaster();
         onPanoramaChanged();
     } else {
         mTransform.applyFitMode();

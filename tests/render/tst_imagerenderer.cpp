@@ -2,11 +2,15 @@
 #include <QCoreApplication>
 #include <QGuiApplication>
 #include <QElapsedTimer>
+#include <QFile>
 #include <QFloat16>
+#include <QPainter>
 #include <QQuickWindow>
 #include <QRandomGenerator>
 #include <QSGRendererInterface>
 #include <QSignalSpy>
+#include <QSvgRenderer>
+#include <QTemporaryDir>
 #include <QTest>
 #include <algorithm>
 #include <cmath>
@@ -208,6 +212,21 @@ constexpr int kPanoramaRedPeriods = 2;
 // Facing the image centre (u = 0.5), away from the back seam.
 constexpr ReferencePanorama kPanoramaFront{0.0, 0.0, 90.0};
 
+// SVG document of kTestImageSize: opaque, with one-unit stripes that
+// blur visibly when a raster of the document is scaled up.
+const QByteArray kSvgDocument = "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='48'>\n"
+    "<rect x='0' y='0' width='64' height='48' fill='#204060'/>\n"
+    "<rect x='8' y='4' width='1' height='40' fill='#ffffff'/>\n"
+    "<rect x='11' y='4' width='1' height='40' fill='#ffffff'/>\n"
+    "<rect x='20' y='10' width='30' height='1' fill='#f0c020'/>\n"
+    "<circle cx='40' cy='30' r='12' fill='#e04020'/>\n"
+    "</svg>\n"_ba;
+// The SVG raster is shown 1:1; only 8-bit rounding of the colour path may
+// differ from QSvgRenderer's own raster.
+constexpr int kSvgRasterTolerance = 2;
+// Long enough for the SVG document to be parsed and rasterized.
+constexpr int kSvgTimeoutMs = 5000;
+
 // Upscaled crop: a part of kTestImageSize upscaled kCropUpscale times.
 constexpr QRect kCropSourceRect(16, 12, 24, 16);
 constexpr int kCropUpscale = 2;
@@ -379,6 +398,17 @@ FloatImage oneToOneFrame(const QImage &reference) {
   return expectedFrame(premultipliedSource(reference),
                        ReferenceScene{kFrameSize, kImageOrigin, {1, 1},
                                       ReferenceFilter::Nearest, kBackground});
+}
+
+// kSvgDocument drawn into an opaque raster of size, as QSvgRenderer (and
+// the widget viewer's QGraphicsSvgItem) draws it.
+QImage svgRaster(QSize size) {
+  QSvgRenderer renderer(kSvgDocument);
+  QImage image(size, QImage::Format_ARGB32_Premultiplied);
+  image.fill(Qt::transparent);
+  QPainter painter(&image);
+  renderer.render(&painter, QRectF(QPointF(0, 0), QSizeF(size)));
+  return image;
 }
 
 std::shared_ptr<const QImage> shared(QImage image) {
@@ -2094,6 +2124,87 @@ private slots:
     // An empty source area clears the crop.
     scene.item->setUpscaledCrop(shared(makeCropImage()), QRect());
     QVERIFY(!scene.item->hasUpscaledCrop());
+  }
+
+  // With CropComposition::Replace the image is not drawn while the crop
+  // is, also not under transparent crop pixels; Over blends the crop.
+  void replacingCropHidesTheImage() {
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    QSignalSpy errors(scene.item.get(), &ImageRenderItem::renderError);
+    scene.item->setRenderSettings(
+        settingsWith(RenderEnums::TextureSampling::Nearest));
+    scene.item->setPlacement(
+        ImagePlacement{QPointF(kImageOrigin), qreal(kCropUpscale)});
+    RENDER(scene, empty);
+    scene.item->setImage(shared(makeTestImage(ImageKind::Opaque, kTestImageSize)));
+    RENDER(scene, plain);
+    QVERIFY(maxDifference(plain, empty) > 0);
+
+    QImage transparent(kCropSourceRect.size() * kCropUpscale,
+                       QImage::Format_ARGB32_Premultiplied);
+    transparent.fill(Qt::transparent);
+    scene.item->setUpscaledCrop(shared(transparent), kCropSourceRect);
+    RENDER(scene, over);
+    QCOMPARE(maxDifference(over, plain), 0);
+    scene.item->setUpscaledCrop(shared(transparent), kCropSourceRect,
+                                CropComposition::Replace);
+    QCOMPARE(scene.item->cropComposition(), CropComposition::Replace);
+    RENDER(scene, replaced);
+    QCOMPARE(maxDifference(replaced, empty), 0);
+    QCOMPARE(errors.count(), 0);
+  }
+
+  // A settled view of an SVG document shows the document rasterized at the
+  // displayed size, as the widget viewer's QGraphicsSvgItem draws it, and
+  // reports renderingSettled() for the frame showing that raster.
+  void viewportShowsTheSvgRasterAtTheDisplayedSize() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = dir.filePath(u"viewport.svg"_s);
+    {
+      QFile file(path);
+      QVERIFY(file.open(QIODevice::WriteOnly));
+      QCOMPARE(file.write(kSvgDocument), kSvgDocument.size());
+    }
+    // What the Loader decodes: the document at its own size.
+    const QImage decoded = svgRaster(kTestImageSize);
+    Scene scene;
+    CREATE_SCENE(scene, kFrameSize);
+    UiSettingsSnapshot settings;
+    settings.viewer.fitMode = SettingsEnums::FitMode::Window;
+    settings.viewer.zoomStep = kViewportZoomStep;
+    settings.viewer.scalingFilter = SettingsEnums::ScalingFilter::Bilinear;
+    ImageViewportController controller(settings);
+    controller.setView(scene.item.get());
+
+    controller.showImage(shared(decoded), path);
+    controller.zoomIn();
+    QTRY_VERIFY_WITH_TIMEOUT(scene.item->hasUpscaledCrop(), kSvgTimeoutMs);
+    QVERIFY(!controller.isRenderingSettled());
+    RENDER(scene, frame);
+    QCoreApplication::processEvents();
+    QVERIFY(controller.isRenderingSettled());
+
+    const QSize shownSize =
+        (QSizeF(kTestImageSize) * scene.item->imageScale()).toSize();
+    const QPoint origin(qRound(scene.item->imagePosition().x()),
+                        qRound(scene.item->imagePosition().y()));
+    const QRect shownArea(origin, shownSize);
+    QVERIFY(QRect(QPoint(0, 0), kFrameSize).contains(shownArea));
+    const QImage expected = svgRaster(shownSize).convertToFormat(frame.format());
+    const int difference = maxDifference(frame.copy(shownArea), expected);
+    QVERIFY2(difference <= kSvgRasterTolerance,
+             qPrintable(u"max difference %1"_s.arg(difference)));
+
+    // The decoded image scaled up instead (a file that is not an SVG
+    // document) is visibly softer.
+    controller.showImage(shared(decoded), u"viewport.png"_s);
+    controller.zoomIn();
+    QCOMPARE(scene.item->imageScale(), qreal(shownSize.width()) / kTestImageSize.width());
+    QVERIFY(!scene.item->hasUpscaledCrop());
+    RENDER(scene, scaled);
+    QVERIFY(maxDifference(scaled.copy(shownArea), expected) > kSvgRasterTolerance);
   }
 
   // ImageViewportController reports renderingSettled() only after a frame

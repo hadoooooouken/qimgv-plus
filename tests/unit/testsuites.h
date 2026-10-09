@@ -21,3 +21,4 @@ int runOverlayTests(int argc, char **argv);
 int runThumbnailStripTests(int argc, char **argv);
 int runContextMenuTests(int argc, char **argv);
 int runCropTests(int argc, char **argv);
+int runSvgRasterizerTests(int argc, char **argv);

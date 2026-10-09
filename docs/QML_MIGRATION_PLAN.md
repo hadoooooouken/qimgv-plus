@@ -1528,6 +1528,85 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
   for simple SVGs, switching on `status`.
 - **Acceptance:** SVG parity with `QGraphicsSvgItem` rendering; no GUI
   thread stall on complex SVGs.
+- **Delivered:**
+  - **`SvgRasterizer`** (`components/svgrasterizer/`, in
+    `qimgv_viewcomponents`, now linked with `Qt6::Svg`; no UI): `open()`
+    reads and parses the document on a private single-thread `QThreadPool`
+    and reports `documentReady(defaultSize)` / `documentFailed()`;
+    `request()` renders a `SvgRasterRequest` (a rect of the decoded image,
+    in image pixels, into a target size) with the same mapping as the Qt SVG
+    image plugin's decode, so the raster lines up with the decoded image.
+    One task runs at a time and a newer request replaces a queued one; every
+    task carries its identity (document generation, request id), which the
+    completion callback validates before touching state, and only the
+    latest request of the current document is reported. `cancelRequests()`
+    and `close()` drop results without waiting; a running task finishes in
+    the background (the destructor waits for it). The parsed
+    `QSvgRenderer` (animation off; animated SVG stays on the
+    `AnimationPlayer` path) lives only on the worker and is detached from
+    its thread, so it may be destroyed from either side.
+  - **Renderer:** `CropComposition { Over, Replace }` on the crop layer
+    (`ImageRenderItem::setUpscaledCrop(..., composition)`,
+    `cropComposition()`, `cropSourceRect()`). With `Replace` the image is not
+    drawn while the crop is, so transparent SVG pixels do not show the
+    blurred image under them; the crop keeps the image's filtering, colour
+    adjustments, colour management and checkerboard. Upscayl crops stay
+    `Over`.
+  - **Viewer** (`ImageViewportController`, the owner of the layer choice):
+    a `.svg` path (the widget viewer's rule) opens the document next to the
+    decoded image. Once the view settles at any scale other than 1:1, the
+    visible rect is requested at the displayed device-pixel size; the
+    settled frame (and `renderingSettled()`) is the one showing the raster,
+    or the decoded image if rasterizing fails. Any transform change drops
+    the raster and the request in flight. The first settle of a document
+    does not wait for parsing, so the first frame and the cold-start reveal
+    are unchanged; the raster follows with a second settle. SVG documents
+    are never AI upscaled, Core's upscaled crops are ignored for them and
+    `hideUpscaledCrop()` no longer removes the SVG raster. An image whose
+    size no longer matches the document (a 90 degree rotation edit) is
+    shown as decoded.
+  - **`VectorImage` (CurveRenderer) evaluated, not adopted:** it draws the
+    document as its own scene-graph item outside `ImageRenderItem`, so the
+    scaling filters, colour adjustments, display colour management, the
+    transparency checkerboard, panorama mode and viewport grabs of the image
+    would not apply, and a second placement path would have to follow
+    `ViewTransform`. That contradicts the single GPU path (section 2,
+    principle 3) for a speed-up that only simple documents get; the worker
+    raster already keeps the GUI thread free. Revisit only if re-raster
+    latency on very large zooms becomes a complaint.
+  - **Deviations:**
+    - During zoom, pan and resize the decoded image is shown scaled until
+      the view settles (the widget item repainted the vector every frame,
+      on the GUI thread).
+    - The raster is shown at `round(rect size * scale)`, so its net scale
+      can differ from 1 by less than one pixel over the raster; for very
+      small rasters the GPU filter then resamples it slightly.
+    - Like the widget viewer: `.svgz` is not rasterized again, and mirror
+      or 180 degree edits of an SVG (same size) show the unedited document
+      once settled.
+  - **Measured** (Release, 4000 x 3000 SVG with 60000 shapes, process start
+    to first `documentRenderingSettled`, one run each): Quick UI 2695 ms
+    (first frame at 2216 ms, decoded image; the raster settles about
+    480 ms later on the worker), widget UI 2954 ms. Both are dominated by
+    the Loader's decode of the document, which is unchanged. A 160 x 120
+    icon enlarged in fit mode renders sharp.
+  - **Flagged, not changed:** the document is parsed twice (Loader decode
+    and `SvgRasterizer`); `ImageStatic::loadGeneric()` still manages its
+    `QImage` with `new` / `delete`.
+  - Tests:
+    - `qimgv_tests` gained `SvgRasterizerTests` (file / size / request
+      rules, a partial raster equals the matching part of a whole-document
+      raster and differs from a stretched decode, only the latest request
+      is reported, cancel and close, reopening, broken and missing files)
+      and viewport tests (raster replaces the image when settled with the
+      visible rect, Core's crop calls do not touch it, dropped on zoom and
+      requested again, none at 1:1, no upscale requests, edited images).
+    - `qimgv_render_tests` gained `replacingCropHidesTheImage` (`Over`
+      blends, `Replace` hides the image also under transparent crop pixels;
+      mutation-checked) and `viewportShowsTheSvgRasterAtTheDisplayedSize`
+      (the presented frame matches `QSvgRenderer` at the displayed size
+      within 2 levels, settles on that frame, and the scaled decode of a
+      non-SVG path does not match); passes on D3D11, D3D12 and Vulkan.
 
 ### Phase 3: Folder view and dialogs
 
