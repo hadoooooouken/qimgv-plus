@@ -99,6 +99,7 @@ target_sources(qimgv-plus PRIVATE
     quick/adapters/interimports.cpp
     quick/adapters/placeholderdirectoryview.cpp
     quick/adapters/quickmainwindowcontroller.cpp
+    quick/adapters/quickoverlayactions.cpp
     quick/adapters/quickvieweractions.cpp
     quick/adapters/quickviewerport.cpp
     quick/adapters/themesnapshotbuilder.cpp

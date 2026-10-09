@@ -14,8 +14,8 @@ class Settings;
 // Runs the viewer actions of ActionManager (fit, zoom, scroll, locks,
 // transparency grid, scaling filter, panorama) on the Qt Quick image
 // viewport, with the confirmation messages of the widget UI. The messages are
-// published through notificationRequested(); the Quick UI shows them once it
-// has its notification overlay (S2.3).
+// published through notificationRequested(); the Quick UI host shows them in
+// the floating message.
 //
 // All three referenced objects must outlive this object. GUI thread only.
 class QuickViewerActions final : public QObject {

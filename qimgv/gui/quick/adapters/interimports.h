@@ -1,21 +1,12 @@
 #pragma once
 
 #include "gui/ports/dialogport.h"
-#include "gui/ports/notificationport.h"
 
 // Ports of the Qt Quick UI whose user interface does not exist yet. They keep
 // Core fully functional and safe until the real implementations replace them:
-// notifications are logged until the floating message overlay (S2.3), and
 // every dialog is declined until the Quick dialogs (S3.2), so no file is
 // deleted, overwritten or written without the user's confirmation.
 // GUI thread only.
-
-// Logs each notification.
-class LoggingNotificationPort final : public INotificationPort {
-public:
-    void showNotification(const NotificationRequest &request) override;
-    void hideNotifications() override;
-};
 
 // Declines every request (confirm: not accepted, file replace: cancel, save
 // path / resize / text input: cancelled, batch conversion: not started,

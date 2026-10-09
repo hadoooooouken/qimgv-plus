@@ -14,6 +14,8 @@ public:
   [[nodiscard]] QString shortcutFor(const QString &action) const override;
   bool invoke(const QString &action) override;
   bool processEvent(QInputEvent &event) override;
+  [[nodiscard]] QString shortcutText(QInputEvent &event) const override;
+  [[nodiscard]] QString keyText(const QKeyEvent &event) const override;
 
 private:
   ActionManager &mActionManager;

@@ -16,6 +16,7 @@
 #include "gui/quick/bridges/themebridge.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
 #include "gui/quick/ui/mainwindowshell.h"
+#include "gui/quick/ui/overlays/overlaycoordinator.h"
 
 // Records what ActionBridge forwards instead of running actions.
 class FakeActionDispatcher final : public IActionDispatcher {
@@ -26,6 +27,8 @@ public:
   [[nodiscard]] QString shortcutFor(const QString &action) const override;
   bool invoke(const QString &action) override;
   bool processEvent(QInputEvent &event) override;
+  [[nodiscard]] QString shortcutText(QInputEvent &event) const override;
+  [[nodiscard]] QString keyText(const QKeyEvent &event) const override;
 
   void setShortcut(const QString &action, const QString &shortcut);
 
@@ -59,6 +62,8 @@ class BridgeTestFixture : public QObject {
   Q_PROPERTY(ImageViewportController *viewportController READ viewportController CONSTANT FINAL)
   Q_PROPERTY(MainWindowShell *windowShell READ windowShell CONSTANT FINAL)
   Q_PROPERTY(QList<QUrl> lastDroppedUrls READ lastDroppedUrls FINAL)
+  Q_PROPERTY(OverlayCoordinator *overlays READ overlays CONSTANT FINAL)
+  Q_PROPERTY(QString lastFileRequest READ lastFileRequest FINAL)
 
 public:
   explicit BridgeTestFixture(QObject *parent = nullptr);
@@ -76,6 +81,10 @@ public:
   [[nodiscard]] ImageViewportController *viewportController();
   [[nodiscard]] MainWindowShell *windowShell();
   [[nodiscard]] QList<QUrl> lastDroppedUrls() const;
+  [[nodiscard]] OverlayCoordinator *overlays();
+  // The last request the overlays made: "copy:<dir>", "move:<dir>",
+  // "rename:<name>", "save", "saveAs" or "discard".
+  [[nodiscard]] QString lastFileRequest() const;
 
   // Flips viewer.smoothZoom and publishes the snapshot (viewer area only).
   Q_INVOKABLE void toggleSmoothZoom();
@@ -98,6 +107,21 @@ public:
                                     const QUrl &url);
   // Forgets the input the dispatcher recorded.
   Q_INVOKABLE void clearInputLog();
+
+  // Overlay requests as the actions and the shell port make them.
+  Q_INVOKABLE void toggleCopy();
+  Q_INVOKABLE void toggleMove();
+  Q_INVOKABLE void toggleImageInfo();
+  Q_INVOKABLE void toggleRename(const QString &currentName);
+  Q_INVOKABLE void toggleColorAdjustments();
+  Q_INVOKABLE void toggleCasSettings();
+  Q_INVOKABLE void setSaveConfirmVisible(bool visible);
+  Q_INVOKABLE void showMessage(const QString &text);
+  // Metadata of count entries "Name <i>" / "Value <i>".
+  Q_INVOKABLE void setMetadataEntries(int count);
+  Q_INVOKABLE void pointerMoved(QPointF position);
+  // Closes every overlay, hides the message and forgets the last request.
+  Q_INVOKABLE void closeOverlays();
   // Path of fileName next to the test executable, for images the tests save
   // for review.
   Q_INVOKABLE QString artifactPath(const QString &fileName) const;
@@ -111,5 +135,7 @@ private:
   ActionBridge mActionBridge;
   ImageViewportController mViewport;
   MainWindowShell mWindowShell;
+  OverlayCoordinator mOverlays;
   QList<QUrl> mLastDroppedUrls;
+  QString mLastFileRequest;
 };

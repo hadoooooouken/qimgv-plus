@@ -35,12 +35,17 @@ qt_extract_metatypes(qimgv_fluenticons)
 qimgv_apply_msvc_profile(qimgv_fluenticons)
 
 # UI-independent viewer components: zoom / pan / fit state, mouse
-# interaction, scaling filter selection and animation playback. A library of
-# its own because qimgv-plus, the qimgv.ui QML module (ImageViewportController)
-# and the tests all use them.
+# interaction, scaling filter selection, animation playback, the file info
+# texts and the copy / move destinations. A library of its own because
+# qimgv-plus, the qimgv.ui QML module (ImageViewportController, the overlay
+# models) and the tests all use them.
 add_library(qimgv_viewcomponents STATIC
     components/animationplayer/animationplayer.cpp
     components/animationplayer/animationplayer.h
+    components/copytargets/copytargetlist.cpp
+    components/copytargets/copytargetlist.h
+    components/shellinfo/fileinfotext.cpp
+    components/shellinfo/fileinfotext.h
     components/scalingfilter/scalingfilterselection.cpp
     components/scalingfilter/scalingfilterselection.h
     components/viewtransform/viewportinteraction.cpp

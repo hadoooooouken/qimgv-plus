@@ -37,6 +37,26 @@ bool ActionBridge::handleKeyEvent(QObject *event) {
   return mDispatcher.processEvent(*keyEvent);
 }
 
+QString ActionBridge::shortcutText(QObject *event) const {
+  const std::unique_ptr<QKeyEvent> keyEvent =
+      QmlInputEvents::keyPressFrom(event);
+  if (!keyEvent) {
+    qWarning() << "ActionBridge::shortcutText: not a QML KeyEvent:" << event;
+    return {};
+  }
+  return mDispatcher.shortcutText(*keyEvent);
+}
+
+QString ActionBridge::keyText(QObject *event) const {
+  const std::unique_ptr<QKeyEvent> keyEvent =
+      QmlInputEvents::keyPressFrom(event);
+  if (!keyEvent) {
+    qWarning() << "ActionBridge::keyText: not a QML KeyEvent:" << event;
+    return {};
+  }
+  return mDispatcher.keyText(*keyEvent);
+}
+
 bool ActionBridge::handleWheelEvent(QObject *event) {
   const std::unique_ptr<QWheelEvent> wheelEvent =
       QmlInputEvents::wheelFrom(event);

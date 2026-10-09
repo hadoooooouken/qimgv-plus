@@ -257,6 +257,12 @@ void ImageViewportController::applyFilter() {
     mView->setCasContrast(mSettings.viewer.casContrast);
 }
 
+void ImageViewportController::setCasParameters(float sharpening, float contrast) {
+    mSettings.viewer.casSharpening = sharpening;
+    mSettings.viewer.casContrast = contrast;
+    applyFilter();
+}
+
 QSize ImageViewportController::viewportSize() const {
     if (!mView)
         return {};

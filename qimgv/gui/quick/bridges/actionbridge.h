@@ -76,6 +76,12 @@ public:
   Q_INVOKABLE bool handleMousePress(QObject *event);
   Q_INVOKABLE bool handleMouseRelease(QObject *event);
   Q_INVOKABLE bool handleMouseDoubleClick(QObject *event);
+  // Shortcut text of a QML KeyEvent ("Ctrl+R"), as shortcuts are stored;
+  // empty for events without a shortcut.
+  Q_INVOKABLE QString shortcutText(QObject *event) const;
+  // Layout-independent name of the key of a QML KeyEvent, without
+  // modifiers ("3" for the key in the digit row).
+  Q_INVOKABLE QString keyText(QObject *event) const;
 
   // Re-reads actions and shortcuts from the dispatcher.
   void refresh();

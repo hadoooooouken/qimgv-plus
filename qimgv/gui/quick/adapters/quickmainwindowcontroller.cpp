@@ -5,6 +5,7 @@
 #include <QGuiApplication>
 #include <QLocale>
 #include <QMimeData>
+#include <QMouseEvent>
 #include <QQuickWindow>
 
 #include "components/actionmanager/actionmanager.h"
@@ -12,6 +13,7 @@
 #include "gui/ports/uievents.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
 #include "gui/quick/ui/mainwindowshell.h"
+#include "gui/quick/ui/overlays/overlaycoordinator.h"
 #include "settings.h"
 
 namespace {
@@ -35,6 +37,7 @@ QuickMainWindowController::QuickMainWindowController(
       window(context.window),
       shell(context.shell),
       viewport(context.viewport),
+      overlays(context.overlays),
       viewMode(context.viewMode),
       events(context.events),
       settings(context.settings),
@@ -46,6 +49,8 @@ QuickMainWindowController::QuickMainWindowController(
             &QuickMainWindowController::persistPlacement);
     connect(&windowState, &WindowStateController::fullscreenChanged, &shell,
             &MainWindowShell::setFullscreen);
+    connect(&windowState, &WindowStateController::fullscreenChanged, &overlays,
+            &OverlayCoordinator::setFullscreen);
     // Saved also when the application quits while the window rests (the
     // debounced report may still be pending).
     connect(qGuiApp, &QGuiApplication::aboutToQuit, this,
@@ -62,9 +67,12 @@ QuickMainWindowController::QuickMainWindowController(
 
     connect(&viewMode, &ViewModeController::viewModeApplied, this, [this](ViewMode mode) {
         shell.setFolderViewActive(mode == MODE_FOLDERVIEW);
+        overlays.setFolderViewActive(mode == MODE_FOLDERVIEW);
         updateTitle();
     });
     shell.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
+    overlays.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
+    overlays.setFullscreen(windowState.isFullscreen());
 
     // The title shows the zoom, the view locks and (by setting) extended
     // details. The lock actions run on the viewport before these
@@ -142,11 +150,11 @@ void QuickMainWindowController::setDirectoryPath(const QString &path) {
 void QuickMainWindowController::setCurrentInfo(const ShellFileInfo &info) {
     currentInfo = info;
     updateTitle();
+    overlays.setFileInfo(info);
 }
 
 void QuickMainWindowController::setMetadata(const MetadataEntries &entries) {
-    Q_UNUSED(entries)
-    reportUnavailable(u"image info overlay"_s);
+    overlays.setMetadata(entries);
 }
 
 void QuickMainWindowController::notifySortingChanged(SortingMode mode) {
@@ -165,8 +173,7 @@ void QuickMainWindowController::refreshFolderTree(const QString &directoryPath) 
 }
 
 void QuickMainWindowController::setSaveOverlayVisible(bool visible) {
-    if (visible)
-        reportUnavailable(u"save overlay"_s);
+    overlays.setSaveConfirmVisible(visible);
 }
 
 bool QuickMainWindowController::isCropPanelActive() const {
@@ -178,17 +185,22 @@ void QuickMainWindowController::toggleCropPanel() {
 }
 
 void QuickMainWindowController::toggleFullscreenInfoBar() {
-    reportUnavailable(u"fullscreen info bar"_s);
+    overlays.fullscreenChrome()->toggleInfoBar();
 }
 
 void QuickMainWindowController::toggleRenamePrompt(const QString &currentName) {
-    Q_UNUSED(currentName)
-    reportUnavailable(u"rename prompt"_s);
+    overlays.toggleRename(currentName);
 }
 
 //------------------------------------------------------------------------------
 
 bool QuickMainWindowController::eventFilter(QObject *watched, QEvent *event) {
+    // Every pointer move over the window, whichever item handles it, like
+    // the application-wide filter of the widget main window.
+    if (watched == &window && event->type() == QEvent::MouseMove) {
+        const auto *mouseEvent = static_cast<const QMouseEvent *>(event);
+        overlays.pointerMoved(mouseEvent->position(), window.isActive());
+    }
     if (watched == &window && event->type() == QEvent::Close) {
         // The window stays; standby hides it, exit tears the UI down.
         event->ignore();

@@ -8,6 +8,7 @@
 #include <QGuiApplication>
 #include <QImage>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QWheelEvent>
@@ -32,6 +33,9 @@ const QMap<QString, QString> &initialShortcuts() {
 
 const QString kIconFontFamily = u"FluentSystemIcons-Custom"_s;
 const QString kTestImagePath = u"C:/fixture/test.png"_s;
+// Destinations of the copy / move overlay.
+const QStringList kCopyTargets{u"C:/fixture/first"_s, u"C:/fixture/second"_s,
+                               u"C:/fixture/third"_s};
 constexpr QRgb kTestImageColor = 0xff3080c0;
 
 // The application's own dark and light schemes, built as the application
@@ -96,6 +100,17 @@ bool FakeActionDispatcher::processEvent(QInputEvent &event) {
   return false;
 }
 
+QString FakeActionDispatcher::shortcutText(QInputEvent &event) const {
+  if (event.type() != QEvent::KeyPress)
+    return {};
+  const auto &keyEvent = static_cast<const QKeyEvent &>(event);
+  return QKeySequence(keyEvent.keyCombination()).toString();
+}
+
+QString FakeActionDispatcher::keyText(const QKeyEvent &event) const {
+  return QKeySequence(event.key()).toString();
+}
+
 void FakeActionDispatcher::setShortcut(const QString &action,
                                        const QString &shortcut) {
   mShortcuts.insert(action, shortcut);
@@ -105,9 +120,27 @@ void FakeActionDispatcher::setShortcut(const QString &action,
 BridgeTestFixture::BridgeTestFixture(QObject *parent)
     : QObject(parent), mSettings(testSettings()),
       mSettingsBridge(mSettings), mThemeBridge(testTheme(mDark)),
-      mActionBridge(mDispatcher), mViewport(mSettings) {
+      mActionBridge(mDispatcher), mViewport(mSettings), mOverlays(mSettings) {
   connect(&mWindowShell, &MainWindowShell::urlsDropped, this,
           [this](const QList<QUrl> &urls) { mLastDroppedUrls = urls; });
+
+  CopyTargetsModel *targets = mOverlays.copyTargets();
+  connect(&mOverlays, &OverlayCoordinator::copyTargetsNeeded, this,
+          [targets]() { targets->setTargets(kCopyTargets); });
+  connect(targets, &CopyTargetsModel::copyRequested, this,
+          [this](const QString &dir) { mLastFileRequest = u"copy:"_s + dir; });
+  connect(targets, &CopyTargetsModel::moveRequested, this,
+          [this](const QString &dir) { mLastFileRequest = u"move:"_s + dir; });
+  connect(mOverlays.renamePrompt(), &RenamePromptController::renameRequested,
+          this, [this](const QString &name) { mLastFileRequest = u"rename:"_s + name; });
+  connect(&mOverlays, &OverlayCoordinator::saveRequested, this,
+          [this]() { mLastFileRequest = u"save"_s; });
+  connect(&mOverlays, &OverlayCoordinator::saveAsRequested, this,
+          [this]() { mLastFileRequest = u"saveAs"_s; });
+  connect(&mOverlays, &OverlayCoordinator::discardEditsRequested, this,
+          [this]() { mLastFileRequest = u"discard"_s; });
+  connect(mOverlays.colorAdjustmentsEditor(), &ColorAdjustmentsEditor::previewChanged,
+          &mViewport, &ImageViewportController::setColorAdjustments);
 }
 
 SettingsBridge &BridgeTestFixture::settingsBridge() { return mSettingsBridge; }
@@ -150,12 +183,18 @@ QList<QUrl> BridgeTestFixture::lastDroppedUrls() const {
   return mLastDroppedUrls;
 }
 
+OverlayCoordinator *BridgeTestFixture::overlays() { return &mOverlays; }
+
+QString BridgeTestFixture::lastFileRequest() const { return mLastFileRequest; }
+
 void BridgeTestFixture::setFolderViewActive(bool active) {
   mWindowShell.setFolderViewActive(active);
+  mOverlays.setFolderViewActive(active);
 }
 
 void BridgeTestFixture::setFullscreen(bool fullscreen) {
   mWindowShell.setFullscreen(fullscreen);
+  mOverlays.setFullscreen(fullscreen);
 }
 
 bool BridgeTestFixture::dropExternalFile(QQuickWindow *window, QPointF position,
@@ -204,6 +243,7 @@ void BridgeTestFixture::showTestImage(int width, int height) {
   mViewport.closeImage();
   mViewport.showImage(std::make_shared<const QImage>(std::move(image)),
                       kTestImagePath);
+  mOverlays.setDocumentDisplayed(true);
 }
 
 QString BridgeTestFixture::artifactPath(const QString &fileName) const {
@@ -217,4 +257,49 @@ void BridgeTestFixture::clearInputLog() {
   mDispatcher.lastWheelAngleDelta = QPoint();
   mDispatcher.mouseEventTypes.clear();
   mDispatcher.mouseButtons.clear();
+}
+
+//------------------------------------------------------------------------------
+void BridgeTestFixture::toggleCopy() { mOverlays.toggleCopy(); }
+
+void BridgeTestFixture::toggleMove() { mOverlays.toggleMove(); }
+
+void BridgeTestFixture::toggleImageInfo() { mOverlays.toggleImageInfo(); }
+
+void BridgeTestFixture::toggleRename(const QString &currentName) {
+  mOverlays.toggleRename(currentName);
+}
+
+void BridgeTestFixture::toggleColorAdjustments() {
+  mOverlays.toggleColorAdjustments();
+}
+
+void BridgeTestFixture::toggleCasSettings() { mOverlays.toggleCasSettings(); }
+
+void BridgeTestFixture::setSaveConfirmVisible(bool visible) {
+  mOverlays.setSaveConfirmVisible(visible);
+}
+
+void BridgeTestFixture::showMessage(const QString &text) {
+  mOverlays.messages()->showMessage(text);
+}
+
+void BridgeTestFixture::setMetadataEntries(int count) {
+  MetadataEntries entries;
+  for (int i = 0; i < count; ++i)
+    entries.append({u"Name %1"_s.arg(i), u"Value %1"_s.arg(i)});
+  mOverlays.setMetadata(entries);
+}
+
+void BridgeTestFixture::pointerMoved(QPointF position) {
+  mOverlays.pointerMoved(position, true);
+}
+
+void BridgeTestFixture::closeOverlays() {
+  for (OverlayState *state :
+       {mOverlays.imageInfo(), mOverlays.saveConfirm(), mOverlays.copy(),
+        mOverlays.rename(), mOverlays.colorAdjustments(), mOverlays.casSettings()})
+    state->close();
+  mOverlays.messages()->hideNotifications();
+  mLastFileRequest.clear();
 }

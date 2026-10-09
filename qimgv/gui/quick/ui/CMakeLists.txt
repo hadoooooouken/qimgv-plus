@@ -14,11 +14,46 @@ qt_add_qml_module(qimgv_ui
         imageviewportcontroller.h
         mainwindowshell.cpp
         mainwindowshell.h
+        overlays/adjustmentslidermodel.cpp
+        overlays/adjustmentslidermodel.h
+        overlays/cassettingseditor.cpp
+        overlays/cassettingseditor.h
+        overlays/coloradjustmentseditor.cpp
+        overlays/coloradjustmentseditor.h
+        overlays/copytargetsmodel.cpp
+        overlays/copytargetsmodel.h
+        overlays/fullscreenchromecontroller.cpp
+        overlays/fullscreenchromecontroller.h
+        overlays/imageinfomodel.cpp
+        overlays/imageinfomodel.h
+        overlays/notificationoverlaymodel.cpp
+        overlays/notificationoverlaymodel.h
+        overlays/overlaycoordinator.cpp
+        overlays/overlaycoordinator.h
+        overlays/overlaystate.cpp
+        overlays/overlaystate.h
+        overlays/renamepromptcontroller.cpp
+        overlays/renamepromptcontroller.h
     QML_FILES
+        AdjustmentSliders.qml
+        CasSettingsOverlay.qml
+        ColorAdjustmentsOverlay.qml
+        ControlsOverlay.qml
+        CopyOverlay.qml
+        FloatingMessage.qml
+        FullscreenInfoOverlay.qml
+        ImageInfoOverlay.qml
         ImageViewport.qml
         Main.qml
+        OverlayHeaderButton.qml
+        OverlayLayer.qml
+        OverlayPanel.qml
+        RenameOverlay.qml
+        SaveConfirmOverlay.qml
 )
 
+# The generated QML type registrations include the headers by file name.
+target_include_directories(qimgv_ui PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/overlays")
 target_compile_features(qimgv_ui PUBLIC cxx_std_23)
 if(MSVC)
     # Same C++26 working-draft switch as qimgv-plus.
@@ -38,4 +73,6 @@ target_link_libraries(qimgv_ui
         qimgv_viewcomponents
     PRIVATE
         Qt6::QuickControls2
+        # FolderDialog of the copy / move overlay.
+        Qt6::QuickDialogs2
 )

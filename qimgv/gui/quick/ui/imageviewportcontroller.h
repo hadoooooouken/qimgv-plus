@@ -117,6 +117,10 @@ public:
     [[nodiscard]] bool isRenderingSettled() const;
     [[nodiscard]] bool panoramaMode() const;
     void setColorAdjustments(const ColorAdjustments &adjustments);
+    // CAS strength of the CAS filter, edited live in the CAS settings
+    // overlay. Stored as the current viewer settings, so a later settings
+    // snapshot with the same values does not reset the session filter.
+    void setCasParameters(float sharpening, float contrast);
     // Reads back the visible part of the image as it is shown (filtering,
     // colour adjustments, tone mapping), in device pixels; the whole
     // viewport in panorama mode. Asynchronous: visibleImageGrabbed() or

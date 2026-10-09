@@ -3,35 +3,12 @@
 #include <QDebug>
 
 namespace {
-const char *kindName(NotificationKind kind) {
-    switch (kind) {
-    case NotificationKind::Info: return "info";
-    case NotificationKind::Success: return "success";
-    case NotificationKind::Warning: return "warning";
-    case NotificationKind::Error: return "error";
-    case NotificationKind::AiUpscale: return "ai-upscale";
-    case NotificationKind::Directory: return "directory";
-    case NotificationKind::DirectoryStart: return "directory-start";
-    case NotificationKind::DirectoryEnd: return "directory-end";
-    }
-    return "unknown";
-}
-
 void reportDeclined(const char *dialog, const QString &detail) {
     qWarning().noquote() << "Qt Quick UI: the" << dialog
                          << "dialog is not available yet; the request was declined:"
                          << detail;
 }
 } // namespace
-
-void LoggingNotificationPort::showNotification(const NotificationRequest &request) {
-    qInfo().noquote() << "Qt Quick UI: notification" << kindName(request.kind)
-                      << request.text;
-}
-
-void LoggingNotificationPort::hideNotifications() {
-    // Nothing is displayed, so there is nothing to hide.
-}
 
 ConfirmationResult DecliningDialogPort::confirm(const ConfirmationRequest &request) {
     reportDeclined("confirmation", request.title + QStringLiteral(": ") + request.message);

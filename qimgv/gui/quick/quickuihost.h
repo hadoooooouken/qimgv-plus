@@ -12,6 +12,7 @@
 #include "gui/quick/adapters/interimports.h"
 #include "gui/quick/adapters/placeholderdirectoryview.h"
 #include "gui/quick/adapters/quickmainwindowcontroller.h"
+#include "gui/quick/adapters/quickoverlayactions.h"
 #include "gui/quick/adapters/quickvieweractions.h"
 #include "gui/quick/adapters/quickviewerport.h"
 #include "gui/quick/bridges/actionbridge.h"
@@ -19,6 +20,7 @@
 #include "gui/quick/bridges/themebridge.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
 #include "gui/quick/ui/mainwindowshell.h"
+#include "gui/quick/ui/overlays/overlaycoordinator.h"
 
 class ActionManager;
 class QQuickWindow;
@@ -26,10 +28,12 @@ class Settings;
 
 // Composition root of the Qt Quick UI (--ui=quick), the counterpart of
 // WidgetUi. Owns the global-service bridges, the image viewport controller
-// with its viewer port and actions, the view mode state, the inbound
-// UiEvents, the port adapters and the QML engine; keeps the bridges and the
-// viewport in sync with Settings and creates the main window from the
-// qimgv.ui module. Core talks to this UI only through ports().
+// with its viewer port and actions, the overlays (OverlayCoordinator, which
+// is also the notification port) with their actions, the view mode state,
+// the inbound UiEvents, the port adapters and the QML engine; keeps the
+// bridges, the viewport and the overlays in sync with Settings and creates
+// the main window from the qimgv.ui module. Core talks to this UI only
+// through ports().
 //
 // Must be destroyed before QApplication and after every Core built from
 // ports(); settings and actionManager must outlive it.
@@ -56,18 +60,18 @@ private:
   void applyGraphicsApi();
   void configurePipelineCache(QQuickWindow &window);
   void forwardViewportEvents();
+  void forwardOverlayEvents();
   void onSettingsChanged();
 
   Settings &mSettings;
   ActionManager &mActionManager;
   UiEvents mEvents;
   ViewModeController mViewMode;
-  LoggingNotificationPort mNotifications;
   DecliningDialogPort mDialogs;
   std::shared_ptr<PlaceholderDirectoryView> mThumbnailPanelView;
   std::shared_ptr<PlaceholderDirectoryView> mFolderView;
-  // The bridges, the viewport controller and the window shell are declared
-  // before the engine so that they outlive it, as
+  // The bridges, the viewport controller, the overlays and the window shell
+  // are declared before the engine so that they outlive it, as
   // QQmlEngine::setExternalSingletonInstance() and the main window's
   // required properties require.
   ActionManagerDispatcher mDispatcher;
@@ -77,6 +81,8 @@ private:
   ImageViewportController mViewport;
   QuickViewerPort mViewerPort;
   QuickViewerActions mViewerActions;
+  OverlayCoordinator mOverlays;
+  QuickOverlayActions mOverlayActions;
   MainWindowShell mWindowShell;
   QQmlApplicationEngine mEngine;
   // Works on the window the engine owns, so it is destroyed first.

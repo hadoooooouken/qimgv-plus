@@ -26,6 +26,7 @@ constexpr QLatin1StringView mainWindowModule = "qimgv.ui"_L1;
 constexpr QLatin1StringView mainWindowType = "Main"_L1;
 constexpr QLatin1StringView viewportControllerProperty = "viewportController"_L1;
 constexpr QLatin1StringView windowShellProperty = "windowShell"_L1;
+constexpr QLatin1StringView overlaysProperty = "overlays"_L1;
 
 constexpr QLatin1StringView bridgesModule = "qimgv.bridges"_L1;
 constexpr QLatin1StringView settingsBridgeType = "AppSettings"_L1;
@@ -70,12 +71,15 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager)
       mActionBridge(mDispatcher),
       mViewport(BridgeSnapshots::readUiSettings(settings)),
       mViewerPort(mViewport),
-      mViewerActions(actionManager, settings, mViewport) {
+      mViewerActions(actionManager, settings, mViewport),
+      mOverlays(BridgeSnapshots::readUiSettings(settings)),
+      mOverlayActions(actionManager, settings, mOverlays, mViewport) {
   // settingsChanged also announces theme switches and shortcut edits; each
   // receiver acts only on what actually changed.
   QObject::connect(&settings, &Settings::settingsChanged, &mSettingsBridge,
                    [this]() { onSettingsChanged(); });
   forwardViewportEvents();
+  forwardOverlayEvents();
 }
 
 QuickUiHost::~QuickUiHost() = default;
@@ -94,13 +98,12 @@ void QuickUiHost::forwardViewportEvents() {
   QObject::connect(&mViewport, &ImageViewportController::prevImageRequested,
                    events, &UiEvents::prevImageRequested);
 
+  NotificationOverlayModel *messages = mOverlays.messages();
   QObject::connect(&mViewerActions, &QuickViewerActions::notificationRequested,
-                   &mViewerActions, [this](const NotificationRequest &request) {
-                     mNotifications.showNotification(request);
-                   });
+                   messages, &NotificationOverlayModel::showNotification);
   QObject::connect(&mViewport, &ImageViewportController::playbackError,
-                   &mViewport, [this](const QString &message) {
-                     mNotifications.showError(message);
+                   messages, [messages](const QString &message) {
+                     messages->showError(message);
                    });
 
   // The folder view placeholder has nothing to lay out: it is ready as soon
@@ -113,10 +116,34 @@ void QuickUiHost::forwardViewportEvents() {
 }
 
 //------------------------------------------------------------------------------
+// Requests made in the overlays go to Core.
+void QuickUiHost::forwardOverlayEvents() {
+  UiEvents *events = &mEvents;
+  CopyTargetsModel *copyTargets = mOverlays.copyTargets();
+  QObject::connect(copyTargets, &CopyTargetsModel::copyRequested, events,
+                   &UiEvents::copyRequested);
+  QObject::connect(copyTargets, &CopyTargetsModel::moveRequested, events,
+                   &UiEvents::moveRequested);
+  QObject::connect(mOverlays.renamePrompt(),
+                   &RenamePromptController::renameRequested, events,
+                   &UiEvents::renameRequested);
+  QObject::connect(mOverlays.colorAdjustmentsEditor(),
+                   &ColorAdjustmentsEditor::applyRequested, events,
+                   &UiEvents::colorAdjustmentsApplyRequested);
+  QObject::connect(&mOverlays, &OverlayCoordinator::saveRequested, events,
+                   &UiEvents::saveRequested);
+  QObject::connect(&mOverlays, &OverlayCoordinator::saveAsRequested, events,
+                   &UiEvents::saveAsRequested);
+  QObject::connect(&mOverlays, &OverlayCoordinator::discardEditsRequested,
+                   events, &UiEvents::discardEditsRequested);
+}
+
+//------------------------------------------------------------------------------
 void QuickUiHost::onSettingsChanged() {
   const UiSettingsSnapshot snapshot = BridgeSnapshots::readUiSettings(mSettings);
   mSettingsBridge.apply(snapshot);
   mViewport.applySettings(snapshot);
+  mOverlays.applySettings(snapshot);
   mThemeBridge.apply(BridgeSnapshots::readTheme(mSettings));
   mActionBridge.refresh();
 }
@@ -181,7 +208,8 @@ bool QuickUiHost::start() {
   applyGraphicsApi();
   mEngine.setInitialProperties(
       {{viewportControllerProperty, QVariant::fromValue(&mViewport)},
-       {windowShellProperty, QVariant::fromValue(&mWindowShell)}});
+       {windowShellProperty, QVariant::fromValue(&mWindowShell)},
+       {overlaysProperty, QVariant::fromValue(&mOverlays)}});
   mEngine.loadFromModule(mainWindowModule, mainWindowType);
   const QList<QObject *> roots = mEngine.rootObjects();
   QQuickWindow *window =
@@ -204,6 +232,7 @@ bool QuickUiHost::start() {
           .window = *window,
           .shell = mWindowShell,
           .viewport = mViewport,
+          .overlays = mOverlays,
           .viewMode = mViewMode,
           .events = mEvents,
           .settings = mSettings,
@@ -220,7 +249,7 @@ std::optional<UiPorts> QuickUiHost::ports() {
     return std::nullopt;
   }
   return UiPorts{
-      mNotifications,
+      *mOverlays.messages(),
       mDialogs,
       mViewerPort,
       *mWindowController,

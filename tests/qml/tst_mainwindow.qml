@@ -15,7 +15,8 @@ TestCase {
         compare(component.status, Component.Ready, component.errorString());
         const window = createTemporaryObject(component, testCase, {
             viewportController: Fixture.viewportController,
-            windowShell: Fixture.windowShell
+            windowShell: Fixture.windowShell,
+            overlays: Fixture.overlays
         });
         verify(window !== null, "qimgv.ui/Main could not be instantiated");
         return window;

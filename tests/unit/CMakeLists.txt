@@ -20,6 +20,7 @@ qt_add_executable(qimgv_tests
     tst_upscaledecision.cpp
     tst_windowtitle.cpp
     tst_uimetrics.cpp
+    tst_overlays.cpp
     "${QIMGV_APP_SOURCE_DIR}/components/viewmode/viewmodecontroller.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/shellinfo/windowtitle.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/singleinstance/singleinstancechannel.cpp"

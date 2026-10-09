@@ -17,3 +17,4 @@ int runQuickShellTests(int argc, char **argv);
 int runDecodedPixelsTests(int argc, char **argv);
 int runUpscaleDecisionTests(int argc, char **argv);
 int runUiMetricsTests(int argc, char **argv);
+int runOverlayTests(int argc, char **argv);

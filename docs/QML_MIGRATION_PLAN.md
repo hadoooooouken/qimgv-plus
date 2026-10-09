@@ -1180,6 +1180,97 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
   rules match (`acceptKeyboardFocus`); no overlay is instantiated at
   startup unless enabled by settings.
 
+- **Scope decision (user, 2026-10-09):** the zoom indicator and the click
+  zones were already ported in S1.6; the map overlay stays in S3.4; the crop
+  overlay moves to S2.5 with the crop panel (it is reachable only through the
+  panel, and its selection logic needs its own C++ model first).
+- **Delivered:**
+  - **Pure components** (`qimgv_viewcomponents`):
+    `components/shellinfo/fileinfotext.*` (`filePositionText`,
+    `imageResolutionText`, `fileSizeText`, `fullscreenInfoFor`; the window
+    title uses the same helpers) and `components/copytargets/copytargetlist.*`
+    (`copyTargetsFrom`: the default destinations of `CopyOverlay`, the
+    visible writable home folders up to `kMaxCopyTargets`;
+    `savableCopyTargets`: without empty and repeated entries).
+  - **Overlay models** (`gui/quick/ui/overlays/`, module `qimgv.ui`), all
+    Settings-free (values in, edit signals out):
+    `OverlayState` (open, `created` latch for loading on first use,
+    `takesKeyboardFocus`, anchor); `NotificationOverlayModel` (the Quick
+    UI's `INotificationPort`, `notificationPresentationFor`: icon, default
+    text and display time by kind); `ImageInfoModel` (name, value, stacked
+    for values over 100 characters); `AdjustmentSliderModel` (slider rows,
+    `sliderValueText`) with `ColorAdjustmentsEditor` (live preview, compare,
+    apply-and-reset) and `CasSettingsEditor` (`CasParameters`);
+    `CopyTargetsModel` (copy / move mode, digit shortcuts,
+    `activateShortcut(keyText)`, folder replacement publishes the list to
+    save); `RenamePromptController` (base-name selection, non-empty accept,
+    pass-through shortcuts of exit and rename, backdrop in folder view);
+    `FullscreenChromeController` (info bar while the setting is on, controls
+    when the panel is off, at the bottom or left; `kHideTimeoutMs` auto-hide
+    on pointer moves, controls kept while hovered; the info bar toggle
+    publishes the setting).
+  - **`OverlayCoordinator`** owns the states and models and holds `MW`'s
+    rules across overlays: entering the folder view closes copy / move,
+    rename, colour adjustments and CAS settings and hides the image info,
+    which returns with the document view; copy / move needs a displayed
+    image; the save confirmation follows `showSaveOverlay`; save
+    confirmation and copy list move to the top when the panel would cover
+    them; colour adjustments and CAS settings open at the last pointer
+    position; `keyboardOverlayOpen` moves the focus between the viewer and
+    the copy list or rename prompt. It keeps the current CAS parameters, so
+    a settings snapshot with unchanged values does not undo an overlay edit.
+  - **Application side:** `QuickOverlayActions` (adapter) runs the copy,
+    move, image info, colour adjustments and CAS actions, fills the copy
+    destinations on first use (never at startup) and stores their edits,
+    stores CAS edits and applies them through the new narrow
+    `ImageViewportController::setCasParameters()` (a settings notification
+    would reset the session scaling filter), stores the info bar toggle and
+    keeps the rename pass-through shortcuts current.
+    `QuickMainWindowController` forwards the shell port's metadata, save
+    overlay, info bar, rename and current-file calls, the window's pointer
+    moves, the fullscreen state and the view mode to the coordinator.
+    `QuickUiHost` replaces `LoggingNotificationPort` with the message model,
+    forwards the overlays' requests to `UiEvents` and hands the coordinator
+    to `Main.qml`. `ActionBridge` gained `shortcutText()` and `keyText()`
+    (through `IActionDispatcher`) for the rename and copy keys.
+  - **QML:** `OverlayLayer` loads each overlay asynchronously on first use
+    (`created`) and keeps it; the fullscreen chrome is loaded while active.
+    Files are named like the widget classes (`FloatingMessage`,
+    `FullscreenInfoOverlay`, `ControlsOverlay`, `ImageInfoOverlay`,
+    `SaveConfirmOverlay`, `CopyOverlay`, `RenameOverlay`,
+    `ColorAdjustmentsOverlay`, `CasSettingsOverlay`), so `qsTr()` uses the
+    widget translation contexts. Shared parts: `OverlayPanel` (surface,
+    header, close button, header drag inside the window, input blocking),
+    `OverlayHeaderButton`, `AdjustmentSliders` (double click resets a
+    slider). Fades (message, info bar, controls) are a `hidden` state with a
+    fade-out transition: they appear at once, as in the widget UI. The copy
+    list's folder picker is `QtQuick.Dialogs.FolderDialog`.
+  - **Deviations:** the colour adjustment preview is not throttled (the GPU
+    applies it per frame). One floating message serves both the document and
+    the folder page (the widget UI has one per page). The fullscreen chrome
+    re-shows only when its own settings change, not on every settings
+    notification.
+  - **Measured** (Release, `smoke.png` 300 x 300, process start to first
+    `documentRenderingSettled`, 5 runs each, same session): Quick UI median
+    346 ms (337 - 359), widget UI median 550 ms (537 - 552). No overlay is
+    created before the first frame.
+  - **Flagged, not changed:** `MW` still holds its own copies of the
+    notification presentation, info bar texts and overlay rules (removed
+    with the widget UI in S4.2); `qimgv.style/Popup.qml` has an unused
+    `qimgv.bridges` import (qmllint info). Not verified by hand in the
+    running application: the overlays were exercised by the Quick tests
+    with the real modules; the application smoke test covers startup only.
+  - Tests: `qimgv_tests` gained `OverlayTests` (info bar texts, copy
+    targets with a temporary home folder, notification presentation and
+    timing, slider texts, colour and CAS editors, copy targets, rename,
+    fullscreen chrome timers, coordinator rules). `qimgv_qml_tests` gained
+    `tst_overlays.qml` (nothing created at startup, each overlay reachable
+    from its request, message fade, image info rows, folder view, copy focus
+    and digit keys, row click, rename Enter / Escape / empty name, colour
+    adjustments at the pointer, CAS, save confirmation setting, fullscreen
+    controls auto-hide); the fixture provides an `OverlayCoordinator` and
+    request hooks.
+
 #### S2.4 Directory view adapter and thumbnail strip
 - **Goal:** the bottom/side thumbnail panel in QML.
 - **Owner:** `DirectoryViewAdapter : QAbstractListModel, IDirectoryView`
@@ -1202,7 +1293,9 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
   `ActionManager`), presentation in QML.
 - **Scope:** `Menu { popupType: Popup.Native }` with fallback to
   `Popup.Window`; `Menu.separatorsCollapsible`; path selector submenu;
-  crop panel with numeric inputs and aspect presets.
+  crop panel with numeric inputs and aspect presets; crop overlay (moved
+  from S2.3): selection logic of `CropOverlay` in a C++ model first, handles
+  via `Shape`.
 - **Acceptance:** menu opens beyond window edges; all shortcuts displayed
   match `ActionManager`.
 

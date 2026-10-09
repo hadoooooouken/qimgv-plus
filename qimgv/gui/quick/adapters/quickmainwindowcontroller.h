@@ -12,6 +12,7 @@
 class ActionManager;
 class ImageViewportController;
 class MainWindowShell;
+class OverlayCoordinator;
 class QQuickWindow;
 class Settings;
 class UiEvents;
@@ -23,6 +24,7 @@ struct QuickMainWindowContext {
     QQuickWindow &window;
     MainWindowShell &shell;
     ImageViewportController &viewport;
+    OverlayCoordinator &overlays;
     ViewModeController &viewMode;
     UiEvents &events;
     Settings &settings;
@@ -41,9 +43,12 @@ struct QuickMainWindowContext {
 // background as its clear colour, so its first frame is the themed window and
 // the image appears with the first frame that renders it.
 //
-// The shell parts without a Quick UI yet (metadata, folder tree, sorting,
-// overlays, crop panel, rename prompt) are logged once and otherwise ignored
-// until their stages (S2.3 - S3.1) implement them. GUI thread only.
+// The overlay parts of the shell port (metadata, save confirmation,
+// fullscreen info bar, rename prompt, current file) and the window's pointer
+// moves, fullscreen state and view mode go to the OverlayCoordinator. The
+// shell parts without a Quick UI yet (folder tree, sorting, crop panel) are
+// logged once and otherwise ignored until their stages (S2.4 - S3.1)
+// implement them. GUI thread only.
 class QuickMainWindowController final : public QObject,
                                         public IWindowPort,
                                         public IShellPort {
@@ -89,6 +94,7 @@ private:
     QQuickWindow &window;
     MainWindowShell &shell;
     ImageViewportController &viewport;
+    OverlayCoordinator &overlays;
     ViewModeController &viewMode;
     UiEvents &events;
     Settings &settings;

@@ -17,6 +17,7 @@ ApplicationWindow {
     // Provided by QuickUiHost (initial properties).
     required property ImageViewportController viewportController
     required property MainWindowShell windowShell
+    required property OverlayCoordinator overlays
 
     readonly property int initialWidth: 1280
     readonly property int initialHeight: 800
@@ -34,7 +35,7 @@ ApplicationWindow {
         anchors.fill: parent
         controller: root.viewportController
         visible: !root.windowShell.folderViewActive
-        focus: visible
+        focus: visible && !root.overlays.keyboardOverlayOpen
     }
 
     // Folder mode. The folder view is not part of the Qt Quick UI yet; the
@@ -42,7 +43,7 @@ ApplicationWindow {
     FocusScope {
         anchors.fill: parent
         visible: root.windowShell.folderViewActive
-        focus: visible
+        focus: visible && !root.overlays.keyboardOverlayOpen
         Keys.onPressed: event => event.accepted = Actions.handleKeyEvent(event)
 
         Label {
@@ -51,6 +52,12 @@ ApplicationWindow {
             color: Theme.colors.text
             font: Theme.fonts.base
         }
+    }
+
+    OverlayLayer {
+        anchors.fill: parent
+        coordinator: root.overlays
+        focus: root.overlays.keyboardOverlayOpen
     }
 
     // Files dropped anywhere on the window open like in the widget UI.

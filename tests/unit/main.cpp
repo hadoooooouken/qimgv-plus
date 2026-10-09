@@ -23,5 +23,6 @@ int main(int argc, char **argv) {
   status |= runDecodedPixelsTests(argc, argv);
   status |= runUpscaleDecisionTests(argc, argv);
   status |= runUiMetricsTests(argc, argv);
+  status |= runOverlayTests(argc, argv);
   return status;
 }

@@ -3,30 +3,10 @@
 #include <QCoreApplication>
 #include <QStringList>
 
-#include <numeric>
+#include "components/shellinfo/fileinfotext.h"
 
 namespace {
 using namespace Qt::StringLiterals;
-
-// Decimal places of the file size.
-constexpr int kFileSizePrecision = 1;
-
-QString positionText(const ShellFileInfo &info) {
-    if (info.fileCount <= 0)
-        return {};
-    return u"[ %1/%2 ]"_s.arg(info.index + 1).arg(info.fileCount);
-}
-
-QString resolutionText(QSize size) {
-    if (size.width() <= 0)
-        return {};
-    QString text = u"%1 x %2"_s.arg(size.width()).arg(size.height());
-    if (size.height() > 0) {
-        const int divisor = std::gcd(size.width(), size.height());
-        text += u" (%1:%2)"_s.arg(size.width() / divisor).arg(size.height() / divisor);
-    }
-    return text;
-}
 
 QString statesText(const WindowTitleState &state) {
     QString states;
@@ -52,13 +32,10 @@ QString windowTitleFor(const WindowTitleState &state, const QLocale &locale) {
     QString title = info.fileName + u" [%1%]"_s.arg(state.scalePercent);
 
     if (state.extendedInfo) {
-        title.prepend(positionText(info) + u"  "_s);
-        QStringList details;
-        details << resolutionText(info.imageSize) << info.colorProfile
-                << info.format.toUpper();
-        if (info.fileSize > 0)
-            details << locale.formattedDataSize(info.fileSize, kFileSizePrecision);
-        for (const QString &detail : std::as_const(details)) {
+        title.prepend(filePositionText(info) + u"  "_s);
+        const QStringList details{imageResolutionText(info.imageSize), info.colorProfile,
+                                  info.format.toUpper(), fileSizeText(info.fileSize, locale)};
+        for (const QString &detail : details) {
             if (!detail.isEmpty())
                 title += u" - "_s + detail;
         }
