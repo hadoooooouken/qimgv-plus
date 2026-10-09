@@ -81,7 +81,7 @@ public:
   Q_INVOKABLE void toggleSmoothZoom();
   // Publishes the current snapshot again (no area changes).
   Q_INVOKABLE void reapplySettings();
-  // Switches between the dark and the light test theme.
+  // Switches between the application's dark and light theme.
   Q_INVOKABLE void switchTheme();
   // Rebinds action and refreshes the actions bridge.
   Q_INVOKABLE void setShortcut(const QString &action, const QString &shortcut);
@@ -98,6 +98,9 @@ public:
                                     const QUrl &url);
   // Forgets the input the dispatcher recorded.
   Q_INVOKABLE void clearInputLog();
+  // Path of fileName next to the test executable, for images the tests save
+  // for review.
+  Q_INVOKABLE QString artifactPath(const QString &fileName) const;
 
 private:
   FakeActionDispatcher mDispatcher;

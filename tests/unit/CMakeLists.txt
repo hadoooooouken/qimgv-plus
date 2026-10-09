@@ -19,6 +19,7 @@ qt_add_executable(qimgv_tests
     tst_windowstate.cpp
     tst_upscaledecision.cpp
     tst_windowtitle.cpp
+    tst_uimetrics.cpp
     "${QIMGV_APP_SOURCE_DIR}/components/viewmode/viewmodecontroller.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/shellinfo/windowtitle.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/singleinstance/singleinstancechannel.cpp"
@@ -26,6 +27,8 @@ qt_add_executable(qimgv_tests
     "${QIMGV_APP_SOURCE_DIR}/components/windowstate/windowstatecontroller.cpp"
     "${QIMGV_APP_SOURCE_DIR}/sourcecontainers/decodedpixels.cpp"
     "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/placeholderdirectoryview.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/themesnapshotbuilder.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/themestore.cpp"
 )
 
 # Components under test are compiled from the application sources and use

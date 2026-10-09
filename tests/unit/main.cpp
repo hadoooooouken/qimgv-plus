@@ -22,5 +22,6 @@ int main(int argc, char **argv) {
   status |= runQuickShellTests(argc, argv);
   status |= runDecodedPixelsTests(argc, argv);
   status |= runUpscaleDecisionTests(argc, argv);
+  status |= runUiMetricsTests(argc, argv);
   return status;
 }

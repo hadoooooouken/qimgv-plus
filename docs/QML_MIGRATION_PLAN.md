@@ -1098,6 +1098,70 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
   singleton; overlay shadows via `RectangularShadow`.
 - **Acceptance:** Qt Quick Test snapshot of a control gallery in both
   schemes; theme switch at runtime updates without restart.
+- **Delivered:**
+  - **Shared metrics and surfaces:** the sizes and dialog colours that
+    `Settings::loadStylesheet()` computed inline moved into pure functions
+    used by both UIs, like `UiMetrics::typographyFor()`:
+    `UiMetrics::controlMetricsFor(font)` (button, top bar and overlay header
+    heights, context menu width and row height, rename overlay width, tooltip
+    and context menu frame sizes) and `DialogSurfaces::colorsFor(dark)`
+    (`gui/dialogsurfaces.h`: dialog window and text colours and the five
+    tints, `sys_window_tinted*` in the stylesheet). The stylesheet output is
+    unchanged.
+  - **Theme bridge:** `Theme.metrics` and `Theme.surfaces`, notified only
+    when they change. The snapshot is built by the pure
+    `buildThemeSnapshot(scheme, font, iconFontFamily)`
+    (`gui/quick/adapters/themesnapshotbuilder.*`); `BridgeSnapshots::
+    readTheme()` calls it with the Settings scheme.
+  - **`qimgv.style`** (`gui/quick/style/`, static module, `IMPORTS
+    QtQuick.Controls.Basic`): selected at compile time. `Main.qml` imports
+    `qimgv.style` instead of `QtQuick.Controls.Basic`; controls not provided
+    fall back to Basic. Every control is built on `QtQuick.Templates` and
+    reads only `Theme` and the `StyleConstants` singleton (radii, paddings,
+    colour factors: the literal values of the stylesheet and ProxyStyle).
+    Button (QPushButton), ToolButton (PanelButton), ComboBox and
+    ItemDelegate (ProxyStyle's flat panel, chevron glyph, list popup with
+    `highlightOnHover`), Slider, SpinBox and DoubleSpinBox, CheckBox and
+    RadioButton (ProxyStyle's Fluent glyph indicators), TextField and
+    SearchField, ScrollBar and ScrollView, Menu (`separatorsCollapsible`),
+    MenuItem, MenuSeparator, ToolTip (default `policy`), Popup, Label.
+    Translucent and derived colours use the 6.12 `Color` singleton
+    (`transparent`, `lighter`, `blend`). Popups, menus and tooltips share
+    `PopupBackground` with a `RectangularShadow`. `IconGlyph` draws one
+    `FluentIcons` glyph.
+  - **Menu shortcuts:** Qt's `MenuItemIconLabel` draws the shortcut in the
+    label colour; the widget menu dims it. `MenuItem` draws it itself in the
+    secondary text colour, formatted by the `ShortcutText` singleton
+    (`Action.shortcut` as native text, like QMenu).
+  - **Deviations:** SpinBox and DoubleSpinBox keep chevron step buttons
+    (the crop panel hides them, the settings dialog has them). SearchField
+    has no search icon (the widget name filter has none; the icon font has
+    no magnifier glyph). Buttons, panel buttons and combo boxes show a 1 px
+    accent border on keyboard focus (ProxyStyle hides focus frames).
+  - **Measured** (Release, `smoke.png` 300×300, process start → first
+    `documentRenderingSettled`, 5 runs each, same session): Quick UI median
+    ≈ 380 ms (319–401), widget UI median ≈ 738 ms (719–795). The machine
+    was loaded during the measurement (widget UI ≈ 510 ms in S2.1); the
+    Quick/widget ratio is better than in S2.1. No style control is
+    instantiated before the first frame.
+  - **Flagged, not changed:** the dark and light `QPalette` literals in
+    `Settings::loadStylesheet()` stay inline; Auto theme mode does not
+    follow an OS dark/light switch at runtime (nothing listens to
+    `QStyleHints::colorSchemeChanged`, in either UI).
+  - Tests: `qimgv_tests` gained `UiMetricsTests` (dark and light tints
+    against the former stylesheet values, designed sizes for small fonts,
+    scaling for large fonts, fixed frame sizes, the theme snapshot of both
+    schemes). `qimgv_qml_tests` now builds the fixture theme from
+    `ThemeStore`'s real schemes and loads Segoe UI and the icon font (the
+    offscreen platform finds no fonts). `tst_style.qml` checks, in both
+    schemes, the colours of every control's flat parts in its states
+    (normal, hovered, pressed, checked, focused, disabled), glyph
+    indicators, spin stepping, the clear button, the minimum scroll handle,
+    the menu shortcut text and highlight, and a runtime theme switch of live
+    controls. It writes `style-dark.png` and `style-light.png` (gallery with
+    a menu, a tooltip and a popup open) next to the test executable for
+    review; they are not compared with reference images (text rendering
+    differs between machines).
 
 #### S2.3 Overlays and floating messages (parallelizable after S2.2)
 - **Goal:** port the 19 overlays as GPU-composited items.

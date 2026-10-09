@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "gui/dialogsurfaces.h"
 #include "gui/uimetrics.h"
 #include "utils/formatregistry.h"
 
@@ -204,25 +205,19 @@ void Settings::loadStylesheet() {
       isDark = true;
     }
 
-    QPalette p;
-    QColor sys_text = p.text().color();
-    QColor sys_window = p.window().color();
-
+    const DialogSurfaces::Colors surfaces = DialogSurfaces::colorsFor(isDark);
     if (isDark) {
-      sys_window = QColor(37, 37, 37);
-      sys_text = QColor(220, 220, 220);
-
       QPalette darkPalette;
-      darkPalette.setColor(QPalette::Window, QColor(37, 37, 37));
-      darkPalette.setColor(QPalette::WindowText, QColor(220, 220, 220));
+      darkPalette.setColor(QPalette::Window, surfaces.window);
+      darkPalette.setColor(QPalette::WindowText, surfaces.text);
       darkPalette.setColor(QPalette::Base, QColor(55, 55, 55));
       darkPalette.setColor(QPalette::AlternateBase, QColor(45, 45, 45));
       darkPalette.setColor(QPalette::ToolTipBase, colors.widget);
       darkPalette.setColor(QPalette::ToolTipText, colors.text_hc);
-      darkPalette.setColor(QPalette::Text, QColor(220, 220, 220));
+      darkPalette.setColor(QPalette::Text, surfaces.text);
       darkPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(100, 100, 100));
       darkPalette.setColor(QPalette::Button, QColor(45, 45, 45));
-      darkPalette.setColor(QPalette::ButtonText, QColor(220, 220, 220));
+      darkPalette.setColor(QPalette::ButtonText, surfaces.text);
       darkPalette.setColor(QPalette::BrightText, Qt::red);
       darkPalette.setColor(QPalette::Link, colors.accent);
       darkPalette.setColor(QPalette::Highlight, colors.accent);
@@ -230,126 +225,66 @@ void Settings::loadStylesheet() {
       darkPalette.setColor(QPalette::Mid, QColor(110, 110, 110));
       qApp->setPalette(darkPalette);
     } else {
-      sys_window = QColor(245, 245, 245);
-      sys_text = QColor(30, 30, 30);
-
       QPalette lightPalette;
-      lightPalette.setColor(QPalette::Window, QColor(245, 245, 245));
-      lightPalette.setColor(QPalette::WindowText, QColor(30, 30, 30));
+      lightPalette.setColor(QPalette::Window, surfaces.window);
+      lightPalette.setColor(QPalette::WindowText, surfaces.text);
       lightPalette.setColor(QPalette::Base, QColor(255, 255, 255));
       lightPalette.setColor(QPalette::AlternateBase, QColor(240, 240, 240));
       lightPalette.setColor(QPalette::ToolTipBase, colors.widget);
       lightPalette.setColor(QPalette::ToolTipText, colors.text_hc);
-      lightPalette.setColor(QPalette::Text, QColor(30, 30, 30));
+      lightPalette.setColor(QPalette::Text, surfaces.text);
       lightPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(150, 150, 150));
       lightPalette.setColor(QPalette::Button, QColor(240, 240, 240));
-      lightPalette.setColor(QPalette::ButtonText, QColor(30, 30, 30));
+      lightPalette.setColor(QPalette::ButtonText, surfaces.text);
       lightPalette.setColor(QPalette::BrightText, Qt::red);
       lightPalette.setColor(QPalette::Link, colors.accent);
       lightPalette.setColor(QPalette::Highlight, colors.accent);
       lightPalette.setColor(QPalette::HighlightedText, Qt::white);
       qApp->setPalette(lightPalette);
     }
-    QColor sys_window_tinted, sys_window_tinted_lc, sys_window_tinted_lc2,
-        sys_window_tinted_hc, sys_window_tinted_hc2;
-    if (sys_window.valueF() <= 0.45f) {
-      // dark system theme
-      sys_window_tinted_lc2.setHsv(sys_window.hue(), sys_window.saturation(),
-                                   sys_window.value() + 6);
-      sys_window_tinted_lc.setHsv(sys_window.hue(), sys_window.saturation(),
-                                  sys_window.value() + 14);
-      sys_window_tinted.setHsv(sys_window.hue(), sys_window.saturation(),
-                               sys_window.value() + 20);
-      sys_window_tinted_hc.setHsv(sys_window.hue(), sys_window.saturation(),
-                                  sys_window.value() + 35);
-      sys_window_tinted_hc2.setHsv(sys_window.hue(), sys_window.saturation(),
-                                   sys_window.value() + 50);
-    } else {
-      // light system theme
-      sys_window_tinted_lc2.setHsv(sys_window.hue(), sys_window.saturation(),
-                                   sys_window.value() - 6);
-      sys_window_tinted_lc.setHsv(sys_window.hue(), sys_window.saturation(),
-                                  sys_window.value() - 14);
-      sys_window_tinted.setHsv(sys_window.hue(), sys_window.saturation(),
-                               sys_window.value() - 20);
-      sys_window_tinted_hc.setHsv(sys_window.hue(), sys_window.saturation(),
-                                  sys_window.value() - 35);
-      sys_window_tinted_hc2.setHsv(sys_window.hue(), sys_window.saturation(),
-                                   sys_window.value() - 50);
-    }
 
     // --- widget sizes ---------------------------------------------
-    auto fnt = QGuiApplication::font();
-    QFontMetrics fm(fnt);
+    const QFont fnt = QGuiApplication::font();
     const UiMetrics::Typography typography = UiMetrics::typographyFor(fnt);
-    int font_small   = typography.smallPointSize;
-    int font_section  = typography.sectionPointSize;
-    int font_large    = typography.largePointSize;
-    int text_height = fm.height();
-    int text_padding = (int)(text_height * 0.10f);
-    int text_padding_small = (int)(text_height * 0.05f);
-    int text_padding_large = (int)(text_height * 0.25f);
-
-    // folderview top panel item sizes
-    int top_panel_v_margin = 4;
-    // ensure at least 4px so its not too thin
-    int top_panel_text_padding = qMax(text_padding, 4);
-    // scale with font, 38px base size
-    int top_panel_height = qMax(
-        (text_height + top_panel_text_padding * 2 + top_panel_v_margin * 2),
-        38);
-
-    // overlay headers
-    int overlay_header_margin = 2;
-    // 32px base size
-    int overlay_header_size = qMax(text_height + text_padding * 2, 30);
-
-    int button_height = text_height + text_padding_large * 2;
-
-    // pseudo-dpi to scale some widget widths
-    int text_height_base = 22;
-    qreal pDpr = qMax(((qreal)(text_height) / text_height_base), 1.0);
-    int context_menu_width = 212 * pDpr;
-    int context_menu_button_height = 32 * pDpr;
-    int rename_overlay_width = 380 * pDpr;
-    constexpr int tooltip_border_width = 1;
-    constexpr int tooltip_border_radius = 6;
-
-    // qDebug()<< "dpr=" << qApp->devicePixelRatio() << "pDpr=" << pDpr;
+    const int font_small = typography.smallPointSize;
+    const int font_section = typography.sectionPointSize;
+    const int font_large = typography.largePointSize;
+    const UiMetrics::ControlMetrics metrics = UiMetrics::controlMetricsFor(fnt);
 
     // --- write variables into stylesheet --------------------------
     styleSheet.replace("%font_small%",   QString::number(font_small)   + "pt");
     styleSheet.replace("%font_section%", QString::number(font_section) + "pt");
     styleSheet.replace("%font_large%",   QString::number(font_large)   + "pt");
     styleSheet.replace("%button_height%",
-                       QString::number(button_height) + "px");
+                       QString::number(metrics.buttonHeight) + "px");
     styleSheet.replace("%top_panel_height%",
-                       QString::number(top_panel_height) + "px");
+                       QString::number(metrics.topPanelHeight) + "px");
     styleSheet.replace("%overlay_header_size%",
-                       QString::number(overlay_header_size) + "px");
+                       QString::number(metrics.overlayHeaderSize) + "px");
     styleSheet.replace("%context_menu_width%",
-                       QString::number(context_menu_width) + "px");
+                       QString::number(metrics.contextMenuWidth) + "px");
     styleSheet.replace("%context_menu_button_height%",
-                       QString::number(context_menu_button_height) + "px");
+                       QString::number(metrics.contextMenuItemHeight) + "px");
     styleSheet.replace("%rename_overlay_width%",
-                       QString::number(rename_overlay_width) + "px");
+                       QString::number(metrics.renameOverlayWidth) + "px");
     styleSheet.replace("%tooltip_border_width%",
-                       QString::number(tooltip_border_width) + "px");
+                       QString::number(metrics.tooltipBorderWidth) + "px");
     styleSheet.replace("%tooltip_border_radius%",
-                       QString::number(tooltip_border_radius) + "px");
+                       QString::number(metrics.tooltipBorderRadius) + "px");
 
     styleSheet.replace("%icontheme%", isDark ? "light" : "dark");
-    styleSheet.replace("%contextmenu_border_radius%", "8px");
-    styleSheet.replace("%sys_window%", sys_window.name());
-    styleSheet.replace("%sys_window_tinted%", sys_window_tinted.name());
-    styleSheet.replace("%sys_window_tinted_lc%", sys_window_tinted_lc.name());
-    styleSheet.replace("%sys_window_tinted_lc2%", sys_window_tinted_lc2.name());
-    styleSheet.replace("%sys_window_tinted_hc%", sys_window_tinted_hc.name());
-    styleSheet.replace("%sys_window_tinted_hc2%", sys_window_tinted_hc2.name());
+    styleSheet.replace("%contextmenu_border_radius%",
+                       QString::number(metrics.contextMenuBorderRadius) + "px");
+    styleSheet.replace("%sys_window%", surfaces.window.name());
+    styleSheet.replace("%sys_window_tinted%", surfaces.tinted.name());
+    styleSheet.replace("%sys_window_tinted_lc%", surfaces.tintedLc.name());
+    styleSheet.replace("%sys_window_tinted_lc2%", surfaces.tintedLc2.name());
+    styleSheet.replace("%sys_window_tinted_hc%", surfaces.tintedHc.name());
+    styleSheet.replace("%sys_window_tinted_hc2%", surfaces.tintedHc2.name());
     styleSheet.replace("%sys_text_secondary_rgba%",
-                       "rgba(" + QString::number(sys_text.red()) + "," +
-                           QString::number(sys_text.green()) + "," +
-                           QString::number(sys_text.blue()) + ",50%)");
+                       "rgba(" + QString::number(surfaces.text.red()) + "," +
+                           QString::number(surfaces.text.green()) + "," +
+                           QString::number(surfaces.text.blue()) + ",50%)");
 
     styleSheet.replace("%button%", colors.button.name());
     styleSheet.replace("%button_hover%", colors.button_hover.name());

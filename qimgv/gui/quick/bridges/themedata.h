@@ -8,7 +8,7 @@
 
 // Theme snapshot published by ThemeBridge. The application side fills it from
 // Settings::colorScheme() and the application font
-// (gui/quick/adapters/bridgesnapshots.h).
+// (gui/quick/adapters/themesnapshotbuilder.h).
 
 // Every colour of ColorScheme (themestore.h), base and extended, under
 // camelCase names: ColorScheme::folderview_topbar is folderViewTopBar.
@@ -130,10 +130,69 @@ public:
   friend bool operator==(const ThemeFonts &, const ThemeFonts &) = default;
 };
 
+// Control sizes in pixels, derived from the application font
+// (UiMetrics::ControlMetrics); the widget stylesheet uses the same values.
+struct ThemeMetrics {
+  Q_GADGET
+  QML_VALUE_TYPE(themeMetrics)
+  QML_UNCREATABLE("Provided by Theme.metrics")
+  Q_PROPERTY(int buttonHeight MEMBER buttonHeight)
+  Q_PROPERTY(int topPanelHeight MEMBER topPanelHeight)
+  Q_PROPERTY(int overlayHeaderSize MEMBER overlayHeaderSize)
+  Q_PROPERTY(int contextMenuWidth MEMBER contextMenuWidth)
+  Q_PROPERTY(int contextMenuItemHeight MEMBER contextMenuItemHeight)
+  Q_PROPERTY(int renameOverlayWidth MEMBER renameOverlayWidth)
+  Q_PROPERTY(int tooltipBorderWidth MEMBER tooltipBorderWidth)
+  Q_PROPERTY(int tooltipBorderRadius MEMBER tooltipBorderRadius)
+  Q_PROPERTY(int contextMenuBorderRadius MEMBER contextMenuBorderRadius)
+
+public:
+  int buttonHeight = 0;
+  int topPanelHeight = 0;
+  int overlayHeaderSize = 0;
+  int contextMenuWidth = 0;
+  int contextMenuItemHeight = 0;
+  int renameOverlayWidth = 0;
+  int tooltipBorderWidth = 0;
+  int tooltipBorderRadius = 0;
+  int contextMenuBorderRadius = 0;
+
+  friend bool operator==(const ThemeMetrics &, const ThemeMetrics &) = default;
+};
+
+// Dialog window and text colours and the tinted surfaces derived from them
+// (DialogSurfaces::Colors), from the faintest (tintedLc2) to the strongest
+// (tintedHc2) contrast with the window.
+struct ThemeSurfaces {
+  Q_GADGET
+  QML_VALUE_TYPE(themeSurfaces)
+  QML_UNCREATABLE("Provided by Theme.surfaces")
+  Q_PROPERTY(QColor window MEMBER window)
+  Q_PROPERTY(QColor text MEMBER text)
+  Q_PROPERTY(QColor tintedLc2 MEMBER tintedLc2)
+  Q_PROPERTY(QColor tintedLc MEMBER tintedLc)
+  Q_PROPERTY(QColor tinted MEMBER tinted)
+  Q_PROPERTY(QColor tintedHc MEMBER tintedHc)
+  Q_PROPERTY(QColor tintedHc2 MEMBER tintedHc2)
+
+public:
+  QColor window;
+  QColor text;
+  QColor tintedLc2;
+  QColor tintedLc;
+  QColor tinted;
+  QColor tintedHc;
+  QColor tintedHc2;
+
+  friend bool operator==(const ThemeSurfaces &, const ThemeSurfaces &) = default;
+};
+
 // Complete set published by ThemeBridge in one step.
 struct ThemeSnapshot {
   ThemeColors colors;
   ThemeFonts fonts;
+  ThemeMetrics metrics;
+  ThemeSurfaces surfaces;
   bool dark = false;
   QString iconFontFamily;
 

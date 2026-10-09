@@ -3,7 +3,9 @@
 #include <QColor>
 #include <QCoreApplication>
 #include <QDebug>
+#include <QDir>
 #include <QDropEvent>
+#include <QGuiApplication>
 #include <QImage>
 #include <QKeyEvent>
 #include <QMimeData>
@@ -11,6 +13,9 @@
 #include <QWheelEvent>
 
 #include <memory>
+
+#include "gui/quick/adapters/themesnapshotbuilder.h"
+#include "themestore.h"
 
 namespace {
 using namespace Qt::StringLiterals;
@@ -25,19 +30,17 @@ const QMap<QString, QString> &initialShortcuts() {
   return shortcuts;
 }
 
-// Distinct backgrounds so that a theme switch changes ThemeColors.
-constexpr QRgb kDarkBackground = 0xff1f1f1f;
-constexpr QRgb kLightBackground = 0xfff2f2f2;
 const QString kIconFontFamily = u"FluentSystemIcons-Custom"_s;
 const QString kTestImagePath = u"C:/fixture/test.png"_s;
 constexpr QRgb kTestImageColor = 0xff3080c0;
 
+// The application's own dark and light schemes, built as the application
+// builds them (the two have distinct backgrounds, so a switch changes
+// ThemeColors).
 ThemeSnapshot testTheme(bool dark) {
-  ThemeSnapshot theme;
-  theme.colors.background = QColor::fromRgb(dark ? kDarkBackground : kLightBackground);
-  theme.dark = dark;
-  theme.iconFontFamily = kIconFontFamily;
-  return theme;
+  return buildThemeSnapshot(
+      ThemeStore::colorScheme(dark ? COLORS_DARK : COLORS_LIGHT),
+      QGuiApplication::font(), kIconFontFamily);
 }
 
 UiSettingsSnapshot testSettings() {
@@ -201,6 +204,10 @@ void BridgeTestFixture::showTestImage(int width, int height) {
   mViewport.closeImage();
   mViewport.showImage(std::make_shared<const QImage>(std::move(image)),
                       kTestImagePath);
+}
+
+QString BridgeTestFixture::artifactPath(const QString &fileName) const {
+  return QDir(QCoreApplication::applicationDirPath()).filePath(fileName);
 }
 
 void BridgeTestFixture::clearInputLog() {

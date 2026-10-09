@@ -101,6 +101,7 @@ target_sources(qimgv-plus PRIVATE
     quick/adapters/quickmainwindowcontroller.cpp
     quick/adapters/quickvieweractions.cpp
     quick/adapters/quickviewerport.cpp
+    quick/adapters/themesnapshotbuilder.cpp
 )
 
 add_subdirectory(quick)

@@ -15,6 +15,7 @@
 // The QML modules are static libraries; importing their static plugins keeps
 // the linker from discarding the module registration and resources.
 Q_IMPORT_QML_PLUGIN(qimgv_bridgesPlugin)
+Q_IMPORT_QML_PLUGIN(qimgv_stylePlugin)
 Q_IMPORT_QML_PLUGIN(qimgv_uiPlugin)
 Q_IMPORT_QML_PLUGIN(qimgv_renderPlugin)
 

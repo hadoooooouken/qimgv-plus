@@ -15,7 +15,8 @@ QML_FOREIGN_NAMESPACE(FluentIcons)
 QML_NAMED_ELEMENT(FluentIcons)
 } // namespace FluentIconsForeign
 
-// Colours, fonts, metrics and icon glyphs for QML (Theme singleton).
+// Colours, fonts, control metrics, dialog surfaces and icon glyphs for QML
+// (Theme singleton).
 //
 // Like SettingsBridge, it is fed by the composition root: QuickUiHost builds
 // a ThemeSnapshot whenever Settings::settingsChanged fires (a theme switch is
@@ -33,6 +34,8 @@ class ThemeBridge : public QObject {
   QML_UNCREATABLE("Provided by QuickUiHost via setExternalSingletonInstance()")
   Q_PROPERTY(ThemeColors colors READ colors NOTIFY colorsChanged FINAL)
   Q_PROPERTY(ThemeFonts fonts READ fonts NOTIFY fontsChanged FINAL)
+  Q_PROPERTY(ThemeMetrics metrics READ metrics NOTIFY metricsChanged FINAL)
+  Q_PROPERTY(ThemeSurfaces surfaces READ surfaces NOTIFY surfacesChanged FINAL)
   Q_PROPERTY(bool dark READ dark NOTIFY darkChanged FINAL)
   Q_PROPERTY(QString iconFontFamily READ iconFontFamily NOTIFY iconFontFamilyChanged FINAL)
   Q_PROPERTY(int compactIconSize READ compactIconSize CONSTANT FINAL)
@@ -43,6 +46,8 @@ public:
 
   [[nodiscard]] const ThemeColors &colors() const;
   [[nodiscard]] const ThemeFonts &fonts() const;
+  [[nodiscard]] const ThemeMetrics &metrics() const;
+  [[nodiscard]] const ThemeSurfaces &surfaces() const;
   [[nodiscard]] bool dark() const;
   [[nodiscard]] const QString &iconFontFamily() const;
   [[nodiscard]] static constexpr int compactIconSize() {
@@ -62,6 +67,8 @@ public:
 signals:
   void colorsChanged();
   void fontsChanged();
+  void metricsChanged();
+  void surfacesChanged();
   void darkChanged();
   void iconFontFamilyChanged();
 

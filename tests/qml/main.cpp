@@ -1,3 +1,8 @@
+#include <QDebug>
+#include <QFont>
+#include <QFontDatabase>
+#include <QGuiApplication>
+#include <QStringList>
 #include <QLatin1StringView>
 #include <QObject>
 #include <QQmlEngine>
@@ -8,6 +13,7 @@
 
 // The qimgv.* QML modules are static; see gui/quick/quickuihost.cpp.
 Q_IMPORT_QML_PLUGIN(qimgv_bridgesPlugin)
+Q_IMPORT_QML_PLUGIN(qimgv_stylePlugin)
 Q_IMPORT_QML_PLUGIN(qimgv_uiPlugin)
 Q_IMPORT_QML_PLUGIN(qimgv_renderPlugin)
 
@@ -16,6 +22,23 @@ using namespace Qt::StringLiterals;
 
 constexpr QLatin1StringView bridgesModule = "qimgv.bridges"_L1;
 constexpr QLatin1StringView testsModule = "qimgv.tests"_L1;
+
+// The offscreen platform finds no system fonts; the tests use the Windows UI
+// font at the size of the Windows default application font.
+constexpr QLatin1StringView uiFontFile = "C:/Windows/Fonts/segoeui.ttf"_L1;
+constexpr int uiFontPointSize = 9;
+
+void loadFont(const QString &file, bool makeApplicationFont) {
+  const int id = QFontDatabase::addApplicationFont(file);
+  const QStringList families =
+      id < 0 ? QStringList() : QFontDatabase::applicationFontFamilies(id);
+  if (families.isEmpty()) {
+    qWarning() << "QmlTestSetup: failed to load the font" << file;
+    return;
+  }
+  if (makeApplicationFont)
+    QGuiApplication::setFont(QFont(families.constFirst(), uiFontPointSize));
+}
 } // namespace
 
 // Gives every test engine its own fixture and publishes the fixture's bridges
@@ -24,6 +47,14 @@ class QmlTestSetup : public QObject {
   Q_OBJECT
 
 public slots:
+  // Registers a text font and the application's icon font (which the
+  // application loads from its resources through IconFontManager), so that
+  // the style tests lay out and draw text and glyphs.
+  void applicationAvailable() {
+    loadFont(uiFontFile, true);
+    loadFont(QStringLiteral(QIMGV_ICON_FONT_FILE), false);
+  }
+
   void qmlEngineAvailable(QQmlEngine *engine) {
     // Owned by the engine (QObject parent): destroyed with it, after the
     // engine's own QML teardown.

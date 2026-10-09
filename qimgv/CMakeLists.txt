@@ -203,6 +203,7 @@ target_link_libraries(qimgv-plus PRIVATE
 # (Q_IMPORT_QML_PLUGIN in gui/quick/quickuihost.cpp).
 target_link_libraries(qimgv-plus PRIVATE
     qimgv_bridgesplugin
+    qimgv_styleplugin
     qimgv_uiplugin
     qimgv_renderplugin
     qimgv_fluenticons

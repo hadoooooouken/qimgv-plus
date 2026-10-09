@@ -6,7 +6,7 @@ qt_add_library(qimgv_ui STATIC)
 
 qt_add_qml_module(qimgv_ui
     URI qimgv.ui
-    IMPORTS qimgv.bridges qimgv.render
+    IMPORTS qimgv.bridges qimgv.render qimgv.style
     SOURCES
         framepresentationtracker.cpp
         framepresentationtracker.h
@@ -34,6 +34,7 @@ target_link_libraries(qimgv_ui
         Qt6::Quick
         qimgv_bridges
         qimgv_render
+        qimgv_style
         qimgv_viewcomponents
     PRIVATE
         Qt6::QuickControls2
