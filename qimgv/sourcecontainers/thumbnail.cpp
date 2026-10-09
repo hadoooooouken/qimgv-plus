@@ -53,6 +53,12 @@ QSize Thumbnail::sourceSize() const {
     return mSourceSize;
 }
 
+QImage Thumbnail::image() const {
+    if (!mImage.isNull())
+        return mImage;
+    return mPixmap ? mPixmap->toImage() : QImage();
+}
+
 std::shared_ptr<QPixmap> Thumbnail::pixmap() {
     if (!mPixmap && !mImage.isNull()) {
         mPixmap = std::make_shared<QPixmap>(QPixmap::fromImage(mImage));

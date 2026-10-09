@@ -16,6 +16,7 @@
 #include "gui/quick/render/imagerenderitem.h"
 #include "gui/quick/render/resamplegrid.h"
 #include "gui/quick/render/textureuploadformat.h"
+#include "gui/quick/render/thumbnailitem.h"
 #include "gui/quick/render/tilegrid.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
 #include "offscreenquick.h"
@@ -511,6 +512,33 @@ QImage makeCropImage() {
   // Different content from the image part it covers.
   return makeTestImage(ImageKind::Opaque, kCropSourceRect.size() * kCropUpscale)
       .mirrored(true, true);
+}
+
+// ThumbnailItem tests: a solid thumbnail filling the scene, with corners of
+// kThumbnailRadius; kThumbnailArcProbe lies on the arc of the top left
+// corner (distance 0 from the outline at its centre to within a pixel).
+constexpr QSize kThumbnailFrameSize(40, 30);
+constexpr QRgb kThumbnailColor = 0xff6496c8;
+constexpr qreal kThumbnailRadius = 8.0;
+constexpr QPoint kThumbnailArcProbe(2, 2);
+constexpr double kThumbnailHighlight = 0.5;
+
+int maxChannelDifference(QRgb a, QRgb b) {
+  return std::max({std::abs(qRed(a) - qRed(b)), std::abs(qGreen(a) - qGreen(b)),
+                   std::abs(qBlue(a) - qBlue(b))});
+}
+
+std::unique_ptr<ThumbnailItem> makeThumbnailItem(OffscreenQuick &quick, double highlight) {
+  QImage image(kThumbnailFrameSize, QImage::Format_ARGB32_Premultiplied);
+  image.fill(QColor::fromRgba(kThumbnailColor));
+  auto item = std::make_unique<ThumbnailItem>();
+  item->setParentItem(quick.contentItem());
+  item->setSize(QSizeF(kThumbnailFrameSize));
+  item->setMaximumSize(kThumbnailFrameSize);
+  item->setCornerRadius(kThumbnailRadius);
+  item->setHighlight(highlight);
+  item->setThumbnail({.image = image, .sourceSize = image.size()});
+  return item;
 }
 
 // One offscreen scene with an ImageRenderItem filling it. The item is
@@ -2150,6 +2178,57 @@ private slots:
     const QImage expected = withGrab.copy(imageArea);
     QVERIFY2(maxDifference(copied, expected) <= kGrabTolerance,
              qPrintable(u"max difference %1"_s.arg(maxDifference(copied, expected))));
+  }
+
+  //--- ThumbnailItem (thumbnail strip) ---------------------------------------
+  // The material cuts the corners with an antialiased edge and keeps the
+  // edges between them whole.
+  void thumbnailItemRoundsItsCorners() {
+    OffscreenQuick quick;
+    QVERIFY2(quick.create(kThumbnailFrameSize, rhiBackend), qPrintable(quick.error()));
+    quick.window()->setColor(Qt::black);
+    const auto item = makeThumbnailItem(quick, 0.0);
+    QCoreApplication::processEvents();
+    const QImage frame = quick.render();
+    QVERIFY2(!frame.isNull(), qPrintable(quick.error()));
+    QCOMPARE(item->paintedRect(), QRectF(QPointF(0, 0), QSizeF(kThumbnailFrameSize)));
+
+    const QPoint center(kThumbnailFrameSize.width() / 2, kThumbnailFrameSize.height() / 2);
+    QVERIFY(maxChannelDifference(frame.pixel(center), kThumbnailColor) <= kExactTolerance);
+    // Middle of an edge: inside the straight part of the outline.
+    QVERIFY(maxChannelDifference(frame.pixel(center.x(), 0), kThumbnailColor) <= kExactTolerance);
+    QVERIFY(maxChannelDifference(frame.pixel(0, center.y()), kThumbnailColor) <= kExactTolerance);
+    // Corner pixels are outside the rounded outline.
+    for (const QPoint corner : {QPoint(0, 0), QPoint(kThumbnailFrameSize.width() - 1, 0),
+                                QPoint(0, kThumbnailFrameSize.height() - 1),
+                                QPoint(kThumbnailFrameSize.width() - 1,
+                                       kThumbnailFrameSize.height() - 1)}) {
+      QVERIFY2(maxChannelDifference(frame.pixel(corner), qRgb(0, 0, 0)) <= kExactTolerance,
+               qPrintable(u"corner %1,%2"_s.arg(corner.x()).arg(corner.y())));
+    }
+    // The outline is antialiased: a pixel on the arc is partly covered.
+    const QRgb onArc = frame.pixel(kThumbnailArcProbe);
+    QVERIFY(qGreen(onArc) > 0 && qGreen(onArc) < qGreen(kThumbnailColor));
+  }
+
+  // The hover highlight adds that fraction of the thumbnail to itself and
+  // saturates.
+  void thumbnailItemHighlightBrightens() {
+    OffscreenQuick quick;
+    QVERIFY2(quick.create(kThumbnailFrameSize, rhiBackend), qPrintable(quick.error()));
+    quick.window()->setColor(Qt::black);
+    const auto item = makeThumbnailItem(quick, kThumbnailHighlight);
+    QCoreApplication::processEvents();
+    const QImage frame = quick.render();
+    QVERIFY2(!frame.isNull(), qPrintable(quick.error()));
+    const auto lit = [](int channel) {
+      return qMin(kOpaqueLevel, qRound(channel * (1.0 + kThumbnailHighlight)));
+    };
+    const QRgb expected = qRgb(lit(qRed(kThumbnailColor)), lit(qGreen(kThumbnailColor)),
+                               lit(qBlue(kThumbnailColor)));
+    const QPoint center(kThumbnailFrameSize.width() / 2, kThumbnailFrameSize.height() / 2);
+    QVERIFY2(maxChannelDifference(frame.pixel(center), expected) <= kExactTolerance,
+             qPrintable(u"%1 instead of %2"_s.arg(frame.pixel(center), 0, 16).arg(expected, 0, 16)));
   }
 };
 

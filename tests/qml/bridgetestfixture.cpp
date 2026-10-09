@@ -14,6 +14,7 @@
 #include <QWheelEvent>
 
 #include <memory>
+#include <utility>
 
 #include "gui/quick/adapters/themesnapshotbuilder.h"
 #include "themestore.h"
@@ -37,6 +38,18 @@ const QString kTestImagePath = u"C:/fixture/test.png"_s;
 const QStringList kCopyTargets{u"C:/fixture/first"_s, u"C:/fixture/second"_s,
                                u"C:/fixture/third"_s};
 constexpr QRgb kTestImageColor = 0xff3080c0;
+// Thumbnail strip: preview size, hide delay, and the delivered thumbnails
+// (4:3, one hue per item).
+constexpr int kTestPreviewsSize = 80;
+constexpr int kTestPanelHideDelayMs = 10;
+constexpr int kTestThumbnailWidth = 64;
+constexpr int kTestThumbnailHeight = 48;
+// Size of the image the thumbnails are made from (larger than any cell).
+constexpr QSize kTestSourceSize(1600, 1200);
+constexpr int kHueSteps = 360;
+constexpr int kHueStride = 37;
+constexpr int kThumbnailSaturation = 200;
+constexpr int kThumbnailValue = 200;
 
 // The application's own dark and light schemes, built as the application
 // builds them (the two have distinct backgrounds, so a switch changes
@@ -120,7 +133,20 @@ void FakeActionDispatcher::setShortcut(const QString &action,
 BridgeTestFixture::BridgeTestFixture(QObject *parent)
     : QObject(parent), mSettings(testSettings()),
       mSettingsBridge(mSettings), mThemeBridge(testTheme(mDark)),
-      mActionBridge(mDispatcher), mViewport(mSettings), mOverlays(mSettings) {
+      mActionBridge(mDispatcher), mViewport(mSettings), mOverlays(mSettings),
+      mThumbnailPanel(mThumbnails, mSettings) {
+  mThumbnailPanel.setLabelFont(QGuiApplication::font());
+  connect(&mThumbnails, &ThumbnailListModel::thumbnailsNeeded, this,
+          [this](const QList<int> &indices) {
+            ++mThumbnailRequestCount;
+            mRequestedThumbnailCount += indices.count();
+            mUnansweredThumbnails.append(indices);
+          });
+  connect(&mThumbnails, &ThumbnailListModel::activated, this,
+          [this](int index) { mLastActivatedThumbnail = index; });
+  connect(&mThumbnailPanel, &ThumbnailPanelController::pinRequested, this,
+          [this](bool pinned) { mLastPinRequest = pinned ? 1 : 0; });
+
   connect(&mWindowShell, &MainWindowShell::urlsDropped, this,
           [this](const QList<QUrl> &urls) { mLastDroppedUrls = urls; });
 
@@ -186,6 +212,24 @@ QList<QUrl> BridgeTestFixture::lastDroppedUrls() const {
 OverlayCoordinator *BridgeTestFixture::overlays() { return &mOverlays; }
 
 QString BridgeTestFixture::lastFileRequest() const { return mLastFileRequest; }
+
+ThumbnailPanelController *BridgeTestFixture::thumbnailPanel() {
+  return &mThumbnailPanel;
+}
+
+int BridgeTestFixture::thumbnailRequestCount() const {
+  return mThumbnailRequestCount;
+}
+
+int BridgeTestFixture::requestedThumbnailCount() const {
+  return mRequestedThumbnailCount;
+}
+
+int BridgeTestFixture::lastActivatedThumbnail() const {
+  return mLastActivatedThumbnail;
+}
+
+int BridgeTestFixture::lastPinRequest() const { return mLastPinRequest; }
 
 void BridgeTestFixture::setFolderViewActive(bool active) {
   mWindowShell.setFolderViewActive(active);
@@ -257,6 +301,63 @@ void BridgeTestFixture::clearInputLog() {
   mDispatcher.lastWheelAngleDelta = QPoint();
   mDispatcher.mouseEventTypes.clear();
   mDispatcher.mouseButtons.clear();
+}
+
+//------------------------------------------------------------------------------
+void BridgeTestFixture::configureThumbnailPanel(bool pinned, int position,
+                                                bool extended) {
+  mSettings.panel.enabled = true;
+  mSettings.panel.pinned = pinned;
+  mSettings.panel.position = static_cast<SettingsEnums::PanelPosition>(position);
+  mSettings.panel.style = extended ? SettingsEnums::PanelStyle::Extended
+                                   : SettingsEnums::PanelStyle::Simple;
+  mSettings.panel.previewsSize = kTestPreviewsSize;
+  mSettings.panel.hideDelayMs = kTestPanelHideDelayMs;
+  mThumbnailPanel.applySettings(mSettings);
+  mLastPinRequest = -1;
+}
+
+void BridgeTestFixture::allowThumbnailPanelCreation() {
+  mThumbnailPanel.allowCreation();
+}
+
+void BridgeTestFixture::setPanelWindowSize(int width, int height) {
+  mThumbnailPanel.setWindowSize(QSizeF(width, height));
+}
+
+void BridgeTestFixture::populateThumbnails(int count) {
+  mUnansweredThumbnails.clear();
+  mThumbnailRequestCount = 0;
+  mRequestedThumbnailCount = 0;
+  mLastActivatedThumbnail = -1;
+  mThumbnails.populate(count);
+}
+
+void BridgeTestFixture::selectThumbnail(int index) {
+  mThumbnails.select(index);
+  mThumbnails.focusOn(index);
+}
+
+int BridgeTestFixture::deliverRequestedThumbnails() {
+  const QList<int> indices = std::exchange(mUnansweredThumbnails, {});
+  const int size = mThumbnails.requestConfig().pixelSize;
+  for (const int index : indices) {
+    QImage image(kTestThumbnailWidth, kTestThumbnailHeight,
+                 QImage::Format_ARGB32_Premultiplied);
+    image.fill(QColor::fromHsv((index * kHueStride) % kHueSteps, kThumbnailSaturation,
+                                   kThumbnailValue));
+    mThumbnails.setThumbnail(
+        index,
+        ThumbnailEntry{.handle = {.image = image, .sourceSize = kTestSourceSize},
+                       .name = u"item %1"_s.arg(index),
+                       .info = u"%1 x %2"_s.arg(kTestThumbnailWidth).arg(kTestThumbnailHeight)},
+        size);
+  }
+  return static_cast<int>(indices.count());
+}
+
+void BridgeTestFixture::panelPointerMoved(QPointF position, int buttons) {
+  mThumbnailPanel.pointerMoved(position, Qt::MouseButtons::fromInt(buttons));
 }
 
 //------------------------------------------------------------------------------

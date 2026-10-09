@@ -24,5 +24,6 @@ int main(int argc, char **argv) {
   status |= runUpscaleDecisionTests(argc, argv);
   status |= runUiMetricsTests(argc, argv);
   status |= runOverlayTests(argc, argv);
+  status |= runThumbnailStripTests(argc, argv);
   return status;
 }

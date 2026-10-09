@@ -1286,6 +1286,124 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
 - **Acceptance:** scrolling 10 000 items stays at display refresh rate
   with no GUI-thread decode; `visibleThumbnailsReady` semantics preserved
   for cold start.
+- **Delivered:**
+  - **Model** (`gui/quick/ui/thumbnails/`, module `qimgv.ui`, free of
+    `Settings` and `Thumbnail`): `ThumbnailListModel` (`QAbstractListModel`)
+    holds the item state (roles `name`, `info`, `isDir`, `thumbnail`,
+    `loaded`, `pending`, `unavailable`, `selected`, `dragHover`) and the
+    behaviour of `ThumbnailView` / `ThumbnailStrip`: the view reports its
+    scroll offset and extent (`setViewport()`), and every item within
+    `kPreloadDistance` (3000 px) that is not loaded, requested or
+    unavailable is requested in one batch, nearest first in the scroll
+    direction (`thumbnailsNeeded`, the `thumbnailsRequested` contract). It
+    also unloads thumbnails outside that range (`unloadThumbs`), emits
+    `visibleThumbnailsReady` once per population with the widget rules,
+    shifts the cached state on insert and remove, and requests nothing while
+    the view is inactive, the panel slides or a scroll animation runs.
+    Scrolling is decided there as well: focus centred or kept in view with
+    half a cell of margin; the wheel smooth with accumulation and
+    acceleration, by item, or by touchpad pixels (the touchpad heuristic);
+    the right-button gesture to an end. The pointer rules live there too:
+    activation on press, Ctrl toggles, the release selects within a
+    multi-selection, drag out after 40 px, back / forward, double click. The
+    view runs the scroll animations the model sends (`scrollRequested`).
+    `thumbnailStripLayoutFor()` gives the cell and panel geometry of
+    `ThumbnailWidget` / `MainPanel::sizeHint()` (`ThumbnailStripLayout`).
+  - **`ThumbnailPanelController`** (`qimgv.ui`) ports the pin and auto-hide
+    rules of `DocumentWidget` / `SlidePanel`:
+    - docked while pinned in a window of at least 800 x 500;
+    - floating panels slide in when the pointer enters their area with no
+      button held (fullscreen only by setting);
+    - floating panels slide out after `panelHideDelayMs` outside the area
+      grown by 8 px, or after at least 600 ms when the pointer left the
+      window or the window was deactivated;
+    - a press in the area keeps the panel hidden until the pointer leaves it;
+    - the folder view and window state changes hide the panel at once;
+    - the exit button is shown in fullscreen at the top or right.
+
+    The pin button publishes `pinRequested`, which the host stores. The
+    controller configures the model: request size `dpr * thumbnailSize`
+    (the application's device pixel ratio, like the widget strip), crop
+    (`squareThumbnails`), unloading, and the scroll settings.
+  - **`ThumbnailItem`** (`qimgv.render`): creates its texture from the
+    decoded `QImage` with `QQuickWindow::createTextureFromImage()` in
+    `updatePaintNode()`, and only again when `QImage::cacheKey()` changes.
+    `ThumbnailMaterial` (`thumbnail.vert` / `.frag`, BATCHABLE for the scene
+    graph's batching renderer) draws the 4 px rounded corners with a
+    one-device-pixel antialiased edge and the hover highlight (the widget's
+    Plus composition at 0.2). `thumbnailDrawSize()` is the size rule of
+    `ThumbnailWidget::updateThumbnailDrawPosition()`. On the software
+    backend it falls back to a `QSGImageNode`.
+  - **Application side:** `DirectoryViewAdapter : ThumbnailListModel,
+    IDirectoryView` (`gui/quick/adapters/`) replaces
+    `PlaceholderDirectoryView` for the panel (the folder view keeps it until
+    S3.1). It hands thumbnails over as `Thumbnail::image()`, a new accessor
+    that returns the decoded image without the `QPixmap` conversion of
+    `pixmap()`. `QuickUiHost` owns the adapter and the controller, stores
+    the pin state and allows the panel content once the first document
+    rendering settled. `QuickMainWindowController` forwards pointer moves,
+    leave, deactivation, size, fullscreen and view mode to the controller.
+    `PanelSettings` gained `unloadThumbnails` and `thumbnailResolution`.
+  - **QML:** `MainPanel` (surface, border, slide by 40 px with fade over
+    300 ms, OutCubic in and InCubic out, buttons as in the widget
+    `ButtonSmall`), `ThumbnailStrip` (`ListView` with `reuseItems`, not
+    interactive; one `MouseArea` reports the pointer and the item under it;
+    the style's `ScrollBar` with the selection marker), `ThumbnailWidget`
+    (cell). `Main.qml` lays the viewer and the panel out in the document
+    page: a pinned panel takes its space from the viewer, a floating one
+    covers it. The panel surface (and with it the docked space) exists from
+    the first frame. The strip is loaded asynchronously only after the first
+    document rendering settled, so it adds nothing to startup.
+  - **Cold start:** `visibleThumbnailsReady` of the strip keeps the widget
+    semantics and is, like the widget strip's, not connected to `UiEvents`.
+    Only the folder view takes part in the cold-start reveal; the model is
+    ready for S3.1.
+  - **Deviations:**
+    - No `path` role: `IDirectoryView` is index based and never carries
+      paths; name and info come from the thumbnail, as in the widget cell.
+    - Long labels elide instead of fading out.
+    - Unavailable thumbnails show the error glyph; the widget keeps the
+      loading glyph.
+    - Shift-click does nothing, as in the widget strip, which never has the
+      keyboard focus and so no range anchor.
+    - No rubber band: the cells fill the strip.
+    - A Qt Quick double click delivers a second press, so the item is
+      activated once more than in the widget UI; activating the shown image
+      again changes nothing.
+  - **Measured** (Release, `smoke.png` 300 x 300, process start to first
+    `documentRenderingSettled`, 5 runs each, same session, floating panel
+    at the bottom): Quick UI median 343 ms (335 - 385), widget UI median
+    528 ms (522 - 547). Pinned panels at all four positions and both styles
+    were checked in window captures of the running application, against the
+    widget UI with the same settings.
+  - **Flagged, not changed:**
+    - `Core` does not connect the panel presenter's `draggedOut`, so
+      dragging out of the strip does nothing in either UI.
+    - Neither UI requests thumbnails again for a new device pixel ratio
+      when the window moves to another screen.
+    - `ThumbnailStripProxy` and `MainPanel` stay until S4.2.
+  - **Not verified by hand in the running application:** hover, wheel
+    scrolling and auto-hide, since no input was sent to the desktop. The
+    tests drive them. Frame rates while scrolling 10 000 items were not
+    measured: the offscreen tests check that delegates and requests stay
+    bounded and that `ThumbnailItem` only uploads decoded images.
+  - Tests:
+    - `qimgv_tests` gained `ThumbnailStripTests`: layout and draw size,
+      preload range, direction, blocking, readiness with final pending
+      images, insert and remove shifting, unloading, configuration changes,
+      reload, focus, smooth / by-item / touchpad wheel, pointer rules, panel
+      docking, hover show and hide, the press guard, the window-exit grace,
+      fullscreen-only and the exit button, pinning, model configuration, and
+      the adapter.
+    - `qimgv_qml_tests` gained `tst_thumbnailstrip.qml`: content only after
+      the creation permission, docking at the four sides, a 10 000-item
+      directory with bounded delegates and requests while focusing and
+      wheel scrolling, delivered thumbnails drawn, the extended labels,
+      activation by press, the pin button, and the floating slide.
+      `tst_mainwindow.qml` checks the docked viewport.
+    - `qimgv_render_tests` (D3D11, D3D12, Vulkan) gained the
+      `ThumbnailItem` corner and highlight pixel tests, checked against a
+      mutated shader.
 
 #### S2.5 Context menu and side/crop panel
 - **Goal:** menus and the crop side panel.

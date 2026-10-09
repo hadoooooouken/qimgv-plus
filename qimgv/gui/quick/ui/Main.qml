@@ -18,6 +18,7 @@ ApplicationWindow {
     required property ImageViewportController viewportController
     required property MainWindowShell windowShell
     required property OverlayCoordinator overlays
+    required property ThumbnailPanelController thumbnailPanel
 
     readonly property int initialWidth: 1280
     readonly property int initialHeight: 800
@@ -30,12 +31,27 @@ ApplicationWindow {
     color: windowShell.fullscreen ? Theme.colors.backgroundFullscreen
                                   : Theme.colors.background
 
-    // The image viewer (document mode).
-    ImageViewport {
+    // Document mode: the image viewer and the thumbnail panel, which takes
+    // its space from the viewer while pinned and floats over it otherwise.
+    Item {
         anchors.fill: parent
-        controller: root.viewportController
         visible: !root.windowShell.folderViewActive
-        focus: visible && !root.overlays.keyboardOverlayOpen
+
+        ImageViewport {
+            anchors.fill: parent
+            anchors.topMargin: mainPanel.dockedTop
+            anchors.bottomMargin: mainPanel.dockedBottom
+            anchors.leftMargin: mainPanel.dockedLeft
+            anchors.rightMargin: mainPanel.dockedRight
+            controller: root.viewportController
+            focus: parent.visible && !root.overlays.keyboardOverlayOpen
+        }
+
+        MainPanel {
+            id: mainPanel
+
+            controller: root.thumbnailPanel
+        }
     }
 
     // Folder mode. The folder view is not part of the Qt Quick UI yet; the

@@ -14,6 +14,7 @@
 #include "gui/quick/ui/imageviewportcontroller.h"
 #include "gui/quick/ui/mainwindowshell.h"
 #include "gui/quick/ui/overlays/overlaycoordinator.h"
+#include "gui/quick/ui/thumbnails/thumbnailpanelcontroller.h"
 #include "settings.h"
 
 namespace {
@@ -38,6 +39,7 @@ QuickMainWindowController::QuickMainWindowController(
       shell(context.shell),
       viewport(context.viewport),
       overlays(context.overlays),
+      thumbnailPanel(context.thumbnailPanel),
       viewMode(context.viewMode),
       events(context.events),
       settings(context.settings),
@@ -51,6 +53,16 @@ QuickMainWindowController::QuickMainWindowController(
             &MainWindowShell::setFullscreen);
     connect(&windowState, &WindowStateController::fullscreenChanged, &overlays,
             &OverlayCoordinator::setFullscreen);
+    connect(&windowState, &WindowStateController::fullscreenChanged, &thumbnailPanel,
+            &ThumbnailPanelController::setFullscreen);
+    connect(&window, &QWindow::widthChanged, this,
+            [this]() { thumbnailPanel.setWindowSize(window.size()); });
+    connect(&window, &QWindow::heightChanged, this,
+            [this]() { thumbnailPanel.setWindowSize(window.size()); });
+    connect(&window, &QWindow::activeChanged, this, [this]() {
+        if (!window.isActive())
+            thumbnailPanel.pointerLeftWindow();
+    });
     // Saved also when the application quits while the window rests (the
     // debounced report may still be pending).
     connect(qGuiApp, &QGuiApplication::aboutToQuit, this,
@@ -68,11 +80,15 @@ QuickMainWindowController::QuickMainWindowController(
     connect(&viewMode, &ViewModeController::viewModeApplied, this, [this](ViewMode mode) {
         shell.setFolderViewActive(mode == MODE_FOLDERVIEW);
         overlays.setFolderViewActive(mode == MODE_FOLDERVIEW);
+        thumbnailPanel.setFolderViewActive(mode == MODE_FOLDERVIEW);
         updateTitle();
     });
     shell.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
     overlays.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
     overlays.setFullscreen(windowState.isFullscreen());
+    thumbnailPanel.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
+    thumbnailPanel.setFullscreen(windowState.isFullscreen());
+    thumbnailPanel.setWindowSize(window.size());
 
     // The title shows the zoom, the view locks and (by setting) extended
     // details. The lock actions run on the viewport before these
@@ -200,7 +216,10 @@ bool QuickMainWindowController::eventFilter(QObject *watched, QEvent *event) {
     if (watched == &window && event->type() == QEvent::MouseMove) {
         const auto *mouseEvent = static_cast<const QMouseEvent *>(event);
         overlays.pointerMoved(mouseEvent->position(), window.isActive());
+        thumbnailPanel.pointerMoved(mouseEvent->position(), mouseEvent->buttons());
     }
+    if (watched == &window && event->type() == QEvent::Leave)
+        thumbnailPanel.pointerLeftWindow();
     if (watched == &window && event->type() == QEvent::Close) {
         // The window stays; standby hides it, exit tears the UI down.
         event->ignore();

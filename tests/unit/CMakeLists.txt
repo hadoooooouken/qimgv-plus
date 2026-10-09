@@ -21,12 +21,15 @@ qt_add_executable(qimgv_tests
     tst_windowtitle.cpp
     tst_uimetrics.cpp
     tst_overlays.cpp
+    tst_thumbnailstrip.cpp
     "${QIMGV_APP_SOURCE_DIR}/components/viewmode/viewmodecontroller.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/shellinfo/windowtitle.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/singleinstance/singleinstancechannel.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/upscaler/upscaledecision.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/windowstate/windowstatecontroller.cpp"
     "${QIMGV_APP_SOURCE_DIR}/sourcecontainers/decodedpixels.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/sourcecontainers/thumbnail.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/directoryviewadapter.cpp"
     "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/placeholderdirectoryview.cpp"
     "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/themesnapshotbuilder.cpp"
     "${QIMGV_APP_SOURCE_DIR}/themestore.cpp"

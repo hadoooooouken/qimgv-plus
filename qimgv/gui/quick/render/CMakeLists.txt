@@ -5,7 +5,8 @@
 # through QRhi with the RHI shaders in res/shaders/rhi (tile drawing with
 # sharpening and colour adjustments, the exact-ratio box downsample, the
 # Magic Kernel Sharp 2021 resampling, the source conversion: HDR tone mapping
-# and display colour management, and the equirectangular panorama).
+# and display colour management, and the equirectangular panorama), and
+# ThumbnailItem, the scene graph item of one thumbnail (thumbnail.vert / .frag).
 
 qt_add_library(qimgv_render STATIC)
 
@@ -36,6 +37,10 @@ qt_add_qml_module(qimgv_render
         resamplegrid.cpp
         resamplegrid.h
         rhipassuniforms.h
+        thumbnailitem.cpp
+        thumbnailitem.h
+        thumbnailmaterial.cpp
+        thumbnailmaterial.h
         textureuploadformat.cpp
         textureuploadformat.h
         tilegrid.cpp
@@ -53,6 +58,17 @@ qt_add_shaders(qimgv_render "qimgv_render_shaders"
         "${QIMGV_RHI_SHADER_DIR}/image.frag"
         "${QIMGV_RHI_SHADER_DIR}/boxreduce.vert"
         "${QIMGV_RHI_SHADER_DIR}/boxreduce.frag"
+)
+
+# ThumbnailItem draws through a scene graph material, whose vertex shader
+# the batching renderer needs in its batchable variant as well.
+qt_add_shaders(qimgv_render "qimgv_render_thumbnail_shaders"
+    PREFIX "/qimgv/render/shaders"
+    BASE "${QIMGV_RHI_SHADER_DIR}"
+    BATCHABLE
+    FILES
+        "${QIMGV_RHI_SHADER_DIR}/thumbnail.vert"
+        "${QIMGV_RHI_SHADER_DIR}/thumbnail.frag"
 )
 
 # The resampling passes read exact texels with texelFetch() and loop over a

@@ -86,6 +86,8 @@ struct PanelSettings {
   Q_PROPERTY(int previewsSize MEMBER previewsSize)
   Q_PROPERTY(bool centerSelection MEMBER centerSelection)
   Q_PROPERTY(bool showSubfolders MEMBER showSubfolders)
+  Q_PROPERTY(bool unloadThumbnails MEMBER unloadThumbnails)
+  Q_PROPERTY(int thumbnailResolution MEMBER thumbnailResolution)
 
 public:
   bool enabled{};
@@ -97,6 +99,10 @@ public:
   int previewsSize{};
   bool centerSelection{};
   bool showSubfolders{};
+  // Drop thumbnails that scrolled far out of view (unloadThumbs).
+  bool unloadThumbnails{};
+  // Size of the cached thumbnails (thumbnailResolution).
+  int thumbnailResolution{};
 
   friend bool operator==(const PanelSettings &,
                          const PanelSettings &) = default;

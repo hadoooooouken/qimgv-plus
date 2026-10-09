@@ -15,6 +15,10 @@ public:
     bool hasAlphaChannel();
     QSize sourceSize() const;
     std::shared_ptr<QPixmap> pixmap();
+    // The thumbnail pixels without a conversion to QPixmap: the decoded
+    // image, or the image of a thumbnail made from a pixmap (shared, not
+    // copied). Null for a thumbnail without pixels.
+    QImage image() const;
 private:
     QString mName, mInfo;
     std::shared_ptr<QPixmap> mPixmap;

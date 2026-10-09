@@ -1,6 +1,7 @@
 #include "quickuihost.h"
 
 #include <QDebug>
+#include <QGuiApplication>
 #include <QLatin1StringView>
 #include <QQuickGraphicsConfiguration>
 #include <QQuickWindow>
@@ -27,6 +28,7 @@ constexpr QLatin1StringView mainWindowType = "Main"_L1;
 constexpr QLatin1StringView viewportControllerProperty = "viewportController"_L1;
 constexpr QLatin1StringView windowShellProperty = "windowShell"_L1;
 constexpr QLatin1StringView overlaysProperty = "overlays"_L1;
+constexpr QLatin1StringView thumbnailPanelProperty = "thumbnailPanel"_L1;
 
 constexpr QLatin1StringView bridgesModule = "qimgv.bridges"_L1;
 constexpr QLatin1StringView settingsBridgeType = "AppSettings"_L1;
@@ -63,7 +65,7 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager)
     : mSettings(settings),
       mActionManager(actionManager),
       mViewMode(settings.defaultViewMode()),
-      mThumbnailPanelView(std::make_shared<PlaceholderDirectoryView>()),
+      mThumbnailPanelView(std::make_shared<DirectoryViewAdapter>()),
       mFolderView(std::make_shared<PlaceholderDirectoryView>()),
       mDispatcher(actionManager),
       mSettingsBridge(BridgeSnapshots::readUiSettings(settings)),
@@ -73,13 +75,15 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager)
       mViewerPort(mViewport),
       mViewerActions(actionManager, settings, mViewport),
       mOverlays(BridgeSnapshots::readUiSettings(settings)),
-      mOverlayActions(actionManager, settings, mOverlays, mViewport) {
+      mOverlayActions(actionManager, settings, mOverlays, mViewport),
+      mThumbnailPanel(*mThumbnailPanelView, BridgeSnapshots::readUiSettings(settings)) {
   // settingsChanged also announces theme switches and shortcut edits; each
   // receiver acts only on what actually changed.
   QObject::connect(&settings, &Settings::settingsChanged, &mSettingsBridge,
                    [this]() { onSettingsChanged(); });
   forwardViewportEvents();
   forwardOverlayEvents();
+  connectThumbnailPanel();
 }
 
 QuickUiHost::~QuickUiHost() = default;
@@ -139,11 +143,28 @@ void QuickUiHost::forwardOverlayEvents() {
 }
 
 //------------------------------------------------------------------------------
+// The panel content is created once the first document was rendered, so it
+// competes with nothing on the way to the first frame; a pinned panel holds
+// its space from the start. Thumbnails are requested for the application's
+// device pixel ratio, like the widget strip.
+void QuickUiHost::connectThumbnailPanel() {
+  mThumbnailPanel.setLabelFont(QGuiApplication::font());
+  mThumbnailPanel.setDevicePixelRatio(qGuiApp->devicePixelRatio());
+  QObject::connect(&mThumbnailPanel, &ThumbnailPanelController::pinRequested,
+                   &mSettings, &Settings::setPanelPinned);
+  QObject::connect(
+      &mViewport, &ImageViewportController::renderingSettled, &mThumbnailPanel,
+      [this]() { mThumbnailPanel.allowCreation(); },
+      Qt::SingleShotConnection);
+}
+
+//------------------------------------------------------------------------------
 void QuickUiHost::onSettingsChanged() {
   const UiSettingsSnapshot snapshot = BridgeSnapshots::readUiSettings(mSettings);
   mSettingsBridge.apply(snapshot);
   mViewport.applySettings(snapshot);
   mOverlays.applySettings(snapshot);
+  mThumbnailPanel.applySettings(snapshot);
   mThemeBridge.apply(BridgeSnapshots::readTheme(mSettings));
   mActionBridge.refresh();
 }
@@ -209,7 +230,8 @@ bool QuickUiHost::start() {
   mEngine.setInitialProperties(
       {{viewportControllerProperty, QVariant::fromValue(&mViewport)},
        {windowShellProperty, QVariant::fromValue(&mWindowShell)},
-       {overlaysProperty, QVariant::fromValue(&mOverlays)}});
+       {overlaysProperty, QVariant::fromValue(&mOverlays)},
+       {thumbnailPanelProperty, QVariant::fromValue(&mThumbnailPanel)}});
   mEngine.loadFromModule(mainWindowModule, mainWindowType);
   const QList<QObject *> roots = mEngine.rootObjects();
   QQuickWindow *window =
@@ -233,6 +255,7 @@ bool QuickUiHost::start() {
           .shell = mWindowShell,
           .viewport = mViewport,
           .overlays = mOverlays,
+          .thumbnailPanel = mThumbnailPanel,
           .viewMode = mViewMode,
           .events = mEvents,
           .settings = mSettings,

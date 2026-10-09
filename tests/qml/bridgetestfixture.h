@@ -17,6 +17,7 @@
 #include "gui/quick/ui/imageviewportcontroller.h"
 #include "gui/quick/ui/mainwindowshell.h"
 #include "gui/quick/ui/overlays/overlaycoordinator.h"
+#include "gui/quick/ui/thumbnails/thumbnailpanelcontroller.h"
 
 // Records what ActionBridge forwards instead of running actions.
 class FakeActionDispatcher final : public IActionDispatcher {
@@ -64,6 +65,11 @@ class BridgeTestFixture : public QObject {
   Q_PROPERTY(QList<QUrl> lastDroppedUrls READ lastDroppedUrls FINAL)
   Q_PROPERTY(OverlayCoordinator *overlays READ overlays CONSTANT FINAL)
   Q_PROPERTY(QString lastFileRequest READ lastFileRequest FINAL)
+  Q_PROPERTY(ThumbnailPanelController *thumbnailPanel READ thumbnailPanel CONSTANT FINAL)
+  Q_PROPERTY(int thumbnailRequestCount READ thumbnailRequestCount FINAL)
+  Q_PROPERTY(int requestedThumbnailCount READ requestedThumbnailCount FINAL)
+  Q_PROPERTY(int lastActivatedThumbnail READ lastActivatedThumbnail FINAL)
+  Q_PROPERTY(int lastPinRequest READ lastPinRequest FINAL)
 
 public:
   explicit BridgeTestFixture(QObject *parent = nullptr);
@@ -85,6 +91,15 @@ public:
   // The last request the overlays made: "copy:<dir>", "move:<dir>",
   // "rename:<name>", "save", "saveAs" or "discard".
   [[nodiscard]] QString lastFileRequest() const;
+  [[nodiscard]] ThumbnailPanelController *thumbnailPanel();
+  // Requests of the thumbnail model (thumbnailsNeeded) and the items they
+  // named, since the last population.
+  [[nodiscard]] int thumbnailRequestCount() const;
+  [[nodiscard]] int requestedThumbnailCount() const;
+  // The last activated item, -1 for none.
+  [[nodiscard]] int lastActivatedThumbnail() const;
+  // The last pin button request: 1 pin, 0 unpin, -1 none.
+  [[nodiscard]] int lastPinRequest() const;
 
   // Flips viewer.smoothZoom and publishes the snapshot (viewer area only).
   Q_INVOKABLE void toggleSmoothZoom();
@@ -122,6 +137,20 @@ public:
   Q_INVOKABLE void pointerMoved(QPointF position);
   // Closes every overlay, hides the message and forgets the last request.
   Q_INVOKABLE void closeOverlays();
+  // Thumbnail panel: enabled with kTestPreviewsSize previews and a short
+  // hide delay, pinned or floating, at position (SettingsEnums::
+  // PanelPosition), with the extended style or not.
+  Q_INVOKABLE void configureThumbnailPanel(bool pinned, int position, bool extended);
+  Q_INVOKABLE void allowThumbnailPanelCreation();
+  Q_INVOKABLE void setPanelWindowSize(int width, int height);
+  // Populates the strip with count items and forgets the requests.
+  Q_INVOKABLE void populateThumbnails(int count);
+  Q_INVOKABLE void selectThumbnail(int index);
+  // Answers every request not answered yet with a decoded image; returns
+  // how many thumbnails were delivered.
+  Q_INVOKABLE int deliverRequestedThumbnails();
+  Q_INVOKABLE void panelPointerMoved(QPointF position, int buttons);
+
   // Path of fileName next to the test executable, for images the tests save
   // for review.
   Q_INVOKABLE QString artifactPath(const QString &fileName) const;
@@ -138,4 +167,11 @@ private:
   OverlayCoordinator mOverlays;
   QList<QUrl> mLastDroppedUrls;
   QString mLastFileRequest;
+  ThumbnailListModel mThumbnails;
+  ThumbnailPanelController mThumbnailPanel;
+  QList<int> mUnansweredThumbnails;
+  int mThumbnailRequestCount = 0;
+  int mRequestedThumbnailCount = 0;
+  int mLastActivatedThumbnail = -1;
+  int mLastPinRequest = -1;
 };

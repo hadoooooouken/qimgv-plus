@@ -51,6 +51,8 @@ UiSettingsSnapshot BridgeSnapshots::readUiSettings(Settings &settings) {
               .previewsSize = settings.panelPreviewsSize(),
               .centerSelection = settings.panelCenterSelection(),
               .showSubfolders = settings.showSubfoldersInPanel(),
+              .unloadThumbnails = settings.unloadThumbs(),
+              .thumbnailResolution = settings.thumbnailResolution(),
           },
       .folderView =
           {

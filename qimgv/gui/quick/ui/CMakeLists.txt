@@ -34,6 +34,12 @@ qt_add_qml_module(qimgv_ui
         overlays/overlaystate.h
         overlays/renamepromptcontroller.cpp
         overlays/renamepromptcontroller.h
+        thumbnails/thumbnaillistmodel.cpp
+        thumbnails/thumbnaillistmodel.h
+        thumbnails/thumbnailpanelcontroller.cpp
+        thumbnails/thumbnailpanelcontroller.h
+        thumbnails/thumbnailstriplayout.cpp
+        thumbnails/thumbnailstriplayout.h
     QML_FILES
         AdjustmentSliders.qml
         CasSettingsOverlay.qml
@@ -45,15 +51,21 @@ qt_add_qml_module(qimgv_ui
         ImageInfoOverlay.qml
         ImageViewport.qml
         Main.qml
+        MainPanel.qml
         OverlayHeaderButton.qml
         OverlayLayer.qml
         OverlayPanel.qml
         RenameOverlay.qml
         SaveConfirmOverlay.qml
+        ThumbnailStrip.qml
+        ThumbnailWidget.qml
 )
 
 # The generated QML type registrations include the headers by file name.
-target_include_directories(qimgv_ui PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/overlays")
+target_include_directories(qimgv_ui PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/overlays"
+    "${CMAKE_CURRENT_SOURCE_DIR}/thumbnails"
+)
 target_compile_features(qimgv_ui PUBLIC cxx_std_23)
 if(MSVC)
     # Same C++26 working-draft switch as qimgv-plus.

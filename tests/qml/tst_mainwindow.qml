@@ -16,19 +16,26 @@ TestCase {
         const window = createTemporaryObject(component, testCase, {
             viewportController: Fixture.viewportController,
             windowShell: Fixture.windowShell,
-            overlays: Fixture.overlays
+            overlays: Fixture.overlays,
+            thumbnailPanel: Fixture.thumbnailPanel
         });
         verify(window !== null, "qimgv.ui/Main could not be instantiated");
         return window;
     }
 
-    function childOfType(window, typeName) {
-        const children = window.contentItem.children;
-        for (let i = 0; i < children.length; ++i) {
-            if (children[i].toString().startsWith(typeName))
-                return children[i];
+    function findType(item, typeName) {
+        if (item.toString().startsWith(typeName))
+            return item;
+        for (let i = 0; i < item.children.length; ++i) {
+            const found = findType(item.children[i], typeName);
+            if (found)
+                return found;
         }
         return null;
+    }
+
+    function childOfType(window, typeName) {
+        return findType(window.contentItem, typeName);
     }
 
     function cleanup() {
@@ -63,6 +70,17 @@ TestCase {
         verify(!viewport.visible);
         Fixture.setFolderViewActive(false);
         verify(viewport.visible);
+    }
+
+    function test_pinnedPanelTakesItsSpaceFromTheViewport() {
+        Fixture.configureThumbnailPanel(true, SettingsEnums.PanelPosition.Bottom, false);
+        const window = createWindow();
+        Fixture.setPanelWindowSize(window.width, window.height);
+        const viewport = childOfType(window, "ImageViewport");
+        compare(viewport.height, window.height - Fixture.thumbnailPanel.layout.panelExtent);
+        // A floating panel covers the viewport instead.
+        Fixture.configureThumbnailPanel(false, SettingsEnums.PanelPosition.Bottom, false);
+        compare(viewport.height, window.height);
     }
 
     function test_externalFileDropsReachTheShell() {
