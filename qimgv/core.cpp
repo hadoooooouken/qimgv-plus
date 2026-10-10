@@ -584,6 +584,7 @@ void Core::connectComponents() {
   connect(mw, &MW::draggedOut, this, qOverload<>(&Core::onDraggedOut));
   connect(mw, &MW::nextImageRequested, this, &Core::nextImage);
   connect(mw, &MW::prevImageRequested, this, &Core::prevImage);
+  connect(mw, &MW::playbackFinished, this, &Core::onPlaybackFinished);
 
   connect(mw, &MW::scalingRequested, this, &Core::scalingRequest);
   connect(model.get(), &DirectoryModel::scalingFinished, this,
@@ -895,6 +896,7 @@ void Core::toggleSlideshow() {
 void Core::startSlideshow() {
   if (!slideshow) {
     slideshow = true;
+    mw->setLoopPlayback(false);
     enableDocumentView();
     startSlideshowTimer();
     updateInfoString();
@@ -904,6 +906,7 @@ void Core::startSlideshow() {
 void Core::stopSlideshow() {
   if (slideshow) {
     slideshow = false;
+    mw->setLoopPlayback(true);
     slideshowTimer.stop();
     updateInfoString();
   }

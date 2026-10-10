@@ -66,6 +66,7 @@ public:
   void hideUpscaledCrop();
   void showImage(std::shared_ptr<const QImage> image, QString filePath = "");
   void showAnimation(const QString &filePath, const QString &format, QSize size);
+  void setLoopPlayback(bool mode);
 
   QRect visibleImageRect() const;
   QRect visibleOriginalImageRect() const;
@@ -205,6 +206,7 @@ signals:
   void draggedOut();
   void nextImageRequested();
   void prevImageRequested();
+  void playbackFinished();
 
 public slots:
   void setupFullUi();

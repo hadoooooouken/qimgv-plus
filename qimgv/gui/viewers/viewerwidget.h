@@ -123,6 +123,7 @@ public slots:
     void onFullscreenModeChanged(bool);
     void readSettings();
     void togglePanorama();
+    void setLoopPlayback(bool mode);
 
 protected:
     void mouseMoveEvent(QMouseEvent *event);

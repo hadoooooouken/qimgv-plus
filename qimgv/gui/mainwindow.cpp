@@ -118,6 +118,7 @@ void MW::setupUi() {
     connect(viewerWidget.get(), &ViewerWidget::draggedOut,       this, &MW::draggedOut);
     connect(viewerWidget.get(), &ViewerWidget::nextImageRequested, this, &MW::nextImageRequested);
     connect(viewerWidget.get(), &ViewerWidget::prevImageRequested, this, &MW::prevImageRequested);
+    connect(viewerWidget.get(), &ViewerWidget::playbackFinished, this, &MW::playbackFinished);
     connect(viewerWidget.get(), &ViewerWidget::showScriptSettings, this, &MW::showScriptSettings);
     connect(viewerWidget.get(), &ViewerWidget::scaleChanged, this, &MW::onScaleChanged);
     connect(this, &MW::zoomIn,        viewerWidget.get(), &ViewerWidget::zoomIn);
@@ -324,6 +325,10 @@ void MW::showAnimation(const QString &filePath, const QString &format, QSize siz
 
 void MW::showContextMenu() {
     viewerWidget->showContextMenu();
+}
+
+void MW::setLoopPlayback(bool mode) {
+    viewerWidget->setLoopPlayback(mode);
 }
 
 void MW::onSortingChanged(SortingMode mode) {

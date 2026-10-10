@@ -269,6 +269,11 @@ void ViewerWidget::setExpandSmallImagesInFitMode(bool enabled) {
         imageViewer->setExpandSmallImagesInFitMode(enabled);
 }
 
+void ViewerWidget::setLoopPlayback(bool mode) {
+    if(imageViewer)
+        imageViewer->setLoopPlayback(mode);
+}
+
 ImageFitMode ViewerWidget::fitMode() {
     return imageViewer->fitMode();
 }
