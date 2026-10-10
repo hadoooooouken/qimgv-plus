@@ -80,7 +80,6 @@ private:
     QPushButton *resetButton = nullptr;
     QPushButton *cancelButton = nullptr;
 
-    QRect cropRect;
     CropOverlay *overlay;
     QSize realSize;
 };

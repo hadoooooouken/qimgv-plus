@@ -5,7 +5,6 @@
 #include <QAbstractItemView>
 #include <QFileSystemModel>
 #include <QFileDialog>
-#include <QElapsedTimer>
 #include <QSet>
 #include <QTimer>
 #include "gui/customwidgets/floatingwidgetcontainer.h"
@@ -123,7 +122,6 @@ private:
     int dirCount = 0;
     QTimer nameFilterTimer;
     FileSystemModelCustom *dirModel;
-    QElapsedTimer popupTimerClutch;
 
     // Top Bar
     QWidget *topBar;

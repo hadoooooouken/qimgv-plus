@@ -66,7 +66,6 @@ private:
     QColor mButtonColor;
     qreal dpr;
     bool isPressed = false;
-    bool leftHovered = false, rightHovered = false;
     bool drawZones = true;
     ActiveHighlightZone activeZone = HIGHLIGHT_NONE;
 

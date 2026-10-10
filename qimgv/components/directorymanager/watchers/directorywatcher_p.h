@@ -18,7 +18,6 @@ public:
     explicit DirectoryWatcherPrivate(DirectoryWatcher* qq, WatcherWorker *w);
 
     DirectoryWatcher* q_ptr;
-    QVector<QSharedPointer<WatcherEvent>> directoryEvents;
     QScopedPointer<WatcherWorker> worker;
     QScopedPointer<QThread> workerThread;
     QString currentDirectory;

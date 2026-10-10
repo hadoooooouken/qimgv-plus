@@ -40,9 +40,6 @@ struct CurrentInfo {
   int index;
   int fileCount;
   QString fileName;
-  QString filePath;
-  QString directoryName;
-  QString directoryPath;
   QSize imageSize;
   qint64 fileSize;
   QString format;

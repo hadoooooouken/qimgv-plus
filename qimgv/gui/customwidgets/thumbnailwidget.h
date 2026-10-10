@@ -83,7 +83,7 @@ protected:
     bool highlighted, hovered, dropHovered;
     int mThumbnailSize, padding, marginX, marginY, labelSpacing, textHeight;
     QRectF bgRect, mBoundingRect;
-    QFont font, fontInfo;
+    QFont font;
     QRect drawRectCentered, nameRect, infoRect;
     bool mUseThumbPanelColors = false;
     qreal dpr = 1.0;

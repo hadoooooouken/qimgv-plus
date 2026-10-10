@@ -151,7 +151,7 @@ private:
     FilterPixmapItem pixmapItem, pixmapItemScaled, pixmapItemCrop;
     QTimer *animationTimer, *scaleTimer;
     QScrollBar *hs, *vs;
-    QPoint mouseMoveStartPos, mousePressPos, drawPos;
+    QPoint mouseMoveStartPos, mousePressPos;
     bool transparencyGrid, expandImage, expandSmallImagesInFitMode, keepFitMode,
          loopPlayback,     mIsFullscreen,  scrollBarWorkaround,
          useFixedZoomLevels, trackpadDetection, mAnimationActive;

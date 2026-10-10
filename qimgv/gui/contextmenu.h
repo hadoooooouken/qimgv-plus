@@ -69,7 +69,6 @@ private:
     ContextMenuItem *m_rename;
     ContextMenuItem *m_trash;
     ContextMenuItem *m_deletePermanently;
-    ContextMenuItem *m_open;
     ContextMenuItem *m_folderView;
     ContextMenuItem *m_settings;
     ContextMenuItem *m_setWallpaper;

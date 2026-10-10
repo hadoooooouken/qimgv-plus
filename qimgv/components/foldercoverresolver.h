@@ -32,7 +32,6 @@ struct FolderCoverResult {
     FolderCoverStatus status = FolderCoverStatus::NoCover;
     QString coverPath;
     QString diagnostic;
-    bool fromCache = false;
 };
 
 Q_DECLARE_METATYPE(FolderCoverResult)

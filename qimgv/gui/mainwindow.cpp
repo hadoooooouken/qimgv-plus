@@ -278,7 +278,6 @@ void MW::switchFitMode() {
 
 void MW::closeImage() {
     info.fileName = "";
-    info.filePath = "";
     viewerWidget->closeImage();
 }
 
@@ -360,8 +359,6 @@ void MW::onFolderSortingChanged(SortingMode mode) {
 
 void MW::setDirectoryPath(QString path) {
     //closeImage();
-    info.directoryPath = path;
-    info.directoryName = path.split("/").last();
     folderView->setDirectoryPath(path);
     onInfoUpdated();
 }
@@ -1069,7 +1066,6 @@ void MW::setCurrentInfo(int _index, int _fileCount, QString _filePath, QString _
     info.index = _index;
     info.fileCount = _fileCount;
     info.fileName = _fileName;
-    info.filePath = _filePath;
     info.imageSize = _imageSize;
     info.fileSize = _fileSize;
     info.format = _format;
