@@ -44,9 +44,9 @@ QVariant ShortcutTableModel::headerData(int section, Qt::Orientation orientation
     if (orientation != Qt::Horizontal || role != Qt::DisplayRole)
         return QAbstractTableModel::headerData(section, orientation, role);
     if (section == ActionColumn)
-        return QCoreApplication::translate(kContext, "Action");
+        return QCoreApplication::translate(kContext, QT_TRANSLATE_NOOP("SettingsDialog", "Action"));
     if (section == ShortcutColumn)
-        return QCoreApplication::translate(kContext, "Shortcut");
+        return QCoreApplication::translate(kContext, QT_TRANSLATE_NOOP("SettingsDialog", "Shortcut"));
     return {};
 }
 

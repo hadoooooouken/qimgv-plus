@@ -91,7 +91,10 @@ SettingsPage {
             Layout.fillWidth: true
             text: root.editor.advanced.excludedCachePaths
             onTextEdited: root.editor.advanced.excludedCachePaths = text
-            ToolTip.text: qsTranslate("SettingsDialog", "Paths to folders that should not be cached, separated by ';'.\nExample: D:\\Downloads; E:\\Pictures")
+            // The example paths are an argument: lupdate drops the backslashes
+            // of QML string literals from the text it extracts.
+            ToolTip.text: qsTranslate("SettingsDialog", "Paths to folders that should not be cached, separated by ';'.\nExample: %1")
+                          .arg("D:\\Downloads; E:\\Pictures")
             ToolTip.visible: hovered
         }
         CheckBox {

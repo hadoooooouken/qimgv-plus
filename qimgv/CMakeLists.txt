@@ -202,7 +202,11 @@ add_subdirectory(utils)
 qt_add_lupdate(
     LUPDATE_TARGET qimgv-plus_lupdate
     TS_FILES ${TS_FILES}
-    SOURCE_TARGETS qimgv-plus qimgv_ui qimgv_render qimgv_bridges
+    # qimgv_viewcomponents holds UI texts too (settings editor, batch rules,
+    # viewer toggles, file info).
+    SOURCE_TARGETS qimgv-plus qimgv_viewcomponents qimgv_ui qimgv_render qimgv_bridges
+    # Strings the sources no longer contain are dropped, not kept as vanished.
+    OPTIONS -no-obsolete
 )
 qt_add_lrelease(qimgv-plus TS_FILES ${TS_FILES})
 
@@ -236,6 +240,8 @@ target_link_libraries(qimgv-plus PRIVATE
     Qt6::Pdf
     Qt6::Qml
     Qt6::Quick
+    # QQuickStyle (the run-time style of Qt's Quick dialogs).
+    Qt6::QuickControls2
     djvudec
 )
 
@@ -288,11 +294,32 @@ if(WIN32)
     # 1. Qt dependencies
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6Core_DIR}/../../../bin")
     if(WINDEPLOYQT_EXECUTABLE)
+        # windeployqt deploys every Qt Quick Controls style, because the
+        # QtQuick.Controls module lists them all as optional imports. The
+        # application only uses Basic (its own style is built on it, and
+        # QuickUiHost pins it as the run-time style), so the other styles,
+        # their libraries and the native style they need are removed again.
+        # "styles" are Qt Widgets style plugins; no QApplication loads them
+        # (skipped, and removed from earlier deployments).
+        set(_unused_controls_styles Fusion Imagine Material Universal FluentWinUI3 Windows)
+        set(_unused_style_removals)
+        foreach(_style ${_unused_controls_styles})
+            list(APPEND _unused_style_removals
+                COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:qimgv-plus>/qml/QtQuick/Controls/${_style}"
+                COMMAND ${CMAKE_COMMAND} -E rm -f
+                    "$<TARGET_FILE_DIR:qimgv-plus>/Qt6QuickControls2${_style}.dll"
+                    "$<TARGET_FILE_DIR:qimgv-plus>/Qt6QuickControls2${_style}StyleImpl.dll"
+            )
+        endforeach()
         add_custom_command(TARGET qimgv-plus POST_BUILD
-            COMMAND ${WINDEPLOYQT_EXECUTABLE} --no-translations --no-compiler-runtime --no-opengl-sw --qmldir "${CMAKE_CURRENT_SOURCE_DIR}/gui/quick" "$<TARGET_FILE:qimgv-plus>"
+            COMMAND ${WINDEPLOYQT_EXECUTABLE} --no-translations --no-compiler-runtime --no-opengl-sw --skip-plugin-types styles --qmldir "${CMAKE_CURRENT_SOURCE_DIR}/gui/quick" "$<TARGET_FILE:qimgv-plus>"
             COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE_DIR:qimgv-plus>/vc_redist.x64.exe"
             COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:qimgv-plus>/tls"
-            COMMENT "Deploying Qt dependencies and cleaning up redistributable..."
+            ${_unused_style_removals}
+            COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:qimgv-plus>/qml/QtQuick/NativeStyle"
+            COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE_DIR:qimgv-plus>/Qt6QuickNativeStyle.dll"
+            COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:qimgv-plus>/styles"
+            COMMENT "Deploying Qt dependencies and cleaning up redistributable and unused styles..."
         )
     endif()
 

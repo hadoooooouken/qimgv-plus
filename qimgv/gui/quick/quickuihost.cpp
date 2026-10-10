@@ -5,6 +5,7 @@
 #include <QGuiApplication>
 #include <QLatin1StringView>
 #include <QQuickGraphicsConfiguration>
+#include <QQuickStyle>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
 #include <QVariant>
@@ -48,6 +49,13 @@ constexpr QLatin1StringView pipelineCacheFilePattern = "quick-pipeline-%1.cache"
 
 // Disables the DXGI vertical blank thread of the Qt Windows platform plugin.
 constexpr char noVblankThreadVariable[] = "QT_D3D_NO_VBLANK_THREAD";
+
+// Run-time Qt Quick Controls style. The application's QML selects its style
+// (qimgv.style, based on Basic) at compile time, but Qt's own Quick dialog
+// implementations (ColorDialog) import QtQuick.Controls, which would load
+// the platform default style. Pinning Basic gives them the application's
+// base style and is the only Controls style the deployment ships.
+constexpr QLatin1StringView controlsRuntimeStyle = "Basic"_L1;
 
 struct GraphicsApiInfo {
   QSGRendererInterface::GraphicsApi api;
@@ -303,6 +311,7 @@ bool QuickUiHost::start() {
     return false;
 
   applyGraphicsApi();
+  QQuickStyle::setStyle(controlsRuntimeStyle);
   mEngine.setInitialProperties(
       {{viewportControllerProperty, QVariant::fromValue(&mViewport)},
        {windowShellProperty, QVariant::fromValue(&mWindowShell)},

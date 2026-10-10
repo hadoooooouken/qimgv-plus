@@ -12,11 +12,11 @@ namespace {
 constexpr char kTranslationContext[] = "FormatFilterComboBox";
 
 QString allFormatsText() {
-    return QCoreApplication::translate(kTranslationContext, "All formats");
+    return QCoreApplication::translate(kTranslationContext, QT_TRANSLATE_NOOP("FormatFilterComboBox", "All formats"));
 }
 
 QString customText() {
-    return QCoreApplication::translate(kTranslationContext, "Custom");
+    return QCoreApplication::translate(kTranslationContext, QT_TRANSLATE_NOOP("FormatFilterComboBox", "Custom"));
 }
 } // namespace
 

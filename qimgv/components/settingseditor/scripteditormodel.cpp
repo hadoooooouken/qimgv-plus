@@ -23,7 +23,7 @@ ScriptEditorModel::ScriptEditorModel(IShortcutScriptStore &store, QObject *paren
     : EditorSession(parent), mStore(store) {}
 
 QString ScriptEditorModel::title() const {
-    return mEditing ? translated("Edit") : translated("New application/script");
+    return mEditing ? translated(QT_TRANSLATE_NOOP("ScriptEditorDialog", "Edit")) : translated(QT_TRANSLATE_NOOP("ScriptEditorDialog", "New application/script"));
 }
 
 QString ScriptEditorModel::name() const {
@@ -67,16 +67,16 @@ bool ScriptEditorModel::nameTaken() const {
 
 QString ScriptEditorModel::message() const {
     if (mName.isEmpty())
-        return translated("Enter script name");
+        return translated(QT_TRANSLATE_NOOP("ScriptEditorDialog", "Enter script name"));
     if (nameTaken())
-        return translated("A script with this same name exists");
+        return translated(QT_TRANSLATE_NOOP("ScriptEditorDialog", "A script with this same name exists"));
     return {};
 }
 
 QString ScriptEditorModel::acceptText() const {
     if (!mName.isEmpty() && nameTaken())
-        return translated("Replace");
-    return mEditing ? translated("Save") : translated("Create");
+        return translated(QT_TRANSLATE_NOOP("ScriptEditorDialog", "Replace"));
+    return mEditing ? translated(QT_TRANSLATE_NOOP("ScriptEditorDialog", "Save")) : translated(QT_TRANSLATE_NOOP("ScriptEditorDialog", "Create"));
 }
 
 bool ScriptEditorModel::canAccept() const {
@@ -88,11 +88,11 @@ bool ScriptEditorModel::acceptable() const {
 }
 
 QString ScriptEditorModel::keywordsText() {
-    return translated("Keywords:") + u' ' + kFileKeyword.toString();
+    return translated(QT_TRANSLATE_NOOP("ScriptEditorDialog", "Keywords:")) + u' ' + kFileKeyword.toString();
 }
 
 QString ScriptEditorModel::executableDialogTitle() {
-    return translated("Select an executable/script");
+    return translated(QT_TRANSLATE_NOOP("ScriptEditorDialog", "Select an executable/script"));
 }
 
 QStringList ScriptEditorModel::executableFilters() {

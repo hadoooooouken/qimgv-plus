@@ -249,11 +249,12 @@ ScriptEditorModel *SettingsEditorModel::scriptEditor() {
 }
 
 QString SettingsEditorModel::windowTitle() {
-    return translated("Preferences — ") + QCoreApplication::applicationName();
+    return translated(QT_TRANSLATE_NOOP("SettingsDialog", "Preferences — ")) + QCoreApplication::applicationName();
 }
 
 QString SettingsEditorModel::aboutText() {
-    return translated(
+    return translated(QT_TRANSLATE_NOOP(
+        "SettingsDialog",
         "This is a fast and easy to use image viewer\n"
         "\n"
         "**Github page:** [https://github.com/hadoooooouken/qimgv-plus](https://github.com/hadoooooouken/qimgv-plus)\n"
@@ -268,7 +269,7 @@ QString SettingsEditorModel::aboutText() {
         "\n"
         "qimgv is licensed under [GNU GPL Version 3](https://www.gnu.org/licenses/gpl-3.0.en.html)\n"
         "\n"
-        "Report any issues / request features [here](https://github.com/hadoooooouken/qimgv-plus/issues)\n");
+        "Report any issues / request features [here](https://github.com/hadoooooouken/qimgv-plus/issues)\n"));
 }
 
 QString SettingsEditorModel::applicationVersion() {
@@ -280,11 +281,11 @@ QString SettingsEditorModel::qtVersion() {
 }
 
 QString SettingsEditorModel::colorProfileDialogTitle() {
-    return translated("Select Monitor Color Profile");
+    return translated(QT_TRANSLATE_NOOP("SettingsDialog", "Select Monitor Color Profile"));
 }
 
 QStringList SettingsEditorModel::colorProfileFilters() {
-    return {translated("Color Profiles (*.icc *.icm)")};
+    return {translated(QT_TRANSLATE_NOOP("SettingsDialog", "Color Profiles (*.icc *.icm)"))};
 }
 
 //--- load / apply -------------------------------------------------------------

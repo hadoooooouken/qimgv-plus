@@ -132,7 +132,7 @@ QString autoResizeLimitText(int step) {
 }
 
 QString panelHideDelayText(int ms) {
-    return QCoreApplication::translate(kContext, "%1 ms").arg(ms);
+    return QCoreApplication::translate(kContext, QT_TRANSLATE_NOOP("SettingsDialog", "%1 ms")).arg(ms);
 }
 
 QString expandLimitText(int limit) {

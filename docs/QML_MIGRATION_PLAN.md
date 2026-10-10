@@ -2247,16 +2247,48 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
 
     No measurable change. The Quick UI never created widget code, so
     removing it changes the binary size, not the run time.
-  - **Found, not fixed:**
-    - `windeployqt --qmldir` deploys every Qt Quick Controls style
-      (Material, Universal, FluentWinUI3, Imagine, Fusion, Windows, native)
-      and `styles/qmodernwindowsstyle.dll`, although the application
-      compiles in its Basic-based style.
-    - The `.ts` files keep the contexts of the deleted widget classes until
-      `lupdate` runs.
-    - Build folders from before this stage still hold
-      `Qt6OpenGLWidgets.dll` and `Qt6SvgWidgets.dll`, which windeployqt
-      does not remove.
+  - **Found, not fixed:** build folders from before this stage still hold
+    `Qt6OpenGLWidgets.dll` and `Qt6SvgWidgets.dll`, which windeployqt does
+    not remove.
+- **Follow-up** (2026-10-10, two commits after the removal):
+  - **Unused Controls styles no longer deployed.**
+    - `windeployqt --qmldir` deployed every Qt Quick Controls style, because
+      the `QtQuick.Controls` module lists them all as optional imports.
+    - Qt's Quick dialog implementations (the accent `ColorDialog`) import
+      `QtQuick.Controls` and so loaded the platform default style at run
+      time (Windows).
+    - `QuickUiHost` now pins the run-time style to Basic
+      (`QQuickStyle::setStyle()`, before the engine loads), the base of
+      `qimgv.style`. The accent dialog is drawn in Basic instead of
+      Windows, and `-style` / `QT_QUICK_CONTROLS_STYLE` no longer change it.
+    - The `qimgv-plus` POST_BUILD step passes
+      `--skip-plugin-types styles` (Qt Widgets styles; nothing loads them
+      under `QGuiApplication`). After windeployqt it removes the Fusion,
+      Imagine, Material, Universal, FluentWinUI3 and Windows modules,
+      `QtQuick/NativeStyle`, their libraries, and the `styles` folder of
+      earlier deployments.
+    - No kept library links against a removed one (`dumpbin /dependents`).
+      Qt's `qml` tool, run inside the trimmed deployment, cannot load the
+      ColorDialog under the default style ("module QtQuick.Controls.Windows
+      is not installed") and opens it with Basic.
+    - Deployment: 127,784,087 B (1,469 files) -> 106,874,794 B (255 files).
+  - **Translations updated** (`lupdate`, now with `-no-obsolete`): the
+    entries of the deleted widget classes are gone, and the QML strings that
+    were missing are added.
+    - lupdate never scanned `qimgv_viewcomponents`, whose texts (settings
+      editor, batch rules, viewer toggles, file info) had kept their
+      translations only through the widget classes' copies. It is now one
+      of the lupdate source targets.
+    - lupdate only extracts literal contexts. The texts passed through a
+      context constant or a helper (the settings editor models,
+      `FormatFilterModel`, the CAS and colour adjustment editors) are
+      marked with `QT_TRANSLATE_NOOP`, as `SettingsOptions` already did.
+    - lupdate's QML parser drops backslashes from string literals. The
+      example paths of the cache exclusion tooltip are therefore a `%1`
+      argument, and the existing translations were moved to the `%1` form.
+    - Every dropped entry was checked against the sources (same context,
+      same text): none is used any more. `en_US.ts` is not in `TS_FILES`
+      and stays untouched.
 
 ---
 

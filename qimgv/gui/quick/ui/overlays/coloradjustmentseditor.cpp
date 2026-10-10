@@ -17,13 +17,13 @@ QList<SliderSpec> colorAdjustmentSpecs() {
     constexpr int kNeutral = 0;
     constexpr int kNeutralMultiplier = 100;
     return {
-        {label("Exposure"), -300, 300, kNeutral, SliderValueFormat::SignedHundredths},
-        {label("Contrast"), 0, 300, kNeutralMultiplier, SliderValueFormat::Percent},
-        {label("Brightness"), -100, 100, kNeutral, SliderValueFormat::Percent},
-        {label("Temperature"), -50, 50, kNeutral, SliderValueFormat::Integer},
-        {label("Tint"), -50, 50, kNeutral, SliderValueFormat::Integer},
-        {label("Saturation"), 0, 200, kNeutralMultiplier, SliderValueFormat::Percent},
-        {label("Hue"), -180, 180, kNeutral, SliderValueFormat::Degrees},
+        {label(QT_TRANSLATE_NOOP("ColorAdjustmentsOverlay", "Exposure")), -300, 300, kNeutral, SliderValueFormat::SignedHundredths},
+        {label(QT_TRANSLATE_NOOP("ColorAdjustmentsOverlay", "Contrast")), 0, 300, kNeutralMultiplier, SliderValueFormat::Percent},
+        {label(QT_TRANSLATE_NOOP("ColorAdjustmentsOverlay", "Brightness")), -100, 100, kNeutral, SliderValueFormat::Percent},
+        {label(QT_TRANSLATE_NOOP("ColorAdjustmentsOverlay", "Temperature")), -50, 50, kNeutral, SliderValueFormat::Integer},
+        {label(QT_TRANSLATE_NOOP("ColorAdjustmentsOverlay", "Tint")), -50, 50, kNeutral, SliderValueFormat::Integer},
+        {label(QT_TRANSLATE_NOOP("ColorAdjustmentsOverlay", "Saturation")), 0, 200, kNeutralMultiplier, SliderValueFormat::Percent},
+        {label(QT_TRANSLATE_NOOP("ColorAdjustmentsOverlay", "Hue")), -180, 180, kNeutral, SliderValueFormat::Degrees},
     };
 }
 } // namespace

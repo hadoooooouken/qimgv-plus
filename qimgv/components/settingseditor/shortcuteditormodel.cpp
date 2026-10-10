@@ -65,7 +65,7 @@ QString ShortcutEditorModel::shortcut() const {
 
 QString ShortcutEditorModel::shortcutText() const {
     if (mShortcut.isEmpty())
-        return QCoreApplication::translate(kCreatorContext, "[Enter shortcut]");
+        return QCoreApplication::translate(kCreatorContext, QT_TRANSLATE_NOOP("ShortcutCreatorDialog", "[Enter shortcut]"));
     return mShortcut;
 }
 
@@ -84,12 +84,12 @@ bool ShortcutEditorModel::acceptable() const {
 }
 
 void ShortcutEditorModel::startAdd() {
-    startRequest(QCoreApplication::translate(kCreatorContext, "Add shortcut"), -1);
+    startRequest(QCoreApplication::translate(kCreatorContext, QT_TRANSLATE_NOOP("ShortcutCreatorDialog", "Add shortcut")), -1);
     open();
 }
 
 void ShortcutEditorModel::startEdit(const ShortcutEntry &entry, int row) {
-    startRequest(QCoreApplication::translate(kSettingsContext, "Edit shortcut"), row);
+    startRequest(QCoreApplication::translate(kSettingsContext, QT_TRANSLATE_NOOP("SettingsDialog", "Edit shortcut")), row);
     if (entry.action.startsWith(kScriptActionPrefix)) {
         mScriptSelected = true;
         const qsizetype index = mScripts.indexOf(entry.action.mid(kScriptActionPrefix.size()));
@@ -130,8 +130,8 @@ void ShortcutEditorModel::setShortcut(const QString &shortcut) {
     if (boundAction.isEmpty()) {
         mWarning.clear();
     } else {
-        mWarning = QCoreApplication::translate(kCreatorContext, "This shortcut is used for action: ") +
-                   boundAction + QCoreApplication::translate(kCreatorContext, ". Replace?");
+        mWarning = QCoreApplication::translate(kCreatorContext, QT_TRANSLATE_NOOP("ShortcutCreatorDialog", "This shortcut is used for action: ")) +
+                   boundAction + QCoreApplication::translate(kCreatorContext, QT_TRANSLATE_NOOP("ShortcutCreatorDialog", ". Replace?"));
     }
     emit shortcutChanged();
 }

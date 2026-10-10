@@ -19,9 +19,9 @@ QList<SliderSpec> casSpecs() {
     constexpr int kMaximum = 100;
     constexpr int kMinimumContrast = 0;
     return {
-        {label("Sharpening"), kMinimumSharpening, kMaximum,
+        {label(QT_TRANSLATE_NOOP("CasSettingsOverlay", "Sharpening")), kMinimumSharpening, kMaximum,
          toSlider(CasParameters::kDefaultSharpening), SliderValueFormat::Hundredths},
-        {label("Contrast"), kMinimumContrast, kMaximum,
+        {label(QT_TRANSLATE_NOOP("CasSettingsOverlay", "Contrast")), kMinimumContrast, kMaximum,
          toSlider(CasParameters::kDefaultContrast), SliderValueFormat::Hundredths},
     };
 }
