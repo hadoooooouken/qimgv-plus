@@ -33,6 +33,7 @@ constexpr QLatin1StringView thumbnailPanelProperty = "thumbnailPanel"_L1;
 constexpr QLatin1StringView contextMenuProperty = "contextMenu"_L1;
 constexpr QLatin1StringView cropProperty = "crop"_L1;
 constexpr QLatin1StringView folderViewProperty = "folderView"_L1;
+constexpr QLatin1StringView dialogsProperty = "dialogs"_L1;
 
 constexpr QLatin1StringView bridgesModule = "qimgv.bridges"_L1;
 constexpr QLatin1StringView settingsBridgeType = "AppSettings"_L1;
@@ -102,7 +103,8 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager,
           .events = mEvents,
           .settings = settings,
           .actions = actionManager,
-      }) {
+      }),
+      mDialogs(mDialogCoordinator, settings) {
   // settingsChanged also announces theme switches and shortcut edits; each
   // receiver acts only on what actually changed.
   QObject::connect(&settings, &Settings::settingsChanged, &mSettingsBridge,
@@ -264,7 +266,8 @@ bool QuickUiHost::start() {
        {thumbnailPanelProperty, QVariant::fromValue(&mThumbnailPanel)},
        {contextMenuProperty, QVariant::fromValue(&mContextMenu)},
        {cropProperty, QVariant::fromValue(&mCrop)},
-       {folderViewProperty, QVariant::fromValue(&mFolderView)}});
+       {folderViewProperty, QVariant::fromValue(&mFolderView)},
+       {dialogsProperty, QVariant::fromValue(&mDialogCoordinator)}});
   mEngine.loadFromModule(mainWindowModule, mainWindowType);
   const QList<QObject *> roots = mEngine.rootObjects();
   QQuickWindow *window =

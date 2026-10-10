@@ -100,6 +100,7 @@ target_sources(qimgv-plus PRIVATE
     quick/adapters/interimports.cpp
     quick/adapters/quickcontextmenuactions.cpp
     quick/adapters/quickcropactions.cpp
+    quick/adapters/quickdialogport.cpp
     quick/adapters/quickfolderviewactions.cpp
     quick/adapters/quickmainwindowcontroller.cpp
     quick/adapters/quickoverlayactions.cpp

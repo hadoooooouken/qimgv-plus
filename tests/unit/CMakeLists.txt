@@ -26,6 +26,7 @@ qt_add_executable(qimgv_tests
     tst_contextmenu.cpp
     tst_crop.cpp
     tst_svgrasterizer.cpp
+    tst_dialogs.cpp
     "${QIMGV_APP_SOURCE_DIR}/components/viewmode/viewmodecontroller.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/shellinfo/windowtitle.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/singleinstance/singleinstancechannel.cpp"

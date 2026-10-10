@@ -22,6 +22,7 @@ ApplicationWindow {
     required property ContextMenuModel contextMenu
     required property CropController crop
     required property FolderViewController folderView
+    required property DialogCoordinator dialogs
 
     // The context menu exists from its first opening on.
     property bool contextMenuCreated: false
@@ -121,6 +122,11 @@ ApplicationWindow {
         sourceComponent: ViewerContextMenu {
             menuModel: root.contextMenu
         }
+    }
+
+    // Modal dialog windows of the dialog port, created on first use.
+    DialogLayer {
+        coordinator: root.dialogs
     }
 
     // Files dropped anywhere on the window open like in the widget UI; the

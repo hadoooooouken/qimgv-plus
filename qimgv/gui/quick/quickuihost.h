@@ -10,9 +10,9 @@
 #include "gui/ports/uiports.h"
 #include "gui/quick/adapters/actionmanagerdispatcher.h"
 #include "gui/quick/adapters/directoryviewadapter.h"
-#include "gui/quick/adapters/interimports.h"
 #include "gui/quick/adapters/quickcontextmenuactions.h"
 #include "gui/quick/adapters/quickcropactions.h"
+#include "gui/quick/adapters/quickdialogport.h"
 #include "gui/quick/adapters/quickfolderviewactions.h"
 #include "gui/quick/adapters/quickmainwindowcontroller.h"
 #include "gui/quick/adapters/quickoverlayactions.h"
@@ -22,6 +22,7 @@
 #include "gui/quick/bridges/settingsbridge.h"
 #include "gui/quick/bridges/themebridge.h"
 #include "gui/quick/ui/crop/cropcontroller.h"
+#include "gui/quick/ui/dialogs/dialogcoordinator.h"
 #include "gui/quick/ui/folderview/foldergridcontroller.h"
 #include "gui/quick/ui/folderview/folderviewcontroller.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
@@ -43,7 +44,8 @@ class Settings;
 // ThumbnailPanelController), the context menu (ContextMenuModel), the crop
 // mode (CropController) and the folder view (its grid's directory view, the
 // FolderGridController and the FolderViewController) with their actions,
-// the view mode state, the inbound UiEvents, the port adapters and the QML
+// the modal dialogs (DialogCoordinator, shown through QuickDialogPort), the
+// view mode state, the inbound UiEvents, the port adapters and the QML
 // engine; keeps the bridges, the viewport, the overlays, the panel, the menu,
 // the crop mode and the folder view in sync with Settings and creates the
 // main window from the qimgv.ui module. Core talks to this UI only through
@@ -84,12 +86,11 @@ private:
   ActionManager &mActionManager;
   UiEvents mEvents;
   ViewModeController mViewMode;
-  DecliningDialogPort mDialogs;
   std::shared_ptr<DirectoryViewAdapter> mThumbnailPanelView;
   std::shared_ptr<DirectoryViewAdapter> mFolderGridView;
   // The bridges, the viewport controller, the overlays, the thumbnail panel,
-  // the context menu, the crop mode, the folder view and the window shell
-  // are declared before the engine so that they outlive it, as
+  // the context menu, the crop mode, the folder view, the dialogs and the
+  // window shell are declared before the engine so that they outlive it, as
   // QQmlEngine::setExternalSingletonInstance() and the main window's
   // required properties require.
   ActionManagerDispatcher mDispatcher;
@@ -109,6 +110,8 @@ private:
   FolderGridController mFolderGrid;
   FolderViewController mFolderView;
   QuickFolderViewActions mFolderViewActions;
+  DialogCoordinator mDialogCoordinator;
+  QuickDialogPort mDialogs;
   MainWindowShell mWindowShell;
   QQmlApplicationEngine mEngine;
   // Works on the window the engine owns, so it is destroyed first.

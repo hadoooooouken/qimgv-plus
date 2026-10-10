@@ -17,6 +17,7 @@
 #include "gui/quick/bridges/settingsbridge.h"
 #include "gui/quick/bridges/themebridge.h"
 #include "gui/quick/ui/crop/cropcontroller.h"
+#include "gui/quick/ui/dialogs/dialogcoordinator.h"
 #include "gui/quick/ui/folderview/foldergridcontroller.h"
 #include "gui/quick/ui/folderview/folderviewcontroller.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
@@ -89,6 +90,11 @@ class BridgeTestFixture : public QObject {
   Q_PROPERTY(QString lastFolderRequest READ lastFolderRequest FINAL)
   Q_PROPERTY(int folderThumbnailRequestCount READ folderThumbnailRequestCount FINAL)
   Q_PROPERTY(int scriptSettingsRequests READ scriptSettingsRequests FINAL)
+  Q_PROPERTY(DialogCoordinator *dialogs READ dialogs CONSTANT FINAL)
+  // The answer of the last finished dialog request: "confirm:<0|1>",
+  // "replace:<yes>:<all>:<cancel>", "resize:<w>x<h>:<filter>:<upscayl>:<model>"
+  // or "resize:none", "text:<0|1>:<text>"; empty for none.
+  Q_PROPERTY(QString lastDialogAnswer READ lastDialogAnswer FINAL)
 
 public:
   explicit BridgeTestFixture(QObject *parent = nullptr);
@@ -129,6 +135,8 @@ public:
   [[nodiscard]] QString lastCropRequest() const;
   // How often "Configure menu" asked for the script settings.
   [[nodiscard]] int scriptSettingsRequests() const;
+  [[nodiscard]] DialogCoordinator *dialogs();
+  [[nodiscard]] QString lastDialogAnswer() const;
 
   // Flips viewer.smoothZoom and publishes the snapshot (viewer area only).
   Q_INVOKABLE void toggleSmoothZoom();
@@ -198,12 +206,30 @@ public:
   Q_INVOKABLE int deliverFolderThumbnails();
   Q_INVOKABLE void clearFolderRequest();
 
+  // Dialog requests as QuickDialogPort starts them (without waiting).
+  Q_INVOKABLE bool requestConfirmation(const QString &title, const QString &message);
+  // mode: a FileReplaceMode value.
+  Q_INVOKABLE bool requestFileReplace(const QString &source, const QString &destination,
+                                      int mode, bool multiple);
+  Q_INVOKABLE bool requestResize(QSize originalSize, QSize desktopSize,
+                                 const QStringList &upscaylModels, bool useUpscayl);
+  Q_INVOKABLE bool requestText(const QString &title, const QString &label,
+                               const QString &initialText);
+  Q_INVOKABLE void clearDialogAnswer();
+  // Abandons every open dialog request.
+  Q_INVOKABLE void abandonDialogs();
+  // Key presses and text as the platform delivers them to window (shortcuts
+  // included).
+  Q_INVOKABLE void sendKey(QQuickWindow *window, int key);
+  Q_INVOKABLE void sendText(QQuickWindow *window, const QString &text);
+
   // Path of fileName next to the test executable, for images the tests save
   // for review.
   Q_INVOKABLE QString artifactPath(const QString &fileName) const;
 
 private:
   void connectFolderView();
+  void connectDialogs();
 
   FakeActionDispatcher mDispatcher;
   UiSettingsSnapshot mSettings;
@@ -234,4 +260,6 @@ private:
   int mFolderThumbnailRequestCount = 0;
   QString mLastFolderRequest;
   int mScriptSettingsRequests = 0;
+  DialogCoordinator mDialogs;
+  QString mLastDialogAnswer;
 };

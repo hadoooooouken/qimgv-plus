@@ -12,6 +12,20 @@ qt_add_qml_module(qimgv_ui
         crop/cropcontroller.h
         crop/cropselection.cpp
         crop/cropselection.h
+        dialogs/confirmationdialogmodel.cpp
+        dialogs/confirmationdialogmodel.h
+        dialogs/dialogcoordinator.cpp
+        dialogs/dialogcoordinator.h
+        dialogs/dialogsession.cpp
+        dialogs/dialogsession.h
+        dialogs/filereplacedialogmodel.cpp
+        dialogs/filereplacedialogmodel.h
+        dialogs/resizedialogmodel.cpp
+        dialogs/resizedialogmodel.h
+        dialogs/savepathdialogmodel.cpp
+        dialogs/savepathdialogmodel.h
+        dialogs/textinputdialogmodel.cpp
+        dialogs/textinputdialogmodel.h
         folderview/bookmarksmodel.cpp
         folderview/bookmarksmodel.h
         folderview/foldergridcontroller.cpp
@@ -60,10 +74,14 @@ qt_add_qml_module(qimgv_ui
         AdjustmentSliders.qml
         CasSettingsOverlay.qml
         ColorAdjustmentsOverlay.qml
+        ConfirmationDialog.qml
         ControlsOverlay.qml
         CopyOverlay.qml
         CropOverlay.qml
         CropPanel.qml
+        DialogLayer.qml
+        DialogWindow.qml
+        FileReplaceDialog.qml
         FloatingMessage.qml
         FolderGridView.qml
         FolderView.qml
@@ -78,8 +96,11 @@ qt_add_qml_module(qimgv_ui
         OverlayPanel.qml
         PlacesPanel.qml
         RenameOverlay.qml
+        ResizeDialog.qml
         SaveConfirmOverlay.qml
+        SaveFileDialog.qml
         SidePanel.qml
+        TextInputDialog.qml
         ThumbnailStrip.qml
         ThumbnailWidget.qml
         ViewerContextMenu.qml
@@ -88,6 +109,7 @@ qt_add_qml_module(qimgv_ui
 # The generated QML type registrations include the headers by file name.
 target_include_directories(qimgv_ui PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/crop"
+    "${CMAKE_CURRENT_SOURCE_DIR}/dialogs"
     "${CMAKE_CURRENT_SOURCE_DIR}/folderview"
     "${CMAKE_CURRENT_SOURCE_DIR}/menus"
     "${CMAKE_CURRENT_SOURCE_DIR}/overlays"
@@ -112,6 +134,6 @@ target_link_libraries(qimgv_ui
         qimgv_viewcomponents
     PRIVATE
         Qt6::QuickControls2
-        # FolderDialog of the copy / move overlay.
+        # FolderDialog of the copy / move overlay, FileDialog of "Save as".
         Qt6::QuickDialogs2
 )

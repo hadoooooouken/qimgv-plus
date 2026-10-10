@@ -4,8 +4,9 @@
 
 // Ports of the Qt Quick UI whose user interface does not exist yet. They keep
 // Core fully functional and safe until the real implementations replace them:
-// every dialog is declined until the Quick dialogs (S3.2), so no file is
-// deleted, overwritten or written without the user's confirmation.
+// QuickDialogPort forwards the batch converter and printing here until their
+// Quick dialogs exist (S3.4), so nothing is converted or printed without the
+// user's choices.
 // GUI thread only.
 
 // Declines every request (confirm: not accepted, file replace: cancel, save

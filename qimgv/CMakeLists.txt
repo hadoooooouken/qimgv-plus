@@ -60,6 +60,9 @@ add_library(qimgv_viewcomponents STATIC
     # Format categories of the folder view's format filter (both UIs).
     utils/formatgroups.cpp
     utils/formatgroups.h
+    # Name filters of the "Save File as..." dialog (both UIs).
+    utils/savefilefilters.cpp
+    utils/savefilefilters.h
 )
 target_include_directories(qimgv_viewcomponents PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_features(qimgv_viewcomponents PUBLIC cxx_std_23)

@@ -46,6 +46,11 @@ QtObject {
     // separator spacing.
     readonly property int popupListPadding: 5
     readonly property int popupPadding: 12
+    // Dialog windows: margin around the content, spacing of its rows and of
+    // the buttons (the layouts of the widget dialogs).
+    readonly property int dialogPadding: 12
+    readonly property int dialogSpacing: 6
+    readonly property int dialogButtonSpacing: 6
     readonly property int menuItemHorizontalPadding: 8
     readonly property int menuItemSpacing: 8
     readonly property int menuSeparatorVerticalPadding: 4

@@ -1755,10 +1755,93 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
   `FileDialog`/`FolderDialog`/`MessageDialog` from `QtQuick.Dialogs` for
   save paths and confirmations.
 - **Acceptance:** `IDialogPort` fully implemented by the Quick UI.
+- **Delivered** (one commit):
+  - **Re-scoped:** the shortcut creator and the script editor moved to
+    S3.3, since `SettingsDialog` is their only caller. The batch converter
+    and printing stay declined until S3.4 (`QuickDialogPort` forwards them
+    to `DecliningDialogPort`). Rename was already ported in S2.3
+    (`RenameOverlay`); the text prompt of the port (Core's "Add folder") is
+    the `TextInputDialog` here.
+  - **View-models** (`gui/quick/ui/dialogs/`, module `qimgv.ui`, free of
+    `Settings`): `DialogSession` is the base of every dialog (`open`,
+    `created` for creation on first use, `finished`; one request at a time,
+    a request while open is declined with a warning; the request is
+    published before the dialog opens; late answers are ignored).
+    `runModalDialog()` waits for the answer in a nested `QEventLoop`, as
+    `QDialog::exec()` does, so Core keeps its blocking calls; when the loop
+    ends otherwise (`QCoreApplication::exit()` ends every running loop) the
+    request is abandoned with the declined answer.
+    `ConfirmationDialogModel` (Yes default, Escape / close answer No),
+    `FileReplaceDialogModel` (Yes / No with "Apply to all" only for
+    multiple collisions, Cancel stops the operation, Escape / close skip
+    the item as the widget dialog's reject did, abandoned cancels),
+    `ResizeDialogModel` (all rules of `ResizeDialog`: percent 1 - 1600,
+    sides following the edited one in single precision, common sizes, fit /
+    fill the primary screen, reset, filter list with MKS 2021 default,
+    Upscayl only with models and only for upscales, request only for a
+    changed size plus the preferences to store), `SavePathDialogModel`
+    (filters from `saveFileFiltersFor()`, a non-local URL is rejected with
+    a warning) and `TextInputDialogModel`, owned by `DialogCoordinator`.
+  - **Shared helper:** `utils/savefilefilters` (in
+    `qimgv_viewcomponents`) builds the "Save File as..." filters and the
+    filter of the suggested suffix; `MW::getSaveFileName()` uses it.
+  - **Application side:** `QuickDialogPort` replaces `DecliningDialogPort`
+    as the Quick UI's dialog port. It gathers the inputs (writable formats,
+    primary screen size, `Settings::availableUpscaylModels()` and the
+    stored resize preferences), starts the request, waits with
+    `runModalDialog()` and stores the Upscayl preferences of an accepted
+    resize.
+  - **QML:** `DialogWindow` is a separate application-modal `Window` (like
+    an exec()'d `QDialog`: the main window takes no input and ignores the
+    close button meanwhile), centred on the main window, sized to its
+    content. Enter presses the focused push button and otherwise accepts
+    (a focused spin box loses the focus first, so its typed text is
+    committed); Escape and the close button dismiss. `ConfirmationDialog`,
+    `FileReplaceDialog`, `ResizeDialog`, `TextInputDialog` and
+    `SaveFileDialog` (`FileDialog` from `QtQuick.Dialogs`, the native
+    Windows dialog) are created by `DialogLayer` in `Main` on their first
+    request. `qimgv.style` gained `DialogButtonBox` and the dialog margins.
+    The QML files keep the widget class names as translation contexts
+    (the save dialog's title was in the `MW` context).
+  - **Deviations:**
+    - Dialogs are `Window`s, not `Dialog` popups, and confirmations use the
+      themed `ConfirmationDialog` instead of `MessageDialog`, which has no
+      native implementation on Windows in Qt 6.12 (its fallback is not
+      themed).
+    - Keys are handled by propagation to the dialog's focus scope, not by
+      window `Shortcut`s: `QWindow::isActive()` is true for every dialog
+      window whose transient parent family has the focus, so the shortcuts
+      of several dialog windows were ambiguous and none fired.
+    - The resize dialog's fields are always enabled; editing the percent
+      or a side selects its mode (the widget dialog started with every
+      field enabled and switched only through its radio buttons). Sides
+      are clamped to 1 - 65535 (the widget dialog could request a side of
+      0).
+    - Long source paths are elided in the middle and destinations wrap at
+      600 px (the widget dialog grew with the source path).
+    - Enter on a focused, closed combo box does not accept the dialog
+      (Qt Quick's `ComboBox` takes the key).
+  - **Flagged, not changed:** `ResizeDialog` and `BatchConverterDialog`
+    scan the Upscayl models themselves instead of calling
+    `Settings::availableUpscaylModels()`; the JPEG save filter keeps its
+    `*jpe` pattern (missing dot) for parity.
+  - **Not verified by hand in the running application:** opening the
+    dialogs, since no input was sent to the desktop; the tests drive them.
+    Startup is unchanged (dialogs are created on first use): Release, a
+    300 x 300 PNG, process start to "first document rendering settled", 5
+    runs each: Quick UI median 389 ms, widget UI median 545 ms.
+  - Tests: `qimgv_tests` gained `DialogTests` (save filters, the session
+    rules and the modal wait, every view-model's answers and the resize
+    rules); `qimgv_qml_tests` gained `tst_dialogs.qml` (creation on first
+    request, Enter / Escape / buttons / close for the confirmation, file
+    replace with "Apply to all" and Cancel, a typed width committed by
+    Enter, common size and Upscayl model, the text prompt, a second
+    request while open); `tst_mainwindow.qml` passes the coordinator.
 
 #### S3.3 Settings dialog
 - **Goal:** split the 4300-line `SettingsDialog` into a settings view-model
-  and QML pages.
+  and QML pages, with the shortcut creator and script editor dialogs it
+  opens (moved here from S3.2).
 - **Owner:** `SettingsEditorModel` (C++): load, validate, apply, reset
   defaults, shortcut table (`QRangeModel` + `SortFilterProxyModel`),
   scripts list, theme editor; QML pages per tab, loaded lazily.

@@ -12,6 +12,7 @@
 #include <QKeySequence>
 #include <QMimeData>
 #include <QMouseEvent>
+#include <QTest>
 #include <QWheelEvent>
 
 #include <memory>
@@ -144,6 +145,7 @@ BridgeTestFixture::BridgeTestFixture(QObject *parent)
       mFolderView(mFolderGrid, mSettings, QDir::homePath()) {
   mThumbnailPanel.setLabelFont(QGuiApplication::font());
   connectFolderView();
+  connectDialogs();
   connect(&mThumbnails, &ThumbnailListModel::thumbnailsNeeded, this,
           [this](const QList<int> &indices) {
             ++mThumbnailRequestCount;
@@ -364,6 +366,92 @@ void BridgeTestFixture::toggleCrop(QSize screenSize) {
 }
 
 void BridgeTestFixture::clearCropRequest() { mLastCropRequest.clear(); }
+
+//------------------------------------------------------------------------------
+void BridgeTestFixture::connectDialogs() {
+  connect(mDialogs.confirmation(), &DialogSession::finished, this, [this]() {
+    mLastDialogAnswer =
+        u"confirm:%1"_s.arg(mDialogs.confirmation()->result().accepted ? 1 : 0);
+  });
+  connect(mDialogs.fileReplace(), &DialogSession::finished, this, [this]() {
+    const FileReplaceDecision decision = mDialogs.fileReplace()->result();
+    mLastDialogAnswer = u"replace:%1:%2:%3"_s.arg(decision.yes ? 1 : 0)
+                            .arg(decision.all ? 1 : 0)
+                            .arg(decision.cancel ? 1 : 0);
+  });
+  connect(mDialogs.resize(), &DialogSession::finished, this, [this]() {
+    const std::optional<ResizeRequest> request = mDialogs.resize()->result();
+    mLastDialogAnswer =
+        request ? u"resize:%1x%2:%3:%4:%5"_s.arg(request->size.width())
+                      .arg(request->size.height())
+                      .arg(static_cast<int>(request->filter))
+                      .arg(request->useUpscayl ? 1 : 0)
+                      .arg(request->upscaylModel)
+                : u"resize:none"_s;
+  });
+  connect(mDialogs.textInput(), &DialogSession::finished, this, [this]() {
+    const TextInputResult result = mDialogs.textInput()->result();
+    mLastDialogAnswer = u"text:%1:%2"_s.arg(result.accepted ? 1 : 0).arg(result.text);
+  });
+}
+
+DialogCoordinator *BridgeTestFixture::dialogs() { return &mDialogs; }
+
+QString BridgeTestFixture::lastDialogAnswer() const { return mLastDialogAnswer; }
+
+bool BridgeTestFixture::requestConfirmation(const QString &title, const QString &message) {
+  return mDialogs.confirmation()->start({.title = title, .message = message});
+}
+
+bool BridgeTestFixture::requestFileReplace(const QString &source, const QString &destination,
+                                           int mode, bool multiple) {
+  return mDialogs.fileReplace()->start({.sourcePath = source,
+                                        .targetPath = destination,
+                                        .mode = static_cast<FileReplaceMode>(mode),
+                                        .multiple = multiple});
+}
+
+bool BridgeTestFixture::requestResize(QSize originalSize, QSize desktopSize,
+                                      const QStringList &upscaylModels, bool useUpscayl) {
+  return mDialogs.resize()->start({.originalSize = originalSize,
+                                   .desktopSize = desktopSize,
+                                   .upscaylModels = upscaylModels,
+                                   .useUpscayl = useUpscayl,
+                                   .upscaylModel = {}});
+}
+
+bool BridgeTestFixture::requestText(const QString &title, const QString &label,
+                                    const QString &initialText) {
+  return mDialogs.textInput()->start(
+      {.title = title, .label = label, .initialText = initialText});
+}
+
+void BridgeTestFixture::clearDialogAnswer() { mLastDialogAnswer.clear(); }
+
+void BridgeTestFixture::abandonDialogs() {
+  mDialogs.confirmation()->abandon();
+  mDialogs.fileReplace()->abandon();
+  mDialogs.resize()->abandon();
+  mDialogs.savePath()->abandon();
+  mDialogs.textInput()->abandon();
+}
+
+void BridgeTestFixture::sendKey(QQuickWindow *window, int key) {
+  if (!window) {
+    qWarning() << "Fixture.sendKey: no window";
+    return;
+  }
+  QTest::keyClick(window, static_cast<Qt::Key>(key));
+}
+
+void BridgeTestFixture::sendText(QQuickWindow *window, const QString &text) {
+  if (!window) {
+    qWarning() << "Fixture.sendText: no window";
+    return;
+  }
+  for (const QChar character : text)
+    QTest::keyClick(window, character.toLatin1());
+}
 
 QString BridgeTestFixture::artifactPath(const QString &fileName) const {
   return QDir(QCoreApplication::applicationDirPath()).filePath(fileName);

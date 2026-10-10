@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "settings.h"
+#include "utils/savefilefilters.h"
 #include <QClipboard>
 #include <QApplication>
 #include <QGuiApplication>
@@ -829,29 +830,10 @@ void MW::showDefault() {
 
 QString MW::getSaveFileName(QString filePath) {
     docWidget->hideFloatingPanel();
-    QStringList filters;
-    // generate filter for writable images
-    auto writerFormats = QImageWriter::supportedImageFormats();
-    if(writerFormats.contains("jpg"))  filters.append("JPEG (*.jpg *.jpeg *jpe *jfif)");
-    if(writerFormats.contains("png"))  filters.append("PNG (*.png)");
-    if(writerFormats.contains("webp")) filters.append("WebP (*.webp)");
-    if(writerFormats.contains("jxl"))  filters.append("JPEG-XL (*.jxl)");
-    if(writerFormats.contains("avif")) filters.append("AVIF (*.avif *.avifs)");
-    if(writerFormats.contains("qoi"))  filters.append("QOI (*.qoi)");
-    if(writerFormats.contains("bmp"))  filters.append("BMP (*.bmp)");
-    if(writerFormats.contains("tif"))  filters.append("TIFF (*.tif *.tiff)");
-    QString filterString = filters.join(";; ");
-
-    // find matching filter for the current image
-    QString selectedFilter = "JPEG (*.jpg *.jpeg *jpe *jfif)";
-    QFileInfo fi(filePath);
-    for(const auto &filter : std::as_const(filters)) {
-        if(filter.contains(fi.suffix().toLower())) {
-            selectedFilter = filter;
-            break;
-        }
-    }
-    QString newFilePath = QFileDialog::getSaveFileName(this, tr("Save File as..."), filePath, filterString, &selectedFilter);
+    const SaveFileFilters filters =
+        saveFileFiltersFor(QImageWriter::supportedImageFormats(), filePath);
+    QString selectedFilter = filters.selected;
+    QString newFilePath = QFileDialog::getSaveFileName(this, tr("Save File as..."), filePath, filters.filters.join(";; "), &selectedFilter);
     return newFilePath;
 }
 

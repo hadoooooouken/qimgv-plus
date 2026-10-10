@@ -23,6 +23,7 @@ qt_add_qml_module(qimgv_style
         Button.qml
         CheckBox.qml
         ComboBox.qml
+        DialogButtonBox.qml
         DoubleSpinBox.qml
         IconGlyph.qml
         ItemDelegate.qml

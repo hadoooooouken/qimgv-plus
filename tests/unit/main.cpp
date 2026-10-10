@@ -29,5 +29,6 @@ int main(int argc, char **argv) {
   status |= runContextMenuTests(argc, argv);
   status |= runCropTests(argc, argv);
   status |= runSvgRasterizerTests(argc, argv);
+  status |= runDialogTests(argc, argv);
   return status;
 }

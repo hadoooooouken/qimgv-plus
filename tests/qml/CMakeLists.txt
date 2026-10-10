@@ -32,6 +32,8 @@ target_link_libraries(qimgv_qml_tests PRIVATE
     Qt6::Qml
     Qt6::Quick
     Qt6::QuickTest
+    # QTest key clicks into the dialog windows.
+    Qt6::Test
     qimgv_bridges
     qimgv_style
     qimgv_ui
