@@ -184,7 +184,7 @@ endif()
 # OpenEXR (Enabled with local build)
 set(OPENEXR_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/openexr/${QIMGV_DEPS_INSTALL_NAME}")
 set(IMATH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/Imath/${QIMGV_DEPS_INSTALL_NAME}")
-set(ZSTD_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../formats/zstd/${QIMGV_DEPS_INSTALL_NAME}")
+# ZSTD_INSTALL_DIR comes from qimgv/CMakeLists.txt.
 kimageformats_add_plugin(kimg_exr SOURCES exr.cpp scanlineconverter.cpp)
 target_include_directories(kimg_exr SYSTEM PRIVATE 
     "${OPENEXR_ROOT}/include"
@@ -198,7 +198,7 @@ target_link_libraries(kimg_exr PRIVATE
     "${OPENEXR_ROOT}/lib/Iex-3_5.lib"
     "${OPENEXR_ROOT}/lib/IlmThread-3_5.lib"
     "${IMATH_ROOT}/lib/Imath-3_2.lib"
-    "${ZSTD_ROOT}/lib/zstd.lib"
+    "${ZSTD_INSTALL_DIR}/lib/zstd.lib"
 )
 
 # LibRaw (Enabled with local build)

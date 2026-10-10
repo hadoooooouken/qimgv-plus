@@ -193,6 +193,20 @@ Files: `cmake/QimgvMsvcPolicy.cmake`, `CMakeLists.txt`, `qimgv/CMakeLists.txt`,
 6. Add presets `qimgv-x64-release-sse2` (`QIMGV_ISA=SSE2`, `exiv2_DIR` pointing to
    `install-sse2`).
 
+Implementation notes:
+
+- ISA-dependent paths must be normal variables derived from `QIMGV_ISA`, never `CACHE` entries.
+  A cache entry keeps the value of the first configure, so a later ISA change in the same build
+  directory would still link the other ISA's dependency. The former `QIMGV_ZSTD_ROOT` cache
+  entry was replaced by `ZSTD_INSTALL_DIR` in `qimgv/CMakeLists.txt`, which `utils/`, `kimg_exr`
+  and the `zstd.dll` deploy share. Existing build directories keep a stale, unused
+  `QIMGV_ZSTD_ROOT` cache entry; it has no effect.
+- `exiv2_DIR` from the presets takes precedence over the `find_package` hint, so
+  `qimgv/CMakeLists.txt` fails the configure when the exiv2 it found is not inside the current
+  ISA's install tree.
+- Use one build directory per ISA (one preset each). Changing `QIMGV_ISA` in an existing build
+  directory is not a supported workflow.
+
 Done when: an AVX2 configure produces a byte-for-byte equivalent command line to today's build,
 and an SSE2 configure points every dependency path to `install-sse2` and outputs to
 `release-sse2`.
@@ -219,13 +233,13 @@ Files: `build_scripts/msvc-release-policy.json`, `build_scripts/MsvcPolicy.ps1`,
    map. The SSE2 prefix is `formats/ffmpeg/ffmpeg-build-msvc-sse2`.
 5. LibRaw (nmake `buildfiles/release-x86_64`): the SSE2 build goes to
    `buildfiles/release-x86_64-sse2`, which `kimg_raw` and `shellex` already expect (Stage 1).
+6. libjpeg-turbo and zlib-ng have their own runtime SIMD dispatch. Build them with the plain SSE2
+   baseline and keep their SIMD options enabled.
 
 Stage 1 derives every ISA-specific folder from `QIMGV_DEPS_SUFFIX` (empty for AVX2, `-sse2` for
 SSE2): `install<suffix>`, `build<suffix>` (libavif, libjxl), `release-x86_64<suffix>` (LibRaw),
 `ffmpeg-build-msvc<suffix>`, and `build_scripts/{qtiff_jpeg,qjpeg_jpeg}/install<suffix>`. The
 scripts must produce exactly these names.
-6. libjpeg-turbo and zlib-ng have their own runtime SIMD dispatch. Build them with the plain SSE2
-   baseline and keep their SIMD options enabled.
 
 Done when: `rebuild-all.ps1` without `-Isa` behaves exactly as before, and `-Isa SSE2` fills only
 `install-sse2` / `build-sse2` folders.

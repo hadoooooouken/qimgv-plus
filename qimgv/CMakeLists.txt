@@ -75,6 +75,13 @@ else()
     message(SEND_ERROR "zlib-ng import library not found at: ${ZLIB_IMPORT_LIB} - run build_scripts/build_qtiff_jpeg.ps1 first")
 endif()
 
+# Shared zstd build: Blender previews (utils/), kimg_exr and the deployed
+# zstd.dll. Like ZLIB_INSTALL_DIR, this is the single source of truth for the
+# zstd install path and must be set before the add_subdirectory() calls below.
+# It is a normal variable on purpose: a cache entry would keep the path of the
+# first configured ISA.
+set(ZSTD_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zstd/${QIMGV_DEPS_INSTALL_NAME}")
+
 # exiv2 is built from source as a static library by build_scripts/build_exiv2.ps1
 # (Release and Debug in one install prefix). Its package config resolves the
 # private ZLIB dependency of a static build with find_dependency(ZLIB), which
@@ -311,7 +318,7 @@ if(WIN32)
     endif()
 
     # 9c. Copy Zstandard shared library for Blender .blend previews
-    set(ZSTD_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zstd/${QIMGV_DEPS_INSTALL_NAME}/bin/zstd.dll")
+    set(ZSTD_DLL_PATH "${ZSTD_INSTALL_DIR}/bin/zstd.dll")
     if(EXISTS "${ZSTD_DLL_PATH}")
         add_custom_command(TARGET qimgv-plus POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ZSTD_DLL_PATH}" "$<TARGET_FILE_DIR:qimgv-plus>/"

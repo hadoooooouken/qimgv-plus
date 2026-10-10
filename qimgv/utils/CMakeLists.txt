@@ -1,15 +1,14 @@
 ## SOURCES FOR QIMGV UTILITY CLASSES
 
-set(QIMGV_ZSTD_ROOT "${CMAKE_SOURCE_DIR}/formats/zstd/${QIMGV_DEPS_INSTALL_NAME}" CACHE PATH
-    "Path to the local zstd installation used for Blender previews")
-set(QIMGV_ZSTD_INCLUDE_DIR "${QIMGV_ZSTD_ROOT}/include")
-set(QIMGV_ZSTD_LIBRARY "${QIMGV_ZSTD_ROOT}/lib/zstd.lib")
-set(QIMGV_ZSTD_RUNTIME "${QIMGV_ZSTD_ROOT}/bin/zstd.dll")
+# ZSTD_INSTALL_DIR comes from qimgv/CMakeLists.txt.
+set(QIMGV_ZSTD_INCLUDE_DIR "${ZSTD_INSTALL_DIR}/include")
+set(QIMGV_ZSTD_LIBRARY "${ZSTD_INSTALL_DIR}/lib/zstd.lib")
+set(QIMGV_ZSTD_RUNTIME "${ZSTD_INSTALL_DIR}/bin/zstd.dll")
 
 if(NOT EXISTS "${QIMGV_ZSTD_INCLUDE_DIR}/zstd.h"
    OR NOT EXISTS "${QIMGV_ZSTD_LIBRARY}"
    OR NOT EXISTS "${QIMGV_ZSTD_RUNTIME}")
-    message(FATAL_ERROR "zstd shared build not found under ${QIMGV_ZSTD_ROOT}")
+    message(FATAL_ERROR "zstd shared build not found under ${ZSTD_INSTALL_DIR}")
 endif()
 
 target_include_directories(qimgv-plus PRIVATE "${QIMGV_ZSTD_INCLUDE_DIR}")
