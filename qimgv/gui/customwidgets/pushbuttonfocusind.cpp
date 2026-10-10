@@ -26,7 +26,6 @@ void PushButtonFocusInd::mousePressEvent(QMouseEvent *event) {
 void PushButtonFocusInd::mouseReleaseEvent(QMouseEvent *event) {
     if(event->button() == Qt::RightButton) {
         event->accept();
-        emit rightClicked();
     } else {
         QPushButton::mouseReleaseEvent(event);
     }

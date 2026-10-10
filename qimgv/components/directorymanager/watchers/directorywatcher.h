@@ -25,9 +25,6 @@ signals:
     void fileRenamed(const QString& old, const QString& now);
     void fileModified(const QString& filePath);
 
-    void observingStarted();
-    void observingStopped();
-
 protected:
     DirectoryWatcher(DirectoryWatcherPrivate *ptr);
     DirectoryWatcherPrivate* d_ptr;

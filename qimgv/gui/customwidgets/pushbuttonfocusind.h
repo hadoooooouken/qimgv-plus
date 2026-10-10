@@ -12,7 +12,6 @@ public:
 
 signals:
     void rightPressed();
-    void rightClicked();
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event);

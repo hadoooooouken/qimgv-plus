@@ -15,8 +15,6 @@ public slots:
     virtual void setRunning(bool running);
 
 signals:
-    void error(const QString& errorMessage);
-    void started();
     void finished();
 
 protected:

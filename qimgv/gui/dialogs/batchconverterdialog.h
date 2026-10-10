@@ -66,9 +66,6 @@ public:
     double value() const;
     void setValue(double val);
 
-signals:
-    void valueChanged(double val);
-
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
 

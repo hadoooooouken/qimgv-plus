@@ -216,8 +216,6 @@ void LinkedSliderSpin::setValue(double val) {
     spinBox->blockSignals(true);
     spinBox->setValue(val);
     spinBox->blockSignals(false);
-
-    emit valueChanged(val);
 }
 
 void LinkedSliderSpin::updateSpinBox(int val) {
@@ -226,7 +224,6 @@ void LinkedSliderSpin::updateSpinBox(int val) {
         spinBox->blockSignals(true);
         spinBox->setValue(realVal);
         spinBox->blockSignals(false);
-        emit valueChanged(realVal);
     }
 }
 
@@ -236,7 +233,6 @@ void LinkedSliderSpin::updateSlider(double val) {
         slider->blockSignals(true);
         slider->setValue(sliderVal);
         slider->blockSignals(false);
-        emit valueChanged(val);
     }
 }
 

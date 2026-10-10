@@ -52,7 +52,6 @@ signals:
     void visibleThumbnailsReady();
     void filesystemViewReady();
     void draggedOut() override;
-    void draggedToBookmarks(QList<int>) override;
     void sortingSelected(SortingMode);
     void folderSortingSelected(SortingMode);
     void formatFilterSelected(QStringList);

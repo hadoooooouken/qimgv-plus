@@ -17,9 +17,6 @@ public:
 
     int frameCount() const override;
 
-signals:
-    void frameChanged(QPixmap*);
-
 private:
     void load();
     QSize mSize;

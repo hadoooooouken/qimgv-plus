@@ -32,7 +32,6 @@ public:
     void clearSelection();
 
 signals:
-    void positionChanged(float x, float y);
     void selectionChanged(QRect);
     void escPressed();
     void cropDefault();

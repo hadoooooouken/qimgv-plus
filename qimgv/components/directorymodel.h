@@ -91,7 +91,6 @@ signals:
     void loaded(QString filePath);
     void loadFailed(const QString &path);
     void sortingChanged(SortingMode);
-    void indexChanged(int oldIndex, int index);
     void imageReady(std::shared_ptr<Image> img, const QString&);
     void imageUpdated(QString filePath);
     void scalingFinished(QImage result, ScalerRequest req);

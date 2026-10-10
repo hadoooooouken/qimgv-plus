@@ -124,7 +124,6 @@ void WindowsWorker::processNotifications(const BYTE* buffer) {
 
 void WindowsWorker::run() {
     isRunning = true;
-    emit started(); // NB: previously never emitted — see note below.
 
     for (;;) {
         DWORD bytesTransferred = 0;
@@ -241,5 +240,5 @@ void WindowsWorker::run() {
     }
 
     isRunning = false;
-    emit finished(); // NB: previously never emitted — see note below.
+    emit finished();
 }

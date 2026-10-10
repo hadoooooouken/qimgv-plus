@@ -37,7 +37,6 @@ public:
     virtual void itemActivated(int) = 0;
     virtual void thumbnailsRequested(QList<int>, int, bool, bool) = 0;
     virtual void draggedOut() = 0;
-    virtual void draggedToBookmarks(QList<int>) = 0;
     virtual void draggedOver(int) = 0;
     virtual void droppedInto(const QMimeData*, QObject*, int, Qt::DropAction) = 0;
     virtual void backRequested() = 0;

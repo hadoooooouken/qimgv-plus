@@ -305,7 +305,6 @@ void ImageViewerV2::startAnimation() {
   if (movie && movie->frameCount() > 1) {
     stopAnimation();
     mAnimationActive = true;
-    emit animationPaused(false);
     animationTimer->start(movie->nextFrameDelay());
   }
 }
@@ -313,7 +312,6 @@ void ImageViewerV2::startAnimation() {
 void ImageViewerV2::stopAnimation() {
   if (movie) {
     mAnimationActive = false;
-    emit animationPaused(true);
     animationTimer->stop();
   }
 }
@@ -343,7 +341,7 @@ void ImageViewerV2::onAnimationTimer() {
   }
 }
 
-void ImageViewerV2::onMovieFrameChanged(int frameNumber) {
+void ImageViewerV2::onMovieFrameChanged() {
   if (!movie)
     return;
 
@@ -354,11 +352,8 @@ void ImageViewerV2::onMovieFrameChanged(int frameNumber) {
   bool isFirstFrame = (image == nullptr || image->isNull());
 
   updateImage(std::make_shared<const QImage>(frameImg));
-  emit frameChanged(frameNumber);
 
   if (isFirstFrame) {
-    emit durationChanged(movie->frameCount());
-
     updateMinScale();
     if (!keepFitMode || imageFitMode == FIT_FREE)
       imageFitMode = imageFitModeDefault;

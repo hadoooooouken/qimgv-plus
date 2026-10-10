@@ -77,13 +77,9 @@ signals:
     void scalingRequested(QSize, ScalingFilter);
     void renderingSettled();
     void scaleChanged(qreal);
-    void sourceSizeChanged(QSize);
     void imageAreaChanged(QRect);
     void draggedOut();
     void playbackFinished();
-    void animationPaused(bool);
-    void frameChanged(int);
-    void durationChanged(int);
     void nextImageRequested();
     void prevImageRequested();
 
@@ -206,7 +202,7 @@ private:
     void requestSettledFramePresentation();
     void onViewportFrameSwapped();
     void setRenderingSettled(bool settled);
-    void onMovieFrameChanged(int frameNumber);
+    void onMovieFrameChanged();
 
     QTimeLine *scrollTimeLineX, *scrollTimeLineY;
     QTimeLine *zoomTimeLine;
