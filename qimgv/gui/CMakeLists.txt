@@ -53,7 +53,6 @@ target_sources(qimgv-plus PRIVATE
     overlays/cassettingsoverlay.cpp
     overlays/coloradjustmentsoverlay.cpp
     overlays/coloradjustmentsoverlayproxy.cpp
-    overlays/mapoverlay.cpp
     overlays/renameoverlay.cpp
     overlays/saveconfirmoverlay.cpp
     overlays/zoomindicatoroverlay.cpp
