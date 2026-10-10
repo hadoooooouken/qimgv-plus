@@ -6,6 +6,24 @@
 #define MyAppIconName "qimgv.ico"
 #define MyAppCLSID "{{978A692C-CD23-4A59-8664-98F1E1B9200B}"
 
+; Target ISA of the packaged build: iscc qimgv-plus.iss (AVX2) or iscc /DIsa=SSE2 qimgv-plus.iss
+#ifndef Isa
+  #define Isa "AVX2"
+#endif
+
+#define MyAvx2OutputBaseFilename "qimgv-plus-setup"
+#define MySse2OutputBaseFilename "qimgv-plus-setup-sse2"
+
+#if Isa == "AVX2"
+  #define MyReleaseDir "..\release"
+  #define MyOutputBaseFilename MyAvx2OutputBaseFilename
+#elif Isa == "SSE2"
+  #define MyReleaseDir "..\release-sse2"
+  #define MyOutputBaseFilename MySse2OutputBaseFilename
+#else
+  #error Unsupported Isa value. Use AVX2 or SSE2.
+#endif
+
 [Setup]
 AppId={{9F57BDCD-C82D-4EBD-93F9-8260CDA2EA53}
 AppName={#MyAppName}
@@ -20,7 +38,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=..\INSTALL
-OutputBaseFilename=qimgv-plus-setup
+OutputBaseFilename={#MyOutputBaseFilename}
 SetupIconFile=res\icons\common\logo\app\{#MyAppIconName}
 Compression=lzma2/max
 SolidCompression=yes
@@ -92,15 +110,17 @@ japanese.ThumbnailsTaskDesc=Windowsエクスプローラーでサムネイルを
 turkish.ThumbnailsTaskDesc=Windows Gezgini'nde küçük resimler oluştur
 russian.ThumbnailsTaskDesc=Создавать эскизы в Проводнике Windows
 
-; AVX2 error messages
-english.AVX2ErrorMsg=Installation impossible: your processor does not support AVX2.%n%nThis version requires AVX2 to work on Windows 10/11.
-ukrainian.AVX2ErrorMsg=Встановлення неможливе: ваш процесор не підтримує AVX2.%n%nЦя версія потребує AVX2 для роботи на Windows 10/11.
-german.AVX2ErrorMsg=Installation unmöglich: Ihr Prozessor unterstützt kein AVX2.%n%nDiese Version benötigt AVX2 für Windows 10/11.
-spanish.AVX2ErrorMsg=Instalación imposible: su procesador no soporta AVX2.%n%nEsta versión requiere AVX2 para funcionar en Windows 10/11.
-french.AVX2ErrorMsg=Installation impossible : votre processeur ne supporte pas AVX2.%n%nCette version nécessite AVX2 pour fonctionner sous Windows 10/11.
-japanese.AVX2ErrorMsg=インストールできません: お使いのプロセッサはAVX2をサポートしていません。%n%nこのバージョンはWindows 10/11でAVX2を必要とします。
-turkish.AVX2ErrorMsg=Kurulum imkansız: işlemciniz AVX2'yi desteklemiyor.%n%nBu sürüm Windows 10/11 üzerinde çalışmak için AVX2 gerektirir.
-russian.AVX2ErrorMsg=Установка невозможна: ваш процессор не поддерживает AVX2.%n%nЭта версия требует AVX2 для работы на Windows 10/11.
+; AVX2 error messages (AVX2 installer only)
+#if Isa == "AVX2"
+english.AVX2ErrorMsg=Installation impossible: your processor does not support AVX2.%n%nThis version requires AVX2. Please download the SSE2 version installer ({#MySse2OutputBaseFilename}.exe) instead.
+ukrainian.AVX2ErrorMsg=Встановлення неможливе: ваш процесор не підтримує AVX2.%n%nЦя версія потребує AVX2. Завантажте натомість інсталятор версії SSE2 ({#MySse2OutputBaseFilename}.exe).
+german.AVX2ErrorMsg=Installation unmöglich: Ihr Prozessor unterstützt kein AVX2.%n%nDiese Version benötigt AVX2. Bitte laden Sie stattdessen das Installationsprogramm der SSE2-Version ({#MySse2OutputBaseFilename}.exe) herunter.
+spanish.AVX2ErrorMsg=Instalación imposible: su procesador no soporta AVX2.%n%nEsta versión requiere AVX2. Descargue en su lugar el instalador de la versión SSE2 ({#MySse2OutputBaseFilename}.exe).
+french.AVX2ErrorMsg=Installation impossible : votre processeur ne supporte pas AVX2.%n%nCette version nécessite AVX2. Veuillez plutôt télécharger le programme d'installation de la version SSE2 ({#MySse2OutputBaseFilename}.exe).
+japanese.AVX2ErrorMsg=インストールできません: お使いのプロセッサはAVX2をサポートしていません。%n%nこのバージョンにはAVX2が必要です。代わりにSSE2版のインストーラー ({#MySse2OutputBaseFilename}.exe) をダウンロードしてください。
+turkish.AVX2ErrorMsg=Kurulum imkansız: işlemciniz AVX2'yi desteklemiyor.%n%nBu sürüm AVX2 gerektirir. Bunun yerine SSE2 sürümünün yükleyicisini ({#MySse2OutputBaseFilename}.exe) indirin.
+russian.AVX2ErrorMsg=Установка невозможна: ваш процессор не поддерживает AVX2.%n%nЭта версия требует AVX2. Загрузите вместо неё установщик версии SSE2 ({#MySse2OutputBaseFilename}.exe).
+#endif
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
@@ -109,11 +129,11 @@ Name: "compact"; Description: "{cm:CompactFilesTaskDesc}"; GroupDescription: "{c
 Name: "thumbnails"; Description: "{cm:ThumbnailsTaskDesc}"; GroupDescription: "{cm:GroupAdditionalOptions}"
 
 [Files]
-Source: "..\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs uninsrestartdelete; Excludes: "{#MyAppExeName},cache\*,conf\*,thumbnails\*"
+Source: "{#MyReleaseDir}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyReleaseDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs uninsrestartdelete; Excludes: "{#MyAppExeName},cache\*,conf\*,thumbnails\*"
 Source: "res\icons\common\logo\app\{#MyAppIconName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "res\filetypes\*"; DestDir: "{app}\res\filetypes"; Flags: ignoreversion
-Source: "..\release\qimgvshellex.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
+Source: "{#MyReleaseDir}\qimgvshellex.dll"; DestDir: "{app}"; Flags: ignoreversion uninsrestartdelete
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppIconName}"
@@ -524,7 +544,9 @@ Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.jph\ShellEx\{{E357F
 
 [Code]
 const
+#if Isa == "AVX2"
   PF_AVX2_INSTRUCTIONS_AVAILABLE = 40;
+#endif
   ThumbnailProviderClassId = '{978A692C-CD23-4A59-8664-98F1E1B9200B}';
   ThumbnailProviderDllName = 'qimgvshellex.dll';
   ThumbnailHandlerCategory = '{E357FCCD-A995-4576-B01F-234630154E96}';
@@ -559,6 +581,7 @@ var
   ForeignThumbnailHandlerPaths: array of String;
   ForeignThumbnailHandlerProviders: array of String;
 
+#if Isa == "AVX2"
 function IsProcessorFeaturePresent(Feature: Integer): Boolean;
   external 'IsProcessorFeaturePresent@kernel32.dll stdcall';
 
@@ -568,6 +591,7 @@ begin
   if not Result then
     MsgBox(CustomMessage('AVX2ErrorMsg'), mbError, MB_OK);
 end;
+#endif
 
 function RemoveOwnedThumbnailHandler(RootKey: HKEY;
   const AssociationPath: String): Boolean;
