@@ -164,26 +164,22 @@ void ScriptManager::processArguments(QStringList &cmd, std::shared_ptr<Image> im
 QStringList ScriptManager::splitCommandLine(const QString &cmdLine) {
     QStringList list;
     QString arg;
-    bool escape = false;
     enum { Idle, Arg, QuotedArg } state = Idle;
+    // Backslashes are kept literally so that Windows paths survive splitting.
     for (QChar const c : cmdLine) {
-        //if(!escape && c == '\\') {
-        //    escape = true;
-        //    continue;
-        //}
         switch (state) {
         case Idle:
-            if(!escape && c == '"')
+            if(c == '"')
                 state = QuotedArg;
-            else if (escape || !c.isSpace()) {
+            else if (!c.isSpace()) {
                 arg += c;
                 state = Arg;
             }
             break;
         case Arg:
-            if(!escape && c == '"')
+            if(c == '"')
                 state = QuotedArg;
-            else if(escape || !c.isSpace())
+            else if(!c.isSpace())
                 arg += c;
             else {
                 list << arg;
@@ -192,13 +188,12 @@ QStringList ScriptManager::splitCommandLine(const QString &cmdLine) {
             }
             break;
         case QuotedArg:
-            if(!escape && c == '"')
+            if(c == '"')
                 state = arg.isEmpty() ? Idle : Arg;
             else
                 arg += c;
             break;
         }
-        escape = false;
     }
     if(!arg.isEmpty())
         list << arg;

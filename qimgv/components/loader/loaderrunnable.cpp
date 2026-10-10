@@ -1,7 +1,5 @@
 #include "loaderrunnable.h"
 
-#include <QElapsedTimer>
-
 #include <utility>
 
 void LoaderTaskNotifier::reportCompletion(ImageLoadCompletion completion) {
@@ -20,11 +18,8 @@ LoaderRunnable::~LoaderRunnable() {
 }
 
 void LoaderRunnable::run() {
-    //QElapsedTimer t;
-    //t.start();
     completion.image =
         ImageFactory::createImage(request.path, request.decodeContext);
-    //qDebug() << "L: " << t.elapsed();
 
     // Warm the lazy DocumentInfo cache (exif / ComfyUI generation-info) here,
     // on the loader pool worker thread, instead of leaving the first, expensive

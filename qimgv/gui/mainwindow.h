@@ -161,7 +161,6 @@ protected:
   void leaveEvent(QEvent *event);
   void showEvent(QShowEvent *event) override;
 
-  // bool focusNextPrevChild(bool);
 signals:
   void opened(QString);
   void fullscreenStateChanged(bool);

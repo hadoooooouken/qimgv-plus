@@ -1448,8 +1448,6 @@ void ImageViewerV2::scrollSmooth(int dx, int dy) {
     }
     if (scrollTimeLineX->state() == QTimeLine::Running) {
       int oldEndFrame = scrollTimeLineX->endFrame();
-      // if(oldEndFrame == currentYPos)
-      //     createScrollTimeLine();
       if (!redirect)
         newEndFrame = oldEndFrame + static_cast<int>(dx);
     }
@@ -1470,8 +1468,6 @@ void ImageViewerV2::scrollSmooth(int dx, int dy) {
     }
     if (scrollTimeLineY->state() == QTimeLine::Running) {
       int oldEndFrame = scrollTimeLineY->endFrame();
-      // if(oldEndFrame == currentYPos)
-      //     createScrollTimeLine();
       if (!redirect)
         newEndFrame = oldEndFrame + static_cast<int>(dy);
     }

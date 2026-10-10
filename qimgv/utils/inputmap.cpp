@@ -41,7 +41,6 @@ void InputMap::initKeyMap() {
     keyMap.insert( 68 , "F10" );
     keyMap.insert( 87 , "F11" );
     keyMap.insert( 88 , "F12" );
-    //keyMap.insert(  , "Print" );
     keyMap.insert( 70 , "ScrollLock" );
     keyMap.insert( 69 , "Pause" );
 
@@ -138,10 +137,7 @@ void InputMap::initKeyMap() {
     keyMap.insert( 83 , "." );
 
     // special
-    //keyMap.insert( ?? , "Wake Up" ); // "Fn" key on thinkpad
     keyMap.insert( 86 , "<" ); // near left shift (iso layout)
-    //keyMap.insert(??, "PgBack");
-    //keyMap.insert(??, "PgForward");
 
     keyMap.insert( 57426 , "Ins" );
     keyMap.insert( 57415 , "Home" );

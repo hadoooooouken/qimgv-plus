@@ -1313,11 +1313,6 @@ void MW::leaveEvent(QEvent *event) {
     docWidget->hideFloatingPanel(true);
 }
 
-// block native tab-switching so we can use it in shortcuts
-//bool MW::focusNextPrevChild(bool) {
-//    return false;
-//}
-
 void MW::togglePanorama() { viewerWidget->togglePanorama(); }
 
 void MW::showEvent(QShowEvent *event) {
