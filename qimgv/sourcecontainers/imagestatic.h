@@ -20,7 +20,6 @@ public:
     ~ImageStatic();
 
     std::unique_ptr<QPixmap> getPixmap();
-    std::shared_ptr<const QImage> getSourceImage();
     std::shared_ptr<const QImage> getImage();
     std::shared_ptr<const QImage> getDisplayImage() override;
     // Changes whenever the effective image content is replaced or discarded.

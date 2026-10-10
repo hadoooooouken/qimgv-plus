@@ -39,14 +39,6 @@ int WatcherEvent::timerId() const {
     return mTimerId;
 }
 
-void WatcherEvent::setTimerId(int timerId) {
-    mTimerId = timerId;
-}
-
 uint WatcherEvent::cookie() const {
     return mCookie;
-}
-
-void WatcherEvent::setCookie(uint cookie) {
-    mCookie = cookie;
 }

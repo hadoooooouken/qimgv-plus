@@ -61,7 +61,6 @@ public:
     bool scaledImageFits() const;
     virtual ScalingFilter scalingFilter() const;
     virtual QWidget *widget();
-    bool hasAnimation() const;
 
     QSize scaledSizeR() const;
 
@@ -69,10 +68,8 @@ public:
     virtual QRect visibleOriginalImageRect() const;
     QRect visibleImageViewportRect() const;
     virtual QPixmap currentScaledPixmapCopy() const;
-    QImage grabViewportImage() const;
     float getDpr() const;
 
-    void pauseResume();
     void enableDrags();
     void disableDrags();
 
@@ -120,10 +117,6 @@ public slots:
     void toggleTransparencyGrid();
     void togglePanorama();
 
-    void nextFrame();
-    void prevFrame();
-
-    bool showAnimationFrame(int frame);
     void onFullscreenModeChanged(bool mode);
     void toggleLockZoom();
     bool lockZoomEnabled();

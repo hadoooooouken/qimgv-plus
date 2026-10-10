@@ -65,7 +65,6 @@ public:
     void onRunnableCreated();
     void onRunnableDestroyed();
     void enableSelfDestruct();
-    int inFlightTasksCount() const { return m_inFlightTasksCount.load(); }
 
     bool isRunning() const { return m_isConverting; }
     bool isCancelling() const { return m_isCancelling; }

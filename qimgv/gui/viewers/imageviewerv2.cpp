@@ -318,15 +318,6 @@ void ImageViewerV2::stopAnimation() {
   }
 }
 
-void ImageViewerV2::pauseResume() {
-  if (movie) {
-    if (mAnimationActive)
-      stopAnimation();
-    else
-      startAnimation();
-  }
-}
-
 void ImageViewerV2::enableDrags() { dragsEnabled = true; }
 
 void ImageViewerV2::disableDrags() { dragsEnabled = false; }
@@ -350,49 +341,6 @@ void ImageViewerV2::onAnimationTimer() {
       return;
     }
   }
-}
-
-void ImageViewerV2::nextFrame() {
-  if (!movie) {
-    return;
-  } else if (movie->currentFrameNumber() == movie->frameCount() - 1) {
-    showAnimationFrame(0);
-  } else {
-    showAnimationFrame(movie->currentFrameNumber() + 1);
-  }
-}
-
-void ImageViewerV2::prevFrame() {
-  if (!movie) {
-    return;
-  } else if (movie->currentFrameNumber() == 0) {
-    showAnimationFrame(movie->frameCount() - 1);
-  } else {
-    showAnimationFrame(movie->currentFrameNumber() - 1);
-  }
-}
-
-bool ImageViewerV2::showAnimationFrame(int frame) {
-  if (!movie || frame < 0 || frame >= movie->frameCount())
-    return false;
-  if (movie->currentFrameNumber() == frame)
-    return true;
-
-  bool blocked = movie->blockSignals(true);
-
-  if (frame < movie->currentFrameNumber())
-    movie->jumpToFrame(0);
-  while (frame != movie->currentFrameNumber()) {
-    if (!movie->jumpToNextFrame()) {
-      qWarning() << "[Error] QMovie:" << movie->lastErrorString();
-      break;
-    }
-  }
-
-  movie->blockSignals(blocked);
-
-  onMovieFrameChanged(movie->currentFrameNumber());
-  return true;
 }
 
 void ImageViewerV2::onMovieFrameChanged(int frameNumber) {
@@ -806,8 +754,6 @@ bool ImageViewerV2::scaledImageFits() const {
 ScalingFilter ImageViewerV2::scalingFilter() const { return mScalingFilter; }
 
 QWidget *ImageViewerV2::widget() { return this; }
-
-bool ImageViewerV2::hasAnimation() const { return (movie != nullptr); }
 
 //  Right button zooming / dragging logic
 //  mouseMoveStartPos: stores the previous mouseMoveEvent() position,
@@ -1952,22 +1898,6 @@ QRect ImageViewerV2::visibleImageViewportRect() const {
   QPolygonF poly = mapFromScene(imageSceneRect);
   QRect rect = poly.boundingRect().toAlignedRect();
   return rect.intersected(viewport()->rect());
-}
-
-QImage ImageViewerV2::grabViewportImage() const {
-  QWidget *view = viewport();
-  if (!view || view->size().isEmpty())
-    return QImage();
-
-  QImage image(view->size() * devicePixelRatioF(), QImage::Format_ARGB32_Premultiplied);
-  image.setDevicePixelRatio(devicePixelRatioF());
-  image.fill(Qt::transparent);
-
-  QPainter painter(&image);
-  const_cast<ImageViewerV2 *>(this)->render(&painter);
-  painter.end();
-
-  return image;
 }
 
 float ImageViewerV2::getDpr() const { return dpr; }

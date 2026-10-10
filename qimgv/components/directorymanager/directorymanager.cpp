@@ -221,14 +221,6 @@ bool DirectoryManager::path_entry_compare_reverse(const FSEntry &e1, const FSEnt
     return collator.compare(e1.path, e2.path) > 0;
 };
 
-bool DirectoryManager::name_entry_compare(const FSEntry &e1, const FSEntry &e2) const {
-    return collator.compare(e1.name, e2.name) < 0;
-};
-
-bool DirectoryManager::name_entry_compare_reverse(const FSEntry &e1, const FSEntry &e2) const {
-    return collator.compare(e1.name, e2.name) > 0;
-};
-
 bool DirectoryManager::date_entry_compare(const FSEntry& e1, const FSEntry& e2) const {
     return e1.modifyTime < e2.modifyTime;
 }
@@ -514,22 +506,6 @@ QString DirectoryManager::nextOfFile(QString filePath) const {
     return nextFilePath;
 }
 
-QString DirectoryManager::prevOfDir(QString dirPath) const {
-    QString prevDirectoryPath = "";
-    int currentIndex = indexOfDir(dirPath);
-    if(currentIndex > 0)
-        prevDirectoryPath = dirEntryVec.at(currentIndex - 1).path;
-    return prevDirectoryPath;
-}
-
-QString DirectoryManager::nextOfDir(QString dirPath) const {
-    QString nextDirectoryPath = "";
-    int currentIndex = indexOfDir(dirPath);
-    if(currentIndex >= 0 && currentIndex < dirEntryVec.size() - 1)
-        nextDirectoryPath = dirEntryVec.at(currentIndex + 1).path;
-    return nextDirectoryPath;
-}
-
 std::expected<std::vector<FSEntry>, std::error_code> DirectoryManager::siblingDirs(const QString &dirPath) const {
     if (dirPath.isEmpty())
         return std::vector<FSEntry>{};
@@ -720,16 +696,6 @@ bool DirectoryManager::containsDir(QString dirPath) const {
 // ##############################################################
 // ###################### PRIVATE METHODS #######################
 // ##############################################################
-void DirectoryManager::loadEntryList(QString directoryPath, bool recursive) {
-    dirEntryVec.clear();
-    fileEntryVec.clear();
-    if(recursive) { // load files only
-        addEntriesFromDirectoryRecursive(fileEntryVec, directoryPath);
-    } else { // load dirs & files
-        addEntriesFromDirectory(fileEntryVec, directoryPath);
-    }
-}
-
 // both directories & files
 void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, QString directoryPath) {
     QRegularExpressionMatch match;

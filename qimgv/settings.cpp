@@ -501,22 +501,8 @@ void Settings::setColorScheme(ColorScheme scheme) {
   loadStylesheet();
 }
 //------------------------------------------------------------------------------
-void Settings::setColorTid(int tid) { mColorScheme.tid = tid; }
-//------------------------------------------------------------------------------
 QList<QByteArray> Settings::supportedFormats() {
   return FormatRegistry::supportedExtensions();
-}
-//------------------------------------------------------------------------------
-// (for open/save dialogs, as a single string)
-// example:  "Images (*.jpg, *.png)"
-QString Settings::supportedFormatsFilter() {
-  QString filters;
-  auto formats = supportedFormats();
-  filters.append("Supported files (");
-  for (int i = 0; i < formats.count(); i++)
-    filters.append("*." + QString(formats.at(i)) + " ");
-  filters.append(")");
-  return filters;
 }
 //------------------------------------------------------------------------------
 QString Settings::supportedFormatsRegex() {
@@ -540,14 +526,6 @@ QStringList Settings::supportedMimeTypes() {
   return filters;
 }
 //------------------------------------------------------------------------------
-bool Settings::useSystemColorScheme() {
-  return settings->settingsConf->value("useSystemColorScheme", false).toBool();
-}
-
-void Settings::setUseSystemColorScheme(bool mode) {
-  settings->settingsConf->setValue("useSystemColorScheme", mode);
-}
-
 ThemeMode Settings::themeMode() {
   int mode = settings->settingsConf->value("themeMode", static_cast<int>(THEME_AUTO)).toInt();
   if (mode < 0 || mode > 2)

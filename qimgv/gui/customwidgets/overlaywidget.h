@@ -36,8 +36,6 @@ public:
     ~OverlayWidget();
     void setHorizontalMargin(int);
     void setVerticalMargin(int);
-    int horizontalMargin();
-    int verticalMargin();
     void setPosition(FloatingWidgetPosition pos);
     void setFadeDuration(int duration);
     void setFadeEnabled(bool mode);

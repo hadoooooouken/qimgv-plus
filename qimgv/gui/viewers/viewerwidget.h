@@ -70,8 +70,6 @@ private:
     float mSaturation = 1.0f;
     float mHue = 0.0f;
 
-    void disableImageViewer();
-
     bool eventFilter(QObject *object, QEvent *event);
 
 private slots:

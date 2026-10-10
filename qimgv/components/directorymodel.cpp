@@ -79,10 +79,6 @@ QString DirectoryModel::dirPathAt(int index) const {
     return dirManager.dirPathAt(index);
 }
 
-bool DirectoryModel::autoRefresh() {
-    return dirManager.fileWatcherActive();
-}
-
 FileListSource DirectoryModel::source() {
     return dirManager.source();
 }
@@ -381,10 +377,6 @@ bool DirectoryModel::isLoaded(int index) const {
 
 bool DirectoryModel::isLoaded(QString filePath) const {
     return cache.contains(filePath);
-}
-
-std::shared_ptr<Image> DirectoryModel::getImageAt(int index) {
-    return getImage(filePathAt(index));
 }
 
 // returns cached image

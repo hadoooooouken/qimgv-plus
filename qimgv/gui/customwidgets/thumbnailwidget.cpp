@@ -114,10 +114,6 @@ QRectF ThumbnailWidget::geometry() const {
     return QRectF(QGraphicsWidget::geometry().topLeft(), boundingRect().size());
 }
 
-QSizeF ThumbnailWidget::effectiveSizeHint(Qt::SizeHint which, const QSizeF &constraint) const {
-    return sizeHint(which, constraint);
-}
-
 void ThumbnailWidget::setThumbnail(std::shared_ptr<Thumbnail> _thumbnail) {
     if(_thumbnail) {
         thumbnail = _thumbnail;

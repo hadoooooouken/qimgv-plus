@@ -36,7 +36,6 @@ public:
     void setHighlighted(bool mode);
     bool isHighlighted();
     void setUseThumbPanelColors(bool mode) { mUseThumbPanelColors = mode; }
-    bool isUseThumbPanelColors() const { return mUseThumbPanelColors; }
     void setDropHovered(bool mode);
     bool isDropHovered();
 
@@ -49,7 +48,6 @@ public:
     void setGeometry(const QRectF &rect) override;
 
     virtual QRectF geometry() const;
-    QSizeF effectiveSizeHint(Qt::SizeHint which, const QSizeF &constraint = QSizeF()) const;
     void setThumbStyle(ThumbnailStyle _style);
     void setPadding(int _padding);
     void setMargins(int _marginX, int _marginY);

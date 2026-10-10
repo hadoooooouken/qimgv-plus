@@ -44,10 +44,6 @@ void ActionButton::setTriggerMode(TriggerMode mode) {
     mTriggerMode = mode;
 }
 
-TriggerMode ActionButton::triggerMode() {
-    return mTriggerMode;
-}
-
 void ActionButton::mousePressEvent(QMouseEvent *event) {
     IconButton::mousePressEvent(event);
     if(mTriggerMode == TriggerMode::PressTrigger && event->button() == Qt::LeftButton)

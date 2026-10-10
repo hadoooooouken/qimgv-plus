@@ -161,15 +161,6 @@ void ViewerWidget::enableImageViewer() {
     }
 }
 
-void ViewerWidget::disableImageViewer() {
-    if(currentWidget == IMAGEVIEWER) {
-        currentWidget = UNSET;
-        imageViewer->closeImage();
-        imageViewer->hide();
-        zoomIndicator->hide();
-    }
-}
-
 void ViewerWidget::onScaleChanged(qreal scale) {
     emit scaleChanged(scale);
     if(!this->isVisible())

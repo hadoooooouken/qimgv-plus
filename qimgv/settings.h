@@ -41,7 +41,6 @@ public:
   ~Settings();
   QStringList supportedMimeTypes();
   QList<QByteArray> supportedFormats();
-  QString supportedFormatsFilter();
   QString supportedFormatsRegex();
   int panelPreviewsSize();
   void setPanelPreviewsSize(int size);
@@ -194,10 +193,6 @@ public:
 
   const ColorScheme &colorScheme();
   void setColorScheme(ColorScheme scheme);
-  void setColorTid(int tid);
-
-  bool useSystemColorScheme();
-  void setUseSystemColorScheme(bool mode);
 
   ThemeMode themeMode();
   void setThemeMode(ThemeMode mode);

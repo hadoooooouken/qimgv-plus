@@ -52,7 +52,6 @@ public:
 
     bool loaderBusy() const;
 
-    std::shared_ptr<Image> getImageAt(int index);
     std::shared_ptr<Image> getImage(QString filePath);
 
     void updateImage(QString filePath, std::shared_ptr<Image> img);
@@ -74,8 +73,6 @@ public:
     int totalCount() const;
     QString dirNameAt(int index) const;
     QString dirPathAt(int index) const;
-
-    bool autoRefresh();
 
     [[nodiscard]] ImageSaveResult saveFile(const QString &filePath);
     [[nodiscard]] ImageSaveResult saveFile(const QString &filePath,

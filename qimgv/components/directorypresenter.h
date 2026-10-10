@@ -90,7 +90,6 @@ signals:
     void selectionExpansionFailed(QString errorMessage);
 
 public slots:
-    void disconnectView();
     void reloadModel();
 
 private slots:

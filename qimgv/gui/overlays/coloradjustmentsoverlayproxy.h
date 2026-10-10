@@ -14,7 +14,6 @@ public:
     void hide();
     bool isHidden() const;
 
-    ColorAdjustmentsOverlay *overlayWidget();
     void setCustomPosition(const QPoint &globalPos);
 
 signals:

@@ -65,8 +65,6 @@ public:
     QString fileNameAt(int index) const;
     QString prevOfFile(QString filePath) const;
     QString nextOfFile(QString filePath) const;
-    QString prevOfDir(QString filePath) const;
-    QString nextOfDir(QString filePath) const;
     std::expected<QString, std::error_code> nextSiblingDir(const QString &dirPath) const;
     std::expected<QString, std::error_code> prevSiblingDir(const QString &dirPath) const;
     void sortEntryLists();
@@ -185,12 +183,9 @@ private:
     QStringList mFormatFilter;
     QString mNameFilter;
     FileListSource mListSource;
-    void loadEntryList(QString directoryPath, bool recursive);
 
     bool path_entry_compare(const FSEntry &e1, const FSEntry &e2) const;
     bool path_entry_compare_reverse(const FSEntry &e1, const FSEntry &e2) const;
-    bool name_entry_compare(const FSEntry &e1, const FSEntry &e2) const;
-    bool name_entry_compare_reverse(const FSEntry &e1, const FSEntry &e2) const;
     bool date_entry_compare(const FSEntry &e1, const FSEntry &e2) const;
     bool date_entry_compare_reverse(const FSEntry &e1, const FSEntry &e2) const;
     CompareFunction compareFunction() const;

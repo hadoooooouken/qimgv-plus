@@ -72,7 +72,6 @@ public:
                                std::optional<bool> toneMapDependent,
                                bool toneMapEnabled, int toneMapOperator,
                                int toneMapWhiteLevel);
-    QString thumbnailPath(QString id);
     bool exists(QString id);
     [[nodiscard]] bool clear();
 

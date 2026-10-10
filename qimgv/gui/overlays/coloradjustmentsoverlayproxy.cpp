@@ -35,11 +35,6 @@ bool ColorAdjustmentsOverlayProxy::isHidden() const {
     return overlay ? overlay->isHidden() : true;
 }
 
-ColorAdjustmentsOverlay *ColorAdjustmentsOverlayProxy::overlayWidget() {
-    init();
-    return overlay;
-}
-
 void ColorAdjustmentsOverlayProxy::setCustomPosition(const QPoint &globalPos) {
     init();
     if (overlay) {

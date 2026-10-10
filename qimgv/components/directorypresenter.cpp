@@ -175,9 +175,6 @@ void DirectoryPresenter::populateView() {
   selectAndFocus(0);
 }
 
-void DirectoryPresenter::disconnectView() {
-}
-
 //------------------------------------------------------------------------------
 
 void DirectoryPresenter::onFileRemoved(QString filePath, int index) {

@@ -346,12 +346,6 @@ bool ThumbnailCache::executeSchemaStatement(QSqlDatabase &db,
     return false;
 }
 
-QString ThumbnailCache::thumbnailPath(QString id)
-{
-    Q_UNUSED(id)
-    return databasePath;
-}
-
 bool ThumbnailCache::exists(QString id)
 {
     QSqlDatabase db = getDatabaseConnection();
