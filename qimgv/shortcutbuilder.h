@@ -16,6 +16,5 @@ private:
     static QString processKeyEvent(QKeyEvent *event);
     static QString modifierKeys(QInputEvent *event);
     static bool isModifier(Qt::Key key);
-    static QString fromEventText(QKeyEvent *event);
     static QString fromEventNativeScanCode(QKeyEvent *event);
 };

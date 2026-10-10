@@ -11,7 +11,6 @@ public:
     DocumentWidget(std::shared_ptr<ViewerWidget> viewWidget, QWidget* parent = nullptr);
     std::shared_ptr<ViewerWidget> viewWidget();
     std::shared_ptr<ThumbnailStripProxy> thumbPanel();
-    void setFocus();
     void hideFloatingPanel();
     void hideFloatingPanel(bool animated);
     void setPanelEnabled(bool mode);

@@ -206,7 +206,6 @@ private:
 
     void scroll(int dx, int dy, bool animated);
 
-    void mousePanWrapping(QMouseEvent *event);
     void mousePan(QMouseEvent *event);
     void mouseMoveZoom(QMouseEvent *event);
     void reset();

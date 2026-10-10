@@ -254,8 +254,6 @@ public:
   ThumbPanelStyle thumbPanelStyle();
   void setThumbPanelStyle(ThumbPanelStyle mode);
 
-  bool absoluteZoomStep();
-  void setAbsoluteZoomStep(bool mode);
   bool autoResizeWindow();
   void setAutoResizeWindow(bool mode);
   int autoResizeLimit();
@@ -319,7 +317,6 @@ private:
   std::unique_ptr<QDir> mTmpDir, mThumbCacheDir, mConfDir;
   ColorScheme mColorScheme;
   bool mHasCustomAccent = false;
-  void createColorVariants();
 
   void setupCache();
 

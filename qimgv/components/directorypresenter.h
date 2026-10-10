@@ -57,7 +57,6 @@ public:
 
     QList<QString> selectedPaths() const;
     QString firstSelectedDirectoryPath() const;
-    int upArrowCount() const;
 
     // Asynchronous counterpart of the old (now removed) synchronous
     // expandedSelectedPaths(): expands the current selection into a bounded
@@ -169,7 +168,6 @@ private:
     defaultFolderThumbnail(int size, const QString &dirName);
     std::shared_ptr<Thumbnail> composeFolderThumbnail(
         int size, const QString &dirName, const QPixmap &innerThumb);
-    std::shared_ptr<Thumbnail> composeUpArrowThumbnail(int size);
     static QString thumbnailPathKey(const QString &path);
     int directoryIndexForPath(const QString &path) const;
     void invalidateFolderThumbnailRequests();
