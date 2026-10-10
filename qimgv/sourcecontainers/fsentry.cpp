@@ -57,9 +57,5 @@ FSEntry::FSEntry( QString _path, QString _name, bool _isDirectory)
 {
 }
 bool FSEntry::operator==(const QString &anotherPath) const {
-#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
     return this->path.compare(anotherPath, Qt::CaseInsensitive) == 0;
-#else
-    return this->path == anotherPath;
-#endif
 }

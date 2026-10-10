@@ -33,7 +33,6 @@ private:
 
     QLineEdit *nameLineEdit = nullptr;
     QLineEdit *pathLineEdit = nullptr;
-    QLabel *label_3 = nullptr;
     QLabel *keywordsLabel = nullptr;
     QCheckBox *blockingCheckBox = nullptr;
     QLabel *messageLabel = nullptr;

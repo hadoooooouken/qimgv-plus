@@ -14,9 +14,6 @@ ScriptEditorDialog::ScriptEditorDialog(QWidget *parent) :
 {
     setupUi();
     this->setWindowTitle(tr("New application/script"));
-#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
-    label_3->hide();
-#endif
     connect(nameLineEdit, &QLineEdit::textChanged, this, &ScriptEditorDialog::onNameChanged);
     this->onNameChanged(nameLineEdit->text());
 }
@@ -28,9 +25,6 @@ ScriptEditorDialog::ScriptEditorDialog(QString name, Script script, QWidget *par
     setupUi();
     this->setWindowTitle(tr("Edit"));
     editTarget = name;
-#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
-    label_3->hide();
-#endif
     connect(nameLineEdit, &QLineEdit::textChanged, this, &ScriptEditorDialog::onNameChanged);
     nameLineEdit->setText(name);
     pathLineEdit->setText(script.command);
@@ -82,12 +76,6 @@ void ScriptEditorDialog::setupUi()
     keywordsLabel->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByMouse);
     keywordsLabel->setText(tr("Keywords:") + " %file%");
     gridLayout->addWidget(keywordsLabel, 2, 0, 1, 3);
-
-    label_3 = new QLabel(tr("NOTE: make sure your .sh script has execute flag."), this);
-    QFont italicFont = smallFont;
-    italicFont.setItalic(true);
-    label_3->setFont(italicFont);
-    gridLayout->addWidget(label_3, 3, 0, 1, 3);
 
     verticalLayout->addLayout(gridLayout);
 
@@ -161,12 +149,7 @@ void ScriptEditorDialog::onNameChanged(QString name) {
 
 void ScriptEditorDialog::selectScriptPath() {
     QFileDialog dialog;
-    QString file;
-#ifdef _WIN32
-    file = dialog.getOpenFileName(this, tr("Select an executable/script"), "", "Executable/script (*.exe *.bat)");
-#else
-    file = dialog.getOpenFileName(this, tr("Select a script file"), "", "Shell script (*.sh)");
-#endif
+    QString file = dialog.getOpenFileName(this, tr("Select an executable/script"), "", "Executable/script (*.exe *.bat)");
     if(!file.isEmpty()) {
         pathLineEdit->setText("\"" + file + "\"" + " %file%");
     }

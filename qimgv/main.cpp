@@ -11,9 +11,7 @@
 #include <QSettings>
 #include <QStandardPaths>
 
-#ifdef _WIN32
 #include <windows.h>
-#endif
 
 #include "appversion.h"
 #include "components/actionmanager/actionmanager.h"
@@ -193,9 +191,7 @@ int main(int argc, char *argv[]) {
               QFileInfo(parser.positionalArguments().at(0)).absoluteFilePath();
         }
         out << pathToSend;
-#ifdef _WIN32
         AllowSetForegroundWindow(ASFW_ANY);
-#endif
         socket.write(data);
         socket.waitForBytesWritten(1000);
         socket.disconnectFromServer();

@@ -1659,10 +1659,7 @@ bool Settings::isPathExcludedFromCache(const QString &path) {
     }
     QString cleanExcluded = QDir::cleanPath(trimmed);
 
-    Qt::CaseSensitivity cs = Qt::CaseSensitive;
-#ifdef Q_OS_WIN
-    cs = Qt::CaseInsensitive;
-#endif
+    constexpr Qt::CaseSensitivity cs = Qt::CaseInsensitive;
 
     if (cleanPath.compare(cleanExcluded, cs) == 0) {
       return true;
