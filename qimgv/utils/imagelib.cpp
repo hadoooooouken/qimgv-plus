@@ -7,7 +7,10 @@
 #include <algorithm>
 #include <ranges>
 #include <span>
+#include <emmintrin.h>
+#if defined(__AVX2__)
 #include <immintrin.h>
+#endif
 #include <QThreadPool>
 #include <QRunnable>
 #include <QSemaphore>
@@ -37,6 +40,39 @@ constexpr int kGaussianHalfWidth = 4;
 constexpr float kGaussianWeights[kGaussianKernelSize] = {
   0.02763f, 0.06628f, 0.12384f, 0.18017f, 0.20416f, 0.18017f, 0.12384f, 0.06628f, 0.02763f
 };
+
+// --- SSE2 per-pixel helpers ---
+// SSE2 is the x64 baseline, so these run in every build. They process the
+// odd trailing pixels of the AVX2 loops and every pixel in non-AVX2 builds.
+// One pixel occupies one __m128 as four float lanes in memory order
+// (B, G, R, A). Rounding matches the AVX2 paths: add kRoundOffset, clamp to
+// [0, kColorMax], then convert with round-to-nearest (cvtps2dq).
+
+// Expands one 32-bpp pixel into four float lanes.
+inline __m128 unpackPixelSse2(uint32_t px) {
+  const __m128i zero = _mm_setzero_si128();
+  __m128i v = _mm_cvtsi32_si128(static_cast<int>(px));
+  v = _mm_unpacklo_epi8(v, zero);
+  v = _mm_unpacklo_epi16(v, zero);
+  return _mm_cvtepi32_ps(v);
+}
+
+// Adds px * weight to a per-channel accumulator.
+inline __m128 accumulatePixelSse2(__m128 acc, uint32_t px, float weight) {
+  return _mm_add_ps(acc, _mm_mul_ps(unpackPixelSse2(px), _mm_set1_ps(weight)));
+}
+
+// Rounds, clamps and packs four float lanes back into one 32-bpp pixel.
+inline uint32_t packPixelSse2(__m128 v) {
+  v = _mm_add_ps(v, _mm_set1_ps(kRoundOffset));
+  v = _mm_min_ps(_mm_max_ps(v, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
+  __m128i i = _mm_cvtps_epi32(v);
+  // The lanes are already in [0, kColorMax], so the signed 32 -> 16 pack
+  // (SSE2) gives the same result as the unsigned one (SSE4.1).
+  i = _mm_packs_epi32(i, i);
+  i = _mm_packus_epi16(i, i);
+  return static_cast<uint32_t>(_mm_cvtsi128_si32(i));
+}
 
 // --- Magic Kernel Sharp 2021 (a = 3, v = 3) ---
 // Reference: johncostella.com/magic. MKS2021 is defined as
@@ -171,6 +207,7 @@ void mksHorizontalFixed(const QImage &src, QImage &inter,
     auto interRow = scanlineSpan(inter, y);
 
     int x = 0;
+#if defined(__AVX2__)
     for (; x + 1 < W_dst; x += 2) {
       const auto &w0 = taps.weights[x];
       const auto &w1 = taps.weights[x + 1];
@@ -198,20 +235,16 @@ void mksHorizontalFixed(const QImage &src, QImage &inter,
       interRow[x]     = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(lo, lo), _mm_packus_epi32(lo, lo)));
       interRow[x + 1] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(hi, hi), _mm_packus_epi32(hi, hi)));
     }
-    // Scalar/SSE tail for an odd trailing pixel
-    if (x < W_dst) {
+#endif
+    // SSE2 per-pixel loop: the odd trailing pixel after the AVX2 loop, or the
+    // whole row in non-AVX2 builds.
+    for (; x < W_dst; ++x) {
       const auto &w = taps.weights[x];
       int left = taps.left[x];
       __m128 acc = _mm_setzero_ps();
-      for (int t = 0; t < kMksFixedTaps; ++t) {
-        uint32_t px = srcRow[std::clamp(left + t, 0, W_src - 1)];
-        __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(px)));
-        acc = _mm_fmadd_ps(v_p, _mm_set1_ps(w[t]), acc);
-      }
-      acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
-      acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
-      __m128i res = _mm_cvtps_epi32(acc);
-      interRow[x] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(res, res), _mm_packus_epi32(res, res)));
+      for (int t = 0; t < kMksFixedTaps; ++t)
+        acc = accumulatePixelSse2(acc, srcRow[std::clamp(left + t, 0, W_src - 1)], w[t]);
+      interRow[x] = packPixelSse2(acc);
     }
   }
 }
@@ -230,6 +263,7 @@ void mksVerticalFixed(const QImage &inter, QImage &dst,
       rows[t] = constScanlineSpan(inter, std::clamp(left + t, 0, H_src - 1));
 
     int x = 0;
+#if defined(__AVX2__)
     for (; x + 1 < W_dst; x += 2) {
       __m256 acc = _mm256_setzero_ps();
       for (int t = 0; t < kMksFixedTaps; ++t) {
@@ -248,17 +282,14 @@ void mksVerticalFixed(const QImage &inter, QImage &dst,
       dstRow[x]     = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(lo, lo), _mm_packus_epi32(lo, lo)));
       dstRow[x + 1] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(hi, hi), _mm_packus_epi32(hi, hi)));
     }
-    if (x < W_dst) {
+#endif
+    // SSE2 per-pixel loop: the odd trailing pixel after the AVX2 loop, or the
+    // whole row in non-AVX2 builds.
+    for (; x < W_dst; ++x) {
       __m128 acc = _mm_setzero_ps();
-      for (int t = 0; t < kMksFixedTaps; ++t) {
-        uint32_t px = rows[t][x];
-        __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(px)));
-        acc = _mm_fmadd_ps(v_p, _mm_set1_ps(w[t]), acc);
-      }
-      acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
-      acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
-      __m128i res = _mm_cvtps_epi32(acc);
-      dstRow[x] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(res, res), _mm_packus_epi32(res, res)));
+      for (int t = 0; t < kMksFixedTaps; ++t)
+        acc = accumulatePixelSse2(acc, rows[t][x], w[t]);
+      dstRow[x] = packPixelSse2(acc);
     }
   }
 }
@@ -271,7 +302,7 @@ void mksVerticalFixed(const QImage &inter, QImage &dst,
 // counts/left offsets here, so the shorter of the pair is padded with
 // weight 0 up to the pair's max count for the duration of the iteration;
 // the (safely clamped, just irrelevant) source pixel it reads contributes
-// nothing to the sum. A scalar/SSE tail handles a leftover odd column.
+// nothing to the sum. An SSE2 per-pixel loop handles a leftover odd column.
 void mksHorizontalGeneral(const QImage &src, QImage &inter,
                            const std::vector<MksAxisTap> &taps,
                            const std::vector<float> &weightPool, int W_src,
@@ -281,6 +312,7 @@ void mksHorizontalGeneral(const QImage &src, QImage &inter,
     auto interRow = scanlineSpan(inter, y);
 
     int x = 0;
+#if defined(__AVX2__)
     for (; x + 1 < W_dst; x += 2) {
       const MksAxisTap &tap0 = taps[x];
       const MksAxisTap &tap1 = taps[x + 1];
@@ -311,19 +343,17 @@ void mksHorizontalGeneral(const QImage &src, QImage &inter,
       interRow[x]     = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(lo, lo), _mm_packus_epi32(lo, lo)));
       interRow[x + 1] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(hi, hi), _mm_packus_epi32(hi, hi)));
     }
-    // Scalar/SSE tail for an odd trailing pixel
-    if (x < W_dst) {
+#endif
+    // SSE2 per-pixel loop: the odd trailing pixel after the AVX2 loop, or the
+    // whole row in non-AVX2 builds.
+    for (; x < W_dst; ++x) {
       const MksAxisTap &tap = taps[x];
       __m128 acc = _mm_setzero_ps();
       for (int t = 0; t < tap.count; ++t) {
         int srcX = std::clamp(tap.left + t, 0, W_src - 1);
-        __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(srcRow[srcX])));
-        acc = _mm_fmadd_ps(v_p, _mm_set1_ps(weightPool[tap.weightOffset + t]), acc);
+        acc = accumulatePixelSse2(acc, srcRow[srcX], weightPool[tap.weightOffset + t]);
       }
-      acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
-      acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
-      __m128i res = _mm_cvtps_epi32(acc);
-      interRow[x] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(res, res), _mm_packus_epi32(res, res)));
+      interRow[x] = packPixelSse2(acc);
     }
   }
 }
@@ -347,6 +377,7 @@ void mksVerticalGeneral(const QImage &inter, QImage &dst,
       rows[t] = constScanlineSpan(inter, std::clamp(tap.left + t, 0, H_src - 1));
 
     int x = 0;
+#if defined(__AVX2__)
     for (; x + 1 < W_dst; x += 2) {
       __m256 acc = _mm256_setzero_ps();
       for (int t = 0; t < tap.count; ++t) {
@@ -365,17 +396,14 @@ void mksVerticalGeneral(const QImage &inter, QImage &dst,
       dstRow[x]     = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(lo, lo), _mm_packus_epi32(lo, lo)));
       dstRow[x + 1] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(hi, hi), _mm_packus_epi32(hi, hi)));
     }
-    // Scalar/SSE tail for an odd trailing column
-    if (x < W_dst) {
+#endif
+    // SSE2 per-pixel loop: the odd trailing column after the AVX2 loop, or
+    // the whole row in non-AVX2 builds.
+    for (; x < W_dst; ++x) {
       __m128 acc = _mm_setzero_ps();
-      for (int t = 0; t < tap.count; ++t) {
-        __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(rows[t][x])));
-        acc = _mm_fmadd_ps(v_p, _mm_set1_ps(weightPool[tap.weightOffset + t]), acc);
-      }
-      acc = _mm_add_ps(acc, _mm_set1_ps(kRoundOffset));
-      acc = _mm_min_ps(_mm_max_ps(acc, _mm_setzero_ps()), _mm_set1_ps(kColorMax));
-      __m128i res = _mm_cvtps_epi32(acc);
-      dstRow[x] = _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packus_epi32(res, res), _mm_packus_epi32(res, res)));
+      for (int t = 0; t < tap.count; ++t)
+        acc = accumulatePixelSse2(acc, rows[t][x], weightPool[tap.weightOffset + t]);
+      dstRow[x] = packPixelSse2(acc);
     }
   }
 }
@@ -715,6 +743,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
             auto interRow = scanlineSpan(interImg, y);
 
             int x = 0;
+#if defined(__AVX2__)
             int limit = W_dst - 1;
             for (; x < limit; x += 2) {
               const auto& hw_a = hWeights[x];
@@ -756,24 +785,17 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               interRow[x] = _mm_cvtsi128_si32(_mm256_castsi256_si128(packed_8));
               interRow[x + 1] = _mm_cvtsi128_si32(_mm256_extractf128_si256(packed_8, 1));
             }
-            if (x < W_dst) {
+#endif
+            // SSE2 per-pixel loop: the odd trailing pixel after the AVX2
+            // loop, or the whole row in non-AVX2 builds.
+            for (; x < W_dst; ++x) {
               const auto& hw = hWeights[x];
-              uint32_t p0 = srcRow[hw.x0];
-              uint32_t p1 = srcRow[hw.x1];
-              uint32_t p2 = srcRow[hw.x2];
-              uint32_t p3 = srcRow[hw.x3];
-
-              float b = hw.w0 * (p0 & 0xFF) + hw.w1 * (p1 & 0xFF) + hw.w2 * (p2 & 0xFF) + hw.w3 * (p3 & 0xFF);
-              float g = hw.w0 * ((p0 >> 8) & 0xFF) + hw.w1 * ((p1 >> 8) & 0xFF) + hw.w2 * ((p2 >> 8) & 0xFF) + hw.w3 * ((p3 >> 8) & 0xFF);
-              float r = hw.w0 * ((p0 >> 16) & 0xFF) + hw.w1 * ((p1 >> 16) & 0xFF) + hw.w2 * ((p2 >> 16) & 0xFF) + hw.w3 * ((p3 >> 16) & 0xFF);
-              float a = hw.w0 * ((p0 >> 24) & 0xFF) + hw.w1 * ((p1 >> 24) & 0xFF) + hw.w2 * ((p2 >> 24) & 0xFF) + hw.w3 * ((p3 >> 24) & 0xFF);
-
-              uint8_t ub = std::clamp(b + kRoundOffset, 0.0f, kColorMax);
-              uint8_t ug = std::clamp(g + kRoundOffset, 0.0f, kColorMax);
-              uint8_t ur = std::clamp(r + kRoundOffset, 0.0f, kColorMax);
-              uint8_t ua = std::clamp(a + kRoundOffset, 0.0f, kColorMax);
-
-              interRow[x] = (ua << 24) | (ur << 16) | (ug << 8) | ub;
+              __m128 acc = _mm_setzero_ps();
+              acc = accumulatePixelSse2(acc, srcRow[hw.x0], hw.w0);
+              acc = accumulatePixelSse2(acc, srcRow[hw.x1], hw.w1);
+              acc = accumulatePixelSse2(acc, srcRow[hw.x2], hw.w2);
+              acc = accumulatePixelSse2(acc, srcRow[hw.x3], hw.w3);
+              interRow[x] = packPixelSse2(acc);
             }
           }
           semaphore.release(1);
@@ -810,12 +832,13 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
             auto r3 = constScanlineSpan(interImg, vw.y3);
             uint32_t* out = rowBuffers[bufIdx].data();
 
+            int x = 0;
+#if defined(__AVX2__)
             __m256 w0 = _mm256_set1_ps(vw.w0);
             __m256 w1 = _mm256_set1_ps(vw.w1);
             __m256 w2 = _mm256_set1_ps(vw.w2);
             __m256 w3 = _mm256_set1_ps(vw.w3);
 
-            int x = 0;
             int limit = W_dst - 1;
             for (; x < limit; x += 2) {
               uint32_t p0_a = r0[x];
@@ -848,23 +871,16 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               out[x] = _mm_cvtsi128_si32(_mm256_castsi256_si128(packed_8));
               out[x + 1] = _mm_cvtsi128_si32(_mm256_extractf128_si256(packed_8, 1));
             }
-            if (x < W_dst) {
-              uint32_t p0 = r0[x];
-              uint32_t p1 = r1[x];
-              uint32_t p2 = r2[x];
-              uint32_t p3 = r3[x];
-
-              float b = vw.w0 * (p0 & 0xFF) + vw.w1 * (p1 & 0xFF) + vw.w2 * (p2 & 0xFF) + vw.w3 * (p3 & 0xFF);
-              float g = vw.w0 * ((p0 >> 8) & 0xFF) + vw.w1 * ((p1 >> 8) & 0xFF) + vw.w2 * ((p2 >> 8) & 0xFF) + vw.w3 * ((p3 >> 8) & 0xFF);
-              float r = vw.w0 * ((p0 >> 16) & 0xFF) + vw.w1 * ((p1 >> 16) & 0xFF) + vw.w2 * ((p2 >> 16) & 0xFF) + vw.w3 * ((p3 >> 16) & 0xFF);
-              float a = vw.w0 * ((p0 >> 24) & 0xFF) + vw.w1 * ((p1 >> 24) & 0xFF) + vw.w2 * ((p2 >> 24) & 0xFF) + vw.w3 * ((p3 >> 24) & 0xFF);
-
-              uint8_t ub = std::clamp(b + kRoundOffset, 0.0f, kColorMax);
-              uint8_t ug = std::clamp(g + kRoundOffset, 0.0f, kColorMax);
-              uint8_t ur = std::clamp(r + kRoundOffset, 0.0f, kColorMax);
-              uint8_t ua = std::clamp(a + kRoundOffset, 0.0f, kColorMax);
-
-              out[x] = (ua << 24) | (ur << 16) | (ug << 8) | ub;
+#endif
+            // SSE2 per-pixel loop: the odd trailing pixel after the AVX2
+            // loop, or the whole row in non-AVX2 builds.
+            for (; x < W_dst; ++x) {
+              __m128 acc = _mm_setzero_ps();
+              acc = accumulatePixelSse2(acc, r0[x], vw.w0);
+              acc = accumulatePixelSse2(acc, r1[x], vw.w1);
+              acc = accumulatePixelSse2(acc, r2[x], vw.w2);
+              acc = accumulatePixelSse2(acc, r3[x], vw.w3);
+              out[x] = packPixelSse2(acc);
             }
           };
 
@@ -905,6 +921,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
             }
 
             int x = 1;
+#if defined(__AVX2__)
             int avx_end = W_dst - 8;
             for (; x < avx_end; x += 8) {
               __m256i reg_C = _mm256_loadu_si256((const __m256i*)&rowC[x]);
@@ -950,8 +967,10 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               __m256i res_pack = _mm256_packus_epi16(res_lo, res_hi);
               _mm256_storeu_si256((__m256i*)&dstRow[x], res_pack);
             }
+#endif
 
-            // Scalar fallback
+            // Scalar loop: the columns left after the AVX2 loop, or the whole
+            // row in non-AVX2 builds.
             for (; x < W_dst; ++x) {
               uint32_t c = rowC[x];
               uint32_t t = rowT[x];
@@ -1016,26 +1035,27 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
           // Thread-local sliding window buffer: stores 9 rows of horizontally blurred floats
           std::vector<std::vector<float>> rowBuffers(kGaussianKernelSize, std::vector<float>(W_dst * 4));
 
-          __m256 vGaussWeights256[kGaussianKernelSize];
           __m128 vGaussWeights128[kGaussianKernelSize];
-          for (int k = 0; k < kGaussianKernelSize; ++k) {
-            vGaussWeights256[k] = _mm256_set1_ps(kGaussianWeights[k]);
+          for (int k = 0; k < kGaussianKernelSize; ++k)
             vGaussWeights128[k] = _mm_set1_ps(kGaussianWeights[k]);
-          }
+          const __m128 vSharp128    = _mm_set1_ps(kUnsharpSharpStrength);
+          const __m128 vBlur128     = _mm_set1_ps(kUnsharpBlurStrength);
+#if defined(__AVX2__)
+          __m256 vGaussWeights256[kGaussianKernelSize];
+          for (int k = 0; k < kGaussianKernelSize; ++k)
+            vGaussWeights256[k] = _mm256_set1_ps(kGaussianWeights[k]);
           const __m256 vSharp256    = _mm256_set1_ps(kUnsharpSharpStrength);
           const __m256 vBlur256     = _mm256_set1_ps(kUnsharpBlurStrength);
           const __m256 vRound256    = _mm256_set1_ps(kRoundOffset);
           const __m256 vColorMax256 = _mm256_set1_ps(kColorMax);
-          const __m128 vSharp128    = _mm_set1_ps(kUnsharpSharpStrength);
-          const __m128 vBlur128     = _mm_set1_ps(kUnsharpBlurStrength);
-          const __m128 vRound128    = _mm_set1_ps(kRoundOffset);
-          const __m128 vColorMax128 = _mm_set1_ps(kColorMax);
+#endif
 
           auto blurRowHorizontal = [&](int yd, float* outRow) {
             int yd_clamped = std::clamp(yd, 0, H_dst - 1);
             auto srcRow = constScanlineSpan(scaledImg, yd_clamped);
 
             int x = 0;
+#if defined(__AVX2__)
             for (; x + 1 < W_dst; x += 2) {
               __m256 sum = _mm256_setzero_ps();
               for (int k = -kGaussianHalfWidth; k <= kGaussianHalfWidth; ++k) {
@@ -1046,13 +1066,15 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               }
               _mm256_storeu_ps(&outRow[x * 4], sum);
             }
-            // Scalar/SSE tail for an odd trailing pixel
-            if (x < W_dst) {
+#endif
+            // SSE2 per-pixel loop: the odd trailing pixel after the AVX2
+            // loop, or the whole row in non-AVX2 builds.
+            for (; x < W_dst; ++x) {
               __m128 sum = _mm_setzero_ps();
               for (int k = -kGaussianHalfWidth; k <= kGaussianHalfWidth; ++k) {
                 int sx = std::clamp(x + k, 0, W_dst - 1);
-                __m128 v_p = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(srcRow[sx])));
-                sum = _mm_fmadd_ps(vGaussWeights128[k + kGaussianHalfWidth], v_p, sum);
+                sum = _mm_add_ps(sum, _mm_mul_ps(vGaussWeights128[k + kGaussianHalfWidth],
+                                                 unpackPixelSse2(srcRow[sx])));
               }
               _mm_storeu_ps(&outRow[x * 4], sum);
             }
@@ -1069,6 +1091,7 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
 
             // Compute vertical Gaussian blur + Unsharp Mask blending on the fly
             int x = 0;
+#if defined(__AVX2__)
             for (; x + 1 < W_dst; x += 2) {
               __m256 sum = _mm256_setzero_ps();
               for (int k = 0; k < kGaussianKernelSize; ++k) {
@@ -1093,27 +1116,23 @@ QImage ImageLib::scaled_Smart(std::shared_ptr<const QImage> source,
               dstRow[x]     = _mm_cvtsi128_si32(_mm256_castsi256_si128(packed_8));
               dstRow[x + 1] = _mm_cvtsi128_si32(_mm256_extractf128_si256(packed_8, 1));
             }
-            // Scalar/SSE tail for an odd trailing pixel
-            if (x < W_dst) {
+#endif
+            // SSE2 per-pixel loop: the odd trailing pixel after the AVX2
+            // loop, or the whole row in non-AVX2 builds.
+            for (; x < W_dst; ++x) {
               __m128 sum = _mm_setzero_ps();
               for (int k = 0; k < kGaussianKernelSize; ++k) {
                 int bufIdx = (y - y_start + k) % kGaussianKernelSize;
                 __m128 r_val = _mm_loadu_ps(&rowBuffers[bufIdx][x * 4]);
-                sum = _mm_fmadd_ps(vGaussWeights128[k], r_val, sum);
+                sum = _mm_add_ps(sum, _mm_mul_ps(vGaussWeights128[k], r_val));
               }
 
-              __m128 orig_f = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(_mm_cvtsi32_si128(origRow[x])));
+              __m128 orig_f = unpackPixelSse2(origRow[x]);
 
-              __m128 final_f = _mm_fmsub_ps(vSharp128, orig_f, _mm_mul_ps(vBlur128, sum));
+              // strength: 0.15 unsharp mask -> 1.15 * original - 0.15 * blurred
+              __m128 final_f = _mm_sub_ps(_mm_mul_ps(vSharp128, orig_f), _mm_mul_ps(vBlur128, sum));
 
-              __m128 rounded = _mm_add_ps(final_f, vRound128);
-              rounded = _mm_min_ps(_mm_max_ps(rounded, _mm_setzero_ps()), vColorMax128);
-
-              __m128i res_i = _mm_cvtps_epi32(rounded);
-              __m128i packed_16 = _mm_packus_epi32(res_i, res_i);
-              __m128i packed_8 = _mm_packus_epi16(packed_16, packed_16);
-
-              dstRow[x] = _mm_cvtsi128_si32(packed_8);
+              dstRow[x] = packPixelSse2(final_f);
             }
 
             // Advance window
@@ -1335,30 +1354,6 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
   int height = dst.height();
   int width = dst.width();
 
-  // Set up AVX2 constants
-  __m256i mask_b_i = _mm256_set1_epi32(0x000000FF);
-  __m256i mask_g_i = _mm256_set1_epi32(0x0000FF00);
-  __m256i mask_r_i = _mm256_set1_epi32(0x00FF0000);
-  __m256i mask_a_i = _mm256_set1_epi32(0xFF000000);
-
-  __m256 v_zero = _mm256_setzero_ps();
-  __m256 v_255 = _mm256_set1_ps(255.0f);
-
-  __m256 v_m00 = _mm256_set1_ps(cm.m[0][0]);
-  __m256 v_m01 = _mm256_set1_ps(cm.m[0][1]);
-  __m256 v_m02 = _mm256_set1_ps(cm.m[0][2]);
-
-  __m256 v_m10 = _mm256_set1_ps(cm.m[1][0]);
-  __m256 v_m11 = _mm256_set1_ps(cm.m[1][1]);
-  __m256 v_m12 = _mm256_set1_ps(cm.m[1][2]);
-
-  __m256 v_m20 = _mm256_set1_ps(cm.m[2][0]);
-  __m256 v_m21 = _mm256_set1_ps(cm.m[2][1]);
-  __m256 v_m22 = _mm256_set1_ps(cm.m[2][2]);
-
-  // Pre-scale offset to avoid doing it per pixel
-  __m256 v_offset_scaled = _mm256_set1_ps(cm.offset * 255.0f + 0.5f);
-
   dst.detach();
   uchar *bits = dst.bits();
   int bytesPerLine = dst.bytesPerLine();
@@ -1380,16 +1375,37 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
       if (y_start >= height) break;
 
       numTasks++;
-      pool->start(new ScalerTask([bits, bytesPerLine, cm, width, y_start, y_end, &semaphore,
-                                  mask_b_i, mask_g_i, mask_r_i, mask_a_i,
-                                  v_zero, v_255,
-                                  v_m00, v_m01, v_m02,
-                                  v_m10, v_m11, v_m12,
-                                  v_m20, v_m21, v_m22,
-                                  v_offset_scaled]() {
+      pool->start(new ScalerTask([bits, bytesPerLine, cm, width, y_start, y_end, &semaphore]() {
+#if defined(__AVX2__)
+        // Set up AVX2 constants
+        const __m256i mask_b_i = _mm256_set1_epi32(0x000000FF);
+        const __m256i mask_g_i = _mm256_set1_epi32(0x0000FF00);
+        const __m256i mask_r_i = _mm256_set1_epi32(0x00FF0000);
+        const __m256i mask_a_i = _mm256_set1_epi32(0xFF000000);
+
+        const __m256 v_zero = _mm256_setzero_ps();
+        const __m256 v_255 = _mm256_set1_ps(255.0f);
+
+        const __m256 v_m00 = _mm256_set1_ps(cm.m[0][0]);
+        const __m256 v_m01 = _mm256_set1_ps(cm.m[0][1]);
+        const __m256 v_m02 = _mm256_set1_ps(cm.m[0][2]);
+
+        const __m256 v_m10 = _mm256_set1_ps(cm.m[1][0]);
+        const __m256 v_m11 = _mm256_set1_ps(cm.m[1][1]);
+        const __m256 v_m12 = _mm256_set1_ps(cm.m[1][2]);
+
+        const __m256 v_m20 = _mm256_set1_ps(cm.m[2][0]);
+        const __m256 v_m21 = _mm256_set1_ps(cm.m[2][1]);
+        const __m256 v_m22 = _mm256_set1_ps(cm.m[2][2]);
+
+        // Pre-scale offset to avoid doing it per pixel
+        const __m256 v_offset_scaled = _mm256_set1_ps(cm.offset * 255.0f + 0.5f);
+#endif
+
         for (int y = y_start; y < y_end; ++y) {
           QRgb *line = reinterpret_cast<QRgb*>(bits + y * bytesPerLine);
           int x = 0;
+#if defined(__AVX2__)
           int avx_end = width - 8;
 
           for (; x <= avx_end; x += 8) {
@@ -1429,8 +1445,10 @@ QImage ImageLib::applyColorAdjustments(std::shared_ptr<const QImage> source, flo
 
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(&line[x]), out_pix);
           }
+#endif
 
-          // Scalar fallback loop for remaining pixels
+          // Scalar loop: the pixels left after the AVX2 loop, or the whole
+          // row in non-AVX2 builds.
           for (; x < width; ++x) {
             QRgb pixel = line[x];
             unsigned int a = pixel & 0xFF000000;

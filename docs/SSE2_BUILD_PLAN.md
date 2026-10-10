@@ -315,8 +315,8 @@ Scaler coverage (`ImageLib::scaled` dispatch, line ~542):
 | MKS2021 | `scaled_MKS2021`, four AVX2 passes | Yes (steps 1-2). |
 | Upscayl (ncnn) | `upscayl-ncnn.dll`, Vulkan | None. ncnn dispatches CPU code at runtime (Stage 7 allowlist). |
 
-1. Add true scalar per-pixel helpers (plain C++, no intrinsics) for the MKS horizontal and
-   vertical taps and for the `scaled_Smart` Gaussian pass. The existing "Scalar/SSE tails" use
+1. Add SSE2-only per-pixel helpers (SSE2 is the x64 baseline) for the MKS horizontal and
+   vertical taps and for the `scaled_Smart` passes. The existing "Scalar/SSE tails" use
    SSE4.1 and FMA3 (audit correction 1) and must not be reused in the `#else` path. The AVX2
    builds use the same helpers for their odd trailing pixel.
 2. MKS2021: guard the vector loops of `mksHorizontalFixed`, `mksVerticalFixed`,
@@ -329,6 +329,35 @@ Scaler coverage (`ImageLib::scaled` dispatch, line ~542):
 4. `applyColorAdjustments` (~1328): the AVX2 loop goes under `#if defined(__AVX2__)`, and the
    existing "Scalar fallback" loop covers the full range in `#else`.
 5. Keep the per-pixel code in shared helpers instead of copying it into the `#else` branches.
+
+Implementation notes:
+
+- Helpers `unpackPixelSse2`, `accumulatePixelSse2` and `packPixelSse2` hold one pixel as four
+  float lanes. SSE4.1 `cvtepu8_epi32` is replaced by two SSE2 unpacks, SSE4.1 `packus_epi32` by
+  SSE2 `packs_epi32` (lanes are already clamped to [0, 255]), and FMA by `mul` + `add`. The
+  rounding matches the AVX2 loops (add 0.5, clamp, `cvtps2dq`).
+- Each former `if (x < W)` tail is now a `for (; x < W; ++x)` loop after the guarded AVX2
+  loop. It handles the odd trailing pixel in AVX2 builds and the whole row in SSE2 builds, so
+  no per-pixel math is duplicated.
+- The `scaled_Smart` upscale tails previously used plain C++ with truncation. They now use the
+  SSE2 helpers, so the AVX2 build's last odd column rounds like the rest of the row.
+- `applyColorAdjustments`: the AVX2 constants moved into the task lambda under the guard, so
+  the capture list no longer depends on the ISA. The sharpen pass and the color loop keep
+  their existing scalar loops.
+- Known AVX2/SSE2 difference: `applyColorAdjustments` scalar loop rounds with
+  `int(v + 0.5)`. In SSE2 builds every pixel goes through it, so it can differ by 1 from the
+  AVX2 build (see the rounding issue below).
+
+Found during this stage (not fixed here; separate commits):
+
+- **Rounding bias in all AVX2 resample/color loops and the SSE2 helpers.** They add
+  `kRoundOffset` (0.5) and then convert with `cvtps2dq`, which already rounds to nearest. The
+  result is rounded up twice: 10.3 becomes 11, and an exact 11.0 becomes 12. Fix: drop the
+  `+ 0.5` before `cvtps2dq` (or use truncating `cvttps2dq`) in all paths together, so AVX2
+  and SSE2 builds stay identical.
+- **Out-of-bounds read in the `scaled_Smart` sharpen pass when `W_dst == 1`.** The `x = 0`
+  border reads `rowC[1]` from a one-element buffer. This happens when a 1-pixel-wide image is
+  upscaled vertically. Fix: use `c` for the right neighbor when `W_dst == 1`.
 
 Commit: `Add scalar fallback for MKS scaling and color adjustments in non-AVX2 builds`
 
