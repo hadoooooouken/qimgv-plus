@@ -26,3 +26,5 @@ int runSvgRasterizerTests(int argc, char **argv);
 int runDialogTests(int argc, char **argv);
 int runSettingsEditorTests(int argc, char **argv);
 int runBatchPrintTests(int argc, char **argv);
+int runUiModeTests(int argc, char **argv);
+int runViewerTogglesTests(int argc, char **argv);

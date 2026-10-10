@@ -817,6 +817,22 @@ void Settings::setQuickGraphicsApi(QuickGraphicsApi api) {
   settings->settingsConf->setValue(quickGraphicsApiKey, QString::fromLatin1(name));
 }
 //------------------------------------------------------------------------------
+namespace {
+constexpr auto uiModeKey = "userInterface";
+} // namespace
+
+UiMode Settings::uiMode() {
+  const QString name =
+      settings->settingsConf->value(uiModeKey, uiModeName(defaultUiMode)).toString();
+  const std::optional<UiMode> mode = uiModeFromName(name);
+  if (!mode) {
+    qWarning() << "Unknown" << uiModeKey << name << "- using"
+               << uiModeName(defaultUiMode);
+    return defaultUiMode;
+  }
+  return *mode;
+}
+//------------------------------------------------------------------------------
 bool Settings::maximizedWindow() {
   return settings->stateConf->value("maximizedWindow", false).toBool();
 }

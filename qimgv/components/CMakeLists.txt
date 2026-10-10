@@ -44,6 +44,8 @@ target_sources(qimgv-plus PRIVATE
     shellinfo/windowtitle.cpp
     singleinstance/singleinstancechannel.cpp
     windowstate/windowstatecontroller.cpp
+    viewertoggles/appviewertogglestore.cpp
+    viewertoggles/appviewertogglestore.h
 
     mimepayload/mimepayloadmanager.cpp
 

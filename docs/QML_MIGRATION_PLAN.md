@@ -106,9 +106,10 @@ Principles:
 3. **One GPU path.** All pixels on screen go through the Qt Quick scene graph
    on QRhi (Direct3D 11 by default). Image filtering, tone mapping, colour
    management and downsampling move into RHI shaders.
-4. **Dual UI during transition.** The Quick UI is opt-in (`--ui=quick` and a
-   hidden setting) until parity (S4.1), then becomes the default, then the
-   widget UI is deleted (S4.2). Every stage leaves both UIs runnable.
+4. **Dual UI during transition.** The Quick UI was opt-in (`--ui=quick`)
+   until parity (S4.1). Since S4.1 it is the default, and `--ui=widgets` or
+   the hidden `userInterface` setting selects the widget UI until it is
+   deleted (S4.2). Every stage leaves both UIs runnable.
 5. **Render-thread discipline.** Qt Quick on Windows uses the threaded render
    loop. Renderer objects (`QQuickRhiItemRenderer`, `QSGNode`s) never touch
    `Core`, `Settings` or components. Data crosses only in
@@ -2068,6 +2069,92 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
   dialog, every setting); performance report (cold start, first frame,
   zoom/pan frame times with `qmlprofiler` and `QSG_RENDER_TIMING`,
   thumbnail scroll, memory, VRAM); `qmllint` clean.
+- **Delivered:**
+  - **Default switch:** `utils/uimode` (`UiMode`, `defaultUiMode`, the
+    names `quick` / `widgets`, case-insensitive parsing) is shared by
+    `main.cpp` and `Settings::uiMode()`. `--ui` has no default value any
+    more. Without it, the hidden setting `userInterface` (`[General]` in
+    `qimgv-plus.ini`) decides, and the Quick UI is the default.
+    - An unknown setting value logs a warning and starts the Quick UI.
+    - An unknown `--ui` value exits with an error.
+    - A failed Quick start still exits with an error: no automatic
+      fallback to the widget UI (user's choice).
+    - Checked on the real executable for all nine flag and setting
+      combinations.
+  - **qmllint:** `all_qmllint` reports nothing. The two unused imports
+    it noted (`style/Popup.qml`, `ui/FolderGridView.qml`) were removed.
+  - **Parity review.** Checked against their handlers in both UIs: every
+    port of `UiPorts`, every `UiEvents` signal, every `ActionManager`
+    action, every widget overlay, dialog and panel, and every `Settings`
+    getter the widget UI reads.
+    - Ports: all implemented.
+    - `UiEvents`: all emitted, with two exceptions.
+      `scalingRequested` is replaced by `upscaleRequested` by design (the
+      GPU scales). `showFoldersChanged` is not emitted by the widget
+      `FolderView` either.
+    - Overlays, dialogs and panels: zoom indicator and click zones (S1.6),
+      the S2.3 overlays, panel (S2.4), context menu and crop (S2.5),
+      folder view (S3.1), dialogs (S3.2, S3.4), settings (S3.3). The
+      window opens on the last display.
+    - Dead in both UIs, for S4.2 to remove: `UiEvents::showFoldersChanged`,
+      the widget `InfoBar` (`gui/panels/infobar`, never created) and the
+      `infoBarWindowed` setting.
+  - **Gaps found and closed:**
+    1. `toggleUpscayl`, `cycleUpscaylModel` and `toggleHdrToneMapping` did
+       nothing in the Quick UI, and neither did the context menu's Upscayl
+       row. `ViewerToggles` (`components/viewertoggles`, in
+       `qimgv_viewcomponents`, free of `Settings` behind
+       `IViewerToggleStore`; `AppViewerToggleStore` implements it over
+       `Settings`) now holds the logic `MW` had inline: the toggles, their
+       messages (widget translation context `MW` kept), model cycling from
+       the last chosen model, and the change announcement after
+       `kModelSwitchDelayMs`. Both UIs use it. `MW` lost the three slots,
+       its timer and the pending model.
+    2. The Quick UI ignored `autoResizeWindow`. MW's computation became
+       `windowGeometryFittingContent()` (pure) and is applied by
+       `WindowStateController::fitToContent()`. `QuickViewerPort` is now a
+       `QObject` that emits `documentShown(QSize)`, which
+       `QuickMainWindowController::fitWindowToDocument()` applies when the
+       setting is on. `MW::preShowResize()` uses the same function.
+       Checked on the real executable: a 300x200 image gives a 300x200
+       window, and a 6000x3000 image a 2304x1152 window on a 2560x1400
+       work area (90 % limit).
+  - **Found, not fixed** (widget UI only; it is removed in S4.2): with
+    `autoResizeWindow`, the widget UI does not fit a window that is still
+    hidden at cold start. `MW::preShowResize()` stores the geometry in the
+    settings, but `MW::showWindowed()` no longer restores it on a plain
+    show. The Quick UI fits the hidden window.
+  - **Tests:** `qimgv_tests` gained `UiModeTests` and `ViewerTogglesTests`,
+    and `WindowStateTests` gained the window fitting cases. All suites pass,
+    with the render tests on D3D11, D3D12 and Vulkan.
+  - **Performance report** (2026-10-10, release build, D3D11, 2560x1440 at
+    165 Hz). Startup and memory: five interleaved cold starts per UI on a
+    4000x3000 JPEG, memory sampled 5 s after launch, medians:
+
+    | | Quick | Widgets |
+    |---|---|---|
+    | First document rendering settled | 425 ms | 617 ms |
+    | Window revealed | 431 ms | 617 ms |
+    | Working set | 270 MB | 297 MB |
+    | Private bytes | 440 MB | 591 MB |
+    | Dedicated VRAM | 151 MB | 275 MB |
+
+    Frame times (Quick UI only): `QSG_RENDER_TIMING` (whole milliseconds)
+    while 40 wheel events were posted to the window, 50 ms apart.
+
+    | | Frame interval median | p95 | Max | Frames over 25 ms |
+    |---|---|---|---|---|
+    | Zoom in and out (the JPEG) | 6 ms | 7 ms | 7 ms | 0 |
+    | Folder grid scroll (400 images) | 6 ms | 7 ms | 8 ms | 0 |
+
+    Both run at the 165 Hz refresh rate. Once the input stops, the window
+    renders no further frames. Memory after the grid scroll:
+    working set 234 MB, dedicated VRAM 96 MB.
+  - **Deviations:**
+    - `qmlprofiler` was not used. The release build has no QML debugging,
+      and the user chose not to make a separate QML-debug build.
+    - The widget UI's frame times were not measured; it has no counterpart
+      of `QSG_RENDER_TIMING`.
 
 #### S4.2 Remove the widget UI
 - **Goal:** delete the legacy code paths.

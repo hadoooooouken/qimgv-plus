@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "settings.h"
+#include "components/windowstate/windowstatecontroller.h"
 #include "utils/savefilefilters.h"
 #include <QClipboard>
 #include <QApplication>
@@ -57,16 +58,10 @@ MW::MW(QWidget *parent)
     this->setAccessibleName("mainwindow");
     windowGeometryChangeTimer.setSingleShot(true);
     windowGeometryChangeTimer.setInterval(30);
-    // Debounce so the "Model: X" message stays readable instead of being
-    // instantly overwritten by "AI Upscaling..." when the model reload
-    // triggers a rescale; also coalesces rapid repeated key presses.
-    upscaylModelSwitchTimer.setSingleShot(true);
-    upscaylModelSwitchTimer.setInterval(1500);
     setupUi();
 
     connect(settings, &Settings::settingsChanged, this, &MW::readSettings);
     connect(&windowGeometryChangeTimer, &QTimer::timeout, this, &MW::onWindowGeometryChanged);
-    connect(&upscaylModelSwitchTimer, &QTimer::timeout, this, &MW::onUpscaylModelSwitchTimeout);
     connect(this, &MW::fullscreenStateChanged, this, &MW::adaptToWindowState);
 
     readSettings();
@@ -299,20 +294,12 @@ void MW::preShowResize(QSize sz) {
     auto screens = qApp->screens();
     if(this->windowState() != Qt::WindowNoState || !screens.count() || screens.count() <= currentDisplay)
         return;
-    int decorationSize = frameGeometry().height() - height();
-    float maxSzMulti = settings->autoResizeLimit() / 100.f;
-    QRect availableGeom = screens.at(currentDisplay)->availableGeometry();
-    QSize maxSz = availableGeom.size() * maxSzMulti;
-    maxSz.setHeight(maxSz.height() - decorationSize);
-    if(!sz.isEmpty()) {
-        if(sz.width() > maxSz.width() || sz.height() > maxSz.height())
-            sz.scale(maxSz, Qt::KeepAspectRatio);
-    } else {
-        sz = maxSz;
-    }
-    QRect newGeom(0,0, sz.width(), sz.height());
-    newGeom.moveCenter(availableGeom.center());
-    newGeom.translate(0, decorationSize / 2);
+    const QRect newGeom = windowGeometryFittingContent({
+        .contentSize = sz,
+        .availableGeometry = screens.at(currentDisplay)->availableGeometry(),
+        .limitPercent = settings->autoResizeLimit(),
+        .frameHeight = frameGeometry().height() - height(),
+    });
 
     if(this->isVisible())
         setGeometry(newGeom);
@@ -529,53 +516,6 @@ void MW::setFilter(ScalingFilter filter) {
     showMessage(tr("Filter: ") + filterName, 600);
     settings->setScalingFilter(filter);
     viewerWidget->setScalingFilter(filter);
-}
-
-void MW::toggleUpscayl() {
-    bool current = settings->useUpscayl();
-    settings->setUseUpscayl(!current);
-    settings->sendChangeNotification();
-    showMessageAiUpscale(settings->useUpscayl() ? tr("Use Upscayl: ON") : tr("Use Upscayl: OFF"), 600);
-    if (!settings->useUpscayl()) {
-        hideUpscaledCrop();
-    }
-}
-
-void MW::toggleHdrToneMapping() {
-    bool enabled = !settings->hdrToneMappingEnabled();
-    settings->setHdrToneMappingEnabled(enabled);
-    // Core already listens for settingsChanged and re-renders the current
-    // image when hdrToneMappingEnabled/Operator/TargetWhiteLevel differ from
-    // their last-seen values (see the lambda wired up in
-    // Core::connectComponents), which is the same path the settings dialog
-    // checkbox uses.
-    settings->sendChangeNotification();
-    showMessage(enabled ? tr("HDR Tone-Mapping: ON") : tr("HDR Tone-Mapping: OFF"), 600);
-}
-
-void MW::cycleUpscaylModel() {
-    const QStringList models = settings->availableUpscaylModels();
-    if (models.isEmpty())
-        return;
-    // Cycle from the last *requested* model, not the one currently loaded by
-    // the background worker, so repeated presses advance correctly even
-    // before the debounced refresh below has applied any of them yet.
-    const QString current = pendingUpscaylModelName.isEmpty() ? settings->upscaylModel() : pendingUpscaylModelName;
-    const int idx = models.indexOf(current);
-    const int next = (idx + 1) % models.size();
-    const QString nextModel = models.at(next);
-    pendingUpscaylModelName = nextModel;
-    settings->setUpscaylModel(nextModel);
-    showMessageAiUpscale(tr("Model: %1").arg(nextModel));
-    // Delay the actual reload/rescale: it triggers Upscaler::upscaleStarted,
-    // which shows an "AI Upscaling..." message that would otherwise
-    // immediately overwrite the "Model: X" message above.
-    upscaylModelSwitchTimer.start();
-}
-
-void MW::onUpscaylModelSwitchTimeout() {
-    pendingUpscaylModelName.clear();
-    settings->sendChangeNotification();
 }
 
 bool MW::isCropPanelActive() {

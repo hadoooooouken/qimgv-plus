@@ -6,6 +6,8 @@
 #include <QWindow>
 
 namespace {
+constexpr qreal kPercent = 100.0;
+
 // A saved geometry that no longer meets any display (a monitor was removed)
 // is centred on the primary display instead of opening off-screen.
 QRect visibleGeometry(const QRect &saved) {
@@ -22,6 +24,20 @@ QRect visibleGeometry(const QRect &saved) {
     return moved;
 }
 } // namespace
+
+QRect windowGeometryFittingContent(const ContentFitRequest &request) {
+    QSize limit = request.availableGeometry.size() * (request.limitPercent / kPercent);
+    limit.setHeight(limit.height() - request.frameHeight);
+    QSize size = request.contentSize;
+    if (size.isEmpty())
+        size = limit;
+    else if (size.width() > limit.width() || size.height() > limit.height())
+        size.scale(limit, Qt::KeepAspectRatio);
+    QRect geometry(QPoint(), size);
+    geometry.moveCenter(request.availableGeometry.center());
+    geometry.translate(0, request.frameHeight / 2);
+    return geometry;
+}
 
 WindowStateController::WindowStateController(QWindow &window,
                                              const WindowPlacement &saved,
@@ -99,6 +115,29 @@ void WindowStateController::toggleFullscreen() {
         showWindowed();
     else
         showFullscreen();
+}
+
+void WindowStateController::fitToContent(QSize contentSize, int limitPercent) {
+    if (fullscreen || window.windowStates() != Qt::WindowNoState)
+        return;
+    const QScreen *screen = targetScreen();
+    if (!screen) {
+        qWarning() << "WindowStateController: no display to fit the window to";
+        return;
+    }
+    const QMargins frame = window.frameMargins();
+    const QRect geometry = windowGeometryFittingContent({
+        .contentSize = contentSize,
+        .availableGeometry = screen->availableGeometry(),
+        .limitPercent = limitPercent,
+        .frameHeight = frame.top() + frame.bottom(),
+    });
+    window.setGeometry(geometry);
+    // A shown window reports the new geometry once it has rested.
+    if (!window.isVisible()) {
+        current.geometry = geometry;
+        emit placementChanged(current);
+    }
 }
 
 void WindowStateController::savePlacement() {

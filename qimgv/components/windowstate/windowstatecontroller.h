@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QRect>
+#include <QSize>
 #include <QTimer>
 
 class QScreen;
@@ -17,6 +18,24 @@ struct WindowPlacement {
 
     bool operator==(const WindowPlacement &) const = default;
 };
+
+// Input of windowGeometryFittingContent().
+struct ContentFitRequest {
+    // Size of the shown document; an empty size takes the whole limit.
+    QSize contentSize;
+    // Available area of the window's display.
+    QRect availableGeometry;
+    // Largest window, in percent of availableGeometry.
+    int limitPercent = 100;
+    // Height of the title bar and the borders around the window's content.
+    int frameHeight = 0;
+};
+
+// Content geometry of a window that fits the shown document (the
+// "autoResizeWindow" setting): the document size, scaled down with its aspect
+// ratio kept to limitPercent of the available area less the frame, centred
+// on that area together with the frame.
+[[nodiscard]] QRect windowGeometryFittingContent(const ContentFitRequest &request);
 
 // Window states of a top-level QWindow, independent of the UI toolkit: it
 // restores the saved placement, remembers the maximized state and the
@@ -43,6 +62,12 @@ public:
     void showFullscreen();
     void showWindowed();
     void toggleFullscreen();
+
+    // Resizes a plain window (neither fullscreen, maximized nor minimized)
+    // to fit a document of contentSize on its display, within limitPercent
+    // of the display (windowGeometryFittingContent()). A hidden window keeps
+    // the geometry for when it is shown, and it is reported at once.
+    void fitToContent(QSize contentSize, int limitPercent);
 
     // Reports the current placement through placementChanged() now (for
     // example before the window is hidden or the application exits).

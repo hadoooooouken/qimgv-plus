@@ -81,6 +81,9 @@ add_library(qimgv_viewcomponents STATIC
     components/viewtransform/viewtransform.h
     components/viewtransform/viewtransformcontroller.cpp
     components/viewtransform/viewtransformcontroller.h
+    # Upscayl and HDR tone mapping toggles of the viewer (both UIs).
+    components/viewertoggles/viewertoggles.cpp
+    components/viewertoggles/viewertoggles.h
     # Format categories of the folder view's format filter (both UIs).
     utils/formatgroups.cpp
     utils/formatgroups.h

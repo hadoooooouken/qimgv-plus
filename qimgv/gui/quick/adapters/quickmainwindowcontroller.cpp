@@ -163,6 +163,11 @@ WId QuickMainWindowController::nativeWindowHandle() const {
     return window.winId();
 }
 
+void QuickMainWindowController::fitWindowToDocument(QSize size) {
+    if (settings.autoResizeWindow())
+        windowState.fitToContent(size, settings.autoResizeLimit());
+}
+
 void QuickMainWindowController::saveWindowGeometry() {
     windowState.savePlacement();
 }

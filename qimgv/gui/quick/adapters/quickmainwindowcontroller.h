@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QSize>
 #include <QString>
 
 #include "components/shellinfo/windowtitle.h"
@@ -72,6 +73,10 @@ public:
                                        QObject *parent = nullptr);
 
     [[nodiscard]] bool isFullscreen() const;
+
+    // With the "autoResizeWindow" setting, fits a plain window to a document
+    // of the given size (QuickViewerPort::documentShown()).
+    void fitWindowToDocument(QSize size);
 
     // IWindowPort
     void showWindow() override;

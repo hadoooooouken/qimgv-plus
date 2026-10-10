@@ -29,6 +29,8 @@ qt_add_executable(qimgv_tests
     tst_dialogs.cpp
     tst_settingseditor.cpp
     tst_batchprint.cpp
+    tst_uimode.cpp
+    tst_viewertoggles.cpp
     ../fakes/fakebatchconversionservice.h
     ../fakes/fakesettingsstores.h
     "${QIMGV_APP_SOURCE_DIR}/components/viewmode/viewmodecontroller.cpp"
@@ -42,6 +44,7 @@ qt_add_executable(qimgv_tests
     "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/themesnapshotbuilder.cpp"
     "${QIMGV_APP_SOURCE_DIR}/themestore.cpp"
     "${QIMGV_APP_SOURCE_DIR}/utils/actions.cpp"
+    "${QIMGV_APP_SOURCE_DIR}/utils/uimode.cpp"
 )
 
 # Components under test are compiled from the application sources and use

@@ -32,6 +32,8 @@ target_sources(qimgv-plus PRIVATE
     startuptiming.cpp
     startuptiming.h
     stuff.cpp
+    uimode.cpp
+    uimode.h
     fileoperations.cpp
     colormanager.cpp
     pngwriter.cpp

@@ -3,6 +3,8 @@
 #include <QObject>
 #include <memory>
 
+#include "components/viewertoggles/appviewertogglestore.h"
+#include "components/viewertoggles/viewertoggles.h"
 #include "components/viewmode/viewmodecontroller.h"
 #include "gui/ports/uievents.h"
 #include "gui/ports/uiports.h"
@@ -29,6 +31,7 @@ private:
     void forwardWindowEvents();
     void followViewMode();
     void connectWindowActions();
+    void connectViewerToggles();
 
     // Declaration order is construction order; the window is destroyed
     // before the controller and events it forwards to.
@@ -40,4 +43,7 @@ private:
     WidgetViewerAdapter viewerAdapter;
     WidgetShellAdapter shellAdapter;
     WidgetWindowAdapter windowAdapter;
+    // The Upscayl and HDR tone mapping actions, shared with the Quick UI.
+    AppViewerToggleStore viewerToggleStore;
+    ViewerToggles viewerToggles;
 };

@@ -11,12 +11,15 @@ WidgetUi::WidgetUi()
       dialogAdapter(*window),
       viewerAdapter(*window),
       shellAdapter(*window),
-      windowAdapter(*window) {
+      windowAdapter(*window),
+      viewerToggleStore(*settings),
+      viewerToggles(viewerToggleStore) {
     // The window is revealed by Core (cold start / raise), never implicitly.
     window->hide();
     forwardWindowEvents();
     followViewMode();
     connectWindowActions();
+    connectViewerToggles();
 }
 
 WidgetUi::~WidgetUi() = default;
@@ -120,13 +123,21 @@ void WidgetUi::connectWindowActions() {
             &MW::toggleScalingFilter);
     connect(actionManager, &ActionManager::cycleScalingFilter, mw,
             &MW::cycleScalingFilter);
-    connect(actionManager, &ActionManager::toggleUpscayl, mw, &MW::toggleUpscayl);
-    connect(actionManager, &ActionManager::cycleUpscaylModel, mw,
-            &MW::cycleUpscaylModel);
-    connect(actionManager, &ActionManager::toggleHdrToneMapping, mw,
-            &MW::toggleHdrToneMapping);
     connect(actionManager, &ActionManager::togglePanorama, mw, &MW::togglePanorama);
     connect(actionManager, &ActionManager::colorAdjustments, mw,
             &MW::toggleColorAdjustments);
     connect(actionManager, &ActionManager::casSettings, mw, &MW::toggleCasSettings);
+}
+
+void WidgetUi::connectViewerToggles() {
+    MW *mw = window.get();
+    ViewerToggles *toggles = &viewerToggles;
+    connect(actionManager, &ActionManager::toggleUpscayl, toggles,
+            &ViewerToggles::toggleUpscayl);
+    connect(actionManager, &ActionManager::cycleUpscaylModel, toggles,
+            &ViewerToggles::cycleUpscaylModel);
+    connect(actionManager, &ActionManager::toggleHdrToneMapping, toggles,
+            &ViewerToggles::toggleHdrToneMapping);
+    connect(toggles, &ViewerToggles::notificationRequested, mw, &MW::showNotification);
+    connect(toggles, &ViewerToggles::upscaledCropHideRequested, mw, &MW::hideUpscaledCrop);
 }

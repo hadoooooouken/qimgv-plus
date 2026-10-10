@@ -82,6 +82,8 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager,
       mViewport(BridgeSnapshots::readUiSettings(settings)),
       mViewerPort(mViewport),
       mViewerActions(actionManager, settings, mViewport),
+      mViewerToggleStore(settings),
+      mViewerToggles(mViewerToggleStore),
       mOverlays(BridgeSnapshots::readUiSettings(settings)),
       mOverlayActions(actionManager, settings, mOverlays, mViewport),
       mThumbnailPanel(*mThumbnailPanelView, BridgeSnapshots::readUiSettings(settings)),
@@ -116,6 +118,7 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager,
   QObject::connect(&settings, &Settings::settingsChanged, &mSettingsBridge,
                    [this]() { onSettingsChanged(); });
   forwardViewportEvents();
+  connectViewerToggles();
   forwardOverlayEvents();
   connectThumbnailPanel();
   connectFolderView();
@@ -145,6 +148,22 @@ void QuickUiHost::forwardViewportEvents() {
                    messages, [messages](const QString &message) {
                      messages->showError(message);
                    });
+}
+
+//------------------------------------------------------------------------------
+// The Upscayl and HDR tone mapping actions, shared with the widget UI.
+void QuickUiHost::connectViewerToggles() {
+  ViewerToggles *toggles = &mViewerToggles;
+  QObject::connect(&mActionManager, &ActionManager::toggleUpscayl, toggles,
+                   &ViewerToggles::toggleUpscayl);
+  QObject::connect(&mActionManager, &ActionManager::cycleUpscaylModel, toggles,
+                   &ViewerToggles::cycleUpscaylModel);
+  QObject::connect(&mActionManager, &ActionManager::toggleHdrToneMapping, toggles,
+                   &ViewerToggles::toggleHdrToneMapping);
+  QObject::connect(toggles, &ViewerToggles::notificationRequested,
+                   mOverlays.messages(), &NotificationOverlayModel::showNotification);
+  QObject::connect(toggles, &ViewerToggles::upscaledCropHideRequested, &mViewport,
+                   &ImageViewportController::hideUpscaledCrop);
 }
 
 //------------------------------------------------------------------------------
@@ -327,6 +346,9 @@ bool QuickUiHost::start() {
           .settings = mSettings,
           .actions = mActionManager,
       });
+  QObject::connect(&mViewerPort, &QuickViewerPort::documentShown,
+                   mWindowController.get(),
+                   &QuickMainWindowController::fitWindowToDocument);
   return true;
 }
 

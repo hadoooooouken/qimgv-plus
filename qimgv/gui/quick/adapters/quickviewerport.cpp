@@ -4,8 +4,9 @@
 
 #include "gui/quick/ui/imageviewportcontroller.h"
 
-QuickViewerPort::QuickViewerPort(ImageViewportController &viewport)
-    : viewport(viewport) {
+QuickViewerPort::QuickViewerPort(ImageViewportController &viewport, QObject *parent)
+    : QObject(parent),
+      viewport(viewport) {
 }
 
 DisplayPipeline QuickViewerPort::displayPipeline() const {
@@ -13,12 +14,13 @@ DisplayPipeline QuickViewerPort::displayPipeline() const {
 }
 
 void QuickViewerPort::showImage(std::shared_ptr<const QImage> image, const QString &filePath) {
+    if (image)
+        emit documentShown(image->size());
     viewport.showImage(std::move(image), filePath);
 }
 
-// The window is not resized to the animation (autoResizeWindow) until the
-// Quick main window takes over window geometry (S2.1).
-void QuickViewerPort::showAnimation(const QString &filePath, const QString &format, QSize) {
+void QuickViewerPort::showAnimation(const QString &filePath, const QString &format, QSize size) {
+    emit documentShown(size);
     viewport.showAnimation(filePath, format);
 }
 

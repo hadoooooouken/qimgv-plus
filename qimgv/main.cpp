@@ -30,6 +30,7 @@
 #include "settings.h"
 #include "utils/cmdoptionsrunner.h"
 #include "utils/startuptiming.h"
+#include "utils/uimode.h"
 
 //------------------------------------------------------------------------------
 ProxyStyleColors proxyStyleColors(const ColorScheme &colors) {
@@ -64,25 +65,12 @@ QDataStream &operator>>(QDataStream &in, Script &v) {
   return in;
 }
 //------------------------------------------------------------------------------
-// User interface selected at startup with --ui. The widget UI stays the
-// default until the Qt Quick UI reaches parity (docs/QML_MIGRATION_PLAN.md).
-enum class UiMode { Widgets, Quick };
-
 namespace {
 using namespace Qt::StringLiterals;
 
 constexpr QLatin1StringView uiOptionName = "ui"_L1;
-constexpr QLatin1StringView uiModeWidgetsName = "widgets"_L1;
-constexpr QLatin1StringView uiModeQuickName = "quick"_L1;
 } // namespace
 
-std::optional<UiMode> uiModeFromName(QStringView name) {
-  if (name == uiModeWidgetsName)
-    return UiMode::Widgets;
-  if (name == uiModeQuickName)
-    return UiMode::Quick;
-  return std::nullopt;
-}
 //------------------------------------------------------------------------------
 // The "multiInstance" setting, read before the services exist (they are
 // started only by the primary instance).
@@ -192,18 +180,21 @@ int main(int argc, char *argv[]) {
       {"build-options",
        QCoreApplication::translate("main", "Show build options.")},
   });
+  // No default value: without --ui the "userInterface" setting decides,
+  // which needs the services started below.
   const QCommandLineOption uiOption(
       uiOptionName,
-      QCoreApplication::translate("main",
-                                  "User interface: %1 (default) or %2.")
-          .arg(uiModeWidgetsName, uiModeQuickName),
-      QCoreApplication::translate("main", "ui"), uiModeWidgetsName);
+      QCoreApplication::translate(
+          "main", "User interface: %1 (default) or %2 (legacy fallback).")
+          .arg(uiModeName(UiMode::Quick), uiModeName(UiMode::Widgets)),
+      QCoreApplication::translate("main", "ui"));
   parser.addOption(uiOption);
   parser.process(a);
 
-  const std::optional<UiMode> uiMode =
-      uiModeFromName(parser.value(uiOption));
-  if (!uiMode) {
+  const std::optional<UiMode> commandLineUiMode =
+      parser.isSet(uiOption) ? uiModeFromName(parser.value(uiOption))
+                             : std::nullopt;
+  if (parser.isSet(uiOption) && !commandLineUiMode) {
     parser.showMessageAndExit(
         QCommandLineParser::MessageType::Error,
         QCoreApplication::translate("main", "Unknown user interface: %1")
@@ -253,7 +244,8 @@ int main(int argc, char *argv[]) {
     // translated; destroyed last, after the UI and Core.
     AppTranslator translator;
     SingleInstanceChannel *channelPtr = channel ? &*channel : nullptr;
-    if (*uiMode == UiMode::Quick) {
+    const UiMode uiMode = commandLineUiMode.value_or(settings->uiMode());
+    if (uiMode == UiMode::Quick) {
       QuickUiHost quickUi(*settings, *actionManager, *scriptManager);
       const std::optional<UiPorts> ports =
           quickUi.start() ? quickUi.ports() : std::nullopt;

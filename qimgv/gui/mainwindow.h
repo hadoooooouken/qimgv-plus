@@ -103,8 +103,6 @@ private:
   std::shared_ptr<ViewerWidget> viewerWidget;
   QHBoxLayout layout;
   QTimer windowGeometryChangeTimer;
-  QTimer upscaylModelSwitchTimer;
-  QString pendingUpscaylModelName;
   int currentDisplay;
   bool m_pseudoFullscreen;
   bool cropPanelActive, showInfoBarFullscreen, maximized;
@@ -149,7 +147,6 @@ private slots:
   void onInfoUpdated();
   void onScaleChanged(qreal scale);
   void showScriptSettings();
-  void onUpscaylModelSwitchTimeout();
 
 protected:
   void mouseMoveEvent(QMouseEvent *event);
@@ -264,9 +261,6 @@ public slots:
   void toggleLockView();
   void toggleFullscreenInfoBar();
   void togglePanorama();
-  void toggleUpscayl();
-  void cycleUpscaylModel();
-  void toggleHdrToneMapping();
   void adaptToWindowState();
 
 };

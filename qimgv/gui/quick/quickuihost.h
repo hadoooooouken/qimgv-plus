@@ -5,6 +5,8 @@
 #include <memory>
 #include <optional>
 
+#include "components/viewertoggles/appviewertogglestore.h"
+#include "components/viewertoggles/viewertoggles.h"
 #include "components/viewmode/viewmodecontroller.h"
 #include "gui/ports/uievents.h"
 #include "gui/ports/uiports.h"
@@ -40,7 +42,8 @@ class Settings;
 
 // Composition root of the Qt Quick UI (--ui=quick), the counterpart of
 // WidgetUi. Owns the global-service bridges, the image viewport controller
-// with its viewer port and actions, the overlays (OverlayCoordinator, which
+// with its viewer port and actions, the viewer's Upscayl and HDR toggles
+// (ViewerToggles), the overlays (OverlayCoordinator, which
 // is also the notification port) with their actions, the thumbnail panel
 // (its directory view, the DirectoryViewAdapter, and its
 // ThumbnailPanelController), the context menu (ContextMenuModel), the crop
@@ -81,6 +84,7 @@ private:
   void applyGraphicsApi();
   void configurePipelineCache(QQuickWindow &window);
   void forwardViewportEvents();
+  void connectViewerToggles();
   void forwardOverlayEvents();
   void connectThumbnailPanel();
   void connectFolderView();
@@ -106,6 +110,8 @@ private:
   ImageViewportController mViewport;
   QuickViewerPort mViewerPort;
   QuickViewerActions mViewerActions;
+  AppViewerToggleStore mViewerToggleStore;
+  ViewerToggles mViewerToggles;
   OverlayCoordinator mOverlays;
   QuickOverlayActions mOverlayActions;
   ThumbnailPanelController mThumbnailPanel;
