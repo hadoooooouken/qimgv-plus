@@ -18,8 +18,10 @@
 
 #include <array>
 #include <cmath>
+#if defined(__AVX2__)
 #include <immintrin.h>
 #include <type_traits>
+#endif
 
 /* *** HDR_HALF_QUALITY ***
  * If defined, a 16-bits float image is created, otherwise a 32-bits float ones (default).
@@ -298,17 +300,19 @@ constexpr int kRgbeRedOffset = 0;
 constexpr int kRgbeGreenOffset = 1;
 constexpr int kRgbeBlueOffset = 2;
 constexpr int kRgbeExponentOffset = 3;
-constexpr int kRgbeExponentShift = 24;
 constexpr int kRgbeExponentBias = 128;
 constexpr int kRgbeMinimumExponent = -31;
 constexpr int kRgbeMaximumExponent = 31;
 constexpr int kRgbeScaleCount = 256;
+#if defined(__AVX2__)
+constexpr int kRgbeExponentShift = 24;
 constexpr int kRgbePixelsPerAvx2Block = 8;
 constexpr int kRgbePixelsPerAvx2Store = 2;
 constexpr int kRgbeAvx2StoresPerBlock = kRgbePixelsPerAvx2Block / kRgbePixelsPerAvx2Store;
 constexpr int kFirstAlphaLane = 3;
 constexpr int kSecondAlphaLane = 7;
 constexpr int kAlphaLaneMask = (1 << kFirstAlphaLane) | (1 << kSecondAlphaLane);
+#endif
 constexpr float kRgbeChannelMaximum = 255.0f;
 constexpr float kOpaqueAlpha = 1.0f;
 
@@ -343,6 +347,7 @@ void convertRgbeScalar(const uchar *image, float_T *scanline, int pixelCount, fl
     }
 }
 
+#if defined(__AVX2__)
 void storeRgbePairAvx2(const uchar *image, float *scanline, __m256 scales)
 {
     const __m128i packedChannels = _mm_loadl_epi64(reinterpret_cast<const __m128i *>(image));
@@ -351,6 +356,7 @@ void storeRgbePairAvx2(const uchar *image, float *scanline, __m256 scales)
     const __m256 opaqueAlpha = _mm256_set1_ps(kOpaqueAlpha);
     _mm256_storeu_ps(scanline, _mm256_blend_ps(converted, opaqueAlpha, kAlphaLaneMask));
 }
+#endif // __AVX2__
 
 template<class float_T>
 void RGBE_To_QRgbLine(const uchar *image, float_T *scanline, const Header& h)
@@ -359,6 +365,8 @@ void RGBE_To_QRgbLine(const uchar *image, float_T *scanline, const Header& h)
     const float exposureScale = exposure > 0.0f ? kOpaqueAlpha / exposure : kOpaqueAlpha;
     int convertedPixelCount = 0;
 
+    // Non-AVX2 builds leave convertedPixelCount at 0 and convert the whole row per pixel.
+#if defined(__AVX2__)
     if constexpr (std::is_same_v<float_T, float>) {
         const auto& scales = rgbeScaleLut();
         const __m256 exposureVector = _mm256_set1_ps(exposureScale);
@@ -386,6 +394,7 @@ void RGBE_To_QRgbLine(const uchar *image, float_T *scanline, const Header& h)
             }
         }
     }
+#endif // __AVX2__
 
     convertRgbeScalar(image + convertedPixelCount * kRgbeChannelCount,
                       scanline + convertedPixelCount * kRgbeChannelCount,

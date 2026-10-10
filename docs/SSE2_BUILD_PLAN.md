@@ -371,6 +371,16 @@ File: `qimgv/3rdparty/kimageformats/hdr.cpp`.
 2. In `#else`, use the per-pixel RGBE conversion (existing scalar path, or add one based on
    Stage 0 findings).
 
+Implementation notes:
+
+- No `#else` branch was needed. `<immintrin.h>`, `<type_traits>`, the AVX2-only constants
+  (`kRgbeExponentShift`, the block/store/lane constants), `storeRgbePairAvx2` and the
+  `if constexpr` block loop are under `#if defined(__AVX2__)`. Non-AVX2 builds leave
+  `convertedPixelCount` at 0, and the existing `convertRgbeScalar` converts the whole row.
+- The scalar path uses the same scale LUT and the same `channel * (scale * exposureScale)`
+  order as the AVX2 path, so FP32 output from both builds is bit-identical. The
+  `HDR_HALF_QUALITY` (FP16) path was already scalar-only and is unchanged.
+
 Commit: `Add scalar RGBE decode path for non-AVX2 builds`
 
 ## Stage 6: Installer Variants
