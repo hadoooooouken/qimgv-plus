@@ -20,6 +20,11 @@ target_sources(qimgv-plus PRIVATE
     widgetui/widgetportadapters.cpp
     widgetui/widgetui.cpp
 
+    # Settings dialog stores over Settings / ActionManager / ScriptManager
+    # (both UIs).
+    settingseditor/appsettingsstore.cpp
+    settingseditor/appsettingsstore.h
+
     customwidgets/actionbutton.cpp
     customwidgets/clickablelabel.cpp
     customwidgets/contextmenuitem.cpp

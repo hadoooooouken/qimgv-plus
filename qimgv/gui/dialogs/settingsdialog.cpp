@@ -1,24 +1,58 @@
 #include "settingsdialog.h"
 #include "settings.h"
-#include "components/cache/thumbnailcache.h"
+#include "components/settingseditor/settingsoptions.h"
+#include "components/settingseditor/settingsscales.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QLocale>
 #include <QPushButton>
 #include <QVBoxLayout>
 
 namespace {
 constexpr int kPanelSliderMinimumWidth = 180;
+
+void fillComboBox(QComboBox *comboBox, const SettingsOptionList &options) {
+  comboBox->clear();
+  for (const SettingsOption &option : options)
+    comboBox->addItem(option.text, option.value);
 }
 
+void selectData(QComboBox *comboBox, const QVariant &value) {
+  const int index = comboBox->findData(value);
+  if (index != -1)
+    comboBox->setCurrentIndex(index);
+}
+
+void setRange(QSlider *slider, const SettingsRange &range) {
+  slider->setRange(range.from, range.to);
+  slider->setSingleStep(range.step);
+  slider->setPageStep(range.pageStep);
+}
+
+void setRange(QSpinBox *spinBox, const SettingsRange &range) {
+  spinBox->setRange(range.from, range.to);
+  spinBox->setSingleStep(range.step);
+}
+} // namespace
+
 SettingsDialog::SettingsDialog(QWidget *parent)
-    : QDialog(parent) {
+    : QDialog(parent),
+      mValueStore(*settings, *actionManager, *scriptManager),
+      mShortcutStore(*actionManager, *scriptManager),
+      mEditor(mValueStore, mShortcutStore) {
   setupUi();
   retranslateUi();
+  mEditor.load();
+
+  const SettingsRanges ranges = SettingsEditorModel::ranges();
+
+  connect(&mValueStore, &AppSettingsStore::clearThumbnailCacheRequested, this,
+          &SettingsDialog::clearThumbnailCacheRequested);
+  connect(&mEditor, &SettingsEditorModel::shortcutPut, this,
+          [this](int row) { shortcutsTableView->selectRow(row); });
 
   connect(useUpscaylCheckBox, &QCheckBox::toggled,
           preloadUpscaylCheckBox, &QCheckBox::setEnabled);
@@ -43,62 +77,57 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   connect(upscaylLimitCheckBox, &QCheckBox::toggled, this,
           updateLimitControls);
 
+  setRange(upscaylLimitSlider, ranges.upscaylLimit);
   connect(upscaylLimitSlider, &QSlider::valueChanged, this,
           [this](int value) {
-            const int step = upscaylLimitSlider->singleStep();
-            const int snapped = ((value + step / 2) / step) * step;
+            const int snapped =
+                SettingsScales::snapped(value, upscaylLimitSlider->singleStep());
             if (snapped != value) {
               upscaylLimitSlider->setValue(snapped);
               return;
             }
-            upscaylLimitValueLabel->setText(QString::number(snapped) + "%");
+            upscaylLimitValueLabel->setText(SettingsScales::percentText(snapped));
           });
 
-  upscaylModelComboBox->addItems(settings->availableUpscaylModels());
+  upscaylModelComboBox->addItems(mEditor.upscaylModels());
 
-  panelSizeSlider->setMinimum(13);
-  panelSizeSlider->setMaximum(32);
-  panelSizeSlider->setSingleStep(1);
+  setRange(panelSizeSlider, ranges.panelSize);
+  setRange(panelHideDelaySlider, ranges.panelHideDelay);
   connect(panelHideDelaySlider, &QSlider::valueChanged, this,
           [this](int value) {
-            const int step = Settings::PanelHideDelayStepMs;
-            const int snapped = ((value + step / 2) / step) * step;
+            const int snapped =
+                SettingsScales::snapped(value, panelHideDelaySlider->singleStep());
             if (snapped != value) {
               panelHideDelaySlider->setValue(snapped);
               return;
             }
-            panelHideDelayValueLabel->setText(tr("%1 ms").arg(snapped));
+            panelHideDelayValueLabel->setText(
+                SettingsScales::panelHideDelayText(snapped));
           });
-  this->setWindowTitle(tr("Preferences — ") + qApp->applicationName());
+  this->setWindowTitle(SettingsEditorModel::windowTitle());
 
-  shortcutsTableWidget->horizontalHeader()->setSectionResizeMode(
+  shortcutsTableView->setModel(mEditor.shortcutTable());
+  shortcutsTableView->horizontalHeader()->setSectionResizeMode(
       QHeaderView::Stretch);
+  scriptsListView->setModel(mEditor.scriptList());
   aboutAppTextBrowser->viewport()->setAutoFillBackground(false);
-  versionLabel->setText("" + QApplication::applicationVersion());
-  qtVersionLabel->setText(qVersion());
+  versionLabel->setText(SettingsEditorModel::applicationVersion());
+  qtVersionLabel->setText(SettingsEditorModel::qtVersion());
   appIconLabel->setPixmap(
       QIcon(":/res/icons/common/logo/app/qimgv.svg").pixmap(22, 22));
   qtIconLabel->setPixmap(
       QIcon(":/res/icons/common/logo/3rdparty/qt.svg").pixmap(22, 16));
 
-  // fake combobox that acts as a menu button
-  // less code than using pushbutton with menu
-  // will be replaced with something custom later
-  // Setup simplified theme mode selector
+  // Theme mode selector
   loadPresetLabel->setText(tr("Theme mode:"));
-  themeSelectorComboBox->clear();
-  themeSelectorComboBox->addItem(tr("System Default (Auto)"));
-  themeSelectorComboBox->addItem(tr("Dark"));
-  themeSelectorComboBox->addItem(tr("Light"));
+  fillComboBox(themeSelectorComboBox, SettingsOptions::themeModes());
 
   connect(themeSelectorComboBox,
-          qOverload<int>(&QComboBox::currentIndexChanged), [this](int index) {
-            if (index >= 0 && index <= 2) {
-              settings->setThemeMode(static_cast<ThemeMode>(index));
-              settings->loadTheme();
-              this->readColorScheme();
-              emit settingsChanged();
-            }
+          qOverload<int>(&QComboBox::currentIndexChanged), this, [this](int index) {
+            if (index < 0)
+              return;
+            mEditor.setThemeMode(themeSelectorComboBox->itemData(index).toInt());
+            showAccentColor();
           });
 
   // Hide unused checkboxes and labels
@@ -151,79 +180,19 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   connect(useCustomAccentCheckBox, &QCheckBox::toggled, this,
           [this](bool checked) {
             colorSelectorAccent->setEnabled(checked);
-            if (checked) {
-              settings->setHasCustomAccent(true);
-              ColorScheme scheme = settings->colorScheme();
-              BaseColorScheme base;
-              base.accent = colorSelectorAccent->color();
-              base.background = scheme.background;
-              base.background_fullscreen = scheme.background_fullscreen;
-              base.text = scheme.text;
-              base.icons = scheme.icons;
-              base.folder_icons = scheme.folder_icons;
-              base.thumbnail_folder_icons = scheme.thumbnail_folder_icons;
-              base.widget = scheme.widget;
-              base.widget_border = scheme.widget_border;
-              base.folderview = scheme.folderview;
-              base.folderview_topbar = scheme.folderview_topbar;
-              base.thumbpanel = scheme.thumbpanel;
-              base.scrollbar = scheme.scrollbar;
-              base.overlay = scheme.overlay;
-              base.overlay_text = scheme.overlay_text;
-              base.status_pending = scheme.status_pending;
-              base.status_error = scheme.status_error;
-              base.status_processing = scheme.status_processing;
-              base.status_success = scheme.status_success;
-              base.danger = scheme.danger;
-              base.trash = scheme.trash;
-              base.tid = scheme.tid;
-
-              settings->setColorScheme(ColorScheme(base));
-              settings->saveTheme();
-            } else {
-              settings->clearCustomAccent();
-              readColorScheme();
-            }
-            emit settingsChanged();
+            mEditor.setCustomAccent(checked);
+            showAccentColor();
           });
 
-  // Connect accent color changes to update and save instantly
-  connect(colorSelectorAccent, &ColorSelectorButton::colorChanged,
-          [this](QColor color) {
-            ColorScheme scheme = settings->colorScheme();
-            BaseColorScheme base;
-            base.accent = color;
-            base.background = scheme.background;
-            base.background_fullscreen = scheme.background_fullscreen;
-            base.text = scheme.text;
-            base.icons = scheme.icons;
-            base.folder_icons = scheme.folder_icons;
-            base.thumbnail_folder_icons = scheme.thumbnail_folder_icons;
-            base.widget = scheme.widget;
-            base.widget_border = scheme.widget_border;
-            base.folderview = scheme.folderview;
-            base.folderview_topbar = scheme.folderview_topbar;
-            base.thumbpanel = scheme.thumbpanel;
-            base.scrollbar = scheme.scrollbar;
-            base.overlay = scheme.overlay;
-            base.overlay_text = scheme.overlay_text;
-            base.status_pending = scheme.status_pending;
-            base.status_error = scheme.status_error;
-            base.status_processing = scheme.status_processing;
-            base.status_success = scheme.status_success;
-            base.danger = scheme.danger;
-            base.trash = scheme.trash;
-            base.tid = scheme.tid;
-
-            settings->setHasCustomAccent(true);
-            settings->setColorScheme(ColorScheme(base));
-            settings->saveTheme();
-            emit settingsChanged();
-          });
+  // Accent color changes are previewed and saved at once
+  connect(colorSelectorAccent, &ColorSelectorButton::colorChanged, this,
+          [this](QColor color) { mEditor.setAccentColor(color); });
 
   // Align opacity labels to make sliders line up perfectly
   label_5->setMinimumWidth(140);
   label_5_thumb->setMinimumWidth(140);
+  setRange(bgOpacitySlider, ranges.opacity);
+  setRange(thumbOpacitySlider, ranges.opacity);
 
   // Connect thumbnail opacity slider
   connect(thumbOpacitySlider, &QSlider::valueChanged, this,
@@ -231,12 +200,10 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   connect(thumbOpacitySlider, &QSlider::sliderReleased, this,
           &SettingsDialog::onThumbOpacitySliderReleased);
 
-  connect(useBlackBackgroundCheckBox, &QCheckBox::toggled,
+  connect(useBlackBackgroundCheckBox, &QCheckBox::toggled, this,
           [this](bool checked) {
-            settings->setUseBlackBackground(checked);
-            settings->loadTheme();
-            this->readColorScheme();
-            emit settingsChanged();
+            mEditor.setUseBlackBackground(checked);
+            showAccentColor();
           });
 
   colorSelectorAccent->setDescription(tr("Accent color"));
@@ -253,16 +220,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   colorSelectorThumbpanel->setDescription(tr("Thumbnail panel"));
   colorSelectorThumbpanel->setShowAlpha(true);
 
-  scalingQualityComboBox->clear();
-  scalingQualityComboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
-  scalingQualityComboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
-
-  scalingQualityComboBox->addItem(tr("Smart sharpen"),
-                                      QI_FILTER_SMART);
-  scalingQualityComboBox->addItem(tr("Magic Kernel Sharp 2021"), QI_FILTER_MKS2021);
-  scalingQualityComboBox->addItem(tr("FidelityFX-CAS (GPU)"), QI_FILTER_CAS);
-  scalingQualityComboBox->addItem(tr("Smart sharpen (GPU)"), QI_FILTER_SMART_GPU);
-  scalingQualityComboBox->addItem(tr("Magic Kernel Sharp 2021 (GPU)"), QI_FILTER_MKS2021_GPU);
+  fillComboBox(scalingQualityComboBox, SettingsOptions::scalingFilters());
 
   casContainerWidget = new QWidget(this);
   QGridLayout *casLayout = new QGridLayout(casContainerWidget);
@@ -271,14 +229,14 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
   QLabel *sharpLabel = new QLabel(tr("Sharpness:"), this);
   casSharpeningSlider = new QSlider(Qt::Horizontal, this);
-  casSharpeningSlider->setRange(1, 100);
+  setRange(casSharpeningSlider, ranges.casSharpening);
   casSharpeningSlider->setFixedWidth(170);
   casSharpeningLabel = new QLabel(this);
   casSharpeningLabel->setFixedWidth(30);
 
   QLabel *contrastLabel = new QLabel(tr("Contrast:"), this);
   casContrastSlider = new QSlider(Qt::Horizontal, this);
-  casContrastSlider->setRange(0, 100);
+  setRange(casContrastSlider, ranges.casContrast);
   casContrastSlider->setFixedWidth(170);
   casContrastLabel = new QLabel(this);
   casContrastLabel->setFixedWidth(30);
@@ -305,13 +263,11 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   });
 
   connect(casSharpeningSlider, &QSlider::valueChanged, this, [this](int val) {
-    casSharpeningLabel->setText(QString::number(val / 100.f, 'f', 2));
+    casSharpeningLabel->setText(SettingsScales::casValueText(val));
   });
   connect(casContrastSlider, &QSlider::valueChanged, this, [this](int val) {
-    casContrastLabel->setText(QString::number(val / 100.f, 'f', 2));
+    casContrastLabel->setText(SettingsScales::casValueText(val));
   });
-
-
 
   setupSidebar();
 
@@ -327,21 +283,23 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   zoomIndGrp.addButton(zoomIndicatorOff);
   zoomIndGrp.addButton(zoomIndicatorOn);
 
-  // readable language names
-  langs.insert("de_DE", "Deutsch");
-  langs.insert("en_US", "English");
-  langs.insert("es_ES", "Español");
-  langs.insert("fr_FR", "Français");
-  langs.insert("tr_TR", "Türkçe");
-  langs.insert("uk_UA", "Українська");
-  langs.insert("ja_JP", "日本語");
-  langs.insert("zh_CN", "简体中文");
-  langs.insert("ru_RU", "Русский");
-  // fill langs combobox, sorted by locale
-  langComboBox->addItems(langs.values());
-  // insert system language entry manually at the beginning
-  langs.insert("system", "System language");
-  langComboBox->insertItem(0, "System language");
+  // readable language names, the system language first
+  fillComboBox(langComboBox, SettingsOptions::languages());
+  fillComboBox(sortingComboBox, SettingsOptions::sortingModes());
+  fillComboBox(panelPositionComboBox, SettingsOptions::panelPositions());
+  fillComboBox(imageScrollingComboBox, SettingsOptions::imageScrollingModes());
+
+  setRange(autoResizeLimitSlider, ranges.autoResizeLimit);
+  slideshowIntervalSpinBox->setRange(ranges.slideshowInterval.from,
+                                     ranges.slideshowInterval.to);
+  setRange(expandLimitSlider, ranges.expandLimit);
+  setRange(zoomStepSlider, ranges.zoomStep);
+  setRange(mouseScrollingSpeedSlider, ranges.mouseScrollingSpeed);
+  setRange(thumbnailerThreadsSlider, ranges.thumbnailerThreads);
+  setRange(thumbnailResolutionSlider, ranges.thumbnailResolution);
+  setRange(thumbnailCacheQuotaSpinBox, ranges.thumbnailCacheSize);
+  setRange(JPEGQualitySlider, ranges.quality);
+  setRange(memoryLimitSpinBox, ranges.memoryLimit);
 
   connect(thumbnailResolutionSlider, &QSlider::valueChanged, this,
           &SettingsDialog::onThumbnailResolutionSliderChanged);
@@ -354,8 +312,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   modernQualitySlider = new QSlider(Qt::Horizontal, this);
   modernQualitySlider->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   modernQualitySlider->setMinimumSize(180, 25);
-  modernQualitySlider->setRange(0, 100);
-  modernQualitySlider->setPageStep(5);
+  setRange(modernQualitySlider, ranges.quality);
   modernQualitySlider->setTickPosition(QSlider::TicksBelow);
   modernQualitySlider->setTickInterval(10);
   modernQualityLabel = new QLabel(this);
@@ -374,9 +331,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   pngQualitySlider = new QSlider(Qt::Horizontal, this);
   pngQualitySlider->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   pngQualitySlider->setMinimumSize(180, 25);
-  pngQualitySlider->setRange(0, 9);
-  pngQualitySlider->setPageStep(1);
-  pngQualitySlider->setSingleStep(1);
+  setRange(pngQualitySlider, ranges.pngCompression);
   pngQualitySlider->setTickPosition(QSlider::TicksBelow);
   pngQualitySlider->setTickInterval(1);
   pngQualityLabel = new QLabel(this);
@@ -418,15 +373,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   QHBoxLayout *profileRowLayout = new QHBoxLayout();
   QLabel *profileLabel = new QLabel(tr("Monitor profile:"), this);
   monitorProfileComboBox = new QComboBox(this);
-  monitorProfileComboBox->addItem(tr("System / Auto (Recommended)"), "System");
-  monitorProfileComboBox->addItem(tr("sRGB"), "sRGB");
-  monitorProfileComboBox->addItem(tr("Display P3"), "DisplayP3");
-  monitorProfileComboBox->addItem(tr("Adobe RGB"), "AdobeRGB");
-  monitorProfileComboBox->addItem(tr("Rec. 2020"), "Rec2020");
-  monitorProfileComboBox->addItem(tr("ProPhoto RGB"), "ProPhoto");
-  monitorProfileComboBox->addItem(tr("Linear sRGB"), "LinearSRGB");
-  monitorProfileComboBox->addItem(tr("Custom Profile (.icc/.icm)..."),
-                                  "Custom");
+  fillComboBox(monitorProfileComboBox, SettingsOptions::monitorProfiles());
   profileRowLayout->addWidget(profileLabel);
   profileRowLayout->addWidget(monitorProfileComboBox);
   profileRowLayout->addStretch(1);
@@ -454,34 +401,20 @@ SettingsDialog::SettingsDialog(QWidget *parent)
         colorManagementGroupBox);
   }
 
-  // Helper lambda or slot to enable/disable controls
-  auto updateCMControls = [this]() {
-    bool cmEnabled = colorManagementCheckBox->isChecked();
-    monitorProfileComboBox->setEnabled(cmEnabled);
-
-    bool customSelected =
-        (monitorProfileComboBox->currentData().toString() == "Custom");
-    customProfileContainer->setVisible(cmEnabled && customSelected);
-    customProfilePathEdit->setEnabled(cmEnabled);
-    customProfileBrowseButton->setEnabled(cmEnabled);
-  };
-
-  connect(colorManagementCheckBox, &QCheckBox::toggled, this, updateCMControls);
+  connect(colorManagementCheckBox, &QCheckBox::toggled, this,
+          &SettingsDialog::updateColorManagementControls);
   connect(monitorProfileComboBox,
           qOverload<int>(&QComboBox::currentIndexChanged), this,
-          updateCMControls);
+          &SettingsDialog::updateColorManagementControls);
 
   connect(customProfileBrowseButton, &QPushButton::clicked, this, [this]() {
     QString path = QFileDialog::getOpenFileName(
-        this, tr("Select Monitor Color Profile"), QString(),
-        tr("Color Profiles (*.icc *.icm)"));
+        this, SettingsEditorModel::colorProfileDialogTitle(), QString(),
+        SettingsEditorModel::colorProfileFilters().join(QStringLiteral(";;")));
     if (!path.isEmpty()) {
       customProfilePathEdit->setText(path);
     }
   });
-
-  // Run update to set initial visibility/enabled states
-  updateCMControls();
 
   // --- HDR Tone-Mapping GroupBox ---
   hdrGroupBox = new QGroupBox(tr("HDR Tone-Mapping"), this);
@@ -496,10 +429,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   QHBoxLayout *operatorRowLayout = new QHBoxLayout();
   QLabel *operatorLabel = new QLabel(tr("Tone-mapping operator:"), this);
   hdrOperatorComboBox = new QComboBox(this);
-  hdrOperatorComboBox->addItem(tr("ITU-R BT.2408 (Recommended)"), 0);
-  hdrOperatorComboBox->addItem(tr("Reinhard-Jodie"), 1);
-  hdrOperatorComboBox->addItem(tr("ACES Filmic"), 2);
-  hdrOperatorComboBox->addItem(tr("Hable (Uncharted 2)"), 3);
+  fillComboBox(hdrOperatorComboBox, SettingsOptions::hdrOperators());
   operatorRowLayout->addWidget(operatorLabel);
   operatorRowLayout->addWidget(hdrOperatorComboBox);
   operatorRowLayout->addStretch(1);
@@ -509,10 +439,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
   QHBoxLayout *whiteLevelRowLayout = new QHBoxLayout();
   QLabel *whiteLevelLabel = new QLabel(tr("Target white level:"), this);
   hdrTargetWhiteComboBox = new QComboBox(this);
-  hdrTargetWhiteComboBox->addItem(tr("203 nits (ITU-R BT.2408 Default)"), 203);
-  hdrTargetWhiteComboBox->addItem(tr("100 nits (Standard sRGB)"), 100);
-  hdrTargetWhiteComboBox->addItem(tr("80 nits (Dim Environment)"), 80);
-  hdrTargetWhiteComboBox->addItem(tr("300 nits (Bright Room)"), 300);
+  fillComboBox(hdrTargetWhiteComboBox, SettingsOptions::hdrTargetWhiteLevels());
   whiteLevelRowLayout->addWidget(whiteLevelLabel);
   whiteLevelRowLayout->addWidget(hdrTargetWhiteComboBox);
   whiteLevelRowLayout->addStretch(1);
@@ -522,17 +449,9 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     scrollAreaWidgetContents_3->layout()->addWidget(hdrGroupBox);
   }
 
-  auto updateHdrControls = [this]() {
-    bool hdrEnabled = hdrToneMappingCheckBox->isChecked();
-    hdrOperatorComboBox->setEnabled(hdrEnabled);
-    hdrTargetWhiteComboBox->setEnabled(hdrEnabled);
-  };
+  connect(hdrToneMappingCheckBox, &QCheckBox::toggled, this,
+          &SettingsDialog::updateHdrControls);
 
-  connect(hdrToneMappingCheckBox, &QCheckBox::toggled, this, updateHdrControls);
-  updateHdrControls();
-
-  connect(this, &SettingsDialog::settingsChanged, settings,
-          &Settings::sendChangeNotification);
   readSettings();
 
   adjustSizeToContents();
@@ -563,420 +482,322 @@ void SettingsDialog::adjustSizeToContents() {
   scrollArea_3->setMinimumWidth(
       scrollAreaWidgetContents_3->minimumSizeHint().width());
   // container
-  // stackedWidget->layout()->activate();
   this->setMinimumWidth(sizeHint().width() + 22);
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::setupSidebar() {}
 //------------------------------------------------------------------------------
-void SettingsDialog::readSettings() {
-  themeSelectorComboBox->blockSignals(true);
-  thumbOpacitySlider->blockSignals(true);
-  useBlackBackgroundCheckBox->blockSignals(true);
-  useCustomAccentCheckBox->blockSignals(true);
-
-  loopSlideshowCheckBox->setChecked(settings->loopSlideshow());
-  enablePanelCheckBox->setChecked(settings->panelEnabled());
-  thumbnailPanelGroupContents->setEnabled(settings->panelEnabled());
-  panelHideDelaySlider->setValue(settings->panelHideDelayMs());
-  panelHideDelayValueLabel->setText(
-      tr("%1 ms").arg(panelHideDelaySlider->value()));
-  panelFullscreenOnlyCheckBox->setChecked(settings->panelFullscreenOnly());
-  squareThumbnailsCheckBox->setChecked(settings->squareThumbnails());
-  transparencyGridCheckBox->setChecked(settings->transparencyGrid());
-  enableSmoothScrollCheckBox->setChecked(settings->enableSmoothScroll());
-  enableSmoothZoomCheckBox->setChecked(settings->enableSmoothZoom());
-  usePreloaderCheckBox->setChecked(settings->usePreloader());
-  useThumbnailCacheCheckBox->setChecked(settings->useThumbnailCache());
-  expandImageCheckBox->setChecked(settings->expandImage());
-  expandImagesGroupContents->setEnabled(settings->expandImage());
-  bgOpacitySlider->setValue(
-      qRound(settings->backgroundOpacity() * 100.0));
-  sortingComboBox->setCurrentIndex(settings->sortingMode());
-  confirmDeleteCheckBox->setChecked(settings->confirmDelete());
-  confirmTrashCheckBox->setChecked(settings->confirmTrash());
-  unlockMinZoomCheckBox->setChecked(settings->unlockMinZoom());
-  sortFoldersCheckBox->setChecked(settings->sortFolders());
-  trackpadDetectionCheckBox->setChecked(settings->trackpadDetection());
-  clickableEdgesCheckBox->setChecked(settings->clickableEdges());
-  clickableEdgesVisibleCheckBox->setChecked(
-      settings->clickableEdgesVisible());
-  clickableEdgesVisibleCheckBox->setEnabled(settings->clickableEdges());
-  showHiddenFilesCheckBox->setChecked(settings->showHiddenFiles());
-
-  if (settings->zoomIndicatorMode() == INDICATOR_ENABLED)
-    zoomIndicatorOn->setChecked(true);
-  else if (settings->zoomIndicatorMode() == INDICATOR_AUTO)
-    zoomIndicatorAuto->setChecked(true);
-  else
-    zoomIndicatorOff->setChecked(true);
-  showInfoBarFullscreen->setChecked(settings->infoBarFullscreen());
-  showExtendedInfoTitle->setChecked(settings->windowTitleExtendedInfo());
-  cursorAutohideCheckBox->setChecked(settings->cursorAutohide());
-  keepFitModeCheckBox->setChecked(settings->keepFitMode());
-  if (settings->focusPointIn1to1Mode() == FOCUS_TOP)
-    focus1to1Top->setChecked(true);
-  else if (settings->focusPointIn1to1Mode() == FOCUS_CENTER)
-    focus1to1Center->setChecked(true);
-  else
-    focus1to1Cursor->setChecked(true);
-  slideshowIntervalSpinBox->setValue(settings->slideshowInterval());
-  imageScrollingComboBox->setCurrentIndex(settings->imageScrolling());
-  saveOverlayCheckBox->setChecked(settings->showSaveOverlay());
-  unloadThumbsCheckBox->setChecked(settings->unloadThumbs());
-  if (settings->thumbPanelStyle() == TH_PANEL_SIMPLE)
-    thumbStyleSimple->setChecked(true);
-  else
-    thumbStyleExtended->setChecked(true);
-  multiInstanceCheckBox->setChecked(settings->multiInstance());
-  if (settings->hasUpscaylModels()) {
-    useUpscaylCheckBox->setChecked(settings->useUpscayl());
-    preloadUpscaylCheckBox->setChecked(settings->preloadUpscayl());
-    preloadUpscaylCheckBox->setEnabled(settings->useUpscayl());
-    upscaylModelComboBox->setEnabled(settings->useUpscayl());
-    label_upscaylModel->setEnabled(settings->useUpscayl());
-
-    int modelIdx = upscaylModelComboBox->findText(settings->upscaylModel());
-    if (modelIdx != -1) {
-      upscaylModelComboBox->setCurrentIndex(modelIdx);
-    } else {
-      int defaultIdx =
-          upscaylModelComboBox->findText(Settings::defaultUpscaylModel());
-      if (defaultIdx != -1) {
-        upscaylModelComboBox->setCurrentIndex(defaultIdx);
-      } else if (upscaylModelComboBox->count() > 0) {
-        upscaylModelComboBox->setCurrentIndex(0);
-      }
-    }
-
-    upscaylLimitCheckBox->setChecked(settings->upscaylLimitEnabled());
-    upscaylLimitSlider->setValue(settings->upscaylLimitValue());
-    upscaylLimitValueLabel->setText(
-        QString::number(settings->upscaylLimitValue()) + "%");
-
-    upscaylLimitCheckBox->setEnabled(settings->useUpscayl());
-    bool limitEnabled = settings->useUpscayl() && settings->upscaylLimitEnabled();
-    upscaylLimitSlider->setEnabled(limitEnabled);
-    upscaylLimitValueLabel->setEnabled(limitEnabled);
-  } else {
-    useUpscaylCheckBox->setChecked(false);
-    useUpscaylCheckBox->setEnabled(false);
-    useUpscaylCheckBox->setToolTip(tr("No AI models found in models/ directory."));
-    preloadUpscaylCheckBox->setChecked(false);
-    preloadUpscaylCheckBox->setEnabled(false);
-    upscaylModelComboBox->setEnabled(false);
-    label_upscaylModel->setEnabled(false);
-    upscaylLimitCheckBox->setChecked(false);
-    upscaylLimitCheckBox->setEnabled(false);
-    upscaylLimitSlider->setEnabled(false);
-    upscaylLimitValueLabel->setEnabled(false);
-  }
-
-  autoResizeWindowCheckBox->setChecked(settings->autoResizeWindow());
-  panelCenterSelectionCheckBox->setChecked(
-      settings->panelCenterSelection());
-  showSubfoldersInPanelCheckBox->setChecked(
-      settings->showSubfoldersInPanel());
-  useFixedZoomLevelsCheckBox->setChecked(settings->useFixedZoomLevels());
-  zoomLevels->setText(settings->zoomLevels());
-
-  if (settings->defaultViewMode() == MODE_FOLDERVIEW)
-    startInFolderViewCheckBox->setChecked(true);
-  else
-    startInFolderViewCheckBox->setChecked(false);
-
-  standbyCheckBox->setChecked(settings->standbyMode());
-  rememberLastFolderCheckBox->setChecked(settings->rememberLastFolder());
-
-  if (settings->folderEndAction() == FOLDER_END_NO_ACTION)
-    folderEndNoAction->setChecked(true);
-  else if (settings->folderEndAction() == FOLDER_END_LOOP)
-    folderEndLoop->setChecked(true);
-  else
-    folderEndSwitchFolder->setChecked(true);
-
-  zoomStepSlider->setValue(static_cast<int>(settings->zoomStep() * 100.f));
-  onZoomStepSliderChanged(zoomStepSlider->value());
-
-  mouseScrollingSpeedSlider->setValue(
-      static_cast<int>((settings->mouseScrollingSpeed() - 0.5f) / 0.25f));
-  onMouseScrollingSpeedSliderChanged(mouseScrollingSpeedSlider->value());
-
-  autoResizeLimitSlider->setValue(
-      static_cast<int>(settings->autoResizeLimit() / 5.f));
-  onAutoResizeLimitSliderChanged(autoResizeLimitSlider->value());
-
-  JPEGQualitySlider->setValue(settings->JPEGSaveQuality());
-  onJPEGQualitySliderChanged(JPEGQualitySlider->value());
-
-  pngQualitySlider->setValue(settings->pngSaveQuality());
-  onPNGQualitySliderChanged(pngQualitySlider->value());
-
-  modernQualitySlider->setValue(settings->modernSaveQuality());
-  onModernQualitySliderChanged(modernQualitySlider->value());
-
-  expandLimitSlider->setValue(settings->expandLimit());
-  onExpandLimitSliderChanged(expandLimitSlider->value());
-
-  // thumbnailer threads
-  thumbnailerThreadsSlider->setValue(settings->thumbnailerThreadCount());
-  onThumbnailerThreadsSliderChanged(thumbnailerThreadsSlider->value());
-
-  thumbnailResolutionSlider->setValue(settings->thumbnailResolution());
-  onThumbnailResolutionSliderChanged(thumbnailResolutionSlider->value());
-
-  thumbnailCacheQuotaSpinBox->setValue(settings->thumbnailCacheMaxSizeMB());
-  updateThumbnailCacheSizeLabel();
-
-  memoryLimitSpinBox->setValue(settings->memoryAllocationLimit());
-  excludedCachePathsLineEdit->setText(settings->excludedCachePaths());
-
-  // language
-  QString langName = langs.value(settings->language());
-  if (langName.isEmpty() || langComboBox->findText(langName) == -1)
-    langComboBox->setCurrentText("en_US");
-  else
-    langComboBox->setCurrentText(langName);
-
-  // ##### fit mode #####
-  if (settings->imageFitMode() == FIT_WINDOW)
-    fitModeWindow->setChecked(true);
-  else if (settings->imageFitMode() == FIT_WIDTH)
-    fitModeWidth->setChecked(true);
-  else if (settings->imageFitMode() == FIT_HEIGHT)
-    fitModeHeight->setChecked(true);
-  else
-    fitMode1to1->setChecked(true);
-
-  // ##### UI #####
-  casSharpeningSlider->setValue(static_cast<int>(settings->casSharpening() * 100.f));
-  casContrastSlider->setValue(static_cast<int>(settings->casContrast() * 100.f));
-
-  int filterIndex =
-      scalingQualityComboBox->findData(settings->scalingFilter());
-  if (filterIndex != -1)
-    scalingQualityComboBox->setCurrentIndex(filterIndex);
-  else
-    scalingQualityComboBox->setCurrentIndex(1); // default to Bilinear
-
-  bool isCas = (settings->scalingFilter() == QI_FILTER_CAS);
-  casContainerWidget->setVisible(isCas);
-  fullscreenCheckBox->setChecked(settings->fullscreenMode());
-  pinPanelCheckBox->setChecked(settings->panelPinned());
-  panelPositionComboBox->setCurrentIndex(settings->panelPosition());
-
-  // reduce by 8x to have nice granular control in qslider
-  panelSizeSlider->setValue(settings->panelPreviewsSize() / 8);
-
-  themeSelectorComboBox->setCurrentIndex(
-      static_cast<int>(settings->themeMode()));
-  thumbOpacitySlider->setValue(
-      qRound(settings->thumbnailOpacity() * 100.0));
-  thumbOpacityPercentLabel->setText(
-      QString::number(thumbOpacitySlider->value()) + "%");
-  useBlackBackgroundCheckBox->setChecked(settings->useBlackBackground());
-
-  colorManagementCheckBox->blockSignals(true);
-  monitorProfileComboBox->blockSignals(true);
-
-  colorManagementCheckBox->setChecked(settings->colorManagementEnabled());
-  int cmIdx =
-      monitorProfileComboBox->findData(settings->monitorColorProfileType());
-  if (cmIdx != -1) {
-    monitorProfileComboBox->setCurrentIndex(cmIdx);
-  } else {
-    monitorProfileComboBox->setCurrentIndex(0);
-  }
-  customProfilePathEdit->setText(settings->monitorColorProfilePath());
-
-  bool cmEnabled = colorManagementCheckBox->isChecked();
+void SettingsDialog::updateColorManagementControls() {
+  const bool cmEnabled = colorManagementCheckBox->isChecked();
   monitorProfileComboBox->setEnabled(cmEnabled);
-  bool customSelected =
-      (monitorProfileComboBox->currentData().toString() == "Custom");
+  const bool customSelected = monitorProfileComboBox->currentData().toString() ==
+                              SettingsOptions::kCustomMonitorProfile;
   customProfileContainer->setVisible(cmEnabled && customSelected);
   customProfilePathEdit->setEnabled(cmEnabled);
   customProfileBrowseButton->setEnabled(cmEnabled);
-
-  colorManagementCheckBox->blockSignals(false);
-  monitorProfileComboBox->blockSignals(false);
-
-  hdrToneMappingCheckBox->blockSignals(true);
-  hdrOperatorComboBox->blockSignals(true);
-  hdrTargetWhiteComboBox->blockSignals(true);
-
-  hdrToneMappingCheckBox->setChecked(settings->hdrToneMappingEnabled());
-  int opIdx = hdrOperatorComboBox->findData(settings->hdrToneMappingOperator());
-  hdrOperatorComboBox->setCurrentIndex(opIdx != -1 ? opIdx : 0);
-  int whiteIdx = hdrTargetWhiteComboBox->findData(settings->hdrTargetWhiteLevel());
-  hdrTargetWhiteComboBox->setCurrentIndex(whiteIdx != -1 ? whiteIdx : 0);
-
-  bool hdrEnabled = hdrToneMappingCheckBox->isChecked();
+}
+//------------------------------------------------------------------------------
+void SettingsDialog::updateHdrControls() {
+  const bool hdrEnabled = hdrToneMappingCheckBox->isChecked();
   hdrOperatorComboBox->setEnabled(hdrEnabled);
   hdrTargetWhiteComboBox->setEnabled(hdrEnabled);
+}
+//------------------------------------------------------------------------------
+// Shows the editor's values. The previewed theme controls do not preview
+// what is only shown.
+void SettingsDialog::readSettings() {
+  const QSignalBlocker themeBlocker(themeSelectorComboBox);
+  const QSignalBlocker opacityBlocker(thumbOpacitySlider);
+  const QSignalBlocker blackBlocker(useBlackBackgroundCheckBox);
+  const QSignalBlocker accentBlocker(useCustomAccentCheckBox);
 
-  hdrToneMappingCheckBox->blockSignals(false);
-  hdrOperatorComboBox->blockSignals(false);
-  hdrTargetWhiteComboBox->blockSignals(false);
+  const GeneralSettings general = mEditor.general();
+  const ViewSettings view = mEditor.view();
+  const ThemeSettings theme = mEditor.theme();
+  const ControlsSettings controls = mEditor.controls();
+  const AdvancedSettings advanced = mEditor.advanced();
+  const UpscaleSettings upscale = mEditor.upscale();
 
-  readColorScheme();
-  readShortcuts();
-  readScripts();
+  // ##### general #####
+  selectData(langComboBox, general.language);
+  fullscreenCheckBox->setChecked(general.fullscreenMode);
+  startInFolderViewCheckBox->setChecked(general.startInFolderView);
+  standbyCheckBox->setChecked(general.standbyMode);
+  rememberLastFolderCheckBox->setChecked(general.rememberLastFolder);
+  showExtendedInfoTitle->setChecked(general.windowTitleExtendedInfo);
+  showInfoBarFullscreen->setChecked(general.infoBarFullscreen);
+  cursorAutohideCheckBox->setChecked(general.cursorAutohide);
+  enableSmoothScrollCheckBox->setChecked(general.smoothScroll);
+  enableSmoothZoomCheckBox->setChecked(general.smoothZoom);
+  if (general.zoomIndicatorMode == INDICATOR_ENABLED)
+    zoomIndicatorOn->setChecked(true);
+  else if (general.zoomIndicatorMode == INDICATOR_AUTO)
+    zoomIndicatorAuto->setChecked(true);
+  else
+    zoomIndicatorOff->setChecked(true);
+  autoResizeWindowCheckBox->setChecked(general.autoResizeWindow);
+  autoResizeLimitSlider->setValue(general.autoResizeLimitStep);
+  onAutoResizeLimitSliderChanged(autoResizeLimitSlider->value());
 
-  useCustomAccentCheckBox->setChecked(settings->hasCustomAccent());
-  colorSelectorAccent->setEnabled(settings->hasCustomAccent());
+  enablePanelCheckBox->setChecked(general.panelEnabled);
+  thumbnailPanelGroupContents->setEnabled(general.panelEnabled);
+  squareThumbnailsCheckBox->setChecked(general.squareThumbnails);
+  pinPanelCheckBox->setChecked(general.panelPinned);
+  panelFullscreenOnlyCheckBox->setChecked(general.panelFullscreenOnly);
+  panelCenterSelectionCheckBox->setChecked(general.panelCenterSelection);
+  showSubfoldersInPanelCheckBox->setChecked(general.showSubfoldersInPanel);
+  panelHideDelaySlider->setValue(general.panelHideDelayMs);
+  panelHideDelayValueLabel->setText(
+      SettingsScales::panelHideDelayText(panelHideDelaySlider->value()));
+  if (general.thumbPanelStyle == TH_PANEL_SIMPLE)
+    thumbStyleSimple->setChecked(true);
+  else
+    thumbStyleExtended->setChecked(true);
+  panelSizeSlider->setValue(general.panelSizeStep);
+  selectData(panelPositionComboBox, general.panelPosition);
 
-  themeSelectorComboBox->blockSignals(false);
-  thumbOpacitySlider->blockSignals(false);
-  useBlackBackgroundCheckBox->blockSignals(false);
-  useCustomAccentCheckBox->blockSignals(false);
+  if (general.folderEndAction == FOLDER_END_NO_ACTION)
+    folderEndNoAction->setChecked(true);
+  else if (general.folderEndAction == FOLDER_END_LOOP)
+    folderEndLoop->setChecked(true);
+  else
+    folderEndSwitchFolder->setChecked(true);
+  selectData(sortingComboBox, general.sortingMode);
+  sortFoldersCheckBox->setChecked(general.sortFolders);
+  showHiddenFilesCheckBox->setChecked(general.showHiddenFiles);
+  slideshowIntervalSpinBox->setValue(general.slideshowIntervalMs);
+  loopSlideshowCheckBox->setChecked(general.loopSlideshow);
+
+  // ##### view #####
+  if (view.imageFitMode == FIT_WINDOW)
+    fitModeWindow->setChecked(true);
+  else if (view.imageFitMode == FIT_WIDTH)
+    fitModeWidth->setChecked(true);
+  else if (view.imageFitMode == FIT_HEIGHT)
+    fitModeHeight->setChecked(true);
+  else
+    fitMode1to1->setChecked(true);
+  keepFitModeCheckBox->setChecked(view.keepFitMode);
+  if (view.focusPoint == FOCUS_TOP)
+    focus1to1Top->setChecked(true);
+  else if (view.focusPoint == FOCUS_CENTER)
+    focus1to1Center->setChecked(true);
+  else
+    focus1to1Cursor->setChecked(true);
+  transparencyGridCheckBox->setChecked(view.transparencyGrid);
+  expandImageCheckBox->setChecked(view.expandImage);
+  expandImagesGroupContents->setEnabled(view.expandImage);
+  expandLimitSlider->setValue(view.expandLimit);
+  onExpandLimitSliderChanged(expandLimitSlider->value());
+  unlockMinZoomCheckBox->setChecked(view.unlockMinZoom);
+  zoomStepSlider->setValue(view.zoomStepPercent);
+  onZoomStepSliderChanged(zoomStepSlider->value());
+  useFixedZoomLevelsCheckBox->setChecked(view.useFixedZoomLevels);
+  zoomLevels->setText(view.zoomLevels);
+
+  selectData(scalingQualityComboBox, view.scalingFilter);
+  casSharpeningSlider->setValue(view.casSharpeningPercent);
+  casSharpeningLabel->setText(SettingsScales::casValueText(casSharpeningSlider->value()));
+  casContrastSlider->setValue(view.casContrastPercent);
+  casContrastLabel->setText(SettingsScales::casValueText(casContrastSlider->value()));
+  casContainerWidget->setVisible(mEditor.casOptionsVisible());
+
+  colorManagementCheckBox->setChecked(view.colorManagementEnabled);
+  selectData(monitorProfileComboBox, view.monitorProfileType);
+  customProfilePathEdit->setText(view.monitorProfilePath);
+  updateColorManagementControls();
+
+  hdrToneMappingCheckBox->setChecked(view.hdrToneMappingEnabled);
+  selectData(hdrOperatorComboBox, view.hdrOperator);
+  selectData(hdrTargetWhiteComboBox, view.hdrTargetWhiteLevel);
+  updateHdrControls();
+
+  // ##### theme #####
+  selectData(themeSelectorComboBox, theme.themeMode);
+  useCustomAccentCheckBox->setChecked(theme.customAccent);
+  colorSelectorAccent->setEnabled(theme.customAccent);
+  showAccentColor();
+  bgOpacitySlider->setValue(theme.backgroundOpacityPercent);
+  onBgOpacitySliderChanged(bgOpacitySlider->value());
+  thumbOpacitySlider->setValue(theme.thumbnailOpacityPercent);
+  thumbOpacityPercentLabel->setText(
+      SettingsScales::percentText(thumbOpacitySlider->value()));
+  useBlackBackgroundCheckBox->setChecked(theme.useBlackBackground);
+
+  // ##### controls #####
+  clickableEdgesCheckBox->setChecked(controls.clickableEdges);
+  clickableEdgesVisibleCheckBox->setChecked(controls.clickableEdgesVisible);
+  clickableEdgesVisibleCheckBox->setEnabled(controls.clickableEdges);
+  selectData(imageScrollingComboBox, controls.imageScrolling);
+  mouseScrollingSpeedSlider->setValue(controls.mouseScrollingSpeedStep);
+  onMouseScrollingSpeedSliderChanged(mouseScrollingSpeedSlider->value());
+  trackpadDetectionCheckBox->setChecked(controls.trackpadDetection);
+
+  // ##### advanced #####
+  usePreloaderCheckBox->setChecked(advanced.usePreloader);
+  thumbnailerThreadsSlider->setValue(advanced.thumbnailerThreads);
+  onThumbnailerThreadsSliderChanged(thumbnailerThreadsSlider->value());
+  useThumbnailCacheCheckBox->setChecked(advanced.useThumbnailCache);
+  thumbnailResolutionSlider->setValue(advanced.thumbnailResolution);
+  onThumbnailResolutionSliderChanged(thumbnailResolutionSlider->value());
+  thumbnailCacheQuotaSpinBox->setValue(advanced.thumbnailCacheMaxSizeMB);
+  thumbnailCacheSizeValueLabel->setText(mEditor.thumbnailCacheSizeText());
+  excludedCachePathsLineEdit->setText(advanced.excludedCachePaths);
+  unloadThumbsCheckBox->setChecked(advanced.unloadThumbs);
+  saveOverlayCheckBox->setChecked(advanced.showSaveOverlay);
+  JPEGQualitySlider->setValue(advanced.jpegQuality);
+  onJPEGQualitySliderChanged(JPEGQualitySlider->value());
+  modernQualitySlider->setValue(advanced.modernQuality);
+  onModernQualitySliderChanged(modernQualitySlider->value());
+  pngQualitySlider->setValue(advanced.pngCompression);
+  onPNGQualitySliderChanged(pngQualitySlider->value());
+  confirmTrashCheckBox->setChecked(advanced.confirmTrash);
+  confirmDeleteCheckBox->setChecked(advanced.confirmDelete);
+  multiInstanceCheckBox->setChecked(advanced.multiInstance);
+  memoryLimitSpinBox->setValue(advanced.memoryLimitMB);
+
+  // ##### AI upscale #####
+  const bool available = mEditor.isUpscaylAvailable();
+  useUpscaylCheckBox->setChecked(upscale.useUpscayl);
+  useUpscaylCheckBox->setEnabled(available);
+  if (!available)
+    useUpscaylCheckBox->setToolTip(tr("No AI models found in models/ directory."));
+  preloadUpscaylCheckBox->setChecked(upscale.preloadUpscayl);
+  preloadUpscaylCheckBox->setEnabled(mEditor.upscaylOptionsEnabled());
+  upscaylModelComboBox->setCurrentIndex(upscaylModelComboBox->findText(upscale.model));
+  upscaylModelComboBox->setEnabled(mEditor.upscaylOptionsEnabled());
+  label_upscaylModel->setEnabled(mEditor.upscaylOptionsEnabled());
+  upscaylLimitCheckBox->setChecked(upscale.limitEnabled);
+  upscaylLimitCheckBox->setEnabled(mEditor.upscaylOptionsEnabled());
+  upscaylLimitSlider->setValue(upscale.limitPercent);
+  upscaylLimitValueLabel->setText(SettingsScales::percentText(upscale.limitPercent));
+  upscaylLimitSlider->setEnabled(mEditor.upscaylLimitSliderEnabled());
+  upscaylLimitValueLabel->setEnabled(mEditor.upscaylLimitSliderEnabled());
+}
+//------------------------------------------------------------------------------
+SettingsValues SettingsDialog::collectSettings() const {
+  SettingsValues values;
+
+  GeneralSettings &general = values.general;
+  general.language = langComboBox->currentData().toString();
+  general.fullscreenMode = fullscreenCheckBox->isChecked();
+  general.startInFolderView = startInFolderViewCheckBox->isChecked();
+  general.standbyMode = standbyCheckBox->isChecked();
+  general.rememberLastFolder = rememberLastFolderCheckBox->isChecked();
+  general.windowTitleExtendedInfo = showExtendedInfoTitle->isChecked();
+  general.infoBarFullscreen = showInfoBarFullscreen->isChecked();
+  general.cursorAutohide = cursorAutohideCheckBox->isChecked();
+  general.smoothScroll = enableSmoothScrollCheckBox->isChecked();
+  general.smoothZoom = enableSmoothZoomCheckBox->isChecked();
+  if (zoomIndicatorOn->isChecked())
+    general.zoomIndicatorMode = INDICATOR_ENABLED;
+  else if (zoomIndicatorAuto->isChecked())
+    general.zoomIndicatorMode = INDICATOR_AUTO;
+  else
+    general.zoomIndicatorMode = INDICATOR_DISABLED;
+  general.autoResizeWindow = autoResizeWindowCheckBox->isChecked();
+  general.autoResizeLimitStep = autoResizeLimitSlider->value();
+  general.panelEnabled = enablePanelCheckBox->isChecked();
+  general.squareThumbnails = squareThumbnailsCheckBox->isChecked();
+  general.panelPinned = pinPanelCheckBox->isChecked();
+  general.panelFullscreenOnly = panelFullscreenOnlyCheckBox->isChecked();
+  general.panelCenterSelection = panelCenterSelectionCheckBox->isChecked();
+  general.showSubfoldersInPanel = showSubfoldersInPanelCheckBox->isChecked();
+  general.panelHideDelayMs = panelHideDelaySlider->value();
+  general.thumbPanelStyle =
+      thumbStyleSimple->isChecked() ? TH_PANEL_SIMPLE : TH_PANEL_EXTENDED;
+  general.panelSizeStep = panelSizeSlider->value();
+  general.panelPosition = panelPositionComboBox->currentData().toInt();
+  if (folderEndNoAction->isChecked())
+    general.folderEndAction = FOLDER_END_NO_ACTION;
+  else if (folderEndLoop->isChecked())
+    general.folderEndAction = FOLDER_END_LOOP;
+  else
+    general.folderEndAction = FOLDER_END_GOTO_ADJACENT;
+  general.sortingMode = sortingComboBox->currentData().toInt();
+  general.sortFolders = sortFoldersCheckBox->isChecked();
+  general.showHiddenFiles = showHiddenFilesCheckBox->isChecked();
+  general.slideshowIntervalMs = slideshowIntervalSpinBox->value();
+  general.loopSlideshow = loopSlideshowCheckBox->isChecked();
+
+  ViewSettings &view = values.view;
+  if (fitModeWindow->isChecked())
+    view.imageFitMode = FIT_WINDOW;
+  else if (fitModeWidth->isChecked())
+    view.imageFitMode = FIT_WIDTH;
+  else if (fitModeHeight->isChecked())
+    view.imageFitMode = FIT_HEIGHT;
+  else
+    view.imageFitMode = FIT_ORIGINAL;
+  view.keepFitMode = keepFitModeCheckBox->isChecked();
+  if (focus1to1Top->isChecked())
+    view.focusPoint = FOCUS_TOP;
+  else if (focus1to1Center->isChecked())
+    view.focusPoint = FOCUS_CENTER;
+  else
+    view.focusPoint = FOCUS_CURSOR;
+  view.transparencyGrid = transparencyGridCheckBox->isChecked();
+  view.expandImage = expandImageCheckBox->isChecked();
+  view.expandLimit = expandLimitSlider->value();
+  view.unlockMinZoom = unlockMinZoomCheckBox->isChecked();
+  view.zoomStepPercent = zoomStepSlider->value();
+  view.useFixedZoomLevels = useFixedZoomLevelsCheckBox->isChecked();
+  view.zoomLevels = zoomLevels->text();
+  view.scalingFilter = scalingQualityComboBox->currentData().toInt();
+  view.casSharpeningPercent = casSharpeningSlider->value();
+  view.casContrastPercent = casContrastSlider->value();
+  view.colorManagementEnabled = colorManagementCheckBox->isChecked();
+  view.monitorProfileType = monitorProfileComboBox->currentData().toString();
+  view.monitorProfilePath = customProfilePathEdit->text();
+  view.hdrToneMappingEnabled = hdrToneMappingCheckBox->isChecked();
+  view.hdrOperator = hdrOperatorComboBox->currentData().toInt();
+  view.hdrTargetWhiteLevel = hdrTargetWhiteComboBox->currentData().toInt();
+
+  ThemeSettings &theme = values.theme;
+  theme.themeMode = themeSelectorComboBox->currentData().toInt();
+  theme.customAccent = useCustomAccentCheckBox->isChecked();
+  theme.accentColor = colorSelectorAccent->color();
+  theme.backgroundOpacityPercent = bgOpacitySlider->value();
+  theme.thumbnailOpacityPercent = thumbOpacitySlider->value();
+  theme.useBlackBackground = useBlackBackgroundCheckBox->isChecked();
+
+  ControlsSettings &controls = values.controls;
+  controls.clickableEdges = clickableEdgesCheckBox->isChecked();
+  controls.clickableEdgesVisible = clickableEdgesVisibleCheckBox->isChecked();
+  controls.imageScrolling = imageScrollingComboBox->currentData().toInt();
+  controls.mouseScrollingSpeedStep = mouseScrollingSpeedSlider->value();
+  controls.trackpadDetection = trackpadDetectionCheckBox->isChecked();
+
+  AdvancedSettings &advanced = values.advanced;
+  advanced.usePreloader = usePreloaderCheckBox->isChecked();
+  advanced.thumbnailerThreads = thumbnailerThreadsSlider->value();
+  advanced.useThumbnailCache = useThumbnailCacheCheckBox->isChecked();
+  advanced.thumbnailResolution = thumbnailResolutionSlider->value();
+  advanced.thumbnailCacheMaxSizeMB = thumbnailCacheQuotaSpinBox->value();
+  advanced.excludedCachePaths = excludedCachePathsLineEdit->text();
+  advanced.unloadThumbs = unloadThumbsCheckBox->isChecked();
+  advanced.showSaveOverlay = saveOverlayCheckBox->isChecked();
+  advanced.jpegQuality = JPEGQualitySlider->value();
+  advanced.modernQuality = modernQualitySlider->value();
+  advanced.pngCompression = pngQualitySlider->value();
+  advanced.confirmTrash = confirmTrashCheckBox->isChecked();
+  advanced.confirmDelete = confirmDeleteCheckBox->isChecked();
+  advanced.multiInstance = multiInstanceCheckBox->isChecked();
+  advanced.memoryLimitMB = memoryLimitSpinBox->value();
+
+  UpscaleSettings &upscale = values.upscale;
+  upscale.useUpscayl = useUpscaylCheckBox->isChecked();
+  upscale.model = mEditor.isUpscaylAvailable() ? upscaylModelComboBox->currentText()
+                                               : mEditor.upscale().model;
+  upscale.preloadUpscayl = preloadUpscaylCheckBox->isChecked();
+  upscale.limitEnabled = upscaylLimitCheckBox->isChecked();
+  upscale.limitPercent = upscaylLimitSlider->value();
+  return values;
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::saveSettings() {
-  settings->setLoopSlideshow(loopSlideshowCheckBox->isChecked());
-  settings->setFullscreenMode(fullscreenCheckBox->isChecked());
-  if (fitModeWindow->isChecked())
-    settings->setImageFitMode(FIT_WINDOW);
-  else if (fitModeWidth->isChecked())
-    settings->setImageFitMode(FIT_WIDTH);
-  else if (fitModeHeight->isChecked())
-    settings->setImageFitMode(FIT_HEIGHT);
-  else
-    settings->setImageFitMode(FIT_ORIGINAL);
-
-  settings->setLanguage(langs.key(langComboBox->currentText()));
-
-  settings->setPanelEnabled(enablePanelCheckBox->isChecked());
-  settings->setPanelHideDelayMs(panelHideDelaySlider->value());
-  settings->setPanelFullscreenOnly(
-      panelFullscreenOnlyCheckBox->isChecked());
-  settings->setSquareThumbnails(squareThumbnailsCheckBox->isChecked());
-  settings->setTransparencyGrid(transparencyGridCheckBox->isChecked());
-  settings->setShowHiddenFiles(showHiddenFilesCheckBox->isChecked());
-  settings->setEnableSmoothScroll(enableSmoothScrollCheckBox->isChecked());
-  settings->setEnableSmoothZoom(enableSmoothZoomCheckBox->isChecked());
-  settings->setUsePreloader(usePreloaderCheckBox->isChecked());
-  settings->setUseThumbnailCache(useThumbnailCacheCheckBox->isChecked());
-  settings->setThumbnailCacheMaxSizeMB(thumbnailCacheQuotaSpinBox->value());
-  settings->setExpandImage(expandImageCheckBox->isChecked());
-
-  settings->setBackgroundOpacity(
-      static_cast<qreal>(bgOpacitySlider->value()) / 100.0);
-  settings->setSortingMode(
-      static_cast<SortingMode>(sortingComboBox->currentIndex()));
-  settings->setConfirmDelete(confirmDeleteCheckBox->isChecked());
-  settings->setConfirmTrash(confirmTrashCheckBox->isChecked());
-  settings->setUnlockMinZoom(unlockMinZoomCheckBox->isChecked());
-  settings->setSortFolders(sortFoldersCheckBox->isChecked());
-  settings->setTrackpadDetection(trackpadDetectionCheckBox->isChecked());
-  settings->setClickableEdges(clickableEdgesCheckBox->isChecked());
-  settings->setClickableEdgesVisible(
-      clickableEdgesVisibleCheckBox->isChecked());
-
-  if (zoomIndicatorOn->isChecked())
-    settings->setZoomIndicatorMode(INDICATOR_ENABLED);
-  else if (zoomIndicatorAuto->isChecked())
-    settings->setZoomIndicatorMode(INDICATOR_AUTO);
-  else
-    settings->setZoomIndicatorMode(INDICATOR_DISABLED);
-  settings->setInfoBarFullscreen(showInfoBarFullscreen->isChecked());
-  settings->setWindowTitleExtendedInfo(showExtendedInfoTitle->isChecked());
-  settings->setCursorAutohide(cursorAutohideCheckBox->isChecked());
-  settings->setKeepFitMode(keepFitModeCheckBox->isChecked());
-  if (focus1to1Top->isChecked())
-    settings->setFocusPointIn1to1Mode(FOCUS_TOP);
-  else if (focus1to1Center->isChecked())
-    settings->setFocusPointIn1to1Mode(FOCUS_CENTER);
-  else
-    settings->setFocusPointIn1to1Mode(FOCUS_CURSOR);
-
-  settings->setSlideshowInterval(slideshowIntervalSpinBox->value());
-
-  if (startInFolderViewCheckBox->isChecked())
-    settings->setDefaultViewMode(MODE_FOLDERVIEW);
-  else
-    settings->setDefaultViewMode(MODE_DOCUMENT);
-
-  settings->setStandbyMode(standbyCheckBox->isChecked());
-  settings->setRememberLastFolder(rememberLastFolderCheckBox->isChecked());
-
-  if (folderEndNoAction->isChecked())
-    settings->setFolderEndAction(FOLDER_END_NO_ACTION);
-  else if (folderEndLoop->isChecked())
-    settings->setFolderEndAction(FOLDER_END_LOOP);
-  else
-    settings->setFolderEndAction(FOLDER_END_GOTO_ADJACENT);
-
-  settings->setScalingFilter(static_cast<ScalingFilter>(
-      scalingQualityComboBox->currentData().toInt()));
-  settings->setCasSharpening(casSharpeningSlider->value() / 100.f);
-  settings->setCasContrast(casContrastSlider->value() / 100.f);
-  settings->setImageScrolling(
-      static_cast<ImageScrolling>(imageScrollingComboBox->currentIndex()));
-  settings->setShowSaveOverlay(saveOverlayCheckBox->isChecked());
-  settings->setUnloadThumbs(unloadThumbsCheckBox->isChecked());
-  if (thumbStyleSimple->isChecked())
-    settings->setThumbPanelStyle(TH_PANEL_SIMPLE);
-  else
-    settings->setThumbPanelStyle(TH_PANEL_EXTENDED);
-  settings->setMultiInstance(multiInstanceCheckBox->isChecked());
-  settings->setUseUpscayl(useUpscaylCheckBox->isChecked());
-  settings->setPreloadUpscayl(preloadUpscaylCheckBox->isChecked());
-  settings->setUpscaylModel(upscaylModelComboBox->currentText());
-  settings->setUpscaylLimitEnabled(upscaylLimitCheckBox->isChecked());
-  settings->setUpscaylLimitValue(upscaylLimitSlider->value());
-
-  settings->setAutoResizeWindow(autoResizeWindowCheckBox->isChecked());
-  settings->setPanelCenterSelection(
-      panelCenterSelectionCheckBox->isChecked());
-  settings->setShowSubfoldersInPanel(
-      showSubfoldersInPanelCheckBox->isChecked());
-  settings->setUseFixedZoomLevels(useFixedZoomLevelsCheckBox->isChecked());
-  settings->setZoomLevels(zoomLevels->text());
-
-  settings->setPanelPinned(pinPanelCheckBox->isChecked());
-  int panelPos = panelPositionComboBox->currentIndex();
-  settings->setPanelPosition(static_cast<PanelPosition>(panelPos));
-
-  settings->setPanelPreviewsSize(panelSizeSlider->value() * 8);
-
-  settings->setJPEGSaveQuality(JPEGQualitySlider->value());
-  settings->setPngSaveQuality(pngQualitySlider->value());
-  settings->setModernSaveQuality(modernQualitySlider->value());
-  settings->setZoomStep(
-      static_cast<qreal>(zoomStepSlider->value() / 100.f));
-  settings->setMouseScrollingSpeed(static_cast<qreal>(
-      0.5f + (mouseScrollingSpeedSlider->value() * 0.25f)));
-  settings->setAutoResizeLimit(autoResizeLimitSlider->value() * 5);
-  settings->setExpandLimit(expandLimitSlider->value());
-  settings->setThumbnailerThreadCount(thumbnailerThreadsSlider->value());
-  settings->setMemoryAllocationLimit(memoryLimitSpinBox->value());
-  settings->setExcludedCachePaths(excludedCachePathsLineEdit->text());
-
-  settings->setColorManagementEnabled(colorManagementCheckBox->isChecked());
-  settings->setMonitorColorProfileType(
-      monitorProfileComboBox->currentData().toString());
-  settings->setMonitorColorProfilePath(customProfilePathEdit->text());
-
-  settings->setHdrToneMappingEnabled(hdrToneMappingCheckBox->isChecked());
-  settings->setHdrToneMappingOperator(hdrOperatorComboBox->currentData().toInt());
-  settings->setHdrTargetWhiteLevel(hdrTargetWhiteComboBox->currentData().toInt());
-
-  int oldRes = settings->thumbnailResolution();
-  int newRes = thumbnailResolutionSlider->value();
-  if (oldRes != newRes) {
-    settings->setThumbnailResolution(newRes);
-  }
-  settings->setThemeMode(
-      static_cast<ThemeMode>(themeSelectorComboBox->currentIndex()));
-  settings->setThumbnailOpacity(thumbOpacitySlider->value() / 100.0);
-  settings->setUseBlackBackground(useBlackBackgroundCheckBox->isChecked());
-
-  saveColorScheme();
-  saveShortcuts();
-
-  scriptManager->saveScripts();
-  actionManager->saveShortcuts();
-  emit settingsChanged();
+  mEditor.setValues(collectSettings());
+  mEditor.apply();
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::saveSettingsAndClose() {
@@ -984,289 +805,123 @@ void SettingsDialog::saveSettingsAndClose() {
   this->close();
 }
 //------------------------------------------------------------------------------
-void SettingsDialog::readColorScheme() {
-  auto colors = settings->colorScheme();
-  setColorScheme(colors);
-}
-
-void SettingsDialog::setColorScheme(ColorScheme colors) {
-  colorSelectorAccent->blockSignals(true);
-  colorSelectorAccent->setColor(colors.accent);
-  colorSelectorAccent->blockSignals(false);
-}
-
-//------------------------------------------------------------------------------
-void SettingsDialog::saveColorScheme() {
-  bool customAccent = useCustomAccentCheckBox->isChecked();
-  settings->setHasCustomAccent(customAccent);
-
-  ColorScheme scheme = settings->colorScheme();
-  BaseColorScheme base;
-  base.accent = colorSelectorAccent->color();
-  base.background = scheme.background;
-  base.background_fullscreen = scheme.background_fullscreen;
-  base.text = scheme.text;
-  base.icons = scheme.icons;
-  base.folder_icons = scheme.folder_icons;
-  base.thumbnail_folder_icons = scheme.thumbnail_folder_icons;
-  base.widget = scheme.widget;
-  base.widget_border = scheme.widget_border;
-  base.folderview = scheme.folderview;
-  base.folderview_topbar = scheme.folderview_topbar;
-  base.thumbpanel = scheme.thumbpanel;
-  base.scrollbar = scheme.scrollbar;
-  base.overlay = scheme.overlay;
-  base.overlay_text = scheme.overlay_text;
-  base.status_pending = scheme.status_pending;
-  base.status_error = scheme.status_error;
-  base.status_processing = scheme.status_processing;
-  base.status_success = scheme.status_success;
-  base.danger = scheme.danger;
-  base.trash = scheme.trash;
-  base.tid = scheme.tid;
-
-  if (customAccent) {
-    settings->setColorScheme(ColorScheme(base));
-  } else {
-    settings->clearCustomAccent();
-  }
-  settings->saveTheme();
+void SettingsDialog::showAccentColor() {
+  QColor accent = mEditor.theme().accentColor;
+  const QSignalBlocker blocker(colorSelectorAccent);
+  colorSelectorAccent->setColor(accent);
 }
 //------------------------------------------------------------------------------
-void SettingsDialog::readShortcuts() {
-  shortcutsTableWidget->clearContents();
-  shortcutsTableWidget->setRowCount(0);
-  const QMap<QString, QString> shortcuts = actionManager->allShortcuts();
-  QMapIterator<QString, QString> i(shortcuts);
-  while (i.hasNext()) {
-    i.next();
-    addShortcutToTable(i.value(), i.key());
-  }
+int SettingsDialog::selectedShortcutRow() const {
+  return shortcutsTableView->currentIndex().row();
 }
 //------------------------------------------------------------------------------
-void SettingsDialog::readScripts() {
-  scriptsListWidget->clear();
-  const QMap<QString, Script> scripts = scriptManager->allScripts();
-  QMapIterator<QString, Script> i(scripts);
-  while (i.hasNext()) {
-    i.next();
-    addScriptToList(i.key());
-  }
+int SettingsDialog::selectedScriptRow() const {
+  return scriptsListView->currentIndex().row();
 }
 //------------------------------------------------------------------------------
-// does not check if the shortcut already there
-void SettingsDialog::addScriptToList(const QString &name) {
-  if (name.isEmpty())
-    return;
-
-  QListWidget *list = scriptsListWidget;
-  QListWidgetItem *nameItem = new QListWidgetItem(name);
-  nameItem->setTextAlignment(Qt::AlignVCenter | Qt::AlignLeft);
-  list->insertItem(scriptsListWidget->count(), nameItem);
-  list->sortItems(Qt::AscendingOrder);
+void SettingsDialog::runShortcutEditor() {
+  ShortcutCreatorDialog dialog(*mEditor.shortcutEditor(), this);
+  dialog.exec();
+}
+//------------------------------------------------------------------------------
+void SettingsDialog::runScriptEditor() {
+  ScriptEditorDialog dialog(*mEditor.scriptEditor(), this);
+  dialog.exec();
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::addScript() {
-  ScriptEditorDialog w;
-  if (w.exec()) {
-    if (w.scriptName().isEmpty())
-      return;
-    scriptManager->addScript(w.scriptName(), w.script());
-    readScripts();
-  }
+  mEditor.addScript();
+  runScriptEditor();
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::editScript() {
-  int row = scriptsListWidget->currentRow();
-  if (row >= 0) {
-    QString name = scriptsListWidget->currentItem()->text();
-    editScript(name);
-  }
+  editScript(scriptsListView->currentIndex());
 }
 //------------------------------------------------------------------------------
-void SettingsDialog::editScript(QListWidgetItem *item) {
-  if (item) {
-    editScript(item->text());
-  }
-}
-//------------------------------------------------------------------------------
-void SettingsDialog::editScript(QString name) {
-  ScriptEditorDialog w(name, scriptManager->getScript(name));
-  if (w.exec()) {
-    if (w.scriptName().isEmpty())
-      return;
-    scriptManager->addScript(w.scriptName(), w.script());
-    readScripts();
-  }
+void SettingsDialog::editScript(const QModelIndex &index) {
+  if (!index.isValid())
+    return;
+  mEditor.editScript(index.row());
+  runScriptEditor();
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::removeScript() {
-  int row = scriptsListWidget->currentRow();
-  if (row >= 0) {
-    QString scriptName = scriptsListWidget->currentItem()->text();
-    delete scriptsListWidget->takeItem(row);
-    saveShortcuts();
-    actionManager->removeAllShortcuts("s:" + scriptName);
-    readShortcuts();
-    scriptManager->removeScript(scriptName);
-  }
-}
-//------------------------------------------------------------------------------
-// does not check if the shortcut already there
-void SettingsDialog::addShortcutToTable(const QString &action,
-                                        const QString &shortcut) {
-  if (action.isEmpty() || shortcut.isEmpty())
-    return;
-
-  shortcutsTableWidget->setRowCount(shortcutsTableWidget->rowCount() +
-                                        1);
-  QTableWidgetItem *actionItem = new QTableWidgetItem(action);
-  actionItem->setTextAlignment(Qt::AlignCenter);
-  shortcutsTableWidget->setItem(shortcutsTableWidget->rowCount() - 1, 0,
-                                    actionItem);
-  QTableWidgetItem *shortcutItem = new QTableWidgetItem(shortcut);
-  shortcutItem->setTextAlignment(Qt::AlignCenter);
-  shortcutsTableWidget->setItem(shortcutsTableWidget->rowCount() - 1, 1,
-                                    shortcutItem);
-  // EFFICIENCY
-  shortcutsTableWidget->sortByColumn(0, Qt::AscendingOrder);
+  const int row = selectedScriptRow();
+  if (row >= 0)
+    mEditor.removeScript(row);
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::addShortcut() {
-  ShortcutCreatorDialog w;
-  if (!w.exec())
-    return;
-  for (int i = 0; i < shortcutsTableWidget->rowCount(); i++) {
-    if (shortcutsTableWidget->item(i, 1)->text() == w.selectedShortcut())
-      removeShortcutAt(i);
-  }
-  addShortcutToTable(w.selectedAction(), w.selectedShortcut());
-  // select
-  auto items = shortcutsTableWidget->findItems(w.selectedShortcut(),
-                                                   Qt::MatchExactly);
-  if (items.count()) {
-    int newRow = shortcutsTableWidget->row(items.at(0));
-    shortcutsTableWidget->selectRow(newRow);
-  }
-}
-//------------------------------------------------------------------------------
-void SettingsDialog::removeShortcutAt(int row) {
-  if (row > 0 && row >= shortcutsTableWidget->rowCount())
-    return;
-  shortcutsTableWidget->removeRow(row);
+  mEditor.addShortcut();
+  runShortcutEditor();
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::editShortcut(int row) {
-  if (row >= 0) {
-    ShortcutCreatorDialog w;
-    w.setWindowTitle(tr("Edit shortcut"));
-    w.setAction(shortcutsTableWidget->item(row, 0)->text());
-    w.setShortcut(shortcutsTableWidget->item(row, 1)->text());
-    if (!w.exec())
-      return;
-    // remove itself
-    removeShortcutAt(row);
-    // remove anything we are replacing
-    for (int i = 0; i < shortcutsTableWidget->rowCount(); i++) {
-      if (shortcutsTableWidget->item(i, 1)->text() == w.selectedShortcut())
-        removeShortcutAt(i);
-    }
-    // re-add
-    addShortcutToTable(w.selectedAction(), w.selectedShortcut());
-    // re-select
-    auto items = shortcutsTableWidget->findItems(w.selectedShortcut(),
-                                                     Qt::MatchExactly);
-    if (items.count()) {
-      int newRow = shortcutsTableWidget->row(items.at(0));
-      shortcutsTableWidget->selectRow(newRow);
-    }
-  }
+  if (row < 0)
+    return;
+  mEditor.editShortcut(row);
+  runShortcutEditor();
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::editShortcut() {
-  editShortcut(shortcutsTableWidget->currentRow());
+  editShortcut(selectedShortcutRow());
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::removeShortcut() {
-  removeShortcutAt(shortcutsTableWidget->currentRow());
-}
-//------------------------------------------------------------------------------
-void SettingsDialog::saveShortcuts() {
-  actionManager->removeAllShortcuts();
-  for (int i = 0; i < shortcutsTableWidget->rowCount(); i++) {
-    actionManager->addShortcut(shortcutsTableWidget->item(i, 1)->text(),
-                               shortcutsTableWidget->item(i, 0)->text());
-  }
+  const int row = selectedShortcutRow();
+  if (row >= 0)
+    mEditor.removeShortcut(row);
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::resetShortcuts() {
-  actionManager->resetDefaults();
-  readShortcuts();
+  mEditor.resetShortcuts();
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::resetZoomLevels() {
-  zoomLevels->setText(settings->defaultZoomLevels());
-}
-//------------------------------------------------------------------------------
-void SettingsDialog::updateThumbnailCacheSizeLabel() {
-  const qint64 bytes = ThumbnailCache::currentDiskUsageBytes();
-  thumbnailCacheSizeValueLabel->setText(QLocale().formattedDataSize(bytes));
+  mEditor.resetZoomLevels();
+  zoomLevels->setText(mEditor.view().zoomLevels);
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onClearThumbnailCacheClicked() {
-  // The live cache is owned by Core; this dialog only requests the clear.
-  // MainWindow forwards the request to Core, which performs it
-  // synchronously (same-thread direct connection), so the label can be
-  // refreshed immediately after the signal is emitted.
-  emit clearThumbnailCacheRequested();
-  updateThumbnailCacheSizeLabel();
+  // The live cache is owned by Core; the store requests the clear, which
+  // Core performs synchronously (direct connection).
+  mEditor.clearThumbnailCache();
+  thumbnailCacheSizeValueLabel->setText(mEditor.thumbnailCacheSizeText());
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onExpandLimitSliderChanged(int value) {
-  if (value == 0)
-    expandLimitLabel->setText("-");
-  else
-    expandLimitLabel->setText(QString::number(value) + "x");
+  expandLimitLabel->setText(SettingsScales::expandLimitText(value));
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onJPEGQualitySliderChanged(int value) {
-  JPEGQualityLabel->setText(QString::number(value) + "%");
+  JPEGQualityLabel->setText(SettingsScales::percentText(value));
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onPNGQualitySliderChanged(int value) {
-  QString desc;
-  if (value == 0)
-    desc = tr("None (Uncompressed)");
-  else if (value <= 3)
-    desc = tr("Fast");
-  else if (value <= 6)
-    desc = tr("Balanced");
-  else
-    desc = tr("Maximum");
-  pngQualityLabel->setText(QString("Level %1 (%2)").arg(value).arg(desc));
+  pngQualityLabel->setText(SettingsScales::pngCompressionText(value));
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onModernQualitySliderChanged(int value) {
-  modernQualityLabel->setText(QString::number(value) + "%");
+  modernQualityLabel->setText(SettingsScales::percentText(value));
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onZoomStepSliderChanged(int value) {
-  zoomStepLabel->setText(QString::number(value / 100.f, 'f', 2) + "x");
+  zoomStepLabel->setText(SettingsScales::zoomStepText(value));
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onMouseScrollingSpeedSliderChanged(int value) {
-  mouseScrollingSpeedLabel->setText(
-      QString::number(0.5f + (value * 0.25f), 'f', 2) + "x");
+  mouseScrollingSpeedLabel->setText(SettingsScales::mouseScrollingSpeedText(value));
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onThumbnailResolutionSliderChanged(int value) {
-  // Snap value to nearest multiple of 16
-  int snapped = ((value + 8) / 16) * 16;
+  const int snapped =
+      SettingsScales::snapped(value, thumbnailResolutionSlider->singleStep());
   if (snapped != value) {
     thumbnailResolutionSlider->setValue(snapped);
     return;
   }
-  thumbnailResolutionValueLabel->setText(QString::number(snapped) + " px");
+  thumbnailResolutionValueLabel->setText(
+      SettingsScales::thumbnailResolutionText(snapped));
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onThumbnailerThreadsSliderChanged(int value) {
@@ -1274,26 +929,20 @@ void SettingsDialog::onThumbnailerThreadsSliderChanged(int value) {
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onBgOpacitySliderChanged(int value) {
-  bgOpacityPercentLabel->setText(QString::number(value) + "%");
+  bgOpacityPercentLabel->setText(SettingsScales::percentText(value));
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onThumbOpacitySliderChanged(int value) {
-  thumbOpacityPercentLabel->setText(QString::number(value) + "%");
-  if (!thumbOpacitySlider->isSliderDown()) {
-    settings->setThumbnailOpacity(value / 100.f);
-    settings->loadTheme();
-    emit settingsChanged();
-  }
+  thumbOpacityPercentLabel->setText(SettingsScales::percentText(value));
+  mEditor.setThumbnailOpacityPercent(value, !thumbOpacitySlider->isSliderDown());
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onThumbOpacitySliderReleased() {
-  settings->setThumbnailOpacity(thumbOpacitySlider->value() / 100.f);
-  settings->loadTheme();
-  emit settingsChanged();
+  mEditor.setThumbnailOpacityPercent(thumbOpacitySlider->value(), true);
 }
 //------------------------------------------------------------------------------
 void SettingsDialog::onAutoResizeLimitSliderChanged(int value) {
-  autoResizeLimit->setText(QString::number(value * 5.f, 'f', 0) + "%");
+  autoResizeLimit->setText(SettingsScales::autoResizeLimitText(value));
 }
 //------------------------------------------------------------------------------
 int SettingsDialog::exec() {
@@ -1305,7 +954,6 @@ int SettingsDialog::exec() {
 void SettingsDialog::switchToPage(int number) {
   sideBar2->selectEntry(number);
 }
-
 
 void SettingsDialog::setupUi() {
         if (this->objectName().isEmpty())
@@ -3145,27 +2793,21 @@ void SettingsDialog::setupUi() {
 
         verticalLayout_33->addLayout(horizontalLayout_2);
 
-        shortcutsTableWidget = new QTableWidget(Controls);
-        if (shortcutsTableWidget->columnCount() < 2)
-            shortcutsTableWidget->setColumnCount(2);
-        QTableWidgetItem *__qtablewidgetitem = new QTableWidgetItem();
-        shortcutsTableWidget->setHorizontalHeaderItem(0, __qtablewidgetitem);
-        QTableWidgetItem *__qtablewidgetitem1 = new QTableWidgetItem();
-        shortcutsTableWidget->setHorizontalHeaderItem(1, __qtablewidgetitem1);
-        shortcutsTableWidget->setObjectName("shortcutsTableWidget");
+        shortcutsTableView = new QTableView(Controls);
+        shortcutsTableView->setObjectName("shortcutsTableView");
         QSizePolicy sizePolicy10(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
         sizePolicy10.setHorizontalStretch(0);
         sizePolicy10.setVerticalStretch(1);
-        sizePolicy10.setHeightForWidth(shortcutsTableWidget->sizePolicy().hasHeightForWidth());
-        shortcutsTableWidget->setSizePolicy(sizePolicy10);
-        shortcutsTableWidget->setEditTriggers(QAbstractItemView::EditTrigger::NoEditTriggers);
-        shortcutsTableWidget->setAlternatingRowColors(true);
-        shortcutsTableWidget->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
-        shortcutsTableWidget->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
-        shortcutsTableWidget->setSortingEnabled(false);
-        shortcutsTableWidget->verticalHeader()->setVisible(false);
+        sizePolicy10.setHeightForWidth(shortcutsTableView->sizePolicy().hasHeightForWidth());
+        shortcutsTableView->setSizePolicy(sizePolicy10);
+        shortcutsTableView->setEditTriggers(QAbstractItemView::EditTrigger::NoEditTriggers);
+        shortcutsTableView->setAlternatingRowColors(true);
+        shortcutsTableView->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+        shortcutsTableView->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+        shortcutsTableView->setSortingEnabled(false);
+        shortcutsTableView->verticalHeader()->setVisible(false);
 
-        verticalLayout_33->addWidget(shortcutsTableWidget);
+        verticalLayout_33->addWidget(shortcutsTableView);
 
 
         verticalLayout_28->addLayout(verticalLayout_33);
@@ -3379,11 +3021,12 @@ void SettingsDialog::setupUi() {
 
         verticalLayout_35->addLayout(horizontalLayout_21);
 
-        scriptsListWidget = new QListWidget(Scripts);
-        scriptsListWidget->setObjectName("scriptsListWidget");
-        scriptsListWidget->setAlternatingRowColors(true);
+        scriptsListView = new QListView(Scripts);
+        scriptsListView->setObjectName("scriptsListView");
+        scriptsListView->setAlternatingRowColors(true);
+        scriptsListView->setEditTriggers(QAbstractItemView::EditTrigger::NoEditTriggers);
 
-        verticalLayout_35->addWidget(scriptsListWidget);
+        verticalLayout_35->addWidget(scriptsListView);
 
 
         verticalLayout_29->addLayout(verticalLayout_35);
@@ -4013,10 +3656,10 @@ void SettingsDialog::setupUi() {
         QObject::connect(thumbnailerThreadsSlider, &QSlider::valueChanged, this, &SettingsDialog::onThumbnailerThreadsSliderChanged);
         QObject::connect(pushButton_2, &QPushButton::clicked, this, &SettingsDialog::addShortcut);
         QObject::connect(pushButton_4, &QPushButton::clicked, this, &SettingsDialog::removeShortcut);
-        QObject::connect(shortcutsTableWidget, &QTableWidget::cellDoubleClicked, this, qOverload<int>(&SettingsDialog::editShortcut));
+        QObject::connect(shortcutsTableView, &QTableView::doubleClicked, this, [this](const QModelIndex &index) { editShortcut(index.row()); });
         QObject::connect(enablePanelCheckBox, &QCheckBox::toggled, thumbnailPanelGroupContents, &QWidget::setEnabled);
         QObject::connect(pushButton_6, &QPushButton::clicked, this, qOverload<>(&SettingsDialog::editScript));
-        QObject::connect(scriptsListWidget, &QListWidget::itemDoubleClicked, this, qOverload<QListWidgetItem*>(&SettingsDialog::editScript));
+        QObject::connect(scriptsListView, &QListView::doubleClicked, this, qOverload<const QModelIndex &>(&SettingsDialog::editScript));
         QObject::connect(pushButton_7, &QPushButton::clicked, this, &SettingsDialog::removeScript);
         QObject::connect(expandImageCheckBox, &QCheckBox::toggled, expandImagesGroupContents, &QWidget::setEnabled);
         QObject::connect(sideBar2, &SSideBar::entrySelected, stackedWidget, &QStackedWidget::setCurrentIndex);
@@ -4187,10 +3830,6 @@ void SettingsDialog::retranslateUi() {
         pushButton_8->setText(QCoreApplication::translate("SettingsDialog", "Edit", nullptr));
         pushButton_4->setText(QCoreApplication::translate("SettingsDialog", "Remove", nullptr));
         pushButton_3->setText(QCoreApplication::translate("SettingsDialog", "Reset to defaults", nullptr));
-        QTableWidgetItem *___qtablewidgetitem = shortcutsTableWidget->horizontalHeaderItem(0);
-        ___qtablewidgetitem->setText(QCoreApplication::translate("SettingsDialog", "Action", nullptr));
-        QTableWidgetItem *___qtablewidgetitem1 = shortcutsTableWidget->horizontalHeaderItem(1);
-        ___qtablewidgetitem1->setText(QCoreApplication::translate("SettingsDialog", "Shortcut", nullptr));
         clickableEdgesCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Switch image by clicking window edges", nullptr));
         clickableEdgesVisibleCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Visible edges", nullptr));
         label_28->setText(QCoreApplication::translate("SettingsDialog", "Scroll image with:", nullptr));
@@ -4249,23 +3888,7 @@ void SettingsDialog::retranslateUi() {
         upscaylLimitCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Enable upscaling only when zoom exceeds:", nullptr));
         upscaylLimitValueLabel->setText(QCoreApplication::translate("SettingsDialog", "200%", nullptr));
         label_53->setText(QCoreApplication::translate("SettingsDialog", "About qimgv-plus", nullptr));
-        aboutAppTextBrowser->setMarkdown(QCoreApplication::translate("SettingsDialog",
-        "This is a fast and easy to use image viewer\n"
-        "\n"
-        "**Github page:** [https://github.com/hadoooooouken/qimgv-plus](https://github.com/hadoooooouken/qimgv-plus)\n"
-        "\n"
-        "**Original project:** [https://github.com/easymodo/qimgv](https://github.com/easymodo/qimgv)\n"
-        "\n"
-        "**Plus version developer:** [hadooooouken](https://github.com/hadoooooouken)\n"
-        "\n"
-        "**Original developer:** [easymodo](https://github.com/easymodo)\n"
-        "\n"
-        "[**Contributors**](https://github.com/hadoooooouken/qimgv-plus/graphs/contributors)\n"
-        "\n"
-        "qimgv is licensed under [GNU GPL Version 3](https://www.gnu.org/licenses/gpl-3.0.en.html)\n"
-        "\n"
-        "Report any issues / request features [here](https://github.com/hadoooooouken/qimgv-plus/issues)\n",
-        nullptr));
+        aboutAppTextBrowser->setMarkdown(SettingsEditorModel::aboutText());
         OK->setText(QCoreApplication::translate("SettingsDialog", "OK", nullptr));
         pushButton->setText(QCoreApplication::translate("SettingsDialog", "Apply", nullptr));
         Cancel->setText(QCoreApplication::translate("SettingsDialog", "Cancel", nullptr));

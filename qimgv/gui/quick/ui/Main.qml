@@ -23,6 +23,7 @@ ApplicationWindow {
     required property CropController crop
     required property FolderViewController folderView
     required property DialogCoordinator dialogs
+    required property SettingsDialogController settingsDialog
 
     // The context menu exists from its first opening on.
     property bool contextMenuCreated: false
@@ -127,6 +128,15 @@ ApplicationWindow {
     // Modal dialog windows of the dialog port, created on first use.
     DialogLayer {
         coordinator: root.dialogs
+    }
+
+    // The settings window, created when it is first opened.
+    Loader {
+        active: root.settingsDialog.created
+        sourceComponent: SettingsDialog {
+            controller: root.settingsDialog
+            transientParent: root
+        }
     }
 
     // Files dropped anywhere on the window open like in the widget UI; the

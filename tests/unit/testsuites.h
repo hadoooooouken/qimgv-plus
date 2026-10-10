@@ -24,3 +24,4 @@ int runContextMenuTests(int argc, char **argv);
 int runCropTests(int argc, char **argv);
 int runSvgRasterizerTests(int argc, char **argv);
 int runDialogTests(int argc, char **argv);
+int runSettingsEditorTests(int argc, char **argv);

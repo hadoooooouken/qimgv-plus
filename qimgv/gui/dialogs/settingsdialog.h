@@ -4,9 +4,9 @@
 #include <QFileDialog>
 #include <QColorDialog>
 #include <QThreadPool>
-#include <QTableWidget>
+#include <QTableView>
 #include <QTextBrowser>
-#include <QListWidget>
+#include <QListView>
 #include <QStackedWidget>
 #include <QButtonGroup>
 #include <QApplication>
@@ -20,8 +20,13 @@
 #include "gui/customwidgets/colorselectorbutton.h"
 #include "gui/dialogs/shortcutcreatordialog.h"
 #include "gui/dialogs/scripteditordialog.h"
+#include "gui/settingseditor/appsettingsstore.h"
+#include "components/settingseditor/settingseditormodel.h"
 #include "themestore.h"
 #include "components/actionmanager/actionmanager.h"
+#include "components/scriptmanager/scriptmanager.h"
+#include "shortcutbuilder.h"
+#include "utils/actions.h"
 #include "gui/customwidgets/ssidebar.h"
 #include <QScrollArea>
 #include <QHeaderView>
@@ -34,6 +39,9 @@
 #include <QDoubleSpinBox>
 
 
+// Widget view of the settings dialog. The values, rules and edits are the
+// SettingsEditorModel's, stored through AppSettingsStore; this dialog shows
+// them and collects the edited values on Apply / OK.
 class SettingsDialog : public QDialog
 {
     Q_OBJECT
@@ -324,7 +332,7 @@ private:
     QPushButton *pushButton_4;
     QSpacerItem *horizontalSpacer_2;
     QPushButton *pushButton_3;
-    QTableWidget *shortcutsTableWidget;
+    QTableView *shortcutsTableView;
     QSpacerItem *verticalSpacer_18;
     QWidget *widget_12;
     QVBoxLayout *verticalLayout_21;
@@ -359,7 +367,7 @@ private:
     QPushButton *pushButton_6;
     QPushButton *pushButton_7;
     QSpacerItem *horizontalSpacer_5;
-    QListWidget *scriptsListWidget;
+    QListView *scriptsListView;
     QWidget *Advanced;
     QVBoxLayout *verticalLayout_30;
     QScrollArea *scrollArea_4;
@@ -457,23 +465,18 @@ private:
     QPushButton *pushButton;
     QPushButton *Cancel;
 
-    void readColorScheme();
-    void setColorScheme(ColorScheme colors);
-    void saveColorScheme();
     void readSettings();
-    void readShortcuts();
-    void readScripts();
-    
-
-    void saveShortcuts();
-    void addShortcutToTable(const QString &action, const QString &shortcut);
-    void addScriptToList(const QString &name);
+    [[nodiscard]] SettingsValues collectSettings() const;
+    void showAccentColor();
+    void updateColorManagementControls();
+    void updateHdrControls();
+    [[nodiscard]] int selectedShortcutRow() const;
+    [[nodiscard]] int selectedScriptRow() const;
+    void runShortcutEditor();
+    void runScriptEditor();
 
     void setupSidebar();
-    void removeShortcutAt(int row);
     void adjustSizeToContents();
-    void updateThumbnailCacheSizeLabel();
-    QMap<QString, QString> langs; // <"en_US", "English">
     QButtonGroup fitModeGrp, folderEndGrp, zoomIndGrp;
 
 private slots:
@@ -482,8 +485,7 @@ private slots:
 
     void addScript();
     void editScript();
-    void editScript(QListWidgetItem *item);
-    void editScript(QString name);
+    void editScript(const QModelIndex &index);
     void removeScript();
 
     void addShortcut();
@@ -507,13 +509,16 @@ private slots:
     void resetZoomLevels();
     void onClearThumbnailCacheClicked();
 signals:
-    void settingsChanged();
     // Emitted when the user requests clearing the on-disk thumbnail cache.
     // The live cache is owned by Core (via Thumbnailer), so this dialog only
     // requests the action; MainWindow forwards it to Core, which performs
     // the actual clear.
     void clearThumbnailCacheRequested();
 private:
+    AppSettingsStore mValueStore;
+    AppShortcutStore mShortcutStore;
+    SettingsEditorModel mEditor;
+
     QSlider *pngQualitySlider = nullptr;
     QLabel *pngQualityLabel = nullptr;
     QSlider *modernQualitySlider = nullptr;

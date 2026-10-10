@@ -1849,6 +1849,109 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
   switching the widget dialog to it; (b) QML pages.
 - **Acceptance:** applying settings from either UI yields identical
   `qimgv-plus.ini` content.
+- **Delivered** (one commit, as the user chose, instead of the planned
+  two):
+  - **Shared editor** (`components/settingseditor/`, in
+    `qimgv_viewcomponents`, free of `Settings`; used by both UIs):
+    `SettingsValues` holds one value object (gadget) per page
+    (`GeneralSettings`, `ViewSettings`, `ThemeSettings`,
+    `ControlsSettings`, `AdvancedSettings`, `UpscaleSettings`). Slider
+    values keep the slider units of the widget dialog, so both UIs store
+    the same values. `SettingsScales` holds the ranges, conversions, snapping
+    and value texts, and `SettingsOptions` the combo box / radio choices
+    with their stored values (texts in the `SettingsDialog` translation
+    context). `SettingsEditorModel` loads, normalizes (fallbacks and range
+    limits as the widget sliders applied them), keeps the draft, applies
+    it, previews the theme values, and owns `ShortcutTableModel` (sorted by
+    action, a shortcut bound once), the script list (`QStringListModel`),
+    `ShortcutEditorModel` and `ScriptEditorModel` (on `EditorSession`:
+    `open` / `created` / accepted / rejected). The model talks to the
+    application only through two ports, `ISettingsValueStore` and
+    `IShortcutScriptStore`.
+  - **Application side:** `AppSettingsStore` / `AppShortcutStore`
+    (`gui/settingseditor/`) read and store through `Settings`,
+    `ActionManager` and `ScriptManager` exactly as the widget dialog did.
+    `static_assert`s tie the dialog ranges to the `Settings` limits. The
+    accent scheme copy, which was written out three times, now exists once.
+    Clearing the thumbnail cache is a signal that each UI forwards to Core.
+    Because both UIs apply through `SettingsEditorModel::apply()` and these
+    stores, the acceptance (identical `qimgv-plus.ini`) holds by
+    construction.
+  - **Widget UI:** `SettingsDialog` keeps its generated layout. It shows the
+    model's values, collects the edited ones on Apply / OK, and runs its
+    rules, labels, snapping, previews, shortcut and script edits through
+    the model. The shortcut table and script list are `QTableView` /
+    `QListView` on the models. `ShortcutCreatorDialog` and
+    `ScriptEditorDialog` are views of their view-models, with the
+    non-Windows `.sh` note removed.
+  - **Quick UI:** `SettingsDialogController` (`gui/quick/ui/settings/`,
+    with `QML_FOREIGN` / `QML_VALUE_TYPE` registrations of the editor types;
+    `qimgv_viewcomponents` now extracts its metatypes) opens
+    `SettingsDialog.qml`. It is an application-modal, resizable window
+    with the sidebar, OK / Apply / Cancel and eight page files
+    (`Settings*Page.qml`). The building blocks are `SettingsPage`,
+    `SettingsSection`, `SettingsSliderRow`, `SettingsComboBox`,
+    `SettingsRadioRow` and `SettingsNote`. Pages edit the draft by value
+    type write-back (`editor.general.loopSlideshow = checked`). Each page
+    is created on its first show while the window is open and dropped when
+    it closes, so every opening shows the reloaded values; the window
+    itself is created on first use. `ShortcutCreatorDialog.qml` captures
+    keys, mouse buttons and the wheel in `ShortcutCaptureField` through the
+    new `Actions.wheelShortcutText` / `mousePressShortcutText` /
+    `mouseReleaseShortcutText`. `ScriptEditorDialog.qml` picks the
+    executable with a `FileDialog`, the View page picks the ICC profile
+    with a `FileDialog`, and the Theme page picks the accent with a
+    `ColorDialog`. `QuickUiHost` opens the window on `openSettings` and on
+    the context menu's "Configure menu" (Scripts page), replacing the
+    logged stub.
+  - **Kept for parity:** Cancel does not undo the previewed theme values
+    (theme mode, accent, black background, thumbnail bar opacity); scripts
+    are added, edited and removed at once, and "Reset to defaults" restores
+    the default shortcuts at once; editing a script under a new name adds
+    it and keeps the old one.
+  - **Fixed:**
+    - A stored language that is not offered now falls back to English. The
+      widget dialog's `setCurrentText("en_US")` never matched an entry, so
+      it fell back to the system language.
+    - Zoom step and CAS values are rounded, not truncated, when shown
+      (0.29 showed as 28 and drifted down on every Apply).
+    - The shortcut creator accepts only once a shortcut was entered. The
+      placeholder "[Enter shortcut]" could be stored as a shortcut, and a
+      script binding could be made without scripts.
+    - The thumbnail bar opacity preview stores the same double as Apply
+      (it stored a float before).
+    - Without Upscayl models the stored model name is kept (it was
+      overwritten with an empty name).
+  - **Deviations:**
+    - No `SortFilterProxyModel` (the dialog has no filter field) and a
+      `QAbstractTableModel` instead of `QRangeModel` (replacing a bound
+      shortcut removes a second row).
+    - The Quick window shows the application and Qt versions as text
+      without their icons.
+    - Radio buttons follow their value only (`checkable: false`), since
+      the rows are not siblings.
+    - "Get more models" is a new translatable string. The widget label was
+      an HTML string.
+  - **Flagged, not changed:** the language list keeps the native name of
+    the shipped Russian translation (`ru_RU.ts`) as data.
+  - **Not verified by hand in the running application:** opening the
+    settings window, since no input was sent to the desktop; the tests
+    drive it. Startup creates nothing new (the window and pages are created
+    on first use): Release, a 300 x 300 PNG, process start to "first
+    document rendering settled". The machine was loaded and noisy, so HEAD
+    and this change were measured interleaved, 3 runs each, several
+    rounds. Quick UI medians: HEAD 378 - 403 ms, this change 392 - 510 ms.
+    Widget UI medians: HEAD 742 - 749 ms, this change 763 - 865 ms. Both
+    UIs rose together, and the widget UI runs no new code at startup.
+  - Tests: `qimgv_tests` gained `SettingsEditorTests` (scales and texts,
+    load / apply round trip, fallbacks and range limits, the Upscayl rules,
+    theme previews, the shortcut table, the creator and the script editor,
+    `SettingsDialogController`) over in-memory stores
+    (`tests/fakes/fakesettingsstores.h`). `qimgv_qml_tests` gained
+    `tst_settings.qml`: lazy pages, OK / Apply / Cancel / Escape, values
+    reloaded on reopening, the theme preview, a key and a mouse button
+    captured as shortcuts, a new script, clearing the cache.
+    `tst_mainwindow.qml` passes the controller.
 
 #### S3.4 Batch converter, print, map overlay
 - **Goal:** the remaining complex windows.

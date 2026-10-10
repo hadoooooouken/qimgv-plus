@@ -10,6 +10,7 @@
 #include <QVariant>
 #include <QtQml/QQmlExtensionPlugin>
 
+#include "components/actionmanager/actionmanager.h"
 #include "gui/quick/adapters/bridgesnapshots.h"
 #include "settings.h"
 #include "utils/startuptiming.h"
@@ -34,6 +35,7 @@ constexpr QLatin1StringView contextMenuProperty = "contextMenu"_L1;
 constexpr QLatin1StringView cropProperty = "crop"_L1;
 constexpr QLatin1StringView folderViewProperty = "folderView"_L1;
 constexpr QLatin1StringView dialogsProperty = "dialogs"_L1;
+constexpr QLatin1StringView settingsDialogProperty = "settingsDialog"_L1;
 
 constexpr QLatin1StringView bridgesModule = "qimgv.bridges"_L1;
 constexpr QLatin1StringView settingsBridgeType = "AppSettings"_L1;
@@ -104,7 +106,11 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager,
           .settings = settings,
           .actions = actionManager,
       }),
-      mDialogs(mDialogCoordinator, settings) {
+      mDialogs(mDialogCoordinator, settings),
+      mSettingsStore(settings, actionManager, scriptManager),
+      mShortcutStore(actionManager, scriptManager),
+      mSettingsEditor(mSettingsStore, mShortcutStore),
+      mSettingsDialog(mSettingsEditor) {
   // settingsChanged also announces theme switches and shortcut edits; each
   // receiver acts only on what actually changed.
   QObject::connect(&settings, &Settings::settingsChanged, &mSettingsBridge,
@@ -113,6 +119,7 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager,
   forwardOverlayEvents();
   connectThumbnailPanel();
   connectFolderView();
+  connectSettingsDialog();
 }
 
 QuickUiHost::~QuickUiHost() = default;
@@ -185,6 +192,24 @@ void QuickUiHost::connectThumbnailPanel() {
 void QuickUiHost::connectFolderView() {
   mFolderGrid.setLabelFont(QGuiApplication::font());
   mFolderGrid.setDevicePixelRatio(qGuiApp->devicePixelRatio());
+}
+
+//------------------------------------------------------------------------------
+// The settings window opens on "openSettings" and on the context menu's
+// "Configure menu" (on the scripts page). Clearing the thumbnail cache goes
+// to Core, which clears it before the request returns (direct connection).
+void QuickUiHost::connectSettingsDialog() {
+  QObject::connect(&mActionManager, &ActionManager::openSettings, &mSettingsDialog,
+                   [this]() {
+                     mContextMenu.close();
+                     mSettingsDialog.show(SettingsEditorModel::Page::General);
+                   });
+  QObject::connect(&mContextMenu, &ContextMenuModel::scriptSettingsRequested,
+                   &mSettingsDialog, [this]() {
+                     mSettingsDialog.show(SettingsEditorModel::Page::Scripts);
+                   });
+  QObject::connect(&mSettingsStore, &AppSettingsStore::clearThumbnailCacheRequested,
+                   &mEvents, &UiEvents::clearThumbnailCacheRequested);
 }
 
 //------------------------------------------------------------------------------
@@ -267,7 +292,8 @@ bool QuickUiHost::start() {
        {contextMenuProperty, QVariant::fromValue(&mContextMenu)},
        {cropProperty, QVariant::fromValue(&mCrop)},
        {folderViewProperty, QVariant::fromValue(&mFolderView)},
-       {dialogsProperty, QVariant::fromValue(&mDialogCoordinator)}});
+       {dialogsProperty, QVariant::fromValue(&mDialogCoordinator)},
+       {settingsDialogProperty, QVariant::fromValue(&mSettingsDialog)}});
   mEngine.loadFromModule(mainWindowModule, mainWindowType);
   const QList<QObject *> roots = mEngine.rootObjects();
   QQuickWindow *window =

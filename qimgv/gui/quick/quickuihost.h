@@ -29,6 +29,8 @@
 #include "gui/quick/ui/mainwindowshell.h"
 #include "gui/quick/ui/menus/contextmenumodel.h"
 #include "gui/quick/ui/overlays/overlaycoordinator.h"
+#include "gui/quick/ui/settings/settingsdialogcontroller.h"
+#include "gui/settingseditor/appsettingsstore.h"
 #include "gui/quick/ui/thumbnails/thumbnailpanelcontroller.h"
 
 class ActionManager;
@@ -45,6 +47,8 @@ class Settings;
 // mode (CropController) and the folder view (its grid's directory view, the
 // FolderGridController and the FolderViewController) with their actions,
 // the modal dialogs (DialogCoordinator, shown through QuickDialogPort), the
+// settings window (SettingsDialogController over the shared
+// SettingsEditorModel and its application stores), the
 // view mode state, the inbound UiEvents, the port adapters and the QML
 // engine; keeps the bridges, the viewport, the overlays, the panel, the menu,
 // the crop mode and the folder view in sync with Settings and creates the
@@ -80,6 +84,7 @@ private:
   void forwardOverlayEvents();
   void connectThumbnailPanel();
   void connectFolderView();
+  void connectSettingsDialog();
   void onSettingsChanged();
 
   Settings &mSettings;
@@ -89,8 +94,9 @@ private:
   std::shared_ptr<DirectoryViewAdapter> mThumbnailPanelView;
   std::shared_ptr<DirectoryViewAdapter> mFolderGridView;
   // The bridges, the viewport controller, the overlays, the thumbnail panel,
-  // the context menu, the crop mode, the folder view, the dialogs and the
-  // window shell are declared before the engine so that they outlive it, as
+  // the context menu, the crop mode, the folder view, the dialogs, the
+  // settings window and the window shell are declared before the engine so
+  // that they outlive it, as
   // QQmlEngine::setExternalSingletonInstance() and the main window's
   // required properties require.
   ActionManagerDispatcher mDispatcher;
@@ -112,6 +118,10 @@ private:
   QuickFolderViewActions mFolderViewActions;
   DialogCoordinator mDialogCoordinator;
   QuickDialogPort mDialogs;
+  AppSettingsStore mSettingsStore;
+  AppShortcutStore mShortcutStore;
+  SettingsEditorModel mSettingsEditor;
+  SettingsDialogController mSettingsDialog;
   MainWindowShell mWindowShell;
   QQmlApplicationEngine mEngine;
   // Works on the window the engine owns, so it is destroyed first.

@@ -49,6 +49,23 @@ add_library(qimgv_viewcomponents STATIC
     components/shellinfo/fileinfotext.h
     components/scalingfilter/scalingfilterselection.cpp
     components/scalingfilter/scalingfilterselection.h
+    # The settings dialog's values, rules and view-models (both UIs).
+    components/settingseditor/editorsession.cpp
+    components/settingseditor/editorsession.h
+    components/settingseditor/scripteditormodel.cpp
+    components/settingseditor/scripteditormodel.h
+    components/settingseditor/settingseditormodel.cpp
+    components/settingseditor/settingseditormodel.h
+    components/settingseditor/settingsoptions.cpp
+    components/settingseditor/settingsoptions.h
+    components/settingseditor/settingsscales.cpp
+    components/settingseditor/settingsscales.h
+    components/settingseditor/settingsstores.h
+    components/settingseditor/settingsvalues.h
+    components/settingseditor/shortcuteditormodel.cpp
+    components/settingseditor/shortcuteditormodel.h
+    components/settingseditor/shortcuttablemodel.cpp
+    components/settingseditor/shortcuttablemodel.h
     components/svgrasterizer/svgrasterizer.cpp
     components/svgrasterizer/svgrasterizer.h
     components/viewtransform/viewportinteraction.cpp
@@ -71,6 +88,9 @@ if(MSVC)
     target_compile_options(qimgv_viewcomponents PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>")
 endif()
 target_link_libraries(qimgv_viewcomponents PUBLIC Qt6::Core Qt6::Gui Qt6::Svg)
+# The qimgv.ui module registers the settings editor types with QML_FOREIGN;
+# qmltyperegistrar reads them from these metatypes.
+qt_extract_metatypes(qimgv_viewcomponents)
 qimgv_apply_msvc_profile(qimgv_viewcomponents)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)

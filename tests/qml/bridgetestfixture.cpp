@@ -10,6 +10,7 @@
 #include <QImage>
 #include <QKeyEvent>
 #include <QKeySequence>
+#include <QMetaProperty>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QTest>
@@ -19,6 +20,7 @@
 #include <utility>
 
 #include "gui/quick/adapters/themesnapshotbuilder.h"
+#include "settings_types.h"
 #include "themestore.h"
 
 namespace {
@@ -79,6 +81,73 @@ UiSettingsSnapshot testSettings() {
   return settings;
 }
 
+// Disk usage the fake thumbnail cache reports until it is cleared.
+constexpr qint64 kTestCacheBytes = 4096;
+
+// Stored settings the settings window tests start from: valid values of
+// every page, two Upscayl models.
+SettingsValues testSettingsValues() {
+  SettingsValues v;
+  v.general.language = u"en_US"_s;
+  v.general.zoomIndicatorMode = INDICATOR_AUTO;
+  v.general.autoResizeLimitStep = 18;
+  v.general.panelEnabled = true;
+  v.general.panelHideDelayMs = 600;
+  v.general.thumbPanelStyle = TH_PANEL_EXTENDED;
+  v.general.panelSizeStep = 20;
+  v.general.panelPosition = PANEL_BOTTOM;
+  v.general.folderEndAction = FOLDER_END_GOTO_ADJACENT;
+  v.general.sortingMode = SORT_NAME;
+  v.general.slideshowIntervalMs = 3000;
+  v.view.imageFitMode = FIT_WINDOW;
+  v.view.focusPoint = FOCUS_CURSOR;
+  v.view.expandLimit = 2;
+  v.view.zoomStepPercent = 25;
+  v.view.zoomLevels = u"0.5,1,2"_s;
+  v.view.scalingFilter = QI_FILTER_MKS2021_GPU;
+  v.view.casSharpeningPercent = 40;
+  v.view.monitorProfileType = u"System"_s;
+  v.view.hdrTargetWhiteLevel = 203;
+  v.theme.themeMode = THEME_DARK;
+  v.theme.accentColor = QColor(u"#3daee9"_s);
+  v.theme.backgroundOpacityPercent = 100;
+  v.theme.thumbnailOpacityPercent = 60;
+  v.controls.mouseScrollingSpeedStep = 2;
+  v.advanced.thumbnailerThreads = 4;
+  v.advanced.thumbnailResolution = 256;
+  v.advanced.thumbnailCacheMaxSizeMB = 512;
+  v.advanced.jpegQuality = 95;
+  v.advanced.modernQuality = 90;
+  v.advanced.pngCompression = 3;
+  v.advanced.memoryLimitMB = 1024;
+  v.upscale.model = u"modelA"_s;
+  v.upscale.limitPercent = 200;
+  return v;
+}
+
+// The meta-object and address of page in values; nulls for no page.
+std::pair<const QMetaObject *, void *> settingsPage(SettingsValues &values,
+                                                    const QString &page) {
+  if (page == u"general"_s)
+    return {&GeneralSettings::staticMetaObject, &values.general};
+  if (page == u"view"_s)
+    return {&ViewSettings::staticMetaObject, &values.view};
+  if (page == u"theme"_s)
+    return {&ThemeSettings::staticMetaObject, &values.theme};
+  if (page == u"controls"_s)
+    return {&ControlsSettings::staticMetaObject, &values.controls};
+  if (page == u"advanced"_s)
+    return {&AdvancedSettings::staticMetaObject, &values.advanced};
+  if (page == u"upscale"_s)
+    return {&UpscaleSettings::staticMetaObject, &values.upscale};
+  return {nullptr, nullptr};
+}
+
+QMetaProperty settingsField(const QMetaObject *page, const QString &field) {
+  if (!page)
+    return {};
+  return page->property(page->indexOfProperty(field.toLatin1().constData()));
+}
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -120,6 +189,18 @@ bool FakeActionDispatcher::processEvent(QInputEvent &event) {
 }
 
 QString FakeActionDispatcher::shortcutText(QInputEvent &event) const {
+  if (event.type() == QEvent::Wheel) {
+    const auto &wheelEvent = static_cast<const QWheelEvent &>(event);
+    return wheelEvent.angleDelta().y() > 0 ? u"WheelUp"_s : u"WheelDown"_s;
+  }
+  if (event.type() == QEvent::MouseButtonPress || event.type() == QEvent::MouseButtonRelease) {
+    // Presses of every button but the right one, releases of the right one.
+    const auto &mouseEvent = static_cast<const QMouseEvent &>(event);
+    const bool rightButton = mouseEvent.button() == Qt::RightButton;
+    if ((event.type() == QEvent::MouseButtonPress) == rightButton)
+      return {};
+    return rightButton ? u"RMB"_s : u"LMB"_s;
+  }
   if (event.type() != QEvent::KeyPress)
     return {};
   const auto &keyEvent = static_cast<const QKeyEvent &>(event);
@@ -142,7 +223,10 @@ BridgeTestFixture::BridgeTestFixture(QObject *parent)
       mActionBridge(mDispatcher), mViewport(mSettings), mOverlays(mSettings),
       mThumbnailPanel(mThumbnails, mSettings), mContextMenu(mDispatcher),
       mCrop(mSettings), mFolderGrid(mFolderThumbnails, mSettings),
-      mFolderView(mFolderGrid, mSettings, QDir::homePath()) {
+      mFolderView(mFolderGrid, mSettings, QDir::homePath()),
+      mSettingsEditor(mSettingsValues, mShortcutScripts),
+      mSettingsDialog(mSettingsEditor) {
+  resetSettingsStores();
   mThumbnailPanel.setLabelFont(QGuiApplication::font());
   connectFolderView();
   connectDialogs();
@@ -396,6 +480,68 @@ void BridgeTestFixture::connectDialogs() {
 }
 
 DialogCoordinator *BridgeTestFixture::dialogs() { return &mDialogs; }
+
+//------------------------------------------------------------------------------
+SettingsDialogController *BridgeTestFixture::settingsDialog() { return &mSettingsDialog; }
+
+int BridgeTestFixture::settingsApplyCount() const { return mSettingsValues.applyCount; }
+
+QString BridgeTestFixture::appliedShortcuts() const {
+  QStringList entries;
+  for (const ShortcutEntry &entry : mSettingsValues.appliedShortcuts)
+    entries << entry.action + u'=' + entry.shortcut;
+  return entries.join(u';');
+}
+
+QStringList BridgeTestFixture::storedScripts() const { return mShortcutScripts.scripts.keys(); }
+
+int BridgeTestFixture::previewedThemeMode() const { return mSettingsValues.previewedThemeMode; }
+
+int BridgeTestFixture::cacheClearCount() const { return mSettingsValues.cacheClearCount; }
+
+void BridgeTestFixture::openSettings(int page) {
+  mSettingsDialog.show(static_cast<SettingsEditorModel::Page>(page));
+}
+
+void BridgeTestFixture::closeSettings() {
+  mSettingsEditor.shortcutEditor()->reject();
+  mSettingsEditor.scriptEditor()->reject();
+  mSettingsDialog.dismiss();
+}
+
+QVariant BridgeTestFixture::storedSetting(const QString &page, const QString &field) const {
+  SettingsValues values = mSettingsValues.stored;
+  const auto [metaObject, gadget] = settingsPage(values, page);
+  const QMetaProperty property = settingsField(metaObject, field);
+  if (!property.isValid()) {
+    qWarning() << "Fixture.storedSetting: no field" << field << "on page" << page;
+    return {};
+  }
+  return property.readOnGadget(gadget);
+}
+
+void BridgeTestFixture::setStoredSetting(const QString &page, const QString &field,
+                                         const QVariant &value) {
+  const auto [metaObject, gadget] = settingsPage(mSettingsValues.stored, page);
+  const QMetaProperty property = settingsField(metaObject, field);
+  if (!property.isValid() || !property.writeOnGadget(gadget, value))
+    qWarning() << "Fixture.setStoredSetting: cannot set" << field << "on page" << page;
+}
+
+void BridgeTestFixture::resetSettingsStores() {
+  mSettingsValues = FakeSettingsValueStore();
+  mSettingsValues.stored = testSettingsValues();
+  mSettingsValues.environmentValues = {.upscaylModels = {u"modelA"_s, u"modelB"_s},
+                                       .defaultUpscaylModel = u"modelA"_s,
+                                       .defaultZoomLevels = u"0.25,0.5,1,2,4"_s};
+  mSettingsValues.cacheBytes = kTestCacheBytes;
+  mShortcutScripts = FakeShortcutScriptStore();
+  mShortcutScripts.actions = {u"nextImage"_s, u"prevImage"_s, u"zoomIn"_s};
+  mShortcutScripts.live = {{.action = u"nextImage"_s, .shortcut = u"Right"_s},
+                           {.action = u"prevImage"_s, .shortcut = u"Left"_s}};
+  mShortcutScripts.defaults = {{.action = u"zoomIn"_s, .shortcut = u"+"_s}};
+  mShortcutScripts.scripts = {{u"gimp"_s, {.command = u"gimp %file%"_s, .blocking = false}}};
+}
 
 QString BridgeTestFixture::lastDialogAnswer() const { return mLastDialogAnswer; }
 

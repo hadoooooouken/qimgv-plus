@@ -16,9 +16,6 @@ QuickContextMenuActions::QuickContextMenuActions(ActionManager &actions, ScriptM
     connect(&actions, &ActionManager::contextMenu, this, &QuickContextMenuActions::toggleMenu);
     connect(&viewport, &ImageViewportController::imageChanged, this,
             [this]() { this->menu.setImageDisplayed(this->viewport.hasImage()); });
-    connect(&menu, &ContextMenuModel::scriptSettingsRequested, this, []() {
-        qInfo() << "Qt Quick UI: the script settings are not available yet";
-    });
     menu.setImageDisplayed(viewport.hasImage());
 }
 

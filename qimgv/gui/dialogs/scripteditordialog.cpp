@@ -1,44 +1,45 @@
 #include "scripteditordialog.h"
+#include "components/settingseditor/scripteditormodel.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QLineEdit>
 #include <QCheckBox>
+#include <QFileDialog>
 #include <QLabel>
 #include <QPushButton>
 #include <QFrame>
 
-ScriptEditorDialog::ScriptEditorDialog(QWidget *parent) :
+ScriptEditorDialog::ScriptEditorDialog(ScriptEditorModel &model, QWidget *parent) :
     QDialog(parent),
-    editMode(false)
+    mModel(model)
 {
     setupUi();
-    this->setWindowTitle(tr("New application/script"));
-#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
-    label_3->hide();
-#endif
-    connect(nameLineEdit, &QLineEdit::textChanged, this, &ScriptEditorDialog::onNameChanged);
-    this->onNameChanged(nameLineEdit->text());
-}
+    setWindowTitle(mModel.title());
+    nameLineEdit->setText(mModel.name());
+    pathLineEdit->setText(mModel.command());
+    blockingCheckBox->setChecked(mModel.isBlocking());
+    onNameChanged();
 
-ScriptEditorDialog::ScriptEditorDialog(QString name, Script script, QWidget *parent)
-    : QDialog(parent),
-      editMode(true)
-{
-    setupUi();
-    this->setWindowTitle(tr("Edit"));
-    editTarget = name;
-#if defined(_WIN32) || defined(Q_OS_WIN) || defined(Q_OS_WIN32)
-    label_3->hide();
-#endif
-    connect(nameLineEdit, &QLineEdit::textChanged, this, &ScriptEditorDialog::onNameChanged);
-    nameLineEdit->setText(name);
-    pathLineEdit->setText(script.command);
-    blockingCheckBox->setChecked(script.blocking);
-    this->onNameChanged(nameLineEdit->text());
+    connect(nameLineEdit, &QLineEdit::textChanged, &mModel, &ScriptEditorModel::setName);
+    connect(pathLineEdit, &QLineEdit::textChanged, &mModel, &ScriptEditorModel::setCommand);
+    connect(blockingCheckBox, &QCheckBox::toggled, &mModel, &ScriptEditorModel::setBlocking);
+    connect(&mModel, &ScriptEditorModel::nameChanged, this, &ScriptEditorDialog::onNameChanged);
+    connect(&mModel, &ScriptEditorModel::commandChanged, this, [this]() {
+        if(pathLineEdit->text() != mModel.command())
+            pathLineEdit->setText(mModel.command());
+    });
 }
 
 ScriptEditorDialog::~ScriptEditorDialog() = default;
+
+void ScriptEditorDialog::done(int result) {
+    if(result == QDialog::Accepted)
+        mModel.accept();
+    else
+        mModel.reject();
+    QDialog::done(result);
+}
 
 void ScriptEditorDialog::setupUi()
 {
@@ -80,14 +81,8 @@ void ScriptEditorDialog::setupUi()
     keywordsLabel->setFont(smallFont);
     keywordsLabel->setMargin(4);
     keywordsLabel->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByMouse);
-    keywordsLabel->setText(tr("Keywords:") + " %file%");
+    keywordsLabel->setText(ScriptEditorModel::keywordsText());
     gridLayout->addWidget(keywordsLabel, 2, 0, 1, 3);
-
-    label_3 = new QLabel(tr("NOTE: make sure your .sh script has execute flag."), this);
-    QFont italicFont = smallFont;
-    italicFont.setItalic(true);
-    label_3->setFont(italicFont);
-    gridLayout->addWidget(label_3, 3, 0, 1, 3);
 
     verticalLayout->addLayout(gridLayout);
 
@@ -107,7 +102,7 @@ void ScriptEditorDialog::setupUi()
     horizontalLayout_4->setContentsMargins(0, 0, 0, 0);
     horizontalLayout_4->addStretch(1);
 
-    acceptButton = new QPushButton(tr("Create"), this);
+    acceptButton = new QPushButton(this);
     horizontalLayout_4->addWidget(acceptButton);
 
     cancelButton = new QPushButton(tr("Cancel"), this);
@@ -121,53 +116,14 @@ void ScriptEditorDialog::setupUi()
     connect(fileSelectButton, &QPushButton::clicked, this, &ScriptEditorDialog::selectScriptPath);
 }
 
-QString ScriptEditorDialog::scriptName() {
-    return nameLineEdit->text();
-}
-
-Script ScriptEditorDialog::script() {
-    return Script(pathLineEdit->text(), blockingCheckBox->isChecked());
-}
-
-void ScriptEditorDialog::onNameChanged(QString name) {
-    if(name.isEmpty()) {
-        messageLabel->setText(tr("Enter script name"));
-        acceptButton->setEnabled(false);
-        return;
-    } else {
-        acceptButton->setEnabled(true);
-    }
-
-    QString okBtnText;
-    messageLabel->clear();
-
-    if(editMode) {
-        if(name != editTarget && scriptManager->scriptExists(name)) {
-            messageLabel->setText(tr("A script with this same name exists"));
-            okBtnText = tr("Replace");
-        } else {
-            okBtnText = tr("Save");
-        }
-    } else {
-        if(scriptManager->scriptExists(name)) {
-            messageLabel->setText(tr("A script with this same name exists"));
-            okBtnText = tr("Replace");
-        } else {
-            okBtnText = tr("Create");
-        }
-    }
-    acceptButton->setText(okBtnText);
+void ScriptEditorDialog::onNameChanged() {
+    messageLabel->setText(mModel.message());
+    acceptButton->setText(mModel.acceptText());
+    acceptButton->setEnabled(mModel.canAccept());
 }
 
 void ScriptEditorDialog::selectScriptPath() {
-    QFileDialog dialog;
-    QString file;
-#ifdef _WIN32
-    file = dialog.getOpenFileName(this, tr("Select an executable/script"), "", "Executable/script (*.exe *.bat)");
-#else
-    file = dialog.getOpenFileName(this, tr("Select a script file"), "", "Shell script (*.sh)");
-#endif
-    if(!file.isEmpty()) {
-        pathLineEdit->setText("\"" + file + "\"" + " %file%");
-    }
+    const QString filter = ScriptEditorModel::executableFilters().join(QStringLiteral(";;"));
+    const QString file = QFileDialog::getOpenFileName(this, ScriptEditorModel::executableDialogTitle(), "", filter);
+    mModel.setExecutablePath(file);
 }

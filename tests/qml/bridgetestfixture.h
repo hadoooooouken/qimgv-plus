@@ -12,6 +12,7 @@
 
 #include <memory>
 
+#include "fakesettingsstores.h"
 #include "gui/quick/bridges/actionbridge.h"
 #include "gui/quick/bridges/actiondispatcher.h"
 #include "gui/quick/bridges/settingsbridge.h"
@@ -24,6 +25,7 @@
 #include "gui/quick/ui/mainwindowshell.h"
 #include "gui/quick/ui/menus/contextmenumodel.h"
 #include "gui/quick/ui/overlays/overlaycoordinator.h"
+#include "gui/quick/ui/settings/settingsdialogcontroller.h"
 #include "gui/quick/ui/thumbnails/thumbnailpanelcontroller.h"
 
 class QFileSystemModel;
@@ -95,6 +97,14 @@ class BridgeTestFixture : public QObject {
   // "replace:<yes>:<all>:<cancel>", "resize:<w>x<h>:<filter>:<upscayl>:<model>"
   // or "resize:none", "text:<0|1>:<text>"; empty for none.
   Q_PROPERTY(QString lastDialogAnswer READ lastDialogAnswer FINAL)
+  // The settings window over an editor with in-memory stores.
+  Q_PROPERTY(SettingsDialogController *settingsDialog READ settingsDialog CONSTANT FINAL)
+  Q_PROPERTY(int settingsApplyCount READ settingsApplyCount FINAL)
+  // The shortcuts the last apply stored, "action=shortcut" joined by ";".
+  Q_PROPERTY(QString appliedShortcuts READ appliedShortcuts FINAL)
+  Q_PROPERTY(QStringList storedScripts READ storedScripts FINAL)
+  Q_PROPERTY(int previewedThemeMode READ previewedThemeMode FINAL)
+  Q_PROPERTY(int cacheClearCount READ cacheClearCount FINAL)
 
 public:
   explicit BridgeTestFixture(QObject *parent = nullptr);
@@ -137,6 +147,12 @@ public:
   [[nodiscard]] int scriptSettingsRequests() const;
   [[nodiscard]] DialogCoordinator *dialogs();
   [[nodiscard]] QString lastDialogAnswer() const;
+  [[nodiscard]] SettingsDialogController *settingsDialog();
+  [[nodiscard]] int settingsApplyCount() const;
+  [[nodiscard]] QString appliedShortcuts() const;
+  [[nodiscard]] QStringList storedScripts() const;
+  [[nodiscard]] int previewedThemeMode() const;
+  [[nodiscard]] int cacheClearCount() const;
 
   // Flips viewer.smoothZoom and publishes the snapshot (viewer area only).
   Q_INVOKABLE void toggleSmoothZoom();
@@ -218,6 +234,18 @@ public:
   Q_INVOKABLE void clearDialogAnswer();
   // Abandons every open dialog request.
   Q_INVOKABLE void abandonDialogs();
+  // Settings window: opens it on page (SettingsEditorModel.Page) with the
+  // stored values; closes it and its sub-dialogs without applying.
+  Q_INVOKABLE void openSettings(int page);
+  Q_INVOKABLE void closeSettings();
+  // A field of a stored settings page ("general", "view", "theme",
+  // "controls", "advanced", "upscale"), as the store keeps it; an invalid
+  // value for an unknown page or field.
+  Q_INVOKABLE QVariant storedSetting(const QString &page, const QString &field) const;
+  Q_INVOKABLE void setStoredSetting(const QString &page, const QString &field,
+                                    const QVariant &value);
+  // Restores the stored values, shortcuts and scripts of a fresh fixture.
+  Q_INVOKABLE void resetSettingsStores();
   // Key presses and text as the platform delivers them to window (shortcuts
   // included).
   Q_INVOKABLE void sendKey(QQuickWindow *window, int key);
@@ -262,4 +290,8 @@ private:
   int mScriptSettingsRequests = 0;
   DialogCoordinator mDialogs;
   QString mLastDialogAnswer;
+  FakeSettingsValueStore mSettingsValues;
+  FakeShortcutScriptStore mShortcutScripts;
+  SettingsEditorModel mSettingsEditor;
+  SettingsDialogController mSettingsDialog;
 };

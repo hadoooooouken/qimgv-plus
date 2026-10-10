@@ -21,7 +21,8 @@ TestCase {
             contextMenu: Fixture.contextMenu,
             crop: Fixture.crop,
             folderView: Fixture.folderView,
-            dialogs: Fixture.dialogs
+            dialogs: Fixture.dialogs,
+            settingsDialog: Fixture.settingsDialog
         });
         verify(window !== null, "qimgv.ui/Main could not be instantiated");
         return window;

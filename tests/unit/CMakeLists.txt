@@ -27,6 +27,8 @@ qt_add_executable(qimgv_tests
     tst_crop.cpp
     tst_svgrasterizer.cpp
     tst_dialogs.cpp
+    tst_settingseditor.cpp
+    ../fakes/fakesettingsstores.h
     "${QIMGV_APP_SOURCE_DIR}/components/viewmode/viewmodecontroller.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/shellinfo/windowtitle.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/singleinstance/singleinstancechannel.cpp"
@@ -42,7 +44,11 @@ qt_add_executable(qimgv_tests
 
 # Components under test are compiled from the application sources and use
 # the application's include root.
-target_include_directories(qimgv_tests PRIVATE "${QIMGV_APP_SOURCE_DIR}")
+target_include_directories(qimgv_tests PRIVATE
+    "${QIMGV_APP_SOURCE_DIR}"
+    # In-memory stores of the settings editor (also used by qimgv_qml_tests).
+    "${CMAKE_CURRENT_SOURCE_DIR}/../fakes"
+)
 
 target_link_libraries(qimgv_tests PRIVATE
     Qt6::Core

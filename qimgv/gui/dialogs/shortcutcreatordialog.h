@@ -1,37 +1,33 @@
 #pragma once
 
 #include <QDialog>
-#include <QComboBox>
-#include <QRadioButton>
-#include "shortcutbuilder.h"
-#include "utils/actions.h"
-#include "components/actionmanager/actionmanager.h"
-#include "components/scriptmanager/scriptmanager.h"
 
 class QRadioButton;
 class QComboBox;
 class QLabel;
 class KeySequenceEdit;
 class QDialogButtonBox;
+class ShortcutEditorModel;
 
+// Widget view of the shortcut creator (ShortcutEditorModel): shows the
+// model's open request; the answer goes to the model when the dialog
+// finishes.
 class ShortcutCreatorDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit ShortcutCreatorDialog(QWidget *parent = nullptr);
-    ~ShortcutCreatorDialog();
-    QString selectedAction();
-    QString selectedShortcut();
-    void setAction(QString);
-    void setShortcut(QString);
+    // model must outlive the dialog.
+    explicit ShortcutCreatorDialog(ShortcutEditorModel &model, QWidget *parent = nullptr);
+    ~ShortcutCreatorDialog() override;
 
-private slots:
-    void onShortcutEdited();
+    void done(int result) override;
 
 private:
     void setupUi();
+    void showShortcut();
 
+    ShortcutEditorModel &mModel;
     QRadioButton *actionsRadioButton = nullptr;
     QComboBox *actionsComboBox = nullptr;
     QRadioButton *scriptsRadioButton = nullptr;
@@ -39,6 +35,4 @@ private:
     KeySequenceEdit *sequenceEdit = nullptr;
     QLabel *warningLabel = nullptr;
     QDialogButtonBox *buttonBox = nullptr;
-
-    QList<QString> actionList, scriptList;
 };

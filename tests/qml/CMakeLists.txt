@@ -23,6 +23,9 @@ qt_add_qml_module(qimgv_qml_tests
         bridgetestfixture.h
 )
 
+# In-memory stores of the settings editor (shared with qimgv_tests).
+target_include_directories(qimgv_qml_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../fakes")
+
 target_compile_definitions(qimgv_qml_tests PRIVATE
     QUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
     QIMGV_ICON_FONT_FILE="${QIMGV_APP_SOURCE_DIR}/res/fonts/FluentSystemIcons-Custom.ttf"

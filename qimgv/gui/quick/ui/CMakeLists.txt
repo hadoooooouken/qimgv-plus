@@ -64,6 +64,9 @@ qt_add_qml_module(qimgv_ui
         overlays/overlaystate.h
         overlays/renamepromptcontroller.cpp
         overlays/renamepromptcontroller.h
+        settings/settingsdialogcontroller.cpp
+        settings/settingsdialogcontroller.h
+        settings/settingseditortypes.h
         thumbnails/thumbnaillistmodel.cpp
         thumbnails/thumbnaillistmodel.h
         thumbnails/thumbnailpanelcontroller.cpp
@@ -99,6 +102,24 @@ qt_add_qml_module(qimgv_ui
         ResizeDialog.qml
         SaveConfirmOverlay.qml
         SaveFileDialog.qml
+        ScriptEditorDialog.qml
+        SettingsAboutPage.qml
+        SettingsAdvancedPage.qml
+        SettingsComboBox.qml
+        SettingsControlsPage.qml
+        SettingsDialog.qml
+        SettingsGeneralPage.qml
+        SettingsNote.qml
+        SettingsPage.qml
+        SettingsRadioRow.qml
+        SettingsScriptsPage.qml
+        SettingsSection.qml
+        SettingsSliderRow.qml
+        SettingsThemePage.qml
+        SettingsUpscalePage.qml
+        SettingsViewPage.qml
+        ShortcutCaptureField.qml
+        ShortcutCreatorDialog.qml
         SidePanel.qml
         TextInputDialog.qml
         ThumbnailStrip.qml
@@ -113,6 +134,7 @@ target_include_directories(qimgv_ui PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/folderview"
     "${CMAKE_CURRENT_SOURCE_DIR}/menus"
     "${CMAKE_CURRENT_SOURCE_DIR}/overlays"
+    "${CMAKE_CURRENT_SOURCE_DIR}/settings"
     "${CMAKE_CURRENT_SOURCE_DIR}/thumbnails"
 )
 target_compile_features(qimgv_ui PUBLIC cxx_std_23)
@@ -134,6 +156,7 @@ target_link_libraries(qimgv_ui
         qimgv_viewcomponents
     PRIVATE
         Qt6::QuickControls2
-        # FolderDialog of the copy / move overlay, FileDialog of "Save as".
+        # FolderDialog of the copy / move overlay, FileDialog of "Save as",
+        # the settings window's FileDialogs and ColorDialog.
         Qt6::QuickDialogs2
 )

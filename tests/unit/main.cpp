@@ -30,5 +30,6 @@ int main(int argc, char **argv) {
   status |= runCropTests(argc, argv);
   status |= runSvgRasterizerTests(argc, argv);
   status |= runDialogTests(argc, argv);
+  status |= runSettingsEditorTests(argc, argv);
   return status;
 }

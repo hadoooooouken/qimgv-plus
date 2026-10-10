@@ -1,4 +1,5 @@
 #include "shortcutcreatordialog.h"
+#include "components/settingseditor/shortcuteditormodel.h"
 #include "gui/customwidgets/keysequenceedit.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -6,27 +7,52 @@
 #include <QComboBox>
 #include <QLabel>
 #include <QDialogButtonBox>
+#include <QPushButton>
 
-ShortcutCreatorDialog::ShortcutCreatorDialog(QWidget *parent) :
-    QDialog(parent)
+ShortcutCreatorDialog::ShortcutCreatorDialog(ShortcutEditorModel &model, QWidget *parent) :
+    QDialog(parent),
+    mModel(model)
 {
     setupUi();
-    setWindowTitle(tr("Add shortcut"));
-    actionList = appActions->getList();
-    scriptList = scriptManager->scriptNames();
+    setWindowTitle(mModel.title());
 
-    actionsComboBox->addItems(actionList);
-    actionsComboBox->setCurrentIndex(0);
+    actionsComboBox->addItems(mModel.actions());
+    actionsComboBox->setCurrentIndex(mModel.actionIndex());
+    scriptsComboBox->addItems(mModel.scripts());
+    scriptsComboBox->setCurrentIndex(mModel.scriptIndex());
+    if(mModel.isScriptSelected())
+        scriptsRadioButton->setChecked(true);
+    else
+        actionsRadioButton->setChecked(true);
+    showShortcut();
 
-    scriptsComboBox->addItems(scriptList);
-    scriptsComboBox->setCurrentIndex(0);
+    connect(scriptsRadioButton, &QRadioButton::toggled, &mModel, &ShortcutEditorModel::setScriptSelected);
+    connect(actionsComboBox, &QComboBox::currentIndexChanged, &mModel, &ShortcutEditorModel::setActionIndex);
+    connect(scriptsComboBox, &QComboBox::currentIndexChanged, &mModel, &ShortcutEditorModel::setScriptIndex);
+    connect(sequenceEdit, &KeySequenceEdit::edited, this, [this]() {
+        mModel.setShortcut(sequenceEdit->sequence());
+    });
+    connect(&mModel, &ShortcutEditorModel::shortcutChanged, this, &ShortcutCreatorDialog::showShortcut);
 }
 
 ShortcutCreatorDialog::~ShortcutCreatorDialog() = default;
 
+void ShortcutCreatorDialog::done(int result) {
+    if(result == QDialog::Accepted)
+        mModel.accept();
+    else
+        mModel.reject();
+    QDialog::done(result);
+}
+
+void ShortcutCreatorDialog::showShortcut() {
+    sequenceEdit->setText(mModel.shortcutText());
+    warningLabel->setText(mModel.warning());
+    buttonBox->button(QDialogButtonBox::Ok)->setEnabled(mModel.canAccept());
+}
+
 void ShortcutCreatorDialog::setupUi()
 {
-    setWindowTitle(tr("New shortcut"));
     resize(340, 237);
 
     QVBoxLayout *verticalLayout = new QVBoxLayout(this);
@@ -35,7 +61,6 @@ void ShortcutCreatorDialog::setupUi()
     QHBoxLayout *actionLayout = new QHBoxLayout();
     actionLayout->setContentsMargins(0, 0, 0, 0);
     actionsRadioButton = new QRadioButton(tr("Action:"), this);
-    actionsRadioButton->setChecked(true);
     QSizePolicy spRadio(QSizePolicy::Minimum, QSizePolicy::Fixed);
     spRadio.setHorizontalStretch(1);
     actionsRadioButton->setSizePolicy(spRadio);
@@ -66,7 +91,6 @@ void ShortcutCreatorDialog::setupUi()
     verticalLayout->addWidget(label_2, 0, Qt::AlignHCenter);
 
     sequenceEdit = new KeySequenceEdit(this);
-    sequenceEdit->setText(tr("[Enter shortcut]"));
     verticalLayout->addWidget(sequenceEdit);
 
     verticalLayout->addStretch(1); // replaces verticalSpacer
@@ -86,40 +110,4 @@ void ShortcutCreatorDialog::setupUi()
     connect(actionsRadioButton, &QRadioButton::toggled, scriptsComboBox, &QComboBox::setDisabled);
     connect(scriptsRadioButton, &QRadioButton::toggled, actionsComboBox, &QComboBox::setDisabled);
     connect(scriptsRadioButton, &QRadioButton::toggled, scriptsComboBox, &QComboBox::setEnabled);
-    connect(sequenceEdit, &KeySequenceEdit::edited, this, &ShortcutCreatorDialog::onShortcutEdited);
-}
-
-QString ShortcutCreatorDialog::selectedAction() {
-    if(actionsRadioButton->isChecked())
-        return actionsComboBox->currentText();
-    else
-        return "s:"+scriptsComboBox->currentText();
-}
-
-QString ShortcutCreatorDialog::selectedShortcut() {
-    return sequenceEdit->sequence();
-}
-
-void ShortcutCreatorDialog::onShortcutEdited() {
-    QString action = actionManager->actionForShortcut(sequenceEdit->sequence());
-    if(!action.isEmpty())
-        warningLabel->setText(tr("This shortcut is used for action: ") + action + tr(". Replace?"));
-    else
-        warningLabel->setText("");
-}
-
-void ShortcutCreatorDialog::setAction(QString action) {
-    auto cbox = actionsComboBox;
-    if(action.startsWith("s:")) {
-        action = action.remove(0,2);
-        cbox = scriptsComboBox;
-        scriptsRadioButton->setChecked(true);
-    }
-    int index = cbox->findText(action);
-    if(index != -1)
-       cbox->setCurrentIndex(index);
-}
-
-void ShortcutCreatorDialog::setShortcut(QString shortcut) {
-    sequenceEdit->setText(shortcut);
 }
