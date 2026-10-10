@@ -6,25 +6,23 @@
 #include <QPointF>
 #include <QDebug>
 
-#ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 #include <windows.h>
 #include <wingdi.h>
-#endif
 
 namespace {
 
-class DefaultColorManager : public IColorManager {
+class ColorManagerImpl {
 public:
-    void invalidateCache() override {
+    void invalidateCache() {
         QMutexLocker locker(&mutex);
         isCached = false;
         cachedTargetSpace = QColorSpace();
     }
 
-    QColorSpace getTargetColorSpace() override {
+    QColorSpace getTargetColorSpace() {
         QMutexLocker locker(&mutex);
         if (isCached) {
             return cachedTargetSpace;
@@ -39,7 +37,6 @@ public:
         QColorSpace targetSpace;
 
         if (profileType == "System") {
-#ifdef _WIN32
             HDC hdc = GetDC(nullptr);
             bool success = false;
             if (hdc) {
@@ -69,9 +66,6 @@ public:
                 targetSpace = QColorSpace(QColorSpace::SRgb);
                 qWarning() << "ColorManager: Falling back to sRGB for System profile.";
             }
-#else
-            targetSpace = QColorSpace(QColorSpace::SRgb);
-#endif
         } else if (profileType == "sRGB") {
             targetSpace = QColorSpace(QColorSpace::SRgb);
         } else if (profileType == "DisplayP3") {
@@ -106,7 +100,7 @@ public:
         return cachedTargetSpace;
     }
 
-    QImage applyColorManagement(const QImage &srcImage) override {
+    QImage applyColorManagement(const QImage &srcImage) {
         if (srcImage.isNull()) return srcImage;
 
         if (!settings || !settings->colorManagementEnabled()) {
@@ -136,38 +130,23 @@ private:
     QMutex mutex;
 };
 
-// Thread-safe access to default instance
-DefaultColorManager* defaultInstance() {
-    static DefaultColorManager instance;
-    return &instance;
-}
-
-IColorManager* g_customInstance = nullptr;
-QMutex g_instanceMutex;
-
-IColorManager* activeInstance() {
-    QMutexLocker locker(&g_instanceMutex);
-    if (g_customInstance) {
-        return g_customInstance;
-    }
-    return defaultInstance();
+// Function-local static: initialization is thread-safe, and the instance's own
+// mutex guards the cached color space.
+ColorManagerImpl &instance() {
+    static ColorManagerImpl impl;
+    return impl;
 }
 
 } // namespace
 
 void ColorManager::invalidateCache() {
-    activeInstance()->invalidateCache();
+    instance().invalidateCache();
 }
 
 QColorSpace ColorManager::getTargetColorSpace() {
-    return activeInstance()->getTargetColorSpace();
+    return instance().getTargetColorSpace();
 }
 
 QImage ColorManager::applyColorManagement(const QImage &srcImage) {
-    return activeInstance()->applyColorManagement(srcImage);
-}
-
-void ColorManager::setInstance(IColorManager *newInstance) {
-    QMutexLocker locker(&g_instanceMutex);
-    g_customInstance = newInstance;
+    return instance().applyColorManagement(srcImage);
 }
