@@ -28,6 +28,8 @@ qt_add_executable(qimgv_tests
     tst_svgrasterizer.cpp
     tst_dialogs.cpp
     tst_settingseditor.cpp
+    tst_batchprint.cpp
+    ../fakes/fakebatchconversionservice.h
     ../fakes/fakesettingsstores.h
     "${QIMGV_APP_SOURCE_DIR}/components/viewmode/viewmodecontroller.cpp"
     "${QIMGV_APP_SOURCE_DIR}/components/shellinfo/windowtitle.cpp"

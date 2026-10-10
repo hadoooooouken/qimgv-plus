@@ -43,8 +43,15 @@ qimgv_apply_msvc_profile(qimgv_fluenticons)
 add_library(qimgv_viewcomponents STATIC
     components/animationplayer/animationplayer.cpp
     components/animationplayer/animationplayer.h
+    # Rules and job of the batch converter dialog (both UIs).
+    components/batchconverter/batchjob.h
+    components/batchconverter/batchjobrules.cpp
+    components/batchconverter/batchjobrules.h
     components/copytargets/copytargetlist.cpp
     components/copytargets/copytargetlist.h
+    # Printing of an image (both UIs' print dialogs).
+    components/printing/imageprintsetup.cpp
+    components/printing/imageprintsetup.h
     components/shellinfo/fileinfotext.cpp
     components/shellinfo/fileinfotext.h
     components/scalingfilter/scalingfilterselection.cpp
@@ -87,7 +94,7 @@ if(MSVC)
     # Same C++26 working-draft switch as qimgv-plus.
     target_compile_options(qimgv_viewcomponents PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:/std:c++latest>")
 endif()
-target_link_libraries(qimgv_viewcomponents PUBLIC Qt6::Core Qt6::Gui Qt6::Svg)
+target_link_libraries(qimgv_viewcomponents PUBLIC Qt6::Core Qt6::Gui Qt6::Svg Qt6::PrintSupport)
 # The qimgv.ui module registers the settings editor types with QML_FOREIGN;
 # qmltyperegistrar reads them from these metatypes.
 qt_extract_metatypes(qimgv_viewcomponents)

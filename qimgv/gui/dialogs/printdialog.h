@@ -2,13 +2,9 @@
 #define PRINTDIALOG_H
 
 #include <QDialog>
-#include <QtPrintSupport/QPrinter>
-#include <QtPrintSupport/QPrinterInfo>
-#include <QFileDialog>
-#include <QPainter>
-#include <QGraphicsColorizeEffect>
-#include <QDebug>
-#include "components/thumbnailer/thumbnailer.h"
+#include <QImage>
+#include <memory>
+#include "components/printing/imageprintsetup.h"
 class QLabel;
 class QComboBox;
 class QRadioButton;
@@ -27,7 +23,6 @@ public:
 private slots:
     void print();
     void exportPdf();
-    QRectF getImagePrintRect(QPrinter *printer);
     void updatePreview();
     void setLandscape(bool mode);
     void onPrinterSelected(QString name);
@@ -36,6 +31,8 @@ private slots:
 private:
     void setupUi();
     void saveSettings();
+    [[nodiscard]] PrintOptions options() const;
+    void showPrintFailure(const QString &message);
 
     QLabel *previewLabel = nullptr;
     QLabel *printerListPlaceholder = nullptr;
@@ -50,7 +47,7 @@ private:
     QPushButton *cancelButton = nullptr;
 
     std::shared_ptr<const QImage> img = nullptr;
-    QPrinter pdfPrinter, *printer = nullptr;
+    ImagePrintSetup printSetup;
     bool printPdfDefault = false;
 };
 

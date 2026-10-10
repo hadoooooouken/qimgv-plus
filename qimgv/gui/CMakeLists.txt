@@ -70,7 +70,6 @@ target_sources(qimgv-plus PRIVATE
     overlays/cassettingsoverlay.cpp
     overlays/coloradjustmentsoverlay.cpp
     overlays/coloradjustmentsoverlayproxy.cpp
-    overlays/mapoverlay.cpp
     overlays/renameoverlay.cpp
     overlays/saveconfirmoverlay.cpp
     overlays/zoomindicatoroverlay.cpp
@@ -100,9 +99,9 @@ target_sources(qimgv-plus PRIVATE
 
     quick/quickuihost.cpp
     quick/adapters/actionmanagerdispatcher.cpp
+    quick/adapters/appbatchconversionservice.cpp
     quick/adapters/bridgesnapshots.cpp
     quick/adapters/directoryviewadapter.cpp
-    quick/adapters/interimports.cpp
     quick/adapters/quickcontextmenuactions.cpp
     quick/adapters/quickcropactions.cpp
     quick/adapters/quickdialogport.cpp

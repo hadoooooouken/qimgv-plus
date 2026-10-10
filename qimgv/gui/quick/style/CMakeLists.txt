@@ -33,6 +33,7 @@ qt_add_qml_module(qimgv_style
         MenuSeparator.qml
         Popup.qml
         PopupBackground.qml
+        ProgressBar.qml
         RadioButton.qml
         ScrollBar.qml
         ScrollView.qml

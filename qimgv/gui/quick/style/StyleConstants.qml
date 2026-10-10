@@ -71,6 +71,11 @@ QtObject {
     readonly property int sliderHandleSize: 16
     readonly property int sliderHandleBorderWidth: 2
 
+    // Progress bars.
+    readonly property int progressBarRadius: 3
+    readonly property int progressBarBorderWidth: 1
+    readonly property int progressBarTextPadding: 2
+
     // Scroll bars.
     readonly property int scrollBarThickness: 13
     readonly property int scrollBarMinimumHandleLength: 60

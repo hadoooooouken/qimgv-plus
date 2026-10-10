@@ -114,13 +114,13 @@ public:
     }
 
     void run() override {
-        auto notifyFinished = [this](const QString &status, const QString &details, bool success) {
+        auto notifyFinished = [this](BatchItemState state, const QString &details) {
             QMetaObject::invokeMethod(
                 m_converter, "onTaskFinished", Qt::QueuedConnection, Q_ARG(int, m_index),
-                Q_ARG(QString, status), Q_ARG(QString, details), Q_ARG(bool, success));
+                Q_ARG(BatchItemState, state), Q_ARG(QString, details));
         };
-        auto notifyStopped = [this, &notifyFinished](const QString &details = QString()) {
-            notifyFinished(QCoreApplication::translate("BatchConverter", "Stopped"), details, false);
+        auto notifyStopped = [&notifyFinished](const QString &details = QString()) {
+            notifyFinished(BatchItemState::Stopped, details);
         };
 
         if (m_cancelFlag->load()) {
@@ -134,8 +134,8 @@ public:
                 notifyStopped();
                 return;
             }
-            notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
-                           QCoreApplication::translate("BatchConverter", "Load Error"), false);
+            notifyFinished(BatchItemState::Failed,
+                           QCoreApplication::translate("BatchConverter", "Load Error"));
             return;
         }
 
@@ -185,8 +185,8 @@ public:
                     notifyStopped();
                     return;
                 }
-                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
-                               QCoreApplication::translate("BatchConverter", "AI Model Error"), false);
+                notifyFinished(BatchItemState::Failed,
+                               QCoreApplication::translate("BatchConverter", "AI Model Error"));
                 return;
             }
 
@@ -196,8 +196,8 @@ public:
                     notifyStopped();
                     return;
                 }
-                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
-                               QCoreApplication::translate("BatchConverter", "AI Upscaling Failed"), false);
+                notifyFinished(BatchItemState::Failed,
+                               QCoreApplication::translate("BatchConverter", "AI Upscaling Failed"));
                 return;
             }
             processedImg = upscaled;
@@ -213,8 +213,8 @@ public:
                         notifyStopped();
                         return;
                     }
-                    notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
-                                   QCoreApplication::translate("BatchConverter", "Resize Error"), false);
+                    notifyFinished(BatchItemState::Failed,
+                                   QCoreApplication::translate("BatchConverter", "Resize Error"));
                     return;
                 }
                 processedImg = resized;
@@ -231,8 +231,8 @@ public:
                     notifyStopped();
                     return;
                 }
-                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
-                               QCoreApplication::translate("BatchConverter", "Resize Error"), false);
+                notifyFinished(BatchItemState::Failed,
+                               QCoreApplication::translate("BatchConverter", "Resize Error"));
                 return;
             }
             processedImg = resized;
@@ -249,9 +249,8 @@ public:
                 return;
             }
             if (rotatedImg.isNull()) {
-                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
-                               QCoreApplication::translate("BatchConverter", "Transform Error"),
-                               false);
+                notifyFinished(BatchItemState::Failed,
+                               QCoreApplication::translate("BatchConverter", "Transform Error"));
                 return;
             }
             processedImg = std::move(rotatedImg);
@@ -269,9 +268,8 @@ public:
                 return;
             }
             if (flippedImg.isNull()) {
-                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
-                               QCoreApplication::translate("BatchConverter", "Transform Error"),
-                               false);
+                notifyFinished(BatchItemState::Failed,
+                               QCoreApplication::translate("BatchConverter", "Transform Error"));
                 return;
             }
             processedImg = std::move(flippedImg);
@@ -289,11 +287,10 @@ public:
                             : ExistingDestinationPolicy::Preserve;
         AtomicFileTransaction stagedOutput(std::move(fileRequest));
         if (!stagedOutput.creationResult().succeeded()) {
-            notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+            notifyFinished(BatchItemState::Failed,
                            operationDetails(
                                QCoreApplication::translate("BatchConverter", "Save Error"),
-                               stagedOutput.creationResult()),
-                           false);
+                               stagedOutput.creationResult()));
             return;
         }
 
@@ -318,11 +315,10 @@ public:
 
         if (!saved) {
             const ImageSaveResult cleanupResult = stagedOutput.discard();
-            notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+            notifyFinished(BatchItemState::Failed,
                            operationDetails(
                                QCoreApplication::translate("BatchConverter", "Save Error"),
-                               cleanupResult),
-                           false);
+                               cleanupResult));
             return;
         }
 
@@ -331,22 +327,19 @@ public:
             const QString skippedDetails = operationDetails(
                 QCoreApplication::translate("BatchConverter", "Skipped (Exists)"), cleanupResult);
             if (!cleanupResult.cleanupSucceeded()) {
-                notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
-                               skippedDetails, false);
+                notifyFinished(BatchItemState::Failed, skippedDetails);
             } else {
-                notifyFinished(QCoreApplication::translate("BatchConverter", "Done"),
-                               skippedDetails, true);
+                notifyFinished(BatchItemState::Done, skippedDetails);
             }
             return;
         }
 
         const ImageSaveResult commitResult = stagedOutput.commit();
         if (!commitResult.succeeded()) {
-            notifyFinished(QCoreApplication::translate("BatchConverter", "Failed"),
+            notifyFinished(BatchItemState::Failed,
                            operationDetails(
                                QCoreApplication::translate("BatchConverter", "Commit Error"),
-                               commitResult),
-                           false);
+                               commitResult));
             return;
         }
 
@@ -359,7 +352,7 @@ public:
             detailsStr.append(QLatin1Char('\n'));
             detailsStr.append(artifactDetails);
         }
-        notifyFinished(QCoreApplication::translate("BatchConverter", "Done"), detailsStr, true);
+        notifyFinished(BatchItemState::Done, detailsStr);
     }
 
 private:
@@ -431,42 +424,42 @@ void BatchConverter::start(const QStringList &allPaths, const QList<int> &select
         QString rawDestPath = buildDestPath(srcPath, job.pattern, activeIndex + 1, job.format, finalOutDir);
 
         if (rawDestPath.isEmpty()) {
-            onTaskFinished(i, tr("Failed"), tr("Invalid destination path"), false);
+            onTaskFinished(i, BatchItemState::Failed, tr("Invalid destination path"));
             continue;
         }
 
         const QString rawDestinationKey = destinationReservationKey(rawDestPath);
         if (rawDestinationKey.isEmpty()) {
-            onTaskFinished(i, tr("Failed"), tr("Destination planning failed: invalid reservation key"), false);
+            onTaskFinished(i, BatchItemState::Failed, tr("Destination planning failed: invalid reservation key"));
             continue;
         }
 
         if (!job.overwrite && QFileInfo::exists(rawDestPath)
             && !reservedDestinationKeys.contains(rawDestinationKey)) {
-            onTaskFinished(i, tr("Done"), tr("Skipped (Exists)"), true);
+            onTaskFinished(i, BatchItemState::Done, tr("Skipped (Exists)"));
             continue;
         }
 
         const QString destPath = makeUniqueDestPath(rawDestPath, reservedDestinationKeys, job.overwrite);
         if (destPath.isEmpty()) {
-            onTaskFinished(i, tr("Failed"),
-                           tr("Destination planning failed: no unique output path is available"), false);
+            onTaskFinished(i, BatchItemState::Failed,
+                           tr("Destination planning failed: no unique output path is available"));
             continue;
         }
 
         if (!job.overwrite && QFileInfo::exists(destPath)) {
-            onTaskFinished(i, tr("Done"), tr("Skipped (Exists)"), true);
+            onTaskFinished(i, BatchItemState::Done, tr("Skipped (Exists)"));
             continue;
         }
 
         const QString destinationKey = destinationReservationKey(destPath);
         if (destinationKey.isEmpty()) {
-            onTaskFinished(i, tr("Failed"), tr("Destination planning failed: invalid reservation key"), false);
+            onTaskFinished(i, BatchItemState::Failed, tr("Destination planning failed: invalid reservation key"));
             continue;
         }
         reservedDestinationKeys.insert(destinationKey);
 
-        emit progressUpdated(i, tr("Processing..."), "", true);
+        emit progressUpdated(i, BatchItemState::Processing, QString());
 
         // Start runnable
         BatchConverterRunnable *runnable = new BatchConverterRunnable(
@@ -536,23 +529,23 @@ void BatchConverter::enableSelfDestruct() {
     }
 }
 
-void BatchConverter::onTaskFinished(int index, QString status, QString details, bool success) {
+void BatchConverter::onTaskFinished(int index, BatchItemState state, QString details) {
     if (!m_isConverting && !m_isCancelling) return;
 
     if (m_isCancelling) {
         if (!details.isEmpty())
-            emit progressUpdated(index, status, details, success);
+            emit progressUpdated(index, state, details);
         return;
     }
 
-    if (success) {
+    if (state == BatchItemState::Done) {
         m_successCount++;
     } else {
         m_failedCount++;
     }
     m_processedFiles++;
 
-    emit progressUpdated(index, status, details, success);
+    emit progressUpdated(index, state, details);
 
     if (m_processedFiles >= m_totalFiles) {
         m_isConverting = false;

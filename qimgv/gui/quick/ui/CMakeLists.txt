@@ -12,6 +12,12 @@ qt_add_qml_module(qimgv_ui
         crop/cropcontroller.h
         crop/cropselection.cpp
         crop/cropselection.h
+        dialogs/batchconversionservice.cpp
+        dialogs/batchconversionservice.h
+        dialogs/batchconverterdialogmodel.cpp
+        dialogs/batchconverterdialogmodel.h
+        dialogs/batchqueuemodel.cpp
+        dialogs/batchqueuemodel.h
         dialogs/confirmationdialogmodel.cpp
         dialogs/confirmationdialogmodel.h
         dialogs/dialogcoordinator.cpp
@@ -20,6 +26,8 @@ qt_add_qml_module(qimgv_ui
         dialogs/dialogsession.h
         dialogs/filereplacedialogmodel.cpp
         dialogs/filereplacedialogmodel.h
+        dialogs/printdialogmodel.cpp
+        dialogs/printdialogmodel.h
         dialogs/resizedialogmodel.cpp
         dialogs/resizedialogmodel.h
         dialogs/savepathdialogmodel.cpp
@@ -75,6 +83,8 @@ qt_add_qml_module(qimgv_ui
         thumbnails/thumbnailstriplayout.h
     QML_FILES
         AdjustmentSliders.qml
+        BatchConverterDialog.qml
+        BatchItemWidget.qml
         CasSettingsOverlay.qml
         ColorAdjustmentsOverlay.qml
         ConfirmationDialog.qml
@@ -92,12 +102,14 @@ qt_add_qml_module(qimgv_ui
         FullscreenInfoOverlay.qml
         ImageInfoOverlay.qml
         ImageViewport.qml
+        LinkedSliderSpin.qml
         Main.qml
         MainPanel.qml
         OverlayHeaderButton.qml
         OverlayLayer.qml
         OverlayPanel.qml
         PlacesPanel.qml
+        PrintDialog.qml
         RenameOverlay.qml
         ResizeDialog.qml
         SaveConfirmOverlay.qml
@@ -156,7 +168,8 @@ target_link_libraries(qimgv_ui
         qimgv_viewcomponents
     PRIVATE
         Qt6::QuickControls2
-        # FolderDialog of the copy / move overlay, FileDialog of "Save as",
-        # the settings window's FileDialogs and ColorDialog.
+        # FolderDialog of the copy / move overlay and the batch converter,
+        # FileDialog of "Save as" and the PDF export, the settings window's
+        # FileDialogs and ColorDialog.
         Qt6::QuickDialogs2
 )

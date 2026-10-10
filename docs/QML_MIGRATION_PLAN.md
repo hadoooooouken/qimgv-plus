@@ -1961,6 +1961,103 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
   `QCanvasPainterItem` or tile `Image`s depending on its current content.
 - **Acceptance:** batch progress updates do not stall the UI; printing
   output identical; map overlay parity.
+- **Delivered** (one commit, as the user chose):
+  - **Map overlay:** `MapOverlay` was compiled but never created (the
+    widget viewer has no minimap), so parity holds without a port. It was
+    deleted as dead code, together with `DecliningDialogPort`
+    (`interimports.*`), which has no user left.
+  - **Shared batch rules** (`components/batchconverter/`, in
+    `qimgv_viewcomponents`, free of `Settings`): `BatchJob`,
+    `AspectFitMode`, `RotationAngle` and the new `BatchItemState` moved to
+    `batchjob.h`. `BatchJobRules` holds what the widget dialog decided
+    inline: the output formats, quality scales and the stored defaults per
+    format, the percent / side rules and limits, common sizes, filters,
+    rotations, the colour sliders and their conversion, the pattern check,
+    the initial output folder, the start checks in the widget's order with
+    their messages, the job handed to the converter (`finalJob()`) and the
+    status texts (widget translation contexts kept). `BatchConverter`
+    reports `BatchItemState` instead of a translated status string, which
+    the dialog compared with `tr("Processing...")` / `tr("Done")`.
+  - **Shared printing** (`components/printing/imageprintsetup`, in
+    `qimgv_viewcomponents`, which now links `Qt6::PrintSupport`):
+    `imagePrintRect()`, the preview rendering and `ImagePrintSetup`, which
+    owns the selected printer (`std::unique_ptr`, replacing the raw pointer
+    with manual `delete`) and the A4 PDF printer, and prints / exports. Both
+    print dialogs print through it, so the output is identical by
+    construction.
+  - **Widget UI:** `BatchConverterDialog` and `PrintDialog` use the shared
+    rules and printing. `LinkedSliderSpin` takes a `ColorSliderSpec` (its
+    8-argument constructor broke the 5-argument rule). The batch dialog
+    lists the Upscayl models from `Settings::availableUpscaylModels()`.
+  - **Quick UI** (`gui/quick/ui/dialogs/`, module `qimgv.ui`):
+    - `BatchConverterDialogModel` (`DialogSession`) holds the draft,
+      validation, start / stop / close and the messages. It converts through
+      a `BatchConversionService` (an abstract `QObject` with the converter's
+      signals plus thumbnails), because `BatchConverter` depends on
+      application code (ImageLib, Upscayl). The application's
+      `AppBatchConversionService` wraps `BatchConverter` and `Thumbnailer`.
+      One service is made per request, and destroying it stops a running
+      batch and lets both delete themselves, as the widget dialog did.
+    - `BatchQueueModel` lists the files. The image headers and file sizes
+      are read on the model's own one-thread pool and applied in groups of
+      32, with a scan generation that drops the results of a previous
+      queue. Each progress report changes one row, so the window stays
+      responsive (the acceptance).
+    - `PrintDialogModel` (`DialogSession`) handles the printer, orientation,
+      colour, fit to page, the preview and the PDF export. It reports the
+      preferences to store on every close.
+    - `QuickDialogPort` gathers the inputs (stored qualities, Upscayl models
+      and preferences, printers through `QPrinterInfo`, print preferences,
+      the screen's device pixel ratio). It stores the batch's Upscayl
+      preferences after a started batch and the print preferences after
+      every close.
+  - **QML:** `BatchConverterDialog.qml` is an application-modal, resizable
+    window with the queue (`BatchItemWidget.qml` rows with `ThumbnailItem`
+    thumbnails), the settings column (`LinkedSliderSpin.qml` colour rows),
+    `FolderDialog` for the output folder, a progress bar and an in-window
+    message window. `PrintDialog.qml` is a `DialogWindow` with the page
+    preview (`ThumbnailItem` plus a page frame on light themes) and a
+    `FileDialog` for the PDF. Both are loaded on first use by
+    `DialogLayer`. `qimgv.style` gained `ProgressBar`.
+  - **Fixed:**
+    - Choosing another printer kept the page orientation. The new
+      `QPrinter` was portrait while "Landscape" stayed checked.
+    - The printer list shows the printer that is used. The widget dialog
+      showed the default printer while printing on the last one.
+    - A failed print or export reports the error and keeps the dialog
+      open. The widget dialog closed silently.
+    - Batch target sides stay within 1 - 65535. A small percent of a small
+      image gave a 0 px target and a resize error.
+    - The Quick batch dialog keeps the stored batch model when no models
+      exist (as S3.3 did for the settings).
+  - **Deviations:**
+    - The batch warnings and the completion message are a window of the
+      batch dialog instead of `QMessageBox`es.
+    - The Quick batch dialog stores the Upscayl preferences when it closes
+      after a started batch. The widget dialog stored them at the start.
+    - The colour value suffix is a label next to the spin box.
+    - Not a `QPrintDialog`, which the plan assumed: the widget print dialog
+      never used one, so `PrintDialogModel` follows the widget dialog.
+  - **Flagged, not changed:** the widget `BatchItemWidget` still reads every
+    image header on the GUI thread when the dialog opens; `ResizeDialog`
+    still scans the Upscayl models itself.
+  - **Not verified by hand in the running application:** opening the
+    dialogs, since no input was sent to the desktop; the tests drive them.
+    No real printer was printed on. Startup is unchanged (the dialogs are
+    created on first use). Release, a 300 x 300 PNG, process start to
+    "first document rendering settled": Quick UI median 371 ms (5 runs),
+    widget UI median 733 ms (3 runs), no warnings.
+  - Tests: `qimgv_tests` gained `BatchPrintTests`. It covers the batch
+    rules, the queue (worker header reads, selection, dropped scans,
+    states, thumbnails), the batch view-model over
+    `FakeBatchConversionService` (`tests/fakes/`) with defaults, quality,
+    resize, colour, start checks, run / stop / close / start failure and
+    preferences, the print rectangle, a PDF export, the oriented grayscale
+    preview, and the print view-model (no printers, export and failure,
+    last printer). `qimgv_qml_tests` gained `tst_batchprint.qml`, which
+    covers the queue window, collapsed colour sliders, the warning window,
+    convert / stop / finish through the buttons, and the print window with
+    and without printers.
 
 ### Phase 4: Switch-over and removal
 

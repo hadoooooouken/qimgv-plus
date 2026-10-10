@@ -473,6 +473,14 @@ void BridgeTestFixture::connectDialogs() {
                       .arg(request->upscaylModel)
                 : u"resize:none"_s;
   });
+  connect(mDialogs.batchConverter(), &DialogSession::finished, this, [this]() {
+    mLastDialogAnswer =
+        u"batch:%1"_s.arg(mDialogs.batchConverter()->result().conversionStarted ? 1 : 0);
+  });
+  connect(mDialogs.print(), &DialogSession::finished, this, [this]() {
+    const std::optional<PrintPreferences> preferences = mDialogs.print()->preferencesToStore();
+    mLastDialogAnswer = u"print:%1"_s.arg(preferences && preferences->pdfDefault ? 1 : 0);
+  });
   connect(mDialogs.textInput(), &DialogSession::finished, this, [this]() {
     const TextInputResult result = mDialogs.textInput()->result();
     mLastDialogAnswer = u"text:%1:%2"_s.arg(result.accepted ? 1 : 0).arg(result.text);
@@ -572,6 +580,50 @@ bool BridgeTestFixture::requestText(const QString &title, const QString &label,
       {.title = title, .label = label, .initialText = initialText});
 }
 
+bool BridgeTestFixture::requestBatchConversion(const QStringList &paths) {
+  constexpr QSize kOriginalSize(1000, 500);
+  constexpr int kQuality = 90;
+  return mDialogs.batchConverter()->start(
+      {.filePaths = paths,
+       .defaultOutputDirectory = {},
+       .originalSize = kOriginalSize,
+       .saveQualities = {.jpeg = kQuality, .png = 3, .modern = kQuality},
+       .upscaylModels = {},
+       .useUpscayl = false,
+       .upscaylModel = {},
+       .devicePixelRatio = 1.0},
+      mBatchService);
+}
+
+int BridgeTestFixture::batchStartCount() const { return mBatchService.startCount; }
+
+int BridgeTestFixture::batchCancelCount() const { return mBatchService.cancelCount; }
+
+void BridgeTestFixture::reportBatchProgress(int index, int state, const QString &details) {
+  mBatchService.reportProgress(index, static_cast<BatchItemState>(state), details);
+}
+
+void BridgeTestFixture::finishBatch(int succeeded, int failed, int total) {
+  mBatchService.reportFinished(succeeded, failed, total);
+}
+
+void BridgeTestFixture::cancelBatch(int succeeded, int failed, int total) {
+  mBatchService.reportCancelled(succeeded, failed, total);
+}
+
+bool BridgeTestFixture::requestPrint(const QStringList &printers) {
+  constexpr QSize kImageSize(400, 200);
+  QImage image(kImageSize, QImage::Format_RGB32);
+  image.fill(Qt::red);
+  return mDialogs.print()->start(
+      {.image = std::make_shared<const QImage>(std::move(image)),
+       .pdfOutputPath = {},
+       .printers = printers,
+       .defaultPrinter = printers.isEmpty() ? QString() : printers.first(),
+       .preferences = {},
+       .devicePixelRatio = 1.0});
+}
+
 void BridgeTestFixture::clearDialogAnswer() { mLastDialogAnswer.clear(); }
 
 void BridgeTestFixture::abandonDialogs() {
@@ -580,6 +632,8 @@ void BridgeTestFixture::abandonDialogs() {
   mDialogs.resize()->abandon();
   mDialogs.savePath()->abandon();
   mDialogs.textInput()->abandon();
+  mDialogs.batchConverter()->abandon();
+  mDialogs.print()->abandon();
 }
 
 void BridgeTestFixture::sendKey(QQuickWindow *window, int key) {

@@ -17,7 +17,6 @@
 #include <QGroupBox>
 #include <QSpacerItem>
 #include <cmath>
-#include "realesrgan.h"
 
 namespace {
 constexpr int kBatchThumbnailExtent = 48;
@@ -76,7 +75,7 @@ BatchItemWidget::BatchItemWidget(const QString &filePath, QWidget *parent)
     rightInfo->setSpacing(2);
     rightInfo->setAlignment(Qt::AlignRight);
 
-    statusLabel = new QLabel(tr("Pending"), this);
+    statusLabel = new QLabel(BatchJobRules::itemStateText(BatchItemState::Pending), this);
     statusLabel->setMinimumWidth(80);
     statusLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
     statusLabel->setAlignment(Qt::AlignRight);
@@ -96,20 +95,10 @@ BatchItemWidget::BatchItemWidget(const QString &filePath, QWidget *parent)
 
     mainLayout->addLayout(rightInfo, 0);
 
-    QString sizeStr;
-    if (size > 1024 * 1024)
-        sizeStr = QString::number(size / (1024.0 * 1024.0), 'f', 1) + " MB";
-    else
-        sizeStr = QString::number(size / 1024.0, 'f', 1) + " KB";
-
     QImageReader reader(filePath);
     imgSize = reader.size();
-    QString origFormat = reader.format().toUpper();
-    srcInfoLabel->setText(QString("%1 \xe2\x80\xa2 %2x%3 \xe2\x80\xa2 %4")
-                          .arg(origFormat)
-                          .arg(imgSize.width())
-                          .arg(imgSize.height())
-                          .arg(sizeStr));
+    srcInfoLabel->setText(BatchJobRules::sourceInfoText(QString::fromLatin1(reader.format()),
+                                                        imgSize, size));
 
     connect(checkBox, &QCheckBox::toggled, this, &BatchItemWidget::checkedStateChanged);
 }
@@ -146,56 +135,56 @@ void BatchItemWidget::setThumbnail(std::shared_ptr<Thumbnail> thumb) {
     }
 }
 
-void BatchItemWidget::setStatus(const QString &statusText, const QString &details, bool success) {
-    statusLabel->setText(statusText);
-    auto colors = settings->colorScheme();
-    if (!success) {
-        statusLabel->setStyleSheet(
-            QString("font-weight: bold; color: %1; font-size: 12px;")
-                .arg(colors.status_error.name()));
-    } else if (statusText == tr("Processing...")) {
-        statusLabel->setStyleSheet(
-            QString("font-weight: bold; color: %1; font-size: 12px;")
-                .arg(colors.status_processing.name()));
-    } else if (statusText == tr("Done")) {
-        statusLabel->setStyleSheet(
-            QString("font-weight: bold; color: %1; font-size: 12px;")
-                .arg(colors.status_success.name()));
-    } else {
-        statusLabel->setStyleSheet(
-            QString("font-weight: bold; color: %1; font-size: 12px;")
-                .arg(colors.status_pending.name()));
+void BatchItemWidget::setStatus(BatchItemState state, const QString &details) {
+    statusLabel->setText(BatchJobRules::itemStateText(state));
+    const auto colors = settings->colorScheme();
+    QColor statusColor = colors.status_pending;
+    switch (state) {
+    case BatchItemState::Failed:
+    case BatchItemState::Stopped:
+        statusColor = colors.status_error;
+        break;
+    case BatchItemState::Processing:
+        statusColor = colors.status_processing;
+        break;
+    case BatchItemState::Done:
+        statusColor = colors.status_success;
+        break;
+    case BatchItemState::Pending:
+        break;
     }
+    statusLabel->setStyleSheet(
+        QString("font-weight: bold; color: %1; font-size: 12px;").arg(statusColor.name()));
     destInfoLabel->setText(details);
 }
 
 // ==================== LinkedSliderSpin ====================
 
-LinkedSliderSpin::LinkedSliderSpin(const QString &labelText, double minVal, double maxVal, double defaultVal,
-                                   double factor, int decimals, const QString &suffix, QWidget *parent)
-    : QWidget(parent), m_factor(factor), m_defaultValue(defaultVal) {
+LinkedSliderSpin::LinkedSliderSpin(const BatchJobRules::ColorSliderSpec &spec, QWidget *parent)
+    : QWidget(parent), m_factor(spec.step), m_defaultValue(spec.defaultValue) {
     QHBoxLayout *layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    label = new QLabel(labelText, this);
+    label = new QLabel(spec.label, this);
     label->setMinimumWidth(80);
     layout->addWidget(label);
 
     slider = new QSlider(Qt::Horizontal, this);
-    slider->setRange(static_cast<int>(std::round(minVal / factor)), static_cast<int>(std::round(maxVal / factor)));
+    slider->setRange(static_cast<int>(std::round(spec.minimum / spec.step)),
+                     static_cast<int>(std::round(spec.maximum / spec.step)));
     layout->addWidget(slider);
 
     spinBox = new QDoubleSpinBox(this);
     spinBox->setFixedSize(80, 24);
     spinBox->setAlignment(Qt::AlignCenter);
     spinBox->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
-    spinBox->setRange(minVal, maxVal);
-    spinBox->setSingleStep(decimals > 0 ? 0.1 : 1.0);
-    spinBox->setDecimals(decimals);
-    spinBox->setSuffix(suffix);
+    spinBox->setRange(spec.minimum, spec.maximum);
+    spinBox->setSingleStep(spec.decimals > 0 ? 0.1 : 1.0);
+    spinBox->setDecimals(spec.decimals);
+    spinBox->setSuffix(spec.suffix);
     layout->addWidget(spinBox);
 
-    setValue(defaultVal);
+    setValue(spec.defaultValue);
 
     slider->installEventFilter(this);
 
@@ -369,9 +358,9 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     percent->setMinimumSize(0, 30);
     percent->setAlignment(Qt::AlignCenter);
     percent->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
-    percent->setRange(1.0, 1600.0);
-    percent->setValue(100.0);
-    percent->setDecimals(1);
+    percent->setRange(BatchJobRules::kMinimumPercent, BatchJobRules::kMaximumPercent);
+    percent->setValue(BatchJobRules::kDefaultPercent);
+    percent->setDecimals(BatchJobRules::kPercentDecimals);
     percent->setEnabled(false);
     percLayout->addWidget(lPerc);
     percLayout->addWidget(percent);
@@ -391,7 +380,7 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     width->setMinimumSize(0, 30);
     width->setAlignment(Qt::AlignCenter);
     width->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
-    width->setRange(1, 65535);
+    width->setRange(BatchJobRules::kMinimumSide, BatchJobRules::kMaximumSide);
     width->setEnabled(false);
     wLayout->addWidget(lWidth);
     wLayout->addWidget(width);
@@ -404,7 +393,7 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
     height->setMinimumSize(0, 30);
     height->setAlignment(Qt::AlignCenter);
     height->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
-    height->setRange(1, 65535);
+    height->setRange(BatchJobRules::kMinimumSide, BatchJobRules::kMaximumSide);
     height->setEnabled(false);
     hLayout->addWidget(lHeight);
     hLayout->addWidget(height);
@@ -474,11 +463,11 @@ void BatchConverterDialog::setupResizeSection(QVBoxLayout *scrollLayout) {
 void BatchConverterDialog::setupTransformSection(QVBoxLayout *scrollLayout) {
     QHBoxLayout *rotationLayout = new QHBoxLayout();
     rotationGroup = new QButtonGroup(this);
-    rotate0Radio = new QRadioButton(tr("0°"), this);
+    rotate0Radio = new QRadioButton(BatchJobRules::rotationLabel(RotationAngle::Rotate0), this);
     rotate0Radio->setChecked(true);
-    rotate90Radio = new QRadioButton(tr("90°"), this);
-    rotate180Radio = new QRadioButton(tr("180°"), this);
-    rotate270Radio = new QRadioButton(tr("270°"), this);
+    rotate90Radio = new QRadioButton(BatchJobRules::rotationLabel(RotationAngle::Rotate90), this);
+    rotate180Radio = new QRadioButton(BatchJobRules::rotationLabel(RotationAngle::Rotate180), this);
+    rotate270Radio = new QRadioButton(BatchJobRules::rotationLabel(RotationAngle::Rotate270), this);
     rotationGroup->addButton(rotate0Radio, static_cast<int>(RotationAngle::Rotate0));
     rotationGroup->addButton(rotate90Radio, static_cast<int>(RotationAngle::Rotate90));
     rotationGroup->addButton(rotate180Radio, static_cast<int>(RotationAngle::Rotate180));
@@ -513,26 +502,12 @@ void BatchConverterDialog::setupColorSection(QVBoxLayout *scrollLayout) {
 
     vColorLayout = new QVBoxLayout();
 
-    exposureWidget = new LinkedSliderSpin(tr("Exposure:"), -2.0, 2.0, 0.0, 0.01, 2, "", this);
-    vColorLayout->addWidget(exposureWidget);
-
-    contrastWidget = new LinkedSliderSpin(tr("Contrast:"), 0.0, 300.0, 100.0, 1.0, 0, "%", this);
-    vColorLayout->addWidget(contrastWidget);
-
-    brightnessWidget = new LinkedSliderSpin(tr("Brightness:"), -100.0, 100.0, 0.0, 1.0, 0, "%", this);
-    vColorLayout->addWidget(brightnessWidget);
-
-    saturationWidget = new LinkedSliderSpin(tr("Saturation:"), 0.0, 200.0, 100.0, 1.0, 0, "%", this);
-    vColorLayout->addWidget(saturationWidget);
-
-    hueWidget = new LinkedSliderSpin(tr("Hue:"), -180.0, 180.0, 0.0, 1.0, 0, QString::fromUtf8("\xc2\xb0"), this);
-    vColorLayout->addWidget(hueWidget);
-
-    tempWidget = new LinkedSliderSpin(tr("Temperature:"), -50.0, 50.0, 0.0, 1.0, 0, "", this);
-    vColorLayout->addWidget(tempWidget);
-
-    tintWidget = new LinkedSliderSpin(tr("Tint:"), -50.0, 50.0, 0.0, 1.0, 0, "", this);
-    vColorLayout->addWidget(tintWidget);
+    const QList<BatchJobRules::ColorSliderSpec> sliderSpecs = BatchJobRules::colorSliders();
+    for (std::size_t i = 0; i < colorSliderWidgets.size(); ++i) {
+        colorSliderWidgets[i] =
+            new LinkedSliderSpin(sliderSpecs[static_cast<qsizetype>(i)], this);
+        vColorLayout->addWidget(colorSliderWidgets[i]);
+    }
 
     contentLayout->addLayout(vColorLayout);
 
@@ -540,13 +515,9 @@ void BatchConverterDialog::setupColorSection(QVBoxLayout *scrollLayout) {
     QPushButton *resetColorButton = new QPushButton(tr("Reset Color Adjustments"), this);
     contentLayout->addWidget(resetColorButton);
     connect(resetColorButton, &QPushButton::clicked, this, [this]() {
-        exposureWidget->setValue(0.0);
-        contrastWidget->setValue(100.0);
-        brightnessWidget->setValue(0.0);
-        saturationWidget->setValue(100.0);
-        hueWidget->setValue(0.0);
-        tempWidget->setValue(0.0);
-        tintWidget->setValue(0.0);
+        const BatchJobRules::ColorSliderValues defaults = BatchJobRules::defaultColorValues();
+        for (std::size_t i = 0; i < colorSliderWidgets.size(); ++i)
+            colorSliderWidgets[i]->setValue(defaults[i]);
     });
 
     ccLayout->addWidget(colorAdjustmentsContent);
@@ -575,10 +546,10 @@ void BatchConverterDialog::setupRenameSection(QVBoxLayout *scrollLayout) {
     ocLayout->addWidget(subfolderCheckBox);
 
     ocLayout->addWidget(new QLabel(tr("Filename pattern:"), this));
-    patternEdit = new QLineEdit(tr("{name}_converted"), this);
+    patternEdit = new QLineEdit(BatchJobRules::defaultPattern(), this);
     ocLayout->addWidget(patternEdit);
 
-    QLabel *helpL = new QLabel(tr("Available: {name}, {ext}, {date}, {index}"), this);
+    QLabel *helpL = new QLabel(BatchJobRules::patternHelp(), this);
     QFont f = helpL->font(); f.setItalic(true); helpL->setFont(f);
     ocLayout->addWidget(helpL);
 
@@ -590,7 +561,7 @@ void BatchConverterDialog::setupRenameSection(QVBoxLayout *scrollLayout) {
 
 void BatchConverterDialog::setupBottomPanel(QVBoxLayout *mainLayout) {
     QHBoxLayout *bLayout = new QHBoxLayout();
-    statusLabel = new QLabel(tr("Ready to convert."), this);
+    statusLabel = new QLabel(BatchJobRules::readyText(), this);
     bLayout->addWidget(statusLabel);
     bLayout->addSpacerItem(new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum));
 
@@ -654,14 +625,8 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     connect(m_converter, &BatchConverter::cancelled, this, &BatchConverterDialog::onCancelled);
     connect(m_converter, &BatchConverter::startFailed, this, &BatchConverterDialog::onStartFailed);
 
-    formatComboBox->addItem("JPEG (*.jpg *.jpeg *.jpe *.jfif)", "jpg");
-    formatComboBox->addItem("PNG (*.png)", "png");
-    formatComboBox->addItem("WebP (*.webp)", "webp");
-    formatComboBox->addItem("JPEG-XL (*.jxl)", "jxl");
-    formatComboBox->addItem("AVIF (*.avif *.avifs)", "avif");
-    formatComboBox->addItem("QOI (*.qoi)", "qoi");
-    formatComboBox->addItem("BMP (*.bmp)", "bmp");
-    formatComboBox->addItem("TIFF (*.tif *.tiff)", "tif");
+    for (const BatchJobRules::OutputFormat &format : BatchJobRules::outputFormats())
+        formatComboBox->addItem(format.label, format.extension);
 
     thumbnailer = new Thumbnailer();
     connect(thumbnailer, &Thumbnailer::thumbnailReady, this,
@@ -696,46 +661,25 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     totalFiles = filePaths.size();
     updateSelectedCount();
 
-    QString initialOutputDir;
-    if (!defaultOutputDir.isEmpty()) {
-        QFileInfo defaultDirInfo(defaultOutputDir);
-        if (defaultDirInfo.exists() && defaultDirInfo.isDir()) {
-            initialOutputDir = defaultDirInfo.absoluteFilePath();
-        }
-    }
-    if (initialOutputDir.isEmpty() && !filePaths.isEmpty()) {
-        initialOutputDir = QFileInfo(filePaths[0]).absolutePath();
-    }
+    const QString initialOutputDir = BatchJobRules::initialOutputDirectory(
+        defaultOutputDir, filePaths.isEmpty() ? QString() : filePaths.first());
     if (!initialOutputDir.isEmpty()) {
         outDirEdit->setText(initialOutputDir);
     }
 
-    filterComboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
-    filterComboBox->addItem(tr("Bilinear"), QI_FILTER_BILINEAR);
-    filterComboBox->addItem(tr("Smart sharpen"), QI_FILTER_SMART);
-    filterComboBox->addItem(tr("Magic Kernel Sharp 2021"), QI_FILTER_MKS2021);
-    int mks2021Index = filterComboBox->findData(QI_FILTER_MKS2021);
-    filterComboBox->setCurrentIndex(mks2021Index != -1 ? mks2021Index : 1);
+    for (const BatchJobRules::ScalingFilterOption &filter : BatchJobRules::scalingFilters())
+        filterComboBox->addItem(filter.label, filter.filter);
+    filterComboBox->setCurrentIndex(BatchJobRules::defaultScalingFilterIndex());
 
-    resComboBox->addItem(tr("Original size"), QVariant());
-    resComboBox->addItem("1280 x 720", QSize(1280, 720));
-    resComboBox->addItem("1366 x 768", QSize(1366, 768));
-    resComboBox->addItem("1440 x 900", QSize(1440, 900));
-    resComboBox->addItem("1440 x 1050", QSize(1440, 1050));
-    resComboBox->addItem("1600 x 1200", QSize(1600, 1200));
-    resComboBox->addItem("1920 x 1080", QSize(1920, 1080));
-    resComboBox->addItem("1920 x 1200", QSize(1920, 1200));
-    resComboBox->addItem("2560 x 1080", QSize(2560, 1080));
-    resComboBox->addItem("2560 x 1440", QSize(2560, 1440));
-    resComboBox->addItem("2560 x 1600", QSize(2560, 1600));
-    resComboBox->addItem("3840 x 1600", QSize(3840, 1600));
-    resComboBox->addItem("3840 x 2160", QSize(3840, 2160));
+    for (const BatchJobRules::CommonSize &commonSize : BatchJobRules::commonSizes())
+        resComboBox->addItem(commonSize.label,
+                             commonSize.size.isValid() ? QVariant(commonSize.size) : QVariant());
 
     if (!filePaths.isEmpty()) {
         QImageReader r(filePaths[0]);
         originalSize = r.size();
     } else {
-        originalSize = QSize(2560, 1440);
+        originalSize = BatchJobRules::fallbackOriginalSize();
     }
     targetSize = originalSize;
     width->setValue(originalSize.width());
@@ -745,16 +689,7 @@ BatchConverterDialog::BatchConverterDialog(const QList<QString> &filePaths, QWid
     percent->setEnabled(false);
 
     if (settings->hasUpscaylModels()) {
-        QDir modelsDir(QCoreApplication::applicationDirPath() + "/models");
-        QStringList filters; filters << "*.param";
-        QStringList files = modelsDir.entryList(filters, QDir::Files);
-        QStringList modelNames;
-        for (const QString &file : files) {
-            QFileInfo fi(file);
-            QString modelName = fi.baseName();
-            if (modelsDir.exists(modelName + ".bin")) modelNames.append(modelName);
-        }
-        upscaylModelComboBox->addItems(modelNames);
+        upscaylModelComboBox->addItems(settings->availableUpscaylModels());
         int modelIdx = upscaylModelComboBox->findText(settings->batchUpscaylModel());
         upscaylModelComboBox->setCurrentIndex(modelIdx != -1 ? modelIdx : 0);
         useUpscaylCheckBox->setChecked(settings->resizeUseUpscayl());
@@ -848,31 +783,23 @@ void BatchConverterDialog::onKeepAspectRatioToggled(bool checked) {
 }
 
 void BatchConverterDialog::onPercentChanged(double val) {
-    double scale = val / 100.0;
-    targetSize.setWidth(originalSize.width() * scale);
-    targetSize.setHeight(originalSize.height() * scale);
+    targetSize = BatchJobRules::percentTarget(originalSize, val);
     updateToTargetValues();
     updateUpscaylAvailability();
 }
 
 void BatchConverterDialog::onWidthChanged(int val) {
     lastEdited = 0;
-    float factor = static_cast<float>(val) / originalSize.width();
-    targetSize.setWidth(val);
-    if (keepAspectRatio->isChecked()) {
-        targetSize.setHeight(static_cast<int>(originalSize.height() * factor));
-    }
+    targetSize = BatchJobRules::widthEdited(originalSize, targetSize, val,
+                                            keepAspectRatio->isChecked());
     updateToTargetValues();
     updateUpscaylAvailability();
 }
 
 void BatchConverterDialog::onHeightChanged(int val) {
     lastEdited = 1;
-    float factor = static_cast<float>(val) / originalSize.height();
-    targetSize.setHeight(val);
-    if (keepAspectRatio->isChecked()) {
-        targetSize.setWidth(static_cast<int>(originalSize.width() * factor));
-    }
+    targetSize = BatchJobRules::heightEdited(originalSize, targetSize, val,
+                                             keepAspectRatio->isChecked());
     updateToTargetValues();
     updateUpscaylAvailability();
 }
@@ -902,7 +829,7 @@ void BatchConverterDialog::onResetSizes() {
     resComboBox->setCurrentIndex(0);
     resComboBox->blockSignals(false);
     percent->blockSignals(true);
-    percent->setValue(100.0);
+    percent->setValue(BatchJobRules::kDefaultPercent);
     percent->blockSignals(false);
     targetSize = originalSize;
     updateToTargetValues();
@@ -948,8 +875,7 @@ void BatchConverterDialog::updateSelectedCount() {
             totalSizeBytes += widget->fileSize();
         }
     }
-    double totalSizeMB = totalSizeBytes / (1024.0 * 1024.0);
-    selectedCountLabel->setText(tr("%1 files selected (%2 MB)").arg(checkedCount).arg(QString::number(totalSizeMB, 'f', 1)));
+    selectedCountLabel->setText(BatchJobRules::selectionText(checkedCount, totalSizeBytes));
 }
 
 void BatchConverterDialog::onBrowseClicked() {
@@ -958,42 +884,29 @@ void BatchConverterDialog::onBrowseClicked() {
 }
 
 void BatchConverterDialog::onFormatChanged(int index) {
-    QString ext = formatComboBox->itemData(index).toString();
-    if (ext == "png") {
-        qualitySlider->setEnabled(true);
-        qualitySpinBox->setEnabled(true);
-        qualitySlider->blockSignals(true);
-        qualitySpinBox->blockSignals(true);
-        qualitySlider->setRange(0, 9);
-        qualitySpinBox->setRange(0, 9);
-        qualitySlider->setValue(settings->pngSaveQuality());
-        qualitySpinBox->setValue(settings->pngSaveQuality());
-        qualitySlider->blockSignals(false);
-        qualitySpinBox->blockSignals(false);
-        qualitySlider->setToolTip(tr("PNG Compression level (0 - none, 9 - max)"));
-        qualitySpinBox->setToolTip(tr("PNG Compression level (0 - none, 9 - max)"));
-    } else if (ext == "jpg" || ext == "webp" || ext == "jxl" || ext == "avif") {
-        qualitySlider->setEnabled(true);
-        qualitySpinBox->setEnabled(true);
-        qualitySlider->blockSignals(true);
-        qualitySpinBox->blockSignals(true);
-        qualitySlider->setRange(1, 100);
-        qualitySpinBox->setRange(1, 100);
-        int val = 90;
-        if (ext == "jpg") val = settings->JPEGSaveQuality();
-        else if (ext == "webp" || ext == "jxl" || ext == "avif") val = settings->modernSaveQuality();
-        qualitySlider->setValue(val);
-        qualitySpinBox->setValue(val);
-        qualitySlider->blockSignals(false);
-        qualitySpinBox->blockSignals(false);
-        qualitySlider->setToolTip(tr("Quality (1 - lowest, 100 - highest)"));
-        qualitySpinBox->setToolTip(tr("Quality (1 - lowest, 100 - highest)"));
-    } else {
-        qualitySlider->setEnabled(false);
-        qualitySpinBox->setEnabled(false);
-        qualitySlider->setToolTip("");
-        qualitySpinBox->setToolTip("");
-    }
+    const QString ext = formatComboBox->itemData(index).toString();
+    const BatchJobRules::QualityScale scale = BatchJobRules::qualityScaleFor(ext);
+    const QString toolTip = BatchJobRules::qualityToolTip(scale.kind);
+    const bool hasQuality = scale.kind != BatchJobRules::QualityKind::None;
+    qualitySlider->setEnabled(hasQuality);
+    qualitySpinBox->setEnabled(hasQuality);
+    qualitySlider->setToolTip(toolTip);
+    qualitySpinBox->setToolTip(toolTip);
+    if (!hasQuality)
+        return;
+
+    const BatchJobRules::SaveQualityDefaults defaults{.jpeg = settings->JPEGSaveQuality(),
+                                                      .png = settings->pngSaveQuality(),
+                                                      .modern = settings->modernSaveQuality()};
+    const int quality = BatchJobRules::defaultQualityFor(ext, defaults);
+    qualitySlider->blockSignals(true);
+    qualitySpinBox->blockSignals(true);
+    qualitySlider->setRange(scale.minimum, scale.maximum);
+    qualitySpinBox->setRange(scale.minimum, scale.maximum);
+    qualitySlider->setValue(quality);
+    qualitySpinBox->setValue(quality);
+    qualitySlider->blockSignals(false);
+    qualitySpinBox->blockSignals(false);
 }
 
 void BatchConverterDialog::updateUiState() {
@@ -1002,7 +915,7 @@ void BatchConverterDialog::updateUiState() {
     selectAllBtn->setEnabled(!isConverting && !isCancelling);
     deselectAllBtn->setEnabled(!isConverting && !isCancelling);
     if (isCancelling) {
-        cancelButton->setText(tr("Stopping..."));
+        cancelButton->setText(BatchJobRules::stoppingText());
         cancelButton->setEnabled(false);
     } else {
         cancelButton->setText(isConverting ? tr("Stop") : tr("Cancel"));
@@ -1013,47 +926,22 @@ void BatchConverterDialog::updateUiState() {
 void BatchConverterDialog::onConvertClicked() {
     if (isConverting) return;
 
-    QString outDir = outDirEdit->text().trimmed();
-    if (outDir.isEmpty() || !QDir(outDir).exists()) {
-        QMessageBox::warning(this, tr("Invalid Directory"), tr("Please select a valid output directory."));
-        return;
-    }
-
-    QString pattern = patternEdit->text().trimmed();
-    if (pattern.contains("..") || pattern.startsWith('/') || pattern.startsWith('\\') || (pattern.size() >= 2 && pattern[1] == ':')) {
-        QMessageBox::warning(this, tr("Invalid Pattern"), tr("Filename pattern cannot contain path traversal sequences (..) or absolute paths."));
-        return;
-    }
-
     int checkedCount = 0;
     for (BatchItemWidget *widget : m_itemWidgets) {
         if (widget && widget->isChecked()) checkedCount++;
     }
 
-    if (checkedCount == 0) {
-        QMessageBox::warning(this, tr("No files"), tr("No files selected in the queue. Please check at least one file."));
+    const BatchJobRules::StartCheck check{.outputDirectory = outDirEdit->text(),
+                                          .pattern = patternEdit->text(),
+                                          .selectedCount = checkedCount,
+                                          .resize = resizeEnableCheckBox->isChecked(),
+                                          .useUpscayl = useUpscaylCheckBox->isChecked(),
+                                          .targetSize = targetSize};
+    const BatchJobRules::StartProblem problem = BatchJobRules::checkStart(check);
+    if (problem != BatchJobRules::StartProblem::None) {
+        const BatchJobRules::Message message = BatchJobRules::startProblemMessage(problem, check);
+        QMessageBox::warning(this, message.title, message.text);
         return;
-    }
-
-    if (resizeEnableCheckBox->isChecked()) {
-        int maxDim = 12288;
-        qint64 maxPixels = 100000000;
-        if (useUpscaylCheckBox->isChecked()) {
-            maxDim = 16384;
-            maxPixels = 268435456;
-        }
-        if (targetSize.width() > maxDim || targetSize.height() > maxDim ||
-            (qint64)targetSize.width() * targetSize.height() > maxPixels) {
-            double mpLimit = maxPixels / 1000000.0;
-            QMessageBox::warning(this, tr("Resolution Limit Exceeded"),
-                                 tr("Target resolution (%1x%2) exceeds safety limits.\n\n"
-                                    "Maximum allowed dimension: %3 px\n"
-                                    "Maximum allowed pixel count: %4 MP\n\n"
-                                    "Please reduce the percentage or absolute size.")
-                                 .arg(targetSize.width()).arg(targetSize.height())
-                                 .arg(maxDim).arg(mpLimit, 0, 'f', 0));
-            return;
-        }
     }
 
     isConverting = true;
@@ -1062,13 +950,14 @@ void BatchConverterDialog::onConvertClicked() {
 
     progressBar->setMaximum(checkedCount);
     progressBar->setValue(0);
-    statusLabel->setText(tr("Processing..."));
+    statusLabel->setText(BatchJobRules::processingText());
     updateUiState();
     startConversion();
 }
 
 void BatchConverterDialog::startConversion() {
-    BatchJob job;
+    BatchJobRules::BatchJobDraft draft;
+    BatchJob &job = draft.job;
     job.format = formatComboBox->currentData().toString();
     job.quality = qualitySlider->value();
     job.doResize = resizeEnableCheckBox->isChecked();
@@ -1078,7 +967,7 @@ void BatchConverterDialog::startConversion() {
     job.keepAspectRatio = keepAspectRatio->isChecked();
     job.aspectFitMode = static_cast<AspectFitMode>(aspectFitModeGroup->checkedId());
     // Per-file upscaling check for mixed resolution batches lives inside BatchConverter itself.
-    job.useUpscayl = job.doResize && useUpscaylCheckBox->isChecked();
+    job.useUpscayl = useUpscaylCheckBox->isChecked();
     job.upscaylModel = upscaylModelComboBox->currentText();
     job.rotation = static_cast<RotationAngle>(rotationGroup->checkedId());
     job.flipHorizontal = flipHorizontalCheckBox->isChecked();
@@ -1089,21 +978,13 @@ void BatchConverterDialog::startConversion() {
     settings->sync();
 
     job.scalingFilter = filterComboBox->currentData().toInt();
-    bool doColor = colorEnableCheckBox->isChecked();
-
-    if (doColor) {
-        job.colorAdjustments.exposure = static_cast<float>(exposureWidget->value());
-        job.colorAdjustments.contrast = static_cast<float>(contrastWidget->value() / 100.0);
-        job.colorAdjustments.brightness = static_cast<float>(brightnessWidget->value() / 100.0);
-        job.colorAdjustments.saturation = static_cast<float>(saturationWidget->value() / 100.0);
-        job.colorAdjustments.hue = static_cast<float>(hueWidget->value());
-        job.colorAdjustments.temperature = static_cast<float>(tempWidget->value() / 100.0);
-        job.colorAdjustments.tint = static_cast<float>(tintWidget->value() / 100.0);
-    }
+    draft.colorEnabled = colorEnableCheckBox->isChecked();
+    for (std::size_t i = 0; i < colorSliderWidgets.size(); ++i)
+        draft.colorValues[i] = colorSliderWidgets[i]->value();
 
     job.pattern = patternEdit->text();
     job.overwrite = overwriteCheckBox->isChecked();
-    job.outputDir = outDirEdit->text().trimmed();
+    job.outputDir = outDirEdit->text();
     job.createSubfolder = subfolderCheckBox->isChecked();
 
     QList<int> selectedIndices;
@@ -1111,33 +992,33 @@ void BatchConverterDialog::startConversion() {
         BatchItemWidget *widget = m_itemWidgets[i];
         if (widget && widget->isChecked()) {
             selectedIndices.append(i);
-            widget->setStatus(tr("Pending"), "", true);
+            widget->setStatus(BatchItemState::Pending);
         }
     }
 
-    m_converter->start(inputPaths, selectedIndices, job);
+    m_converter->start(inputPaths, selectedIndices, BatchJobRules::finalJob(draft));
 }
 
-void BatchConverterDialog::onProgressUpdated(int index, QString status, QString details, bool success) {
+void BatchConverterDialog::onProgressUpdated(int index, BatchItemState state, QString details) {
     if (index >= 0 && index < m_itemWidgets.size()) {
         BatchItemWidget *widget = m_itemWidgets[index];
-        if (widget) widget->setStatus(status, details, success);
+        if (widget) widget->setStatus(state, details);
     }
 
-    if (status != tr("Processing...")) {
+    if (state != BatchItemState::Processing) {
         processedFiles++;
         progressBar->setValue(processedFiles);
-        statusLabel->setText(tr("Processed %1 / %2 files.").arg(processedFiles).arg(progressBar->maximum()));
+        statusLabel->setText(BatchJobRules::processedText(processedFiles, progressBar->maximum()));
     }
 }
 
 void BatchConverterDialog::onFinished(int successCount, int failedCount, int totalCount) {
     isConverting = false;
     updateUiState();
-    statusLabel->setText(tr("Finished. Success: %1, Failed: %2").arg(successCount).arg(failedCount));
-    QMessageBox::information(this, tr("Batch Conversion Complete"),
-                             tr("Batch process complete.\n\nSuccessfully converted: %1\nFailed: %2\nTotal files: %3")
-                             .arg(successCount).arg(failedCount).arg(totalCount));
+    statusLabel->setText(BatchJobRules::finishedText(successCount, failedCount));
+    const BatchJobRules::Message message =
+        BatchJobRules::completedMessage(successCount, failedCount, totalCount);
+    QMessageBox::information(this, message.title, message.text);
 }
 
 void BatchConverterDialog::onCancelClicked() {
@@ -1146,7 +1027,7 @@ void BatchConverterDialog::onCancelClicked() {
             isCancelling = true;
             m_converter->cancel();
             updateUiState();
-            statusLabel->setText(tr("Stopping..."));
+            statusLabel->setText(BatchJobRules::stoppingText());
         }
     } else if (isCancelling) {
         // Do nothing, wait for cancellation to finish
@@ -1159,14 +1040,15 @@ void BatchConverterDialog::onCancelled(int successCount, int failedCount, int to
     isConverting = false;
     isCancelling = false;
     updateUiState();
-    statusLabel->setText(tr("Stopped by user. Success: %1, Failed: %2").arg(successCount).arg(failedCount));
+    statusLabel->setText(BatchJobRules::stoppedText(successCount, failedCount));
 }
 
 void BatchConverterDialog::onStartFailed(const QString &reason) {
     isConverting = false;
     updateUiState();
-    statusLabel->setText(tr("Batch aborted."));
-    QMessageBox::warning(this, tr("Batch Conversion Failed"), reason);
+    statusLabel->setText(BatchJobRules::abortedText());
+    const BatchJobRules::Message message = BatchJobRules::startFailedMessage(reason);
+    QMessageBox::warning(this, message.title, message.text);
 }
 
 void BatchConverterDialog::collectResizeWidgets() {

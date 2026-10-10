@@ -45,6 +45,22 @@ Item {
     }
 
     Loader {
+        active: dialogLayer.coordinator.batchConverter.created
+        sourceComponent: BatchConverterDialog {
+            dialog: dialogLayer.coordinator.batchConverter
+            transientParent: dialogLayer.Window.window
+        }
+    }
+
+    Loader {
+        active: dialogLayer.coordinator.print.created
+        sourceComponent: PrintDialog {
+            dialog: dialogLayer.coordinator.print
+            transientParent: dialogLayer.Window.window
+        }
+    }
+
+    Loader {
         active: dialogLayer.coordinator.savePath.created
         sourceComponent: SaveFileDialog {
             dialog: dialogLayer.coordinator.savePath

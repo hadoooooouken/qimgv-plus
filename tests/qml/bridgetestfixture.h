@@ -27,6 +27,7 @@
 #include "gui/quick/ui/overlays/overlaycoordinator.h"
 #include "gui/quick/ui/settings/settingsdialogcontroller.h"
 #include "gui/quick/ui/thumbnails/thumbnailpanelcontroller.h"
+#include "fakebatchconversionservice.h"
 
 class QFileSystemModel;
 
@@ -231,6 +232,17 @@ public:
                                  const QStringList &upscaylModels, bool useUpscayl);
   Q_INVOKABLE bool requestText(const QString &title, const QString &label,
                                const QString &initialText);
+  // Batch converter over paths, converting through the fixture's fake
+  // service; the counts and reports drive that service.
+  Q_INVOKABLE bool requestBatchConversion(const QStringList &paths);
+  Q_INVOKABLE int batchStartCount() const;
+  Q_INVOKABLE int batchCancelCount() const;
+  // state: a BatchQueueModel.ItemState value.
+  Q_INVOKABLE void reportBatchProgress(int index, int state, const QString &details);
+  Q_INVOKABLE void finishBatch(int succeeded, int failed, int total);
+  Q_INVOKABLE void cancelBatch(int succeeded, int failed, int total);
+  // Print dialog for a 400 x 200 image with these printers (none: PDF only).
+  Q_INVOKABLE bool requestPrint(const QStringList &printers);
   Q_INVOKABLE void clearDialogAnswer();
   // Abandons every open dialog request.
   Q_INVOKABLE void abandonDialogs();
@@ -288,6 +300,7 @@ private:
   int mFolderThumbnailRequestCount = 0;
   QString mLastFolderRequest;
   int mScriptSettingsRequests = 0;
+  FakeBatchConversionService mBatchService;
   DialogCoordinator mDialogs;
   QString mLastDialogAnswer;
   FakeSettingsValueStore mSettingsValues;

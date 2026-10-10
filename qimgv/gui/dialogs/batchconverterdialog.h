@@ -5,6 +5,7 @@
 #include "sourcecontainers/thumbnail.h"
 #include "utils/imagelib.h"
 #include "components/batchconverter/batchconverter.h"
+#include "components/batchconverter/batchjobrules.h"
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>
@@ -24,6 +25,7 @@
 #include <QStringList>
 #include <QVBoxLayout>
 #include <QBoxLayout>
+#include <array>
 
 class QFileInfo;
 
@@ -32,7 +34,7 @@ class BatchItemWidget : public QWidget {
 public:
     explicit BatchItemWidget(const QString &filePath, QWidget *parent = nullptr);
 
-    void setStatus(const QString &statusText, const QString &details = "", bool success = true);
+    void setStatus(BatchItemState state, const QString &details = QString());
     void setThumbnail(std::shared_ptr<Thumbnail> thumb);
     bool isChecked() const { return checkBox->isChecked(); }
     void setChecked(bool checked) { checkBox->setChecked(checked); }
@@ -59,9 +61,8 @@ private:
 class LinkedSliderSpin : public QWidget {
     Q_OBJECT
 public:
-    LinkedSliderSpin(const QString &labelText, double minVal, double maxVal, double defaultVal,
-                     double factor = 1.0, int decimals = 0, const QString &suffix = "",
-                     QWidget *parent = nullptr);
+    explicit LinkedSliderSpin(const BatchJobRules::ColorSliderSpec &spec,
+                              QWidget *parent = nullptr);
 
     double value() const;
     void setValue(double val);
@@ -94,7 +95,7 @@ public:
     bool conversionWasStarted() const { return m_conversionStarted; }
 
 public slots:
-    void onProgressUpdated(int index, QString status, QString details, bool success);
+    void onProgressUpdated(int index, BatchItemState state, QString details);
     void onFinished(int successCount, int failedCount, int totalCount);
     void onCancelled(int successCount, int failedCount, int totalCount);
     void onStartFailed(const QString &reason);
@@ -181,13 +182,8 @@ private:
     QCheckBox *colorEnableCheckBox;
     QWidget *colorAdjustmentsContent = nullptr;
     QVBoxLayout *vColorLayout = nullptr;
-    LinkedSliderSpin *exposureWidget;
-    LinkedSliderSpin *contrastWidget;
-    LinkedSliderSpin *brightnessWidget;
-    LinkedSliderSpin *saturationWidget;
-    LinkedSliderSpin *hueWidget;
-    LinkedSliderSpin *tempWidget;
-    LinkedSliderSpin *tintWidget;
+    // In BatchJobRules::ColorSlider order.
+    std::array<LinkedSliderSpin *, BatchJobRules::kColorSliderCount> colorSliderWidgets{};
 
     QWidget *outputContainer;
     QLineEdit *outDirEdit;

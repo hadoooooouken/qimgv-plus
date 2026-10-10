@@ -31,5 +31,6 @@ int main(int argc, char **argv) {
   status |= runSvgRasterizerTests(argc, argv);
   status |= runDialogTests(argc, argv);
   status |= runSettingsEditorTests(argc, argv);
+  status |= runBatchPrintTests(argc, argv);
   return status;
 }

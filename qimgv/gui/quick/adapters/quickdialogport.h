@@ -1,18 +1,19 @@
 #pragma once
 
 #include "gui/ports/dialogport.h"
-#include "gui/quick/adapters/interimports.h"
 
 class DialogCoordinator;
 class Settings;
 
 // Dialog port of the Qt Quick UI. Gathers what each dialog starts from (the
 // writable image formats, the primary screen size, the Upscayl models and
-// preferences), opens the dialog through the DialogCoordinator and waits for
-// the answer in a nested event loop (runModalDialog()), so Core keeps its
-// blocking calls as with QDialog::exec(). Stores the Upscayl preferences of
-// an accepted resize. The batch converter and printing are declined until
-// their Quick dialogs exist (S3.4).
+// preferences, the stored save qualities, the installed printers and the
+// print preferences), opens the dialog through the DialogCoordinator and
+// waits for the answer in a nested event loop (runModalDialog()), so Core
+// keeps its blocking calls as with QDialog::exec(). Stores the Upscayl
+// preferences of an accepted resize and of a started batch, and the print
+// preferences. The batch converter converts through an
+// AppBatchConversionService made for the request.
 //
 // The coordinator and settings must outlive the port. GUI thread only.
 class QuickDialogPort final : public IDialogPort {
@@ -30,5 +31,4 @@ public:
 private:
     DialogCoordinator &mDialogs;
     Settings &mSettings;
-    DecliningDialogPort mNotYetAvailable;
 };

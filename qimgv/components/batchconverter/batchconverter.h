@@ -8,45 +8,9 @@
 #include <QList>
 #include <QSet>
 #include <atomic>
-#include <cstdint>
 #include <memory>
 
-#include "utils/coloradjustments.h"
-
-enum class AspectFitMode : uint8_t {
-    Auto,   // Fit into the target box, constrained by whichever side is tighter (per file).
-    Width,  // Scale is derived from the target width only; height follows proportionally.
-    Height  // Scale is derived from the target height only; width follows proportionally.
-};
-
-enum class RotationAngle : uint16_t {
-    Rotate0 = 0,    // No rotation (default).
-    Rotate90 = 90,
-    Rotate180 = 180,
-    Rotate270 = 270
-};
-
-struct BatchJob {
-    QString format;
-    int quality = 90;
-    bool doResize = false;
-    bool resizeByPercent = false;
-    double resizePercent = 100.0;
-    QSize targetSize;
-    bool keepAspectRatio = true;
-    AspectFitMode aspectFitMode = AspectFitMode::Auto;
-    bool useUpscayl = false;
-    QString upscaylModel;
-    int scalingFilter = 0;
-    RotationAngle rotation = RotationAngle::Rotate0;
-    bool flipHorizontal = false;
-    bool flipVertical = false;
-    ColorAdjustments colorAdjustments;
-    QString pattern;
-    bool overwrite = false;
-    QString outputDir;
-    bool createSubfolder = false;
-};
+#include "batchjob.h"
 
 class BatchConverter : public QObject {
     Q_OBJECT
@@ -67,13 +31,16 @@ public:
     bool isCancelling() const { return m_isCancelling; }
 
 signals:
-    void progressUpdated(int index, QString status, QString details, bool success);
+    // State of the file at index (of the paths passed to start()) and what
+    // happened to it (the output or the reason it failed); emitted with
+    // BatchItemState::Processing when the file is handed to a worker.
+    void progressUpdated(int index, BatchItemState state, QString details);
     void finished(int successCount, int failedCount, int totalCount);
     void cancelled(int successCount, int failedCount, int totalCount);
     void startFailed(const QString &reason);
 
 private slots:
-    void onTaskFinished(int index, QString status, QString details, bool success);
+    void onTaskFinished(int index, BatchItemState state, QString details);
     void finishCancellation();
 
 private:
