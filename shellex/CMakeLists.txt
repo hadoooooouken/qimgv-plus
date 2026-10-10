@@ -36,7 +36,7 @@ target_compile_definitions(qimgvshellex PRIVATE QT_NO_VERSION_TAGGING)
 set_target_properties(qimgvshellex PROPERTIES
     CXX_EXTENSIONS OFF
     PREFIX "" # No "lib" prefix on Windows (output as qimgvshellex.dll directly)
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../release"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${QIMGV_RELEASE_DIR}"
 )
 
 # Link Qt, LibRaw, and standard Win32 libraries
@@ -49,7 +49,7 @@ target_link_libraries(qimgvshellex PRIVATE
     Qt6::Gui
     Qt6::Svg
     shlwapi
-    "${CMAKE_CURRENT_SOURCE_DIR}/../formats/LibRaw/buildfiles/release-x86_64/libraw_static.lib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../formats/LibRaw/buildfiles/release-x86_64${QIMGV_DEPS_SUFFIX}/libraw_static.lib"
 )
 target_compile_definitions(qimgvshellex PRIVATE LIBRAW_NODLL)
 

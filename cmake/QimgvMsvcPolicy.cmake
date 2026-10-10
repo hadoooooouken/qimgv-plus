@@ -21,8 +21,30 @@ include_guard(GLOBAL)
 # Release optimization baseline shared by every target in the build.
 set(QIMGV_MSVC_RELEASE_BASELINE_FLAGS "/O2 /DNDEBUG")
 
-# Application ISA baseline: AVX2 is the mandatory minimum CPU for qimgv-plus.
-set(QIMGV_MSVC_ISA_OPTIONS /arch:AVX2)
+# Application ISA baseline. AVX2 is the primary build; SSE2 is the
+# compatibility build for x64 CPUs without AVX/AVX2. Each ISA is configured in
+# its own build directory (see CMakePresets.json) and links its own dependency
+# trees, because a single AVX2-compiled dependency breaks the SSE2 build.
+set(QIMGV_ISA_VALUES AVX2 SSE2)
+set(QIMGV_ISA "AVX2" CACHE STRING "Instruction set baseline of the build (AVX2 or SSE2)")
+set_property(CACHE QIMGV_ISA PROPERTY STRINGS ${QIMGV_ISA_VALUES})
+if(NOT QIMGV_ISA IN_LIST QIMGV_ISA_VALUES)
+    message(FATAL_ERROR "QIMGV_ISA must be one of '${QIMGV_ISA_VALUES}', got '${QIMGV_ISA}'")
+endif()
+
+# Every ISA-specific path is derived from QIMGV_DEPS_SUFFIX, which the
+# dependency build scripts append to the same folder names.
+if(QIMGV_ISA STREQUAL "AVX2")
+    set(QIMGV_MSVC_ISA_OPTIONS /arch:AVX2)
+    set(QIMGV_DEPS_SUFFIX "")
+else()
+    set(QIMGV_MSVC_ISA_OPTIONS /arch:SSE2)
+    set(QIMGV_DEPS_SUFFIX "-sse2")
+endif()
+set(QIMGV_DEPS_INSTALL_NAME "install${QIMGV_DEPS_SUFFIX}")
+set(QIMGV_DEPS_BUILD_NAME "build${QIMGV_DEPS_SUFFIX}")
+cmake_path(SET QIMGV_RELEASE_DIR NORMALIZE "${CMAKE_CURRENT_LIST_DIR}/../release${QIMGV_DEPS_SUFFIX}")
+message(STATUS "qimgv ISA: ${QIMGV_ISA} (dependencies: ${QIMGV_DEPS_INSTALL_NAME}, output: ${QIMGV_RELEASE_DIR})")
 
 # Compile-side hardening: Control Flow Guard, Spectre v1 mitigation and
 # EH continuation metadata (consumed by CET shadow stacks).

@@ -1,6 +1,6 @@
 ## SOURCES FOR QIMGV UTILITY CLASSES
 
-set(QIMGV_ZSTD_ROOT "${CMAKE_SOURCE_DIR}/formats/zstd/install" CACHE PATH
+set(QIMGV_ZSTD_ROOT "${CMAKE_SOURCE_DIR}/formats/zstd/${QIMGV_DEPS_INSTALL_NAME}" CACHE PATH
     "Path to the local zstd installation used for Blender previews")
 set(QIMGV_ZSTD_INCLUDE_DIR "${QIMGV_ZSTD_ROOT}/include")
 set(QIMGV_ZSTD_LIBRARY "${QIMGV_ZSTD_ROOT}/lib/zstd.lib")

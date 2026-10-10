@@ -35,6 +35,15 @@
       }
     },
     {
+      "name": "qimgv-x64-release-sse2",
+      "displayName": "qimgv: x64 Release (SSE2)",
+      "inherits": "qimgv-x64-release",
+      "cacheVariables": {
+        "QIMGV_ISA": "SSE2",
+        "exiv2_DIR": "E:/qimgv/formats/exiv2/install-sse2/lib/cmake/exiv2"
+      }
+    },
+    {
       "name": "qimgv-x64-relwithdebinfo",
       "displayName": "qimgv: x64 RelWithDebInfo",
       "inherits": "windows-base",
@@ -51,6 +60,10 @@
     {
       "name": "qimgv-x64-release",
       "configurePreset": "qimgv-x64-release"
+    },
+    {
+      "name": "qimgv-x64-release-sse2",
+      "configurePreset": "qimgv-x64-release-sse2"
     },
     {
       "name": "qimgv-x64-relwithdebinfo",

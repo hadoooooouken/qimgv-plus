@@ -65,7 +65,7 @@ qt_add_lrelease(qimgv-plus TS_FILES ${TS_FILES})
 # reuse ZLIB_IMPORT_LIB/ZLIB_INCLUDE_DIR directly only if this block runs first.
 # This is the single source of truth for the zlib-ng install path; don't
 # re-derive it with a second set() in 3rdparty/kimageformats/CMakeLists.txt.
-set(ZLIB_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install")
+set(ZLIB_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/${QIMGV_DEPS_INSTALL_NAME}")
 set(ZLIB_IMPORT_LIB "${ZLIB_INSTALL_DIR}/lib/zlib.lib")
 set(ZLIB_INCLUDE_DIR "${ZLIB_INSTALL_DIR}/include")
 if(EXISTS "${ZLIB_IMPORT_LIB}")
@@ -80,9 +80,22 @@ endif()
 # private ZLIB dependency of a static build with find_dependency(ZLIB), which
 # ZLIB_ROOT points at the same zlib-ng install as above.
 if(EXIV2)
-    set(EXIV2_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/exiv2/install")
+    set(EXIV2_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../formats/exiv2/${QIMGV_DEPS_INSTALL_NAME}")
     set(ZLIB_ROOT "${ZLIB_INSTALL_DIR}")
     find_package(exiv2 REQUIRED CONFIG HINTS "${EXIV2_INSTALL_DIR}")
+
+    # exiv2_DIR (set by CMakePresets.json) takes precedence over HINTS, so a
+    # preset or cache entry from the other ISA would silently link the wrong
+    # build. Paths are compared case-insensitively, as Windows resolves them.
+    cmake_path(SET _exiv2_expected_root NORMALIZE "${EXIV2_INSTALL_DIR}")
+    cmake_path(SET _exiv2_found_dir NORMALIZE "${exiv2_DIR}")
+    string(TOLOWER "${_exiv2_expected_root}" _exiv2_expected_root)
+    string(TOLOWER "${_exiv2_found_dir}" _exiv2_found_dir)
+    cmake_path(IS_PREFIX _exiv2_expected_root "${_exiv2_found_dir}" _exiv2_matches_isa)
+    if(NOT _exiv2_matches_isa)
+        message(FATAL_ERROR "exiv2_DIR '${exiv2_DIR}' is not inside the ${QIMGV_ISA} exiv2 install "
+                            "'${EXIV2_INSTALL_DIR}'")
+    endif()
 
     get_target_property(_exiv2_type Exiv2::exiv2lib TYPE)
     if(NOT _exiv2_type STREQUAL "STATIC_LIBRARY")
@@ -99,7 +112,7 @@ if(EXIV2)
 endif()
 
 # libdeflate for fast PNG writing in batch converter (pre-built shared dll, loaded at runtime via QLibrary)
-set(LIBDEFLATE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libdeflate/install/bin/deflate.dll")
+set(LIBDEFLATE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libdeflate/${QIMGV_DEPS_INSTALL_NAME}/bin/deflate.dll")
 if(EXISTS "${LIBDEFLATE_DLL}")
     add_custom_command(TARGET qimgv-plus POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${LIBDEFLATE_DLL}" "$<TARGET_FILE_DIR:qimgv-plus>/"
@@ -132,7 +145,7 @@ qimgv_suppress_crt_deprecation(qimgv-plus)
 
 set_target_properties(qimgv-plus PROPERTIES
     CXX_EXTENSIONS OFF
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../release"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${QIMGV_RELEASE_DIR}"
 )
 
 # LINK STUFF
@@ -196,7 +209,7 @@ if(WIN32)
     endif()
 
     # 1b. Custom qtiff.dll with JPEG compression support (overrides stock after windeployqt)
-    set(CUSTOM_QTIFF_DLL "${CMAKE_CURRENT_SOURCE_DIR}/../build_scripts/qtiff_jpeg/install/qtiff.dll")
+    set(CUSTOM_QTIFF_DLL "${CMAKE_CURRENT_SOURCE_DIR}/../build_scripts/qtiff_jpeg/${QIMGV_DEPS_INSTALL_NAME}/qtiff.dll")
     if(EXISTS "${CUSTOM_QTIFF_DLL}")
         add_custom_command(TARGET qimgv-plus POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -209,13 +222,13 @@ if(WIN32)
     # 1c. Custom qjpeg.dll backed by shared libjpeg-turbo (overrides stock after windeployqt)
     # Shares its JPEG codec with qtiff.dll above via the jpeg*.dll deployed in step 9c,
     # instead of each plugin carrying its own copy of libjpeg-turbo.
-    set(CUSTOM_QJPEG_DLL "${CMAKE_CURRENT_SOURCE_DIR}/../build_scripts/qjpeg_jpeg/install/qjpeg.dll")
+    set(CUSTOM_QJPEG_DLL "${CMAKE_CURRENT_SOURCE_DIR}/../build_scripts/qjpeg_jpeg/${QIMGV_DEPS_INSTALL_NAME}/qjpeg.dll")
     if(EXISTS "${CUSTOM_QJPEG_DLL}")
         add_custom_command(TARGET qimgv-plus POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${CUSTOM_QJPEG_DLL}"
                 "$<TARGET_FILE_DIR:qimgv-plus>/imageformats/qjpeg.dll"
-            COMMENT "Deploying custom qjpeg.dll with AVX2 libjpeg-turbo support..."
+            COMMENT "Deploying custom qjpeg.dll backed by shared libjpeg-turbo..."
         )
     endif()
 
@@ -287,7 +300,7 @@ if(WIN32)
 
 
     # 9b. Copy zlib-ng shared library for qtiff.dll and qimgv-plus.exe
-    set(ZLIB_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/install/bin/zlib1.dll")
+    set(ZLIB_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zlib-ng/${QIMGV_DEPS_INSTALL_NAME}/bin/zlib1.dll")
     if(EXISTS "${ZLIB_DLL_PATH}")
         add_custom_command(TARGET qimgv-plus POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ZLIB_DLL_PATH}" "$<TARGET_FILE_DIR:qimgv-plus>/"
@@ -298,7 +311,7 @@ if(WIN32)
     endif()
 
     # 9c. Copy Zstandard shared library for Blender .blend previews
-    set(ZSTD_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zstd/install/bin/zstd.dll")
+    set(ZSTD_DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../formats/zstd/${QIMGV_DEPS_INSTALL_NAME}/bin/zstd.dll")
     if(EXISTS "${ZSTD_DLL_PATH}")
         add_custom_command(TARGET qimgv-plus POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ZSTD_DLL_PATH}" "$<TARGET_FILE_DIR:qimgv-plus>/"
@@ -309,14 +322,14 @@ if(WIN32)
     endif()
 
     # 9d. Copy shared libjpeg-turbo library for qtiff.dll (via libtiff) and qjpeg.dll.
-    # Both plugins link against this one AVX2/LTCG-optimized build (see
+    # Both plugins link against this one LTCG-optimized build (see
     # build_scripts/build_qtiff_jpeg.ps1 Step 2 and build_qjpeg_jpeg.ps1) instead of
     # each carrying a private static copy. Like zlib1.dll above, this has to sit next
     # to the exe (not in imageformats/): Windows' default DLL search order covers the
     # application directory but not a plugin's own directory.
     # The DLL name is versioned (e.g. jpeg62.dll) by libjpeg-turbo's SO_MAJOR_VERSION,
     # so it's resolved with a glob instead of being hardcoded.
-    file(GLOB _jpeg_dll_candidates "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjpeg-turbo/install/bin/jpeg*.dll")
+    file(GLOB _jpeg_dll_candidates "${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjpeg-turbo/${QIMGV_DEPS_INSTALL_NAME}/bin/jpeg*.dll")
     if(_jpeg_dll_candidates)
         list(GET _jpeg_dll_candidates 0 JPEG_DLL_PATH)
         add_custom_command(TARGET qimgv-plus POST_BUILD
@@ -324,7 +337,7 @@ if(WIN32)
             COMMENT "Deploying shared libjpeg-turbo library (${JPEG_DLL_PATH})..."
         )
     else()
-        message(WARNING "libjpeg-turbo shared DLL not found in: ${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjpeg-turbo/install/bin - run build_scripts/build_qtiff_jpeg.ps1 -Steps libjpeg-turbo first")
+        message(WARNING "libjpeg-turbo shared DLL not found in: ${CMAKE_CURRENT_SOURCE_DIR}/../formats/libjpeg-turbo/${QIMGV_DEPS_INSTALL_NAME}/bin - run build_scripts/build_qtiff_jpeg.ps1 -Steps libjpeg-turbo first")
     endif()
 
     # 10. Copy upscayl-ncnn DLL and models directory

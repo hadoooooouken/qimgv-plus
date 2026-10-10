@@ -74,11 +74,15 @@ qimgv_suppress_crt_deprecation(upscayl-ncnn)
 # source flags end with /arch:AVX, /arch:AVX2 or /arch:AVX512; that strategy is
 # left intact. The application baseline is still placed BEFORE ncnn's own
 # /arch:SSE2 on purpose: MSVC lowers code generation to the last /arch, but
-# keeps __AVX__/__AVX2__ predefined from the earlier /arch:AVX2, and ncnn's x86
-# sources select their AVX/AVX2 intrinsic paths by those macros. Dropping it
-# removed those paths from the base TUs (e.g. convolution_x86.cpp: 6691 ymm
-# instructions -> 0), so this ordering reproduces the established build.
-# glslang has no ISA strategy of its own and gets the regular AVX2 baseline.
+# keeps __AVX__/__AVX2__ predefined from an earlier /arch:AVX2, and ncnn's x86
+# sources select their AVX/AVX2 intrinsic paths by those macros.
+#   - AVX2 build: the base TUs keep their AVX/AVX2 paths (dropping the leading
+#     flag took convolution_x86.cpp from 6691 ymm instructions to 0), so this
+#     ordering reproduces the established build.
+#   - SSE2 build: the leading flag is /arch:SSE2, no AVX macro is predefined
+#     and the base TUs fall back to their SSE2 paths; the runtime-dispatched
+#     AVX/AVX2/AVX512 TUs are unchanged and still selected by CPUID.
+# glslang has no ISA strategy of its own and gets the regular baseline.
 # All of them keep the IPO setting of the upscayl subproject; /guard:ehcont on
 # them is required for the upscayl-ncnn.dll link to accept /guard:ehcont.
 target_compile_options(ncnn BEFORE PRIVATE "$<$<COMPILE_LANGUAGE:C,CXX>:${QIMGV_MSVC_ISA_OPTIONS}>")
