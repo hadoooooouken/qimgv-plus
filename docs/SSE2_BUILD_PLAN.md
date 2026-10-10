@@ -404,7 +404,7 @@ Commit: `Build AVX2 and SSE2 installer variants from one script`
 
 ## Stage 7: ISA Verification
 
-Status: [ ]
+Status: [x]
 
 1. Add `build_scripts/check-isa.ps1 -Path <release dir>`:
    - Run `dumpbin /disasm` on every `*.exe` / `*.dll`.
@@ -416,6 +416,24 @@ Status: [ ]
    model: `sde -mrm -- release-sse2\qimgv-plus.exe`. Open at least JPEG, PNG, TIFF, HEIC, AVIF,
    JXL, JXR, EXR, Radiance HDR, a RAW file, DjVu and an archive. Run upscaling, color
    adjustments and MKS scaling. Any illegal-instruction fault fails the release.
+
+Implementation notes:
+
+- `check-isa.ps1` locates the MSVC `Hostx64\x64\dumpbin.exe` directly via `vswhere` (or imports
+  `vcvarsall.bat x64` if needed) and sets its working directory so `msvcdis140.dll` resolves
+  without requiring a pre-configured developer shell.
+- It parses disassembly line-by-line via process redirection, detecting VEX prefixes (`v*` except
+  legacy `verr`/`verw`), `ymm`/`zmm` registers, vector memory sizes (`ymmword`/`zmmword`), and
+  BMI instructions.
+- By default it terminates `dumpbin` on the first match per binary for fast scanning (~30s for the
+  entire 74-binary tree), with an optional `-FullCount` switch to count all occurrences.
+- Allowlisted categories: runtime-dispatched `upscayl-ncnn.dll`, `jpeg*.dll`, `zlib1.dll`,
+  `deflate.dll`, `zstd.dll`, statically linked plugins (`kimg_avif.dll`, `kimg_jxl.dll`,
+  `kimg_ff.dll`, `kimg_heif.dll`), Microsoft redistributables (`d3dcompiler_47.dll`, `dxcompiler.dll`,
+  `dxil.dll`, `vcomp140.dll`), and Qt SDK binaries/plugins.
+- Verified against the current AVX2 `release/` tree: all 31 first-party and static plugin binaries
+  fail under `-Isa SSE2` with offending instruction samples reported, and pass under `-Isa AVX2`.
+- Added `-Sde` switch to launch the Intel SDE pre-AVX CPU smoke test (`sde -mrm -- <exe>`).
 
 Commit: `Add ISA verification script for release folders`
 
