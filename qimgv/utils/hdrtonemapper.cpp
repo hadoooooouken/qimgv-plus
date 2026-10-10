@@ -7,7 +7,9 @@
 #include <QRunnable>
 #include <QSemaphore>
 
+#if defined(__AVX2__)
 #include <immintrin.h>
+#endif
 
 #include <vector>
 #include <array>
@@ -77,6 +79,9 @@ constexpr float kEpsilon = 1e-6f;
 
 // Components per pixel in the kimageformats float plugins' buffer layout.
 constexpr int kFloatChannelsPerPixel = 4;
+
+// Largest finite qfloat16 value.
+constexpr float kHalfFloatMax = 65504.0f;
 
 enum class InputTransfer {
     PQ,
@@ -218,8 +223,9 @@ void buildByteLut(TransferLut &lut, InputTransfer t, float invWhite) {
         lut.values[i] = decodeTransferAbsolute(t, float(i) / 255.0f) * invWhite;
 }
 
+#if defined(__AVX2__)
 // ---------------------------------------------------------------------------
-// AVX2 primitives.
+// AVX2 primitives. Non-AVX2 builds use the scalar helpers below for every pixel.
 // ---------------------------------------------------------------------------
 inline void mul3x3(__m256 &r, __m256 &g, __m256 &b, const float m[3][3]) {
     const __m256 r0 = _mm256_fmadd_ps(_mm256_set1_ps(m[0][0]), r,
@@ -521,9 +527,11 @@ inline void loadQRgba64Row8(const quint16 *src, int x,
     b = _mm256_i32gather_ps(transferTable, bb, 4);
     a = _mm256_div_ps(_mm256_cvtepi32_ps(ab), _mm256_set1_ps(65535.0f));
 }
+#endif // __AVX2__
 
 // ---------------------------------------------------------------------------
-// Scalar reference for the tail and the 8-bit fallback path.
+// Scalar path: premultiplied, 8-bit and narrow rows in AVX2 builds; every row
+// in non-AVX2 builds.
 // ---------------------------------------------------------------------------
 inline uint8_t floatToByte(float v) {
     int i = int(srgbLut().at(v) * 255.0f + 0.5f);
@@ -637,7 +645,8 @@ inline void compressGamutScalar(float &r, float &g, float &b) {
 }
 
 // ---------------------------------------------------------------------------
-// Worker task: one chunk of scanlines. AVX2 for the three HDR paths.
+// Worker task: one chunk of scanlines. AVX2 builds vectorize the three
+// non-premultiplied HDR paths; everything else uses the scalar loop.
 // ---------------------------------------------------------------------------
 class ToneMapTask : public QRunnable {
 public:
@@ -669,14 +678,17 @@ public:
                                srcFormat == QImage::Format_RGBA32FPx4_Premultiplied ||
                                srcFormat == QImage::Format_RGBA64_Premultiplied);
 
+#if defined(__AVX2__)
         const float *srgbTable = srgbLut().v.data();
         const float *tanhTable = tanhLut().v.data();
+#endif
         const float *transferTable = m_lut.values.data();
 
         for (int y = m_yStart; y < m_yEnd; ++y) {
             uint32_t *dstLine = reinterpret_cast<uint32_t *>(m_dst.scanLine(y));
             const uchar *srcLine = m_src.constScanLine(y);
 
+#if defined(__AVX2__)
             if ((isHalfFloat || isFullFloat || is16BitInt) &&
                 !isPremul && width >= 8) {
                 auto processRow = [&](int x) {
@@ -700,21 +712,30 @@ public:
                 if (x < width) processRow(width - 8);
                 continue;
             }
+#endif
 
-            // Scalar fallback: premultiplied, 8-bit, or very narrow rows.
             for (int x = 0; x < width; ++x) {
                 float r, g, b, a;
                 if (isHalfFloat) {
                     const qfloat16 *p = reinterpret_cast<const qfloat16 *>(srcLine) +
                                         x * kFloatChannelsPerPixel;
-                    r = float(p[0]); g = float(p[1]); b = float(p[2]); a = float(p[3]);
+                    a = float(p[3]);
                     if (isPremul) {
-                        if (a > kEpsilon) { r /= a; g /= a; b /= a; }
-                        else { r = g = b = 0.0f; }
+                        if (a > kEpsilon) {
+                            const qfloat16 hr(std::clamp(float(p[0]) / a, 0.0f, kHalfFloatMax));
+                            const qfloat16 hg(std::clamp(float(p[1]) / a, 0.0f, kHalfFloatMax));
+                            const qfloat16 hb(std::clamp(float(p[2]) / a, 0.0f, kHalfFloatMax));
+                            r = transferTable[halfToBits(hr)];
+                            g = transferTable[halfToBits(hg)];
+                            b = transferTable[halfToBits(hb)];
+                        } else {
+                            r = g = b = 0.0f;
+                        }
+                    } else {
+                        r = transferTable[halfToBits(p[0])];
+                        g = transferTable[halfToBits(p[1])];
+                        b = transferTable[halfToBits(p[2])];
                     }
-                    r = transferTable[halfToBits(p[0])];
-                    g = transferTable[halfToBits(p[1])];
-                    b = transferTable[halfToBits(p[2])];
                 } else if (isFullFloat) {
                     const float *p = reinterpret_cast<const float *>(srcLine) +
                                      x * kFloatChannelsPerPixel;
@@ -723,9 +744,9 @@ public:
                         if (a > kEpsilon) { r /= a; g /= a; b /= a; }
                         else { r = g = b = 0.0f; }
                     }
-                    qfloat16 hr(std::clamp(r, 0.0f, 65504.0f));
-                    qfloat16 hg(std::clamp(g, 0.0f, 65504.0f));
-                    qfloat16 hb(std::clamp(b, 0.0f, 65504.0f));
+                    qfloat16 hr(std::clamp(r, 0.0f, kHalfFloatMax));
+                    qfloat16 hg(std::clamp(g, 0.0f, kHalfFloatMax));
+                    qfloat16 hb(std::clamp(b, 0.0f, kHalfFloatMax));
                     r = transferTable[halfToBits(hr)];
                     g = transferTable[halfToBits(hg)];
                     b = transferTable[halfToBits(hb)];

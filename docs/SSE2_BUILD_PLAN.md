@@ -285,6 +285,19 @@ File: `qimgv/utils/hdrtonemapper.cpp`.
 4. Verify visually: the same HDR/EXR/AVIF-PQ files on both builds. Small rounding differences
    are expected, because FMA in AVX2 is not used in the scalar path.
 
+Implementation notes:
+
+- The per-pixel loop in `ToneMapTask::run()` was already the AVX2 build's path for
+  premultiplied, 8-bit and narrow (< 8 px) rows. Only `<immintrin.h>`, the `__m256` primitives
+  and the vectorized row branch are guarded. Non-AVX2 builds send every row through that loop,
+  so no math is duplicated. The AVX2 build's vectorized path is unchanged.
+- Fixed while auditing that loop: the premultiplied FP16 branch divided by alpha and then
+  discarded the result (the LUT lookup re-read the original half bits). It now un-premultiplies,
+  clamps and re-quantizes to half before the lookup, like the FP32 branch.
+- Known scalar/AVX2 difference (unchanged): for FP32 input the AVX2 path converts to half
+  without clamping, so values above 65504 become `inf` and map to 0 (black) through the LUT.
+  The scalar path clamps them to 65504. This only affects extreme linear values.
+
 Commit: `Add scalar fallback for HDR tone mapping in non-AVX2 builds`
 
 ## Stage 4: Image Scaling and Color Adjustment Fallback
