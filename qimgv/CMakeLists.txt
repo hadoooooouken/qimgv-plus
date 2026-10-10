@@ -299,9 +299,12 @@ if(WIN32)
         # application only uses Basic (its own style is built on it, and
         # QuickUiHost pins it as the run-time style), so the other styles,
         # their libraries and the native style they need are removed again.
+        # The QtQuick.Dialogs implementation carries per-style variants of
+        # its dialogs for the same reason; only the Basic ones are loaded.
         # "styles" are Qt Widgets style plugins; no QApplication loads them
         # (skipped, and removed from earlier deployments).
         set(_unused_controls_styles Fusion Imagine Material Universal FluentWinUI3 Windows)
+        set(_unused_dialog_styles Fusion Imagine Material Universal)
         set(_unused_style_removals)
         foreach(_style ${_unused_controls_styles})
             list(APPEND _unused_style_removals
@@ -311,15 +314,72 @@ if(WIN32)
                     "$<TARGET_FILE_DIR:qimgv-plus>/Qt6QuickControls2${_style}StyleImpl.dll"
             )
         endforeach()
+        foreach(_style ${_unused_dialog_styles})
+            list(APPEND _unused_style_removals
+                COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:qimgv-plus>/qml/QtQuick/Dialogs/quickimpl/qml/+${_style}"
+            )
+        endforeach()
+
+        # Plugin types the application never loads: QML debugging and
+        # profiling (qmltooling, which also pulls in Qt6Quick3DUtils), TUIO
+        # touch input (generic), network reachability (networkinformation;
+        # only local sockets are used), the virtual keyboard
+        # (platforminputcontexts) and Lottie vector images
+        # (vectorimageformats, which pull in Qt6Lottie and
+        # Qt6QuickVectorImage). The thumbnail cache only needs the SQLite
+        # driver. All of them are removed from earlier deployments as well,
+        # since windeployqt never deletes files it no longer deploys.
+        set(_skipped_plugin_types styles qmltooling generic networkinformation platforminputcontexts vectorimageformats)
+        set(_excluded_sql_drivers qsqlibase qsqlmimer qsqloci qsqlodbc qsqlpsql)
+        set(_unused_qt_libraries
+            Qt6Quick3DUtils Qt6VirtualKeyboard
+            Qt6Lottie Qt6LottieVectorImageGenerator
+            Qt6QuickVectorImage Qt6QuickVectorImageGenerator
+        )
+        # Empty module directories left behind by earlier deployments.
+        set(_empty_qml_module_dirs
+            QtQml/DesignSupport QtQml/StateMachine QtQml/XmlListModel
+            QtQuick/Controls/Native QtQuick/LocalStorage QtQuick/Particles
+            QtQuick/Pdf QtQuick/Scene2D QtQuick/Scene3D
+            QtQuick/Shapes/DesignHelpers QtQuick/Timeline QtQuick/tooling
+            QtQuick/VectorImage QtQuick/VirtualKeyboard
+        )
+        list(JOIN _skipped_plugin_types "," _skipped_plugin_types_arg)
+        list(JOIN _excluded_sql_drivers "," _excluded_sql_drivers_arg)
+        set(_unused_plugin_removals)
+        foreach(_plugin_type ${_skipped_plugin_types})
+            list(APPEND _unused_plugin_removals
+                COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:qimgv-plus>/${_plugin_type}"
+            )
+        endforeach()
+        foreach(_driver ${_excluded_sql_drivers})
+            list(APPEND _unused_plugin_removals
+                COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE_DIR:qimgv-plus>/sqldrivers/${_driver}.dll"
+            )
+        endforeach()
+        foreach(_library ${_unused_qt_libraries})
+            list(APPEND _unused_plugin_removals
+                COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE_DIR:qimgv-plus>/${_library}.dll"
+            )
+        endforeach()
+        foreach(_module_dir ${_empty_qml_module_dirs})
+            list(APPEND _unused_plugin_removals
+                COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:qimgv-plus>/qml/${_module_dir}"
+            )
+        endforeach()
+
         add_custom_command(TARGET qimgv-plus POST_BUILD
-            COMMAND ${WINDEPLOYQT_EXECUTABLE} --no-translations --no-compiler-runtime --no-opengl-sw --skip-plugin-types styles --qmldir "${CMAKE_CURRENT_SOURCE_DIR}/gui/quick" "$<TARGET_FILE:qimgv-plus>"
+            COMMAND ${WINDEPLOYQT_EXECUTABLE} --no-translations --no-compiler-runtime --no-opengl-sw
+                --skip-plugin-types ${_skipped_plugin_types_arg}
+                --exclude-plugins ${_excluded_sql_drivers_arg}
+                --qmldir "${CMAKE_CURRENT_SOURCE_DIR}/gui/quick" "$<TARGET_FILE:qimgv-plus>"
             COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE_DIR:qimgv-plus>/vc_redist.x64.exe"
             COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:qimgv-plus>/tls"
             ${_unused_style_removals}
             COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:qimgv-plus>/qml/QtQuick/NativeStyle"
             COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE_DIR:qimgv-plus>/Qt6QuickNativeStyle.dll"
-            COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:qimgv-plus>/styles"
-            COMMENT "Deploying Qt dependencies and cleaning up redistributable and unused styles..."
+            ${_unused_plugin_removals}
+            COMMENT "Deploying Qt dependencies and cleaning up redistributable, unused styles and unused plugins..."
         )
     endif()
 
