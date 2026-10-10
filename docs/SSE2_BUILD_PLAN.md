@@ -385,7 +385,7 @@ Commit: `Add scalar RGBE decode path for non-AVX2 builds`
 
 ## Stage 6: Installer Variants
 
-Status: [ ]
+Status: [x]
 
 File: `qimgv/qimgv-plus.iss`.
 
@@ -404,7 +404,7 @@ Commit: `Build AVX2 and SSE2 installer variants from one script`
 
 ## Stage 7: ISA Verification
 
-Status: [x]
+Status: [ ] (first version committed in `48b97861`; review findings below are open)
 
 1. Add `build_scripts/check-isa.ps1 -Path <release dir>`:
    - Run `dumpbin /disasm` on every `*.exe` / `*.dll`.
@@ -434,6 +434,45 @@ Implementation notes:
 - Verified against the current AVX2 `release/` tree: all 31 first-party and static plugin binaries
   fail under `-Isa SSE2` with offending instruction samples reported, and pass under `-Isa AVX2`.
 - Added `-Sde` switch to launch the Intel SDE pre-AVX CPU smoke test (`sde -mrm -- <exe>`).
+
+Review findings (2026-10-11, open). The script has only been run against the AVX2 `release/`
+tree; no `release-sse2/` existed yet.
+
+1. **False FAIL on every correct SSE2 first-party binary (blocking).** `msvcprt.lib` (the `/MD`
+   import library) statically contains the STL `vector_algorithms.obj`: 6319 `ymm` lines and
+   475 SSSE3/SSE4.1 lines, all behind an `__isa_available` check. Any binary that calls
+   `std::find`, `std::count`, `std::min_element`, `std::reverse` and similar links this code,
+   so `qimgv-plus.exe`, `qimgvshellex.dll` and the `kimg_*` plugins report `[FAIL]` even when
+   built with `/arch:SSE2`. Binary-level "any VEX" detection cannot tell this dispatched code
+   from a real leak, and release builds have no PDBs for per-function attribution.
+2. **SSE3/SSSE3/SSE4.x are not detected.** Only VEX, `ymm`/`zmm` and BMI are matched. The Stage 0
+   bug class (`_mm_cvtepu8_epi32` -> `pmovzxbd`, `_mm_packus_epi32` -> `packusdw`, compiled
+   legacy-encoded without `/arch`) passes as `[OK]`.
+3. **Whole-file allowlist hides wrong-ISA dependencies.** `kimg_avif`, `kimg_jxl`, `kimg_heif`,
+   `kimg_ff`, `jpeg62`, `zlib1`, `deflate` and `zstd` pass unconditionally, although Stage 2
+   rebuilds every one of them with `-Isa SSE2`. A dependency built without `-Isa SSE2` (full
+   `/arch:AVX2` code) is not caught.
+4. **Silent pass on `dumpbin` failure.** The exit code is not checked and the number of parsed
+   instruction lines is not validated. If `dumpbin` fails (missing `msvcdis140.dll`, bad file),
+   the binary reports `[OK]`.
+5. **Mnemonic regex misparses.** `[0-9A-Fa-f\s]{2,}` with case-insensitive `-match` also consumes
+   mnemonics made of hex letters (`add`, `adc`, `dec`), so the first operand is captured as the
+   mnemonic. VEX detection still works because `v` is not a hex digit. The byte group should be
+   matched as `(?:[0-9A-F]{2} )+` with case-sensitive `-cmatch`.
+6. **SDE CPU model is weaker than the build target.** `-mrm` (Merom) supports SSSE3, so SSSE3
+   leaks do not fault. Use `-p4p` (Pentium 4 Prescott, x86-64 with SSE3) for the smoke test.
+
+Proposed rework (pending confirmation):
+
+- First-party code: scan the `.obj` files of the SSE2 CMake build tree instead of linked binaries.
+  Each object maps to one source file, so the STL static objects are excluded and any VEX or
+  SSE3+ instruction in a first-party TU is a real leak. Allowlist only the ncnn runtime-dispatch
+  TUs by name.
+- Shipped binaries (including dependencies): detect whole-module `/arch:AVX*` compilation. MSVC
+  emits VEX encodings for all scalar float code under `/arch:AVX*` and legacy encodings without
+  it, so a module with VEX scalar float instructions and no legacy ones was compiled for AVX.
+  Dispatched SIMD code does not change this ratio.
+- Keep the SDE run (with `-p4p`) as the runtime check.
 
 Commit: `Add ISA verification script for release folders`
 
