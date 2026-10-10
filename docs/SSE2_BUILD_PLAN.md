@@ -306,15 +306,29 @@ Status: [ ]
 
 File: `qimgv/utils/imagelib.cpp`.
 
-1. MKS2021: guard `mksHorizontalFixed`, `mksVerticalFixed`, `mksHorizontalGeneral`,
-   `mksVerticalGeneral` with `#if defined(__AVX2__)`. In `#else`, run the existing per-pixel tail
-   code for every pixel.
-2. `scaled_MKS2021` (line ~1176): in non-AVX2 builds always take the general path, or route both
-   paths to the scalar implementation. Keep the selection logic in one place.
-3. `scaled_Smart` (~954) and `applyColorAdjustments` (~1338): the AVX2 loops go under
-   `#if defined(__AVX2__)`, and the existing "Scalar fallback" loop covers the full range in
-   `#else`.
-4. Keep the tail code in shared helpers instead of copying it into the `#else` branches.
+Scaler coverage (`ImageLib::scaled` dispatch, line ~542):
+
+| Filter | Implementation | Stage 4 work |
+|---|---|---|
+| Nearest, Bilinear | `scaled_Qt` -> `QImage::scaled` | None. Qt dispatches its SIMD at runtime. |
+| Smart | `scaled_Smart`, four AVX2 passes | Yes (step 3). |
+| MKS2021 | `scaled_MKS2021`, four AVX2 passes | Yes (steps 1-2). |
+| Upscayl (ncnn) | `upscayl-ncnn.dll`, Vulkan | None. ncnn dispatches CPU code at runtime (Stage 7 allowlist). |
+
+1. Add true scalar per-pixel helpers (plain C++, no intrinsics) for the MKS horizontal and
+   vertical taps and for the `scaled_Smart` Gaussian pass. The existing "Scalar/SSE tails" use
+   SSE4.1 and FMA3 (audit correction 1) and must not be reused in the `#else` path. The AVX2
+   builds use the same helpers for their odd trailing pixel.
+2. MKS2021: guard the vector loops of `mksHorizontalFixed`, `mksVerticalFixed`,
+   `mksHorizontalGeneral` and `mksVerticalGeneral` with `#if defined(__AVX2__)`. In `#else`, the
+   scalar helpers process every pixel. `scaled_MKS2021` (line ~1137) keeps its fixed/general
+   selection in one place.
+3. `scaled_Smart`: guard all four AVX2 passes (audit correction 2): upscale horizontal, upscale
+   vertical, sharpen and downscale Gaussian. In `#else`, the existing scalar loops (upscale,
+   sharpen "Scalar fallback") or the new Gaussian helper cover the full range.
+4. `applyColorAdjustments` (~1328): the AVX2 loop goes under `#if defined(__AVX2__)`, and the
+   existing "Scalar fallback" loop covers the full range in `#else`.
+5. Keep the per-pixel code in shared helpers instead of copying it into the `#else` branches.
 
 Commit: `Add scalar fallback for MKS scaling and color adjustments in non-AVX2 builds`
 
