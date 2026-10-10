@@ -4,6 +4,7 @@
 #include "gui/ports/viewerport.h"
 #include "gui/ports/viewmodeport.h"
 #include "gui/ports/windowport.h"
+#include "utils/startuptiming.h"
 
 #include <QDebug>
 
@@ -170,4 +171,5 @@ void ColdStartWindowController::revealWindow() {
     documentReadyFallbackTimer.stop();
     state = State::Shown;
     window.setWindowConcealed(false);
+    logStartupMilestone(u"cold-start window revealed");
 }

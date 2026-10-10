@@ -148,6 +148,8 @@ public:
     [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
     [[nodiscard]] int itemCount() const;
+    // Number of leading items that are directories.
+    [[nodiscard]] int dirCount() const;
     // The last selected item, -1 without a selection.
     [[nodiscard]] int currentIndex() const;
     [[nodiscard]] QList<int> selection() const;
@@ -194,6 +196,10 @@ public:
     // Scrolls until the item is fully visible (animated with smooth
     // scrolling).
     void scrollToItem(int index);
+    // Activates the item (Enter in the folder grid).
+    void activate(int index);
+    // The right button moved far enough since its press to scroll to an end.
+    [[nodiscard]] bool gestureActive() const;
 
     // --- view (QML) ------------------------------------------------------
     // The view is shown and laid out.
@@ -214,6 +220,7 @@ public:
 
 signals:
     void countChanged();
+    void dirCountChanged();
     void selectionChanged();
     // Requests the thumbnails of indices at size (device pixels).
     void thumbnailsNeeded(const QList<int> &indices, int size, bool crop, bool force);

@@ -1623,6 +1623,129 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
 - **Acceptance:** feature parity checklist for `FolderView`,
   `FolderGridView`, `BookmarksWidget`; thumbnail cache and cold start
   readiness unchanged.
+- **Delivered** (two commits: the `ThumbnailListModel` refactor, then the
+  folder view):
+  - **Refactor:** `ThumbnailListModel` lays items out in rows
+    (`ThumbnailScrollConfig::columns`, `leadingSpace`, `preloadDistance`,
+    `focusShowsNeighbours`), selects on press and activates by double click
+    (`ItemActivation::OnDoubleClick`) and keeps a Shift range anchor
+    (`beginRangeSelection()` / `selectRangeTo()`, the rule of
+    `ThumbnailView::addSelectionRange()`). The strip keeps its behaviour
+    with the defaults (one column, 3000 px, activation on press).
+  - **Grid** (`gui/quick/ui/folderview/`, module `qimgv.ui`, free of
+    `Settings`): `folderGridLayoutFor()` gives the geometry of
+    `FolderGridView::gridGeometry()` and the labelled `ThumbnailWidget`
+    (`FolderGridLayout`, its cell as a `ThumbnailStripLayout`).
+    `FolderGridController` configures the model (icon size times the device
+    pixel ratio, no crop, unloading, 2300 px preload) and owns the input
+    rules of `FolderGridView`: arrows with the column memory of Up / Down,
+    Page Up / Down by four rows, Home / End, Shift ranges, Ctrl+A keeping
+    the current item, Enter, Backspace ("goUp"), type-ahead for printable
+    text; the rubber band over the background (Ctrl toggles against the
+    selection at its start); the context menu on a right click that was no
+    scroll gesture; Ctrl + wheel zoom by 16 px within 128 - 512 and the log2
+    slider snapping to 256, stored on release; copy / move drops with their
+    target; the selected image count for the batch button.
+  - **`FolderViewController`** (`qimgv.ui`): the top bar state (path, file
+    and folder sorting, name filter published 150 ms after the last edit),
+    the places panel (shown while enabled in a view of at least 600 px,
+    splitter width, collapsible sections; the slider hides below 510 px),
+    the folder tree (a `QFileSystemModel` the host provides on the first
+    activation; it follows the grid's directory, lists the folders above
+    it and asks the view to scroll to it), drops onto tree folders and
+    bookmarks, and the readiness for the cold-start reveal.
+    `BookmarksModel` is a `QRangeModelAdapter` over the bookmarks (add once,
+    remove, up / down, drag move, the current folder highlighted, the home
+    folder in an empty list). `FormatFilterModel` ports the rules of
+    `FormatFilterComboBox` over `allFormatCategories()` (`formatgroups.cpp`
+    moved to `qimgv_viewcomponents`, used by both UIs).
+  - **Application side:** a second `DirectoryViewAdapter` replaces
+    `PlaceholderDirectoryView` (removed) as Core's folder view.
+    `QuickFolderViewActions` creates `FileSystemModelCustom` on the first
+    activation, sends sorting, filters, folder selections, drops, batch
+    conversion and both readiness signals to `UiEvents`, turns the grid's
+    requests into the directory view's signals (type-ahead, drag hover,
+    drops, open selected) and stores the icon size, the panel layout and the
+    bookmarks. `QuickMainWindowController` implements the folder parts of
+    `IShellPort` (path, sorting indicators, tree refresh) and drives the
+    view's active and fullscreen state. `FolderViewSettings` gained
+    `folderSortingMode`, `formatFilter` and `bookmarks`.
+  - **QML:** `FolderView` (top bar, `SplitView`), `FolderGridView`
+    (`GridView` with `reuseItems`, one `MouseArea`, the rubber band, the
+    context menu as `Popup.Window`), `PlacesPanel` (bookmark rows, a
+    `TreeView` over the name column), `FormatFilterComboBox` (categorized
+    popup window). `ThumbnailWidget` draws the cells of both the strip and
+    the grid (cell layout and surface colours are set by the view). `Main`
+    creates the folder view with an asynchronous `Loader` on its first
+    activation; documents opened at startup do not create it. The
+    window-wide drop area lies below the page, so the folder view's drop
+    areas take their drops. The view keeps the translation contexts
+    `FolderView`, `FolderGridView` and `FormatFilterComboBox`.
+  - **Drag out:** the grid's drag out reaches `Core::onDraggedOut()`, which
+    already builds the payload with `MimePayloadManager` and runs the
+    `QDrag`; no QML `Drag.mimeData` is needed (a deviation from the scope
+    above).
+  - **Cold start:** the grid reports `visibleThumbnailsReady` with the
+    strip's rules once its view is active; the tree is ready once the view
+    is laid out and the parent of the directory was listed (or the panel or
+    the tree is hidden). Like the widget view, which exists only once the
+    window is shown, the Quick view is never ready before it is laid out;
+    otherwise the ready signal arrived before the cold-start controller
+    waited for it and the reveal fell back to its 2000 ms timeout.
+    `ColdStartWindowController::revealWindow()` logs the startup milestone
+    "cold-start window revealed".
+  - **Measured** (Release, a folder of 60 PNG images and 3 subfolders
+    opened in folder view, 1280 x 800 window, process start to "cold-start
+    window revealed", 5 runs each, same session): Quick UI median 587 ms
+    (569 - 598), widget UI median 725 ms (715 - 772); with the places panel
+    hidden the Quick UI took 584 ms. Listing the folders above the current
+    one costs about 175 ms before the first frame (412 ms when only the
+    parent is listed); it is kept so that the tree is complete when shown,
+    as in the widget UI. Window captures of the running application matched
+    the widget UI (grid, labels, top bar, bookmarks, expanded tree).
+  - **Deviations:**
+    - Cells are rounded to whole pixels (the widget grid used fractional
+      row heights for icon sizes that are not multiples of four).
+    - Zooming keeps the current item in view without the widget's extra
+      40 px margin.
+    - Dragging a bookmark down puts it in front of the row under the drop
+      point; the widget moved it one row further.
+    - A root folder bookmark is named by its path (the widget showed an
+      empty name).
+    - The tree keeps other branches expanded when it follows the grid; the
+      widget collapsed all when the previous folder's parent was collapsed.
+    - A Qt Quick double click delivers a second press, as in the strip; it
+      only selects the item again.
+  - **Flagged, not changed:**
+    - `FileSystemModelCustom` reads the global `Settings` and produces a
+      `QPixmap` decoration the Quick tree does not use; it lives in
+      `gui/folderview/`, so S4.2 has to move it instead of deleting it.
+    - `BookmarksWidget::readSettings()` re-adds every bookmark on each
+      settings change.
+    - `ThumbnailStrip.qml` logs "Cannot read property ... of null" for its
+      scroll bar anchors when the strip is destroyed in the QML tests
+      (already before this stage).
+  - **Not verified by hand in the running application:** pointer, keyboard,
+    drag and drop and the popups, since no input was sent to the desktop.
+    The tests drive them.
+  - Tests:
+    - `qimgv_tests` gained `FolderViewTests` (grid layout and centring,
+      model configuration, press and double click, arrows with the column
+      memory, page keys, Shift ranges and Shift-click, Ctrl+A, Enter /
+      Backspace / type-ahead, the rubber band with and without Ctrl, the
+      context menu and the gesture, Ctrl + wheel zoom, the slider snap and
+      storing on release, drops and drag hover, the selected image count,
+      the format filter rules, the bookmarks, the places panel rules,
+      settings, the name filter delay, sorting requests, the first
+      activation, readiness with and without the tree, listing of the
+      folders above, drops onto bookmarks and tree folders, home and the
+      bookmark dialog folder) and row tests in `ThumbnailStripTests`.
+    - `qimgv_qml_tests` gained `tst_folderview.qml` (bounded delegates and
+      requests in a 10 000-item directory, double click, keys and
+      type-ahead, the rubber band, the context menu request, a drop with its
+      target, the name filter, the compact top bar, the places panel);
+      `tst_mainwindow.qml` checks that the folder view is created on its
+      first activation.
 
 #### S3.2 Small dialogs
 - **Goal:** resize, file replace, rename, shortcut creator, script editor.

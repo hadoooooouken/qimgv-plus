@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import qimgv.bridges
 import qimgv.style
 
 // The thumbnail strip of the panel (ThumbnailStrip in the widget UI): a
@@ -98,9 +99,13 @@ Item {
         onViewExtentChanged: strip.reportViewport()
 
         delegate: ThumbnailWidget {
-            stripLayout: strip.stripLayout
-            controller: strip.controller
+            cellLayout: strip.stripLayout
             hoveredIndex: strip.hoveredIndex
+            surfaceColor: Theme.colors.thumbPanel
+            hoverColor: Theme.colors.thumbPanelHc
+            labelOnSurface: strip.controller.labelTextColor(Theme.colors.thumbPanel)
+            labelOnHover: strip.controller.labelTextColor(Theme.colors.thumbPanelHc)
+            selectedLabelColor: Theme.colors.thumbPanelText
         }
     }
 

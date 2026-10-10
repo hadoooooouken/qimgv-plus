@@ -10,16 +10,22 @@
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
+#include <memory>
+
 #include "gui/quick/bridges/actionbridge.h"
 #include "gui/quick/bridges/actiondispatcher.h"
 #include "gui/quick/bridges/settingsbridge.h"
 #include "gui/quick/bridges/themebridge.h"
 #include "gui/quick/ui/crop/cropcontroller.h"
+#include "gui/quick/ui/folderview/foldergridcontroller.h"
+#include "gui/quick/ui/folderview/folderviewcontroller.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
 #include "gui/quick/ui/mainwindowshell.h"
 #include "gui/quick/ui/menus/contextmenumodel.h"
 #include "gui/quick/ui/overlays/overlaycoordinator.h"
 #include "gui/quick/ui/thumbnails/thumbnailpanelcontroller.h"
+
+class QFileSystemModel;
 
 // Records what ActionBridge forwards instead of running actions.
 class FakeActionDispatcher final : public IActionDispatcher {
@@ -75,6 +81,13 @@ class BridgeTestFixture : public QObject {
   Q_PROPERTY(ContextMenuModel *contextMenu READ contextMenu CONSTANT FINAL)
   Q_PROPERTY(CropController *crop READ crop CONSTANT FINAL)
   Q_PROPERTY(QString lastCropRequest READ lastCropRequest FINAL)
+  Q_PROPERTY(FolderViewController *folderView READ folderView CONSTANT FINAL)
+  // The last request of the folder view: "sorting:<mode>",
+  // "folderSorting:<mode>", "nameFilter:<text>", "formats:<extensions>",
+  // "directory:<path>", "activated:<index>", "typeAhead:<text>",
+  // "contextMenu", "batch", "openSelected", "drop:<index>:<action>".
+  Q_PROPERTY(QString lastFolderRequest READ lastFolderRequest FINAL)
+  Q_PROPERTY(int folderThumbnailRequestCount READ folderThumbnailRequestCount FINAL)
   Q_PROPERTY(int scriptSettingsRequests READ scriptSettingsRequests FINAL)
 
 public:
@@ -108,6 +121,9 @@ public:
   [[nodiscard]] int lastPinRequest() const;
   [[nodiscard]] ContextMenuModel *contextMenu();
   [[nodiscard]] CropController *crop();
+  [[nodiscard]] FolderViewController *folderView();
+  [[nodiscard]] QString lastFolderRequest() const;
+  [[nodiscard]] int folderThumbnailRequestCount() const;
   // The last crop request: "crop:x,y,w,h", "cropAndSave:x,y,w,h" or
   // "default:<action>"; empty for none.
   [[nodiscard]] QString lastCropRequest() const;
@@ -176,11 +192,19 @@ public:
   Q_INVOKABLE void toggleCrop(QSize screenSize);
   Q_INVOKABLE void clearCropRequest();
 
+  // Folder view: a directory of count items (the first dirCount are
+  // folders) shown at path; thumbnails answered like the panel's.
+  Q_INVOKABLE void populateFolder(int count, int dirCount, const QString &path);
+  Q_INVOKABLE int deliverFolderThumbnails();
+  Q_INVOKABLE void clearFolderRequest();
+
   // Path of fileName next to the test executable, for images the tests save
   // for review.
   Q_INVOKABLE QString artifactPath(const QString &fileName) const;
 
 private:
+  void connectFolderView();
+
   FakeActionDispatcher mDispatcher;
   UiSettingsSnapshot mSettings;
   bool mDark = true;
@@ -202,5 +226,12 @@ private:
   ContextMenuModel mContextMenu;
   CropController mCrop;
   QString mLastCropRequest;
+  ThumbnailListModel mFolderThumbnails;
+  FolderGridController mFolderGrid;
+  FolderViewController mFolderView;
+  std::unique_ptr<QFileSystemModel> mFolderTree;
+  QList<int> mUnansweredFolderThumbnails;
+  int mFolderThumbnailRequestCount = 0;
+  QString mLastFolderRequest;
   int mScriptSettingsRequests = 0;
 };

@@ -21,6 +21,7 @@ ApplicationWindow {
     required property ThumbnailPanelController thumbnailPanel
     required property ContextMenuModel contextMenu
     required property CropController crop
+    required property FolderViewController folderView
 
     // The context menu exists from its first opening on.
     property bool contextMenuCreated: false
@@ -79,19 +80,24 @@ ApplicationWindow {
         focus: root.crop.active && !root.overlays.keyboardOverlayOpen
     }
 
-    // Folder mode. The folder view is not part of the Qt Quick UI yet; the
-    // page keeps the action shortcuts working, so the user can leave it.
+    // Folder mode. The folder view is created on its first activation, in
+    // the background; until then the page keeps the action shortcuts
+    // working.
     FocusScope {
         anchors.fill: parent
         visible: root.windowShell.folderViewActive
         focus: visible && !root.overlays.keyboardOverlayOpen
         Keys.onPressed: event => event.accepted = Actions.handleKeyEvent(event)
 
-        Label {
-            anchors.centerIn: parent
-            text: qsTr("The folder view is not available in this user interface yet.")
-            color: Theme.colors.text
-            font: Theme.fonts.base
+        Loader {
+            anchors.fill: parent
+            active: root.folderView.created
+            asynchronous: true
+            focus: true
+            sourceComponent: FolderView {
+                controller: root.folderView
+                focus: true
+            }
         }
     }
 
@@ -117,9 +123,11 @@ ApplicationWindow {
         }
     }
 
-    // Files dropped anywhere on the window open like in the widget UI.
+    // Files dropped anywhere on the window open like in the widget UI; the
+    // drop areas of the folder view lie above it.
     DropArea {
         anchors.fill: parent
+        z: -1
         onEntered: drag => drag.accepted = drag.hasUrls
         onDropped: drop => {
             root.windowShell.dropUrls(drop.urls, drop.source);

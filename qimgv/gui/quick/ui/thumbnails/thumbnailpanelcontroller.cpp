@@ -206,7 +206,7 @@ void ThumbnailPanelController::setAnimationRunning(bool running) {
 }
 
 QColor ThumbnailPanelController::labelTextColor(const QColor &background) const {
-    return qGray(background.rgb()) > kLightSurfaceGray ? QColor(Qt::black) : QColor(Qt::white);
+    return thumbnailLabelColor(background);
 }
 
 //------------------------------------------------------------------------------

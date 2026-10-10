@@ -22,6 +22,7 @@ qt_add_executable(qimgv_tests
     tst_uimetrics.cpp
     tst_overlays.cpp
     tst_thumbnailstrip.cpp
+    tst_folderview.cpp
     tst_contextmenu.cpp
     tst_crop.cpp
     tst_svgrasterizer.cpp
@@ -33,7 +34,6 @@ qt_add_executable(qimgv_tests
     "${QIMGV_APP_SOURCE_DIR}/sourcecontainers/decodedpixels.cpp"
     "${QIMGV_APP_SOURCE_DIR}/sourcecontainers/thumbnail.cpp"
     "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/directoryviewadapter.cpp"
-    "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/placeholderdirectoryview.cpp"
     "${QIMGV_APP_SOURCE_DIR}/gui/quick/adapters/themesnapshotbuilder.cpp"
     "${QIMGV_APP_SOURCE_DIR}/themestore.cpp"
     "${QIMGV_APP_SOURCE_DIR}/utils/actions.cpp"

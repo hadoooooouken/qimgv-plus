@@ -1,6 +1,7 @@
 #include "quickuihost.h"
 
 #include <QDebug>
+#include <QDir>
 #include <QGuiApplication>
 #include <QLatin1StringView>
 #include <QQuickGraphicsConfiguration>
@@ -31,6 +32,7 @@ constexpr QLatin1StringView overlaysProperty = "overlays"_L1;
 constexpr QLatin1StringView thumbnailPanelProperty = "thumbnailPanel"_L1;
 constexpr QLatin1StringView contextMenuProperty = "contextMenu"_L1;
 constexpr QLatin1StringView cropProperty = "crop"_L1;
+constexpr QLatin1StringView folderViewProperty = "folderView"_L1;
 
 constexpr QLatin1StringView bridgesModule = "qimgv.bridges"_L1;
 constexpr QLatin1StringView settingsBridgeType = "AppSettings"_L1;
@@ -69,7 +71,7 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager,
       mActionManager(actionManager),
       mViewMode(settings.defaultViewMode()),
       mThumbnailPanelView(std::make_shared<DirectoryViewAdapter>()),
-      mFolderView(std::make_shared<PlaceholderDirectoryView>()),
+      mFolderGridView(std::make_shared<DirectoryViewAdapter>()),
       mDispatcher(actionManager),
       mSettingsBridge(BridgeSnapshots::readUiSettings(settings)),
       mThemeBridge(BridgeSnapshots::readTheme(settings)),
@@ -90,6 +92,16 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager,
           .contextMenu = mContextMenu,
           .events = mEvents,
           .settings = settings,
+      }),
+      mFolderGrid(*mFolderGridView, BridgeSnapshots::readUiSettings(settings)),
+      mFolderView(mFolderGrid, BridgeSnapshots::readUiSettings(settings), QDir::homePath()),
+      mFolderViewActions(QuickFolderViewContext{
+          .folderView = mFolderView,
+          .grid = mFolderGrid,
+          .gridView = *mFolderGridView,
+          .events = mEvents,
+          .settings = settings,
+          .actions = actionManager,
       }) {
   // settingsChanged also announces theme switches and shortcut edits; each
   // receiver acts only on what actually changed.
@@ -98,6 +110,7 @@ QuickUiHost::QuickUiHost(Settings &settings, ActionManager &actionManager,
   forwardViewportEvents();
   forwardOverlayEvents();
   connectThumbnailPanel();
+  connectFolderView();
 }
 
 QuickUiHost::~QuickUiHost() = default;
@@ -122,14 +135,6 @@ void QuickUiHost::forwardViewportEvents() {
   QObject::connect(&mViewport, &ImageViewportController::playbackError,
                    messages, [messages](const QString &message) {
                      messages->showError(message);
-                   });
-
-  // The folder view placeholder has nothing to lay out: it is ready as soon
-  // as it holds the directory, which completes the cold-start wait.
-  QObject::connect(mFolderView.get(), &PlaceholderDirectoryView::populated,
-                   events, [events]() {
-                     emit events->filesystemViewReady();
-                     emit events->visibleThumbnailsReady();
                    });
 }
 
@@ -173,6 +178,14 @@ void QuickUiHost::connectThumbnailPanel() {
 }
 
 //------------------------------------------------------------------------------
+// The grid requests thumbnails for the application's device pixel ratio and
+// lays its labels out with the application font, like the widget grid.
+void QuickUiHost::connectFolderView() {
+  mFolderGrid.setLabelFont(QGuiApplication::font());
+  mFolderGrid.setDevicePixelRatio(qGuiApp->devicePixelRatio());
+}
+
+//------------------------------------------------------------------------------
 void QuickUiHost::onSettingsChanged() {
   const UiSettingsSnapshot snapshot = BridgeSnapshots::readUiSettings(mSettings);
   mSettingsBridge.apply(snapshot);
@@ -180,6 +193,7 @@ void QuickUiHost::onSettingsChanged() {
   mOverlays.applySettings(snapshot);
   mThumbnailPanel.applySettings(snapshot);
   mCrop.applySettings(snapshot);
+  mFolderView.applySettings(snapshot);
   mThemeBridge.apply(BridgeSnapshots::readTheme(mSettings));
   mActionBridge.refresh();
   mContextMenu.refreshShortcuts();
@@ -249,7 +263,8 @@ bool QuickUiHost::start() {
        {overlaysProperty, QVariant::fromValue(&mOverlays)},
        {thumbnailPanelProperty, QVariant::fromValue(&mThumbnailPanel)},
        {contextMenuProperty, QVariant::fromValue(&mContextMenu)},
-       {cropProperty, QVariant::fromValue(&mCrop)}});
+       {cropProperty, QVariant::fromValue(&mCrop)},
+       {folderViewProperty, QVariant::fromValue(&mFolderView)}});
   mEngine.loadFromModule(mainWindowModule, mainWindowType);
   const QList<QObject *> roots = mEngine.rootObjects();
   QQuickWindow *window =
@@ -276,6 +291,8 @@ bool QuickUiHost::start() {
           .thumbnailPanel = mThumbnailPanel,
           .contextMenu = mContextMenu,
           .crop = mCrop,
+          .folderView = mFolderView,
+          .folderViewActions = mFolderViewActions,
           .viewMode = mViewMode,
           .events = mEvents,
           .settings = mSettings,
@@ -300,6 +317,6 @@ std::optional<UiPorts> QuickUiHost::ports() {
       mViewMode,
       mEvents,
       mThumbnailPanelView,
-      mFolderView,
+      mFolderGridView,
   };
 }

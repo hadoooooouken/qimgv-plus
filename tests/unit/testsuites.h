@@ -19,6 +19,7 @@ int runUpscaleDecisionTests(int argc, char **argv);
 int runUiMetricsTests(int argc, char **argv);
 int runOverlayTests(int argc, char **argv);
 int runThumbnailStripTests(int argc, char **argv);
+int runFolderViewTests(int argc, char **argv);
 int runContextMenuTests(int argc, char **argv);
 int runCropTests(int argc, char **argv);
 int runSvgRasterizerTests(int argc, char **argv);

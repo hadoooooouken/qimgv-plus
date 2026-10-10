@@ -59,6 +59,10 @@ UiSettingsSnapshot BridgeSnapshots::readUiSettings(Settings &settings) {
               .iconSize = settings.folderViewIconSize(),
               .squareThumbnails = settings.squareThumbnails(),
               .sortingMode = static_cast<Enums::SortingMode>(settings.sortingMode()),
+              .folderSortingMode =
+                  static_cast<Enums::SortingMode>(settings.folderIconSortingMode()),
+              .formatFilter = settings.formatFilter(),
+              .bookmarks = settings.bookmarks(),
               .sortFolders = settings.sortFolders(),
               .showHiddenFiles = settings.showHiddenFiles(),
               .placesPanel = settings.placesPanel(),

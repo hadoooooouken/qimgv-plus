@@ -98,9 +98,9 @@ target_sources(qimgv-plus PRIVATE
     quick/adapters/bridgesnapshots.cpp
     quick/adapters/directoryviewadapter.cpp
     quick/adapters/interimports.cpp
-    quick/adapters/placeholderdirectoryview.cpp
     quick/adapters/quickcontextmenuactions.cpp
     quick/adapters/quickcropactions.cpp
+    quick/adapters/quickfolderviewactions.cpp
     quick/adapters/quickmainwindowcontroller.cpp
     quick/adapters/quickoverlayactions.cpp
     quick/adapters/quickvieweractions.cpp

@@ -83,6 +83,10 @@ int ThumbnailListModel::itemCount() const {
     return mCount;
 }
 
+int ThumbnailListModel::dirCount() const {
+    return mDirCount;
+}
+
 int ThumbnailListModel::currentIndex() const {
     return mSelection.isEmpty() ? -1 : mSelection.constLast();
 }
@@ -311,6 +315,7 @@ void ThumbnailListModel::setDirCount(int count) {
     mDirCount = newCount;
     if (last >= 0)
         emit dataChanged(index(0), index(last), {DirectoryRole});
+    emit dirCountChanged();
 }
 
 //------------------------------------------------------------------------------
@@ -533,6 +538,15 @@ void ThumbnailListModel::release(int index, int button, QPointF position) {
 void ThumbnailListModel::doubleClick(int index, int button) {
     if (static_cast<Qt::MouseButton>(button) == Qt::LeftButton && checkRange(index))
         emit activated(index);
+}
+
+void ThumbnailListModel::activate(int index) {
+    if (checkRange(index))
+        emit activated(index);
+}
+
+bool ThumbnailListModel::gestureActive() const {
+    return mGestureActive;
 }
 
 //------------------------------------------------------------------------------

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QObject>
-#include <QSet>
 #include <QString>
 
 #include "components/shellinfo/windowtitle.h"
@@ -12,10 +11,12 @@
 class ActionManager;
 class ContextMenuModel;
 class CropController;
+class FolderViewController;
 class ImageViewportController;
 class MainWindowShell;
 class OverlayCoordinator;
 class QQuickWindow;
+class QuickFolderViewActions;
 class Settings;
 class ThumbnailPanelController;
 class UiEvents;
@@ -31,6 +32,8 @@ struct QuickMainWindowContext {
     ThumbnailPanelController &thumbnailPanel;
     ContextMenuModel &contextMenu;
     CropController &crop;
+    FolderViewController &folderView;
+    QuickFolderViewActions &folderViewActions;
     ViewModeController &viewMode;
     UiEvents &events;
     Settings &settings;
@@ -56,8 +59,9 @@ struct QuickMainWindowContext {
 // activation, fullscreen state and view mode. The context menu and the crop
 // mode follow the view mode; the crop panel requests open and close the
 // crop mode (CropController) with the size of the window's screen. The
-// shell parts without a Quick UI yet (folder tree, sorting) are logged once
-// and otherwise ignored until S3.1 implements them.
+// folder view (FolderViewController) follows the view mode and the
+// fullscreen state and gets the folder view parts of the shell port: the
+// directory path, the sorting indicators and the folder tree refresh.
 // GUI thread only.
 class QuickMainWindowController final : public QObject,
                                         public IWindowPort,
@@ -98,8 +102,6 @@ private:
     void closeFullscreenOrExit();
     void persistPlacement(const WindowPlacement &placement);
     void updateTitle();
-    // Logs, once per feature, that the Quick UI cannot show it yet.
-    void reportUnavailable(const QString &feature);
 
     QQuickWindow &window;
     MainWindowShell &shell;
@@ -108,11 +110,12 @@ private:
     ThumbnailPanelController &thumbnailPanel;
     ContextMenuModel &contextMenu;
     CropController &crop;
+    FolderViewController &folderView;
+    QuickFolderViewActions &folderViewActions;
     ViewModeController &viewMode;
     UiEvents &events;
     Settings &settings;
     ActionManager &actions;
     WindowStateController windowState;
     ShellFileInfo currentInfo;
-    QSet<QString> reportedUnavailable;
 };

@@ -3,6 +3,7 @@
 #include <QColorSpace>
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QtQml/qqmlregistration.h>
 
 #include "gui/quick/bridges/settingsenums.h"
@@ -116,6 +117,9 @@ struct FolderViewSettings {
   Q_PROPERTY(int iconSize MEMBER iconSize)
   Q_PROPERTY(bool squareThumbnails MEMBER squareThumbnails)
   Q_PROPERTY(SettingsEnums::SortingMode sortingMode MEMBER sortingMode)
+  Q_PROPERTY(SettingsEnums::SortingMode folderSortingMode MEMBER folderSortingMode)
+  Q_PROPERTY(QStringList formatFilter MEMBER formatFilter)
+  Q_PROPERTY(QStringList bookmarks MEMBER bookmarks)
   Q_PROPERTY(bool sortFolders MEMBER sortFolders)
   Q_PROPERTY(bool showHiddenFiles MEMBER showHiddenFiles)
   Q_PROPERTY(bool placesPanel MEMBER placesPanel)
@@ -127,6 +131,11 @@ public:
   int iconSize{};
   bool squareThumbnails{};
   SettingsEnums::SortingMode sortingMode{};
+  // Sorting of the folder icons (folderIconSortingMode).
+  SettingsEnums::SortingMode folderSortingMode{};
+  // Extensions the grid shows; empty for all formats.
+  QStringList formatFilter;
+  QStringList bookmarks;
   bool sortFolders{};
   bool showHiddenFiles{};
   bool placesPanel{};

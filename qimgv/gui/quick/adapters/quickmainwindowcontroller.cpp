@@ -12,7 +12,9 @@
 #include "components/actionmanager/actionmanager.h"
 #include "components/viewmode/viewmodecontroller.h"
 #include "gui/ports/uievents.h"
+#include "gui/quick/adapters/quickfolderviewactions.h"
 #include "gui/quick/ui/crop/cropcontroller.h"
+#include "gui/quick/ui/folderview/folderviewcontroller.h"
 #include "gui/quick/ui/imageviewportcontroller.h"
 #include "gui/quick/ui/mainwindowshell.h"
 #include "gui/quick/ui/menus/contextmenumodel.h"
@@ -45,6 +47,8 @@ QuickMainWindowController::QuickMainWindowController(
       thumbnailPanel(context.thumbnailPanel),
       contextMenu(context.contextMenu),
       crop(context.crop),
+      folderView(context.folderView),
+      folderViewActions(context.folderViewActions),
       viewMode(context.viewMode),
       events(context.events),
       settings(context.settings),
@@ -60,6 +64,8 @@ QuickMainWindowController::QuickMainWindowController(
             &OverlayCoordinator::setFullscreen);
     connect(&windowState, &WindowStateController::fullscreenChanged, &thumbnailPanel,
             &ThumbnailPanelController::setFullscreen);
+    connect(&windowState, &WindowStateController::fullscreenChanged, &folderView,
+            &FolderViewController::setFullscreen);
     connect(&window, &QWindow::widthChanged, this,
             [this]() { thumbnailPanel.setWindowSize(window.size()); });
     connect(&window, &QWindow::heightChanged, this,
@@ -88,6 +94,7 @@ QuickMainWindowController::QuickMainWindowController(
         thumbnailPanel.setFolderViewActive(mode == MODE_FOLDERVIEW);
         contextMenu.setFolderViewActive(mode == MODE_FOLDERVIEW);
         crop.setFolderViewActive(mode == MODE_FOLDERVIEW);
+        folderView.setActive(mode == MODE_FOLDERVIEW);
         updateTitle();
     });
     shell.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
@@ -97,6 +104,8 @@ QuickMainWindowController::QuickMainWindowController(
     thumbnailPanel.setFullscreen(windowState.isFullscreen());
     contextMenu.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
     crop.setFolderViewActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
+    folderView.setFullscreen(windowState.isFullscreen());
+    folderView.setActive(viewMode.currentViewMode() == MODE_FOLDERVIEW);
     thumbnailPanel.setWindowSize(window.size());
 
     // The title shows the zoom, the view locks and (by setting) extended
@@ -168,8 +177,7 @@ void QuickMainWindowController::setWindowUpdatesSuspended(bool suspended) {
 // IShellPort
 
 void QuickMainWindowController::setDirectoryPath(const QString &path) {
-    Q_UNUSED(path)
-    reportUnavailable(u"folder view path"_s);
+    folderView.setDirectoryPath(path);
 }
 
 void QuickMainWindowController::setCurrentInfo(const ShellFileInfo &info) {
@@ -182,19 +190,17 @@ void QuickMainWindowController::setMetadata(const MetadataEntries &entries) {
     overlays.setMetadata(entries);
 }
 
+// The SettingsEnums values mirror the settings enums one to one.
 void QuickMainWindowController::notifySortingChanged(SortingMode mode) {
-    Q_UNUSED(mode)
-    reportUnavailable(u"sorting indicator"_s);
+    folderView.setSortingMode(static_cast<SettingsEnums::SortingMode>(mode));
 }
 
 void QuickMainWindowController::notifyFolderSortingChanged(SortingMode mode) {
-    Q_UNUSED(mode)
-    reportUnavailable(u"folder sorting indicator"_s);
+    folderView.setFolderSortingMode(static_cast<SettingsEnums::SortingMode>(mode));
 }
 
 void QuickMainWindowController::refreshFolderTree(const QString &directoryPath) {
-    Q_UNUSED(directoryPath)
-    reportUnavailable(u"folder tree"_s);
+    folderViewActions.refreshFolderTree(directoryPath);
 }
 
 void QuickMainWindowController::setSaveOverlayVisible(bool visible) {
@@ -282,9 +288,3 @@ void QuickMainWindowController::updateTitle() {
         window.setTitle(title);
 }
 
-void QuickMainWindowController::reportUnavailable(const QString &feature) {
-    if (reportedUnavailable.contains(feature))
-        return;
-    reportedUnavailable.insert(feature);
-    qInfo().noquote() << "Qt Quick UI:" << feature << "is not available yet";
-}

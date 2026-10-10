@@ -5,12 +5,13 @@ import qimgv.bridges
 import qimgv.render
 import qimgv.style
 
-// One cell of the thumbnail strip, drawn like the widget ThumbnailWidget:
-// hover and selection surfaces, the thumbnail (ThumbnailItem, with rounded
-// corners and the hover highlight), the clock glyph while it loads or when
-// it is unavailable, the name and info labels of the extended style, and the
-// drop target frame. Geometry comes from the strip layout; the strip tells
-// the cell whether the pointer is over it.
+// One cell of the thumbnail strip or the folder grid, drawn like the widget
+// ThumbnailWidget: hover and selection surfaces, the thumbnail
+// (ThumbnailItem, with rounded corners and the hover highlight), the clock
+// glyph while it loads or when it is unavailable, the name and info labels
+// of the labelled styles, and the drop target frame. Geometry comes from the
+// view's cell layout and the colours from the view's surface (the panel or
+// the folder view); the view tells the cell whether the pointer is over it.
 Item {
     id: cell
 
@@ -23,10 +24,16 @@ Item {
     required property bool unavailable
     required property bool selected
     required property bool dragHover
-    // Set by the strip.
-    required property thumbnailStripLayout stripLayout
-    required property ThumbnailPanelController controller
-    property int hoveredIndex: -1
+    // Set by the view.
+    required property thumbnailStripLayout cellLayout
+    required property int hoveredIndex
+    // The view's surface and its hovered shade, and the label colours on
+    // them while unselected and the label colour of a selected cell.
+    required property color surfaceColor
+    required property color hoverColor
+    required property color labelOnSurface
+    required property color labelOnHover
+    required property color selectedLabelColor
 
     readonly property bool hovered: index === hoveredIndex
     // 0 - 1, follows hovered with the widget's fade in and out.
@@ -47,12 +54,11 @@ Item {
     readonly property real dropHoverFillOpacity: 0.1
 
     readonly property bool hasImage: loaded && thumbnail.valid
-    readonly property color labelColor: selected
-        ? Theme.colors.thumbPanelText
-        : controller.labelTextColor(hovered ? Theme.colors.thumbPanelHc : Theme.colors.thumbPanel)
+    readonly property color labelColor: selected ? selectedLabelColor
+                                                 : hovered ? labelOnHover : labelOnSurface
 
-    width: stripLayout.cellWidth
-    height: stripLayout.cellHeight
+    width: cellLayout.cellWidth
+    height: cellLayout.cellHeight
 
     onHoveredChanged: {
         hoverAnimation.stop();
@@ -60,7 +66,10 @@ Item {
         hoverAnimation.duration = hovered ? hoverInDuration : hoverOutDuration;
         hoverAnimation.start();
     }
-    ListView.onReused: {
+    ListView.onReused: resetHover()
+    GridView.onReused: resetHover()
+
+    function resetHover() {
         hoverAnimation.stop();
         hoverAmount = hovered ? 1 : 0;
     }
@@ -73,26 +82,26 @@ Item {
         easing.type: Easing.OutQuad
     }
 
-    // ThumbnailWidget fills its whole cell with the (translucent) panel
-    // colour over the strip, which has the same background.
+    // ThumbnailWidget fills its whole cell with the (translucent) surface
+    // colour over the view, which has the same background.
     Rectangle {
         anchors.fill: parent
-        color: Theme.colors.thumbPanel
+        color: cell.surfaceColor
     }
 
     // The cell minus its margins carries the surfaces.
     Item {
         id: surface
 
-        x: cell.stripLayout.marginX
-        y: cell.stripLayout.marginY
-        width: cell.width - 2 * cell.stripLayout.marginX
-        height: cell.height - 2 * cell.stripLayout.marginY
+        x: cell.cellLayout.marginX
+        y: cell.cellLayout.marginY
+        width: cell.width - 2 * cell.cellLayout.marginX
+        height: cell.height - 2 * cell.cellLayout.marginY
 
         Rectangle {
             anchors.fill: parent
             radius: cell.surfaceRadius
-            color: Theme.colors.thumbPanelHc
+            color: cell.hoverColor
             opacity: cell.hoverAmount
             visible: !cell.selected && cell.hoverAmount > 0
         }
@@ -117,12 +126,12 @@ Item {
     }
 
     ThumbnailItem {
-        y: cell.stripLayout.imageCenterOffset
+        y: cell.cellLayout.imageCenterOffset
         width: cell.width
         height: cell.height
         visible: cell.hasImage
         thumbnail: cell.thumbnail
-        maximumSize: cell.stripLayout.imageArea
+        maximumSize: cell.cellLayout.imageArea
         cornerRadius: cell.thumbnailRadius
         highlight: cell.hoverHighlight * cell.hoverAmount
     }
@@ -136,11 +145,11 @@ Item {
     }
 
     Text {
-        x: cell.stripLayout.labelLeft
-        y: cell.stripLayout.labelTop
-        width: cell.stripLayout.labelWidth
-        height: cell.stripLayout.textHeight
-        visible: cell.stripLayout.labels && cell.loaded
+        x: cell.cellLayout.labelLeft
+        y: cell.cellLayout.labelTop
+        width: cell.cellLayout.labelWidth
+        height: cell.cellLayout.textHeight
+        visible: cell.cellLayout.labels && cell.loaded
         text: cell.name
         color: cell.labelColor
         font: Theme.fonts.base
@@ -150,11 +159,11 @@ Item {
     }
 
     Text {
-        x: cell.stripLayout.labelLeft
-        y: cell.stripLayout.infoTop
-        width: cell.stripLayout.labelWidth
-        height: cell.stripLayout.textHeight
-        visible: cell.stripLayout.labels && cell.loaded
+        x: cell.cellLayout.labelLeft
+        y: cell.cellLayout.infoTop
+        width: cell.cellLayout.labelWidth
+        height: cell.cellLayout.textHeight
+        visible: cell.cellLayout.labels && cell.loaded
         text: cell.info
         color: cell.labelColor
         opacity: cell.infoOpacity

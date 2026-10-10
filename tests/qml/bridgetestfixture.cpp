@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QDropEvent>
+#include <QFileSystemModel>
 #include <QGuiApplication>
 #include <QImage>
 #include <QKeyEvent>
@@ -70,6 +71,10 @@ UiSettingsSnapshot testSettings() {
   settings.viewer.trackpadDetection = true;
   settings.panel.position = SettingsEnums::PanelPosition::Bottom;
   settings.overlays.zoomIndicatorMode = SettingsEnums::ZoomIndicatorMode::Enabled;
+  settings.folderView.iconSize = FolderGridLayout::kMinimumIconSize;
+  settings.folderView.placesPanelWidth = FolderViewController::kPlacesPanelMinimumWidth;
+  settings.folderView.bookmarksExpanded = true;
+  settings.folderView.treeExpanded = true;
   return settings;
 }
 
@@ -135,8 +140,10 @@ BridgeTestFixture::BridgeTestFixture(QObject *parent)
       mSettingsBridge(mSettings), mThemeBridge(testTheme(mDark)),
       mActionBridge(mDispatcher), mViewport(mSettings), mOverlays(mSettings),
       mThumbnailPanel(mThumbnails, mSettings), mContextMenu(mDispatcher),
-      mCrop(mSettings) {
+      mCrop(mSettings), mFolderGrid(mFolderThumbnails, mSettings),
+      mFolderView(mFolderGrid, mSettings, QDir::homePath()) {
   mThumbnailPanel.setLabelFont(QGuiApplication::font());
+  connectFolderView();
   connect(&mThumbnails, &ThumbnailListModel::thumbnailsNeeded, this,
           [this](const QList<int> &indices) {
             ++mThumbnailRequestCount;
@@ -266,6 +273,7 @@ int BridgeTestFixture::lastActivatedThumbnail() const {
 int BridgeTestFixture::lastPinRequest() const { return mLastPinRequest; }
 
 void BridgeTestFixture::setFolderViewActive(bool active) {
+  mFolderView.setActive(active);
   mWindowShell.setFolderViewActive(active);
   mOverlays.setFolderViewActive(active);
   mContextMenu.setFolderViewActive(active);
@@ -273,6 +281,7 @@ void BridgeTestFixture::setFolderViewActive(bool active) {
 }
 
 void BridgeTestFixture::setFullscreen(bool fullscreen) {
+  mFolderView.setFullscreen(fullscreen);
   mWindowShell.setFullscreen(fullscreen);
   mOverlays.setFullscreen(fullscreen);
 }
@@ -420,6 +429,98 @@ int BridgeTestFixture::deliverRequestedThumbnails() {
         size);
   }
   return static_cast<int>(indices.count());
+}
+
+//------------------------------------------------------------------------------
+// Folder view
+
+// The requests go where QuickFolderViewActions sends them in the
+// application; here they are recorded.
+void BridgeTestFixture::connectFolderView() {
+  mFolderGrid.setLabelFont(QGuiApplication::font());
+  connect(&mFolderThumbnails, &ThumbnailListModel::thumbnailsNeeded, this,
+          [this](const QList<int> &indices) {
+            ++mFolderThumbnailRequestCount;
+            mUnansweredFolderThumbnails.append(indices);
+          });
+  connect(&mFolderThumbnails, &ThumbnailListModel::activated, this,
+          [this](int index) { mLastFolderRequest = u"activated:%1"_s.arg(index); });
+  connect(&mFolderView, &FolderViewController::folderTreeRequested, this, [this]() {
+    mFolderTree = std::make_unique<QFileSystemModel>();
+    mFolderTree->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
+    mFolderTree->setRootPath(QString());
+    mFolderView.setFolderTree(mFolderTree.get());
+  });
+  connect(&mFolderView, &FolderViewController::sortingSelected, this,
+          [this](SettingsEnums::SortingMode mode) {
+            mLastFolderRequest = u"sorting:%1"_s.arg(static_cast<int>(mode));
+          });
+  connect(&mFolderView, &FolderViewController::folderSortingSelected, this,
+          [this](SettingsEnums::SortingMode mode) {
+            mLastFolderRequest = u"folderSorting:%1"_s.arg(static_cast<int>(mode));
+          });
+  connect(&mFolderView, &FolderViewController::nameFilterSelected, this,
+          [this](const QString &text) { mLastFolderRequest = u"nameFilter:"_s + text; });
+  connect(&mFolderView, &FolderViewController::formatFilterSelected, this,
+          [this](const QStringList &extensions) {
+            mLastFolderRequest = u"formats:"_s + extensions.join(u',');
+          });
+  connect(&mFolderView, &FolderViewController::directorySelected, this,
+          [this](const QString &path) { mLastFolderRequest = u"directory:"_s + path; });
+  connect(&mFolderGrid, &FolderGridController::typeAheadRequested, this,
+          [this](const QString &text) { mLastFolderRequest = u"typeAhead:"_s + text; });
+  connect(&mFolderGrid, &FolderGridController::contextMenuRequested, this,
+          [this]() { mLastFolderRequest = u"contextMenu"_s; });
+  connect(&mFolderGrid, &FolderGridController::batchConversionRequested, this,
+          [this]() { mLastFolderRequest = u"batch"_s; });
+  connect(&mFolderGrid, &FolderGridController::openSelectedRequested, this,
+          [this]() { mLastFolderRequest = u"openSelected"_s; });
+  connect(&mFolderGrid, &FolderGridController::urlsDropped, this,
+          [this](const QList<QUrl> &, QObject *, int index, Qt::DropAction action) {
+            mLastFolderRequest = u"drop:%1:%2"_s.arg(index).arg(static_cast<int>(action));
+          });
+}
+
+FolderViewController *BridgeTestFixture::folderView() {
+  return &mFolderView;
+}
+
+QString BridgeTestFixture::lastFolderRequest() const {
+  return mLastFolderRequest;
+}
+
+int BridgeTestFixture::folderThumbnailRequestCount() const {
+  return mFolderThumbnailRequestCount;
+}
+
+void BridgeTestFixture::populateFolder(int count, int dirCount, const QString &path) {
+  mUnansweredFolderThumbnails.clear();
+  mFolderThumbnailRequestCount = 0;
+  mLastFolderRequest.clear();
+  mFolderThumbnails.populate(count);
+  mFolderThumbnails.setDirCount(dirCount);
+  mFolderView.setDirectoryPath(path);
+}
+
+int BridgeTestFixture::deliverFolderThumbnails() {
+  const QList<int> indices = std::exchange(mUnansweredFolderThumbnails, {});
+  const int size = mFolderThumbnails.requestConfig().pixelSize;
+  for (const int index : indices) {
+    QImage image(kTestThumbnailWidth, kTestThumbnailHeight, QImage::Format_ARGB32_Premultiplied);
+    image.fill(QColor::fromHsv((index * kHueStride) % kHueSteps, kThumbnailSaturation,
+                               kThumbnailValue));
+    mFolderThumbnails.setThumbnail(
+        index,
+        ThumbnailEntry{.handle = {.image = image, .sourceSize = kTestSourceSize},
+                       .name = u"file %1"_s.arg(index),
+                       .info = u"%1 x %2"_s.arg(kTestThumbnailWidth).arg(kTestThumbnailHeight)},
+        size);
+  }
+  return static_cast<int>(indices.count());
+}
+
+void BridgeTestFixture::clearFolderRequest() {
+  mLastFolderRequest.clear();
 }
 
 void BridgeTestFixture::panelPointerMoved(QPointF position, int buttons) {

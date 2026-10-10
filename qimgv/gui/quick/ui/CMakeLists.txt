@@ -12,6 +12,16 @@ qt_add_qml_module(qimgv_ui
         crop/cropcontroller.h
         crop/cropselection.cpp
         crop/cropselection.h
+        folderview/bookmarksmodel.cpp
+        folderview/bookmarksmodel.h
+        folderview/foldergridcontroller.cpp
+        folderview/foldergridcontroller.h
+        folderview/foldergridlayout.cpp
+        folderview/foldergridlayout.h
+        folderview/folderviewcontroller.cpp
+        folderview/folderviewcontroller.h
+        folderview/formatfiltermodel.cpp
+        folderview/formatfiltermodel.h
         framepresentationtracker.cpp
         framepresentationtracker.h
         imageviewportcontroller.cpp
@@ -55,6 +65,9 @@ qt_add_qml_module(qimgv_ui
         CropOverlay.qml
         CropPanel.qml
         FloatingMessage.qml
+        FolderGridView.qml
+        FolderView.qml
+        FormatFilterComboBox.qml
         FullscreenInfoOverlay.qml
         ImageInfoOverlay.qml
         ImageViewport.qml
@@ -63,6 +76,7 @@ qt_add_qml_module(qimgv_ui
         OverlayHeaderButton.qml
         OverlayLayer.qml
         OverlayPanel.qml
+        PlacesPanel.qml
         RenameOverlay.qml
         SaveConfirmOverlay.qml
         SidePanel.qml
@@ -74,6 +88,7 @@ qt_add_qml_module(qimgv_ui
 # The generated QML type registrations include the headers by file name.
 target_include_directories(qimgv_ui PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/crop"
+    "${CMAKE_CURRENT_SOURCE_DIR}/folderview"
     "${CMAKE_CURRENT_SOURCE_DIR}/menus"
     "${CMAKE_CURRENT_SOURCE_DIR}/overlays"
     "${CMAKE_CURRENT_SOURCE_DIR}/thumbnails"

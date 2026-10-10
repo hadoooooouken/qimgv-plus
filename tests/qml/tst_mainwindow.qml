@@ -19,7 +19,8 @@ TestCase {
             overlays: Fixture.overlays,
             thumbnailPanel: Fixture.thumbnailPanel,
             contextMenu: Fixture.contextMenu,
-            crop: Fixture.crop
+            crop: Fixture.crop,
+            folderView: Fixture.folderView
         });
         verify(window !== null, "qimgv.ui/Main could not be instantiated");
         return window;
@@ -68,8 +69,11 @@ TestCase {
         verify(viewport !== null, "no ImageViewport in the main window");
         verify(viewport.visible);
 
+        // The folder view is created on its first activation.
+        verify(childOfType(window, "FolderView") === null);
         Fixture.setFolderViewActive(true);
         verify(!viewport.visible);
+        tryVerify(() => childOfType(window, "FolderView") !== null);
         Fixture.setFolderViewActive(false);
         verify(viewport.visible);
     }

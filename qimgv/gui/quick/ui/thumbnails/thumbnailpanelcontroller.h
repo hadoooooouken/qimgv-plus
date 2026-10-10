@@ -62,9 +62,6 @@ public:
     // The slide: distance and duration of the show and hide animation.
     static constexpr int kSlideDistancePx = 40;
     static constexpr int kAnimationDurationMs = 300;
-    // Text colours on light and dark surfaces, chosen by qGray().
-    static constexpr int kLightSurfaceGray = 128;
-
     // model must outlive the controller; settings: the initial UI settings.
     ThumbnailPanelController(ThumbnailListModel &model, const UiSettingsSnapshot &settings,
                              QObject *parent = nullptr);

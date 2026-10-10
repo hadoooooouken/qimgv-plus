@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QColor>
 #include <QObject>
 #include <QSize>
 #include <QtQml/qqmlregistration.h>
@@ -94,3 +95,7 @@ public:
 };
 
 [[nodiscard]] ThumbnailStripLayout thumbnailStripLayoutFor(const ThumbnailStripLayoutInput &input);
+
+// Text colour of an unselected cell label on background: black on light
+// surfaces, white on dark ones (ThumbnailWidget::drawLabel()).
+[[nodiscard]] QColor thumbnailLabelColor(const QColor &background);

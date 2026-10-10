@@ -5,6 +5,15 @@
 
 namespace Enums = SettingsEnums;
 
+namespace {
+// Surfaces lighter than this qGray() value get black labels.
+constexpr int kLightSurfaceGray = 128;
+} // namespace
+
+QColor thumbnailLabelColor(const QColor &background) {
+    return qGray(background.rgb()) > kLightSurfaceGray ? QColor(Qt::black) : QColor(Qt::white);
+}
+
 ThumbnailStripLayout thumbnailStripLayoutFor(const ThumbnailStripLayoutInput &input) {
     ThumbnailStripLayout layout;
     layout.horizontal =
