@@ -172,7 +172,6 @@ signals:
   void moveRequested(QString);
   void copyUrlsRequested(QList<QString>, QString);
   void moveUrlsRequested(QList<QString>, QString);
-  void showFoldersChanged(bool);
   void resizeRequested(QSize, ScalingFilter, bool, QString);
   void clearThumbnailCacheRequested();
   void renameRequested(QString);

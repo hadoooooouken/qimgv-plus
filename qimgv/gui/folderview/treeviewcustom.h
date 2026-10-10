@@ -15,7 +15,6 @@ public:
 
 signals:
     void droppedIn(QList<QString>, QModelIndex, Qt::DropAction);
-    void tabbedOut();
 
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;

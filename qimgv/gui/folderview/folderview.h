@@ -82,7 +82,6 @@ signals:
     void formatFilterSelected(QStringList);
     void nameFilterSelected(QString);
     void directorySelected(QString path);
-    void showFoldersChanged(bool mode);
     void copyUrlsRequested(QList<QString>, QString path);
     void moveUrlsRequested(QList<QString>, QString path);
     void droppedInto(const QMimeData*, QObject*, int, Qt::DropAction) override;
@@ -111,7 +110,6 @@ private slots:
 
     void onSplitterMoved();
     void onHomeBtn();
-    void onTreeViewTabOut();
     void onSelectionChanged();
     void onBatchClicked();
 

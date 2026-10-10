@@ -101,7 +101,6 @@ void MW::setupUi() {
     connect(folderView.get(), &FolderViewProxy::directorySelected, this, &MW::opened);
     connect(folderView.get(), &FolderViewProxy::copyUrlsRequested, this, &MW::copyUrlsRequested);
     connect(folderView.get(), &FolderViewProxy::moveUrlsRequested, this, &MW::moveUrlsRequested);
-    connect(folderView.get(), &FolderViewProxy::showFoldersChanged, this, &MW::showFoldersChanged);
     connect(folderView.get(), &FolderViewProxy::batchRequested, this, &MW::batchRequested);
 
     centralWidget.reset(new CentralWidget(docWidget, folderView, this));

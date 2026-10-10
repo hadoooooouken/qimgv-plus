@@ -186,7 +186,6 @@ FolderView::FolderView(QWidget *parent) :
     connect(directoriesLabel, &ClickableLabel::clicked, this, &FolderView::toggleFilesystemView);
 
     connect(dirTreeView, &TreeViewCustom::droppedIn, this, &FolderView::onDroppedInByIndex);
-    connect(dirTreeView, &TreeViewCustom::tabbedOut, this, &FolderView::onTreeViewTabOut);
     connect(bookmarksWidget, &BookmarksWidget::droppedIn, this, &FolderView::onBookmarkDroppedIn);
 
     sortingComboBox->setItemDelegate(new QStyledItemDelegate(sortingComboBox));
@@ -540,10 +539,6 @@ void FolderView::toggleFilesystemView() {
     else
         dirTreeView->show();
     settings->setPlacesPanelTreeExpanded(dirTreeView->isVisible());
-}
-
-void FolderView::onTreeViewTabOut() {
-    thumbnailGrid->setFocus();
 }
 
 void FolderView::onDroppedInByIndex(QList<QString> paths, QModelIndex index, Qt::DropAction action) {

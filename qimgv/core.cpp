@@ -579,7 +579,6 @@ void Core::connectComponents() {
   connect(mw, &MW::folderSortingSelected, this, &Core::onFolderSortingSelected);
   connect(mw, &MW::formatFilterSelected, this, &Core::onFormatFilterSelected);
   connect(mw, &MW::nameFilterSelected, this, &Core::onNameFilterSelected);
-  connect(mw, &MW::showFoldersChanged, this, &Core::setFoldersDisplay);
   connect(mw, &MW::discardEditsRequested, this, &Core::discardEdits);
   connect(mw, &MW::draggedOut, this, qOverload<>(&Core::onDraggedOut));
   connect(mw, &MW::nextImageRequested, this, &Core::nextImage);
@@ -1399,11 +1398,6 @@ void Core::onDraggedOut(QList<QString> paths) {
 }
 
 void Core::sortBy(SortingMode mode) { model->setSortingMode(mode); }
-
-void Core::setFoldersDisplay(bool mode) {
-  if (folderViewPresenter.showDirs() != mode)
-    folderViewPresenter.setShowDirs(mode);
-}
 
 void Core::renameCurrentSelection(QString newName) {
   if (newName.isEmpty() || selectedPath().isEmpty())
