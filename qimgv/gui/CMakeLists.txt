@@ -64,9 +64,6 @@ target_sources(qimgv-plus PRIVATE
     panels/mainpanel/thumbnailstripproxy.cpp
     panels/sidepanel/sidepanel.cpp
 
-    panels/infobar/infobar.cpp
-    panels/infobar/infobarproxy.cpp
-
     viewers/documentwidget.cpp
     viewers/filterpixmapitem.cpp
     viewers/imageviewerv2.cpp

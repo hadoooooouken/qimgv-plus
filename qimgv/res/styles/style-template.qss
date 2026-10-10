@@ -752,16 +752,6 @@ ControlsOverlay #controlsOverlayLeftButton:hover {
     border-bottom-left-radius: 8px;
 }
 /*----------------------------------------------------------------------------*/
-
-InfoBar, InfoBarProxy {
-    background-color: %widget%;
-}
-
-InfoBar QLabel {
-    color: %text_hc%;
-}
-
-/*----------------------------------------------------------------------------*/
 ZoomIndicatorOverlay {
     background-color: %overlay_rgba%;
     border-color: %overlay_rgba%;

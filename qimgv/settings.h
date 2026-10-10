@@ -137,8 +137,6 @@ public:
 
   bool infoBarFullscreen();
   void setInfoBarFullscreen(bool mode);
-  bool infoBarWindowed();
-  void setInfoBarWindowed(bool mode);
 
   bool windowTitleExtendedInfo();
   void setWindowTitleExtendedInfo(bool mode);

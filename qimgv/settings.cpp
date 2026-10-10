@@ -1308,14 +1308,6 @@ void Settings::setInfoBarFullscreen(bool mode) {
   settings->settingsConf->setValue("infoBarFullscreen", mode);
 }
 //------------------------------------------------------------------------------
-bool Settings::infoBarWindowed() {
-  return settings->settingsConf->value("infoBarWindowed", false).toBool();
-}
-
-void Settings::setInfoBarWindowed(bool mode) {
-  settings->settingsConf->setValue("infoBarWindowed", mode);
-}
-//------------------------------------------------------------------------------
 bool Settings::windowTitleExtendedInfo() {
   return settings->settingsConf->value("windowTitleExtendedInfo", true)
       .toBool();
