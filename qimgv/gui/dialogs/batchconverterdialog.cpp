@@ -25,6 +25,8 @@ constexpr int kBatchThumbnailCornerRadius = 6;
 constexpr int kBatchDialogWidth = 1048;
 constexpr int kBatchDialogHeight = 816;
 constexpr qreal kMinimumDevicePixelRatio = 1.0;
+// Tolerance for comparing the spin box value with the slider-derived value.
+constexpr double kLinkedSpinValueEpsilon = 1e-7;
 }
 
 // ==================== BatchItemWidget ====================
@@ -220,7 +222,7 @@ void LinkedSliderSpin::setValue(double val) {
 
 void LinkedSliderSpin::updateSpinBox(int val) {
     double realVal = val * m_factor;
-    if (std::abs(spinBox->value() - realVal) > 1e-7) {
+    if (std::abs(spinBox->value() - realVal) > kLinkedSpinValueEpsilon) {
         spinBox->blockSignals(true);
         spinBox->setValue(realVal);
         spinBox->blockSignals(false);
