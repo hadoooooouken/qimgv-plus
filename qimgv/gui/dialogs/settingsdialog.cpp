@@ -101,41 +101,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
             }
           });
 
-  // Hide unused checkboxes and labels
-  useSystemColorsCheckBox->hide();
-  modifySystemSchemeLabel->hide();
-
-  // Hide all color selectors except Accent
-  colorSelectorBackground->hide();
-  label_34->hide();
-  colorSelectorFullscreen->hide();
-  label_35->hide();
-  colorSelectorText->hide();
-  label_11->hide();
-  colorSelectorIcons->hide();
-  label_14->hide();
-  colorSelectorFolderview->hide();
-  label_36->hide();
-  colorSelectorFolderviewPanel->hide();
-  label_21->hide();
-  colorSelectorWidget->hide();
-  label_31->hide();
-  colorSelectorWidgetBorder->hide();
-  label_22->hide();
-  colorSelectorOverlay->hide();
-  label_37->hide();
-  colorSelectorOverlayText->hide();
-  label_32->hide();
-  colorSelectorScrollbar->hide();
-  label_23->hide();
-  colorSelectorThumbpanel->hide();
-  label_thumbpanel->hide();
-
   // "Use custom accent" checkbox
-  gridLayout_2->removeWidget(colorSelectorAccent);
-  gridLayout_2->removeWidget(label_33);
-  label_33->hide();
-
   QHBoxLayout *accentLayout = new QHBoxLayout();
   accentLayout->setContentsMargins(0, 0, 0, 0);
   accentLayout->setSpacing(12);
@@ -240,18 +206,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
           });
 
   colorSelectorAccent->setDescription(tr("Accent color"));
-  colorSelectorBackground->setDescription(tr("Windowed mode background"));
-  colorSelectorFullscreen->setDescription(tr("Fullscreen mode background"));
-  colorSelectorFolderview->setDescription(tr("FolderView background"));
-  colorSelectorFolderviewPanel->setDescription(tr("FolderView top panel"));
-  colorSelectorText->setDescription(tr("Text color"));
-  colorSelectorWidget->setDescription(tr("Widget background"));
-  colorSelectorWidgetBorder->setDescription(tr("Widget border"));
-  colorSelectorOverlay->setDescription(tr("Overlay background"));
-  colorSelectorOverlayText->setDescription(tr("Overlay text"));
-  colorSelectorScrollbar->setDescription(tr("Scrollbars"));
-  colorSelectorThumbpanel->setDescription(tr("Thumbnail panel"));
-  colorSelectorThumbpanel->setShowAlpha(true);
 
   scalingQualityComboBox->clear();
   scalingQualityComboBox->addItem(tr("Nearest"), QI_FILTER_NEAREST);
@@ -2658,18 +2612,6 @@ void SettingsDialog::setupUi() {
 
         horizontalLayout_3->addItem(horizontalSpacer_13);
 
-        useSystemColorsCheckBox = new QCheckBox(colorsPresetGroup);
-        useSystemColorsCheckBox->setObjectName("useSystemColorsCheckBox");
-
-        horizontalLayout_3->addWidget(useSystemColorsCheckBox);
-
-        modifySystemSchemeLabel = new ClickableLabel(colorsPresetGroup);
-        modifySystemSchemeLabel->setObjectName("modifySystemSchemeLabel");
-        modifySystemSchemeLabel->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-        modifySystemSchemeLabel->setTextFormat(Qt::TextFormat::RichText);
-
-        horizontalLayout_3->addWidget(modifySystemSchemeLabel);
-
         horizontalSpacer_18 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
 
         horizontalLayout_3->addItem(horizontalSpacer_18);
@@ -2712,246 +2654,9 @@ void SettingsDialog::setupUi() {
         colorSelectorAccent->setAutoFillBackground(true);
         colorSelectorAccent->setFrameShape(QFrame::Shape::Box);
 
-        gridLayout_2->addWidget(colorSelectorAccent, 0, 0, 1, 1);
-
-        colorSelectorIcons = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorIcons->setObjectName("colorSelectorIcons");
-        sizePolicy2.setHeightForWidth(colorSelectorIcons->sizePolicy().hasHeightForWidth());
-        colorSelectorIcons->setSizePolicy(sizePolicy2);
-        colorSelectorIcons->setMinimumSize(QSize(40, 22));
-#if QT_CONFIG(accessibility)
-        colorSelectorIcons->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorIcons->setAutoFillBackground(true);
-        colorSelectorIcons->setFrameShape(QFrame::Shape::Box);
-        colorSelectorIcons->setText(QString::fromUtf8(""));
-
-        gridLayout_2->addWidget(colorSelectorIcons, 3, 2, 1, 1);
-
-        colorSelectorFullscreen = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorFullscreen->setObjectName("colorSelectorFullscreen");
-        sizePolicy2.setHeightForWidth(colorSelectorFullscreen->sizePolicy().hasHeightForWidth());
-        colorSelectorFullscreen->setSizePolicy(sizePolicy2);
-        colorSelectorFullscreen->setMinimumSize(QSize(40, 22));
-        colorSelectorFullscreen->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-#if QT_CONFIG(accessibility)
-        colorSelectorFullscreen->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorFullscreen->setAutoFillBackground(true);
-        colorSelectorFullscreen->setFrameShape(QFrame::Shape::Box);
-        colorSelectorFullscreen->setText(QString::fromUtf8(""));
-
-        gridLayout_2->addWidget(colorSelectorFullscreen, 1, 2, 1, 1);
-
-        colorSelectorBackground = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorBackground->setObjectName("colorSelectorBackground");
-        sizePolicy2.setHeightForWidth(colorSelectorBackground->sizePolicy().hasHeightForWidth());
-        colorSelectorBackground->setSizePolicy(sizePolicy2);
-        colorSelectorBackground->setMinimumSize(QSize(40, 22));
-        colorSelectorBackground->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-#if QT_CONFIG(accessibility)
-        colorSelectorBackground->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorBackground->setAutoFillBackground(true);
-        colorSelectorBackground->setFrameShape(QFrame::Shape::Box);
-
-        gridLayout_2->addWidget(colorSelectorBackground, 1, 0, 1, 1);
-
         horizontalSpacer_28 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
 
         gridLayout_2->addItem(horizontalSpacer_28, 3, 4, 1, 1);
-
-        label_33 = new QLabel(colorConfigSubgroup);
-        label_33->setObjectName("label_33");
-        label_33->setMinimumSize(QSize(180, 0));
-
-        gridLayout_2->addWidget(label_33, 0, 1, 1, 1);
-
-        label_34 = new QLabel(colorConfigSubgroup);
-        label_34->setObjectName("label_34");
-
-        gridLayout_2->addWidget(label_34, 1, 1, 1, 1);
-
-        label_35 = new QLabel(colorConfigSubgroup);
-        label_35->setObjectName("label_35");
-
-        gridLayout_2->addWidget(label_35, 1, 3, 1, 1);
-
-        colorSelectorOverlayText = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorOverlayText->setObjectName("colorSelectorOverlayText");
-        sizePolicy2.setHeightForWidth(colorSelectorOverlayText->sizePolicy().hasHeightForWidth());
-        colorSelectorOverlayText->setSizePolicy(sizePolicy2);
-        colorSelectorOverlayText->setMinimumSize(QSize(40, 22));
-        colorSelectorOverlayText->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-#if QT_CONFIG(accessibility)
-        colorSelectorOverlayText->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorOverlayText->setAutoFillBackground(true);
-        colorSelectorOverlayText->setFrameShape(QFrame::Shape::Box);
-
-        gridLayout_2->addWidget(colorSelectorOverlayText, 6, 2, 1, 1);
-
-        label_11 = new QLabel(colorConfigSubgroup);
-        label_11->setObjectName("label_11");
-
-        gridLayout_2->addWidget(label_11, 3, 1, 1, 1);
-
-        label_14 = new QLabel(colorConfigSubgroup);
-        label_14->setObjectName("label_14");
-
-        gridLayout_2->addWidget(label_14, 3, 3, 1, 1);
-
-        colorSelectorFolderview = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorFolderview->setObjectName("colorSelectorFolderview");
-        sizePolicy2.setHeightForWidth(colorSelectorFolderview->sizePolicy().hasHeightForWidth());
-        colorSelectorFolderview->setSizePolicy(sizePolicy2);
-        colorSelectorFolderview->setMinimumSize(QSize(40, 22));
-        colorSelectorFolderview->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-#if QT_CONFIG(accessibility)
-        colorSelectorFolderview->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorFolderview->setAutoFillBackground(true);
-        colorSelectorFolderview->setFrameShape(QFrame::Shape::Box);
-
-        gridLayout_2->addWidget(colorSelectorFolderview, 4, 0, 1, 1);
-
-        colorSelectorText = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorText->setObjectName("colorSelectorText");
-        sizePolicy2.setHeightForWidth(colorSelectorText->sizePolicy().hasHeightForWidth());
-        colorSelectorText->setSizePolicy(sizePolicy2);
-        colorSelectorText->setMinimumSize(QSize(40, 22));
-        colorSelectorText->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-#if QT_CONFIG(accessibility)
-        colorSelectorText->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorText->setAutoFillBackground(true);
-        colorSelectorText->setFrameShape(QFrame::Shape::Box);
-
-        gridLayout_2->addWidget(colorSelectorText, 3, 0, 1, 1);
-
-        colorSelectorWidgetBorder = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorWidgetBorder->setObjectName("colorSelectorWidgetBorder");
-        sizePolicy2.setHeightForWidth(colorSelectorWidgetBorder->sizePolicy().hasHeightForWidth());
-        colorSelectorWidgetBorder->setSizePolicy(sizePolicy2);
-        colorSelectorWidgetBorder->setMinimumSize(QSize(40, 22));
-        colorSelectorWidgetBorder->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-#if QT_CONFIG(accessibility)
-        colorSelectorWidgetBorder->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorWidgetBorder->setAutoFillBackground(true);
-        colorSelectorWidgetBorder->setFrameShape(QFrame::Shape::Box);
-
-        gridLayout_2->addWidget(colorSelectorWidgetBorder, 5, 2, 1, 1);
-
-        label_36 = new QLabel(colorConfigSubgroup);
-        label_36->setObjectName("label_36");
-
-        gridLayout_2->addWidget(label_36, 6, 1, 1, 1);
-
-        colorSelectorOverlay = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorOverlay->setObjectName("colorSelectorOverlay");
-        sizePolicy2.setHeightForWidth(colorSelectorOverlay->sizePolicy().hasHeightForWidth());
-        colorSelectorOverlay->setSizePolicy(sizePolicy2);
-        colorSelectorOverlay->setMinimumSize(QSize(40, 22));
-        colorSelectorOverlay->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-#if QT_CONFIG(accessibility)
-        colorSelectorOverlay->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorOverlay->setAutoFillBackground(true);
-        colorSelectorOverlay->setFrameShape(QFrame::Shape::Box);
-
-        gridLayout_2->addWidget(colorSelectorOverlay, 6, 0, 1, 1);
-
-        label_21 = new QLabel(colorConfigSubgroup);
-        label_21->setObjectName("label_21");
-
-        gridLayout_2->addWidget(label_21, 5, 1, 1, 1);
-
-        label_31 = new QLabel(colorConfigSubgroup);
-        label_31->setObjectName("label_31");
-
-        gridLayout_2->addWidget(label_31, 4, 3, 1, 1);
-
-        label_22 = new QLabel(colorConfigSubgroup);
-        label_22->setObjectName("label_22");
-
-        gridLayout_2->addWidget(label_22, 5, 3, 1, 1);
-
-        colorSelectorScrollbar = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorScrollbar->setObjectName("colorSelectorScrollbar");
-        sizePolicy2.setHeightForWidth(colorSelectorScrollbar->sizePolicy().hasHeightForWidth());
-        colorSelectorScrollbar->setSizePolicy(sizePolicy2);
-        colorSelectorScrollbar->setMinimumSize(QSize(40, 22));
-        colorSelectorScrollbar->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-#if QT_CONFIG(accessibility)
-        colorSelectorScrollbar->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorScrollbar->setAutoFillBackground(true);
-        colorSelectorScrollbar->setFrameShape(QFrame::Shape::Box);
-
-        gridLayout_2->addWidget(colorSelectorScrollbar, 7, 0, 1, 1);
-
-        colorSelectorFolderviewPanel = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorFolderviewPanel->setObjectName("colorSelectorFolderviewPanel");
-        sizePolicy2.setHeightForWidth(colorSelectorFolderviewPanel->sizePolicy().hasHeightForWidth());
-        colorSelectorFolderviewPanel->setSizePolicy(sizePolicy2);
-        colorSelectorFolderviewPanel->setMinimumSize(QSize(40, 22));
-        colorSelectorFolderviewPanel->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-#if QT_CONFIG(accessibility)
-        colorSelectorFolderviewPanel->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorFolderviewPanel->setAutoFillBackground(true);
-        colorSelectorFolderviewPanel->setFrameShape(QFrame::Shape::Box);
-
-        gridLayout_2->addWidget(colorSelectorFolderviewPanel, 4, 2, 1, 1);
-
-        label_37 = new QLabel(colorConfigSubgroup);
-        label_37->setObjectName("label_37");
-
-        gridLayout_2->addWidget(label_37, 6, 3, 1, 1);
-
-        colorSelectorWidget = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorWidget->setObjectName("colorSelectorWidget");
-        sizePolicy2.setHeightForWidth(colorSelectorWidget->sizePolicy().hasHeightForWidth());
-        colorSelectorWidget->setSizePolicy(sizePolicy2);
-        colorSelectorWidget->setMinimumSize(QSize(40, 22));
-        colorSelectorWidget->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-#if QT_CONFIG(accessibility)
-        colorSelectorWidget->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorWidget->setAutoFillBackground(true);
-        colorSelectorWidget->setFrameShape(QFrame::Shape::Box);
-
-        gridLayout_2->addWidget(colorSelectorWidget, 5, 0, 1, 1);
-
-        label_32 = new QLabel(colorConfigSubgroup);
-        label_32->setObjectName("label_32");
-
-        gridLayout_2->addWidget(label_32, 7, 1, 1, 1);
-
-        colorSelectorThumbpanel = new ColorSelectorButton(colorConfigSubgroup);
-        colorSelectorThumbpanel->setObjectName("colorSelectorThumbpanel");
-        sizePolicy2.setHeightForWidth(colorSelectorThumbpanel->sizePolicy().hasHeightForWidth());
-        colorSelectorThumbpanel->setSizePolicy(sizePolicy2);
-        colorSelectorThumbpanel->setMinimumSize(QSize(40, 22));
-        colorSelectorThumbpanel->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
-#if QT_CONFIG(accessibility)
-        colorSelectorThumbpanel->setAccessibleName(QString::fromUtf8(""));
-#endif // QT_CONFIG(accessibility)
-        colorSelectorThumbpanel->setAutoFillBackground(true);
-        colorSelectorThumbpanel->setFrameShape(QFrame::Shape::Box);
-
-        gridLayout_2->addWidget(colorSelectorThumbpanel, 7, 2, 1, 1);
-
-        label_thumbpanel = new QLabel(colorConfigSubgroup);
-        label_thumbpanel->setObjectName("label_thumbpanel");
-
-        gridLayout_2->addWidget(label_thumbpanel, 7, 3, 1, 1);
-
-        label_23 = new QLabel(colorConfigSubgroup);
-        label_23->setObjectName("label_23");
-
-        gridLayout_2->addWidget(label_23, 4, 1, 1, 1);
 
         widget_24 = new QWidget(colorConfigSubgroup);
         widget_24->setObjectName("widget_24");
@@ -4149,32 +3854,7 @@ void SettingsDialog::retranslateUi() {
         themeSelectorComboBox->setItemText(3, QCoreApplication::translate("SettingsDialog", "Light", nullptr));
 
         themeSelectorComboBox->setCurrentText(QCoreApplication::translate("SettingsDialog", "Black", nullptr));
-        useSystemColorsCheckBox->setText(QCoreApplication::translate("SettingsDialog", "Use system colors", nullptr));
-        modifySystemSchemeLabel->setText(QCoreApplication::translate("SettingsDialog", "<html><head/><body><p><span style=\"text-decoration: underline;\">modify</span></p></body></html>", nullptr));
         colorSelectorAccent->setText(QString());
-        colorSelectorBackground->setText(QString());
-        label_33->setText(QCoreApplication::translate("SettingsDialog", "Accent", nullptr));
-        label_34->setText(QCoreApplication::translate("SettingsDialog", "Background", nullptr));
-        label_35->setText(QCoreApplication::translate("SettingsDialog", "Background (fullscreen mode)", nullptr));
-        colorSelectorOverlayText->setText(QString());
-        label_11->setText(QCoreApplication::translate("SettingsDialog", "Text", nullptr));
-        label_14->setText(QCoreApplication::translate("SettingsDialog", "Icons", nullptr));
-        colorSelectorFolderview->setText(QString());
-        colorSelectorText->setText(QString());
-        colorSelectorWidgetBorder->setText(QString());
-        label_36->setText(QCoreApplication::translate("SettingsDialog", "Overlay background", nullptr));
-        colorSelectorOverlay->setText(QString());
-        label_21->setText(QCoreApplication::translate("SettingsDialog", "Widget background", nullptr));
-        label_31->setText(QCoreApplication::translate("SettingsDialog", "Folder view top panel", nullptr));
-        label_22->setText(QCoreApplication::translate("SettingsDialog", "Widget border", nullptr));
-        colorSelectorScrollbar->setText(QString());
-        colorSelectorFolderviewPanel->setText(QString());
-        label_37->setText(QCoreApplication::translate("SettingsDialog", "Overlay text", nullptr));
-        colorSelectorWidget->setText(QString());
-        label_32->setText(QCoreApplication::translate("SettingsDialog", "Scrollbars", nullptr));
-        colorSelectorThumbpanel->setText(QString());
-        label_thumbpanel->setText(QCoreApplication::translate("SettingsDialog", "Thumbnail panel", nullptr));
-        label_23->setText(QCoreApplication::translate("SettingsDialog", "Folder view background", nullptr));
         label_38->setText(QCoreApplication::translate("SettingsDialog", "Other window tweaks", nullptr));
         label_5->setText(QCoreApplication::translate("SettingsDialog", "Window opacity:", nullptr));
         bgOpacityPercentLabel->setText(QCoreApplication::translate("SettingsDialog", "%", nullptr));
