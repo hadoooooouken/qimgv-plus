@@ -72,8 +72,7 @@ FolderCoverResult readError(FolderCoverRequest request,
         std::move(request),
         FolderCoverStatus::ReadError,
         {},
-        diagnostic,
-        false
+        diagnostic
     };
 }
 
@@ -238,8 +237,7 @@ FolderCoverResult findFolderCover(
         bestPath.isEmpty() ? FolderCoverStatus::NoCover
                            : FolderCoverStatus::CoverFound,
         std::move(bestPath),
-        {},
-        false
+        {}
     };
 }
 
@@ -316,8 +314,7 @@ void FolderCoverResolver::resolve(FolderCoverRequest request)
                 std::move(request),
                 FolderCoverStatus::CoverFound,
                 *cachedCover,
-                {},
-                true
+                {}
             };
             emitQueued(std::move(result));
             return;
