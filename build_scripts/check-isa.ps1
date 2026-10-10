@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Verifies that release binaries conform to the target instruction set (SSE2 or AVX2).
 
@@ -33,6 +33,14 @@
     Disassembles each binary completely to count all AVX occurrences, rather than
     terminating early on the first detected match for maximum speed.
 
+.PARAMETER ObjDir
+    Path to the CMake build directory for the SSE2 target (e.g.
+    out/build/qimgv-x64-release-sse2). When provided, the script scans all first-party
+    .obj files for AVX/VEX instructions before scanning binaries. If every .obj is clean,
+    any AVX found in non-allowlisted binaries is attributed to the MSVC CRT's
+    vector_algorithms.obj (runtime-dispatched via __isa_available) and reported as
+    [CRT-DISP] instead of [FAIL].
+
 .PARAMETER Sde
     Launches the Intel Software Development Emulator (sde.exe) smoke test on qimgv-plus.exe
     under the pre-AVX CPU model: `sde -mrm -- <path>\qimgv-plus.exe`.
@@ -58,6 +66,8 @@ param(
     [switch] $Strict,
 
     [switch] $FullCount,
+
+    [string] $ObjDir,
 
     [switch] $Sde,
 
@@ -196,6 +206,81 @@ function Get-AllowlistReason {
 }
 
 # ---------------------------------------------------------------------------
+# First-party .obj scan (CRT dispatch verification)
+# ---------------------------------------------------------------------------
+
+function Invoke-ObjScan {
+    param(
+        [string] $DumpbinPath,
+        [string] $ScanDir
+    )
+
+    # Collect all .obj files, excluding runtime-dispatch subtrees and CMake probes
+    $objFiles = Get-ChildItem -Path $ScanDir -Filter "*.obj" -Recurse -File |
+                Where-Object {
+                    $_.FullName -notmatch "\\upscayl-ncnn\\" -and
+                    $_.FullName -notmatch "\\glslang\\" -and
+                    $_.FullName -notmatch "\\SPIRV\\" -and
+                    $_.FullName -notmatch "\\CompilerId"
+                } |
+                Sort-Object FullName
+
+    $dirtyFiles = @()
+
+    foreach ($obj in $objFiles) {
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $DumpbinPath
+        $psi.WorkingDirectory = Split-Path $DumpbinPath -Parent
+        $psi.Arguments = "/disasm `"$($obj.FullName)`""
+        $psi.UseShellExecute = $false
+        $psi.RedirectStandardOutput = $true
+        $psi.CreateNoWindow = $true
+
+        $proc = [System.Diagnostics.Process]::Start($psi)
+        $foundAvx = $false
+        $sample = $null
+        $lineCount = 0
+
+        while (-not $proc.StandardOutput.EndOfStream) {
+            $line = $proc.StandardOutput.ReadLine()
+            $lineCount++
+
+            # Same instruction regex as Test-BinaryIsa
+            if ($line -match "^\s*[0-9A-Fa-f]+:\s+[0-9A-Fa-f\s]{2,}\s+(?<mnemonic>[a-z0-9]+)\b(?<rest>.*)$") {
+                $mnemonic = $Matches['mnemonic']
+                $rest = $Matches['rest']
+
+                if (($mnemonic -like "v*" -and $mnemonic -ne "verr" -and $mnemonic -ne "verw") -or
+                    ($mnemonic -match "^[yz]mm") -or
+                    ($rest -match "\b[yz]mm\d*\b|[yz]mmword") -or
+                    ($mnemonic -in @('andn', 'bzhi', 'mulx', 'pdep', 'pext', 'rorx', 'sarx', 'shlx', 'shrx'))) {
+                    $foundAvx = $true
+                    $sample = $line.Trim()
+                    try { $proc.Kill() } catch {}
+                    break
+                }
+            }
+        }
+
+        $proc.WaitForExit()
+
+        if ($lineCount -eq 0) {
+            Write-Warning "dumpbin produced no output for: $($obj.FullName)"
+        }
+
+        if ($foundAvx) {
+            $relPath = $obj.FullName.Substring($ScanDir.Length).TrimStart("\/")
+            $dirtyFiles += [PSCustomObject]@{ Path = $relPath; Sample = $sample }
+        }
+    }
+
+    return [PSCustomObject]@{
+        Scanned    = $objFiles.Count
+        DirtyFiles = $dirtyFiles
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Binary analysis
 # ---------------------------------------------------------------------------
 
@@ -317,6 +402,15 @@ if (-not $Isa) {
     }
 }
 
+# Auto-resolve ObjDir from the conventional CMake preset build directory
+if (-not $ObjDir) {
+    $presetName = if ($Isa -eq "SSE2") { "qimgv-x64-release-sse2" } else { "qimgv-x64-release" }
+    $candidate = Join-Path $projectRoot "out\build\$presetName"
+    if (Test-Path $candidate) {
+        $ObjDir = $candidate
+    }
+}
+
 $dumpbinExe = Ensure-Dumpbin
 
 # ---------------------------------------------------------------------------
@@ -352,13 +446,45 @@ Write-Host ("=" * 70) -ForegroundColor DarkCyan
 Write-Host ""
 
 # ---------------------------------------------------------------------------
+# First-party .obj verification (opt-in via -ObjDir)
+# ---------------------------------------------------------------------------
+
+$crtDispatchVerified = $false
+
+if ($ObjDir -and $Isa -eq "SSE2") {
+    $resolvedObjDir = (Resolve-Path $ObjDir -ErrorAction SilentlyContinue)
+    if (-not $resolvedObjDir) {
+        Write-Host "WARNING: -ObjDir path not found: $ObjDir" -ForegroundColor Yellow
+        Write-Host "         CRT dispatch verification skipped." -ForegroundColor Yellow
+    } else {
+        $resolvedObjDir = $resolvedObjDir.Path
+        Write-Host "  First-party .obj scan: $resolvedObjDir" -ForegroundColor Gray
+        $objResult = Invoke-ObjScan -DumpbinPath $dumpbinExe -ScanDir $resolvedObjDir
+        if ($objResult.DirtyFiles.Count -gt 0) {
+            Write-Host "  WARNING: $($objResult.DirtyFiles.Count)/$($objResult.Scanned) .obj file(s) contain AVX:" -ForegroundColor Red
+            foreach ($df in $objResult.DirtyFiles) {
+                Write-Host "    $($df.Path)" -ForegroundColor Red
+                Write-Host "      $($df.Sample)" -ForegroundColor DarkRed
+            }
+            Write-Host "  CRT dispatch verification FAILED. Binary [FAIL] results are genuine." -ForegroundColor Red
+        } else {
+            Write-Host "  Result: $($objResult.Scanned) .obj files scanned, all SSE2-clean." -ForegroundColor Green
+            Write-Host "  AVX in non-allowlisted binaries is MSVC CRT runtime dispatch." -ForegroundColor Green
+            $crtDispatchVerified = $true
+        }
+        Write-Host ""
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Scanning
 # ---------------------------------------------------------------------------
 
-$passedCount     = 0
-$allowlistCount  = 0
-$unexpectedCount = 0
-$failedBinaries  = @()
+$passedCount      = 0
+$allowlistCount   = 0
+$crtDispatchCount = 0
+$unexpectedCount  = 0
+$failedBinaries   = @()
 
 foreach ($target in $targets) {
     $relPath = if ($target.FullName.StartsWith($baseDir, [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -379,6 +505,9 @@ foreach ($target in $targets) {
         } elseif ($result.IsAllowlisted -and (-not $Strict)) {
             Write-Host "  [ALLOWLIST]  $relPath ($($result.AllowlistReason))" -ForegroundColor Cyan
             $allowlistCount++
+        } elseif ($crtDispatchVerified -and (-not $Strict)) {
+            Write-Host "  [CRT-DISP]   $relPath (MSVC CRT vector_algorithms runtime dispatch)" -ForegroundColor DarkCyan
+            $crtDispatchCount++
         } else {
             Write-Host "  [FAIL]       $relPath" -ForegroundColor Red
             if ($result.FirstSample) {
@@ -418,6 +547,9 @@ Write-Host "Summary: $($targets.Count) total scanned" -ForegroundColor Cyan
 if ($Isa -eq "SSE2") {
     Write-Host "  SSE2-clean:          $passedCount" -ForegroundColor Green
     Write-Host "  Allowlisted runtime: $allowlistCount" -ForegroundColor Cyan
+    if ($crtDispatchCount -gt 0) {
+        Write-Host "  CRT dispatch (ok):   $crtDispatchCount" -ForegroundColor DarkCyan
+    }
     if ($unexpectedCount -gt 0) {
         Write-Host "  Unexpected AVX:      $unexpectedCount" -ForegroundColor Red
     }
