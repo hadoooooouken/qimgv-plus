@@ -321,3 +321,6 @@ Write-Host "    6. Run build_scripts\rebuild-all.ps1" -ForegroundColor Gray
 Write-Host "    7. (Optional) Run build_scripts\build_ffmpeg_msvc.py" -ForegroundColor Gray
 Write-Host "    8. Configure and build qimgv-plus (see BUILDING.md)" -ForegroundColor Gray
 Write-Host ""
+Write-Host "  SSE2 variant: repeat steps 2-7 with '-Isa SSE2' (build_ffmpeg_msvc.py: '--isa SSE2')," -ForegroundColor Gray
+Write-Host "  then build the qimgv-x64-release-sse2 preset. Outputs go to install-sse2 / build-sse2 folders." -ForegroundColor Gray
+Write-Host ""

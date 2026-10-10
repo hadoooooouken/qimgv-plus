@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Rebuild all qimgv format libraries with AVX2 / LTCG / O2.
+    Rebuild all qimgv format libraries with the selected ISA / LTCG / O2.
 
 .PARAMETER Libraries
     Which libs to rebuild. Default = all.
@@ -9,14 +9,22 @@
 .PARAMETER FullClean
     Remove entire build\ folder instead of just CMakeCache.txt.
 
+.PARAMETER Isa
+    Instruction set baseline: AVX2 (default) or SSE2. Each ISA has its own
+    build and install folders (build / install for AVX2, build-sse2 /
+    install-sse2 for SSE2; see Get-IsaFolderName in MsvcPolicy.ps1).
+
 .EXAMPLE
     .\rebuild-all.ps1
     .\rebuild-all.ps1 -Libraries libheif
     .\rebuild-all.ps1 -Libraries Imath,openexr -FullClean
+    .\rebuild-all.ps1 -Isa SSE2
 #>
 param(
-    [string[]] $Libraries = @("zstd","Imath","OpenJPH","openexr","libavif","libjxl","jxrlib","libdeflate","LibRaw"),
-    [switch]   $FullClean
+    [string[]] $Libraries = @("zstd","Imath","OpenJPH","openjpeg","openexr","libavif","libjxl","jxrlib","libdeflate","LibRaw"),
+    [switch]   $FullClean,
+    [ValidateSet("AVX2", "SSE2")]
+    [string]   $Isa = "AVX2"
 )
 
 $ErrorActionPreference = "Stop"
@@ -24,6 +32,10 @@ $ROOT = (Resolve-Path "$PSScriptRoot\..\formats").Path
 
 # Common compiler / linker policy (single source: msvc-release-policy.json)
 . (Join-Path $PSScriptRoot "MsvcPolicy.ps1")
+
+# ISA-specific folder names, shared by every library below.
+$INSTALL_NAME = Get-IsaFolderName -BaseName "install" -Isa $Isa
+$BUILD_NAME   = Get-IsaFolderName -BaseName "build" -Isa $Isa
 
 # ---------------------------------------------------------------------------
 # VC dev environment bootstrap
@@ -134,7 +146,7 @@ function Build-Library {
     Clear-BuildCache $BuildDir
 
     Write-Info "Configuring..."
-    $hardeningArgs = Get-MsvcPolicyCMakeArgs -Ipo:$Ipo
+    $hardeningArgs = Get-MsvcPolicyCMakeArgs -Isa $Isa -Ipo:$Ipo
     $args = @("-S", $SrcDir, "-B", $BuildDir, "-A", "x64") + $hardeningArgs + $ConfigArgs
     Invoke-CMake $args
 
@@ -158,11 +170,11 @@ $ALL_LIBS = [ordered]@{
     "Imath" = {
         Build-Library `
             -SrcDir     "$ROOT\Imath" `
-            -BuildDir   "$ROOT\Imath\build" `
-            -InstallDir "$ROOT\Imath\install" `
+            -BuildDir   "$ROOT\Imath\$BUILD_NAME" `
+            -InstallDir "$ROOT\Imath\$INSTALL_NAME" `
             -Ipo `
             -ConfigArgs @(
-                "-DCMAKE_INSTALL_PREFIX=$ROOT\Imath\install",
+                "-DCMAKE_INSTALL_PREFIX=$ROOT\Imath\$INSTALL_NAME",
                 "-DBUILD_SHARED_LIBS=OFF",
                 "-DBUILD_TESTING=OFF"
             )
@@ -171,27 +183,46 @@ $ALL_LIBS = [ordered]@{
     "OpenJPH" = {
     Build-Library `
         -SrcDir     "$ROOT\OpenJPH" `
-        -BuildDir   "$ROOT\OpenJPH\build" `
-        -InstallDir "$ROOT\OpenJPH\install" `
+        -BuildDir   "$ROOT\OpenJPH\$BUILD_NAME" `
+        -InstallDir "$ROOT\OpenJPH\$INSTALL_NAME" `
         -Ipo `
         -ConfigArgs @(
-            "-DCMAKE_INSTALL_PREFIX=$ROOT\OpenJPH\install",
+            "-DCMAKE_INSTALL_PREFIX=$ROOT\OpenJPH\$INSTALL_NAME",
             "-DBUILD_SHARED_LIBS=OFF",
             "-DOJPH_BUILD_TESTS=OFF",
             "-DOJPH_BUILD_EXECUTABLES=OFF"
         )
     }
 
+    # Static openjp2.lib for kimg_jp2 (linked with OPJ_STATIC). Only the
+    # library is built: no codec executables, JPIP, tests or docs.
+    "openjpeg" = {
+        Build-Library `
+            -SrcDir     "$ROOT\openjpeg" `
+            -BuildDir   "$ROOT\openjpeg\$BUILD_NAME" `
+            -InstallDir "$ROOT\openjpeg\$INSTALL_NAME" `
+            -Ipo `
+            -ConfigArgs @(
+                "-DCMAKE_INSTALL_PREFIX=$ROOT\openjpeg\$INSTALL_NAME",
+                "-DBUILD_SHARED_LIBS=OFF",
+                "-DBUILD_STATIC_LIBS=ON",
+                "-DBUILD_CODEC=OFF",
+                "-DBUILD_JPIP=OFF",
+                "-DBUILD_DOC=OFF",
+                "-DBUILD_TESTING=OFF"
+            )
+    }
+
     "openexr" = {
         Build-Library `
             -SrcDir     "$ROOT\openexr" `
-            -BuildDir   "$ROOT\openexr\build" `
-            -InstallDir "$ROOT\openexr\install" `
+            -BuildDir   "$ROOT\openexr\$BUILD_NAME" `
+            -InstallDir "$ROOT\openexr\$INSTALL_NAME" `
             -Ipo `
             -ConfigArgs @(
-                "-DCMAKE_INSTALL_PREFIX=$ROOT\openexr\install",
-                "-DImath_DIR=$ROOT\Imath\install\lib\cmake\Imath",
-                "-Dzstd_DIR=$ROOT\zstd\install\lib\cmake\zstd",
+                "-DCMAKE_INSTALL_PREFIX=$ROOT\openexr\$INSTALL_NAME",
+                "-DImath_DIR=$ROOT\Imath\$INSTALL_NAME\lib\cmake\Imath",
+                "-Dzstd_DIR=$ROOT\zstd\$INSTALL_NAME\lib\cmake\zstd",
                 "-DBUILD_SHARED_LIBS=OFF",
                 "-DBUILD_TESTING=OFF",
                 "-DOPENEXR_BUILD_TOOLS=OFF",
@@ -204,7 +235,7 @@ $ALL_LIBS = [ordered]@{
     "libavif" = {
         Build-Library `
             -SrcDir   "$ROOT\libavif" `
-            -BuildDir "$ROOT\libavif\build" `
+            -BuildDir "$ROOT\libavif\$BUILD_NAME" `
             -Ipo `
             -ConfigArgs @(
                 "-DBUILD_SHARED_LIBS=OFF",
@@ -221,7 +252,7 @@ $ALL_LIBS = [ordered]@{
     "libjxl" = {
         Build-Library `
             -SrcDir   "$ROOT\libjxl" `
-            -BuildDir "$ROOT\libjxl\build" `
+            -BuildDir "$ROOT\libjxl\$BUILD_NAME" `
             -ConfigArgs @(
                 "-DBUILD_SHARED_LIBS=OFF",
                 "-DBUILD_TESTING=OFF",
@@ -240,11 +271,11 @@ $ALL_LIBS = [ordered]@{
     "jxrlib" = {
         Build-Library `
             -SrcDir     "$ROOT\jxrlib" `
-            -BuildDir   "$ROOT\jxrlib\build" `
-            -InstallDir "$ROOT\jxrlib\install" `
+            -BuildDir   "$ROOT\jxrlib\$BUILD_NAME" `
+            -InstallDir "$ROOT\jxrlib\$INSTALL_NAME" `
             -Ipo `
             -ConfigArgs @(
-                "-DCMAKE_INSTALL_PREFIX=$ROOT\jxrlib\install",
+                "-DCMAKE_INSTALL_PREFIX=$ROOT\jxrlib\$INSTALL_NAME",
                 "-DBUILD_SHARED_LIBS=OFF"
             )
     }
@@ -252,11 +283,11 @@ $ALL_LIBS = [ordered]@{
     "libdeflate" = {
         Build-Library `
             -SrcDir     "$ROOT\libdeflate" `
-            -BuildDir   "$ROOT\libdeflate\build" `
-            -InstallDir "$ROOT\libdeflate\install" `
+            -BuildDir   "$ROOT\libdeflate\$BUILD_NAME" `
+            -InstallDir "$ROOT\libdeflate\$INSTALL_NAME" `
             -Ipo `
             -ConfigArgs @(
-                "-DCMAKE_INSTALL_PREFIX=$ROOT\libdeflate\install",
+                "-DCMAKE_INSTALL_PREFIX=$ROOT\libdeflate\$INSTALL_NAME",
                 # Keep upstream from forcing CMAKE_C_FLAGS_RELEASE to "-O2 -DNDEBUG",
                 # which would drop the /MD CRT selection of the policy baseline.
                 "-DLIBDEFLATE_USER_SET_RELEASE_FLAGS=ON",
@@ -270,11 +301,11 @@ $ALL_LIBS = [ordered]@{
     "zstd" = {
         Build-Library `
             -SrcDir     "$ROOT\zstd\build\cmake" `
-            -BuildDir   "$ROOT\zstd\build-msvc" `
-            -InstallDir "$ROOT\zstd\install" `
+            -BuildDir   "$ROOT\zstd\$(Get-IsaFolderName -BaseName "build-msvc" -Isa $Isa)" `
+            -InstallDir "$ROOT\zstd\$INSTALL_NAME" `
             -Ipo `
             -ConfigArgs @(
-                "-DCMAKE_INSTALL_PREFIX=$ROOT\zstd\install",
+                "-DCMAKE_INSTALL_PREFIX=$ROOT\zstd\$INSTALL_NAME",
                 "-DZSTD_BUILD_STATIC=OFF",
                 "-DZSTD_BUILD_SHARED=ON",
                 "-DZSTD_BUILD_PROGRAMS=OFF",
@@ -294,7 +325,9 @@ $ALL_LIBS = [ordered]@{
         Write-Info "Using $vcvars"
 
         $librawDir = "$ROOT\LibRaw"
-        $destDir = "$librawDir\buildfiles\release-x86_64"
+        # nmake builds in-tree (obj\, lib\, bin\), so every run starts with a
+        # clean and only the per-ISA copy below keeps the results apart.
+        $destDir = "$librawDir\buildfiles\$(Get-IsaFolderName -BaseName "release-x86_64" -Isa $Isa)"
 
         # Run nmake inside cmd with vcvarsall.bat environment loaded
         Write-Info "Cleaning LibRaw..."
@@ -303,16 +336,17 @@ $ALL_LIBS = [ordered]@{
             throw "LibRaw clean failed (exit code $LASTEXITCODE)"
         }
 
-        Write-Info "Building LibRaw with AVX2, LTCG, OpenMP and hardening flags"
+        Write-Info "Building LibRaw with $Isa, LTCG, OpenMP and hardening flags"
         $policy = Get-MsvcPolicy
-        $librawCopt = "$($policy.release_baseline) /GL /openmp $($policy.compile)"
+        $librawCopt = "$($policy.release_baseline) /GL /openmp $(Get-MsvcPolicyCompileFlags $Isa)"
         $librawLdflags = "/LTCG $($policy.link)"
         cmd.exe /c "call `"$vcvars`" x64 && cd /d `"$librawDir`" && nmake /f Makefile.msvc COPT_OPT=`"$librawCopt`" CFLAGS=`"-DUSE_OPENMP`" LDFLAGS=`"$librawLdflags`""
         if ($LASTEXITCODE -ne 0) {
             throw "LibRaw build failed (exit code $LASTEXITCODE)"
         }
 
-        # Copy the outputs to the expected buildfiles/release-x86_64 directory
+        # Copy the outputs to the buildfiles/release-x86_64<suffix> directory
+        # that kimg_raw and qimgvshellex link against
         Write-Info "Deploying LibRaw binaries..."
         if (-not (Test-Path $destDir)) {
             New-Item -ItemType Directory -Path $destDir -Force | Out-Null
@@ -340,6 +374,7 @@ $n       = 0
 Write-Host ""
 Write-Host "  qimgv format libraries rebuild" -ForegroundColor White
 Write-Host "  Root : $ROOT"         -ForegroundColor DarkGray
+Write-Host "  ISA  : $Isa (install: $INSTALL_NAME, build: $BUILD_NAME)" -ForegroundColor DarkGray
 Write-Host "  Libs : $($Libraries -join ', ')" -ForegroundColor DarkGray
 Write-Host "  Mode : $(if ($FullClean) { 'Full clean' } else { 'Cache-only clean' })" -ForegroundColor DarkGray
 

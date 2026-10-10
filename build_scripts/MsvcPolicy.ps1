@@ -16,9 +16,19 @@
 
     /MD stays in the Release baseline: projects whose cmake_minimum_required
     predates CMP0091 do not get a CRT selection from CMAKE_MSVC_RUNTIME_LIBRARY.
+
+    The instruction set is a parameter (-Isa AVX2|SSE2). Each ISA has its own
+    /arch flag and its own folder suffix (see the "isa" map in the policy
+    file), so AVX2 and SSE2 dependencies never share an install or build
+    folder. Use Get-IsaFolderName for every ISA-specific folder name; the
+    suffixes match QIMGV_DEPS_SUFFIX in cmake/QimgvMsvcPolicy.cmake.
 #>
 
 $MSVC_POLICY_FILE = Join-Path $PSScriptRoot "msvc-release-policy.json"
+
+# The ISA whose binaries the shared Qt SDK and the plain release/ folder hold.
+# Scripts only deploy into the Qt SDK for this ISA.
+$MSVC_DEFAULT_ISA = "AVX2"
 
 # CMake's own MSVC defaults, which are replaced when CMAKE_<LANG>_FLAGS and
 # CMAKE_<TYPE>_LINKER_FLAGS are given on the command line.
@@ -36,18 +46,61 @@ function Get-MsvcPolicy {
             throw "MSVC policy file $MSVC_POLICY_FILE is missing '$key'"
         }
     }
+    if (-not $policy.isa) {
+        throw "MSVC policy file $MSVC_POLICY_FILE is missing 'isa'"
+    }
     return $policy
 }
 
+function Get-MsvcIsaPolicy {
+    param([Parameter(Mandatory)] [string] $Isa)
+
+    $isaPolicy = (Get-MsvcPolicy).isa.$Isa
+    if (-not $isaPolicy) {
+        throw "MSVC policy file $MSVC_POLICY_FILE has no 'isa' entry for '$Isa'"
+    }
+    if (-not $isaPolicy.arch) {
+        throw "MSVC policy file $MSVC_POLICY_FILE is missing 'isa.$Isa.arch'"
+    }
+    # An empty suffix is valid (the default ISA keeps the plain folder names).
+    if ($null -eq $isaPolicy.deps_suffix) {
+        throw "MSVC policy file $MSVC_POLICY_FILE is missing 'isa.$Isa.deps_suffix'"
+    }
+    return $isaPolicy
+}
+
+# ISA flag followed by the hardening flags, in the order the AVX2 build used
+# before the ISA became a parameter.
+function Get-MsvcPolicyCompileFlags {
+    param([Parameter(Mandatory)] [string] $Isa)
+
+    return "$((Get-MsvcIsaPolicy $Isa).arch) $((Get-MsvcPolicy).compile)"
+}
+
+# Folder name for an ISA-specific install, build or output folder:
+# "install" -> "install" (AVX2) / "install-sse2" (SSE2).
+function Get-IsaFolderName {
+    param(
+        [Parameter(Mandatory)] [string] $BaseName,
+        [Parameter(Mandatory)] [string] $Isa
+    )
+
+    return "$BaseName$((Get-MsvcIsaPolicy $Isa).deps_suffix)"
+}
+
 function Get-MsvcPolicyCMakeArgs {
-    param([switch] $Ipo)
+    param(
+        [Parameter(Mandatory)] [string] $Isa,
+        [switch] $Ipo
+    )
 
     $policy = Get-MsvcPolicy
+    $compileFlags = Get-MsvcPolicyCompileFlags $Isa
     $linkerFlags = "$MSVC_CMAKE_DEFAULT_LINKER_FLAGS $($policy.link)"
 
     $cmakeArgs = @(
-        "-DCMAKE_C_FLAGS=$MSVC_CMAKE_DEFAULT_C_FLAGS $($policy.compile)",
-        "-DCMAKE_CXX_FLAGS=$MSVC_CMAKE_DEFAULT_CXX_FLAGS $($policy.compile)",
+        "-DCMAKE_C_FLAGS=$MSVC_CMAKE_DEFAULT_C_FLAGS $compileFlags",
+        "-DCMAKE_CXX_FLAGS=$MSVC_CMAKE_DEFAULT_CXX_FLAGS $compileFlags",
         "-DCMAKE_C_FLAGS_RELEASE=$($policy.release_baseline)",
         "-DCMAKE_CXX_FLAGS_RELEASE=$($policy.release_baseline)",
         "-DCMAKE_EXE_LINKER_FLAGS=$linkerFlags",

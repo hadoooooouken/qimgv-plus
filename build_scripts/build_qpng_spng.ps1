@@ -7,7 +7,8 @@
       1. libspng (static, SIMD unfilter intrinsics via ENABLE_OPT)
 
     Reuses the zlib-ng install already produced by build_qtiff_jpeg.ps1
-    (formats/zlib-ng/install) -- it is not rebuilt here.
+    (formats/zlib-ng/install, or install-sse2 for -Isa SSE2) -- it is not
+    rebuilt here.
 
     The resulting spng_static.lib is picked up automatically by
     3rdparty/kimageformats/CMakeLists.txt on the next qimgv-plus configure,
@@ -21,26 +22,22 @@
     Remove the entire libspng build folder before building (otherwise only
     CMakeCache.txt is cleared).
 
+.PARAMETER Isa
+    Instruction set baseline: AVX2 (default) or SSE2. SSE2 uses the
+    build_msvc-sse2 / install-sse2 folders and the zlib-ng install-sse2 tree.
+
 .EXAMPLE
     .\build_qpng_spng.ps1
     .\build_qpng_spng.ps1 -FullClean
+    .\build_qpng_spng.ps1 -Isa SSE2
 #>
 param(
-    [switch] $FullClean
+    [switch] $FullClean,
+    [ValidateSet("AVX2", "SSE2")]
+    [string] $Isa = "AVX2"
 )
 
 $ErrorActionPreference = "Stop"
-
-# ---------------------------------------------------------------------------
-# Paths
-# ---------------------------------------------------------------------------
-$ROOT        = (Resolve-Path "$PSScriptRoot\..").Path
-$FORMATS_DIR = Join-Path $ROOT "formats"
-
-$ZLIB_INSTALL   = Join-Path $FORMATS_DIR "zlib-ng\install"
-$SPNG_SRC_DIR   = Join-Path $FORMATS_DIR "libspng"
-$SPNG_BUILD_DIR = Join-Path $SPNG_SRC_DIR "build_msvc"
-$SPNG_INSTALL   = Join-Path $SPNG_SRC_DIR "install"
 
 # ---------------------------------------------------------------------------
 # Common compiler / linker policy (single source: msvc-release-policy.json)
@@ -48,8 +45,20 @@ $SPNG_INSTALL   = Join-Path $SPNG_SRC_DIR "install"
 . (Join-Path $PSScriptRoot "MsvcPolicy.ps1")
 
 function Get-HardeningArgs {
-    return Get-MsvcPolicyCMakeArgs
+    return Get-MsvcPolicyCMakeArgs -Isa $Isa
 }
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+$ROOT        = (Resolve-Path "$PSScriptRoot\..").Path
+$FORMATS_DIR = Join-Path $ROOT "formats"
+
+$INSTALL_NAME   = Get-IsaFolderName -BaseName "install" -Isa $Isa
+$ZLIB_INSTALL   = Join-Path $FORMATS_DIR "zlib-ng\$INSTALL_NAME"
+$SPNG_SRC_DIR   = Join-Path $FORMATS_DIR "libspng"
+$SPNG_BUILD_DIR = Join-Path $SPNG_SRC_DIR (Get-IsaFolderName -BaseName "build_msvc" -Isa $Isa)
+$SPNG_INSTALL   = Join-Path $SPNG_SRC_DIR $INSTALL_NAME
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -97,7 +106,7 @@ function Invoke-CMake {
 # ---------------------------------------------------------------------------
 $zlibLib = Join-Path $ZLIB_INSTALL "lib\zlib.lib"
 if (-not (Test-Path $zlibLib)) {
-    throw "zlib-ng import library not found at: $zlibLib -- run build_qtiff_jpeg.ps1 first"
+    throw "zlib-ng import library not found at: $zlibLib -- run build_qtiff_jpeg.ps1 -Isa $Isa first"
 }
 
 # ---------------------------------------------------------------------------
@@ -144,6 +153,7 @@ $sw = [System.Diagnostics.Stopwatch]::StartNew()
 Write-Host ""
 Write-Host "  kimg_png (libspng) build" -ForegroundColor White
 Write-Host "  Root : $ROOT"            -ForegroundColor DarkGray
+Write-Host "  ISA  : $Isa"             -ForegroundColor DarkGray
 Write-Host "  zlib : $ZLIB_INSTALL"    -ForegroundColor DarkGray
 Write-Host ""
 

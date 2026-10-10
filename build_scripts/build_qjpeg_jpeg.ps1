@@ -32,16 +32,35 @@
 .PARAMETER SkipDeploy
     Skip deploying qjpeg.dll (and the shared jpeg*.dll) into the Qt SDK.
 
+.PARAMETER Isa
+    Instruction set baseline: AVX2 (default) or SSE2. SSE2 uses the
+    libjpeg-turbo install-sse2 tree and the qjpeg_jpeg build-sse2 /
+    install-sse2 folders. The shared Qt SDK only ever receives the AVX2
+    binaries: with -Isa SSE2 the Qt SDK deploy is skipped and only
+    release-sse2 is updated.
+
 .EXAMPLE
     .\build_qjpeg_jpeg.ps1
     .\build_qjpeg_jpeg.ps1 -FullClean
+    .\build_qjpeg_jpeg.ps1 -Isa SSE2
 #>
 param(
     [switch] $FullClean,
-    [switch] $SkipDeploy
+    [switch] $SkipDeploy,
+    [ValidateSet("AVX2", "SSE2")]
+    [string] $Isa = "AVX2"
 )
 
 $ErrorActionPreference = "Stop"
+
+# ---------------------------------------------------------------------------
+# Common compiler / linker policy (single source: msvc-release-policy.json)
+# ---------------------------------------------------------------------------
+. (Join-Path $PSScriptRoot "MsvcPolicy.ps1")
+
+function Get-HardeningArgs {
+    return Get-MsvcPolicyCMakeArgs -Isa $Isa -Ipo
+}
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -52,20 +71,17 @@ $SCRIPT_DIR  = $PSScriptRoot
 
 $QT_DIR      = if ($env:QT_DIR) { $env:QT_DIR } else { "E:\Qt\6.12.0\msvc2022_64" }
 $QT_SDK_IMAGEFORMATS = Join-Path $QT_DIR "plugins\imageformats"
+# The shared Qt SDK holds the default-ISA plugins that development runs use.
+$DEPLOY_TO_QT_SDK = ($Isa -eq $MSVC_DEFAULT_ISA)
 
-$JPEG_INSTALL    = Join-Path $FORMATS_DIR "libjpeg-turbo\install"
+# ISA-specific folder names (see Get-IsaFolderName in MsvcPolicy.ps1)
+$INSTALL_NAME    = Get-IsaFolderName -BaseName "install" -Isa $Isa
+$RELEASE_DIR     = Join-Path $ROOT (Get-IsaFolderName -BaseName "release" -Isa $Isa)
+
+$JPEG_INSTALL    = Join-Path $FORMATS_DIR "libjpeg-turbo\$INSTALL_NAME"
 $JPEG_BIN_DIR    = Join-Path $JPEG_INSTALL "bin"
-$QJPEG_BUILD_DIR = Join-Path $SCRIPT_DIR "qjpeg_jpeg\build"
-$QJPEG_INSTALL   = Join-Path $SCRIPT_DIR "qjpeg_jpeg\install"
-
-# ---------------------------------------------------------------------------
-# Common compiler / linker policy (single source: msvc-release-policy.json)
-# ---------------------------------------------------------------------------
-. (Join-Path $PSScriptRoot "MsvcPolicy.ps1")
-
-function Get-HardeningArgs {
-    return Get-MsvcPolicyCMakeArgs -Ipo
-}
+$QJPEG_BUILD_DIR = Join-Path $SCRIPT_DIR "qjpeg_jpeg\$(Get-IsaFolderName -BaseName "build" -Isa $Isa)"
+$QJPEG_INSTALL   = Join-Path $SCRIPT_DIR "qjpeg_jpeg\$INSTALL_NAME"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -128,11 +144,11 @@ function Get-JpegDllPath {
 $jpegImportLib = Join-Path $JPEG_INSTALL "lib\jpeg.lib"
 if (-not (Test-Path $jpegImportLib)) {
     throw "libjpeg-turbo import library not found at: $jpegImportLib -- " +
-          "run '.\build_qtiff_jpeg.ps1 -Steps libjpeg-turbo' first"
+          "run '.\build_qtiff_jpeg.ps1 -Steps libjpeg-turbo -Isa $Isa' first"
 }
 if (-not (Get-JpegDllPath)) {
     throw "No shared jpeg*.dll found in $JPEG_BIN_DIR -- " +
-          "run '.\build_qtiff_jpeg.ps1 -Steps libjpeg-turbo' first"
+          "run '.\build_qtiff_jpeg.ps1 -Steps libjpeg-turbo -Isa $Isa' first"
 }
 
 # ---------------------------------------------------------------------------
@@ -181,17 +197,21 @@ function Deploy-Qjpeg {
         return
     }
 
-    # Back up original only if not already backed up
-    if ((Test-Path $stockDll) -and -not (Test-Path $backupDll)) {
-        Copy-Item $stockDll $backupDll -Force
-        Write-Info "Backed up stock qjpeg.dll -> qjpeg.dll.stock"
+    if ($DEPLOY_TO_QT_SDK) {
+        # Back up original only if not already backed up
+        if ((Test-Path $stockDll) -and -not (Test-Path $backupDll)) {
+            Copy-Item $stockDll $backupDll -Force
+            Write-Info "Backed up stock qjpeg.dll -> qjpeg.dll.stock"
+        }
+
+        Copy-Item $customDll $stockDll -Force
+        Write-OK "Deployed custom qjpeg.dll to Qt SDK: $stockDll"
+    } else {
+        Write-Info "Qt SDK deploy skipped: the Qt SDK keeps the $MSVC_DEFAULT_ISA qjpeg.dll"
     }
 
-    Copy-Item $customDll $stockDll -Force
-    Write-OK "Deployed custom qjpeg.dll to Qt SDK: $stockDll"
-
     # Also copy to project release directory if it exists
-    $releaseDll = Join-Path $ROOT "release\imageformats\qjpeg.dll"
+    $releaseDll = Join-Path $RELEASE_DIR "imageformats\qjpeg.dll"
     $releaseDir = Split-Path $releaseDll -Parent
     if (Test-Path $releaseDir) {
         Copy-Item $customDll $releaseDll -Force
@@ -206,11 +226,13 @@ function Deploy-Qjpeg {
     if ($jpegDll) {
         $jpegDllName = Split-Path $jpegDll -Leaf
 
-        $qtBinDll = Join-Path $QT_DIR "bin\$jpegDllName"
-        Copy-Item $jpegDll $qtBinDll -Force
-        Write-OK "Deployed $jpegDllName to Qt SDK bin: $qtBinDll"
+        if ($DEPLOY_TO_QT_SDK) {
+            $qtBinDll = Join-Path $QT_DIR "bin\$jpegDllName"
+            Copy-Item $jpegDll $qtBinDll -Force
+            Write-OK "Deployed $jpegDllName to Qt SDK bin: $qtBinDll"
+        }
 
-        $releaseJpegDll = Join-Path $ROOT "release\$jpegDllName"
+        $releaseJpegDll = Join-Path $RELEASE_DIR $jpegDllName
         if (Test-Path (Split-Path $releaseJpegDll -Parent)) {
             Copy-Item $jpegDll $releaseJpegDll -Force
             Write-OK "Deployed $jpegDllName to release: $releaseJpegDll"
@@ -229,6 +251,7 @@ $sw = [System.Diagnostics.Stopwatch]::StartNew()
 Write-Host ""
 Write-Host "  qjpeg.dll (shared libjpeg-turbo) build" -ForegroundColor White
 Write-Host "  Root : $ROOT"                           -ForegroundColor DarkGray
+Write-Host "  ISA  : $Isa"                            -ForegroundColor DarkGray
 Write-Host "  jpeg : $JPEG_INSTALL"                   -ForegroundColor DarkGray
 Write-Host ""
 

@@ -26,7 +26,8 @@
     and iterator debug level: the Debug preset links exiv2d.lib.
 
     Reuses the zlib-ng install already produced by build_qtiff_jpeg.ps1
-    (formats/zlib-ng/install) -- it is not rebuilt here.
+    (formats/zlib-ng/install, or install-sse2 for -Isa SSE2) -- it is not
+    rebuilt here.
 
 .PARAMETER Configs
     CMake configurations to build and install. Default = Release, Debug.
@@ -35,29 +36,25 @@
     Remove the entire exiv2 build folder before building (otherwise only
     CMakeCache.txt is cleared).
 
+.PARAMETER Isa
+    Instruction set baseline: AVX2 (default) or SSE2. SSE2 uses the
+    build_msvc-sse2 / install-sse2 folders and the zlib-ng install-sse2 tree.
+
 .EXAMPLE
     .\build_exiv2.ps1
     .\build_exiv2.ps1 -Configs Release
     .\build_exiv2.ps1 -FullClean
+    .\build_exiv2.ps1 -Isa SSE2
 #>
 param(
     [ValidateSet("Release", "Debug")]
     [string[]] $Configs = @("Release", "Debug"),
-    [switch]   $FullClean
+    [switch]   $FullClean,
+    [ValidateSet("AVX2", "SSE2")]
+    [string]   $Isa = "AVX2"
 )
 
 $ErrorActionPreference = "Stop"
-
-# ---------------------------------------------------------------------------
-# Paths
-# ---------------------------------------------------------------------------
-$ROOT        = (Resolve-Path "$PSScriptRoot\..").Path
-$FORMATS_DIR = Join-Path $ROOT "formats"
-
-$ZLIB_INSTALL    = Join-Path $FORMATS_DIR "zlib-ng\install"
-$EXIV2_SRC_DIR   = Join-Path $FORMATS_DIR "exiv2"
-$EXIV2_BUILD_DIR = Join-Path $EXIV2_SRC_DIR "build_msvc"
-$EXIV2_INSTALL   = Join-Path $EXIV2_SRC_DIR "install"
 
 # ---------------------------------------------------------------------------
 # Common compiler / linker policy (single source: msvc-release-policy.json)
@@ -65,8 +62,20 @@ $EXIV2_INSTALL   = Join-Path $EXIV2_SRC_DIR "install"
 . (Join-Path $PSScriptRoot "MsvcPolicy.ps1")
 
 function Get-HardeningArgs {
-    return Get-MsvcPolicyCMakeArgs -Ipo
+    return Get-MsvcPolicyCMakeArgs -Isa $Isa -Ipo
 }
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+$ROOT        = (Resolve-Path "$PSScriptRoot\..").Path
+$FORMATS_DIR = Join-Path $ROOT "formats"
+
+$INSTALL_NAME    = Get-IsaFolderName -BaseName "install" -Isa $Isa
+$ZLIB_INSTALL    = Join-Path $FORMATS_DIR "zlib-ng\$INSTALL_NAME"
+$EXIV2_SRC_DIR   = Join-Path $FORMATS_DIR "exiv2"
+$EXIV2_BUILD_DIR = Join-Path $EXIV2_SRC_DIR (Get-IsaFolderName -BaseName "build_msvc" -Isa $Isa)
+$EXIV2_INSTALL   = Join-Path $EXIV2_SRC_DIR $INSTALL_NAME
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -116,7 +125,7 @@ function Invoke-CMake {
 # qimgv-plus target -- see the EXISTS check in qimgv/CMakeLists.txt).
 $zlibLib = Join-Path $ZLIB_INSTALL "lib\zlib.lib"
 if (-not (Test-Path $zlibLib)) {
-    throw "zlib-ng import library not found at: $zlibLib -- run build_qtiff_jpeg.ps1 first"
+    throw "zlib-ng import library not found at: $zlibLib -- run build_qtiff_jpeg.ps1 -Isa $Isa first"
 }
 
 # formats/exiv2 used to hold the official prebuilt bundle; the source tree
@@ -183,6 +192,7 @@ $sw = [System.Diagnostics.Stopwatch]::StartNew()
 Write-Host ""
 Write-Host "  exiv2 (static) build"              -ForegroundColor White
 Write-Host "  Root    : $ROOT"                   -ForegroundColor DarkGray
+Write-Host "  ISA     : $Isa"                    -ForegroundColor DarkGray
 Write-Host "  zlib    : $ZLIB_INSTALL"           -ForegroundColor DarkGray
 Write-Host "  Configs : $($Configs -join ', ')"  -ForegroundColor DarkGray
 Write-Host ""

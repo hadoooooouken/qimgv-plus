@@ -1,12 +1,23 @@
 # deploy-plugins.ps1
 # Copies built kimageformats plugins to release/imageformats/
 # Run from project root (e:\qimgv)
+# -Isa SSE2 deploys the qimgv-x64-release-sse2 build into release-sse2/ and
+# takes the dependency DLLs from the install-sse2 trees.
+
+param(
+    [ValidateSet("AVX2", "SSE2")]
+    [string] $Isa = "AVX2"
+)
 
 $ErrorActionPreference = "Stop"
 
-$projectRoot = Split-Path $PSScriptRoot -Parent
-$buildDir    = Join-Path $projectRoot "out\build\qimgv-x64-release\imageformats"
-$releaseDir  = Join-Path $projectRoot "release\imageformats"
+. (Join-Path $PSScriptRoot "MsvcPolicy.ps1")
+
+$installName    = Get-IsaFolderName -BaseName "install" -Isa $Isa
+$projectRoot    = Split-Path $PSScriptRoot -Parent
+$buildDir       = Join-Path $projectRoot "out\build\$(Get-IsaFolderName -BaseName "qimgv-x64-release" -Isa $Isa)\imageformats"
+$mainReleaseDir = Join-Path $projectRoot (Get-IsaFolderName -BaseName "release" -Isa $Isa)
+$releaseDir     = Join-Path $mainReleaseDir "imageformats"
 
 if (-not (Test-Path $buildDir)) {
     Write-Host "Build directory not found: $buildDir" -ForegroundColor Red
@@ -44,28 +55,28 @@ if ($copied -eq 0) {
     Write-Host "Deployed $copied / $($dlls.Count) plugins." -ForegroundColor Green
 }
 
-# Copy dependency DLLs to main release/ directory
-$mainReleaseDir = Join-Path $projectRoot "release"
+# Copy dependency DLLs to the main release directory
 if (-not (Test-Path $mainReleaseDir)) {
     New-Item -ItemType Directory -Path $mainReleaseDir -Force | Out-Null
 }
 
 $depDlls = @(
-    "formats\zlib-ng\install\bin\zlib1.dll"
-    "formats\libdeflate\install\bin\deflate.dll"
-    "formats\zstd\install\bin\zstd.dll"
+    "formats\zlib-ng\$installName\bin\zlib1.dll"
+    "formats\libdeflate\$installName\bin\deflate.dll"
+    "formats\zstd\$installName\bin\zstd.dll"
 )
 
 # libjpeg-turbo's shared DLL is versioned (e.g. jpeg62.dll) by SO_MAJOR_VERSION,
 # so resolve it by pattern instead of hardcoding the name (unlike the fixed-name
 # DLLs above). Shared by qtiff.dll (via libtiff) and qjpeg.dll.
-$jpegDll = Get-ChildItem -Path (Join-Path $projectRoot "formats\libjpeg-turbo\install\bin") `
+$jpegBinDir = "formats\libjpeg-turbo\$installName\bin"
+$jpegDll = Get-ChildItem -Path (Join-Path $projectRoot $jpegBinDir) `
     -Filter "jpeg*.dll" -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -notmatch "^turbojpeg" } | Select-Object -First 1
 if ($jpegDll) {
-    $depDlls += "formats\libjpeg-turbo\install\bin\$($jpegDll.Name)"
+    $depDlls += "$jpegBinDir\$($jpegDll.Name)"
 } else {
-    Write-Warning "Shared libjpeg-turbo DLL not found under formats\libjpeg-turbo\install\bin"
+    Write-Warning "Shared libjpeg-turbo DLL not found under $jpegBinDir"
 }
 
 Write-Host "Deploying EXR dependency DLLs..." -ForegroundColor Cyan

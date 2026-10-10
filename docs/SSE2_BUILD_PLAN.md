@@ -33,7 +33,7 @@ build working. Tick the status box when a stage is merged.
 | First-party targets | `cmake/QimgvMsvcPolicy.cmake:25` (`QIMGV_MSVC_ISA_OPTIONS`) | `/arch:AVX2` |
 | ncnn base TUs | `CMakeLists.txt:84` (application ISA placed before ncnn's own `/arch:SSE2`) | AVX2 macros, runtime dispatch |
 | glslang | `CMakeLists.txt:86-90` via `qimgv_apply_msvc_profile` | `/arch:AVX2` |
-| External dependencies | `build_scripts/msvc-release-policy.json` (`compile`) | `/arch:AVX2` |
+| External dependencies | `build_scripts/msvc-release-policy.json` (`isa.<ISA>.arch`, Stage 2) | `/arch:AVX2` (default `-Isa`) |
 | Dependency install trees | `formats/<lib>/install` (hardcoded in CMake files, see Stage 1) | single tree |
 | Output folder | `qimgv/CMakeLists.txt:135`, `shellex/CMakeLists.txt:39` | `../release` |
 | Installer CPU check | `qimgv/qimgv-plus.iss`, `InitializeSetup` | aborts without AVX2 |
@@ -241,8 +241,32 @@ SSE2): `install<suffix>`, `build<suffix>` (libavif, libjxl), `release-x86_64<suf
 `ffmpeg-build-msvc<suffix>`, and `build_scripts/{qtiff_jpeg,qjpeg_jpeg}/install<suffix>`. The
 scripts must produce exactly these names.
 
-Done when: `rebuild-all.ps1` without `-Isa` behaves exactly as before, and `-Isa SSE2` fills only
-`install-sse2` / `build-sse2` folders.
+Implementation notes:
+
+- Each `isa` entry in the policy JSON is an object, `{ "arch": "/arch:SSE2", "deps_suffix": "-sse2" }`,
+  so `build_ffmpeg_msvc.py` and the PowerShell scripts share both the flag and the folder
+  suffix. `deps_suffix` must stay equal to `QIMGV_DEPS_SUFFIX` in `cmake/QimgvMsvcPolicy.cmake`.
+  The `arch` flag is placed before `compile`, so the AVX2 command lines are unchanged.
+- `MsvcPolicy.ps1` exposes `Get-MsvcPolicyCMakeArgs -Isa`, `Get-MsvcPolicyCompileFlags -Isa`
+  (LibRaw nmake) and `Get-IsaFolderName -BaseName -Isa`. Intermediate build folders get the
+  suffix too (`build_msvc-sse2`, `build-msvc-sse2`, `qtiff_jpeg/build-sse2`), so both ISAs can
+  stay configured side by side.
+- `build_qtiff_jpeg.ps1` and `build_qjpeg_jpeg.ps1` deploy into the shared Qt SDK only for the
+  default ISA (`$MSVC_DEFAULT_ISA`). With `-Isa SSE2` they update only `release-sse2`.
+- openjpeg is now the `openjpeg` step of `rebuild-all.ps1`, part of the default list. It uses
+  the hand-built configuration (static, no codec/JPIP/tests/docs, IPO) plus the shared policy.
+  The previous hand-built AVX2 `install` lacked the hardening flags; rebuild it once.
+- LibRaw's nmake build is in-tree. Each run cleans first, and only the copy into
+  `buildfiles/release-x86_64<suffix>` keeps the ISAs apart. FFmpeg is also built in-tree
+  (`make clean` first), so its prefix is the only per-ISA output.
+- libavif fetches its LOCAL codecs (dav1d, aom, libyuv) into the build folder, so the first
+  `-Isa SSE2` run downloads them again into `build-sse2`.
+- `deploy-plugins.ps1 -Isa SSE2` reads `out/build/qimgv-x64-release-sse2` and writes
+  `release-sse2`.
+- `.gitignore` covers `release-sse2/`, `build-sse2/` and `install-sse2/`.
+
+Done when: `rebuild-all.ps1` without `-Isa` behaves exactly as before (plus the new openjpeg
+step), and `-Isa SSE2` fills only `install-sse2` / `build-sse2` folders.
 
 Commit: `Add ISA parameter to dependency build scripts`
 

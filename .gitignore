@@ -19,6 +19,9 @@ bkp/
 *.zip
 *.7z
 release/
+release-sse2/
+build-sse2/
+install-sse2/
 qimgv/Output/
 Output/
 !*.iss

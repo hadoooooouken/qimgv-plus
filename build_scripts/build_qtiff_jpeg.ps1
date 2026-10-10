@@ -31,18 +31,38 @@
 .PARAMETER SkipDeploy
     Skip deploying qtiff.dll into the Qt SDK directory.
 
+.PARAMETER Isa
+    Instruction set baseline: AVX2 (default) or SSE2. Every build and
+    install folder gets the ISA suffix (install-sse2, build_msvc-sse2, ...).
+    libjpeg-turbo and zlib-ng keep their own runtime-dispatched SIMD paths
+    for both ISAs. The shared Qt SDK only ever receives the AVX2 binaries:
+    with -Isa SSE2 the Qt SDK deploy is skipped and only release-sse2 is
+    updated.
+
 .EXAMPLE
     .\build_qtiff_jpeg.ps1
     .\build_qtiff_jpeg.ps1 -Steps qtiff
     .\build_qtiff_jpeg.ps1 -FullClean
+    .\build_qtiff_jpeg.ps1 -Isa SSE2
 #>
 param(
     [string[]] $Steps = @("zlib", "libjpeg-turbo", "libtiff", "qtiff"),
     [switch]   $FullClean,
-    [switch]   $SkipDeploy
+    [switch]   $SkipDeploy,
+    [ValidateSet("AVX2", "SSE2")]
+    [string]   $Isa = "AVX2"
 )
 
 $ErrorActionPreference = "Stop"
+
+# ---------------------------------------------------------------------------
+# Common compiler / linker policy (single source: msvc-release-policy.json)
+# ---------------------------------------------------------------------------
+. (Join-Path $PSScriptRoot "MsvcPolicy.ps1")
+
+function Get-HardeningArgs {
+    return Get-MsvcPolicyCMakeArgs -Isa $Isa -Ipo
+}
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -53,27 +73,24 @@ $SCRIPT_DIR  = $PSScriptRoot
 
 $QT_DIR      = if ($env:QT_DIR) { $env:QT_DIR } else { "E:\Qt\6.12.0\msvc2022_64" }
 $QT_SDK_IMAGEFORMATS = Join-Path $QT_DIR "plugins\imageformats"
+# The shared Qt SDK holds the default-ISA plugins that development runs use.
+$DEPLOY_TO_QT_SDK = ($Isa -eq $MSVC_DEFAULT_ISA)
 
 $NASM_EXE    = Join-Path $FORMATS_DIR "nasm\nasm.exe"
 
+# ISA-specific folder names (see Get-IsaFolderName in MsvcPolicy.ps1)
+$INSTALL_NAME     = Get-IsaFolderName -BaseName "install" -Isa $Isa
+$MSVC_BUILD_NAME  = Get-IsaFolderName -BaseName "build_msvc" -Isa $Isa
+$RELEASE_DIR      = Join-Path $ROOT (Get-IsaFolderName -BaseName "release" -Isa $Isa)
+
 # Install prefixes for each dependency
 $ZLIB_SRC_DIR     = Join-Path $FORMATS_DIR "zlib-ng"
-$ZLIB_INSTALL     = Join-Path $FORMATS_DIR "zlib-ng\install"
-$ZLIB_NG_DIR      = Join-Path $FORMATS_DIR "zlib-ng"
-$JPEG_INSTALL     = Join-Path $FORMATS_DIR "libjpeg-turbo\install"
+$ZLIB_INSTALL     = Join-Path $FORMATS_DIR "zlib-ng\$INSTALL_NAME"
+$JPEG_INSTALL     = Join-Path $FORMATS_DIR "libjpeg-turbo\$INSTALL_NAME"
 $JPEG_BIN_DIR     = Join-Path $JPEG_INSTALL "bin"
-$TIFF_INSTALL     = Join-Path $FORMATS_DIR "libtiff\install"
-$QTIFF_BUILD_DIR  = Join-Path $SCRIPT_DIR "qtiff_jpeg\build"
-$QTIFF_INSTALL    = Join-Path $SCRIPT_DIR "qtiff_jpeg\install"
-
-# ---------------------------------------------------------------------------
-# Common compiler / linker policy (single source: msvc-release-policy.json)
-# ---------------------------------------------------------------------------
-. (Join-Path $PSScriptRoot "MsvcPolicy.ps1")
-
-function Get-HardeningArgs {
-    return Get-MsvcPolicyCMakeArgs -Ipo
-}
+$TIFF_INSTALL     = Join-Path $FORMATS_DIR "libtiff\$INSTALL_NAME"
+$QTIFF_BUILD_DIR  = Join-Path $SCRIPT_DIR "qtiff_jpeg\$(Get-IsaFolderName -BaseName "build" -Isa $Isa)"
+$QTIFF_INSTALL    = Join-Path $SCRIPT_DIR "qtiff_jpeg\$INSTALL_NAME"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -136,7 +153,7 @@ function Get-JpegDllPath {
 # Step 1: zlib (static)
 # ---------------------------------------------------------------------------
 function Build-Zlib {
-    $buildDir = Join-Path $ZLIB_SRC_DIR "build_msvc"
+    $buildDir = Join-Path $ZLIB_SRC_DIR $MSVC_BUILD_NAME
     Clear-BuildDir $buildDir
 
     Write-Info "Configuring zlib-ng (compat)..."
@@ -171,7 +188,7 @@ function Build-Zlib {
 # double build time for an artifact that's never consumed.
 function Build-LibjpegTurbo {
     $srcDir   = Join-Path $FORMATS_DIR "libjpeg-turbo"
-    $buildDir = Join-Path $srcDir "build_msvc"
+    $buildDir = Join-Path $srcDir $MSVC_BUILD_NAME
 
     if (-not (Test-Path $NASM_EXE)) {
         throw "NASM not found at $NASM_EXE"
@@ -221,7 +238,7 @@ function Build-LibjpegTurbo {
 # CMakeLists.txt for how that DLL is deployed alongside the plugin.
 function Build-Libtiff {
     $srcDir   = Join-Path $FORMATS_DIR "libtiff"
-    $buildDir = Join-Path $srcDir "build_msvc"
+    $buildDir = Join-Path $srcDir $MSVC_BUILD_NAME
 
     # CMAKE_PREFIX_PATH lets libtiff's find_package(ZLIB) and find_package(JPEG) work
     $prefixPath = "$ZLIB_INSTALL;$JPEG_INSTALL"
@@ -304,17 +321,21 @@ function Deploy-Qtiff {
         return
     }
 
-    # Back up original only if not already backed up
-    if ((Test-Path $stockDll) -and -not (Test-Path $backupDll)) {
-        Copy-Item $stockDll $backupDll -Force
-        Write-Info "Backed up stock qtiff.dll -> qtiff.dll.stock"
+    if ($DEPLOY_TO_QT_SDK) {
+        # Back up original only if not already backed up
+        if ((Test-Path $stockDll) -and -not (Test-Path $backupDll)) {
+            Copy-Item $stockDll $backupDll -Force
+            Write-Info "Backed up stock qtiff.dll -> qtiff.dll.stock"
+        }
+
+        Copy-Item $customDll $stockDll -Force
+        Write-OK "Deployed custom qtiff.dll to Qt SDK: $stockDll"
+    } else {
+        Write-Info "Qt SDK deploy skipped: the Qt SDK keeps the $MSVC_DEFAULT_ISA qtiff.dll"
     }
 
-    Copy-Item $customDll $stockDll -Force
-    Write-OK "Deployed custom qtiff.dll to Qt SDK: $stockDll"
-
     # Also copy to project release directory if it exists
-    $releaseDll = Join-Path $ROOT "release\imageformats\qtiff.dll"
+    $releaseDll = Join-Path $RELEASE_DIR "imageformats\qtiff.dll"
     $releaseDir = Split-Path $releaseDll -Parent
     if (Test-Path $releaseDir) {
         Copy-Item $customDll $releaseDll -Force
@@ -344,11 +365,15 @@ function Deploy-JpegRuntime {
     }
     $jpegDllName = Split-Path $jpegDll -Leaf
 
-    $qtBinDll = Join-Path $QT_DIR "bin\$jpegDllName"
-    Copy-Item $jpegDll $qtBinDll -Force
-    Write-OK "Deployed $jpegDllName to Qt SDK bin: $qtBinDll"
+    if ($DEPLOY_TO_QT_SDK) {
+        $qtBinDll = Join-Path $QT_DIR "bin\$jpegDllName"
+        Copy-Item $jpegDll $qtBinDll -Force
+        Write-OK "Deployed $jpegDllName to Qt SDK bin: $qtBinDll"
+    } else {
+        Write-Info "Qt SDK deploy skipped: the Qt SDK keeps the $MSVC_DEFAULT_ISA $jpegDllName"
+    }
 
-    $releaseDll = Join-Path $ROOT "release\$jpegDllName"
+    $releaseDll = Join-Path $RELEASE_DIR $jpegDllName
     $releaseDir = Split-Path $releaseDll -Parent
     if (Test-Path $releaseDir) {
         Copy-Item $jpegDll $releaseDll -Force
@@ -377,6 +402,7 @@ Write-Host ""
 Write-Host "  qtiff.dll JPEG build" -ForegroundColor White
 Write-Host "  Root : $ROOT"         -ForegroundColor DarkGray
 Write-Host "  Steps: $($Steps -join ', ')" -ForegroundColor DarkGray
+Write-Host "  ISA  : $Isa (install: $INSTALL_NAME)" -ForegroundColor DarkGray
 Write-Host "  NASM : $NASM_EXE"    -ForegroundColor DarkGray
 Write-Host ""
 
