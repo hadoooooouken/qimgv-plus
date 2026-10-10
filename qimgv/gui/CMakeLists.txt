@@ -67,6 +67,7 @@ target_sources(qimgv-plus PRIVATE
     viewers/documentwidget.cpp
     viewers/filterpixmapitem.cpp
     viewers/imageviewerv2.cpp
+    viewers/panoramagraphicsitem.cpp
     viewers/viewerwidget.cpp
 
     folderview/foldergridview.cpp

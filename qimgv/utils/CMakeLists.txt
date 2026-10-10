@@ -38,8 +38,3 @@ target_sources(qimgv-plus PRIVATE
     hdrtonemapper.cpp
     hdrtonemapper.h
 )
-
-target_sources(qimgv-plus PRIVATE
-    ../gui/viewers/panoramagraphicsitem.cpp
-    ../gui/viewers/panoramagraphicsitem.h
-)
