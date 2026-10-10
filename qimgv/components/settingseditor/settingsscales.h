@@ -5,8 +5,8 @@
 
 // Ranges of the settings dialog's sliders and spin boxes, the conversions
 // between their units and the stored settings, and the texts shown next to
-// them. The conversions are those of the widget dialog, so both UIs store
-// identical values.
+// them. The conversions are those of the former widget dialog, so existing
+// configurations keep their meaning.
 
 // Range of one slider or spin box, in its own units.
 struct SettingsRange {

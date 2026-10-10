@@ -49,7 +49,7 @@ struct ColorMatrix {
 };
 
 // The one definition of the ColorAdjustments -> ColorMatrix mapping, shared
-// by the CPU path (ImageLib), the OpenGL widget viewer and the QRhi renderer.
+// by the CPU path (ImageLib) and the QRhi renderer.
 // Pure arithmetic, safe on any thread.
 [[nodiscard]] inline ColorMatrix colorAdjustmentMatrix(const ColorAdjustments &adjustments) {
     // Rec.709 luma weights (saturation pivots around luma).

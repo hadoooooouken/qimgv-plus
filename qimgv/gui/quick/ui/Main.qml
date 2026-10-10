@@ -4,7 +4,7 @@ import QtQuick
 import qimgv.bridges
 import qimgv.style
 
-// Main window of the Qt Quick UI (--ui=quick). The application style
+// Main window of the Qt Quick UI. The application style
 // (qimgv.style, based on Basic) is imported directly instead of
 // QtQuick.Controls: the style is selected at compile time, so qmlsc compiles
 // the bindings ahead of time instead of resolving the style at runtime.

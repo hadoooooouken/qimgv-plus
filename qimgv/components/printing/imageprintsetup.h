@@ -10,8 +10,8 @@
 
 #include <memory>
 
-// Printing of one image, shared by the print dialogs of both UIs, so both
-// print and export identical pages.
+// Printing of one image: the print dialog's printing, PDF export and page
+// preview, so all three lay out identical pages.
 
 struct PrintOptions {
     bool landscape = false;

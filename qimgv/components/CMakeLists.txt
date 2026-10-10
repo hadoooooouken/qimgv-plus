@@ -10,7 +10,6 @@ target_sources(qimgv-plus PRIVATE
     actionmanager/actionmanager.cpp
 
     cache/cache.cpp
-    cache/cacheitem.cpp
     cache/decodedthumbnailcache.cpp
     cache/thumbnailcache.cpp
     cache/thumbnailcachemaintenance.cpp
@@ -19,9 +18,6 @@ target_sources(qimgv-plus PRIVATE
 
     loader/loader.cpp
     loader/loaderrunnable.cpp
-
-    scaler/scaler.cpp
-    scaler/scalerrunnable.cpp
 
     thumbnailer/thumbnailer.cpp
     thumbnailer/thumbnailerrunnable.cpp

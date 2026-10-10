@@ -111,7 +111,7 @@ struct ReferencePanorama {
   double fov = 0.0;
 };
 
-// The widget viewer's res/shaders/panorama.frag in double precision, for an
+// The former widget viewer's panorama shader in double precision, for an
 // opaque source: per pixel centre the same ray, rotations and
 // equirectangular mapping, then bilinear sampling of the source itself
 // (level 0), repeating horizontally and clamped vertically; color applies

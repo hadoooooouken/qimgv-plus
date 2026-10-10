@@ -6,7 +6,7 @@
 #include <utility>
 
 void DecodedPixels::assign(std::shared_ptr<const QImage> decoded, bool hdr,
-                           DisplayPipeline pipeline, SdrConversion toSdr) {
+                           SdrConversion toSdr) {
     QMutexLocker locker(&mMutex);
     mHdr.reset();
     mSdr.reset();
@@ -19,11 +19,6 @@ void DecodedPixels::assign(std::shared_ptr<const QImage> decoded, bool hdr,
         return;
     }
     mHdr = std::move(decoded);
-    if (pipeline == DisplayPipeline::Cpu) {
-        // The CPU viewer displays the SDR copy; the HDR source is not kept.
-        convertLocked();
-        mHdr.reset();
-    }
 }
 
 std::shared_ptr<const QImage> DecodedPixels::sdr() {

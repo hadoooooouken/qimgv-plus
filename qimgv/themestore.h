@@ -83,10 +83,9 @@ public:
     QColor folderview_button_hover;
     QColor folderview_button_pressed;
     QColor input_field_focus;
-    // combobox panel colors for plain (non-QSS-styled) QComboBox instances
-    // rendered by ProxyStyle, e.g. in SettingsDialog, PrintDialog,
-    // ResizeDialog. Tuned to stay visible against both the app's own
-    // widget-family surfaces and the OS-tinted native dialog backgrounds.
+    // combobox panel colors, kept in the theme files. Tuned to stay
+    // visible against both the app's own surfaces and the OS-tinted
+    // native dialog backgrounds.
     QColor combo_field;
     QColor combo_field_hover;
     QColor combo_field_pressed;

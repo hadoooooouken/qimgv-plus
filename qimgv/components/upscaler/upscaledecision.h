@@ -1,8 +1,7 @@
 #pragma once
 
 // What Core does about the AI upscale of the visible area once the viewer
-// has asked for it at a new size (after a CPU scale in the widget UI,
-// directly in the Qt Quick UI).
+// has asked for it at a new size.
 enum class UpscaleAction {
     None,
     // Panorama: no upscale; drop the crop and the upscaler's state.

@@ -9,8 +9,8 @@ class ScriptManager;
 class Settings;
 
 // ISettingsValueStore over the application's Settings, for the settings
-// dialog of both UIs: reads and stores the values exactly as the widget
-// dialog did, so either UI writes the same configuration. Applying also
+// dialog: reads and stores the values exactly as the former widget dialog
+// did, so existing configurations keep their meaning. Applying also
 // stores the shortcut table into the ActionManager and saves the shortcuts
 // and the scripts.
 //

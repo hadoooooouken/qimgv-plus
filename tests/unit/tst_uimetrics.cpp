@@ -26,8 +26,8 @@ QFont fontWithPointSize(int pointSize) {
 QColor grey(int value) { return QColor::fromRgb(value, value, value); }
 } // namespace
 
-// The control metrics and dialog surfaces shared by the widget stylesheet
-// and the Qt Quick Theme bridge, and the theme snapshot built from them.
+// The control metrics and dialog surfaces of the Qt Quick Theme bridge, and
+// the theme snapshot built from them.
 class UiMetricsTests : public QObject {
   Q_OBJECT
 

@@ -1,5 +1,5 @@
 #include "directorypresenter.h"
-#include <QApplication>
+#include <QGuiApplication>
 #include <QDir>
 #include <QPainter>
 #include <QPainterPath>

@@ -1,18 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file>res/icons/common/logo/3rdparty/qt.svg</file>
-        <file>res/icons/common/logo/app/qimgv.svg</file>
-        <file>res/icons/dark/other/collapsed.svg</file>
-        <file>res/icons/dark/other/expanded.svg</file>
-        <file>res/icons/light/other/collapsed.svg</file>
-        <file>res/icons/light/other/expanded.svg</file>
-        <file>res/styles/style-template.qss</file>
         <file>res/icons/common/other/folder32-scalable.svg</file>
-        <file>res/shaders/panorama.frag</file>
-        <file>res/shaders/filter.vert</file>
-        <file>res/shaders/filter.frag</file>
-        <file>res/shaders/boxreduce.vert</file>
-        <file>res/shaders/boxreduce.frag</file>
         <file>res/fonts/FluentSystemIcons-Custom.ttf</file>
     </qresource>
 </RCC>

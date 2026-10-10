@@ -6,8 +6,6 @@ DirectoryModel::DirectoryModel(QObject *parent) :
     QObject(parent),
     fileListSource(SOURCE_DIRECTORY)
 {
-    scaler = std::make_unique<Scaler>(&cache);
-
     connect(&dirManager, &DirectoryManager::fileRemoved,  this, &DirectoryModel::onFileRemoved);
     connect(&dirManager, &DirectoryManager::fileAdded,    this, &DirectoryModel::onFileAdded);
     connect(&dirManager, &DirectoryManager::fileRenamed,  this, &DirectoryModel::onFileRenamed);
@@ -20,23 +18,10 @@ DirectoryModel::DirectoryModel(QObject *parent) :
     connect(&dirManager, &DirectoryManager::sortingChanged, this, &DirectoryModel::onSortingChanged);
     connect(&loader, &Loader::loadFinished, this, &DirectoryModel::onImageReady);
     connect(&loader, &Loader::loadFailed, this, &DirectoryModel::loadFailed);
-    connect(scaler.get(), &Scaler::scalingFinished, this, &DirectoryModel::scalingFinished);
-}
-
-void DirectoryModel::setDisplayPipeline(DisplayPipeline pipeline) {
-    loader.setDisplayPipeline(pipeline);
 }
 
 DirectoryModel::~DirectoryModel() {
     loader.clearTasks();
-}
-
-void DirectoryModel::clearScaler() {
-    scaler->clear();
-}
-
-void DirectoryModel::requestScaled(const ScalerRequest &req) {
-    scaler->requestScaled(req);
 }
 
 int DirectoryModel::totalCount() const {

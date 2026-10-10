@@ -151,7 +151,7 @@ void QuickUiHost::forwardViewportEvents() {
 }
 
 //------------------------------------------------------------------------------
-// The Upscayl and HDR tone mapping actions, shared with the widget UI.
+// The Upscayl and HDR tone mapping actions.
 void QuickUiHost::connectViewerToggles() {
   ViewerToggles *toggles = &mViewerToggles;
   QObject::connect(&mActionManager, &ActionManager::toggleUpscayl, toggles,

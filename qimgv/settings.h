@@ -3,8 +3,7 @@
 #include <memory>
 #include "themestore.h"
 #include "utils/script.h"
-#include "utils/uimode.h"
-#include <QApplication>
+#include <QGuiApplication>
 #include <QStyleHints>
 #include <QColor>
 #include <QDebug>
@@ -74,9 +73,6 @@ public:
   // Hidden setting (no settings dialog entry yet); Direct3D 11 by default.
   QuickGraphicsApi quickGraphicsApi();
   void setQuickGraphicsApi(QuickGraphicsApi api);
-  // Hidden setting "userInterface" (no settings dialog entry): the UI used
-  // when --ui is not given; the Qt Quick UI by default.
-  UiMode uiMode();
   ImageFitMode imageFitMode();
   void setImageFitMode(ImageFitMode mode);
   QRect windowGeometry();
@@ -144,8 +140,6 @@ public:
 
   bool infoBarFullscreen();
   void setInfoBarFullscreen(bool mode);
-  bool infoBarWindowed();
-  void setInfoBarWindowed(bool mode);
 
   bool windowTitleExtendedInfo();
   void setWindowTitleExtendedInfo(bool mode);
@@ -223,7 +217,6 @@ public:
   void setHasCustomAccent(bool custom) { mHasCustomAccent = custom; }
   void clearCustomAccent();
 
-  void loadStylesheet();
 
   bool showSaveOverlay();
   void setShowSaveOverlay(bool mode);

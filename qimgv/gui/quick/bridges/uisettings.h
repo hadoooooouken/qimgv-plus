@@ -153,14 +153,12 @@ struct OverlaySettings {
   QML_VALUE_TYPE(overlaySettings)
   QML_UNCREATABLE("Provided by AppSettings.overlays")
   Q_PROPERTY(bool infoBarFullscreen MEMBER infoBarFullscreen)
-  Q_PROPERTY(bool infoBarWindowed MEMBER infoBarWindowed)
   Q_PROPERTY(SettingsEnums::ZoomIndicatorMode zoomIndicatorMode MEMBER zoomIndicatorMode)
   Q_PROPERTY(bool showSaveOverlay MEMBER showSaveOverlay)
   Q_PROPERTY(SettingsEnums::CropAction defaultCropAction MEMBER defaultCropAction)
 
 public:
   bool infoBarFullscreen{};
-  bool infoBarWindowed{};
   SettingsEnums::ZoomIndicatorMode zoomIndicatorMode{};
   bool showSaveOverlay{};
   SettingsEnums::CropAction defaultCropAction{};

@@ -16,7 +16,7 @@
 class IconFontManager {
 public:
     // Registers the bundled font from the Qt resource. Must be called once,
-    // after the QApplication instance is constructed, before any glyph is
+    // after the QGuiApplication instance is constructed, before any glyph is
     // rendered. Returns false (and logs a warning) if the font could not be
     // loaded - callers should treat this as non-fatal, since IconWidget/
     // StyledComboBox fall back to drawing nothing rather than crashing.

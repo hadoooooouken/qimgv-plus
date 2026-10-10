@@ -2165,6 +2165,98 @@ test QML scene and by `--ui=quick`. The widget viewer is not modified.
   `PrintSupport` only for printing.
 - **Acceptance:** no `QWidget` subclass remains outside the print path;
   deploy size and startup measured.
+- **Delivered:**
+  - **Widget UI removed:** everything under `gui/` except `ports/`,
+    `controllers/` (`ColdStartWindowController`), `settingseditor/`,
+    `quick/`, `idirectoryview.h`, `uimetrics.h` and `dialogsurfaces.h`.
+    That is `MW`, `CentralWidget`, `ContextMenu`, `customwidgets/`,
+    `dialogs/`, `overlays/` (with the `*Proxy` deferral classes),
+    `panels/` (with the dead `InfoBar`), `viewers/` (`ImageViewerV2`,
+    `FilterPixmapItem`, `PanoramaGraphicsItem`), `folderview/` (the widget
+    `IDirectoryView` implementations) and `widgetui/`. Also removed:
+    - `ProxyStyle` and `utils/displayutils`.
+    - The old GLSL shaders and `res/styles/style-template.qss`.
+    - The tree view arrows and the unused logos in `resources.qrc`.
+    - `Settings::loadStylesheet()` (application palette and stylesheet).
+    - `AA_UseDesktopOpenGL`.
+    - `Widgets`, `SvgWidgets` and `OpenGLWidgets` from `find_package` and
+      from the `qimgv-plus` link.
+  - **`QGuiApplication`:** `main.cpp` creates a `QGuiApplication`.
+    - Qt Widgets now comes only as a dependency of `PrintSupport`
+      (`QPrinter`). `dumpbin /dependents` lists no Widgets DLL for
+      `qimgv-plus.exe`.
+    - The QML print dialog, the QtQuick.Dialogs file, folder and colour
+      dialogs, and the folder tree's `QFileSystemModel` need no
+      `QApplication`.
+    - No `QWidget` code remains at all, the print path included.
+  - **UI selection removed** (user's choice): the `--ui` option, the hidden
+    `userInterface` setting, `utils/uimode` and `UiModeTests`.
+    - An existing `userInterface` key is ignored.
+    - This replaces S4.1's plan to keep `--ui=widgets` for one release.
+  - **CPU display path removed** (user's choice; not in the stage's listed
+    scope):
+    - The `Scaler` component, `UiEvents::scalingRequested`,
+      `Core::scalingRequest()` and `onScalingFinished()`, and
+      `DirectoryModel::requestScaled()`, `clearScaler()` and
+      `scalingFinished`.
+    - `IViewerPort::displayPipeline()` and `showScaledImage()`.
+    - `DisplayPipeline` together with `DecodeContext::displayPipeline` and
+      `Loader::setDisplayPipeline()`.
+    - The colour-managed display copies of `ImageStatic`, and
+      `Image::getPixmap()`.
+    - Every static image now behaves as the former `Gpu` pipeline did: it
+      keeps the HDR source, and `DecodedPixels` makes the SDR copy on
+      first use.
+    - Only the scaler reserved `Cache` items, so the reservations and
+      `CacheItem` are gone. `Cache` is a plain path-to-image map.
+  - **Dead items from S4.1:** `UiEvents::showFoldersChanged` together with
+    `Core::setFoldersDisplay()`, and the `infoBarWindowed` setting with its
+    `OverlaySettings` bridge field.
+  - **Moved:** `FileSystemModelCustom` (the folder tree model of the Quick
+    folder view), from `gui/folderview/` to `gui/quick/adapters/`.
+  - **Comments:** comments that described both UIs, `--ui=quick`,
+    `WidgetUi` or the stylesheet as current were corrected. Provenance notes
+    ("FolderView in the widget UI", "as in the widget viewer") are kept as
+    the record of where a behaviour comes from. `BUILDING.md` lists the Qt
+    components the build now needs.
+  - **Tests:** `DecodedPixelsTests` lost the CPU-pipeline case. All suites
+    pass, with the render tests on D3D11, D3D12 and Vulkan, and
+    `all_qmllint` reports nothing. On the real executable, a JPEG, a
+    Radiance HDR image (tone mapped on the GPU) and a folder all open
+    without warnings, and the window keeps the executable's icon.
+  - **Deploy size** (2026-10-10): `windeployqt` with the build's flags, into
+    an empty folder, for HEAD and for this stage.
+
+    | | Before | After |
+    |---|---|---|
+    | `qimgv-plus.exe` | 11,190,784 B | 10,104,832 B |
+    | Qt deployment and executable | 128,994,567 B (1,471 files) | 127,784,087 B (1,469 files) |
+
+    The deployment no longer has `Qt6OpenGLWidgets.dll` or
+    `Qt6SvgWidgets.dll`. `Qt6Widgets.dll` stays for `PrintSupport`.
+  - **Startup and memory** (2026-10-10, release build, D3D11): 16
+    interleaved cold starts per build on a 4000x3000 JPEG, from complete
+    copies of the deployment. Memory sampled 5 s after launch; medians:
+
+    | | Before | After |
+    |---|---|---|
+    | First document rendering settled | 435 ms | 430 ms |
+    | Window revealed | 438 ms | 434 ms |
+    | Working set | 213 MB | 212 MB |
+    | Private bytes | 345 MB | 345 MB |
+
+    No measurable change. The Quick UI never created widget code, so
+    removing it changes the binary size, not the run time.
+  - **Found, not fixed:**
+    - `windeployqt --qmldir` deploys every Qt Quick Controls style
+      (Material, Universal, FluentWinUI3, Imagine, Fusion, Windows, native)
+      and `styles/qmodernwindowsstyle.dll`, although the application
+      compiles in its Basic-based style.
+    - The `.ts` files keep the contexts of the deleted widget classes until
+      `lupdate` runs.
+    - Build folders from before this stage still hold
+      `Qt6OpenGLWidgets.dll` and `Qt6SvgWidgets.dll`, which windeployqt
+      does not remove.
 
 ---
 

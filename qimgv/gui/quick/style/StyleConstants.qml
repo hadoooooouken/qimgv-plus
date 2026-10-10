@@ -3,8 +3,8 @@ pragma Singleton
 import QtQuick
 
 // Fixed sizes and colour factors of the qimgv.style controls. They are the
-// values of the widget stylesheet (res/styles/style-template.qss) and
-// ProxyStyle; the sizes that scale with the font come from Theme.metrics.
+// values of the former widget stylesheet and ProxyStyle; the sizes that
+// scale with the font come from Theme.metrics.
 QtObject {
     // Corner radius of buttons, fields, combo boxes and panel buttons.
     readonly property int controlRadius: 4

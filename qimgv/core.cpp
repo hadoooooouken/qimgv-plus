@@ -25,6 +25,7 @@
 #include "components/wallpaper/wallpapercontroller.h"
 #include "components/mimepayload/mimepayloadmanager.h"
 #include <QColorSpace>
+#include <QCursor>
 #include <tchar.h>
 #include <windows.h>
 #include <psapi.h>
@@ -507,9 +508,7 @@ void Core::initComponents() {
   thumbnailer = std::make_shared<Thumbnailer>();
   thumbPanelPresenter.setThumbnailer(thumbnailer);
   folderViewPresenter.setThumbnailer(thumbnailer);
-  auto *directoryModel = new DirectoryModel();
-  directoryModel->setDisplayPipeline(ui.viewer.displayPipeline());
-  attachModel(directoryModel);
+  attachModel(new DirectoryModel());
   coldStartWindowController = std::make_unique<ColdStartWindowController>(
       ui.window, ui.viewMode, ui.viewer, ui.events);
 }
@@ -555,9 +554,6 @@ void Core::connectComponents() {
   connect(scriptManager, &ScriptManager::error, this,
           [this](const QString &error) { ui.notifications.showError(error); });
 
-  connect(model.get(), &DirectoryModel::scalingFinished, this,
-          &Core::onScalingFinished);
-
   connect(settings, &Settings::settingsChanged, this, [this]() {
       bool cmEnabled = settings->colorManagementEnabled();
       QString cmType = settings->monitorColorProfileType();
@@ -583,7 +579,6 @@ void Core::connectComponents() {
 
           ColorManager::invalidateCache();
           if (state.hasActiveImage && state.currentImg) {
-              model->clearScaler();
               if (hdrChanged) {
                   model->reload(state.currentFilePath);
                   state.currentImg = model->getImage(state.currentFilePath);
@@ -698,14 +693,11 @@ void Core::connectUiEvents() {
           &Core::onFormatFilterSelected);
   connect(events, &UiEvents::nameFilterSelected, this,
           &Core::onNameFilterSelected);
-  connect(events, &UiEvents::showFoldersChanged, this,
-          &Core::setFoldersDisplay);
   connect(events, &UiEvents::discardEditsRequested, this, &Core::discardEdits);
   connect(events, &UiEvents::draggedOut, this,
           qOverload<>(&Core::onDraggedOut));
   connect(events, &UiEvents::nextImageRequested, this, &Core::nextImage);
   connect(events, &UiEvents::prevImageRequested, this, &Core::prevImage);
-  connect(events, &UiEvents::scalingRequested, this, &Core::scalingRequest);
   connect(events, &UiEvents::upscaleRequested, this, &Core::onUpscaleRequested);
   connect(events, &UiEvents::suspendRequested, this, &Core::suspendToStandby);
 }
@@ -1324,11 +1316,6 @@ void Core::onDraggedOut(QList<QString> paths) {
 }
 
 void Core::sortBy(SortingMode mode) { model->setSortingMode(mode); }
-
-void Core::setFoldersDisplay(bool mode) {
-  if (folderViewPresenter.showDirs() != mode)
-    folderViewPresenter.setShowDirs(mode);
-}
 
 void Core::renameCurrentSelection(QString newName) {
   if (newName.isEmpty() || selectedPath().isEmpty())
@@ -1967,26 +1954,8 @@ void Core::print() {
   ui.dialogs.print({img->getImage(), pdfPath});
 }
 
-void Core::scalingRequest(QSize size, ScalingFilter filter) {
-  // filter out an unnecessary scale request at statup
-  if (ui.window.isWindowVisible() && state.hasActiveImage) {
-    std::shared_ptr<Image> forScale = model->getImage(state.currentFilePath);
-    if (forScale) {
-      model->requestScaled(
-          ScalerRequest(forScale, size, state.currentFilePath, filter));
-    }
-  }
-}
-
-void Core::onScalingFinished(QImage scaled, ScalerRequest req) {
-  if (state.hasActiveImage && req.path == state.currentFilePath) {
-    ui.viewer.showScaledImage(scaled);
-    updateUpscale(req.image, req.size, req.path);
-  }
-}
-
-// The Qt Quick viewer scales on the GPU and asks for the upscale directly,
-// without a CPU-scaled copy.
+// The viewer scales on the GPU and asks for the upscale directly, without a
+// CPU-scaled copy.
 void Core::onUpscaleRequested(QSize size) {
   if (!ui.window.isWindowVisible() || !state.hasActiveImage)
     return;
@@ -2040,7 +2009,6 @@ void Core::reset() {
   state.currentImg.reset();
   autoPageHintShown.clear();
   m_pendingDocumentLoad = PendingDocumentLoad::None;
-  model->clearScaler();
   model->setDirectory("");
 }
 
@@ -2388,7 +2356,6 @@ void Core::jumpToLast() {
 
 void Core::onLoadFailed(const QString &path) {
   ui.notifications.showMessage(tr("Load failed: ") + path);
-  model->clearScaler();
   if (path == state.currentFilePath)
     ui.viewer.closeImage();
 }
@@ -2412,7 +2379,6 @@ void Core::onModelItemReady(std::shared_ptr<Image> img, const QString &path) {
 }
 
 void Core::modelDelayLoad() {
-  model->clearScaler();
   model->setDirectory(state.directoryPath);
   ui.shell.setDirectoryPath(state.directoryPath);
   pendingModelImageSync = true;

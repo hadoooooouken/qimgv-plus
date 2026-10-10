@@ -10,8 +10,7 @@ inline constexpr int kCompactIconSizePx = 16;
 inline constexpr int kStandardIconSizePx = 20;
 
 // Point sizes of the secondary text styles, derived from the application
-// font. Shared by the widget stylesheet (Settings::loadStylesheet()) and the
-// Qt Quick Theme bridge so both UIs scale text identically.
+// font. Used by the Qt Quick Theme bridge.
 struct Typography {
   int smallPointSize = 0;
   int sectionPointSize = 0;
@@ -35,8 +34,8 @@ inline constexpr float kLargeFontScale = 1.8f;
 }
 
 // Control sizes derived from the height of a text line in the application
-// font, plus the fixed frame sizes of tooltips and context menus. Shared by
-// the widget stylesheet and the Qt Quick Theme bridge, like Typography.
+// font, plus the fixed frame sizes of tooltips and context menus. Used by
+// the Qt Quick Theme bridge, like Typography.
 struct ControlMetrics {
   int buttonHeight = 0;
   int topPanelHeight = 0;

@@ -136,8 +136,6 @@ private slots:
     void rotateRight();
     void nextPage();
     void prevPage();
-    void scalingRequest(QSize, ScalingFilter);
-    void onScalingFinished(QImage scaled, ScalerRequest req);
     void onUpscaleRequested(QSize size);
     void updateUpscale(const std::shared_ptr<Image> &image, QSize size,
                        const QString &path);
@@ -205,7 +203,6 @@ private slots:
     void toggleFolderView();
     void toggleSlideshow();
     void onPlaybackFinished();
-    void setFoldersDisplay(bool mode);
     void loadParentDir();
     void nextDirectory();
     void prevDirectory(bool selectLast);

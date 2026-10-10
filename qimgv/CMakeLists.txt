@@ -43,20 +43,20 @@ qimgv_apply_msvc_profile(qimgv_fluenticons)
 add_library(qimgv_viewcomponents STATIC
     components/animationplayer/animationplayer.cpp
     components/animationplayer/animationplayer.h
-    # Rules and job of the batch converter dialog (both UIs).
+    # Rules and job of the batch converter dialog.
     components/batchconverter/batchjob.h
     components/batchconverter/batchjobrules.cpp
     components/batchconverter/batchjobrules.h
     components/copytargets/copytargetlist.cpp
     components/copytargets/copytargetlist.h
-    # Printing of an image (both UIs' print dialogs).
+    # Printing of an image (the print dialog).
     components/printing/imageprintsetup.cpp
     components/printing/imageprintsetup.h
     components/shellinfo/fileinfotext.cpp
     components/shellinfo/fileinfotext.h
     components/scalingfilter/scalingfilterselection.cpp
     components/scalingfilter/scalingfilterselection.h
-    # The settings dialog's values, rules and view-models (both UIs).
+    # The settings dialog's values, rules and view-models.
     components/settingseditor/editorsession.cpp
     components/settingseditor/editorsession.h
     components/settingseditor/scripteditormodel.cpp
@@ -81,13 +81,13 @@ add_library(qimgv_viewcomponents STATIC
     components/viewtransform/viewtransform.h
     components/viewtransform/viewtransformcontroller.cpp
     components/viewtransform/viewtransformcontroller.h
-    # Upscayl and HDR tone mapping toggles of the viewer (both UIs).
+    # Upscayl and HDR tone mapping toggles of the viewer.
     components/viewertoggles/viewertoggles.cpp
     components/viewertoggles/viewertoggles.h
-    # Format categories of the folder view's format filter (both UIs).
+    # Format categories of the folder view's format filter.
     utils/formatgroups.cpp
     utils/formatgroups.h
-    # Name filters of the "Save File as..." dialog (both UIs).
+    # Name filters of the "Save File as..." dialog.
     utils/savefilefilters.cpp
     utils/savefilefilters.h
 )
@@ -133,7 +133,6 @@ add_executable(qimgv-plus
     themestore.cpp
     sharedresources.cpp
     shortcutbuilder.cpp
-    proxystyle.cpp
     resources.qrc
     qimgv.rc
     ${QM_FILES}
@@ -230,13 +229,10 @@ set_target_properties(qimgv-plus PROPERTIES
 # LINK STUFF
 target_link_libraries(qimgv-plus PRIVATE 
     Qt6::Core 
-    Qt6::Widgets 
     Qt6::Network 
     Qt6::Svg 
     Qt6::PrintSupport 
     Qt6::Sql 
-    Qt6::OpenGLWidgets 
-    Qt6::SvgWidgets
     Qt6::Pdf
     Qt6::Qml
     Qt6::Quick

@@ -5,8 +5,7 @@
 // Window and text colours of the application's dialogs (settings, print,
 // resize) for the light and the dark scheme, and the tinted surfaces derived
 // from the window colour: sidebars, groups, separators and slider grooves.
-// Shared by the widget stylesheet and palette (Settings::loadStylesheet())
-// and the Qt Quick Theme bridge.
+// Used by the Qt Quick Theme bridge.
 namespace DialogSurfaces {
 
 struct Colors {

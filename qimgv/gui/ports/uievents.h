@@ -49,12 +49,10 @@ signals:
     void folderSortingSelected(SortingMode mode);
     void formatFilterSelected(QStringList extensions);
     void nameFilterSelected(QString nameFilter);
-    void showFoldersChanged(bool showFolders);
 
     // Viewer
-    void scalingRequested(QSize size, ScalingFilter filter);
     // The visible area may need an AI upscale at the displayed size (device
-    // pixels); for viewers that scale on the GPU and need no CPU copy.
+    // pixels). The viewer scales on the GPU and needs no CPU-scaled copy.
     void upscaleRequested(QSize size);
 
     // Application

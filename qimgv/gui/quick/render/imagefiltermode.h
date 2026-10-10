@@ -15,13 +15,13 @@ struct ImageFilterMode {
                          const ImageFilterMode &) = default;
 };
 
-// Same choices as the widget viewer (ImageViewerV2 / FilterPixmapItem):
+// Same choices as the former widget viewer (ImageViewerV2 / FilterPixmapItem):
 //  - Nearest: nearest texel, no sharpening;
 //  - Bilinear: trilinear minification, no sharpening;
 //  - Cas / SmartGpu: trilinear with CAS / smart sharpening;
 //  - Mks2021Gpu: trilinear while the view moves, the MKS2021 resampling
 //    kernel once it is settled;
-//  - Smart / Mks2021: the CPU display scaling filters of the Scaler
-//    component. The renderer shows them with trilinear sampling and the
+//  - Smart / Mks2021: the former CPU display scaling filters (the settings
+//    may still name them). The renderer shows them with trilinear sampling and the
 //    exact-ratio downsample, without sharpening.
 [[nodiscard]] ImageFilterMode imageFilterModeFor(ScalingFilter filter);

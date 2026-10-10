@@ -7,7 +7,6 @@
 // person's answer: accepted() or rejected() is emitted after `open` turned
 // false. `created` turns true with the first request and stays true, so QML
 // creates the dialog window on first use. A request while open restarts it.
-// The widget UI shows the same requests through an exec()'d QDialog.
 //
 // GUI thread only.
 class EditorSession : public QObject {

@@ -20,11 +20,10 @@ public:
                          DecodeContext context = {});
     ~ImageStatic();
 
-    std::unique_ptr<QPixmap> getPixmap();
     std::shared_ptr<const QImage> getSourceImage();
     std::shared_ptr<const QImage> getImage();
-    // Cpu pipeline: the tone-mapped, colour-managed image. Gpu pipeline: the
-    // decoded image (HDR stays HDR), which the viewer converts itself.
+    // The decoded image (HDR stays HDR); the viewer tone maps and colour
+    // manages it itself.
     std::shared_ptr<const QImage> getDisplayImage() override;
     std::shared_ptr<const QImage> getDecodedImage() override;
     // Changes whenever the effective image content is replaced or discarded.
@@ -51,15 +50,12 @@ private:
     void loadPdf();
     void loadDjvu();
     [[nodiscard]] static QImage sdrFromHdr(const QImage &hdr);
-    [[nodiscard]] DisplayPipeline displayPipeline() const;
     void setDecoded(std::shared_ptr<const QImage> decoded);
 
     DecodeContext mDecodeContext;
     // The unedited pixels; their SDR copy is getSourceImage().
     DecodedPixels pixels;
     std::shared_ptr<const QImage> imageEdited;
-    mutable std::shared_ptr<const QImage> imageColorManaged;
-    mutable std::shared_ptr<const QImage> imageColorManagedEdited;
     quint64 mContentRevision = 0;
     void clearEditedImageState() noexcept;
     void loadGeneric();

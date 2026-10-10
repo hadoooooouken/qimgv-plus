@@ -8,8 +8,8 @@
 
 // The values the settings dialog edits, one value object per page of the
 // dialog, independent of Settings and of any UI. Values shown by a slider
-// keep the slider's units (see SettingsScales), so both UIs store exactly
-// the values the widget dialog stored. Choices of the legacy settings enums
+// keep the slider's units (see SettingsScales), so the dialog stores exactly
+// the values the former widget dialog stored. Choices of the legacy settings enums
 // (settings_types.h) are kept as their int values: the enums are unscoped
 // and cannot be registered with the meta-object system; the option lists of
 // SettingsOptions carry the valid values.

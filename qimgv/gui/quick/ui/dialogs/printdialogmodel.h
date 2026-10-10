@@ -27,10 +27,10 @@ struct PrintDialogInput {
 };
 
 // Printing or exporting the current image as a PDF (PrintDialog.qml), with
-// the rules of the widget PrintDialog: printer, orientation, colour mode and
+// the rules of the former widget PrintDialog: printer, orientation, colour mode and
 // fit to page, a preview of the page, the last used printer and output
-// remembered. Printing and the preview go through ImagePrintSetup, as in the
-// widget dialog, so both UIs print the same page.
+// remembered. Printing and the preview go through ImagePrintSetup, so both
+// show the same page.
 //
 // A failed print or export keeps the dialog open with errorText. Every
 // close reports the preferences to store, as the widget dialog stored them

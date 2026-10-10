@@ -3,13 +3,11 @@
 // the Quick UI bridges).
 #define NOMINMAX
 
-#include <QApplication>
 #include <QCommandLineParser>
 #include <QDataStream>
 #include <QDir>
-#include <QEvent>
 #include <QFileInfo>
-#include <QStyleFactory>
+#include <QGuiApplication>
 #include <QSettings>
 #include <QStandardPaths>
 
@@ -25,34 +23,10 @@
 #include "components/singleinstance/singleinstancechannel.h"
 #include "core.h"
 #include "gui/quick/quickuihost.h"
-#include "gui/widgetui/widgetui.h"
-#include "proxystyle.h"
 #include "settings.h"
 #include "utils/cmdoptionsrunner.h"
 #include "utils/startuptiming.h"
-#include "utils/uimode.h"
 
-//------------------------------------------------------------------------------
-ProxyStyleColors proxyStyleColors(const ColorScheme &colors) {
-  return {
-      .icons = colors.icons,
-      .control = colors.combo_field,
-      .controlHover = colors.combo_field_hover,
-      .controlPressed = colors.combo_field_pressed,
-      .controlBorder = colors.combo_field_border,
-      .controlFocusBorder = colors.accent,
-  };
-}
-//------------------------------------------------------------------------------
-// Keeps the application style in sync with the current colour scheme.
-void bindProxyStyleToSettings(ProxyStyle &proxyStyle, Settings &appSettings) {
-  proxyStyle.setColors(proxyStyleColors(appSettings.colorScheme()));
-  QObject::connect(&appSettings, &Settings::settingsChanged, &proxyStyle,
-                   [&appSettings, &proxyStyle]() {
-                     proxyStyle.setColors(
-                         proxyStyleColors(appSettings.colorScheme()));
-                   });
-}
 //------------------------------------------------------------------------------
 QDataStream &operator<<(QDataStream &out, const Script &v) {
   out << v.command << v.blocking;
@@ -65,13 +39,6 @@ QDataStream &operator>>(QDataStream &in, Script &v) {
   return in;
 }
 //------------------------------------------------------------------------------
-namespace {
-using namespace Qt::StringLiterals;
-
-constexpr QLatin1StringView uiOptionName = "ui"_L1;
-} // namespace
-
-//------------------------------------------------------------------------------
 // The "multiInstance" setting, read before the services exist (they are
 // started only by the primary instance).
 bool multiInstanceEnabled() {
@@ -82,11 +49,11 @@ bool multiInstanceEnabled() {
   return tempSettings.value("multiInstance", false).toBool();
 }
 //------------------------------------------------------------------------------
-// Runs Core over the given user interface until the application exits: opens
-// the command-line path (or the default path), answers the paths sent by
+// Runs Core over the user interface until the application exits: opens the
+// command-line path (or the default path), answers the paths sent by
 // secondary instances through channel (nullptr in multi-instance mode) and
 // shows the window.
-int runCore(QApplication &app, const UiPorts &ports,
+int runCore(QGuiApplication &app, const UiPorts &ports,
             SingleInstanceChannel *channel, const QStringList &paths) {
   QObject::connect(
       &ports.events, &UiEvents::documentRenderingSettled, &ports.events,
@@ -118,38 +85,23 @@ int main(int argc, char *argv[]) {
   // force some env variables
   qputenv("QT_PLUGIN_PATH", "");
 
-  QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-
-  QApplication a(argc, argv);
+  QGuiApplication a(argc, argv);
   QCoreApplication::setLibraryPaths(QStringList()
                                     << QCoreApplication::applicationDirPath());
 
-  // use some style workarounds with platform-independent Fusion base to prevent
-  // uxtheme clashes in Windows 11.
-  // Ownership: ProxyStyle owns the Fusion base style, and setStyle() makes
-  // QApplication the owner of ProxyStyle, which deletes it on destruction.
-  // proxyStyle is a non-owning handle that stays valid for all of main().
-  auto *proxyStyle = new ProxyStyle(QStyleFactory::create("fusion"));
-  a.setStyle(proxyStyle);
-
-  // Declared after the QApplication so it is destroyed first, while the
-  // style and the event loop objects still exist. Engaged only on the paths
-  // that need the services.
+  // Declared after the QGuiApplication so it is destroyed first, while the
+  // event loop objects still exist. Engaged only on the paths that need the
+  // services.
   std::optional<AppServices> services;
-  const auto startServices = [&services, proxyStyle]() {
-    services.emplace();
-    bindProxyStyleToSettings(*proxyStyle, *settings);
-  };
+  const auto startServices = [&services]() { services.emplace(); };
 
   QCoreApplication::setOrganizationName("qimgv-plus");
   QCoreApplication::setOrganizationDomain(
       "github.com/hadoooooouken/qimgv-plus");
   QCoreApplication::setApplicationName("qimgv-plus");
   QCoreApplication::setApplicationVersion(appVersion.toString());
-  QApplication::setEffectEnabled(Qt::UI_AnimateCombo, false);
 
   // use custom types in signals
-  qRegisterMetaType<ScalerRequest>("ScalerRequest");
   qRegisterMetaType<Script>("Script");
   qRegisterMetaType<QPixmap *>("QPixmap*");
   qRegisterMetaType<std::shared_ptr<Image>>("std::shared_ptr<Image>");
@@ -180,27 +132,7 @@ int main(int argc, char *argv[]) {
       {"build-options",
        QCoreApplication::translate("main", "Show build options.")},
   });
-  // No default value: without --ui the "userInterface" setting decides,
-  // which needs the services started below.
-  const QCommandLineOption uiOption(
-      uiOptionName,
-      QCoreApplication::translate(
-          "main", "User interface: %1 (default) or %2 (legacy fallback).")
-          .arg(uiModeName(UiMode::Quick), uiModeName(UiMode::Widgets)),
-      QCoreApplication::translate("main", "ui"));
-  parser.addOption(uiOption);
   parser.process(a);
-
-  const std::optional<UiMode> commandLineUiMode =
-      parser.isSet(uiOption) ? uiModeFromName(parser.value(uiOption))
-                             : std::nullopt;
-  if (parser.isSet(uiOption) && !commandLineUiMode) {
-    parser.showMessageAndExit(
-        QCommandLineParser::MessageType::Error,
-        QCoreApplication::translate("main", "Unknown user interface: %1")
-            .arg(parser.value(uiOption)),
-        EXIT_FAILURE);
-  }
 
   int exitCode = 0;
   if (parser.isSet("build-options")) {
@@ -221,8 +153,8 @@ int main(int argc, char *argv[]) {
                        [&r, path = parser.value("gen-thumbs"), size] { r.generateThumbs(path, size); });
     exitCode = a.exec();
   } else {
-    // Primary or secondary instance; the same channel serves both UIs, so a
-    // second launch raises whichever UI is running.
+    // Primary or secondary instance: a second launch hands its path to the
+    // running instance, which raises its window.
     std::optional<SingleInstanceChannel> channel;
     if (!multiInstanceEnabled()) {
       channel.emplace(SingleInstanceChannel::serverNameFor(QDir::tempPath()));
@@ -239,22 +171,16 @@ int main(int argc, char *argv[]) {
     startServices();
 
     // Closing the window may only suspend to standby; the exit action quits.
-    QApplication::setQuitOnLastWindowClosed(false);
+    QGuiApplication::setQuitOnLastWindowClosed(false);
     // Installed before the user interface is built so that its strings are
     // translated; destroyed last, after the UI and Core.
     AppTranslator translator;
     SingleInstanceChannel *channelPtr = channel ? &*channel : nullptr;
-    const UiMode uiMode = commandLineUiMode.value_or(settings->uiMode());
-    if (uiMode == UiMode::Quick) {
-      QuickUiHost quickUi(*settings, *actionManager, *scriptManager);
-      const std::optional<UiPorts> ports =
-          quickUi.start() ? quickUi.ports() : std::nullopt;
-      exitCode = ports ? runCore(a, *ports, channelPtr, parser.positionalArguments())
-                       : EXIT_FAILURE;
-    } else {
-      WidgetUi widgetUi;
-      exitCode = runCore(a, widgetUi.ports(), channelPtr, parser.positionalArguments());
-    }
+    QuickUiHost quickUi(*settings, *actionManager, *scriptManager);
+    const std::optional<UiPorts> ports =
+        quickUi.start() ? quickUi.ports() : std::nullopt;
+    exitCode = ports ? runCore(a, *ports, channelPtr, parser.positionalArguments())
+                     : EXIT_FAILURE;
   }
 
   return exitCode;

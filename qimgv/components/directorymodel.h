@@ -6,7 +6,6 @@
 #include <QObject>
 #include "cache/cache.h"
 #include "directorymanager/directorymanager.h"
-#include "scaler/scaler.h"
 #include "loader/loader.h"
 #include "utils/fileoperations.h"
 
@@ -15,12 +14,6 @@ class DirectoryModel : public QObject {
 public:
     explicit DirectoryModel(QObject *parent = nullptr);
     ~DirectoryModel();
-
-    void clearScaler();
-    // How loaded static images are prepared for display (see
-    // DisplayPipeline); set once, before the first load.
-    void setDisplayPipeline(DisplayPipeline pipeline);
-    void requestScaled(const ScalerRequest &req);
 
     void load(QString filePath, bool asyncHint);
     void preload(QString filePath);
@@ -100,13 +93,11 @@ signals:
     void indexChanged(int oldIndex, int index);
     void imageReady(std::shared_ptr<Image> img, const QString&);
     void imageUpdated(QString filePath);
-    void scalingFinished(QImage result, ScalerRequest req);
 
 private:
     DirectoryManager dirManager;
     Loader loader;
     Cache cache;
-    std::unique_ptr<Scaler> scaler;
     FileListSource fileListSource;
 
     // Loads filePath from disk unconditionally, bypassing the cache-hit

@@ -9,7 +9,7 @@ This guide walks you through building qimgv-plus and all its dependencies on Win
 | **Visual Studio** | 2022 (17.x+) | [visualstudio.microsoft.com](https://visualstudio.microsoft.com/) | "Desktop development with C++" workload |
 | **CMake** | 3.25+ | Included with VS or [cmake.org](https://cmake.org/download/) | |
 | **Git** | Latest | [git-scm.com](https://git-scm.com/) | |
-| **Qt SDK** | 6.12+ | [qt.io](https://www.qt.io/download-qt-installer) | Components: Core, Widgets, Network, Svg, SvgWidgets, PrintSupport, OpenGLWidgets, Sql, Pdf, LinguistTools |
+| **Qt SDK** | 6.12+ | [qt.io](https://www.qt.io/download-qt-installer) | Components: Core, Gui, Network, Svg, PrintSupport, Sql, Pdf, Qml, Quick, QuickControls2, QuickDialogs2, ShaderTools, LinguistTools; Test and QuickTest for the tests |
 | **Vulkan SDK** | Latest | [vulkan.lunarg.com](https://vulkan.lunarg.com/sdk/home) | Required for upscayl-ncnn (AI upscaling) |
 | **MSYS2** | Latest | [msys2.org](https://www.msys2.org/) | Only needed for building FFmpeg (provides bash/make) |
 | **Python 3** | 3.10+ | [python.org](https://www.python.org/) | Only needed for building FFmpeg |

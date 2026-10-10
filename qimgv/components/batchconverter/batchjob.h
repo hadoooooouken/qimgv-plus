@@ -7,8 +7,8 @@
 #include "utils/coloradjustments.h"
 
 // What one batch conversion does to every selected file. Shared by
-// BatchConverter (which runs it) and the batch converter dialogs of both UIs
-// (which build it, see batchjobrules.h); free of Settings and of the
+// BatchConverter (which runs it) and the batch converter dialog (which
+// builds it, see batchjobrules.h); free of Settings and of the
 // converter's image code.
 
 enum class AspectFitMode : uint8_t {

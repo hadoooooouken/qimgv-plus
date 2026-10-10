@@ -1,10 +1,10 @@
 #include "imagestatic.h"
 #include "settings.h"
 #include "utils/blendreader.h"
-#include "utils/colormanager.h"
 #include "utils/djvureader.h"
 #include "utils/fontpreview.h"
 #include "utils/hdrtonemapper.h"
+#include <QColorSpace>
 #include <QMutexLocker>
 #include <QPainter>
 #include <QPdfDocument>
@@ -205,8 +205,8 @@ void ImageStatic::loadPdf() {
   mLoaded = true;
 }
 
-// HDR -> SDR as the CPU viewer shows it: tone mapped with the current
-// settings, or (tone mapping off or failed) converted to integer sRGB. Either
+// HDR -> SDR for the CPU work on the image (editing, saving, copying,
+// upscaling): tone mapped with the current settings, or (tone mapping off or failed) converted to integer sRGB. Either
 // way the result is an integer sRGB image without the HDR_* metadata text.
 QImage ImageStatic::sdrFromHdr(const QImage &hdr) {
   if (settings && settings->hdrToneMappingEnabled()) {
@@ -229,27 +229,15 @@ QImage ImageStatic::sdrFromHdr(const QImage &hdr) {
   return converted;
 }
 
-DisplayPipeline ImageStatic::displayPipeline() const {
-  return mDecodeContext.displayPipeline;
-}
-
-// The CPU pipeline prepares the colour-managed display copy at load; the GPU
-// viewer colour manages (and tone maps) the decoded pixels itself.
+// The viewer colour manages (and tone maps) the decoded pixels itself.
 void ImageStatic::setDecoded(std::shared_ptr<const QImage> decoded) {
   const bool hdr = decoded && HdrToneMapper::isHdr(*decoded);
-  pixels.assign(std::move(decoded), hdr, displayPipeline(), &ImageStatic::sdrFromHdr);
-  imageColorManaged.reset();
-  if (displayPipeline() == DisplayPipeline::Cpu) {
-    if (const std::shared_ptr<const QImage> sdr = pixels.sdr())
-      imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*sdr));
-  }
+  pixels.assign(std::move(decoded), hdr, &ImageStatic::sdrFromHdr);
 }
 
 void ImageStatic::commitEdits() {
   if (isEdited()) {
     pixels.replace(imageEdited);
-    // The display copy of the edited pixels becomes the current one.
-    imageColorManaged = std::move(imageColorManagedEdited);
     // The effective pixels stay unchanged, so committing does not advance the
     // content revision.
     clearEditedImageState();
@@ -257,42 +245,8 @@ void ImageStatic::commitEdits() {
   }
 }
 
-std::unique_ptr<QPixmap> ImageStatic::getPixmap() {
-  std::unique_ptr<QPixmap> pix(new QPixmap());
-  const std::shared_ptr<const QImage> current = getImage();
-  if (!current)
-    return pix;
-  if (settings && settings->colorManagementEnabled())
-    pix->convertFromImage(ColorManager::applyColorManagement(*current));
-  else
-    pix->convertFromImage(*current);
-  return pix;
-}
-
 std::shared_ptr<const QImage> ImageStatic::getDisplayImage() {
-  if (displayPipeline() == DisplayPipeline::Gpu)
-    return getDecodedImage();
-
-  if (settings && settings->colorManagementEnabled()) {
-    QColorSpace targetSpace = ColorManager::getTargetColorSpace();
-    if (isEdited() && imageEdited) {
-      if (!imageColorManagedEdited || imageColorManagedEdited->colorSpace() != targetSpace) {
-        imageColorManagedEdited = std::make_shared<const QImage>(ColorManager::applyColorManagement(*imageEdited));
-      }
-      return imageColorManagedEdited;
-    } else if (const std::shared_ptr<const QImage> sdr = pixels.sdr()) {
-      if (!imageColorManaged || imageColorManaged->colorSpace() != targetSpace) {
-        imageColorManaged = std::make_shared<const QImage>(ColorManager::applyColorManagement(*sdr));
-      }
-      return imageColorManaged;
-    }
-  } else {
-    if (isEdited() && imageEdited) {
-      return imageEdited;
-    }
-    return pixels.sdr();
-  }
-  return nullptr;
+  return getDecodedImage();
 }
 
 std::shared_ptr<const QImage> ImageStatic::getDecodedImage() {
@@ -337,9 +291,6 @@ bool ImageStatic::setEditedImage(std::unique_ptr<const QImage> imageEditedNew) {
       return true;
     }
     imageEdited = std::move(imageEditedNew);
-    if (imageEdited && displayPipeline() == DisplayPipeline::Cpu) {
-      imageColorManagedEdited = std::make_shared<const QImage>(ColorManager::applyColorManagement(*imageEdited));
-    }
     mEdited = true;
     ++mContentRevision;
     return true;
@@ -358,6 +309,5 @@ bool ImageStatic::discardEditedImage() {
 
 void ImageStatic::clearEditedImageState() noexcept {
   imageEdited.reset();
-  imageColorManagedEdited.reset();
   mEdited = false;
 }

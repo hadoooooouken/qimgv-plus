@@ -4,7 +4,7 @@
 #include <QMimeData>
 
 #include "components/actionmanager/actionmanager.h"
-#include "gui/folderview/filesystemmodelcustom.h"
+#include "gui/quick/adapters/filesystemmodelcustom.h"
 #include "gui/ports/uievents.h"
 #include "gui/quick/adapters/directoryviewadapter.h"
 #include "gui/quick/ui/folderview/foldergridcontroller.h"

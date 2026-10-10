@@ -1,6 +1,4 @@
 #include "settings.h"
-#include "gui/dialogsurfaces.h"
-#include "gui/uimetrics.h"
 #include "utils/formatregistry.h"
 
 #include <algorithm>
@@ -24,7 +22,7 @@ int normalizedPanelHideDelayMs(int delayMs) {
 } // namespace
 
 Settings::Settings(QObject *parent) : QObject(parent) {
-  QString appDirPath = QApplication::applicationDirPath();
+  QString appDirPath = QCoreApplication::applicationDirPath();
   QString confPath = appDirPath + "/conf";
   QDir confDir(confPath);
 
@@ -123,7 +121,7 @@ Settings *Settings::getInstance() {
 void Settings::setupCache() {
   QString cachePath;
   QString thumbPath;
-  QString appDirPath = QDir::cleanPath(QApplication::applicationDirPath());
+  QString appDirPath = QDir::cleanPath(QCoreApplication::applicationDirPath());
   QString confPath = QDir::cleanPath(mConfDir->absolutePath());
 
   if (confPath == QDir::cleanPath(appDirPath + "/conf")) {
@@ -180,189 +178,6 @@ qint64 Settings::thumbnailCacheMaxEntries() {
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 QString Settings::tmpDir() { return mTmpDir->path() + "/"; }
-//------------------------------------------------------------------------------
-// this here is temporarily, will be moved to some sort of theme manager class
-void Settings::loadStylesheet() {
-  // stylesheet template file
-  static QString styleSheetTemplate;
-  if (styleSheetTemplate.isEmpty()) {
-    QFile file(":/res/styles/style-template.qss");
-    if (file.open(QFile::ReadOnly)) {
-      styleSheetTemplate = QLatin1String(file.readAll());
-    }
-  }
-  if (!styleSheetTemplate.isEmpty()) {
-    QString styleSheet = styleSheetTemplate;
-
-    // --- color scheme ---------------------------------------------
-    auto colors = settings->colorScheme();
-    // tint color for system windows
-    ThemeMode themeModeVal = settings->themeMode();
-    bool isDark = false;
-    if (themeModeVal == THEME_AUTO) {
-      isDark = QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
-    } else if (themeModeVal == THEME_DARK) {
-      isDark = true;
-    }
-
-    const DialogSurfaces::Colors surfaces = DialogSurfaces::colorsFor(isDark);
-    if (isDark) {
-      QPalette darkPalette;
-      darkPalette.setColor(QPalette::Window, surfaces.window);
-      darkPalette.setColor(QPalette::WindowText, surfaces.text);
-      darkPalette.setColor(QPalette::Base, QColor(55, 55, 55));
-      darkPalette.setColor(QPalette::AlternateBase, QColor(45, 45, 45));
-      darkPalette.setColor(QPalette::ToolTipBase, colors.widget);
-      darkPalette.setColor(QPalette::ToolTipText, colors.text_hc);
-      darkPalette.setColor(QPalette::Text, surfaces.text);
-      darkPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(100, 100, 100));
-      darkPalette.setColor(QPalette::Button, QColor(45, 45, 45));
-      darkPalette.setColor(QPalette::ButtonText, surfaces.text);
-      darkPalette.setColor(QPalette::BrightText, Qt::red);
-      darkPalette.setColor(QPalette::Link, colors.accent);
-      darkPalette.setColor(QPalette::Highlight, colors.accent);
-      darkPalette.setColor(QPalette::HighlightedText, Qt::white);
-      darkPalette.setColor(QPalette::Mid, QColor(110, 110, 110));
-      qApp->setPalette(darkPalette);
-    } else {
-      QPalette lightPalette;
-      lightPalette.setColor(QPalette::Window, surfaces.window);
-      lightPalette.setColor(QPalette::WindowText, surfaces.text);
-      lightPalette.setColor(QPalette::Base, QColor(255, 255, 255));
-      lightPalette.setColor(QPalette::AlternateBase, QColor(240, 240, 240));
-      lightPalette.setColor(QPalette::ToolTipBase, colors.widget);
-      lightPalette.setColor(QPalette::ToolTipText, colors.text_hc);
-      lightPalette.setColor(QPalette::Text, surfaces.text);
-      lightPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(150, 150, 150));
-      lightPalette.setColor(QPalette::Button, QColor(240, 240, 240));
-      lightPalette.setColor(QPalette::ButtonText, surfaces.text);
-      lightPalette.setColor(QPalette::BrightText, Qt::red);
-      lightPalette.setColor(QPalette::Link, colors.accent);
-      lightPalette.setColor(QPalette::Highlight, colors.accent);
-      lightPalette.setColor(QPalette::HighlightedText, Qt::white);
-      qApp->setPalette(lightPalette);
-    }
-
-    // --- widget sizes ---------------------------------------------
-    const QFont fnt = QGuiApplication::font();
-    const UiMetrics::Typography typography = UiMetrics::typographyFor(fnt);
-    const int font_small = typography.smallPointSize;
-    const int font_section = typography.sectionPointSize;
-    const int font_large = typography.largePointSize;
-    const UiMetrics::ControlMetrics metrics = UiMetrics::controlMetricsFor(fnt);
-
-    // --- write variables into stylesheet --------------------------
-    styleSheet.replace("%font_small%",   QString::number(font_small)   + "pt");
-    styleSheet.replace("%font_section%", QString::number(font_section) + "pt");
-    styleSheet.replace("%font_large%",   QString::number(font_large)   + "pt");
-    styleSheet.replace("%button_height%",
-                       QString::number(metrics.buttonHeight) + "px");
-    styleSheet.replace("%top_panel_height%",
-                       QString::number(metrics.topPanelHeight) + "px");
-    styleSheet.replace("%overlay_header_size%",
-                       QString::number(metrics.overlayHeaderSize) + "px");
-    styleSheet.replace("%context_menu_width%",
-                       QString::number(metrics.contextMenuWidth) + "px");
-    styleSheet.replace("%context_menu_button_height%",
-                       QString::number(metrics.contextMenuItemHeight) + "px");
-    styleSheet.replace("%rename_overlay_width%",
-                       QString::number(metrics.renameOverlayWidth) + "px");
-    styleSheet.replace("%tooltip_border_width%",
-                       QString::number(metrics.tooltipBorderWidth) + "px");
-    styleSheet.replace("%tooltip_border_radius%",
-                       QString::number(metrics.tooltipBorderRadius) + "px");
-
-    styleSheet.replace("%icontheme%", isDark ? "light" : "dark");
-    styleSheet.replace("%contextmenu_border_radius%",
-                       QString::number(metrics.contextMenuBorderRadius) + "px");
-    styleSheet.replace("%sys_window%", surfaces.window.name());
-    styleSheet.replace("%sys_window_tinted%", surfaces.tinted.name());
-    styleSheet.replace("%sys_window_tinted_lc%", surfaces.tintedLc.name());
-    styleSheet.replace("%sys_window_tinted_lc2%", surfaces.tintedLc2.name());
-    styleSheet.replace("%sys_window_tinted_hc%", surfaces.tintedHc.name());
-    styleSheet.replace("%sys_window_tinted_hc2%", surfaces.tintedHc2.name());
-    styleSheet.replace("%sys_text_secondary_rgba%",
-                       "rgba(" + QString::number(surfaces.text.red()) + "," +
-                           QString::number(surfaces.text.green()) + "," +
-                           QString::number(surfaces.text.blue()) + ",50%)");
-
-    styleSheet.replace("%button%", colors.button.name());
-    styleSheet.replace("%button_hover%", colors.button_hover.name());
-    styleSheet.replace("%button_pressed%", colors.button_pressed.name());
-    styleSheet.replace("%panel_button%", colors.panel_button.name());
-    styleSheet.replace("%panel_button_hover%",
-                       colors.panel_button_hover.name());
-    styleSheet.replace("%panel_button_pressed%",
-                       colors.panel_button_pressed.name());
-    styleSheet.replace("%widget%", colors.widget.name());
-    styleSheet.replace("%widget_border%", colors.widget_border.name());
-    styleSheet.replace("%folderview%", colors.folderview.name());
-    styleSheet.replace("%folderview_topbar%", colors.folderview_topbar.name());
-    styleSheet.replace("%thumbpanel%", colors.thumbpanel.name());
-    styleSheet.replace("%thumbpanel_hc%", colors.thumbpanel_hc.name());
-    styleSheet.replace("%thumbpanel_hc2%", colors.thumbpanel_hc2.name());
-    styleSheet.replace("%folderview_hc%", colors.folderview_hc.name());
-    styleSheet.replace("%folderview_hc2%", colors.folderview_hc2.name());
-    styleSheet.replace("%accent_light%", colors.accent.lighter(130).name());
-    styleSheet.replace("%accent%", colors.accent.name());
-    styleSheet.replace("%input_field_focus%", colors.input_field_focus.name());
-    styleSheet.replace("%overlay%", colors.overlay.name());
-    styleSheet.replace("%icons%", colors.icons.name());
-    styleSheet.replace("%text_hc2%", colors.text_hc2.name());
-    styleSheet.replace("%text_hc%", colors.text_hc.name());
-    styleSheet.replace("%text%", colors.text.name());
-    styleSheet.replace("%overlay_text%", colors.overlay_text.name());
-    styleSheet.replace("%text_lc%", colors.text_lc.name());
-    styleSheet.replace("%text_lc2%", colors.text_lc2.name());
-    styleSheet.replace("%scrollbar%", colors.scrollbar.name());
-    styleSheet.replace("%scrollbar_hover%", colors.scrollbar_hover.name());
-    styleSheet.replace("%folderview_button_hover%",
-                       colors.folderview_button_hover.name());
-    styleSheet.replace("%folderview_button_pressed%",
-                       colors.folderview_button_pressed.name());
-    styleSheet.replace("%text_secondary_rgba%",
-                       "rgba(" + QString::number(colors.text.red()) + "," +
-                           QString::number(colors.text.green()) + "," +
-                           QString::number(colors.text.blue()) + ",62%)");
-    styleSheet.replace(
-        "%bookmark_action_hover_rgba%",
-        "rgba(" + QString::number(colors.text_hc2.red()) + "," +
-            QString::number(colors.text_hc2.green()) + "," +
-            QString::number(colors.text_hc2.blue()) + ",14%)");
-    styleSheet.replace(
-        "%bookmark_action_pressed_rgba%",
-        "rgba(" + QString::number(colors.text_hc2.red()) + "," +
-            QString::number(colors.text_hc2.green()) + "," +
-            QString::number(colors.text_hc2.blue()) + ",26%)");
-    styleSheet.replace("%accent_hover_rgba%",
-                       "rgba(" + QString::number(colors.accent.red()) + "," +
-                           QString::number(colors.accent.green()) + "," +
-                           QString::number(colors.accent.blue()) + ",65%)");
-    styleSheet.replace("%overlay_rgba%",
-                       "rgba(" + QString::number(colors.overlay.red()) + "," +
-                           QString::number(colors.overlay.green()) + "," +
-                           QString::number(colors.overlay.blue()) + ",90%)");
-    styleSheet.replace(
-        "%fv_backdrop_rgba%",
-        "rgba(" + QString::number(colors.folderview_hc2.red()) + "," +
-            QString::number(colors.folderview_hc2.green()) + "," +
-            QString::number(colors.folderview_hc2.blue()) + ",80%)");
-    styleSheet.replace("%thumbpanel_rgba%",
-                       "rgba(" + QString::number(colors.thumbpanel.red()) +
-                           "," + QString::number(colors.thumbpanel.green()) +
-                           "," + QString::number(colors.thumbpanel.blue()) +
-                           "," + QString::number(colors.thumbpanel.alphaF()) +
-                           ")");
-    // do not show separator line if topbar color matches folderview
-    if (colors.folderview != colors.folderview_topbar)
-      styleSheet.replace("%topbar_border_rgba%", "rgba(0,0,0,14%)");
-    else
-      styleSheet.replace("%topbar_border_rgba%", colors.folderview.name());
-
-    // --- apply -------------------------------------------------
-    qApp->setStyleSheet(styleSheet);
-  }
-}
 //------------------------------------------------------------------------------
 void Settings::loadTheme() {
   ThemeMode mode = themeMode();
@@ -435,7 +250,6 @@ const ColorScheme &Settings::colorScheme() { return mColorScheme; }
 //------------------------------------------------------------------------------
 void Settings::setColorScheme(ColorScheme scheme) {
   mColorScheme = scheme;
-  loadStylesheet();
 }
 //------------------------------------------------------------------------------
 void Settings::setColorTid(int tid) { mColorScheme.tid = tid; }
@@ -721,7 +535,7 @@ bool Settings::hasUpscaylModels() {
   static bool checked = false;
   static bool exists = false;
   if (!checked) {
-    QDir modelsDir(QApplication::applicationDirPath() + "/models");
+    QDir modelsDir(QCoreApplication::applicationDirPath() + "/models");
     QStringList filters;
     filters << "*.param";
     QStringList files = modelsDir.entryList(filters, QDir::Files);
@@ -739,7 +553,7 @@ bool Settings::hasUpscaylModels() {
 }
 
 QStringList Settings::availableUpscaylModels() {
-  QDir modelsDir(QApplication::applicationDirPath() + "/models");
+  QDir modelsDir(QCoreApplication::applicationDirPath() + "/models");
   QStringList filters;
   filters << "*.param";
   QStringList files = modelsDir.entryList(filters, QDir::Files, QDir::Name);
@@ -815,22 +629,6 @@ void Settings::setQuickGraphicsApi(QuickGraphicsApi api) {
     break;
   }
   settings->settingsConf->setValue(quickGraphicsApiKey, QString::fromLatin1(name));
-}
-//------------------------------------------------------------------------------
-namespace {
-constexpr auto uiModeKey = "userInterface";
-} // namespace
-
-UiMode Settings::uiMode() {
-  const QString name =
-      settings->settingsConf->value(uiModeKey, uiModeName(defaultUiMode)).toString();
-  const std::optional<UiMode> mode = uiModeFromName(name);
-  if (!mode) {
-    qWarning() << "Unknown" << uiModeKey << name << "- using"
-               << uiModeName(defaultUiMode);
-    return defaultUiMode;
-  }
-  return *mode;
 }
 //------------------------------------------------------------------------------
 bool Settings::maximizedWindow() {
@@ -1297,14 +1095,6 @@ bool Settings::infoBarFullscreen() {
 
 void Settings::setInfoBarFullscreen(bool mode) {
   settings->settingsConf->setValue("infoBarFullscreen", mode);
-}
-//------------------------------------------------------------------------------
-bool Settings::infoBarWindowed() {
-  return settings->settingsConf->value("infoBarWindowed", false).toBool();
-}
-
-void Settings::setInfoBarWindowed(bool mode) {
-  settings->settingsConf->setValue("infoBarWindowed", mode);
 }
 //------------------------------------------------------------------------------
 bool Settings::windowTitleExtendedInfo() {

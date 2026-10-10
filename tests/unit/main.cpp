@@ -32,7 +32,6 @@ int main(int argc, char **argv) {
   status |= runDialogTests(argc, argv);
   status |= runSettingsEditorTests(argc, argv);
   status |= runBatchPrintTests(argc, argv);
-  status |= runUiModeTests(argc, argv);
   status |= runViewerTogglesTests(argc, argv);
   return status;
 }

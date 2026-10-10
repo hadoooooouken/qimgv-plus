@@ -5,8 +5,8 @@
 #include <optional>
 
 // Catalogue of the Fluent System Icons glyphs used by the UI. It is
-// toolkit-independent: the widget UI renders the glyphs through
-// IconFontManager, the Qt Quick UI through the Theme bridge
+// toolkit-independent: IconFontManager paints the glyphs into images, the
+// Qt Quick UI renders them through the Theme bridge
 // (gui/quick/bridges/themebridge.h). The enum lives in a Q_NAMESPACE so that
 // QML can name the glyphs; the using-declaration below keeps the unqualified
 // FluentIcon spelling for C++ users.

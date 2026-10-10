@@ -14,14 +14,9 @@ class QuickViewerPort final : public QObject, public IViewerPort {
 public:
     explicit QuickViewerPort(ImageViewportController &viewport, QObject *parent = nullptr);
 
-    // The GPU renderer tone maps and colour manages the decoded image.
-    [[nodiscard]] DisplayPipeline displayPipeline() const override;
     void showImage(std::shared_ptr<const QImage> image, const QString &filePath) override;
     void showAnimation(const QString &filePath, const QString &format, QSize size) override;
     void closeImage() override;
-    // The GPU renderer filters and scales the image itself and never asks
-    // Core for a CPU-scaled copy; one that arrives anyway is not displayed.
-    void showScaledImage(const QImage &scaled) override;
     void showUpscaledCrop(const QImage &crop, const QRect &originalRect) override;
     void hideUpscaledCrop() override;
     void refreshScaling() override;

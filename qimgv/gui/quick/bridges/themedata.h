@@ -131,7 +131,7 @@ public:
 };
 
 // Control sizes in pixels, derived from the application font
-// (UiMetrics::ControlMetrics); the widget stylesheet uses the same values.
+// (UiMetrics::ControlMetrics).
 struct ThemeMetrics {
   Q_GADGET
   QML_VALUE_TYPE(themeMetrics)

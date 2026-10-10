@@ -40,10 +40,10 @@ class QQuickWindow;
 class ScriptManager;
 class Settings;
 
-// Composition root of the Qt Quick UI (--ui=quick), the counterpart of
-// WidgetUi. Owns the global-service bridges, the image viewport controller
-// with its viewer port and actions, the viewer's Upscayl and HDR toggles
-// (ViewerToggles), the overlays (OverlayCoordinator, which
+// Composition root of the Qt Quick UI. Owns the global-service bridges,
+// the image viewport controller with its viewer port and actions, the
+// viewer's Upscayl and HDR toggles (ViewerToggles), the overlays
+// (OverlayCoordinator, which
 // is also the notification port) with their actions, the thumbnail panel
 // (its directory view, the DirectoryViewAdapter, and its
 // ThumbnailPanelController), the context menu (ContextMenuModel), the crop
@@ -58,7 +58,7 @@ class Settings;
 // main window from the qimgv.ui module. Core talks to this UI only through
 // ports().
 //
-// Must be destroyed before QApplication and after every Core built from
+// Must be destroyed before QGuiApplication and after every Core built from
 // ports(); settings, actionManager and scriptManager must outlive it.
 class QuickUiHost {
 public:

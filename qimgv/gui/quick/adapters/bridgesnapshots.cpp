@@ -73,7 +73,6 @@ UiSettingsSnapshot BridgeSnapshots::readUiSettings(Settings &settings) {
       .overlays =
           {
               .infoBarFullscreen = settings.infoBarFullscreen(),
-              .infoBarWindowed = settings.infoBarWindowed(),
               .zoomIndicatorMode =
                   static_cast<Enums::ZoomIndicatorMode>(settings.zoomIndicatorMode()),
               .showSaveOverlay = settings.showSaveOverlay(),

@@ -39,11 +39,6 @@ int ImageAnimated::frameCount() const {
     return mFrameCount;
 }
 
-// in case of gif returns current frame
-std::unique_ptr<QPixmap> ImageAnimated::getPixmap() {
-    return std::unique_ptr<QPixmap>(new QPixmap(mPath, mDocInfo->format().toStdString().c_str()));
-}
-
 std::shared_ptr<const QImage> ImageAnimated::getImage() {
     std::shared_ptr<const QImage> img(new QImage(mPath, mDocInfo->format().toStdString().c_str()));
     return img;

@@ -32,19 +32,11 @@ target_sources(qimgv-plus PRIVATE
     startuptiming.cpp
     startuptiming.h
     stuff.cpp
-    uimode.cpp
-    uimode.h
     fileoperations.cpp
     colormanager.cpp
     pngwriter.cpp
     iconfontmanager.cpp
-    displayutils.cpp
     hdrtonemapper.cpp
     hdrtonemapper.h
     hdrsource.h
-)
-
-target_sources(qimgv-plus PRIVATE
-    ../gui/viewers/panoramagraphicsitem.cpp
-    ../gui/viewers/panoramagraphicsitem.h
 )

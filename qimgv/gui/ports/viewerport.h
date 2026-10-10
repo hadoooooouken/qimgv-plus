@@ -6,8 +6,6 @@
 #include <QString>
 #include <memory>
 
-#include "utils/displaypipeline.h"
-
 // Outbound UI port for the document viewer: what is displayed and the view
 // state the core needs for scaling and AI upscaling decisions. Must only be
 // called on the GUI thread.
@@ -15,21 +13,16 @@ class IViewerPort {
 public:
     virtual ~IViewerPort() = default;
 
-    // Where this viewer wants static images prepared; constant for the
-    // viewer's lifetime. Core loads images accordingly and passes them to
-    // showImage() as Image::getDisplayImage() returns them.
-    [[nodiscard]] virtual DisplayPipeline displayPipeline() const = 0;
-
+    // image: as Image::getDisplayImage() returns it, the decoded pixels (HDR
+    // stays HDR); the viewer tone maps and colour manages them itself.
     virtual void showImage(std::shared_ptr<const QImage> image, const QString &filePath) = 0;
     virtual void showAnimation(const QString &filePath, const QString &format, QSize size) = 0;
     virtual void closeImage() = 0;
 
-    // Delivers a CPU-scaled version of the displayed image.
-    virtual void showScaledImage(const QImage &scaled) = 0;
     // Displays an AI-upscaled crop over originalRect (source image coordinates).
     virtual void showUpscaledCrop(const QImage &crop, const QRect &originalRect) = 0;
     virtual void hideUpscaledCrop() = 0;
-    // Re-requests scaling of the displayed image at the current zoom.
+    // Re-requests the AI upscale of the displayed image at the current zoom.
     virtual void refreshScaling() = 0;
 
     // Visible part of the displayed image, in source image coordinates.

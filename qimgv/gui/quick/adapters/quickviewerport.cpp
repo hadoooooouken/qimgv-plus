@@ -9,10 +9,6 @@ QuickViewerPort::QuickViewerPort(ImageViewportController &viewport, QObject *par
       viewport(viewport) {
 }
 
-DisplayPipeline QuickViewerPort::displayPipeline() const {
-    return DisplayPipeline::Gpu;
-}
-
 void QuickViewerPort::showImage(std::shared_ptr<const QImage> image, const QString &filePath) {
     if (image)
         emit documentShown(image->size());
@@ -26,10 +22,6 @@ void QuickViewerPort::showAnimation(const QString &filePath, const QString &form
 
 void QuickViewerPort::closeImage() {
     viewport.closeImage();
-}
-
-void QuickViewerPort::showScaledImage(const QImage &) {
-    // Intentionally not displayed; see the declaration.
 }
 
 void QuickViewerPort::showUpscaledCrop(const QImage &crop, const QRect &originalRect) {

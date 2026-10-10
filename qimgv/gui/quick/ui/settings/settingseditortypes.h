@@ -10,7 +10,7 @@
 #include "components/settingseditor/shortcuteditormodel.h"
 
 // QML registrations of the settings editor types, which live in the
-// UI-independent view components (both UIs use them).
+// UI-independent view components.
 
 struct EditorSessionForeign {
     Q_GADGET

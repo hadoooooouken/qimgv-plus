@@ -12,7 +12,7 @@
 
 // Viewer settings that drive the view transform. The viewer that owns the
 // transform reads them from Settings; the model itself never touches global
-// state, so it can be exercised by unit tests and shared by both UIs.
+// state, so it can be exercised by unit tests.
 struct ViewTransformConfig {
     bool expandImage = false;
     // Raw "expand limit" setting. Values below 1 mean "no limit"; see

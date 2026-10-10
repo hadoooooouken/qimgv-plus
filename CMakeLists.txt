@@ -34,7 +34,9 @@ set(QT_VERSION_MAJOR 6)
 # GuiPrivate (QRhi) is used deliberately by qimgv.render; see its CMakeLists.
 set(QT_NO_PRIVATE_MODULE_WARNING ON)
 find_package(Qt6 6.12 REQUIRED COMPONENTS
-    Core Widgets Network Svg SvgWidgets PrintSupport OpenGLWidgets Sql Pdf
+    # PrintSupport (QPrinter) brings Qt Widgets with it; nothing else uses
+    # Widgets.
+    Core Gui Network Svg PrintSupport Sql Pdf
     Qml Quick QuickControls2 QuickDialogs2 ShaderTools
     # QRhi headers (<rhi/qrhi.h>) for the qimgv.render module.
     GuiPrivate

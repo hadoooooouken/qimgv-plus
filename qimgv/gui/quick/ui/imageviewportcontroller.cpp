@@ -245,8 +245,7 @@ void ImageViewportController::pushDisplayState() {
     applyItemSettled();
 }
 
-// HDR tone mapping and display colour management of the decoded image (the
-// Quick UI uses DisplayPipeline::Gpu).
+// HDR tone mapping and display colour management of the decoded image.
 void ImageViewportController::applyDisplayColor() {
     if (!mView)
         return;

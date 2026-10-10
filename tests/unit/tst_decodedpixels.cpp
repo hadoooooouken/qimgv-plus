@@ -42,25 +42,11 @@ class DecodedPixelsTests : public QObject {
   Q_OBJECT
 
 private slots:
-  void cpuConvertsAnHdrImageAtOnce() {
-    CountingConversion conversion;
-    DecodedPixels pixels;
-    pixels.assign(hdrImage(), true, DisplayPipeline::Cpu, conversion.function());
-    QCOMPARE(conversion.calls->load(), 1);
-    QVERIFY(!pixels.hasHdrSource());
-    const std::shared_ptr<const QImage> sdr = pixels.sdr();
-    QVERIFY(sdr);
-    QCOMPARE(sdr->format(), QImage::Format_ARGB32);
-    // The HDR source is not kept: decoded() is the SDR copy.
-    QCOMPARE(pixels.decoded(), sdr);
-    QCOMPARE(conversion.calls->load(), 1);
-  }
-
-  void gpuKeepsTheHdrSourceAndConvertsOnFirstUse() {
+  void keepsTheHdrSourceAndConvertsOnFirstUse() {
     CountingConversion conversion;
     const std::shared_ptr<const QImage> hdr = hdrImage();
     DecodedPixels pixels;
-    pixels.assign(hdr, true, DisplayPipeline::Gpu, conversion.function());
+    pixels.assign(hdr, true, conversion.function());
     QCOMPARE(conversion.calls->load(), 0);
     QVERIFY(pixels.hasHdrSource());
     QCOMPARE(pixels.decoded(), hdr);
@@ -80,7 +66,7 @@ private slots:
     CountingConversion conversion;
     const std::shared_ptr<const QImage> sdr = sdrImage();
     DecodedPixels pixels;
-    pixels.assign(sdr, false, DisplayPipeline::Gpu, conversion.function());
+    pixels.assign(sdr, false, conversion.function());
     QCOMPARE(pixels.sdr(), sdr);
     QCOMPARE(pixels.decoded(), sdr);
     QVERIFY(!pixels.hasHdrSource());
@@ -90,7 +76,7 @@ private slots:
   void concurrentReadersConvertOnce() {
     CountingConversion conversion;
     DecodedPixels pixels;
-    pixels.assign(hdrImage(), true, DisplayPipeline::Gpu, conversion.function());
+    pixels.assign(hdrImage(), true, conversion.function());
 
     std::vector<std::shared_ptr<const QImage>> results(kConcurrentReaders);
     std::vector<std::unique_ptr<QThread>> readers;
@@ -110,7 +96,7 @@ private slots:
   void aFailedConversionIsReportedOnce() {
     std::atomic<int> calls = 0;
     DecodedPixels pixels;
-    pixels.assign(hdrImage(), true, DisplayPipeline::Gpu, [&calls](const QImage &) {
+    pixels.assign(hdrImage(), true, [&calls](const QImage &) {
       ++calls;
       return QImage();
     });
@@ -125,7 +111,7 @@ private slots:
   void replacingDropsTheHdrSource() {
     CountingConversion conversion;
     DecodedPixels pixels;
-    pixels.assign(hdrImage(), true, DisplayPipeline::Gpu, conversion.function());
+    pixels.assign(hdrImage(), true, conversion.function());
     const std::shared_ptr<const QImage> edited = sdrImage();
     pixels.replace(edited);
     QVERIFY(!pixels.hasHdrSource());
@@ -137,8 +123,8 @@ private slots:
   void assigningNothingClears() {
     CountingConversion conversion;
     DecodedPixels pixels;
-    pixels.assign(sdrImage(), false, DisplayPipeline::Gpu, conversion.function());
-    pixels.assign(nullptr, false, DisplayPipeline::Gpu, conversion.function());
+    pixels.assign(sdrImage(), false, conversion.function());
+    pixels.assign(nullptr, false, conversion.function());
     QVERIFY(!pixels.sdr());
     QVERIFY(!pixels.decoded());
     QCOMPARE(pixels.size(), QSize());

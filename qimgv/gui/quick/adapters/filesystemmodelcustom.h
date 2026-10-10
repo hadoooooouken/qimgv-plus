@@ -1,7 +1,7 @@
 #ifndef FILESYSTEMMODELCUSTOM_H
 #define FILESYSTEMMODELCUSTOM_H
 
-#include <QApplication>
+#include <QGuiApplication>
 #include <QFileSystemModel>
 #include <QPainter>
 #include <QHash>

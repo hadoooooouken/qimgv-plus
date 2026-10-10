@@ -37,13 +37,7 @@ bool Loader::isLoading(QString path) {
 }
 
 std::shared_ptr<Image> Loader::load(QString path) {
-    DecodeContext context;
-    context.displayPipeline = mDisplayPipeline;
-    return ImageFactory::createImage(path, std::move(context));
-}
-
-void Loader::setDisplayPipeline(DisplayPipeline pipeline) {
-    mDisplayPipeline = pipeline;
+    return ImageFactory::createImage(path);
 }
 
 // Cancels obsolete loads before starting the requested priority load.
@@ -67,7 +61,6 @@ void Loader::doLoadAsync(QString path, int priority) {
     request.taskId = taskId;
     request.decodeContext.cancellationToken =
         mCancellationSource.get_token();
-    request.decodeContext.displayPipeline = mDisplayPipeline;
 
     auto runnable =
         std::make_unique<LoaderRunnable>(std::move(request), taskNotifier);

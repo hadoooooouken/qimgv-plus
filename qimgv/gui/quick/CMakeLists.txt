@@ -1,5 +1,5 @@
 ## QT QUICK UI MODULES
-# Each QML module of the Qt Quick UI (--ui=quick) is a static library linked
+# Each QML module of the Qt Quick UI is a static library linked
 # into qimgv-plus through its static plugin; see quickuihost.cpp.
 
 # Module output directories follow the module URIs (qimgv/ui, qimgv/style,

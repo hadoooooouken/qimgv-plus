@@ -63,8 +63,7 @@ public:
   explicit SvgRasterizer(QObject *parent = nullptr);
   ~SvgRasterizer() override;
 
-  // The file is an SVG document this component renders; the widget viewer
-  // switches to its vector item by the same rule.
+  // The file is an SVG document this component renders.
   [[nodiscard]] static bool isSvgFile(const QString &path);
   // The document (default size documentSize) is the source of an image of
   // imageSize: the same size, or that size scaled down with its aspect
