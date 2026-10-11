@@ -13,10 +13,12 @@ This guide walks you through building qimgv-plus and all its dependencies on Win
 | **Vulkan SDK** | Latest | [vulkan.lunarg.com](https://vulkan.lunarg.com/sdk/home) | Required for upscayl-ncnn (AI upscaling) |
 | **MSYS2** | Latest | [msys2.org](https://www.msys2.org/) | Only needed for building FFmpeg (provides bash/make) |
 | **Python 3** | 3.10+ | [python.org](https://www.python.org/) | Only needed for building FFmpeg |
+| **Inno Setup** | 6.x | [jrsoftware.org](https://jrsoftware.org/isdl.php) | Required for packaging release installers (`iscc`) |
+| **Intel SDE** | 9.x+ | [intel.com](https://www.intel.com/content/www/us/en/developer/articles/tool/software-development-emulator.html) | Optional; for SSE2 CPU emulation and smoke testing |
 
 ### Minimum Hardware
 
-- **CPU**: x86-64 with AVX2 support
+- **CPU**: x86-64 with AVX2 support (for default build) or SSE2 support (for SSE2 build)
 - **RAM**: 16 GB
 - **GPU VRAM**: 8 GB
 - **Storage**: SSD
@@ -131,15 +133,21 @@ qimgv-plus/
 │   ├── ninja/                 # Ninja build tool (tool binary)
 │   └── magic-kernel-sharp/    # Scaling kernel data
 ├── build_scripts/             # Dependency build automation
-│   ├── rebuild-all.ps1
+│   ├── msvc-release-policy.json # Shared compiler/linker/ISA policy
+│   ├── MsvcPolicy.ps1         # Policy helpers (Get-IsaFolderName, etc.)
+│   ├── rebuild-all.ps1        # Batch builder for format libraries
 │   ├── build_qtiff_jpeg.ps1
 │   ├── build_qpng_spng.ps1
 │   ├── build_qjpeg_jpeg.ps1
 │   ├── build_exiv2.ps1
 │   ├── build_ffmpeg_msvc.py
+│   ├── check-isa.ps1          # ISA compliance verification scanner
 │   ├── check_deps.py
-│   ├── deploy-plugins.ps1
+│   ├── deploy-plugins.ps1     # Plugin & dependency deployment
 │   └── setup-deps.ps1
+├── release/                   # AVX2 output directory
+├── release-sse2/              # SSE2 output directory
+├── INSTALL/                   # Packaged installer executables
 ├── patches/                   # Local patch files for dependencies
 │   ├── *.patch                # Single-file patches
 │   ├── kimageformats/         # Patch series (10 commits past v6.26.0)
@@ -303,21 +311,127 @@ Builds a minimal FFmpeg with only the HEVC decoder. Required for HEIF/HEIC suppo
 ```powershell
 cd ..  # back to project root
 
-# Configure (using presets)
+# --- Build AVX2 (default) ---
 cmake --preset qimgv-x64-release
+cmake --build --preset qimgv-x64-release
 
-# Build
-cmake --build out/build/qimgv-x64-release --config Release
+# --- Build SSE2 ---
+cmake --preset qimgv-x64-release-sse2
+cmake --build --preset qimgv-x64-release-sse2
 ```
 
-The built application and all plugins/DLLs are placed in the `release/` directory.
+Outputs are placed in `release/` (AVX2) and `release-sse2/` (SSE2).
 
 ### Phase 3: Post-Build (Optional)
 
+If plugins or dependency DLLs need to be redeployed manually:
+
 ```powershell
 cd build_scripts
-.\deploy-plugins.ps1    # Copy kimg_*.dll plugins to release/imageformats/
+.\deploy-plugins.ps1            # Deploy to release/
+.\deploy-plugins.ps1 -Isa SSE2 # Deploy to release-sse2/
+cd ..
 ```
+
+---
+
+## Dual AVX2 / SSE2 Release Procedure
+
+qimgv-plus supports building and shipping two official installer variants from a single source tree:
+- **AVX2 build** (`release/`, packaged as `qimgv-plus-setup.exe`): Target baseline for modern CPUs with AVX2 support.
+- **SSE2 build** (`release-sse2/`, packaged as `qimgv-plus-setup-sse2.exe`): Target baseline for older x86-64 CPUs without AVX/AVX2 (e.g. Intel Core 2, first-gen Core i3/i5/i7, AMD Athlon 64 / Phenom).
+
+Each variant maintains its own isolated CMake build directory (`out/build/qimgv-x64-release` vs `out/build/qimgv-x64-release-sse2`), dependency install trees (`formats/<lib>/install` vs `formats/<lib>/install-sse2`), and output folder (`release` vs `release-sse2`).
+
+Follow these four steps to produce and verify an official release:
+
+### 1. Dependencies
+
+Format dependencies must be compiled for both ISA targets. **Rebuild them only when a dependency version or patch changes**, not on every application release.
+
+Run each script from a Visual Studio Developer Command Prompt:
+
+```powershell
+cd build_scripts
+
+# --- AVX2 Dependencies (Default) ---
+.\build_qtiff_jpeg.ps1
+.\build_qpng_spng.ps1
+.\build_qjpeg_jpeg.ps1
+.\build_exiv2.ps1
+.\rebuild-all.ps1
+python build_ffmpeg_msvc.py
+
+# --- SSE2 Dependencies ---
+.\build_qtiff_jpeg.ps1 -Isa SSE2
+.\build_qpng_spng.ps1  -Isa SSE2
+.\build_qjpeg_jpeg.ps1 -Isa SSE2
+.\build_exiv2.ps1      -Isa SSE2
+.\rebuild-all.ps1      -Isa SSE2
+python build_ffmpeg_msvc.py --isa SSE2
+
+cd ..
+```
+
+> [!NOTE]
+> All build scripts share common compiler/linker policies defined in `build_scripts/msvc-release-policy.json` and `build_scripts/MsvcPolicy.ps1`. The `-Isa SSE2` switch configures `/arch:SSE2` and routes outputs to `install-sse2` prefixes.
+
+### 2. Application
+
+Build both CMake presets. CMake automatically executes post-build steps (`windeployqt`, dependency DLL copies, and plugin deployment) into the corresponding release folder.
+
+```powershell
+# --- Build AVX2 Release (outputs to release/) ---
+cmake --preset qimgv-x64-release
+cmake --build --preset qimgv-x64-release
+
+# --- Build SSE2 Release (outputs to release-sse2/) ---
+cmake --preset qimgv-x64-release-sse2
+cmake --build --preset qimgv-x64-release-sse2
+```
+
+### 3. Verification
+
+Before packaging, verify ISA compliance using `check-isa.ps1` to ensure no illegal AVX/AVX2 instructions leaked into the SSE2 binaries.
+
+#### 3a. Verify AVX2 Release
+```powershell
+.\build_scripts\check-isa.ps1 -Path release -Isa AVX2
+```
+Confirms that the AVX2 release binaries pass ISA consistency checks.
+
+#### 3b. Verify SSE2 Release
+```powershell
+.\build_scripts\check-isa.ps1 -Path release-sse2 -ObjDir out\build\qimgv-x64-release-sse2
+```
+Scans first-party `.obj` files in the build tree and release binaries. Passing `-ObjDir` verifies that first-party translation units contain zero AVX/VEX instructions and confirms any vector instructions in first-party binaries originate strictly from MSVC CRT runtime dispatch (`vector_algorithms.obj`).
+
+#### 3c. SDE Smoke Test (SSE2 Only)
+Validate runtime execution under the Intel Software Development Emulator (SDE) using a pre-AVX CPU model:
+```powershell
+.\build_scripts\check-isa.ps1 -Path release-sse2 -Sde
+```
+Or run directly:
+```powershell
+sde -p4p -- release-sse2\qimgv-plus.exe
+```
+The `-p4p` flag emulates a Pentium 4 Prescott (x86-64, SSE3 baseline). Any unguarded AVX/AVX2 instruction triggers an illegal instruction exception, verifying that the binary will not crash on legacy hardware.
+
+### 4. Installers
+
+Build the Inno Setup installers for both variants:
+
+```powershell
+# AVX2 installer -> INSTALL\qimgv-plus-setup.exe
+iscc qimgv\qimgv-plus.iss
+
+# SSE2 installer -> INSTALL\qimgv-plus-setup-sse2.exe
+iscc /DIsa=SSE2 qimgv\qimgv-plus.iss
+```
+
+- The **AVX2 installer** (`qimgv-plus-setup.exe`) includes a hardware check in `InitializeSetup` that aborts installation on CPUs without AVX2 support and directs the user to download the SSE2 installer.
+- The **SSE2 installer** (`qimgv-plus-setup-sse2.exe`) packages the `release-sse2/` tree and runs on any 64-bit Windows system without AVX2 hardware constraints.
+- Both setup executables are written to the `INSTALL/` directory.
 
 ---
 

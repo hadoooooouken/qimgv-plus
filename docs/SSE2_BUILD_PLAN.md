@@ -478,7 +478,7 @@ Commit: `Add ISA verification script for release folders`
 
 ## Stage 8: Release Procedure
 
-Status: [ ]
+Status: [x]
 
 Document the steps in `BUILDING.md`:
 
