@@ -1,5 +1,8 @@
 # qimgv-plus
 
+> [!IMPORTANT]
+> **This project continues as [wynpix](https://github.com/hadoooooouken/wynpix).** New releases are published there. This repository is no longer updated.
+
 [![Version](https://img.shields.io/github/v/tag/hadoooooouken/qimgv-plus?color=blue\&label=Version)](https://github.com/hadoooooouken/qimgv-plus/releases/latest) ![Platform](https://img.shields.io/badge/Platform-Windows-0078D4?logo=windows\&logoColor=white) ![C++](https://img.shields.io/badge/C%2B%2B-26-00599C?logo=c%2B%2B\&logoColor=white) ![Qt](https://img.shields.io/badge/Qt-6.12-41CD52?logo=qt\&logoColor=white) ![CPU](https://img.shields.io/badge/CPU-AVX2-orange) ![GPU](https://img.shields.io/badge/GPU-OpenGL-0696D7?logo=opengl\&logoColor=white) ![AI Upscaling](https://img.shields.io/badge/AI_Upscaling-Upscayl%20\(Vulkan\)-8A2BE2)
 
 A Windows-optimized fork of the [qimgv](https://github.com/easymodo/qimgv) image viewer, featuring high-quality CPU and GPU scaling, real-time AI upscaling (Upscayl), shader-based color adjustments, 360° spherical panorama viewing, HDR tone-mapping, and native support for modern image formats.
